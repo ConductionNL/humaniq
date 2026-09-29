@@ -11,7 +11,6 @@
 -->
 <template>
 	<div class="on-call-averages">
-		<h2>{{ t('humaniq', 'On-call hours') }}</h2>
 		<p class="on-call-averages__intro">
 			{{ t('humaniq', 'The average hours each on-call worker worked in the period, from approved timesheets only. After twelve months, offer at least the twelve-month average as fixed hours.') }}
 		</p>
@@ -46,13 +45,13 @@
 		<table v-else-if="rows.length > 0" class="on-call-averages__table">
 			<thead>
 				<tr>
-					<th>{{ t('humaniq', 'Employee') }}</th>
-					<th>{{ t('humaniq', 'Counted from') }}</th>
-					<th>{{ t('humaniq', 'Counted to') }}</th>
-					<th>{{ t('humaniq', 'Approved hours') }}</th>
-					<th>{{ t('humaniq', 'Hours per week') }}</th>
-					<th>{{ t('humaniq', 'Hours per month') }}</th>
-					<th>{{ t('humaniq', 'Offer due') }}</th>
+					<th scope="col">{{ t('humaniq', 'Employee') }}</th>
+					<th scope="col">{{ t('humaniq', 'Counted from') }}</th>
+					<th scope="col">{{ t('humaniq', 'Counted to') }}</th>
+					<th scope="col">{{ t('humaniq', 'Approved hours') }}</th>
+					<th scope="col">{{ t('humaniq', 'Hours per week') }}</th>
+					<th scope="col">{{ t('humaniq', 'Hours per month') }}</th>
+					<th scope="col">{{ t('humaniq', 'Offer due') }}</th>
 				</tr>
 			</thead>
 			<tbody>

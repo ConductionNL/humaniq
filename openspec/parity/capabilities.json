@@ -8243,7 +8243,7 @@
    "built": {
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-objects.json EmploymentContract.type oproep, vasteUrenAanbodOp, vasteUrenAanbodUren; lib/Service/OnCallAverageService.php averages() over approved TimeEntry hours per week and per month for a chosen window; lib/Controller/FlexContractController.php onCallAverages() (HR only, JSON or format=csv); nl-signaal-oproep-vaste-uren flags an on-call contract past twelve months without an offer. Tests: tests/Unit/Service/OnCallAverageServiceTest.php, tests/Unit/Controller/FlexContractControllerTest.php, tests/Unit/Standards/Checks/NlFlexContractSignalsTest.php.",
-    "reachedOn": "On-call hours page /contracts/on-call (menu entry after Contracts): from and to dates, the averages table and Download CSV",
+    "reachedOn": "On-call hours dashboard /contracts/on-call (menu entry after Contracts): from and to dates, the averages table and Download CSV",
     "owner": "ConductionNL/humaniq",
     "change": "2026-09-29-people-flex-contract-rules",
     "readOn": "2026-09-29"

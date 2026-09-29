@@ -4179,12 +4179,32 @@
 			"type": "detail"
 		},
 		{
-			"_note": "people-flex-contract-rules D4 (REQ-FLX-002): the average approved hours of every on-call contract over a period HR picks, per week and per month, for the fixed-hours offer of BW 7:628a lid 5, with a CSV download. A host-app SFC (OnCallAverages.vue, the ProformaPayslip precedent): an index page cannot take a from and to date and show a computed average. Reads GET /api/contracts/on-call-averages, HR only.",
-			"component": "OnCallAverages",
+			"config": {
+				"_note": "people-flex-contract-rules D4 (REQ-FLX-002): the average approved hours of every on-call contract over a period HR picks, per week and per month, for the fixed-hours offer of BW 7:628a lid 5, with a CSV download. A dashboard with one host widget (on-call-averages, OnCallAverages.vue): no built-in widget takes a from and to date and re-reads an endpoint with them. Reads GET /api/contracts/on-call-averages, HR only.",
+				"description": "The average approved hours of every on-call worker over a period you pick, for the fixed-hours offer after twelve months.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "on-call-averages"
+					}
+				],
+				"widgets": [
+					{
+						"content": {},
+						"id": "on-call-averages",
+						"title": "On-call hours",
+						"type": "on-call-averages"
+					}
+				]
+			},
 			"id": "OnCallAverages",
 			"route": "/contracts/on-call",
 			"title": "On-call hours",
-			"type": "custom"
+			"type": "dashboard"
 		},
 		{
 			"config": {

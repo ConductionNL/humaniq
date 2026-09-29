@@ -104,11 +104,11 @@ import { CnActionButtons, CnDeltaWidget, CnStatWidget } from '@conduction/nextcl
 import CompCycleRunDialog from './dialogs/CompCycleRunDialog.vue'
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
-import OnCallAverages from './views/OnCallAverages.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
 import ApprovalsInboxWidget from './widgets/ApprovalsInboxWidget.vue'
 import EmployeeHistoryWidget from './widgets/EmployeeHistoryWidget.vue'
 import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
+import OnCallAverages from './widgets/OnCallAverages.vue'
 import TrendChartWidget from './widgets/TrendChartWidget.vue'
 import { proposeRaiseForSelection } from './dialogs/proposeRaiseForSelection.js'
 import { registerTrainingAttended, registerTrainingNotAttended } from './dialogs/registerTrainingAttendance.js'
@@ -146,11 +146,6 @@ export default {
 		handler: registerTrainingNotAttended,
 	},
 
-	OnCallAverages: {
-		kind: 'page',
-		component: OnCallAverages,
-		_note: 'people-flex-contract-rules D4 (REQ-FLX-002): the on-call average hours over a period HR picks, with a CSV download. An index page cannot take a from and to date and show a computed average; host-app SFC calling GET /api/contracts/on-call-averages.',
-	},
 	ProformaPayslip: {
 		kind: 'page',
 		component: ProformaPayslip,
@@ -191,6 +186,17 @@ export default {
 		allowedSlots: ['body'],
 		propsSchema: null,
 		_note: 'self-service-approvals-inbox REQ-API-001/002: the My approvals inbox over GET /api/approvals, open (waiting for the caller as manager or deputy, approve and reject in place through the OpenRegister transition) or decided (the last 90 days with each timeline). Composed server side under the caller\'s own rights; the widget only renders and posts the transition.',
+	},
+	// @custom-widget-ratchet exclude no built-in widget takes a from and to date from the user and re-reads an endpoint with them, and the CSV download needs the same period
+	'on-call-averages': {
+		kind: 'widget',
+		component: OnCallAverages,
+		defaultSize: { w: 12, h: 8 },
+		minSize: { w: 6, h: 4 },
+		maxSize: { w: 12, h: 12 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'people-flex-contract-rules D4 (REQ-FLX-002): the on-call average hours over a period HR picks, with a CSV download, over GET /api/contracts/on-call-averages.',
 	},
 	// @custom-widget-ratchet exclude on a detail page no built-in widget key reaches a table that reads endpointSource: CnDetailWidgetHost canonicalises object-table to table, whose renderer CnObjectListWidget ignores endpointSource in nextcloud-vue 2.57.1; this mounts the library's own CnWidgetObjectTable
 	'endpoint-table': {

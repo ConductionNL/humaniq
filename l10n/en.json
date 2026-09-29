@@ -2711,7 +2711,8 @@
         "Not part of a fixed-term chain": "Not part of a fixed-term chain",
         "On-call": "On-call",
         "Permanent from": "Permanent from",
-        "Position in chain": "Position in chain"
+        "Position in chain": "Position in chain",
+        "The average approved hours of every on-call worker over a period you pick, for the fixed-hours offer after twelve months.": "The average approved hours of every on-call worker over a period you pick, for the fixed-hours offer after twelve months."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

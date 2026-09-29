@@ -127,3 +127,6 @@ lid 5) is violated when an `oproep` contract started more than 12 months ago and
 - **Predicates in their own provider.** Both rules live in
   `lib/Standards/Checks/NlFlexContractChecks.php`, a sibling of `NlSignalChecks`, not in
   it: adding them there took `NlSignalChecks` past the class complexity limit.
+- **The on-call overview is a dashboard** with one host widget (`on-call-averages`), not a
+  `type: custom` page: gate 69 ratchets custom pages. The widget holds the period, the
+  table and the CSV link.

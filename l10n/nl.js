@@ -2712,7 +2712,8 @@ OC.L10N.register(
         "Not part of a fixed-term chain": "Geen deel van een keten van tijdelijke contracten",
         "On-call": "Oproep",
         "Permanent from": "Vast vanaf",
-        "Position in chain": "Positie in de keten"
+        "Position in chain": "Positie in de keten",
+        "The average approved hours of every on-call worker over a period you pick, for the fixed-hours offer after twelve months.": "De gemiddelde goedgekeurde uren van elke oproepkracht over een periode die je kiest, voor het aanbod van vaste uren na twaalf maanden."
     },
     "nplurals=2; plural=(n != 1);"
 )
