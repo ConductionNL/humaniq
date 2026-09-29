@@ -1063,15 +1063,10 @@
 						"url": "/api/prefill/employee/@objectId",
 						"method": "POST",
 						"visibleWhen": {
-							"source": {
-								"register": "humaniq",
-								"schema": "hrAdministration",
-								"filter": {
-									"administrationId": "@object.administrationId"
-								}
-							},
-							"field": "brpGrondslag",
-							"op": "notEmpty"
+							"endpoint": "/apps/humaniq/api/prefill/brp-available",
+							"field": "available",
+							"op": "eq",
+							"value": true
 						},
 						"confirm": false,
 						"successMessage": "Filled the empty fields from the population register. Fields you had already filled were kept."
