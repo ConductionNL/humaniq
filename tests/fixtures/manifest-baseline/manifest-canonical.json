@@ -1978,9 +1978,18 @@
 						"id": "PerformanceReport",
 						"label": "Performance",
 						"route": "PerformanceReport"
+					},
+					{
+						"category": "pay",
+						"description": "The gender pay gap per pay category, as the pay transparency law asks.",
+						"icon": "ScaleBalance",
+						"id": "PayTransparencyReport",
+						"label": "Pay transparency",
+						"route": "PayTransparencyReport"
 					}
 				],
 				"categories": {
+					"pay": "Pay",
 					"people": "People",
 					"wellbeing": "Time away and performance"
 				},
@@ -8842,6 +8851,237 @@
 			"route": "/sick-leave/:id",
 			"title": "Sick leave case",
 			"type": "detail"
+		},
+		{
+			"_note": "reporting-pay-transparency REQ-PTR-001/002. The gender pay gap per pay category of equal work, from GET /api/reports/pay-transparency (HR and accountants of the active administration; anyone else gets 403 and an empty page). Hourly pay is the year's gross pay over hours paid; gaps are the men's figure minus the women's, as a percentage of the men's. A category with fewer women or men than app config pay_transparency_minimum_group (default 5) shows 'Too small to report' and no figure; the overall stats and quartiles stay empty when the whole administration is below it. The year filter's 'last' means the previous calendar year. The CSV header action always exports the previous calendar year: CnDashboardPage hands header actions no workspace context, so it cannot read the filter.",
+			"config": {
+				"description": "The gender pay gap in hourly pay, overall and per pay category, as the pay transparency law asks. Groups too small to keep people anonymous show no figures.",
+				"headerActions": [
+					{
+						"download": true,
+						"errorMessage": "Downloading the pay transparency report failed.",
+						"filename": "pay-transparency.csv",
+						"icon": "DownloadOutline",
+						"id": "export-pay-transparency",
+						"label": "Download last year's report (CSV)",
+						"method": "POST",
+						"params": {},
+						"type": "api-call",
+						"url": "/api/reports/pay-transparency/export"
+					}
+				],
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "pt-mean-gap"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "pt-median-gap"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 3,
+						"widgetId": "pt-variable-gap"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 2,
+						"id": 4,
+						"widgetId": "pt-categories"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 7,
+						"id": 5,
+						"widgetId": "pt-quartiles"
+					}
+				],
+				"pageFilters": [
+					{
+						"default": "last",
+						"key": "payTransparencyYear",
+						"label": "Year",
+						"options": [
+							{
+								"label": "Last calendar year",
+								"value": "last"
+							},
+							{
+								"label": "2026",
+								"value": "2026"
+							},
+							{
+								"label": "2025",
+								"value": "2025"
+							},
+							{
+								"label": "2024",
+								"value": "2024"
+							}
+						],
+						"type": "select"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"caption": "Hourly pay, men minus women, of the men's",
+							"endpointSource": {
+								"params": {
+									"year": "@workspace.payTransparencyYear?"
+								},
+								"url": "/apps/humaniq/api/reports/pay-transparency"
+							},
+							"format": {
+								"decimals": 1,
+								"style": "decimal"
+							},
+							"icon": "ScaleBalance",
+							"label": "Mean gap (%)",
+							"valueField": "overall.meanGap"
+						},
+						"icon": "ScaleBalance",
+						"id": "pt-mean-gap",
+						"title": "Mean gap (%)",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"caption": "Hourly pay, men minus women, of the men's",
+							"endpointSource": {
+								"params": {
+									"year": "@workspace.payTransparencyYear?"
+								},
+								"url": "/apps/humaniq/api/reports/pay-transparency"
+							},
+							"format": {
+								"decimals": 1,
+								"style": "decimal"
+							},
+							"icon": "ScaleBalance",
+							"label": "Median gap (%)",
+							"valueField": "overall.medianGap"
+						},
+						"icon": "ScaleBalance",
+						"id": "pt-median-gap",
+						"title": "Median gap (%)",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"caption": "Among those who received variable pay",
+							"endpointSource": {
+								"params": {
+									"year": "@workspace.payTransparencyYear?"
+								},
+								"url": "/apps/humaniq/api/reports/pay-transparency"
+							},
+							"format": {
+								"decimals": 1,
+								"style": "decimal"
+							},
+							"icon": "ChartBar",
+							"label": "Mean gap in variable pay (%)",
+							"valueField": "overall.variableMeanGap"
+						},
+						"icon": "ChartBar",
+						"id": "pt-variable-gap",
+						"title": "Mean gap in variable pay (%)",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Pay category"
+								},
+								{
+									"key": "women",
+									"label": "Women"
+								},
+								{
+									"key": "men",
+									"label": "Men"
+								},
+								{
+									"key": "meanGapText",
+									"label": "Mean gap"
+								},
+								{
+									"key": "medianGapText",
+									"label": "Median gap"
+								},
+								{
+									"key": "variableMeanGapText",
+									"label": "Gap in variable pay"
+								}
+							],
+							"emptyText": "No payslips in this year",
+							"endpointSource": {
+								"params": {
+									"year": "@workspace.payTransparencyYear?"
+								},
+								"responsePath": "categories",
+								"url": "/apps/humaniq/api/reports/pay-transparency"
+							}
+						},
+						"id": "pt-categories",
+						"title": "Per pay category",
+						"type": "object-table"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "quartile",
+									"label": "Quartile"
+								},
+								{
+									"key": "women",
+									"label": "Women"
+								},
+								{
+									"key": "men",
+									"label": "Men"
+								}
+							],
+							"emptyText": "Too small to report",
+							"endpointSource": {
+								"params": {
+									"year": "@workspace.payTransparencyYear?"
+								},
+								"responsePath": "quartiles",
+								"url": "/apps/humaniq/api/reports/pay-transparency"
+							}
+						},
+						"id": "pt-quartiles",
+						"title": "Women and men per pay quartile (%)",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "PayTransparencyReport",
+			"route": "/reports/pay-transparency",
+			"title": "Pay transparency",
+			"type": "dashboard"
 		},
 		{
 			"config": {

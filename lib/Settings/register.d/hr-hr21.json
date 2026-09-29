@@ -5,7 +5,7 @@
             "Normfunctie": {
                 "slug": "Normfunctie",
                 "icon": "BriefcaseOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Reference job",
                 "description": "A job function in your catalogue: a function from the HR21 reference library (VNG) or one of your own, mapped to a Cao Gemeenten schaal and optionally to a salary band. Retire a function instead of deleting it, so contracts that point at it keep their meaning.",
                 "type": "object",
@@ -26,7 +26,8 @@
                     "bron": {"type": "string", "enum": ["hr21", "eigen"], "x-enum-labels": {"hr21": "HR21 reference", "eigen": "Own function"}, "default": "eigen", "title": "Source", "description": "Where the function comes from: the HR21 reference library or your own catalogue.", "x-notes": "people-job-framework-maintenance D2: hr21 for rows taken over from the VNG HR21 library, eigen for employer functions."},
                     "functiefamilie": {"type": "string", "nullable": true, "title": "Function family", "description": "The family the function belongs to, for example Informatie or Beleid.", "x-notes": "people-job-framework-maintenance D2: free text grouping, beside the HR21 functiegroep."},
                     "salaryBandId": {"type": "string", "format": "uuid", "nullable": true, "$ref": "SalaryBand", "title": "Salary band", "description": "The salary band this function is graded in, if any.", "x-notes": "people-job-framework-maintenance D2: optional link to the SalaryBand the comp-cycles machinery uses."},
-                    "status": {"type": "string", "enum": ["actief", "vervallen"], "x-enum-labels": {"actief": "Active", "vervallen": "Retired"}, "default": "actief", "title": "Status", "description": "Retire a function instead of deleting it: contracts that point at it keep their meaning, and the rules audit asks you to give those contracts a current function.", "x-notes": "people-job-framework-maintenance D1/D4: retire, never delete; nl-hr21-vervallen-functie flags a live contract on a vervallen function."}
+                    "status": {"type": "string", "enum": ["actief", "vervallen"], "x-enum-labels": {"actief": "Active", "vervallen": "Retired"}, "default": "actief", "title": "Status", "description": "Retire a function instead of deleting it: contracts that point at it keep their meaning, and the rules audit asks you to give those contracts a current function.", "x-notes": "people-job-framework-maintenance D1/D4: retire, never delete; nl-hr21-vervallen-functie flags a live contract on a vervallen function."},
+                    "payCategory": {"type": "string", "nullable": true, "title": "Pay category", "description": "Functions in the same pay category count as equal work or work of equal value in the pay transparency report.", "x-notes": "reporting-pay-transparency: the employer's grouping, set with gender-neutral criteria (skills, effort, responsibility, working conditions)."}
                 }
             }
         }

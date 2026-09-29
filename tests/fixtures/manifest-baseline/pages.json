@@ -188,6 +188,10 @@
 		"route": "/sick-leave/:id"
 	},
 	{
+		"id": "PayTransparencyReport",
+		"route": "/reports/pay-transparency"
+	},
+	{
 		"id": "MijnHr",
 		"route": "/mijn"
 	},

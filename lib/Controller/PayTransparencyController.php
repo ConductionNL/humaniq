@@ -82,7 +82,7 @@ class PayTransparencyController extends Controller {
 	 * GET /api/reports/pay-transparency?year: the report; the year defaults to
 	 * the previous calendar year.
 	 *
-	 * @param int|null $year The year.
+	 * @param string|null $year The year; anything but a year (the page's "last") means the previous calendar year.
 	 *
 	 * @return JSONResponse 403 outside HR and accountants.
 	 *
@@ -90,7 +90,7 @@ class PayTransparencyController extends Controller {
 	 * @spec openspec/specs/pay-transparency/spec.md#REQ-PTR-002
 	 */
 	#[NoAdminRequired]
-	public function report(?int $year = null): JSONResponse {
+	public function report(?string $year = null): JSONResponse {
 		$report = $this->build(year: $year);
 		if ($report === null) {
 			return new JSONResponse(['message' => 'Only HR and accountants can read the pay transparency report.'], Http::STATUS_FORBIDDEN);
@@ -102,7 +102,7 @@ class PayTransparencyController extends Controller {
 	/**
 	 * POST /api/reports/pay-transparency/export {year}: the report as CSV.
 	 *
-	 * @param int|null $year The year.
+	 * @param string|null $year The year, or nothing for the previous calendar year.
 	 *
 	 * @return JSONResponse|DataDisplayResponse 403 outside HR and accountants.
 	 *
@@ -110,7 +110,7 @@ class PayTransparencyController extends Controller {
 	 * @spec openspec/specs/pay-transparency/spec.md#REQ-PTR-002
 	 */
 	#[NoAdminRequired]
-	public function export(?int $year = null): JSONResponse|DataDisplayResponse {
+	public function export(?string $year = null): JSONResponse|DataDisplayResponse {
 		$report = $this->build(year: $year);
 		if ($report === null) {
 			return new JSONResponse(['message' => 'Only HR and accountants can read the pay transparency report.'], Http::STATUS_FORBIDDEN);
@@ -125,18 +125,18 @@ class PayTransparencyController extends Controller {
 	/**
 	 * The report of the caller's administration, or null when refused.
 	 *
-	 * @param int|null $year The year, or null for the previous calendar year.
+	 * @param string|null $year The year, or anything else for the previous calendar year.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function build(?int $year): ?array {
+	private function build(?string $year): ?array {
 		$userId = (string)($this->session->getUser()?->getUID() ?? '');
 		$administrationId = $userId === '' ? null : $this->access->fullReaderAdministration($userId);
 		if ($administrationId === null) {
 			return null;
 		}
 
-		$year = ($year ?? ((int)$this->time->now()->format('Y') - 1));
+		$year = preg_match('/^\d{4}$/', (string)$year) === 1 ? (int)$year : ((int)$this->time->now()->format('Y') - 1);
 		$rows = [
 			'employees' => $this->inAdministration(schema: 'Employee', administrationId: $administrationId),
 			'contracts' => $this->inAdministration(schema: 'EmploymentContract', administrationId: $administrationId),

@@ -860,7 +860,8 @@
 				"description": "Pick a report to open it.",
 				"categories": {
 					"people": "People",
-					"wellbeing": "Time away and performance"
+					"wellbeing": "Time away and performance",
+					"pay": "Pay"
 				},
 				"cards": [
 					{
@@ -886,6 +887,14 @@
 						"icon": "BullseyeArrow",
 						"category": "wellbeing",
 						"route": "PerformanceReport"
+					},
+					{
+						"id": "PayTransparencyReport",
+						"label": "Pay transparency",
+						"description": "The gender pay gap per pay category, as the pay transparency law asks.",
+						"icon": "ScaleBalance",
+						"category": "pay",
+						"route": "PayTransparencyReport"
 					}
 				]
 			}

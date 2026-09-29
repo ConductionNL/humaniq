@@ -98,7 +98,7 @@ class PayTransparencyControllerTest extends TestCase {
 	 * @spec openspec/specs/pay-transparency/spec.md#REQ-PTR-001
 	 */
 	public function testHrReadsLastYearOfItsOwnAdministration(): void {
-		$response = $this->controller(role: 'hr')->report();
+		$response = $this->controller(role: 'hr')->report(year: 'last');
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$data = $response->getData();
@@ -117,7 +117,7 @@ class PayTransparencyControllerTest extends TestCase {
 	 * @spec openspec/specs/pay-transparency/spec.md#REQ-PTR-002
 	 */
 	public function testAnAccountantMayReadIt(): void {
-		$this->assertSame(Http::STATUS_OK, $this->controller(role: 'accountant')->report(year: 2026)->getStatus());
+		$this->assertSame(Http::STATUS_OK, $this->controller(role: 'accountant')->report(year: '2026')->getStatus());
 	}//end testAnAccountantMayReadIt()
 
 	/**
@@ -140,7 +140,7 @@ class PayTransparencyControllerTest extends TestCase {
 	 * @spec openspec/specs/pay-transparency/spec.md#REQ-PTR-001
 	 */
 	public function testTheExportIsACsv(): void {
-		$response = $this->controller(role: 'hr')->export(year: 2026);
+		$response = $this->controller(role: 'hr')->export(year: '2026');
 
 		$this->assertInstanceOf(DataDisplayResponse::class, $response);
 		$lines = explode("\n", trim($response->render()));
