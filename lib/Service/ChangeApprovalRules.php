@@ -94,6 +94,8 @@ class ChangeApprovalRules {
 	 * @param array<string, array{fields: list<string>, approverRole: string}> $rules The rules.
 	 *
 	 * @return string|null
+	 *
+	 * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-002
 	 */
 	public function guardingKind(string $field, array $rules): ?string {
 		foreach ($rules as $kind => $rule) {

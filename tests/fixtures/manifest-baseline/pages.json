@@ -252,8 +252,8 @@
 		"route": "/caos"
 	},
 	{
-		"id": "MijnWijzigingsverzoeken",
-		"route": "/my-change-requests"
+		"id": "MijnGegevens",
+		"route": "/my-details"
 	},
 	{
 		"id": "ChangeRequests",

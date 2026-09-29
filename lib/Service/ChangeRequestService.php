@@ -15,8 +15,7 @@
  *   their own record; for someone else's record it waits for HR.
  * - On a decision it records who decided and when, and refuses a rejection
  *   without a reason.
- * - Once approved it writes the values to the employee as one internal write,
- *   unless the record changed since the request was made.
+ * ChangeRequestApplier writes an approved request to the employee.
  *
  * @category Service
  * @package  OCA\Humaniq\Service
@@ -41,7 +40,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IUserSession;
 
 /**
- * Places, decides and applies employee change requests.
+ * Places and decides employee change requests.
  *
  * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-001
  */
@@ -66,14 +65,12 @@ class ChangeRequestService {
 	 *
 	 * @param HoursRegisterGateway $gateway     Reads and writes humaniq's register.
 	 * @param ChangeApprovalRules  $rules       The rule per kind of change.
-	 * @param InternalWriteMarker  $marker      Marks the apply write as humaniq's own.
 	 * @param IUserSession         $userSession The signed-in user.
 	 * @param ITimeFactory         $time        Now.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly ChangeApprovalRules $rules,
-		private readonly InternalWriteMarker $marker,
 		private readonly IUserSession $userSession,
 		private readonly ITimeFactory $time,
 	) {
@@ -96,31 +93,72 @@ class ChangeRequestService {
 			return $this->refusal('Er is geen medewerker gevonden voor dit wijzigingsverzoek.');
 		}
 
-		$kind = (string)($request['changeKind'] ?? '');
-		$rule = ($this->rules->forAdministration($this->text($employee['administrationId'] ?? null))[$kind] ?? null);
+		$rule = ($this->rules->forAdministration($this->text($employee['administrationId'] ?? null))[(string)($request['changeKind'] ?? '')] ?? null);
 		if ($rule === null) {
 			return $this->refusal('Er is geen goedkeuringsregel voor dit soort wijziging.');
 		}
 
 		$changes = $this->proposedChanges($request);
-		$outside = array_diff(array_keys($changes), $rule['fields']);
-		if ($changes === [] || $outside !== []) {
-			return $this->refusal($changes === [] ? 'Dit wijzigingsverzoek bevat geen wijziging.' : 'Deze velden horen niet bij dit soort wijziging: ' . implode(', ', $outside) . '.');
+		$error = $this->changesError($changes, $rule['fields']);
+		if ($error !== null) {
+			return $this->refusal($error);
 		}
 
+		return ['stamps' => $this->placement($request, $employee, $changes, $this->approverFor($rule['approverRole'], $employee, $uid), $uid), 'error' => null];
+	}//end prepare()
+
+	/**
+	 * Why the proposed changes cannot be requested under the rule, or null.
+	 *
+	 * @param array<string, mixed> $changes The proposed values.
+	 * @param list<string>         $fields  The fields the rule covers.
+	 *
+	 * @return string|null
+	 */
+	private function changesError(array $changes, array $fields): ?string {
+		if ($changes === []) {
+			return 'Dit wijzigingsverzoek bevat geen wijziging.';
+		}
+
+		$outside = array_diff(array_keys($changes), $fields);
+
+		return $outside === [] ? null : 'Deze velden horen niet bij dit soort wijziging: ' . implode(', ', $outside) . '.';
+	}//end changesError()
+
+	/**
+	 * The approver: a kind without one applies at once only on the
+	 * requester's own record; someone else's record waits for HR.
+	 *
+	 * @param string               $role     The rule's approver role.
+	 * @param array<string, mixed> $employee The employee.
+	 * @param string               $uid      The requester.
+	 *
+	 * @return string
+	 */
+	private function approverFor(string $role, array $employee, string $uid): string {
+		$ownRecord = $uid !== '' && $uid === $this->text($employee['nextcloudUserId'] ?? null);
+
+		return ($role === ChangeApprovalRules::NO_APPROVER && $ownRecord === false) ? 'hr' : $role;
+	}//end approverFor()
+
+	/**
+	 * The stamps that place a request.
+	 *
+	 * @param array<string, mixed> $request  The request.
+	 * @param array<string, mixed> $employee The employee.
+	 * @param array<string, mixed> $changes  The proposed values.
+	 * @param string               $role     The approver role.
+	 * @param string               $uid      The requester.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function placement(array $request, array $employee, array $changes, string $role, string $uid): array {
 		$previous = [];
 		foreach (array_keys($changes) as $field) {
 			$previous[$field] = ($employee[$field] ?? null);
 		}
 
 		$employeeId = (string)$employee['id'];
-		$ownRecord = $uid !== '' && $uid === $this->text($employee['nextcloudUserId'] ?? null);
-		$role = $rule['approverRole'];
-		if ($role === ChangeApprovalRules::NO_APPROVER && $ownRecord === false) {
-			// Only the employee's own request applies without a second person.
-			$role = 'hr';
-		}
-
 		$stamps = [
 			'employeeId' => $employeeId,
 			'changes' => $changes,
@@ -137,8 +175,8 @@ class ChangeRequestService {
 			$stamps['decidedAt'] = $this->now()->format(DATE_ATOM);
 		}
 
-		return ['stamps' => $stamps, 'error' => null];
-	}//end prepare()
+		return $stamps;
+	}//end placement()
 
 	/**
 	 * The stamps for a decision, or the reason it is refused.
@@ -164,50 +202,6 @@ class ChangeRequestService {
 
 		return ['stamps' => ['decidedBy' => $uid === '' ? null : $uid, 'decidedAt' => $this->now()->format(DATE_ATOM)], 'error' => null];
 	}//end decide()
-
-	/**
-	 * Write an approved request's values to the employee, once.
-	 *
-	 * @param string               $requestId The request.
-	 * @param array<string, mixed> $request   The request as saved.
-	 *
-	 * @return bool Whether the values were written.
-	 *
-	 * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-001
-	 */
-	public function apply(string $requestId, array $request): bool {
-		if (($request['status'] ?? null) !== 'goedgekeurd' || $this->text($request['appliedAt'] ?? null) !== null || $this->text($request['applyError'] ?? null) !== null) {
-			return false;
-		}
-
-		$employeeId = (string)($request['employeeId'] ?? '');
-		$employee = $this->gateway->findObjectData($employeeId, 'Employee');
-		$changes = (is_array($request['changes'] ?? null) === true ? $request['changes'] : []);
-		$previous = (is_array($request['previousValues'] ?? null) === true ? $request['previousValues'] : []);
-		$stale = [];
-		foreach (array_keys($changes) as $field) {
-			if ($employee === null || $this->same($employee[$field] ?? null, $previous[$field] ?? null) === false) {
-				$stale[] = (string)$field;
-			}
-		}
-
-		$record = $this->withoutIdentity($request);
-		if ($stale !== []) {
-			$record['applyError'] = 'Niet doorgevoerd: ' . implode(', ', $stale) . ' is gewijzigd nadat het verzoek werd gedaan. Doe een nieuw verzoek.';
-			$this->marker->runInternal(fn () => $this->gateway->save($record, self::SCHEMA, $requestId));
-			return false;
-		}
-
-		$record['appliedAt'] = $this->now()->format(DATE_ATOM);
-		$this->marker->runInternal(
-			function () use ($employee, $changes, $employeeId, $record, $requestId): void {
-				$this->gateway->save(array_merge($this->withoutIdentity((array)$employee), $changes), 'Employee', $employeeId);
-				$this->gateway->save($record, self::SCHEMA, $requestId);
-			}
-		);
-
-		return true;
-	}//end apply()
 
 	/**
 	 * The employee a request is for: the named one, or the requester's own.
@@ -244,35 +238,6 @@ class ChangeRequestService {
 
 		return $changes;
 	}//end proposedChanges()
-
-	/**
-	 * Whether two stored values are the same value.
-	 *
-	 * @param mixed $left  One value.
-	 * @param mixed $right The other.
-	 *
-	 * @return bool
-	 */
-	private function same(mixed $left, mixed $right): bool {
-		if (is_numeric($left) === true && is_numeric($right) === true) {
-			return (float)$left === (float)$right;
-		}
-
-		return $this->text($left) === $this->text($right);
-	}//end same()
-
-	/**
-	 * A row without its id and metadata, for a save by id.
-	 *
-	 * @param array<string, mixed> $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function withoutIdentity(array $row): array {
-		unset($row['id'], $row['@self']);
-
-		return $row;
-	}//end withoutIdentity()
 
 	/**
 	 * A refusal.

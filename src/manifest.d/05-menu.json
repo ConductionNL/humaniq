@@ -49,7 +49,10 @@
 					"id": "MijnWijzigingsverzoeken",
 					"label": "My change requests",
 					"icon": "PencilOutline",
-					"route": "MijnWijzigingsverzoeken"
+					"route": "ChangeRequests",
+					"query": {
+						"userId": "@me"
+					}
 				},
 				{
 					"id": "MijnAanwezigheid",

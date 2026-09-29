@@ -64,40 +64,76 @@ class ChangeApproverRoleGuard implements LifecycleGuardInterface {
 	 *
 	 * @return GuardResult
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
+	 *  static allow()/deny() factories mandated by OpenRegister's contract.
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action is part of the
+	 *  LifecycleGuardInterface signature; the same rule applies to both
+	 *  goedkeuren and afwijzen.
+	 *
 	 * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-001
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
-		if ($userId === '') {
-			return GuardResult::deny('U moet ingelogd zijn om over een wijzigingsverzoek te beslissen.');
+		$refusal = $this->secondPersonRefusal($object, $userId);
+		if ($refusal !== null) {
+			return GuardResult::deny($refusal);
 		}
 
-		if (trim((string)($object['userId'] ?? '')) === $userId) {
-			return GuardResult::deny('U mag niet beslissen over een wijziging van uw eigen gegevens. Een tweede persoon moet dit doen.');
-		}
-
-		if (trim((string)($object['requestedBy'] ?? '')) === $userId) {
-			return GuardResult::deny('U heeft deze wijziging zelf aangevraagd en mag er niet over beslissen. Een tweede persoon moet dit doen.');
-		}
-
-		if ($this->groupManager->isAdmin($userId) === true) {
+		if ($this->mayDecide($object, $userId) === true) {
 			return GuardResult::allow();
 		}
 
 		$role = (string)($object['approverRole'] ?? '');
-		if ($role === 'none') {
-			return GuardResult::allow();
-		}
-
 		if ($role === 'manager') {
-			return trim((string)($object['managerUserId'] ?? '')) === $userId ? GuardResult::allow() : GuardResult::deny('Alleen de leidinggevende van deze medewerker beslist over deze wijziging.');
-		}
-
-		if ($this->holdsRole(userId: $userId, role: $role, administrationId: (string)($object['administrationId'] ?? '')) === true) {
-			return GuardResult::allow();
+			return GuardResult::deny('Alleen de leidinggevende van deze medewerker beslist over deze wijziging.');
 		}
 
 		return GuardResult::deny(sprintf('Deze wijziging moet worden beoordeeld door iemand met de rol %s in deze administratie.', $role === '' ? 'onbekend' : $role));
 	}//end check()
+
+	/**
+	 * Why the user may not decide as the wrong person, or null.
+	 *
+	 * @param array<string, mixed> $object The request.
+	 * @param string               $userId The acting user.
+	 *
+	 * @return string|null
+	 */
+	private function secondPersonRefusal(array $object, string $userId): ?string {
+		if ($userId === '') {
+			return 'U moet ingelogd zijn om over een wijzigingsverzoek te beslissen.';
+		}
+
+		if (trim((string)($object['userId'] ?? '')) === $userId) {
+			return 'U mag niet beslissen over een wijziging van uw eigen gegevens. Een tweede persoon moet dit doen.';
+		}
+
+		if (trim((string)($object['requestedBy'] ?? '')) === $userId) {
+			return 'U heeft deze wijziging zelf aangevraagd en mag er niet over beslissen. Een tweede persoon moet dit doen.';
+		}
+
+		return null;
+	}//end secondPersonRefusal()
+
+	/**
+	 * Whether the user holds the request's approver role.
+	 *
+	 * @param array<string, mixed> $object The request.
+	 * @param string               $userId The acting user.
+	 *
+	 * @return bool
+	 */
+	private function mayDecide(array $object, string $userId): bool {
+		$role = (string)($object['approverRole'] ?? '');
+		if ($this->groupManager->isAdmin($userId) === true || $role === 'none') {
+			return true;
+		}
+
+		if ($role === 'manager') {
+			return trim((string)($object['managerUserId'] ?? '')) === $userId;
+		}
+
+		return $this->holdsRole(userId: $userId, role: $role, administrationId: (string)($object['administrationId'] ?? ''));
+	}//end mayDecide()
 
 	/**
 	 * Whether the user holds the role in the administration.

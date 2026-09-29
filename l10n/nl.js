@@ -2398,13 +2398,11 @@ OC.L10N.register(
         "Trainings not registered, because they already have this status or could not be changed: {count}.": "Trainingen niet geregistreerd, omdat ze deze status al hebben of niet gewijzigd konden worden: {count}.",
         "Address": "Adres",
         "Approver": "Beoordelaar",
-        "Ask for a change of your address or bank account. Choose the kind of change and fill in only the new values; your record is filled in for you.": "Vraag een wijziging van je adres of bankrekening aan. Kies het soort wijziging en vul alleen de nieuwe gegevens in; je eigen dossier wordt voor je ingevuld.",
         "Bank account": "Bankrekening",
         "Change approval rule": "Goedkeuringsregel voor wijzigingen",
         "Change approval rules": "Goedkeuringsregels voor wijzigingen",
         "Change request": "Wijzigingsverzoek",
         "Change requests": "Wijzigingsverzoeken",
-        "Changes to employee records that wait for approval. Open one to see the current and the proposed values side by side.": "Wijzigingen in medewerkergegevens die op goedkeuring wachten. Open er een om de huidige en de voorgestelde waarden naast elkaar te zien.",
         "City": "Woonplaats",
         "Contract terms": "Contractvoorwaarden",
         "Country": "Land",
@@ -2455,7 +2453,8 @@ OC.L10N.register(
         "Whose record this change is for. Left empty, it is your own record.": "Voor wiens dossier deze wijziging is. Leeg gelaten is het je eigen dossier.",
         "Why the approved values were not written, for example because the record changed after the request was made. Make a new request.": "Waarom de goedgekeurde waarden niet zijn doorgevoerd, bijvoorbeeld omdat het dossier is gewijzigd nadat het verzoek werd gedaan. Doe een nieuw verzoek.",
         "Why the request was rejected.": "Waarom het verzoek is afgewezen.",
-        "Your own record. To change your address or bank account, add a request under My change requests. An address change applies at once; a bank account change waits for HR.": "Je eigen dossier. Wil je je adres of bankrekening wijzigen, voeg dan een verzoek toe onder Mijn wijzigingsverzoeken. Een adreswijziging wordt meteen doorgevoerd; een nieuwe bankrekening wacht op HR."
+        "Your own record. To change your address or bank account, add a request under My change requests. An address change applies at once; a bank account change waits for HR.": "Je eigen dossier. Wil je je adres of bankrekening wijzigen, voeg dan een verzoek toe onder Mijn wijzigingsverzoeken. Een adreswijziging wordt meteen doorgevoerd; een nieuwe bankrekening wacht op HR.",
+        "Changes to employee records. Open one to see the current and the proposed values side by side. Add one to ask for a change of your own address or bank account; your record is filled in for you.": "Wijzigingen in medewerkergegevens. Open er een om de huidige en de voorgestelde waarden naast elkaar te zien. Voeg er een toe om een wijziging van je eigen adres of bankrekening aan te vragen; je dossier wordt voor je ingevuld."
     },
     "nplurals=2; plural=(n != 1);"
 )

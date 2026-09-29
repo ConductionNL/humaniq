@@ -5,7 +5,7 @@
  *
  * Listens on OpenRegister's object events for `EmployeeChangeRequest`
  * (people-record-change-approval D1 and D4) and hands them to
- * ChangeRequestService: a new request is placed (or refused) before it is
+ * ChangeRequestService and ChangeRequestApplier: a new request is placed (or refused) before it is
  * saved, a decision is stamped (or refused) before it is saved, and an
  * approved request is applied to the employee after it is saved.
  *
@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Service\ChangeRequestApplier;
 use OCA\Humaniq\Service\ChangeRequestService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
@@ -58,12 +59,14 @@ class ChangeRequestListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param HoursRegisterGateway $gateway Resolves slugs.
-	 * @param ChangeRequestService $service The request logic.
+	 * @param ChangeRequestService $service Places and decides a request.
+	 * @param ChangeRequestApplier $applier Applies an approved request.
 	 * @param LoggerInterface      $logger  Logger.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly ChangeRequestService $service,
+		private readonly ChangeRequestApplier $applier,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -97,7 +100,7 @@ class ChangeRequestListener implements IEventListener {
 		}
 
 		try {
-			$this->service->apply((string)$entity->getUuid(), $request);
+			$this->applier->apply((string)$entity->getUuid(), $request);
 		} catch (\Throwable $e) {
 			$this->logger->warning('humaniq: ChangeRequestListener could not apply a change request', ['exception' => $e->getMessage()]);
 		}

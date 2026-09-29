@@ -37,6 +37,7 @@ use DateTime;
 use OCA\Humaniq\Listener\ChangeRequestListener;
 use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 use OCA\Humaniq\Service\ChangeApprovalRules;
+use OCA\Humaniq\Service\ChangeRequestApplier;
 use OCA\Humaniq\Service\ChangeRequestService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
@@ -168,8 +169,9 @@ class EmployeeChangeRequestFlowTest extends TestCase {
 		$time->method('getDateTime')->willReturnCallback(static fn (): DateTime => new DateTime('2026-09-29T10:00:00+00:00'));
 		$this->marker = new InternalWriteMarker();
 		$rules = new ChangeApprovalRules($gateway);
-		$service = new ChangeRequestService(gateway: $gateway, rules: $rules, marker: $this->marker, userSession: $session, time: $time);
-		$this->requests = new ChangeRequestListener(gateway: $gateway, service: $service, logger: new NullLogger());
+		$service = new ChangeRequestService(gateway: $gateway, rules: $rules, userSession: $session, time: $time);
+		$applier = new ChangeRequestApplier(gateway: $gateway, marker: $this->marker, time: $time);
+		$this->requests = new ChangeRequestListener(gateway: $gateway, service: $service, applier: $applier, logger: new NullLogger());
 		$this->guard = new EmployeeGuardedFieldListener(gateway: $gateway, rules: $rules, marker: $this->marker, logger: new NullLogger());
 	}//end wire()
 

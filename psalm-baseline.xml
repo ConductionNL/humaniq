@@ -17,6 +17,9 @@
       <code><![CDATA[LeaveTypeConditionGuard]]></code>
       <code><![CDATA[LeaveTypeConditionGuard]]></code>
       <code><![CDATA[LeaveTypeConditionGuard]]></code>
+      <code><![CDATA[ChangeApproverRoleGuard]]></code>
+      <code><![CDATA[ChangeApproverRoleGuard]]></code>
+      <code><![CDATA[ChangeApproverRoleGuard]]></code>
       <code><![CDATA[NoSelfApprovalGuard]]></code>
       <code><![CDATA[NoSelfApprovalGuard]]></code>
       <code><![CDATA[NoSelfApprovalGuard]]></code>

@@ -283,7 +283,10 @@
 					"icon": "PencilOutline",
 					"id": "MijnWijzigingsverzoeken",
 					"label": "My change requests",
-					"route": "MijnWijzigingsverzoeken"
+					"query": {
+						"userId": "@me"
+					},
+					"route": "ChangeRequests"
 				},
 				{
 					"icon": "ClockOutline",
@@ -9137,36 +9140,36 @@
 		},
 		{
 			"config": {
-				"_note": "people-record-change-approval (2026-09-29): REQ-ECR-003. The standard create form of EmployeeChangeRequest: employeeId is not required, ChangeRequestService fills it from the requester's own account, merges the flat address and bank fields into changes, and applies an address change at once (approver none, own record).",
+				"_note": "people-record-change-approval (2026-09-29): REQ-ECR-003. The Employee list scoped by the base filter nextcloudUserId = @me, so an employee only ever sees their own row (and OpenRegister RBAC still decides what they may read). No create: the record is HR's; a change goes through EmployeeChangeRequest on MijnWijzigingsverzoeken.",
+				"allowCreate": false,
 				"columns": [
-					"changeKind",
-					"status",
+					"firstName",
+					"lastName",
 					"straat",
+					"huisnummer",
 					"postcode",
 					"woonplaats",
-					"iban",
-					"decidedAt",
-					"applyError"
+					"iban"
 				],
-				"description": "Ask for a change of your address or bank account. Choose the kind of change and fill in only the new values; your record is filled in for you.",
+				"description": "Your own record. To change your address or bank account, add a request under My change requests. An address change applies at once; a bank account change waits for HR.",
 				"filter": {
-					"userId": "@me"
+					"nextcloudUserId": "@me"
 				},
 				"register": "humaniq",
-				"schema": "EmployeeChangeRequest",
+				"schema": "Employee",
 				"sort": {
-					"field": "decidedAt",
-					"order": "desc"
+					"field": "lastName",
+					"order": "asc"
 				}
 			},
-			"id": "MijnWijzigingsverzoeken",
-			"route": "/my-change-requests",
-			"title": "My change requests",
+			"id": "MijnGegevens",
+			"route": "/my-details",
+			"title": "My details",
 			"type": "index"
 		},
 		{
 			"config": {
-				"_note": "people-record-change-approval (2026-09-29): REQ-ECR-001. The approval queue; ChangeApproverRoleGuard decides who may approve or reject each one.",
+				"_note": "people-record-change-approval (2026-09-29): REQ-ECR-001. The approval queue; ChangeApproverRoleGuard decides who may approve or reject each one. My HR > My change requests is a menu preset on this page (userId = @me), not a second index (ADR-097 Decision 5); its create form is the self-service request: employeeId is not required, ChangeRequestService fills it from the requester's own account, merges the flat address and bank fields into changes, and applies an address change at once (approver none, own record).",
 				"columns": [
 					"employeeId",
 					"changeKind",
@@ -9176,7 +9179,7 @@
 					"decidedBy",
 					"decidedAt"
 				],
-				"description": "Changes to employee records that wait for approval. Open one to see the current and the proposed values side by side.",
+				"description": "Changes to employee records. Open one to see the current and the proposed values side by side. Add one to ask for a change of your own address or bank account; your record is filled in for you.",
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
