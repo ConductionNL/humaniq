@@ -27,6 +27,9 @@
 								"category",
 								"serialNumber",
 								"licencePlate",
+								"make",
+								"model",
+								"firstAdmissionDate",
 								"purchaseDate",
 								"purchaseValue",
 								"status",
@@ -172,7 +175,24 @@
 							"label": "Write off"
 						}
 					]
-				}
+				},
+				"headerActions": [
+					{
+						"id": "prefill-rdw",
+						"label": "Fill from RDW",
+						"type": "api-call",
+						"icon": "CarOutline",
+						"url": "/api/prefill/vehicle/@objectId",
+						"method": "POST",
+						"visibleWhen": {
+							"field": "category",
+							"op": "eq",
+							"value": "vehicle"
+						},
+						"confirm": false,
+						"successMessage": "Filled the empty fields from the vehicle register. Fields you had already filled were kept."
+					}
+				]
 			}
 		}
 	],

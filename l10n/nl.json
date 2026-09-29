@@ -2778,7 +2778,19 @@
         "2026": "2026",
         "2025": "2025",
         "2024": "2024",
-        "My settings": "Mijn instellingen"
+        "My settings": "Mijn instellingen",
+        "Make": "Merk",
+        "The make of a vehicle, as the vehicle register records it.": "Het merk van een voertuig, zoals het kentekenregister het vastlegt.",
+        "Model": "Model",
+        "The model of a vehicle, as the vehicle register records it.": "Het model van een voertuig, zoals het kentekenregister het vastlegt.",
+        "First admission date": "Datum eerste toelating",
+        "The date the vehicle was first admitted to the road, which sets how long its company-car tax rate holds.": "De datum waarop het voertuig voor het eerst op de weg is toegelaten. Die bepaalt hoe lang het bijtellingspercentage geldt.",
+        "Legal basis for the BRP": "Grondslag voor de BRP",
+        "The legal basis on which this employer may consult the population register (BRP). Leave it empty unless you have one: without it the population register is never consulted.": "De wettelijke grondslag waarop deze werkgever de Basisregistratie Personen (BRP) mag raadplegen. Laat dit leeg als u die niet heeft: zonder grondslag wordt de BRP nooit geraadpleegd.",
+        "Fill from RDW": "Vullen vanuit RDW",
+        "Fill from BRP": "Vullen vanuit BRP",
+        "Filled the empty fields from the vehicle register. Fields you had already filled were kept.": "De lege velden zijn gevuld vanuit het kentekenregister. Velden die al waren ingevuld, zijn niet gewijzigd.",
+        "Filled the empty fields from the population register. Fields you had already filled were kept.": "De lege velden zijn gevuld vanuit de BRP. Velden die al waren ingevuld, zijn niet gewijzigd."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

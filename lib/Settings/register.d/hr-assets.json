@@ -5,7 +5,7 @@
             "Asset": {
                 "slug": "Asset",
                 "icon": "DesktopTowerMonitor",
-                "version": "0.4.1",
+                "version": "0.5.0",
                 "title": "Asset",
                 "description": "A company-owned item issued to employees (laptop, phone, vehicle, tool, accessPass, clothing, other): identity fields (serialNumber, licencePlate for vehicles), acquisition fields, and a guarded custody state machine (asset-management-mvp). A vehicle Asset additionally carries the fiscal facts (listPrice, fuelType, companyCarTaxCategory) the monthly bijtelling privegebruik auto calculation needs (hrmq-asset-fleet-merge, absorbed from the retired Vehicle schema): required exactly when category is vehicle, enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet (a schema-level conditional cannot express this: Schema::getSchemaObject() never emits allOf/if/then to the validator, design.md D2). No AssetHistoryEntry: OpenRegister's object audit trail already records every mutation.",
                 "type": "object",
@@ -181,7 +181,10 @@
                         "nullable": true,
                         "title": "Company car tax category",
                         "description": "Which company-car tax rate applies: the standard rate over the full catalogue value, or the reduced electric rate up to the cap with the standard rate above it.", "x-notes": "The fiscal classification selecting which nl-{year}.json bijtellingPrivegebruikAuto rate/cap row applies: standard = the flat standardPercent rate over the full listPrice; evReducedCapped = the reduced evReducedPercent rate up to evReducedCataloguswaardeCap, standardPercent on the excess (fleet-bijtelling design.md D3). Meaningful only for category vehicle. Enum append-only -- the hydrogen/fully-solar uncapped rate and grijs-kenteken/bestelauto regimes are named non-goals, not modelled by an enum value here yet."
-                    }
+                    },
+                    "make": {"type": "string", "nullable": true, "title": "Make", "description": "The make of a vehicle, as the vehicle register records it.", "x-notes": "people-register-prefill: filled from RDW merk by Fill from RDW when empty. Only for a vehicle."},
+                    "model": {"type": "string", "nullable": true, "title": "Model", "description": "The model of a vehicle, as the vehicle register records it.", "x-notes": "people-register-prefill: filled from RDW handelsbenaming when empty. Only for a vehicle."},
+                    "firstAdmissionDate": {"type": "string", "format": "date", "nullable": true, "title": "First admission date", "description": "The date the vehicle was first admitted to the road, which sets how long its company-car tax rate holds.", "x-notes": "people-register-prefill: filled from RDW datum_eerste_toelating when empty. Only for a vehicle."}
                 }
             },
             "AssetAssignment": {

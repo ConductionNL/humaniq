@@ -1152,7 +1152,7 @@
    "id": "ppl-brp-lookup",
    "area": "people",
    "name": "Fill in an employee's address and personal details from the population register.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -1168,10 +1168,12 @@
     "personio": "not checked: not settled: searched help centre for population register, BRP and address lookup; no article on filling personal details from a population register."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-register-prefill on 2026-09-27. Before: grep -rnie brp -e gba -e personsapi -e ingeschrevenpersonen lib/ src/manifest.d/ openspec/specs/ (excluding _lane): no hits anywhere in the repository",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Controller/RegisterPrefillController.php employee() behind POST /api/prefill/employee/{employeeId} (HR or admin; refuses with no-legal-basis unless the administration records hrAdministration.brpGrondslag) calls lib/Service/RegisterPrefillService.php employee(): Haal Centraal BRP Personen by BSN in a POST body through integriq with persistLog false (source prefill_brp_source), mapped by lib/Service/BrpPersonMapper.php onto name, date of birth and address; only empty fields are written, differences are listed. Tests: tests/Unit/Service/RegisterPrefillServiceTest.php, tests/Unit/Controller/RegisterPrefillControllerTest.php.",
+    "reachedOn": "EmployeeDetail /employees/:id header action Fill from BRP, shown only when the administration records a legal basis",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-people-register-prefill",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7893,7 +7895,7 @@
    "id": "dm-plate-lookup",
    "area": "expenses",
    "name": "Fill in a company car's make, first registration date and catalogue value from the vehicle register by entering its licence plate.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "no",
    "visma-raet": "yes",
    "hr2day": "partial",
@@ -7909,10 +7911,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'licen[cs]e.?plate|vehicle|catalog' src/plugins src/client/src: no match; no company car or vehicle data anywhere in the code"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-register-prefill on 2026-09-27. Before: lib/Settings/register.d/hr-assets.json:113 Asset.licencePlate is typed by hand next to catalogue value and fuel type; grep -rniE 'rdw|opendata' lib: no lookup",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Controller/RegisterPrefillController.php vehicle() behind POST /api/prefill/vehicle/{assetId} (HR or admin) calls lib/Service/RegisterPrefillService.php vehicle(): the RDW registered vehicles and fuel datasets by plate through integriq (lib/Service/RegisterLookupGateway.php, source in app config prefill_rdw_source, declared in lib/Settings/connections.json), mapped by lib/Service/RdwVehicleMapper.php onto Asset make, model, firstAdmissionDate, listPrice and fuelType; only empty fields are written, differences are listed. Tests: tests/Unit/Service/RegisterPrefillServiceTest.php (recorded RDW answer for GZS78Z), tests/Unit/Controller/RegisterPrefillControllerTest.php.",
+    "reachedOn": "AssetDetail /assets/:id header action Fill from RDW (vehicles only)",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-people-register-prefill",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

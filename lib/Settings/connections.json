@@ -1,0 +1,19 @@
+{
+    "app": "humaniq",
+    "connections": [
+        {
+            "key": "rdw-voertuigen",
+            "title": "Vehicle register (RDW)",
+            "description": "Fills a company car's make, model, first admission date, catalogue value and fuel type from its licence plate, through the RDW open data.",
+            "order": 10,
+            "requiredConfig": ["prefill_rdw_source"]
+        },
+        {
+            "key": "brp-personen",
+            "title": "Population register (BRP)",
+            "description": "Fills an employee's name, date of birth and address by BSN, for an employer that records a legal basis for it. The certificate stays with the credential broker.",
+            "order": 20,
+            "requiredConfig": ["prefill_brp_source"]
+        }
+    ]
+}

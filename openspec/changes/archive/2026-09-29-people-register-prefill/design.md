@@ -86,3 +86,38 @@ calls, and write through the caller's own OpenRegister rights.
 
 - Should an address difference from the BRP open a change request automatically? This
   design reports it and leaves the choice to HR.
+
+## Changes during the build (2026-09-29)
+
+- **Source per register in app config.** `connections.json` lists connections for integriq's
+  registry page; it does not say which integriq source to call. The source uuid is app config
+  `prefill_rdw_source` / `prefill_brp_source` (the `route_distance_source` precedent), and each
+  declaration names its key in `requiredConfig`. Without integriq the answer is 409
+  `skipped-no-integriq`; without a source, 409 `no-source`.
+- **Two RDW datasets.** Make, model, first admission and catalogue value come from the
+  registered vehicles dataset (`/resource/m9d7-ebf2.json`), the fuel from the fuel dataset
+  (`/resource/8ys7-d773.json`). Electricity plus a second fuel maps to `hybrid`. The unit test
+  uses the recorded open data answer for plate GZS78Z (read 2026-09-29).
+- **The BSN is kept by neither app.** The BRP is asked with a POST body
+  (`RaadpleegMetBurgerservicenummer`, fields naam, geboorte.datum, verblijfplaats) and
+  `persistLog: false`, so integriq writes no CallLog of it. The last name carries the prefix, the
+  house number its letter and addition, the postcode is written `1234 AB`.
+- **Visibility of Fill from BRP.** The manifest schema's `visibleWhen` has no "not empty"
+  operator (gate 53 refused `notEmpty`), so the action reads `GET /api/prefill/brp-available`,
+  which answers `available: true` for HR or an administrator whose active administration
+  records `brpGrondslag`. The employee endpoint still checks the employee's own administration
+  and refuses without a basis (403 `no-legal-basis`), sending nothing. Fill from RDW shows on
+  `category` vehicle.
+- **The save carries the stored record.** OpenRegister's `saveObject()` replaces the object
+  (missing properties are written as null), so the controller merges the stored record with
+  the filled fields before saving.
+- **Access and the write.** HR means `HumaniqRoles::isHr()` (the `humaniq-hr` group or an
+  administrator), which replaced the `PayrollController` precedent this design named. The record
+  is read under the caller's own rights; the filled fields are saved through the app's register
+  gateway, so the change-approval guard still runs: a filled field that an approval rule covers
+  is refused and the endpoint answers 409 with that rule's message.
+- **Differences are in the answer, not in the toast.** The nextcloud-vue `api-call` success
+  toast shows only its fixed `successMessage`, so the page says fields already filled were kept
+  and the `differs` list is in the JSON answer.
+- **Seed.** The existing vehicle seeds (`V-000-XX`, `V-001-XX`) have no make or model, which is
+  what the placeholder seed was for; no new seed.
