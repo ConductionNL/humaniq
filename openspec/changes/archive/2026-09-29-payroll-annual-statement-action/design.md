@@ -96,3 +96,14 @@ instance once the year is over, and the single action works on any seeded `Jaaro
 
 - Should the batch skip employees whose statement already has a PDF, or report them? This
   design reports them as already generated.
+
+## Changes during the build (2026-09-29)
+
+- The batch is allowed for HR **and payroll** (`HumaniqRoles::isHr()` or `isPayroll()`, both true
+  for an administrator). The `hr` role this design named became the `humaniq-hr` group in
+  compliance-roles-and-field-access, which also added `humaniq-payroll`; the payroll officer is
+  the natural owner of the January run.
+- The count is in the 202 response (`{year, queued}`). A manifest `api-call` toast has a fixed
+  text, so the page confirms the queue without the number.
+- `HrDocumentService::jaaropgaafEmployeeIds()` is the one place that lists a year's employees;
+  the backlog and the count both use it.

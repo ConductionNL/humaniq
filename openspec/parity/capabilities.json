@@ -3938,7 +3938,7 @@
    "id": "pay-annual-statement",
    "area": "payroll",
    "name": "Produce the annual statement of earnings for each employee.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -3954,10 +3954,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/31150544664989-The-income-tax-certificate is produced by Personio Payroll for Germany; for Dutch entities https://support.personio.de/hc/en-us/articles/35527377864861-Loket-Integration-Sync-payroll-documents fetches annual statements produced in Loket into Personio, so Personio does not produce the Dutch statement itself."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-annual-statement-action on 2026-09-27 for the missing half: generating the annual statement from its page; viewing is built. Before: src/manifest.d/hr-documents.json Jaaropgaven /jaaropgaven index + JaaropgaafDetail /jaaropgaven/:id show the aggregated per-employee annual totals; the note says the Jaaropgaaf record 'is a pure data aggregate upserted server-side by HrDocumentService', which is driven from lib/Command/DocumentsGenerateCommand.php --type jaaropgaaf; no page action triggers generation",
-    "reachedOn": "Jaaropgaven /jaaropgaven and JaaropgaafDetail /jaaropgaven/:id (view only, menu Payroll); generation is occ humaniq:documents:generate --type jaaropgaaf only, no page",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Controller/DocumentController.php generate() accepts documentType jaaropgaaf with a jaaropgaafId resolved under the caller's RBAC (404 otherwise) and calls HrDocumentService::generateJaaropgaaf(); queueJaaropgaven() behind POST /api/documents/jaaropgaven (HR or payroll, finished years only) queues lib/BackgroundJob/JaaropgaafYearJob.php, which runs the idempotent jaaropgaaf backlog. Tests: tests/Unit/Controller/DocumentControllerTest.php, tests/Unit/BackgroundJob/JaaropgaafYearJobTest.php.",
+    "reachedOn": "JaaropgaafDetail /jaaropgaven/:id header action Generate PDF; Jaaropgaven /jaaropgaven action Generate last year's statements (menu Payroll)",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-payroll-annual-statement-action",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
