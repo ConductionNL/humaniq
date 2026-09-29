@@ -5325,8 +5325,8 @@
    "built": {
     "state": "built",
     "change": "2026-09-29-people-record-change-approval",
-    "evidence": "Employee gains straat, huisnummer, postcode, woonplaats, land (hr-objects.json 0.9.0); My HR > My details (Employee index, base filter nextcloudUserId = @me) and My HR > My change requests (create form with the flat address and bank fields, employee filled from the account). An address change applies at once, a bank account change waits for HR. Tests: EmployeeChangeRequestFlowTest::testAnAddressChangeAppliesAtOnce, ::testABankAccountChangeWaitsForHrAndIsAppliedOnce.",
-    "reachedOn": "My HR > My details /my-details and My HR > My change requests /my-change-requests",
+    "evidence": "Employee gains straat, huisnummer, postcode, woonplaats, land (hr-objects.json 0.9.0); My HR > My details (Employee index, base filter nextcloudUserId = @me) and My HR > My change requests (a userId = @me preset on the ChangeRequests list; create form with the flat address and bank fields, employee filled from the account). An address change applies at once, a bank account change waits for HR. Tests: EmployeeChangeRequestFlowTest::testAnAddressChangeAppliesAtOnce, ::testABankAccountChangeWaitsForHrAndIsAppliedOnce.",
+    "reachedOn": "My HR > My details /my-details and My HR > My change requests (preset userId = @me on /change-requests)",
     "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },

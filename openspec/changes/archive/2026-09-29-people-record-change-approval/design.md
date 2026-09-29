@@ -100,9 +100,9 @@ All nullable; titles and descriptions follow gate 28.
   `requestedBy`), so the transition needs one `requires`.
 - `AvgDsrService::rectifySubjectObject()` now writes under `InternalWriteMarker`: an AVG
   rectification is an administrator's decided procedure and must not be sent to a request.
-- `MijnGegevens` is the Employee index with base filter `nextcloudUserId: @me`;
-  `MijnWijzigingsverzoeken` the request index with `userId: @me`, whose create form is the
-  self-service request.
+- `MijnGegevens` is the Employee index with base filter `nextcloudUserId: @me`. My change
+  requests is a menu preset (`userId: @me`) on `ChangeRequests`, not a second index over the
+  schema (gate 68, ADR-097 Decision 5); its create form is the self-service request.
 
 ## Declarative-vs-imperative decision (ADR-031)
 
