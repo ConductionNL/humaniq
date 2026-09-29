@@ -102,10 +102,15 @@ calls, and write through the caller's own OpenRegister rights.
   (`RaadpleegMetBurgerservicenummer`, fields naam, geboorte.datum, verblijfplaats) and
   `persistLog: false`, so integriq writes no CallLog of it. The last name carries the prefix, the
   house number its letter and addition, the postcode is written `1234 AB`.
-- **Visibility of Fill from BRP.** A header action's `visibleWhen` in source mode reads the
-  employee's `hrAdministration` by `administrationId` and shows the action only when
-  `brpGrondslag` is not empty; the endpoint refuses without it (403 `no-legal-basis`) and sends
-  nothing. Fill from RDW shows on `category` vehicle.
+- **Visibility of Fill from BRP.** The manifest schema's `visibleWhen` has no "not empty"
+  operator (gate 53 refused `notEmpty`), so the action reads `GET /api/prefill/brp-available`,
+  which answers `available: true` for HR or an administrator whose active administration
+  records `brpGrondslag`. The employee endpoint still checks the employee's own administration
+  and refuses without a basis (403 `no-legal-basis`), sending nothing. Fill from RDW shows on
+  `category` vehicle.
+- **The save carries the stored record.** OpenRegister's `saveObject()` replaces the object
+  (missing properties are written as null), so the controller merges the stored record with
+  the filled fields before saving.
 - **Access and the write.** HR means `HumaniqRoles::isHr()` (the `humaniq-hr` group or an
   administrator), which replaced the `PayrollController` precedent this design named. The record
   is read under the caller's own rights; the filled fields are saved through the app's register

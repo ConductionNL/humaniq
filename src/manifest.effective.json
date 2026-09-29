@@ -5158,15 +5158,10 @@
 						"type": "api-call",
 						"url": "/api/prefill/employee/@objectId",
 						"visibleWhen": {
-							"field": "brpGrondslag",
-							"op": "notEmpty",
-							"source": {
-								"filter": {
-									"administrationId": "@object.administrationId"
-								},
-								"register": "humaniq",
-								"schema": "hrAdministration"
-							}
+							"endpoint": "/apps/humaniq/api/prefill/brp-available",
+							"field": "available",
+							"op": "eq",
+							"value": true
 						}
 					}
 				],

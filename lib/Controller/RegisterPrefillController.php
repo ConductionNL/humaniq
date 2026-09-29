@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RbacObjectReader;
@@ -61,6 +62,7 @@ class RegisterPrefillController extends Controller {
 	 * @param RbacObjectReader       $rbac        Reads under the caller's own rights.
 	 * @param HumaniqRoles           $roles       The HR check.
 	 * @param IUserSession           $userSession The caller.
+	 * @param AdministrationService  $administrations The caller's active administration.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -69,6 +71,7 @@ class RegisterPrefillController extends Controller {
 		private readonly RbacObjectReader $rbac,
 		private readonly HumaniqRoles $roles,
 		private readonly IUserSession $userSession,
+		private readonly AdministrationService $administrations,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -127,6 +130,25 @@ class RegisterPrefillController extends Controller {
 	}//end employee()
 
 	/**
+	 * Whether Fill from BRP is offered to the caller: HR or an administrator
+	 * whose active administration records a legal basis. The header action's
+	 * visibleWhen reads it; the employee endpoint still checks the
+	 * employee's own administration.
+	 *
+	 * @return JSONResponse `{available: bool}`
+	 *
+	 * @spec openspec/specs/register-prefill/spec.md#REQ-RPF-002
+	 */
+	#[NoAdminRequired]
+	public function brpAvailable(): JSONResponse {
+		$uid = (string)($this->userSession->getUser()?->getUID() ?? '');
+		$available = $this->mayFill() === true
+			&& $this->hasBrpBasis((string)($this->administrations->getActiveAdministrationId($uid) ?? '')) === true;
+
+		return new JSONResponse(['available' => $available]);
+	}//end brpAvailable()
+
+	/**
 	 * Run the lookup and save what it filled.
 	 *
 	 * @param string   $schema   The schema slug.
@@ -146,7 +168,10 @@ class RegisterPrefillController extends Controller {
 
 		if ($result['filled'] !== []) {
 			try {
-				$this->gateway->save($result['filled'], $schema, $objectId);
+				// OpenRegister's save replaces the object, so the stored record is carried.
+				$stored = ($this->gateway->findObjectData($objectId, $schema) ?? []);
+				unset($stored['id'], $stored['@self']);
+				$this->gateway->save(array_merge($stored, $result['filled']), $schema, $objectId);
 			} catch (\Throwable $e) {
 				return new JSONResponse(['message' => $e->getMessage(), 'reason' => 'refused'], Http::STATUS_CONFLICT);
 			}
