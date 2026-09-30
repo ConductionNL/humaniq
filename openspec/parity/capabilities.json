@@ -1322,7 +1322,7 @@
    "id": "hir-multiposting",
    "area": "hiring",
    "name": "Post a vacancy to several job boards in one go.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -1338,17 +1338,19 @@
     "personio": "https://support.personio.de/hc/en-us/articles/115005416109-Promote-jobs-on-external-job-boards-via-multiposting: post a job on many paid and free job boards at once from within Personio, through the partner GoHiring."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-multiposting on 2026-09-27. Before: lib/Settings/register.d/hr-ats.json Vacancy description: 'no external multiposting (werk.nl/LinkedIn is an OpenConnector follow-up)'; grep -rniF multiposting lib/ src/manifest.d/ openspec/specs/: only this one disclaiming mention",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-ats.json: Vacancy.channels (the boards HR ticks) and postedToChannels; VacancyPosting (one per vacancy and board: te-plaatsen, geplaatst, mislukt, ingetrokken); two x-openregister-flows on Vacancy, Vacature plaatsen (object.updated, filter published and not yet posted, explode channels, route per board, integriq apply-mapping and source-call with onError continue, upsert the posting) and Vacature intrekken (closed: read live postings, DELETE on the board, mark ingetrokken). Both arrive disabled. Node configs checked with the real openregister and integriq classes. Tests: tests/Unit/Flow/VacancyMultipostingTest.php.",
+    "reachedOn": "Recruitment > Vacancies > a vacancy: Job boards on the data widget and the Job boards list; posts once an administrator enables the flows and configures a source per board in integriq",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-multiposting",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "recruiting-vacancies",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Named as a deliberate follow-up for integriq (the renamed OpenConnector), not built."
+   "note": "Posting runs through integriq (one source and mapping per board); the flows ship disabled per the engine adoption contract."
   },
   {
    "id": "hir-applicant-pipeline",

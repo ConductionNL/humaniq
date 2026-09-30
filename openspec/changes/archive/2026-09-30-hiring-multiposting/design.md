@@ -99,6 +99,43 @@ with `lastError` "no source configured". No credential or token appears in the s
 - [A board changes its API] → the mapping and source live in integriq, so the fix is
   connector configuration and not a humaniq release.
 
+## As built (2026-09-30)
+
+Read against openregister and integriq at `development` on 2026-09-30; every node config was
+validated with the real node classes and both graphs were built with openregister's real
+`FlowDefinitionBuilder` (`work/vmp/validate.php`, `work/vmp/build.php` in the lane directory).
+Three points of this design did not fit the engine as it is, and changed:
+
+- **D1, trigger.** `openregister.trigger-object` accepts only `object.created`, `object.updated`
+  and `object.deleted`; there is no trigger on a lifecycle transition. Both flows therefore fire
+  on `object.updated` of `Vacancy` and filter: `Vacature plaatsen` on `status` `gepubliceerd`,
+  boards ticked and `postedToChannels` not set; `Vacature intrekken` on `status` `gesloten` with
+  `postedToChannels` set. The posting flow sets `Vacancy.postedToChannels` before it posts, so a
+  later save of a published vacancy does not post it again. Clearing the flag posts it again,
+  and the postings are updated, not duplicated.
+- **D1 and D2, one source per step.** `openconnector.source-call` names its source in its own
+  config and does not template it. So the flow explodes `channels` into one item per board,
+  routes each item with `openregister.route` (per-item routing; `openregister.switch` decides on
+  the first item only) to a branch per shipped board (werk-nl, linkedin, indeed), and each branch
+  maps with `humaniq-vacancy-<code>` and calls source `<code>`. A code with no branch goes to the
+  `no-source` output and is written `mislukt` with "no source configured". A branch whose source
+  does not exist in integriq fails that step, so an administrator deletes the branch of a board
+  they do not use when adopting the flow (said in the flow description).
+- **D1, failures.** Each call runs with `onError: continue`; integriq then carries the error on
+  the item under `error`, and a second router writes `mislukt` with `error.message` or
+  `geplaatst` with the board's reference and link, read from the answer by the step's
+  `responseMapping` (`id` and `url`; an administrator adjusts them per board). The moment comes
+  from `openregister.set-fields` with the JsonLogic `now` operation, since the write step has no
+  clock. The request body is `{"vacancy": <mapped advert>}`: the source-call step sends an
+  object body as JSON and a whole-value placeholder cannot be the body itself.
+- **D3.** Posting writes upsert on `vacancyId` and `channel`. Withdrawal reads the vacancy's
+  `geplaatst` postings with `fanOut`, calls `DELETE /vacancies/{{ externalId }}` on the board's
+  source and updates the posting to `ingetrokken` with `withdrawnAt`; a refused withdrawal keeps
+  `geplaatst` and records the reason in `lastError`.
+- Register 0.44.0 (Vacancy 0.5.0 with `channels` and `postedToChannels`; VacancyPosting 0.1.0).
+  `VacancyDetail` shows `channels` in the data widget and a Job boards `object-list`.
+- Task 2.3 and 4.2 (a live run against a stub integriq source) are left open for the live check.
+
 ## Open Questions
 
 - Some boards pull an XML feed instead of accepting a push. Should the careers collection

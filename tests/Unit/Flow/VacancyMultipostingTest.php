@@ -16,9 +16,9 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hiring-multiposting/specs/vacancy-multiposting/spec.md#REQ-VMP-001
- * @spec openspec/changes/hiring-multiposting/specs/vacancy-multiposting/spec.md#REQ-VMP-002
- * @spec openspec/changes/hiring-multiposting/specs/vacancy-multiposting/spec.md#REQ-VMP-003
+ * @spec openspec/specs/vacancy-multiposting/spec.md#REQ-VMP-001
+ * @spec openspec/specs/vacancy-multiposting/spec.md#REQ-VMP-002
+ * @spec openspec/specs/vacancy-multiposting/spec.md#REQ-VMP-003
  */
 
 declare(strict_types=1);
