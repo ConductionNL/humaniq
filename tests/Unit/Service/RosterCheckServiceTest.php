@@ -184,6 +184,61 @@ class RosterCheckServiceTest extends TestCase {
 	}//end testCompliantRosterReportsNoViolations()
 
 	/**
+	 * Approved leave and open sick leave on an assignment's date are reported
+	 * in the same act as the working-time rules, as `leave` findings of their
+	 * own kind (REQ-ROST-C05): approved leave counts as mandatory, sick leave
+	 * as advisory, and neither carries the reason.
+	 *
+	 * @return void
+	 */
+	public function testLeaveOnARosteredDayIsReportedInTheSameCheck(): void {
+		$service = $this->serviceWithRows(
+			[
+				'Roster' => [
+					['id' => 'roster-ok', 'period' => '2026-W29', 'status' => 'concept'],
+				],
+				'RosterAssignment' => [
+					['id' => 'ra-leave', 'rosterId' => 'roster-ok', 'employeeId' => 'emp-2', 'shiftId' => 'shift-day', 'date' => '2026-07-20', 'plannedStart' => '2026-07-20T07:00:00', 'plannedEnd' => '2026-07-20T15:30:00', 'plannedBreakMinutes' => 30],
+					['id' => 'ra-sick', 'rosterId' => 'roster-ok', 'employeeId' => 'emp-3', 'shiftId' => 'shift-day', 'date' => '2026-07-21', 'plannedStart' => '2026-07-21T07:00:00', 'plannedEnd' => '2026-07-21T15:30:00', 'plannedBreakMinutes' => 30],
+				],
+				'Shift' => [],
+				'LeaveRequest' => [
+					['id' => 'lr-1', 'employeeId' => 'emp-2', 'status' => 'approved', 'startDate' => '2026-07-20', 'endDate' => '2026-07-24', 'reason' => 'Bruiloft'],
+				],
+				'SickLeaveCase' => [
+					['id' => 'sick-1', 'employeeId' => 'emp-3', 'status' => 'gemeld', 'firstSickDay' => '2026-07-19', 'absenceProgression' => 'griep'],
+				],
+			]
+		);
+
+		$report = $service->checkRoster('roster-ok');
+
+		$this->assertSame(2, $report['leaveFindings']);
+		$this->assertSame(1, $report['mandatoryViolations']);
+		$kinds = array_column($report['violations'], 'kind');
+		$this->assertSame(['leave', 'leave'], $kinds);
+		$this->assertSame(['ra-leave', 'ra-sick'], array_column($report['violations'], 'objectId'));
+		$serialised = (string)json_encode($report);
+		$this->assertStringNotContainsString('Bruiloft', $serialised);
+		$this->assertStringNotContainsString('griep', $serialised);
+
+	}//end testLeaveOnARosteredDayIsReportedInTheSameCheck()
+
+	/**
+	 * The report shapes that read nothing still carry the leave count, so a
+	 * caller never reads a missing key as zero by accident.
+	 *
+	 * @return void
+	 */
+	public function testEveryReportShapeCarriesTheLeaveCount(): void {
+		$service = $this->serviceWithRows(['Roster' => []]);
+
+		$this->assertSame(0, $service->checkRoster('roster-none')['leaveFindings']);
+		$this->assertSame(0, $service->checkRoster('')['leaveFindings']);
+
+	}//end testEveryReportShapeCarriesTheLeaveCount()
+
+	/**
 	 * An assignment missing its projected planned-clock fields is filled
 	 * in-memory from its referenced Shift for the purposes of the check
 	 * (design D2), so a max-werkdag breach is still detected.

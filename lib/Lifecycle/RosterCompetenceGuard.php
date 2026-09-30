@@ -9,9 +9,11 @@
  * itself is `RosterCheckService`'s, reused as is, so `occ humaniq:roster:check`
  * and this refusal can never disagree about who is qualified.
  *
- * Only `competence` findings refuse. Working-time findings stay a report: the
- * coordinator's decision on #512 covers the competence rule, not the
- * Arbeidstijdenwet ones.
+ * `competence` findings refuse, and so do `leave` findings for approved leave
+ * (REQ-ROST-C05, row pln-leave-in-roster): nobody is published onto a day they
+ * are on leave. Working-time findings and open sick leave stay a report: the
+ * decision on #512 covers the competence rule, not the Arbeidstijdenwet ones,
+ * and an open sick case has no end date to plan around.
  *
  * Fails closed: a roster without an id, an unresolvable register, or a roster
  * the check cannot find all deny rather than publish on a guess.
@@ -32,6 +34,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/specs/rostering/spec.md#REQ-ROST-C02
+ * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
  */
 
 declare(strict_types=1);
@@ -39,12 +42,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Lifecycle;
 
 use OCA\Humaniq\Service\CompetenceCheckService;
+use OCA\Humaniq\Service\LeaveConflictCheckService;
 use OCA\Humaniq\Service\RosterCheckService;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 
 /**
- * Denies publishing a roster that carries an unqualified assignment.
+ * Denies publishing a roster that carries an unqualified assignment, or one on approved leave.
  *
  * @spec openspec/specs/rostering/spec.md#REQ-ROST-C02
  */
@@ -102,24 +106,51 @@ final class RosterCompetenceGuard implements LifecycleGuardInterface {
 			return GuardResult::deny('Dit rooster is niet gevonden, dus de bevoegdheden kunnen niet worden gecontroleerd. Publiceren is geweigerd.');
 		}
 
-		$statements = [];
+		$competence = [];
+		$leave = [];
 		foreach (($report['violations'] ?? []) as $finding) {
-			if (($finding['kind'] ?? '') === CompetenceCheckService::FINDING_KIND) {
-				$statements[] = (string)($finding['statement'] ?? '');
+			$kind = ($finding['kind'] ?? '');
+			if ($kind === CompetenceCheckService::FINDING_KIND) {
+				$competence[] = (string)($finding['statement'] ?? '');
+			}
+
+			// Approved leave refuses (REQ-ROST-C05); open sick leave is advisory and only reports.
+			if ($kind === LeaveConflictCheckService::FINDING_KIND && ($finding['severity'] ?? '') === 'mandatory') {
+				$leave[] = (string)($finding['statement'] ?? '');
 			}
 		}
 
-		if ($statements === []) {
+		if ($competence === [] && $leave === []) {
 			return GuardResult::allow();
 		}
 
-		$message = 'Dit rooster kan niet worden gepubliceerd. Diensten zonder geldige bevoegdheid: '
-			. count($statements) . '. ' . implode(' ', array_slice($statements, 0, self::NAMED_FINDINGS));
-		if (count($statements) > self::NAMED_FINDINGS) {
+		$message = 'Dit rooster kan niet worden gepubliceerd.'
+			. $this->named(label: 'Diensten zonder geldige bevoegdheid', statements: $competence)
+			. $this->named(label: 'Diensten op een dag met goedgekeurd verlof', statements: $leave);
+		if (count($competence) > self::NAMED_FINDINGS || count($leave) > self::NAMED_FINDINGS) {
 			$message .= ' Voer occ humaniq:roster:check uit voor de volledige lijst.';
 		}
 
 		return GuardResult::deny($message);
 	}//end check()
+
+	/**
+	 * One part of the refusal: a count and the first few statements.
+	 *
+	 * @param string $label What the statements are.
+	 * @param array<int, string> $statements The finding statements.
+	 *
+	 * @return string The part, empty when there are none.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
+	 */
+	private function named(string $label, array $statements): string {
+		if ($statements === []) {
+			return '';
+		}
+
+		return ' ' . $label . ': ' . count($statements) . '. '
+			. implode(' ', array_slice($statements, 0, self::NAMED_FINDINGS));
+	}//end named()
 
 }//end class

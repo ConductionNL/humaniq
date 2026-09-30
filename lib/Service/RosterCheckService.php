@@ -69,12 +69,14 @@ class RosterCheckService {
 	 * @param IAppConfig $appConfig App config for the register slug.
 	 * @param LoggerInterface $logger Logger.
 	 * @param CompetenceCheckService $competences The competence cross-check (design D3).
+	 * @param LeaveConflictCheckService $leave The leave cross-check (design D10).
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly CompetenceCheckService $competences = new CompetenceCheckService(),
+		private readonly LeaveConflictCheckService $leave = new LeaveConflictCheckService(),
 	) {
 
 	}//end __construct()
@@ -211,6 +213,7 @@ class RosterCheckService {
 			'violations' => [],
 			'mandatoryViolations' => 0,
 			'competenceFindings' => 0,
+			'leaveFindings' => 0,
 			'registerResolved' => true,
 		];
 
@@ -257,8 +260,42 @@ class RosterCheckService {
 			}
 		}
 
+		foreach ($this->leaveFindings(assignments: $projected, register: $register) as $finding) {
+			$report['violations'][] = $finding;
+			++$report['leaveFindings'];
+			if (($finding['severity'] ?? '') === 'mandatory') {
+				$report['mandatoryViolations']++;
+			}
+		}
+
 		return $report;
 	}//end evaluateRosters()
+
+	/**
+	 * The leave cross-check (REQ-ROST-C05), in the same act as the other two.
+	 *
+	 * Never-throw: leave that cannot be read costs its own findings and
+	 * nothing else, like the competence cross-check.
+	 *
+	 * @param array<int, array<string, mixed>> $assignments The projected assignments.
+	 * @param string $register The resolved register slug.
+	 *
+	 * @return array<int, array<string, mixed>> The leave findings.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
+	 */
+	private function leaveFindings(array $assignments, string $register): array {
+		try {
+			return $this->leave->findings(
+				assignments: $assignments,
+				leaveRequests: $this->loadAll('LeaveRequest', $register),
+				sickLeaveCases: $this->loadAll('SickLeaveCase', $register)
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('humaniq: the leave cross-check could not run: ' . $e->getMessage());
+			return [];
+		}
+	}//end leaveFindings()
 
 	/**
 	 * The zero-result report shape: the register WAS read, and it held no
@@ -280,6 +317,7 @@ class RosterCheckService {
 			'violations' => [],
 			'mandatoryViolations' => 0,
 			'competenceFindings' => 0,
+			'leaveFindings' => 0,
 			'registerResolved' => true,
 		];
 
@@ -308,6 +346,7 @@ class RosterCheckService {
 			'violations' => [],
 			'mandatoryViolations' => 0,
 			'competenceFindings' => 0,
+			'leaveFindings' => 0,
 			'registerResolved' => false,
 			'error' => $message,
 		];
