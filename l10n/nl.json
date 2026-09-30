@@ -3169,7 +3169,20 @@
         "Overtime to take off": "Overwerk als vrije tijd",
         "Overtime hours, with the surcharge, that go to the time-off-in-lieu balance when the payroll run is approved.": "Overuren, met toeslag, die naar het compensatieverlof gaan als de verloning is goedgekeurd.",
         "Overtime credited at": "Overwerk bijgeschreven op",
-        "When the overtime to take off was added to the time-off-in-lieu balance.": "Wanneer het overwerk als vrije tijd is bijgeschreven op het compensatieverlof."
+        "When the overtime to take off was added to the time-off-in-lieu balance.": "Wanneer het overwerk als vrije tijd is bijgeschreven op het compensatieverlof.",
+        "What this leave costs": "Wat dit verlof kost",
+        "Worked out from": "Berekend op basis van",
+        "No dates on this request yet.": "Deze aanvraag heeft nog geen data.",
+        "Day by day": "Per dag",
+        "Day": "Dag",
+        "Day off": "Vrije dag",
+        "Weekend": "Weekend",
+        "Working day, contract average": "Werkdag, gemiddelde uit het contract",
+        "Working day": "Werkdag",
+        "Hours entered on the request": "Uren ingevuld op de aanvraag",
+        "Working pattern and public holidays": "Werkpatroon en feestdagen",
+        "Working pattern; public holidays could not be checked": "Werkpatroon; feestdagen konden niet worden gecontroleerd",
+        "Contract hours, spread over five days": "Contracturen, verdeeld over vijf dagen"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

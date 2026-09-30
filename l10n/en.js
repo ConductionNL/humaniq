@@ -3170,7 +3170,20 @@ OC.L10N.register(
         "Overtime to take off": "Overtime to take off",
         "Overtime hours, with the surcharge, that go to the time-off-in-lieu balance when the payroll run is approved.": "Overtime hours, with the surcharge, that go to the time-off-in-lieu balance when the payroll run is approved.",
         "Overtime credited at": "Overtime credited at",
-        "When the overtime to take off was added to the time-off-in-lieu balance.": "When the overtime to take off was added to the time-off-in-lieu balance."
+        "When the overtime to take off was added to the time-off-in-lieu balance.": "When the overtime to take off was added to the time-off-in-lieu balance.",
+        "What this leave costs": "What this leave costs",
+        "Worked out from": "Worked out from",
+        "No dates on this request yet.": "No dates on this request yet.",
+        "Day by day": "Day by day",
+        "Day": "Day",
+        "Day off": "Day off",
+        "Weekend": "Weekend",
+        "Working day, contract average": "Working day, contract average",
+        "Working day": "Working day",
+        "Hours entered on the request": "Hours entered on the request",
+        "Working pattern and public holidays": "Working pattern and public holidays",
+        "Working pattern; public holidays could not be checked": "Working pattern; public holidays could not be checked",
+        "Contract hours, spread over five days": "Contract hours, spread over five days"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -42,6 +42,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use DateTimeImmutable;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -68,12 +69,14 @@ class LeaveBalanceProjectionService {
 	 * @param SettingsService $settingsService Register slug source.
 	 * @param LoggerInterface $logger Logger.
 	 * @param LeaveTypeResolver $leaveTypes Resolves the request's administered leave type.
+	 * @param WorkingCalendarReader|null $calendar openregister's working calendar, for the feestdagen a leave day does not cost.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
 		private readonly LeaveTypeResolver $leaveTypes = new LeaveTypeResolver(),
+		private readonly ?WorkingCalendarReader $calendar = null,
 	) {
 
 	}//end __construct()
@@ -114,13 +117,15 @@ class LeaveBalanceProjectionService {
 			return;
 		}
 
+		$allRequests = $this->loadAll('LeaveRequest');
 		$this->recompute(
 			employeeId: $employeeId,
 			leaveType: $leaveType,
-			allRequests: $this->loadAll('LeaveRequest'),
+			allRequests: $allRequests,
 			allBalances: $this->loadAll('LeaveBalance'),
 			type: $this->resolveLeaveType($request),
-			today: ($today ?? date('Y-m-d'))
+			today: ($today ?? date('Y-m-d')),
+			workingTime: $this->workingTime(requests: $allRequests)
 		);
 
 	}//end projectForRequest()
@@ -141,6 +146,7 @@ class LeaveBalanceProjectionService {
 		// loadAll answers an empty list on a read failure, and no type means
 		// "draws from the balance", as before types existed.
 		$types = $this->loadAll('LeaveType');
+		$workingTime = $this->workingTime(requests: $allRequests);
 
 		$groups = [];
 		foreach ($allBalances as $balance) {
@@ -165,7 +171,8 @@ class LeaveBalanceProjectionService {
 				allRequests: $allRequests,
 				allBalances: $allBalances,
 				type: $type,
-				today: $today
+				today: $today,
+				workingTime: $workingTime
 			);
 		}
 
@@ -185,6 +192,7 @@ class LeaveBalanceProjectionService {
 	 * @param array<int, array<string, mixed>> $allBalances Every LeaveBalance.
 	 * @param array<string, mixed>|null $type The administered LeaveType.
 	 * @param string $today The date lapses are measured on.
+	 * @param array<string, mixed>|null $workingTime Patterns, non-working times and calendar dates, loaded once per projection.
 	 *
 	 * @return int The number of balances written.
 	 *
@@ -196,7 +204,8 @@ class LeaveBalanceProjectionService {
 		array $allRequests,
 		array $allBalances,
 		?array $type,
-		string $today
+		string $today,
+		?array $workingTime = null
 	): int {
 		$balances = [];
 		foreach ($allBalances as $balance) {
@@ -215,7 +224,7 @@ class LeaveBalanceProjectionService {
 		$calculator = new LeaveAllocationCalculator();
 		$allocation = $calculator->allocate(
 			balances: $balances,
-			uses: $this->usesOf(calculator: $calculator, requests: $allRequests, balances: $balances, employeeId: $employeeId, leaveType: $leaveType),
+			uses: $this->usesOf(calculator: $calculator, requests: $allRequests, balances: $balances, employeeId: $employeeId, leaveType: $leaveType, workingTime: $workingTime),
 			leaveType: $type,
 			today: $today
 		);
@@ -240,11 +249,12 @@ class LeaveBalanceProjectionService {
 	 * @param array<int, array<string, mixed>> $balances The employee's balances of this type.
 	 * @param string $employeeId The employee.
 	 * @param string $leaveType The leave type.
+	 * @param array<string, mixed>|null $workingTime The working time, or null.
 	 *
 	 * @return array<int, array{date: string, year: int, hours: float}>
 	 */
-	private function usesOf(LeaveAllocationCalculator $calculator, array $requests, array $balances, string $employeeId, string $leaveType): array {
-		$found = $calculator->usesFrom(requests: $requests, balances: $balances, employeeId: $employeeId, leaveType: $leaveType);
+	private function usesOf(LeaveAllocationCalculator $calculator, array $requests, array $balances, string $employeeId, string $leaveType, ?array $workingTime): array {
+		$found = $calculator->usesFrom(requests: $requests, balances: $balances, employeeId: $employeeId, leaveType: $leaveType, workingTime: $workingTime);
 		if ($found['underivable'] !== []) {
 			$this->logger->warning(
 				sprintf(
@@ -259,6 +269,51 @@ class LeaveBalanceProjectionService {
 
 		return $found['uses'];
 	}//end usesOf()
+
+	/**
+	 * Everyone's working patterns and non-working times, and the dates
+	 * openregister's working calendar marks non-working over the span of the
+	 * requests, read once per projection. An unread calendar is logged once,
+	 * and every cost then says `pattern-only` (leave-hours-from-the-working-pattern D3).
+	 *
+	 * @param array<int, array<string, mixed>> $requests The LeaveRequests in scope.
+	 *
+	 * @return array{patterns: array<int, array<string, mixed>>, nonWorkingTimes: array<int, array<string, mixed>>, nonWorkingDates: array<int, string>|null}
+	 *
+	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-001
+	 */
+	private function workingTime(array $requests): array {
+		$first = null;
+		$last = null;
+		foreach ($requests as $request) {
+			$start = substr((string)($request['startDate'] ?? ''), 0, 10);
+			$end = substr((string)($request['endDate'] ?? $start), 0, 10);
+			if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $start) !== 1) {
+				continue;
+			}
+
+			$first = min($first ?? $start, $start);
+			$last = max($last ?? $end, $end, $start);
+		}
+
+		$dates = null;
+		if ($this->calendar !== null && $first !== null) {
+			$answer = $this->calendar->nonWorkingDates(new DateTimeImmutable($first), new DateTimeImmutable((string)$last));
+			$dates = $answer['dates'];
+			if ($dates === null) {
+				$this->logger->notice(
+					'humaniq: the working calendar could not be read (' . (string)($answer['reason'] ?? 'unknown')
+					. '), so leave days were costed from the working pattern alone.'
+				);
+			}
+		}
+
+		return [
+			'patterns' => $this->loadAll('WorkingPattern'),
+			'nonWorkingTimes' => $this->loadAll('NonWorkingTime'),
+			'nonWorkingDates' => $dates,
+		];
+	}//end workingTime()
 
 	/**
 	 * The administered `LeaveType` a request means, or null when none is

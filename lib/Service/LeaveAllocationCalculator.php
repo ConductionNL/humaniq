@@ -181,13 +181,15 @@ class LeaveAllocationCalculator {
 	 * @param array<int, array<string, mixed>> $requests   Every LeaveRequest.
 	 * @param array<int, array<string, mixed>> $balances   The employee's balances of this type.
 	 * @param string                           $employeeId The employee.
-	 * @param string                           $leaveType  The leave type.
+	 * @param string                           $leaveType   The leave type.
+	 * @param array<string, mixed>|null        $workingTime patterns, nonWorkingTimes and nonWorkingDates, to cost each day from the person's working time; null for the contract average.
 	 *
 	 * @return array{uses: array<int, array{date: string, year: int, hours: float}>, underivable: array<int, string>}
 	 *
 	 * @spec openspec/specs/leave-expiry-and-carry-over/spec.md#Requirement:-Leave-taken-SHALL-draw-from-the-hours-that-lapse-first-(REQ-LEX-001)
+	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-001
 	 */
-	public function usesFrom(array $requests, array $balances, string $employeeId, string $leaveType): array {
+	public function usesFrom(array $requests, array $balances, string $employeeId, string $leaveType, ?array $workingTime = null): array {
 		$contractHours = [];
 		foreach ($balances as $balance) {
 			if (($balance['contractHoursPerWeek'] ?? null) !== null) {
@@ -205,7 +207,7 @@ class LeaveAllocationCalculator {
 				continue;
 			}
 
-			foreach ($this->requestUses(request: $request, contractHours: $contractHours) as $use) {
+			foreach ($this->requestUses(request: $request, contractHours: $contractHours, workingTime: $workingTime) as $use) {
 				if ($use === null) {
 					$underivable[] = (string)($request['id'] ?? ($request['@self']['id'] ?? 'unknown'));
 					continue;
@@ -223,10 +225,11 @@ class LeaveAllocationCalculator {
 	 *
 	 * @param array<string, mixed> $request       The LeaveRequest.
 	 * @param array<int, float>    $contractHours Contract hours per week by balance year.
+	 * @param array<string, mixed>|null $workingTime The person's working time, or null.
 	 *
 	 * @return array<int, array{date: string, year: int, hours: float}|null>
 	 */
-	private function requestUses(array $request, array $contractHours): array {
+	private function requestUses(array $request, array $contractHours, ?array $workingTime): array {
 		$start = substr((string)($request['startDate'] ?? ''), 0, 10);
 		$startYear = (int)substr($start, 0, 4);
 		$endYear = max($startYear, (int)substr((string)($request['endDate'] ?? ''), 0, 4));
@@ -236,7 +239,7 @@ class LeaveAllocationCalculator {
 		// class free of static access.
 		$requestHours = [LeaveHoursCalculator::class, 'requestHours'];
 		for ($year = $startYear; $startYear > 0 && $year <= $endYear; $year++) {
-			$resolved = $requestHours($request, ($contractHours[$year] ?? null), $year);
+			$resolved = $requestHours($request, ($contractHours[$year] ?? null), $year, $workingTime);
 			if ($resolved['derivable'] === false) {
 				$out[] = null;
 				continue;

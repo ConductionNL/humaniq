@@ -638,6 +638,59 @@
             {
                 "@self": {
                     "register": "humaniq",
+                    "schema": "WorkingPattern",
+                    "slug": "workingpattern-devries-2026"
+                },
+                "employeeId": "@ref:employee-devries",
+                "validFrom": "2026-01-01",
+                "hoursMonday": 8,
+                "hoursTuesday": 8,
+                "hoursWednesday": 8,
+                "hoursThursday": 8,
+                "hoursFriday": 0,
+                "hoursSaturday": 0,
+                "hoursSunday": 0,
+                "note": "Werkt maandag tot en met donderdag (leave-hours-from-the-working-pattern seed)."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveRequest",
+                    "slug": "leave-devries-donderdag-vrijdag"
+                },
+                "employeeId": "@ref:employee-devries",
+                "leaveType": "holiday",
+                "startDate": "2026-10-08",
+                "endDate": "2026-10-09",
+                "reason": "Lang weekend.",
+                "status": "approved",
+                "submittedAt": "2026-09-01T09:00:00Z",
+                "approvedBy": "admin",
+                "approvedAt": "2026-09-02T10:00:00Z",
+                "administrationId": "ADM-001",
+                "_note": "leave-hours-from-the-working-pattern: no hours entered, so the cost comes from the pattern: Thursday 8 hours, Friday is her free day, 8 hours in all (the contract average would have said 12.8)."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveRequest",
+                    "slug": "leave-devries-pasen"
+                },
+                "employeeId": "@ref:employee-devries",
+                "leaveType": "holiday",
+                "startDate": "2026-04-06",
+                "endDate": "2026-04-07",
+                "reason": "Paasdagen.",
+                "status": "approved",
+                "submittedAt": "2026-03-01T09:00:00Z",
+                "approvedBy": "admin",
+                "approvedAt": "2026-03-02T10:00:00Z",
+                "administrationId": "ADM-001",
+                "_note": "leave-hours-from-the-working-pattern: Easter Monday 2026-04-06 costs nothing when openregister's working calendar marks it non-working, so the request costs 8 hours; with the calendar unread it says pattern-only and costs 16."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
                     "schema": "LeaveBalance",
                     "slug": "leavebalance-jansen-2026-holiday"
                 },
