@@ -55,6 +55,7 @@ use OCA\Humaniq\Listener\RegisterHoursLeafListener;
 use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
 use OCA\Humaniq\Listener\RightToWorkCheckListener;
 use OCA\Humaniq\Listener\ScenarioMutationListener;
+use OCA\Humaniq\Listener\ExitInterviewListener;
 use OCA\Humaniq\Listener\RelationsCaseListener;
 use OCA\Humaniq\Listener\SideActivityListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
@@ -479,6 +480,7 @@ class Application extends App implements IBootstrap {
 		$this->registerDossierListeners($dispatcher);
 		$this->registerSideActivityListeners($dispatcher);
 		$this->registerRelationsCaseListeners($dispatcher);
+		$this->registerExitInterviewListeners($dispatcher);
 		$this->registerScenarioMutationListener($dispatcher);
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
@@ -793,6 +795,30 @@ class Application extends App implements IBootstrap {
 		}
 
 	}//end registerRelationsCaseListeners()
+
+	/**
+	 * hiring-offboarding-completion D1: an exit interview takes its leaver,
+	 * administration and department from its case before it is created, and
+	 * stamps the case's exit interview date after.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-001
+	 */
+	private function registerExitInterviewListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectCreatedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: ExitInterviewListener::class,
+				registers: null,
+				schemas: [ExitInterviewListener::SLUG]
+			);
+		}
+
+	}//end registerExitInterviewListeners()
 
 	/**
 	 * self-service-approvals-inbox D1 and D2: a deputy record is judged before

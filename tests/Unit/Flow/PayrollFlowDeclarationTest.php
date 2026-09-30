@@ -31,10 +31,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Flow;
 
 use OCA\Humaniq\Flow\HumaniqFlowNodeListener;
+use OCA\Humaniq\Flow\AnonymiseExitInterviewsNode;
 use OCA\Humaniq\Flow\PayrollApproveNode;
 use OCA\Humaniq\Flow\PayrollCalculateNode;
 use OCA\Humaniq\Flow\PayrollGlPostNode;
 use OCA\Humaniq\Flow\PayrollNetPayNode;
+use OCA\Humaniq\Flow\RevokeAccessNode;
+use OCA\Humaniq\Service\AccessRevocationService;
+use OCA\Humaniq\Service\ExitInterviewService;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\PayrollRunService;
@@ -101,6 +105,8 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 				PayrollApproveNode::class => new PayrollApproveNode(...$common),
 				PayrollGlPostNode::class => new PayrollGlPostNode(...array_merge($common, [$this->createMock(PayrollGLPostService::class)])),
 				PayrollNetPayNode::class => new PayrollNetPayNode(...array_merge($common, [$this->createMock(PayrollNetPayService::class)])),
+				RevokeAccessNode::class => new RevokeAccessNode($this->l10n(), $this->urls(), $this->createMock(AccessRevocationService::class)),
+				AnonymiseExitInterviewsNode::class => new AnonymiseExitInterviewsNode($this->l10n(), $this->urls(), $this->createMock(ExitInterviewService::class)),
 				default => throw new RuntimeException('Unlisted node class ' . $nodeClass . ' — extend this map.'),
 			};
 			$ids[] = $node->getId();
@@ -142,6 +148,11 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 		);
 
 		foreach ($this->registeredIds() as $id) {
+			// The offboarding steps belong to their own flows (OffboardingFlowNodesTest).
+			if (str_starts_with($id, 'humaniq.payroll-') === false) {
+				continue;
+			}
+
 			$this->assertContains($id, $types, 'Registered node ' . $id . ' is unused by the shipped flow');
 		}
 	}//end testAllContributedNodesAreUsed()

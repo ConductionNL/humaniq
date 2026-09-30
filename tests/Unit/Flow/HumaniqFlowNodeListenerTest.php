@@ -24,10 +24,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Flow;
 
 use OCA\Humaniq\Flow\HumaniqFlowNodeListener;
+use OCA\Humaniq\Flow\AnonymiseExitInterviewsNode;
 use OCA\Humaniq\Flow\PayrollApproveNode;
 use OCA\Humaniq\Flow\PayrollCalculateNode;
 use OCA\Humaniq\Flow\PayrollGlPostNode;
 use OCA\Humaniq\Flow\PayrollNetPayNode;
+use OCA\Humaniq\Flow\RevokeAccessNode;
+use OCA\Humaniq\Service\AccessRevocationService;
+use OCA\Humaniq\Service\ExitInterviewService;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\PayrollRunService;
@@ -64,6 +68,8 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 			PayrollApproveNode::class => new PayrollApproveNode(...$common),
 			PayrollGlPostNode::class => new PayrollGlPostNode(...array_merge($common, [$this->createMock(PayrollGLPostService::class)])),
 			PayrollNetPayNode::class => new PayrollNetPayNode(...array_merge($common, [$this->createMock(PayrollNetPayService::class)])),
+			RevokeAccessNode::class => new RevokeAccessNode($this->l10n(), $this->urls(), $this->createMock(AccessRevocationService::class)),
+			AnonymiseExitInterviewsNode::class => new AnonymiseExitInterviewsNode($this->l10n(), $this->urls(), $this->createMock(ExitInterviewService::class)),
 			default => throw new RuntimeException('Unexpected node class ' . $nodeClass),
 		};
 	}//end buildNode()
@@ -106,7 +112,7 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 	}//end capturingEvent()
 
 	/**
-	 * All four payroll nodes land on the registry under their ids.
+	 * All six nodes (four payroll, two offboarding) land on the registry under their ids.
 	 *
 	 * @return void
 	 */
@@ -124,6 +130,8 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 				'humaniq.payroll-approve',
 				'humaniq.payroll-glpost',
 				'humaniq.payroll-netpay',
+				'humaniq.revoke-access',
+				'humaniq.anonymise-exit-interviews',
 			],
 			$event->registered
 		);
@@ -151,7 +159,7 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 		$listener->handle($event);
 
 		$this->assertNotContains('humaniq.payroll-approve', $event->registered);
-		$this->assertCount(3, $event->registered);
+		$this->assertCount(5, $event->registered);
 	}//end testBrokenNodeIsSkippedNotFatal()
 
 }//end class
