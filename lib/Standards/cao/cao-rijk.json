@@ -43,8 +43,9 @@
   "allowances": {
     "value": {
       "ikb": {
+        "kind": "percentage-of-wage",
         "pct": 16.5,
-        "minEuroPerMonth": 452,
+        "minAmountCents": 45200,
         "ikbUrenPerJaar": 64
       }
     },

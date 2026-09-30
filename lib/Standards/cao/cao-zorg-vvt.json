@@ -35,19 +35,65 @@
   "allowances": {
     "value": {
       "ort": {
-        "weekdagNacht0006of2224": {
-          "pctFrom": 44,
-          "pctTo": 47,
-          "effectiveDate": "2026-01-01"
-        },
-        "zaterdag0006of2224": {
-          "pctFrom": 49,
-          "pctTo": 52,
-          "effectiveDate": "2026-01-01"
-        }
+        "kind": "hourly-surcharge",
+        "windows": [
+          {
+            "label": "weekdagNacht0006",
+            "days": [
+              "monday",
+              "tuesday",
+              "wednesday",
+              "thursday",
+              "friday"
+            ],
+            "from": "00:00",
+            "to": "06:00",
+            "pct": 47,
+            "pctFrom": 44,
+            "effectiveDate": "2026-01-01"
+          },
+          {
+            "label": "weekdagNacht2224",
+            "days": [
+              "monday",
+              "tuesday",
+              "wednesday",
+              "thursday",
+              "friday"
+            ],
+            "from": "22:00",
+            "to": "24:00",
+            "pct": 47,
+            "pctFrom": 44,
+            "effectiveDate": "2026-01-01"
+          },
+          {
+            "label": "zaterdag0006",
+            "days": [
+              "saturday"
+            ],
+            "from": "00:00",
+            "to": "06:00",
+            "pct": 52,
+            "pctFrom": 49,
+            "effectiveDate": "2026-01-01"
+          },
+          {
+            "label": "zaterdag2224",
+            "days": [
+              "saturday"
+            ],
+            "from": "22:00",
+            "to": "24:00",
+            "pct": 52,
+            "pctFrom": 49,
+            "effectiveDate": "2026-01-01"
+          }
+        ],
+        "holidayPct": null
       }
     },
-    "source": "Directly fetched, confirmed 2026 change: actiz.nl 'CAO VVT, hoofdstuk 4.4 Onregelmatig werken en de vergoeding die je daarvoor ontvangt' states the onregelmatigheidstoeslag (ORT) rose per 1 January 2026 — weekdag-nacht 00:00-06:00/22:00-24:00 from 44% to 47%, zaterdag 00:00-06:00/22:00-24:00 from 49% to 52%. Kept placeholder despite this confirmed citation because the full day/time/holiday/regeling-A-vs-B stacking matrix was not transcribed in this pass (design.md Named gap 2) — a real, cited fact is not the same as a complete, verifiable leaf. Display-only: no check, resolver, or payroll-calculator hook applies these rates to an actual worked shift.",
+    "source": "Directly fetched, confirmed 2026 change: actiz.nl 'CAO VVT, hoofdstuk 4.4 Onregelmatig werken en de vergoeding die je daarvoor ontvangt' states the onregelmatigheidstoeslag (ORT) rose per 1 January 2026 — weekdag-nacht 00:00-06:00/22:00-24:00 from 44% to 47%, zaterdag 00:00-06:00/22:00-24:00 from 49% to 52%. Kept placeholder despite this confirmed citation because the full day/time/holiday/regeling-A-vs-B stacking matrix was not transcribed in this pass (design.md Named gap 2) — a real, cited fact is not the same as a complete, verifiable leaf. The windows carry the 2026 rate as pct and the earlier one as pctFrom; the leaf stays a placeholder, so the run pays them only through a contract override with a reason (payroll-cao-components).",
     "verified": false,
     "placeholder": true,
     "checkAgainst": "actiz.nl CAO VVT tekst, hoofdstuk 4.4 Onregelmatig werken en de vergoeding die je daarvoor ontvangt"

@@ -157,6 +157,22 @@ class EmploymentTermsResolver {
 	}//end resolveOvertimeToeslag()
 
 	/**
+	 * The CAO components a contract names, resolved (payroll-cao-components
+	 * D2); see CaoComponentTerms.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract as an array.
+	 *
+	 * @return array{components: list<array<string, mixed>>, unresolved: list<string>, unknown: list<string>}
+	 *
+	 * @throws InvalidArgumentException When an override has no reason or is below the agreement.
+	 *
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-002
+	 */
+	public function resolveComponents(array $contract): array {
+		return (new CaoComponentTerms())->resolve(contract: $contract);
+	}//end resolveComponents()
+
+	/**
 	 * Resolve the full-time vakantiedagen entitlement for one contract.
 	 *
 	 * Statutory minimums are NOT applied here — `nl-verlof-wettelijk-minimum`

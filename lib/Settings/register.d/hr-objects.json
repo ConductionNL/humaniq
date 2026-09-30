@@ -68,7 +68,7 @@
             "EmploymentContract": {
                 "slug": "EmploymentContract",
                 "icon": "FileSign",
-                "version": "0.11.0",
+                "version": "0.12.0",
                 "title": "Employment Contract",
                 "description": "An employment agreement between the organisation and an employee. Carries the contract attributes the payroll checks read (permanent/temporary type that drives the Awf low/high premium, contracted hours, CAO, minimum-wage hourly basis).",
                 "type": "object",
@@ -107,13 +107,16 @@
                     "bpvSchoolNaam": {"type": "string", "nullable": true, "title": "Vocational placement school", "description": "The school that is party to the work-placement agreement.", "x-notes": "NL: for a type: bbl contract, the name of the onderwijsinstelling (ROC/vakschool) party to the BPV-/praktijkleerovereenkomst. Informational; null/absent for every non-bbl contract type."},
                     "uitzendFase": {"type": "string", "enum": ["A", "B", "C"], "x-enum-labels": {"A": "Phase A", "B": "Phase B", "C": "Phase C"}, "nullable": true, "title": "Agency phase", "description": "The agency phase (A, B or C) of this temporary-work contract. Only for agency contracts; set it by hand.", "x-notes": "NL: de ABU/NBBU-fasensysteemfase (A/B/C) van deze uitzendovereenkomst -- alleen zinvol op een uitzendcontract (type 'agency'). Door HR ingevoerd, niet afgeleid uit een gewerkte-weken-telling (uitzend-flexpool D2). Fase A is de flexibele beginfase waarin het uitzendbeding (uitzendbedingVanToepassing) rechtsgeldig kan gelden (BW art. 7:691 lid 2); in fase B/C geldt het uitzendbeding niet meer. Gelezen door nl-uitzendbeding-alleen-fase-a. Null wanneer geen fase is vastgelegd."},
                     "uitzendbedingVanToepassing": {"type": "boolean", "nullable": true, "title": "Agency clause applies", "description": "The agency clause applies, so the contract ends by law as soon as the hirer ends the placement. Only possible in phase A.", "x-notes": "NL: of het uitzendbeding (BW art. 7:691 lid 2) op deze uitzendovereenkomst van toepassing is -- het beding dat de uitzendovereenkomst van rechtswege doet eindigen zodra de inlener de terbeschikkingstelling beeindigt. Door HR ingevoerd, alleen zinvol op een uitzendcontract (type 'agency'). Is dit true, dan moet uitzendFase gelijk zijn aan A (nl-uitzendbeding-alleen-fase-a); het beding is juridisch niet houdbaar zodra de kracht fase A voorbij is. Null wanneer niet vastgelegd."},
-                    "inlenersbeloningReferentie": {"type": "string", "nullable": true, "title": "Hirer's pay reference", "description": "Note how the hourly wage was matched to what a comparable employee at the hirer would earn.", "x-notes": "NL: vrije-tekstverwijzing naar de onderbouwing van het uurloon tegen de inlenersbeloning -- de beloning die een vergelijkbare werknemer in een gelijke functie bij de inlener zou ontvangen (WAADI art. 8). Een audittrail-veld (dezelfde vertrouwensgrens als Loonbeslag.beslagvrijeVoet), geen berekende handhaving: alleen de aanwezigheid wordt getoetst, niet de juistheid van het bedrag. Op een uitzendcontract (type 'agency') met een ingevuld hourlyWage moet dit veld gevuld zijn (nl-inlenersbeloning-onderbouwing-vereist). Null wanneer geen onderbouwing is vastgelegd."}
+                    "inlenersbeloningReferentie": {"type": "string", "nullable": true, "title": "Hirer's pay reference", "description": "Note how the hourly wage was matched to what a comparable employee at the hirer would earn.", "x-notes": "NL: vrije-tekstverwijzing naar de onderbouwing van het uurloon tegen de inlenersbeloning -- de beloning die een vergelijkbare werknemer in een gelijke functie bij de inlener zou ontvangen (WAADI art. 8). Een audittrail-veld (dezelfde vertrouwensgrens als Loonbeslag.beslagvrijeVoet), geen berekende handhaving: alleen de aanwezigheid wordt getoetst, niet de juistheid van het bedrag. Op een uitzendcontract (type 'agency') met een ingevuld hourlyWage moet dit veld gevuld zijn (nl-inlenersbeloning-onderbouwing-vereist). Null wanneer geen onderbouwing is vastgelegd."},
+                    "caoComponents": {"title": "CAO components", "type": "array", "items": {"type": "string"}, "nullable": true, "description": "The allowances and premiums of the collective labour agreement that apply to this contract, such as a shift allowance or a night premium.", "x-notes": "payroll-cao-components D2: component keys of the agreement's allowances leaf (lib/Standards/cao/{cao}.json). Resolved by EmploymentTermsResolver::resolveComponents(); a key the agreement lacks is flagged by nl-cao-component-onbekend.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-hr", "humaniq-payroll"]}},
+                    "caoComponentOverrides": {"title": "CAO component overrides", "type": "object", "nullable": true, "description": "Figures this contract pays instead of the agreement's, per component. They may not be below the agreement.", "x-notes": "payroll-cao-components D2: {componentKey: {pct | amountCents | windows | holidayPct}}. Refused on save by CaoComponentOverrideListener without caoComponentOverrideReason or below the agreement.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-hr", "humaniq-payroll"]}},
+                    "caoComponentOverrideReason": {"title": "CAO component override reason", "type": "string", "nullable": true, "description": "Why this contract departs from the agreement's components. Required with any override.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-hr", "humaniq-payroll"]}}
                 }
             },
             "Payslip": {
                 "slug": "Payslip",
                 "icon": "ReceiptTextOutline",
-                "version": "0.15.0",
+                "version": "0.16.0",
                 "configuration": {
                     "x-openregister-notifications": {
                         "payslip-ready": {
@@ -238,13 +241,16 @@
                     "reimbursedExpenseIds": {"title": "Claims paid", "type": "array", "items": {"type": "string"}, "nullable": true, "description": "The expense claims this payslip paid.", "x-notes": "payroll-expenses-and-allowances D2.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
                     "allowancesTaxed": {"title": "Allowances taxed", "type": "number", "nullable": true, "description": "The part of the recurring allowances that is wage, included in the gross pay.", "x-notes": "payroll-expenses-and-allowances D4.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
                     "allowancesUntaxed": {"title": "Allowances untaxed", "type": "number", "nullable": true, "description": "The part of the recurring allowances paid on top of net pay without tax.", "x-notes": "payroll-expenses-and-allowances D4.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
-                    "allowanceLines": {"title": "Allowances", "type": "array", "items": {"type": "object", "properties": {"allowanceId": {"type": "string", "title": "Allowance", "description": "The recurring allowance this line pays."}, "kind": {"type": "string", "title": "Kind", "description": "What the allowance is for."}, "status": {"type": "string", "title": "Status", "description": "Paid, or why it was not paid this period.", "enum": ["paid", "norm-unverified", "days-missing", "no-amount", "arrangement-missing", "treatment-unknown"]}, "taxed": {"type": "number", "title": "Taxed", "description": "The part added to the gross pay."}, "untaxed": {"type": "number", "title": "Untaxed", "description": "The part paid on top of net pay."}, "wkrCategory": {"type": "string", "nullable": true, "title": "WKR category", "description": "The WKR category of the untaxed part."}}}, "nullable": true, "description": "Each recurring allowance this period, with its taxed and untaxed part, or the reason it was not paid.", "x-notes": "payroll-expenses-and-allowances D4: status paid, norm-unverified, days-missing, no-amount, arrangement-missing or treatment-unknown.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}}
+                    "allowanceLines": {"title": "Allowances", "type": "array", "items": {"type": "object", "properties": {"allowanceId": {"type": "string", "title": "Allowance", "description": "The recurring allowance this line pays."}, "kind": {"type": "string", "title": "Kind", "description": "What the allowance is for."}, "status": {"type": "string", "title": "Status", "description": "Paid, or why it was not paid this period.", "enum": ["paid", "norm-unverified", "days-missing", "no-amount", "arrangement-missing", "treatment-unknown"]}, "taxed": {"type": "number", "title": "Taxed", "description": "The part added to the gross pay."}, "untaxed": {"type": "number", "title": "Untaxed", "description": "The part paid on top of net pay."}, "wkrCategory": {"type": "string", "nullable": true, "title": "WKR category", "description": "The WKR category of the untaxed part."}}}, "nullable": true, "description": "Each recurring allowance this period, with its taxed and untaxed part, or the reason it was not paid.", "x-notes": "payroll-expenses-and-allowances D4: status paid, norm-unverified, days-missing, no-amount, arrangement-missing or treatment-unknown.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
+                    "caoComponentLines": {"title": "CAO components", "type": "array", "items": {"type": "object", "properties": {"key": {"type": "string", "title": "Component", "description": "The component of the collective labour agreement."}, "kind": {"type": "string", "title": "Kind", "description": "How the component is computed.", "enum": ["percentage-of-wage", "fixed-monthly", "hourly-surcharge"]}, "basis": {"type": "string", "title": "Basis", "description": "What the amount is computed on, such as 10% of 3000.00 or the hours in a window."}, "hours": {"type": "number", "nullable": true, "title": "Hours", "description": "The hours that earn the premium."}, "pct": {"type": "number", "nullable": true, "title": "Percentage", "description": "The percentage paid."}, "amount": {"type": "number", "title": "Amount", "description": "The amount added to the gross pay."}, "source": {"type": "string", "title": "Source", "description": "The agreement or the contract.", "enum": ["cao", "contract-override"]}}}, "nullable": true, "description": "Each allowance and premium of the collective labour agreement paid this period, with its basis.", "x-notes": "payroll-cao-components D3: part of grossPay. Basis no-times: an entry without start and end earns no premium; no-hourly-rate: no rate to compute on.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
+                    "caoComponentsTotal": {"title": "CAO components total", "type": "number", "nullable": true, "description": "The total of the collective labour agreement's allowances and premiums, included in the gross pay.", "x-notes": "payroll-cao-components D3.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
+                    "caoComponentsUnresolved": {"title": "CAO components not paid", "type": "array", "items": {"type": "string"}, "nullable": true, "description": "Components the contract names that were not paid, because the agreement's figure is not confirmed or the component is unknown.", "x-notes": "payroll-cao-components D4: payroll-run-checks turns each into a warning.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}}
                 }
             },
             "PayrollRun": {
                 "slug": "PayrollRun",
                 "icon": "CogPlayOutline",
-                "version": "0.4.0",
+                "version": "0.5.0",
                 "configuration": {
                     "x-openregister-flows": [
                         {
@@ -316,12 +322,162 @@
                     "totalWithholdings": {"title": "Total withholdings", "type": "number", "description": "Total employee withholdings (tax + social) for the period."},
                     "totalNet": {"title": "Total net", "type": "number", "description": "Total net pay for the period."},
                     "totalReimbursements": {"title": "Total reimbursements", "type": "number", "nullable": true, "description": "Expense claims and untaxed allowances this run paid on top of net pay. The payroll journal books them on the reimbursement account.", "x-notes": "payroll-expenses-and-allowances D6."},
+                    "checkedAt": {"title": "Checked at", "type": "string", "format": "date-time", "nullable": true, "description": "When the run check last ran. It runs after every calculation and from Check run.", "x-notes": "payroll-run-checks D2."},
+                    "blockingFindings": {"title": "Blocking findings", "type": "integer", "nullable": true, "description": "How many findings of the last check say someone will not be paid or a mandatory rule is broken.", "x-notes": "payroll-run-checks D2."},
+                    "warningFindings": {"title": "Warning findings", "type": "integer", "nullable": true, "description": "How many findings of the last check ask a reviewer to look.", "x-notes": "payroll-run-checks D2."},
                     "glLiabilityPosted": {"title": "GL liability posted", "type": "number", "description": "Amount posted to the liability accounts. It must match gross pay plus employer charges, minus net pay.", "x-notes": "Amount posted to payroll liability accounts in the GL — must reconcile to gross+employer charges−net (xc-payroll-gl-reconciliation)."},
                     "glExpensePosted": {"title": "GL expense posted", "type": "number", "description": "Amount posted to the expense accounts. It must match gross pay plus employer charges.", "x-notes": "Amount posted to payroll expense accounts in the GL — must reconcile to gross+employer charges (xc-payroll-gl-reconciliation)."},
                     "withholdingsClearedToZero": {"title": "Withholdings cleared to zero", "type": "boolean", "description": "Every tax and social security liability was cleared to zero when it was paid over.", "x-notes": "Whether each tax/social withholding liability was cleared to zero when remitted (xc-withholding-liability-clearing)."},
                     "withholdingLiabilityBalance": {"title": "Withholding liability balance", "type": "number", "description": "What is left on the withholding liability after paying over. Zero when everything was cleared.", "x-notes": "Residual withholding-liability balance after remittance — zero when cleared (xc-withholding-liability-clearing)."},
                     "calculatedAt": {"title": "Calculated at", "type": "string", "format": "date-time", "nullable": true, "description": "When the payroll engine last calculated this run. Empty for a hand-entered run.", "x-notes": "When the payroll engine (re)calculated this run's payslips and totals (nl-engine-table-version). Null for hand-entered runs."},
                     "engineVersion": {"title": "Engine version", "type": "string", "nullable": true, "description": "Which tax-year table produced this run, for example nl-2026. Empty for a hand-entered run.", "x-notes": "Versioned tax-year table file that produced this run (e.g. nl-2026 -> lib/Standards/tables/nl-2026.json) (nl-engine-table-version). Null for hand-entered runs."}
+                }
+            },
+            "PayrollRunFinding": {
+                "slug": "PayrollRunFinding",
+                "icon": "AlertCircleOutline",
+                "version": "0.1.0",
+                "title": "Payroll run finding",
+                "description": "One finding of the check of a payroll run: someone who will not be paid, an input no run pays, a broken rule, or an amount far from the employee's own history. The check replaces them after every calculation; a reviewer acknowledges a finding with a note (payroll-run-checks).",
+                "type": "object",
+                "x-schema-org": "schema:Report",
+                "required": [
+                    "payrollRunId",
+                    "kind",
+                    "severity",
+                    "message",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "open",
+                        "terminal": [],
+                        "transitions": {
+                            "acknowledge": {
+                                "from": [
+                                    "open"
+                                ],
+                                "to": "acknowledged",
+                                "description": "A reviewer has read the finding and notes why it is fine. An acknowledged finding that comes back unchanged keeps its acknowledgement."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "payrollRunId": {
+                        "type": "string",
+                        "$ref": "PayrollRun",
+                        "title": "Payroll run",
+                        "description": "The run this finding belongs to."
+                    },
+                    "employeeId": {
+                        "type": "string",
+                        "nullable": true,
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Who the finding is about."
+                    },
+                    "kind": {
+                        "type": "string",
+                        "title": "Kind",
+                        "description": "What the check found.",
+                        "x-enum-labels": {
+                            "skipped": "Not paid",
+                            "unpaid-input": "Input not paid",
+                            "rule-violation": "Rule broken",
+                            "deviation": "Unusual amount"
+                        },
+                        "enum": [
+                            "skipped",
+                            "unpaid-input",
+                            "rule-violation",
+                            "deviation"
+                        ]
+                    },
+                    "severity": {
+                        "type": "string",
+                        "title": "Severity",
+                        "description": "Blocking when someone is not paid or a mandatory rule is broken; warning to look at; info when the cause is known.",
+                        "x-enum-labels": {
+                            "blocking": "Blocking",
+                            "warning": "Warning",
+                            "info": "Info"
+                        },
+                        "enum": [
+                            "blocking",
+                            "warning",
+                            "info"
+                        ]
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "description": "The finding in words."
+                    },
+                    "ruleId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Rule",
+                        "description": "The rule that is broken, or the kind of input that is not paid."
+                    },
+                    "component": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Component",
+                        "description": "The amount that is unusual, such as net pay."
+                    },
+                    "currentValue": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Current value",
+                        "description": "The amount on this payslip."
+                    },
+                    "baselineValue": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Usual value",
+                        "description": "The median of the employee's last paid payslips."
+                    },
+                    "explanation": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Explanation",
+                        "description": "The known cause of the difference, when humaniq knows one."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Open until a reviewer acknowledges it.",
+                        "x-enum-labels": {
+                            "open": "Open",
+                            "acknowledged": "Acknowledged"
+                        },
+                        "enum": [
+                            "open",
+                            "acknowledged"
+                        ],
+                        "default": "open"
+                    },
+                    "acknowledgementNote": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Note",
+                        "description": "Why the reviewer accepts the finding."
+                    },
+                    "acknowledgedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Acknowledged by",
+                        "description": "Who acknowledged the finding."
+                    },
+                    "checkedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Checked at",
+                        "description": "When the check that found it ran."
+                    }
                 }
             },
             "PayrollMutationReport": {

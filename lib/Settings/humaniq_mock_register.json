@@ -14124,6 +14124,69 @@
       {
         "@self": {
           "register": "humaniq",
+          "schema": "PayrollRunFinding",
+          "slug": "payrollrunfinding-payrollrunfinding-1-1"
+        },
+        "payrollRunId": "Voorbeeld Payrollrunid 1",
+        "kind": "skipped",
+        "severity": "blocking",
+        "message": "Voorbeeld Message 1",
+        "status": "open",
+        "employeeId": "Voorbeeld Employeeid 1",
+        "ruleId": "Voorbeeld Ruleid 1",
+        "component": "Voorbeeld Component 1",
+        "currentValue": 1.0,
+        "baselineValue": 1.0,
+        "explanation": "Voorbeeld Explanation 1",
+        "acknowledgementNote": "Voorbeeld Acknowledgementnote 1",
+        "acknowledgedBy": "Voorbeeld Acknowledgedby 1",
+        "checkedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollRunFinding",
+          "slug": "payrollrunfinding-payrollrunfinding-2-2"
+        },
+        "payrollRunId": "Voorbeeld Payrollrunid 2",
+        "kind": "unpaid-input",
+        "severity": "warning",
+        "message": "Voorbeeld Message 2",
+        "status": "acknowledged",
+        "employeeId": "Voorbeeld Employeeid 2",
+        "ruleId": "Voorbeeld Ruleid 2",
+        "component": "Voorbeeld Component 2",
+        "currentValue": 2.0,
+        "baselineValue": 2.0,
+        "explanation": "Voorbeeld Explanation 2",
+        "acknowledgementNote": "Voorbeeld Acknowledgementnote 2",
+        "acknowledgedBy": "Voorbeeld Acknowledgedby 2",
+        "checkedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollRunFinding",
+          "slug": "payrollrunfinding-payrollrunfinding-3-3"
+        },
+        "payrollRunId": "Voorbeeld Payrollrunid 3",
+        "kind": "rule-violation",
+        "severity": "info",
+        "message": "Voorbeeld Message 3",
+        "status": "open",
+        "employeeId": "Voorbeeld Employeeid 3",
+        "ruleId": "Voorbeeld Ruleid 3",
+        "component": "Voorbeeld Component 3",
+        "currentValue": 3.0,
+        "baselineValue": 3.0,
+        "explanation": "Voorbeeld Explanation 3",
+        "acknowledgementNote": "Voorbeeld Acknowledgementnote 3",
+        "acknowledgedBy": "Voorbeeld Acknowledgedby 3",
+        "checkedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
           "schema": "WpmReport",
           "slug": "wpmreport-wpmreport-1-1"
         },

@@ -237,8 +237,10 @@ class PayrollRunService {
 	 * @param HoursPayService|null $hoursPay Approved hours and overtime as pay (time-hours-and-overtime-to-payroll); null runs without it.
 	 * @param WorkingCalendarReader|null $calendar openregister's working calendar, for the feestdag overtime category.
 	 * @param PayrollExpenseFoldService|null $expenses Approved claims and recurring allowances (payroll-expenses-and-allowances); null runs without them.
+	 * @param PayrollRunCheckService|null $runCheck The run check that runs after every calculation (payroll-run-checks D2); null runs without it.
+	 * @param CaoComponentPayService|null $caoComponents The CAO components a contract names (payroll-cao-components D3); null runs without them.
 	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each optional fold (hours, claims and allowances) is its own collaborator, so a run without one stays byte-identical and a test names which fold ran.
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each optional fold (hours, claims and allowances) and the run check is its own collaborator, so a run without one stays byte-identical and a test names which fold ran.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -251,6 +253,8 @@ class PayrollRunService {
 		private readonly ?HoursPayService $hoursPay = null,
 		private readonly ?WorkingCalendarReader $calendar = null,
 		private readonly ?PayrollExpenseFoldService $expenses = null,
+		private readonly ?PayrollRunCheckService $runCheck = null,
+		private readonly ?CaoComponentPayService $caoComponents = null,
 	) {
 
 	}//end __construct()
@@ -455,13 +459,13 @@ class PayrollRunService {
 
 			$contract = $this->coveringContract($employee, $contractsByEmployeeKey, $period);
 			if ($contract === null) {
-				$skipped[] = ['employee' => $employeeLabel, 'reason' => 'no-contract (geen contract dat de periode dekt)'];
+				$skipped[] = ['employee' => $employeeLabel, 'employeeId' => $employeeId, 'reason' => 'no-contract (geen contract dat de periode dekt)'];
 				continue;
 			}
 
 			$taxTableColor = trim((string)($employee['taxTableColor'] ?? ''));
 			if (in_array($taxTableColor, ['wit', 'groen'], true) === false) {
-				$skipped[] = ['employee' => $employeeLabel, 'reason' => 'non-nl (geen NL tabelkleur wit/groen op het werknemersrecord)'];
+				$skipped[] = ['employee' => $employeeLabel, 'employeeId' => $employeeId, 'reason' => 'non-nl (geen NL tabelkleur wit/groen op het werknemersrecord)'];
 				continue;
 			}
 
@@ -474,7 +478,7 @@ class PayrollRunService {
 			if ($salaried === false) {
 				$hourlySkip = $this->hourlySkipReason(contract: $contract, hoursPay: $hoursPay);
 				if ($hourlySkip !== null) {
-					$skipped[] = ['employee' => $employeeLabel, 'reason' => $hourlySkip];
+					$skipped[] = ['employee' => $employeeLabel, 'employeeId' => $employeeId, 'reason' => $hourlySkip];
 					continue;
 				}
 			}
@@ -482,11 +486,12 @@ class PayrollRunService {
 			if (trim((string)($employee['bsn'] ?? '')) === '' || ($employee['identityDocumentVerified'] ?? false) !== true) {
 				// Anoniementarief precondition: never compute a knowingly-wrong
 				// slip — the 52% flat path is a named fast-follow (design.md D2).
-				$skipped[] = ['employee' => $employeeLabel, 'reason' => 'anoniementarief-precondition (BSN/ID-verificatie ontbreekt; 52%-tarief: fast-follow)'];
+				$skipped[] = ['employee' => $employeeLabel, 'employeeId' => $employeeId, 'reason' => 'anoniementarief-precondition (BSN/ID-verificatie ontbreekt; 52%-tarief: fast-follow)'];
 				continue;
 			}
 
 			$grossMonthlySalaryCents = ($salaried === true ? (int)round(((float)$grossMonthly) * 100) : (int)($hoursPay['hourlyCents'] ?? 0));
+			$regularWageCents = $grossMonthlySalaryCents;
 
 			// sick-pay-calc (design.md D4): an open (gemeld) SickLeaveCase
 			// covering the period substitutes the doorbetaald loon for the
@@ -533,6 +538,12 @@ class PayrollRunService {
 			// unchanged.
 			$leaveBuySellCents = ($leaveBuySellByEmployeeId[$employeeId] ?? 0);
 			$grossMonthlySalaryCents += $leaveBuySellCents;
+
+			// payroll-cao-components D3: the allowances and premiums the
+			// collective agreement prescribes are wage, added before the
+			// calculator. A contract naming none folds nothing.
+			$caoFold = $this->caoComponents?->foldFor(contract: $contract, regularWageCents: $regularWageCents, hoursPay: $hoursPay, entries: $hours['entries'], nonWorkingDates: $hours['nonWorkingDates'], period: $period);
+			$grossMonthlySalaryCents += (int)($caoFold['totalCents'] ?? 0);
 
 			// payroll-expenses-and-allowances D2/D4: the taxed part of every
 			// allowance is wage and enters the gross before the calculator;
@@ -600,6 +611,7 @@ class PayrollRunService {
 			$payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents));
 			$payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
 			$payload = array_merge($payload, $this->hoursPayFields(hoursPay: $hoursPay, salaried: $salaried));
+			$payload = array_merge($payload, ($this->caoComponents?->payslipFields(fold: $caoFold) ?? []));
 			$payload = array_merge($payload, $this->expenseFields(fold: $expenseFold, netCents: ($nettoPaySoFarCents - $loonbeslagDeductionCents)));
 			$paidClaimIds = array_merge($paidClaimIds, (array)($expenseFold['claimIds'] ?? []));
 			$wkrRows = array_merge($wkrRows, (array)($expenseFold['wkr'] ?? []));
@@ -708,6 +720,7 @@ class PayrollRunService {
 		$outcome = $this->outcome($runId, $period, $administrationId, 'calculated', sprintf('%d loonstro(o)k(en) berekend, %d overgeslagen.', count($computed), count($skipped)));
 		$outcome['computed'] = $computed;
 		$outcome['skipped'] = $skipped;
+		$outcome['check'] = $this->runTheCheck(runId: $runId, skipped: $skipped);
 		$outcome['totals'] = [
 			'totalGross' => $this->euros($totals['gross']),
 			'totalLoonheffing' => $this->euros($totals['loonheffing']),
@@ -809,6 +822,30 @@ class PayrollRunService {
 
 		return ($hoursPay === null ? 'no-approved-hours' : null);
 	}//end hourlySkipReason()
+
+	/**
+	 * Run the check after a successful calculation; a failing check is
+	 * logged and never fails the run (payroll-run-checks D2).
+	 *
+	 * @param string                     $runId   The run.
+	 * @param list<array<string, mixed>> $skipped The skipped employees.
+	 *
+	 * @return array<string, int>|null The counts, or null without a check.
+	 *
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
+	 */
+	private function runTheCheck(string $runId, array $skipped): ?array {
+		if ($this->runCheck === null || $runId === '') {
+			return null;
+		}
+
+		try {
+			return $this->runCheck->check($runId, $skipped);
+		} catch (\Throwable $e) {
+			$this->logger->error('PayrollRunService: the check of run ' . $runId . ' failed: ' . $e->getMessage());
+			return null;
+		}
+	}//end runTheCheck()
 
 	/**
 	 * The payslip fields of the claims-and-allowances fold; the net pay is

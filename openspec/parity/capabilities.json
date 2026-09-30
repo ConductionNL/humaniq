@@ -3881,7 +3881,7 @@
    "id": "pay-run-check",
    "area": "payroll",
    "name": "Get a pre-run check that flags missing or odd data before payroll is final.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -3897,10 +3897,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360001796137-Monthly-Payroll-Accounting-With-Personio-Payroll: the task column shows warnings and blockers per employee before approval; https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration has you resolve open tasks and validation errors in the payroll table before the Loket sync."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-run-checks on 2026-09-27 for the missing half: the pre-run check on the payroll run page; the occ check is built. Before: lib/Command/PayrollVerifyCommand.php: 'Run-scoped corpus audit over one period's PayrollRun(s) + their payslips; exits non-zero on any mandatory violation' (appinfo/info.xml commands block); no controller route or manifest page calls this check",
-    "reachedOn": "occ humaniq:payroll:verify only, no page",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/PayrollRunCheckService.php stores the check of one run as PayrollRunFinding objects (schema in lib/Settings/register.d/hr-objects.json, acknowledge transition, reviewer stamped by lib/Listener/PayrollRunFindingStampListener.php): every skipped employee blocking, approved timesheets and payroll-route claims no run pays as warnings, the rule audit (RuleAuditService::auditPayrollRunScope) with a mandatory violation blocking, and deviations from each employee's paid history; an acknowledged finding that recurs keeps its acknowledgement. lib/Service/PayrollRunService.php runs it after every calculation and writes checkedAt, blockingFindings and warningFindings on the run; POST /api/payroll/check (lib/Controller/PayrollCheckController.php, admin or hr role, run read under RBAC) runs it on demand. Tests: tests/Unit/Service/PayrollRunCheckServiceTest.php, tests/Unit/Controller/PayrollCheckControllerTest.php, tests/Unit/Listener/PayrollRunFindingStampListenerTest.php, tests/Unit/Settings/PayrollRunChecksDeclarationTest.php, tests/Unit/Service/PayrollRunServiceTest.php::testACalculationRunsTheCheckWithTheSkippedList.",
+    "reachedOn": "Payroll runs > a run: Check run, the Blocking findings and Warning findings tiles and the Run check findings list; a finding (/payroll-run-findings/:id) with Acknowledge",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-payroll-run-checks",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4177,7 +4179,7 @@
    "id": "pay-cao-components",
    "area": "payroll",
    "name": "Pay allowances, shift premiums and other components a collective agreement prescribes.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -4193,17 +4195,18 @@
     "personio": "https://support.personio.de/hc/en-us/articles/13632466245661-Personio-Payroll-About: Personio Payroll processes overtime and shift allowances (not linked to time tracking) and https://support.personio.de/hc/en-us/articles/31082835200797-Create-and-manage-additional-pay grants allowances relative to salary as collective agreements mandate; no collective agreement rule set applies them, and Personio Payroll is Germany only per https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-cao-components on 2026-09-27 for the missing half: paying CAO-prescribed allowances and premiums in the run; the CAO floor check is built. Before: lib/Standards/Checks/NlCaoChecks.php (cao-library) only runs two machine-checkable compliance checks, nl-cao-minimumloon-schaal (salary floor) and nl-cao-verlof-minimum (leave floor); Caos/CaoDetail (hr-cao.json) are read-only reference pages; grep -n -iE 'shift.?premie|toeslag|allowance|premium' lib/Standards/packs/nl-2026.pack.json: no hits, so no step in the actual payroll calculation chain applies a CAO-specific shift premium or allowance",
-    "reachedOn": "Caos /caos and CaoDetail show the CAO's minimum scale and leave figures for reference; the compliance check runs via occ humaniq:rules:audit; nothing in a payroll run actually adds a CAO-prescribed component to a payslip",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "The CAO corpus describes every allowance as percentage-of-wage, fixed-monthly or hourly-surcharge with time windows and a holiday percentage (lib/Standards/cao/SCHEMA.md, lib/Standards/CaoComponents.php; paid only from a verified, non-placeholder leaf). EmploymentContract.caoComponents names the components that apply, caoComponentOverrides improves them with caoComponentOverrideReason and never below the agreement (lib/Service/CaoComponentTerms.php, refused on save by lib/Listener/CaoComponentOverrideListener.php). lib/Service/CaoComponentPayService.php and lib/Service/CaoComponentCalculator.php add the components to the gross in lib/Service/PayrollRunService.php before the calculator: a percentage of the regular wage, a fixed amount pro rata, and the premium on the hourly rate for every approved hour inside a window. The payslip lists caoComponentLines with basis and source, caoComponentsTotal and caoComponentsUnresolved; the run check warns about each unpaid one; nl-cao-component-onbekend flags an unknown key. Tests: tests/Unit/Service/CaoComponentCalculatorTest.php, tests/Unit/Service/CaoComponentPayServiceTest.php, tests/Unit/Service/EmploymentTermsResolverComponentsTest.php, tests/Unit/Listener/CaoComponentOverrideListenerTest.php, tests/Unit/Standards/CaoComponentsCorpusTest.php, tests/Unit/Service/PayrollRunServiceTest.php::testCaoComponentsArePaidAsWage.",
+    "reachedOn": "An employment contract: CAO components and overrides; the payslip: CAO components, CAO components total, CAO components not paid; a payroll run's check findings",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-payroll-cao-components",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "cao-library",
    "featureConfidence": "high",
-   "source": "competitor",
-   "note": "humaniq's CAO library checks a floor and shows reference data, it does not calculate or pay a CAO's shift premiums or allowances; that is a materially smaller claim than 'CAO-ondersteuning' in these competitor rows, which implies the CAO rules actually run in payroll."
+   "source": "competitor"
   },
   {
    "id": "pay-30-percent",
@@ -8139,7 +8142,7 @@
    "id": "dm-pay-anomaly",
    "area": "payroll",
    "name": "Have pay runs compared with each employee's own pay history so unusual amounts are flagged before payroll closes.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -8155,10 +8158,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'anomal|outlier|payroll' src/plugins src/client/src: no match; no pay runs exist to compare"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-run-checks on 2026-09-27 for the missing half: comparing each employee's pay with their own history and flagging outliers before close. Before: lib/Service/PayrollMutationService.php compares a run with the previous one per employee (pay-mutation-report, PayrollMutationReportDetail /payroll-mutations/:id); no learned history or per-component sensitivity (grep -rniE 'anomal|outlier' lib: no hits)",
-    "reachedOn": "PayrollMutations /payroll-mutations, PayrollMutationReportDetail",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/PayAnomalyDetector.php compares gross, net, wage tax, employer cost and hours paid on each payslip of the run with the median of the employee's last six paid payslips (runs approved, posted or paid, plus hand-entered ones), flags a difference above the component's relative threshold and absolute floor (defaults 15% and 50.00, hours 20% and 8; setting payroll_check_thresholds), names a known cause (sick pay, retro correction, leave bought or sold, garnishment, bijtelling, a raise applied in the period) as info, and reports fewer than three prior payslips as too little history. Tests: tests/Unit/Service/PayAnomalyDetectorTest.php, tests/Unit/Service/PayrollRunCheckServiceTest.php::testADeviationFromPaidHistoryIsFound and ::testTheThresholdsAreASetting.",
+    "reachedOn": "Payroll runs > a run: Run check findings of kind Unusual amount, with Usual value and the known cause",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-payroll-run-checks",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

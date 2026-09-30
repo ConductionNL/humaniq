@@ -44,6 +44,8 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Service\CaoComponentCalculator;
+use OCA\Humaniq\Service\CaoComponentPayService;
 use OCA\Humaniq\Service\EmploymentTermsResolver;
 use OCA\Humaniq\Service\HoursPayService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
@@ -51,6 +53,7 @@ use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\PayrollExpenseFoldService;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
+use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
@@ -228,10 +231,12 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @param HoursPayService|null $hoursPay The hours-and-overtime fold, or null for a run without it.
 	 * @param PayrollExpenseFoldService|null $expenses The claims-and-allowances fold, or null for a run without it.
+	 * @param PayrollRunCheckService|null $runCheck The run check, or null for a run without it.
+	 * @param CaoComponentPayService|null $caoComponents The CAO components fold, or null for a run without it.
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -253,7 +258,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses),
+			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents),
 			$fake,
 			$retentionGuard,
 		];
@@ -1785,6 +1790,37 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testASalariedEmployeeWithoutOvertimeKeepsAnIdenticalPayslip()
 
 	/**
+	 * A contract naming the example agreement's 10% shift allowance gets it
+	 * on the payslip, in the gross the wage tax is computed over; a contract
+	 * naming no component keeps a byte-identical payslip with the fold wired.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-003
+	 */
+	public function testCaoComponentsArePaidAsWage(): void {
+		$rows = ['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
+		$fold = new CaoComponentPayService(new EmploymentTermsResolver(), new CaoComponentCalculator(), $this->createMock(LoggerInterface::class));
+		[$plainService, $plainFake] = $this->service($rows);
+		$plainService->runFor('2026-05');
+		$plain = $this->savedFor($plainFake, 'Payslip');
+		[$unnamed, $unnamedFake] = $this->service($rows, null, null, null, null, $fold);
+		$unnamed->runFor('2026-05');
+		$this->assertEquals($plain, $this->savedFor($unnamedFake, 'Payslip'));
+
+		$rows['EmploymentContract'] = [$this->contract(['cao' => 'cao-voorbeeld', 'caoComponents' => ['ploegentoeslag']])];
+		[$service, $fake] = $this->service($rows, null, null, null, null, $fold);
+		$service->runFor('2026-05');
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$this->assertEqualsWithDelta(($plain[0]['grossPay'] + 380.00), $payslip['grossPay'], 0.001);
+		$this->assertGreaterThan($plain[0]['loonheffing'], $payslip['loonheffing']);
+		$this->assertSame(380.0, $payslip['caoComponentsTotal']);
+		$this->assertSame('ploegentoeslag', $payslip['caoComponentLines'][0]['key']);
+		$this->assertSame([], $payslip['caoComponentsUnresolved']);
+	}//end testCaoComponentsArePaidAsWage()
+
+	/**
 	 * The claims-and-allowances fold over the given rows, recording its writes.
 	 *
 	 * @param array<string, array<int, array<string, mixed>>> $rows Rows keyed by schema.
@@ -1909,5 +1945,33 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertEqualsWithDelta(($byAccount['4001'] + $byAccount['4002'] + $byAccount['4010']), ($byAccount['1701'] + $byAccount['1702']), 0.001);
 		$this->assertEqualsWithDelta($plainJournal['1702'] + 27.40, $byAccount['1702'], 0.001);
 	}//end testReimbursementsReachTheJournalBalanced()
+
+	/**
+	 * payroll-run-checks D2: a calculation runs the check with the skipped
+	 * list and returns its summary; a failing check does not fail the run.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
+	 */
+	public function testACalculationRunsTheCheckWithTheSkippedList(): void {
+		$rows = ['Employee' => [$this->employee(), ['id' => 'emp-nocontract', 'firstName' => 'Kees', 'lastName' => 'Zonder', 'startDate' => '2020-01-01']], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
+		$check = $this->createMock(PayrollRunCheckService::class);
+		$check->expects($this->once())->method('check')->with(
+			$this->isType('string'),
+			$this->callback(static fn (array $skipped): bool => $skipped !== [] && ($skipped[0]['employeeId'] ?? '') === 'emp-nocontract')
+		)->willReturn(['blocking' => 1, 'warning' => 0, 'info' => 0]);
+		[$service] = $this->service($rows, null, null, null, $check);
+
+		$result = $service->runFor('2026-05');
+
+		$this->assertSame('calculated', $result['status']);
+		$this->assertSame(1, $result['check']['blocking']);
+
+		$failing = $this->createMock(PayrollRunCheckService::class);
+		$failing->method('check')->willThrowException(new \RuntimeException('down'));
+		[$service] = $this->service($rows, null, null, null, $failing);
+		$this->assertSame('calculated', $service->runFor('2026-05')['status']);
+	}//end testACalculationRunsTheCheckWithTheSkippedList()
 
 }//end class

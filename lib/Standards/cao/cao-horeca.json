@@ -25,6 +25,7 @@
   "allowances": {
     "value": {
       "toeslagOnregelmatigheid": {
+        "kind": "percentage-of-wage",
         "pct": 15
       }
     },

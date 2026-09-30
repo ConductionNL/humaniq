@@ -48,7 +48,7 @@ final class CaoRegistry {
 	 *
 	 * @var string
 	 */
-	public const VERSION = '2026-08.19';
+	public const VERSION = '2026-09.20';
 
 	/**
 	 * Required top-level keys on every well-formed CAO file.
@@ -320,7 +320,7 @@ final class CaoRegistry {
 	 *
 	 * @return bool
 	 */
-	private static function isUsableLeaf(mixed $leaf): bool {
+	public static function isUsableLeaf(mixed $leaf): bool {
 		if (is_array($leaf) === false || array_key_exists('value', $leaf) === false) {
 			return false;
 		}

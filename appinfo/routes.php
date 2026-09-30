@@ -33,6 +33,7 @@ return [
         // payroll-core-engine — guarded trigger for the PayrollRunDetail
         // "(Her)berekenen" manifest api-call action (design.md D6).
         ['name' => 'payroll#calculate', 'url' => '/api/payroll/calculate', 'verb' => 'POST'],
+        ['name' => 'payrollCheck#check', 'url' => '/api/payroll/check', 'verb' => 'POST'],
         // payroll-mutation-reports — guarded, admin/HR-only trigger for the
         // PayrollRunDetail "Mutatieoverzicht" manifest api-call action
         // (design.md D6).

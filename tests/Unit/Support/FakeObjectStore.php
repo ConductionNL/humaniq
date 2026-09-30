@@ -184,6 +184,38 @@ class FakeObjectStore {
 	}//end find()
 
 	/**
+	 * Mirror of ObjectService::deleteObject() with the real signature
+	 * (openregister lib/Service/ObjectService.php): removes the object and
+	 * reports whether it was there.
+	 *
+	 * @param string    $uuid           The object.
+	 * @param mixed     $register       The register (ignored).
+	 * @param mixed     $schema         The schema slug.
+	 * @param bool      $_rbac          Ignored.
+	 * @param bool      $_multitenancy  Ignored.
+	 * @param bool      $_retentionSweep Ignored.
+	 * @param mixed     $currentUser    Ignored.
+	 * @param bool      $permanent      Ignored.
+	 *
+	 * @return bool
+	 */
+	public function deleteObject(
+		string $uuid,
+		mixed $register = null,
+		mixed $schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_retentionSweep = false,
+		mixed $currentUser = null,
+		bool $permanent = false,
+	): bool {
+		$schemaKey = (string)($schema ?? $this->contextSchema);
+		$found = isset($this->state->objects[$schemaKey][$uuid]);
+		unset($this->state->objects[$schemaKey][$uuid]);
+		return $found;
+	}//end deleteObject()
+
+	/**
 	 * Mirror of ObjectService::saveObject() — upserts into the store and
 	 * logs the call.
 	 *
