@@ -14147,6 +14147,63 @@
         "userId": "Voorbeeld Userid 3",
         "managerUserId": "Voorbeeld Manageruserid 3",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ExitInterview",
+          "slug": "exitinterview-exitinterview-1-1"
+        },
+        "heldOn": "2026-03-01",
+        "mainReason": "salaris",
+        "offboardingId": "00000000-0000-4000-8000-000000000000",
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "orgUnitId": "00000000-0000-4000-8000-000000000000",
+        "conductedBy": "Voorbeeld Conductedby 1",
+        "wouldRecommend": 0,
+        "wouldReturn": true,
+        "whatWorked": "Voorbeeld Whatworked 1",
+        "whatToImprove": "Voorbeeld Whattoimprove 1",
+        "anonymisedAt": "2026-03-01T09:00:00+00:00",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ExitInterview",
+          "slug": "exitinterview-exitinterview-2-2"
+        },
+        "heldOn": "2026-03-02",
+        "mainReason": "loopbaan",
+        "offboardingId": "00000000-0000-4000-8000-000000000001",
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "orgUnitId": "00000000-0000-4000-8000-000000000001",
+        "conductedBy": "Voorbeeld Conductedby 2",
+        "wouldRecommend": 1,
+        "wouldReturn": false,
+        "whatWorked": "Voorbeeld Whatworked 2",
+        "whatToImprove": "Voorbeeld Whattoimprove 2",
+        "anonymisedAt": "2026-03-02T09:00:00+00:00",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ExitInterview",
+          "slug": "exitinterview-exitinterview-3-3"
+        },
+        "heldOn": "2026-03-03",
+        "mainReason": "leidinggevende",
+        "offboardingId": "00000000-0000-4000-8000-000000000002",
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "orgUnitId": "00000000-0000-4000-8000-000000000002",
+        "conductedBy": "Voorbeeld Conductedby 3",
+        "wouldRecommend": 2,
+        "wouldReturn": true,
+        "whatWorked": "Voorbeeld Whatworked 3",
+        "whatToImprove": "Voorbeeld Whattoimprove 3",
+        "anonymisedAt": "2026-03-03T09:00:00+00:00",
+        "administrationId": "Voorbeeld Administrationid 3"
       }
     ]
   }

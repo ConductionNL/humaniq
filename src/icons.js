@@ -15,6 +15,7 @@
 import Account from "vue-material-design-icons/Account.vue";
 import AccountArrowRightOutline from "vue-material-design-icons/AccountArrowRightOutline.vue";
 import AccountBoxOutline from "vue-material-design-icons/AccountBoxOutline.vue";
+import AccountCancelOutline from "vue-material-design-icons/AccountCancelOutline.vue";
 import AccountClockOutline from "vue-material-design-icons/AccountClockOutline.vue";
 import AccountEditOutline from "vue-material-design-icons/AccountEditOutline.vue";
 import AccountGroupOutline from "vue-material-design-icons/AccountGroupOutline.vue";
@@ -73,6 +74,7 @@ import ClockPlusOutline from "vue-material-design-icons/ClockPlusOutline.vue";
 import CloseCircleOutline from "vue-material-design-icons/CloseCircleOutline.vue";
 import CogOutline from "vue-material-design-icons/CogOutline.vue";
 import CogPlayOutline from "vue-material-design-icons/CogPlayOutline.vue";
+import CommentAccountOutline from "vue-material-design-icons/CommentAccountOutline.vue";
 import CreditCardOutline from "vue-material-design-icons/CreditCardOutline.vue";
 import CurrencyEur from "vue-material-design-icons/CurrencyEur.vue";
 import DatabaseExportOutline from "vue-material-design-icons/DatabaseExportOutline.vue";
@@ -132,6 +134,7 @@ export default {
 	Account,
 	AccountArrowRightOutline,
 	AccountBoxOutline,
+	AccountCancelOutline,
 	AccountEditOutline,
 	AccountClockOutline,
 	AccountGroupOutline,
@@ -190,6 +193,7 @@ export default {
 	CloseCircleOutline,
 	CogOutline,
 	CogPlayOutline,
+	CommentAccountOutline,
 	CreditCardOutline,
 	CurrencyEur,
 	DatabaseExportOutline,

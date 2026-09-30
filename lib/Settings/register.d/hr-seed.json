@@ -1245,6 +1245,44 @@
             {
                 "@self": {
                     "register": "humaniq",
+                    "schema": "ExitInterview",
+                    "slug": "exitinterview-de-boer"
+                },
+                "offboardingId": "@ref:offboarding-de-boer",
+                "employeeId": "@ref:employee-de-boer",
+                "orgUnitId": "@ref:orgunit-consultancy",
+                "heldOn": "2026-05-28",
+                "conductedBy": "admin",
+                "mainReason": "loopbaan",
+                "wouldRecommend": 7,
+                "wouldReturn": true,
+                "whatWorked": "De collega's en de vrijheid om zelf klanten te kiezen.",
+                "whatToImprove": "Een zichtbaar pad naar een seniorrol.",
+                "anonymisedAt": null,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ExitInterview",
+                    "slug": "exitinterview-anoniem-2025"
+                },
+                "offboardingId": null,
+                "employeeId": null,
+                "orgUnitId": "@ref:orgunit-backoffice",
+                "heldOn": "2025-11-10",
+                "conductedBy": null,
+                "mainReason": "leidinggevende",
+                "wouldRecommend": 4,
+                "wouldReturn": false,
+                "whatWorked": null,
+                "whatToImprove": null,
+                "anonymisedAt": "2026-02-09T02:30:00+00:00",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
                     "schema": "Asset",
                     "slug": "asset-laptop-latitude",
                     "version": "1.1.0"

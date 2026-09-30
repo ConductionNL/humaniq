@@ -567,6 +567,12 @@
 					"route": "Offboardings"
 				},
 				{
+					"icon": "CommentAccountOutline",
+					"id": "ExitInterviews",
+					"label": "Exit interviews",
+					"route": "ExitInterviews"
+				},
+				{
 					"icon": "CalendarAccountOutline",
 					"id": "WorkingPatterns",
 					"label": "Working patterns",
@@ -7583,7 +7589,27 @@
 		},
 		{
 			"config": {
-				"_note": "offboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the departing Employee), the checklist/eindafrekening fields and notes, leaving reason/status/lastWorkingDay; the 'Checklist' widget groups exitGesprekDone/assetsIngeleverd/toegangIngetrokken; the 'Eindafrekening' widget groups verlofsaldoUitbetaald/vakantiegeldAfgerekend/transitievergoedingBedrag/getuigschriftVerstrekt/notes -- the OnboardingDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OFB-002 edges (afronding_plannen/eindafrekening_gereedmelden/afronden/annuleren) -- no invented edges. Checklist/eindafrekening gates are audit-enforced (lib/Standards/Checks/NlOffboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet gate field -- guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab.",
+				"_note": "offboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the departing Employee), the checklist/eindafrekening fields and notes, leaving reason/status/lastWorkingDay; the 'Checklist' widget groups exitGesprekDone/assetsIngeleverd/toegangIngetrokken; the 'Eindafrekening' widget groups verlofsaldoUitbetaald/vakantiegeldAfgerekend/transitievergoedingBedrag/getuigschriftVerstrekt/notes -- the OnboardingDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OFB-002 edges (afronding_plannen/eindafrekening_gereedmelden/afronden/annuleren) -- no invented edges. Checklist/eindafrekening gates are audit-enforced (lib/Standards/Checks/NlOffboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet gate field -- guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab. hiring-offboarding-completion (2026-09-30): Revoke access disables the leaver's Nextcloud account (Employee.nextcloudUserId) through Nextcloud's user manager, refuses an administrator or the caller's own account, and stamps who and when (HR or admin; 404 before 403). Calculate transition payment (HR, payroll or admin) writes transitievergoedingBedrag and the breakdown from the contract chain, the monthly wage and the 2026 cap in the nl-offboarding-transitievergoeding rule; the amount stays editable. Exit interview lists the case's ExitInterview; recording one fills in exitGesprekDone.",
+				"headerActions": [
+					{
+						"confirm": true,
+						"icon": "AccountCancelOutline",
+						"id": "revoke-access",
+						"label": "Revoke access",
+						"method": "POST",
+						"type": "api-call",
+						"url": "/api/offboarding/@objectId/revoke-access"
+					},
+					{
+						"confirm": true,
+						"icon": "Calculator",
+						"id": "transition-payment",
+						"label": "Calculate transition payment",
+						"method": "POST",
+						"type": "api-call",
+						"url": "/api/offboarding/@objectId/transition-payment"
+					}
+				],
 				"layout": [
 					{
 						"gridHeight": 5,
@@ -7610,7 +7636,15 @@
 						"widgetId": "data-3"
 					},
 					{
-						"gridHeight": 19,
+						"gridHeight": 4,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 19,
+						"id": 6,
+						"widgetId": "exit-interviews"
+					},
+					{
+						"gridHeight": 23,
 						"gridWidth": 4,
 						"gridX": 8,
 						"gridY": 0,
@@ -7621,7 +7655,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 19,
+						"gridY": 23,
 						"id": 5,
 						"widgetId": "files"
 					}
@@ -7684,7 +7718,11 @@
 								"vakantiegeldAfgerekend",
 								"transitievergoedingBedrag",
 								"getuigschriftVerstrekt",
-								"notes"
+								"notes",
+								"toegangIngetrokkenDoor",
+								"toegangIngetrokkenOp",
+								"toegangIngetrokkenToelichting",
+								"transitievergoedingBerekening"
 							],
 							"title": "Case"
 						},
@@ -7699,7 +7737,10 @@
 							"include": [
 								"exitGesprekDone",
 								"assetsIngeleverd",
-								"toegangIngetrokken"
+								"toegangIngetrokken",
+								"toegangIngetrokkenDoor",
+								"toegangIngetrokkenOp",
+								"toegangIngetrokkenToelichting"
 							],
 							"title": "Checklist"
 						},
@@ -7715,6 +7756,7 @@
 								"verlofsaldoUitbetaald",
 								"vakantiegeldAfgerekend",
 								"transitievergoedingBedrag",
+								"transitievergoedingBerekening",
 								"getuigschriftVerstrekt",
 								"notes"
 							],
@@ -7724,6 +7766,45 @@
 						"id": "data-3",
 						"title": "Final settlement",
 						"type": "data"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "heldOn",
+									"label": "Held on"
+								},
+								{
+									"key": "mainReason",
+									"label": "Main reason"
+								},
+								{
+									"key": "wouldRecommend",
+									"label": "Would recommend"
+								},
+								{
+									"key": "wouldReturn",
+									"label": "Would come back"
+								}
+							],
+							"emptyText": "No exit interview recorded yet",
+							"filter": {
+								"offboardingId": "@objectId"
+							},
+							"limit": 5,
+							"register": "humaniq",
+							"rowRoute": "ExitInterviewDetail",
+							"schema": "ExitInterview",
+							"sort": {
+								"dir": "desc",
+								"field": "heldOn"
+							},
+							"viewAllRoute": "ExitInterviews"
+						},
+						"icon": "CommentAccountOutline",
+						"id": "exit-interviews",
+						"title": "Exit interview",
+						"type": "object-list"
 					},
 					{
 						"content": {
@@ -7746,6 +7827,87 @@
 			"route": "/offboardings/:id",
 			"title": "Offboarding",
 			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "hiring-offboarding-completion (2026-09-30): REQ-OFC-001/002. The reason count reads GET /api/offboarding/exit-reasons (HR only; anonymised interviews count too, they keep reason, department and date). The list reads the ExitInterview objects; OpenRegister lets only humaniq-hr read them. The disabled flow Exit interviews anonymiseren clears the person link and free text after 90 days once an administrator enables it.",
+				"description": "What leavers said when they left, and their reasons counted over the last twelve months.",
+				"layout": [
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "exit-reasons"
+					},
+					{
+						"gridHeight": 7,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 5,
+						"id": 2,
+						"widgetId": "exit-list"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"emptyLabel": "No exit interviews in the last twelve months",
+							"endpointSource": {
+								"params": {
+									"months": 12
+								},
+								"responsePath": "reasons",
+								"url": "/apps/humaniq/api/offboarding/exit-reasons"
+							},
+							"height": "100%",
+							"labelsPath": "label",
+							"seriesFields": [
+								{
+									"name": "Leavers",
+									"path": "count"
+								}
+							],
+							"type": "bar"
+						},
+						"id": "exit-reasons",
+						"title": "Reasons for leaving, last twelve months",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"columns": [
+								"heldOn",
+								"mainReason",
+								"wouldRecommend",
+								"wouldReturn",
+								"orgUnitId",
+								"anonymisedAt"
+							],
+							"emptyText": "No exit interviews yet",
+							"filter": {
+								"administrationId": "@workspace.activeAdministrationId?"
+							},
+							"limit": 50,
+							"register": "humaniq",
+							"rowRoute": "ExitInterviewDetail",
+							"schema": "ExitInterview",
+							"sort": {
+								"dir": "desc",
+								"field": "heldOn"
+							}
+						},
+						"id": "exit-list",
+						"title": "Exit interviews",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "ExitInterviews",
+			"route": "/exit-interviews",
+			"title": "Exit interviews",
+			"type": "dashboard"
 		},
 		{
 			"config": {
@@ -13267,6 +13429,68 @@
 			"route": "/offboardings",
 			"title": "Offboardings",
 			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "hiring-offboarding-completion (2026-09-30): D1. Recording the interview fills in the case's exit interview date, the leaver and the department (ExitInterviewListener). After 90 days the flow clears the leaver, the case, who held it and the free text.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "ExitInterview",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"administrationId": {
+									"editable": false
+								},
+								"anonymisedAt": {
+									"editable": false
+								}
+							},
+							"title": "Exit interview"
+						},
+						"icon": "CommentAccountOutline",
+						"id": "data",
+						"title": "Exit interview",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "ExitInterviewDetail",
+			"route": "/exit-interviews/:id",
+			"title": "Exit interview",
+			"type": "detail"
 		},
 		{
 			"config": {
