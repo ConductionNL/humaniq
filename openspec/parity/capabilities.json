@@ -3429,7 +3429,7 @@
    "id": "pln-leave-in-roster",
    "area": "planning",
    "name": "See approved leave inside the roster so nobody is planned while away.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "partial",
    "hr2day": "partial",
@@ -3445,11 +3445,12 @@
     "personio": "https://developer.personio.de/docs/key-points-for-implementing-shift-planning-integration-with-personio-hris: shift planning partners consume approved absences from Personio for accurate shift planning; the roster itself lives in the partner app."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/agenda-rostering-and-resource-booking (REQ agenda and availability: approved leave and open sick leave appear on the person's agenda and are taken out of availability for rostering), matched 2026-09-28. Before: grep -niF leave lib/Service/RosterCheckService.php lib/Standards/Checks/NlRosterChecks.php lib/Controller/RosterController.php: no hits; RosterAssignmentProjectionService.php only composes a Shift's start/end times, not leave; RosterAssignments/RosterDetail manifest pages show no leave column",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "evidence": "lib/Service/LeaveConflictCheckService.php finds a RosterAssignment on a day of approved LeaveRequest (mandatory) or open SickLeaveCase (advisory) of its employee, no reason copied; lib/Service/RosterCheckService.php runs it in the same act as the working-time and competence checks (leaveFindings); lib/Lifecycle/RosterCompetenceGuard.php refuses publiceren on approved leave; GET /api/roster/{rosterId}/leave (lib/Controller/RosterController.php::leave) feeds the Planned while away widget on RosterDetail (src/manifest.d/hr-roster.json). The agenda (lib/Service/AgendaComposer.php) and availability (lib/Service/AvailabilityService.php) already carry leave. Tests: tests/Unit/Service/LeaveConflictCheckServiceTest.php, tests/Unit/Service/RosterCheckServiceTest.php, tests/Unit/Lifecycle/RosterCompetenceGuardTest.php, tests/Unit/Controller/RosterControllerTest.php.",
+    "reachedOn": "Planning > a roster: Planned while away; Publish refused while someone is rostered on approved leave",
     "owner": "ConductionNL/humaniq",
-    "change": "agenda-rostering-and-resource-booking"
+    "change": "2026-09-30-agenda-rostering-and-resource-booking",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

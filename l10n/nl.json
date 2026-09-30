@@ -3182,7 +3182,13 @@
         "Hours entered on the request": "Uren ingevuld op de aanvraag",
         "Working pattern and public holidays": "Werkpatroon en feestdagen",
         "Working pattern; public holidays could not be checked": "Werkpatroon; feestdagen konden niet worden gecontroleerd",
-        "Contract hours, spread over five days": "Contracturen, verdeeld over vijf dagen"
+        "Contract hours, spread over five days": "Contracturen, verdeeld over vijf dagen",
+        "Planned while away": "Ingepland tijdens afwezigheid",
+        "Absence": "Afwezigheid",
+        "Effect": "Gevolg",
+        "On approved leave": "Met goedgekeurd verlof",
+        "Blocks publishing": "Blokkeert publiceren",
+        "Nobody on this roster is planned on a day they are away": "Niemand in dit rooster is ingepland op een dag dat die persoon afwezig is"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

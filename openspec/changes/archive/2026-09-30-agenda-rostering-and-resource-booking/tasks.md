@@ -65,3 +65,15 @@
       availability subtraction.
 - [x] 8.2 e2e coverage or a reason-bearing exclusion per scenario, per gate 19.
 - [x] 8.3 `npm run check:manifest` exits 0.
+
+## 9. Leave inside the roster (pln-leave-in-roster, added 2026-09-30)
+
+- [x] 9.1 Add `LeaveConflictCheckService`: approved leave on an assignment's date is a
+      mandatory `leave` finding, open sick leave an advisory one, no reason copied.
+- [x] 9.2 Run it in `RosterCheckService` in the same act, with a `leaveFindings` count
+      in every report shape.
+- [x] 9.3 Refuse `publiceren` on a mandatory leave finding in `RosterCompetenceGuard`.
+- [x] 9.4 Add `GET /api/roster/{rosterId}/leave` and the Planned while away widget on
+      RosterDetail, en and nl.
+- [x] 9.5 Unit tests: LeaveConflictCheckServiceTest, RosterCheckServiceTest,
+      RosterCompetenceGuardTest, RosterControllerTest.
