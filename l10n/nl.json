@@ -3232,7 +3232,14 @@
         "With the salary": "Met het salaris",
         "Fixed allowances paid every month with the salary, such as a home-working, travel or telephone allowance. A second HR adviser activates each one.": "Vaste vergoedingen die elke maand met het salaris worden betaald, zoals een thuiswerk-, reiskosten- of telefoonvergoeding. Een tweede HR-adviseur activeert elke vergoeding.",
         "Allowance": "Vergoeding",
-        "A fixed allowance paid to one employee every month through the payslip, such as a home-working, travel or telephone allowance. HR declares its tax treatment; humaniq pays the untaxed part on top of net pay, adds the taxed part to the gross, and writes the WKR ledger row itself (payroll-expenses-and-allowances).": "Een vaste vergoeding die één medewerker elke maand via de loonstrook krijgt, zoals een thuiswerk-, reiskosten- of telefoonvergoeding. HR legt de fiscale behandeling vast; humaniq betaalt het onbelaste deel bovenop het nettoloon, telt het belaste deel bij het brutoloon en schrijft zelf de WKR-regel."
+        "A fixed allowance paid to one employee every month through the payslip, such as a home-working, travel or telephone allowance. HR declares its tax treatment; humaniq pays the untaxed part on top of net pay, adds the taxed part to the gross, and writes the WKR ledger row itself (payroll-expenses-and-allowances).": "Een vaste vergoeding die één medewerker elke maand via de loonstrook krijgt, zoals een thuiswerk-, reiskosten- of telefoonvergoeding. HR legt de fiscale behandeling vast; humaniq betaalt het onbelaste deel bovenop het nettoloon, telt het belaste deel bij het brutoloon en schrijft zelf de WKR-regel.",
+        "Paid, or why it was not paid this period.": "Betaald, of waarom het deze periode niet is betaald.",
+        "Taxed": "Belast",
+        "The WKR category of the untaxed part.": "De WKR-categorie van het onbelaste deel.",
+        "The part added to the gross pay.": "Het deel dat bij het brutoloon komt.",
+        "The part paid on top of net pay.": "Het deel dat bovenop het nettoloon wordt betaald.",
+        "The recurring allowance this line pays.": "De vaste vergoeding die deze regel betaalt.",
+        "Untaxed": "Onbelast"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

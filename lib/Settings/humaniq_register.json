@@ -42,6 +42,7 @@
                     "EmployeeCompetence",
                     "EmploymentContract",
                     "CommuteArrangement",
+                    "RecurringAllowance",
                     "WpmReport",
                     "Expense",
                     "Formatieplaats",
