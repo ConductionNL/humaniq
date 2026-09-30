@@ -108,6 +108,18 @@ class HoursRegisterGatewayTest extends TestCase {
 	}//end testFindFilteredAndSaveRoundTrip()
 
 	/**
+	 * delete() removes the object from the register.
+	 *
+	 * @return void
+	 */
+	public function testDeleteRemovesTheObject(): void {
+		$this->gateway->save(['payrollRunId' => 'run-5', 'kind' => 'skipped'], 'PayrollRunFinding', 'f-1');
+		$this->gateway->delete('f-1', 'PayrollRunFinding');
+
+		$this->assertNull($this->gateway->findObjectData('f-1', 'PayrollRunFinding'));
+	}//end testDeleteRemovesTheObject()
+
+	/**
 	 * The chain lookups resolve manager / cost centre through the SAME
 	 * OrgResolutionService the audit uses, with the never-guessed
 	 * unique-or-null posture; the account-link lookup finds the matching

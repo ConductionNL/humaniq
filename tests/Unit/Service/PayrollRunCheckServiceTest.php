@@ -62,10 +62,11 @@ class PayrollRunCheckServiceTest extends TestCase {
 	 * @param array<string, list<array<string, mixed>>> $rows       Rows keyed by schema.
 	 * @param list<array<string, mixed>>                $violations What the rule audit reports.
 	 * @param string                                    $thresholds The payroll_check_thresholds setting.
+	 * @param bool                                      $auditFails Whether the rule audit throws.
 	 *
 	 * @return PayrollRunCheckService
 	 */
-	private function service(array $rows, array $violations = [], string $thresholds = ''): PayrollRunCheckService {
+	private function service(array $rows, array $violations = [], string $thresholds = '', bool $auditFails = false): PayrollRunCheckService {
 		$gateway = $this->createMock(HoursRegisterGateway::class);
 		$gateway->method('loadAll')->willReturnCallback(static fn (string $schema): array => ($rows[$schema] ?? []));
 		$gateway->method('findObjectData')->willReturnCallback(static function (string $uuid, string $schema) use ($rows): ?array {
@@ -85,7 +86,11 @@ class PayrollRunCheckServiceTest extends TestCase {
 			$this->deletes[] = ['uuid' => $uuid, 'schema' => $schema];
 		});
 		$audit = $this->createMock(RuleAuditService::class);
-		$audit->method('auditPayrollRunScope')->willReturn(['violations' => $violations]);
+		if ($auditFails === true) {
+			$audit->method('auditPayrollRunScope')->willThrowException(new \RuntimeException('rules unavailable'));
+		} else {
+			$audit->method('auditPayrollRunScope')->willReturn(['violations' => $violations]);
+		}
 
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(static fn (string $app, string $key, string $default = ''): string => ($key === 'payroll_check_thresholds' ? $thresholds : $default));
@@ -242,5 +247,20 @@ class PayrollRunCheckServiceTest extends TestCase {
 		$this->assertSame([], $this->saves);
 		$this->assertSame(0, $summary['blocking']);
 	}//end testAnUnknownRunChecksNothing()
+
+	/**
+	 * A rule audit that cannot run leaves the other sources' findings and
+	 * the counts in place.
+	 *
+	 * @return void
+	 */
+	public function testAFailingRuleAuditKeepsTheOtherFindings(): void {
+		$summary = $this->service(rows: $this->rows(), auditFails: true)->check('run-5', [['employeeId' => 'emp-3', 'reason' => 'no-salary']]);
+
+		$kinds = array_column($this->findings(), 'kind');
+		$this->assertNotContains('rule-violation', $kinds);
+		$this->assertContains('skipped', $kinds);
+		$this->assertSame(1, $summary['blocking']);
+	}//end testAFailingRuleAuditKeepsTheOtherFindings()
 
 }//end class
