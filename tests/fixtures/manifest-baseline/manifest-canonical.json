@@ -238,6 +238,12 @@
 		{
 			"children": [
 				{
+					"icon": "BullhornOutline",
+					"id": "MijnMededelingen",
+					"label": "My announcements",
+					"route": "MijnMededelingen"
+				},
+				{
 					"icon": "ClockCheckOutline",
 					"id": "MijnUren",
 					"label": "My hours",
@@ -499,6 +505,12 @@
 					"id": "RelationsCases",
 					"label": "Relations cases",
 					"route": "RelationsCases"
+				},
+				{
+					"icon": "BullhornOutline",
+					"id": "Announcements",
+					"label": "Announcements",
+					"route": "Announcements"
 				},
 				{
 					"icon": "FileDocumentMultipleOutline",
@@ -3329,6 +3341,174 @@
 			"route": "/configuratie/administraties",
 			"title": "Administrations",
 			"type": "custom"
+		},
+		{
+			"config": {
+				"_note": "self-service-announcements-and-digest (2026-09-30): REQ-AND-001/002, design D2. The table reads GET /api/announcements/mine, which returns the published announcements in their period whose audience holds the caller (the whole administration, or one of the caller's live departments including their teams), each with the caller's own confirmation. A declarative filter cannot say one of my units, so this is an endpoint. Opening a row shows the text and the policy file; I have read this confirms it.",
+				"description": "What HR tells you: news, and policies you may be asked to confirm you read.",
+				"layout": [
+					{
+						"gridHeight": 6,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "my-announcements"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "title",
+									"label": "Announcement"
+								},
+								{
+									"key": "publishFrom",
+									"label": "Shown from"
+								},
+								{
+									"key": "requiresConfirmation",
+									"label": "Asks for confirmation"
+								},
+								{
+									"key": "confirmed",
+									"label": "Confirmed by you"
+								}
+							],
+							"emptyText": "No announcements for you",
+							"endpointSource": {
+								"params": {},
+								"responsePath": "announcements",
+								"url": "/apps/humaniq/api/announcements/mine"
+							},
+							"rowRoute": "AnnouncementDetail"
+						},
+						"id": "my-announcements",
+						"title": "Announcements for you",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "MijnMededelingen",
+			"route": "/my-announcements",
+			"title": "My announcements",
+			"type": "dashboard"
+		},
+		{
+			"config": {
+				"_note": "self-service-announcements-and-digest (2026-09-30): REQ-AND-001/002, design D1/D2. The policy document is a file on the announcement (sidebar Files tab); OpenRegister lets every employee read a published announcement and its files. I have read this posts to /api/announcements/{id}/confirm, which confirms only for an employee in the audience of a published announcement that asks for it, once. Who confirmed comes from GET /api/announcements/confirmations?id=, HR and administrators only (403 for others, so the table stays empty for an employee).",
+				"headerActions": [
+					{
+						"confirm": true,
+						"icon": "CheckDecagramOutline",
+						"id": "confirm-read",
+						"label": "I have read this",
+						"method": "POST",
+						"type": "api-call",
+						"url": "/api/announcements/@objectId/confirm"
+					}
+				],
+				"hiddenTabs": [
+					"notes",
+					"tags",
+					"tasks"
+				],
+				"layout": [
+					{
+						"gridHeight": 7,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 7,
+						"id": 2,
+						"widgetId": "confirmations"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "publiceren",
+							"from": [
+								"concept"
+							],
+							"label": "Publish",
+							"to": "gepubliceerd"
+						},
+						{
+							"action": "intrekken",
+							"from": [
+								"concept",
+								"gepubliceerd"
+							],
+							"label": "Withdraw",
+							"to": "ingetrokken"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "Announcement",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 1,
+							"title": "Announcement"
+						},
+						"icon": "BullhornOutline",
+						"id": "data",
+						"title": "Announcement",
+						"type": "data"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Employee"
+								},
+								{
+									"key": "confirmed",
+									"label": "Confirmed"
+								},
+								{
+									"key": "confirmedAt",
+									"label": "Confirmed at"
+								}
+							],
+							"emptyText": "Nobody in the audience yet, or only HR sees who confirmed",
+							"endpointSource": {
+								"params": {
+									"id": "@objectId"
+								},
+								"responsePath": "rows",
+								"url": "/apps/humaniq/api/announcements/confirmations"
+							}
+						},
+						"id": "confirmations",
+						"title": "Who confirmed",
+						"type": "endpoint-table"
+					}
+				]
+			},
+			"id": "AnnouncementDetail",
+			"route": "/announcements/:id",
+			"title": "Announcement",
+			"type": "detail"
 		},
 		{
 			"config": {
@@ -9206,14 +9386,22 @@
 		},
 		{
 			"config": {
-				"_note": "hrmq-personal-dashboard (design.md D1/D3): the caller-scoped personal landing surface hydra ADR-097 Decision 3 requires — 'route to a type: \"dashboard\" page scoped to the caller … Not an index page, and not a bare parent with no route of its own'. The MijnHrGroup menu entry gains route: \"MijnHr\" through this fragment's menu block (mergeMenuItems fills the base group's undefined route key), so the group title lands here while its nine children stay under the collapse chevron — both of Decision 3's conditions, which moves humaniq's counted main-menu total from 6 to 5. Every widget carries a caller-scope filter (userId: \"@me\", or managerUserId: \"@me\" for the approver's own queue) plus the OPTIONAL administration token @workspace.activeAdministrationId? — unresolved means dropped, so a widget degrades to user-scoped-only, never to another user's rows. Only the built-in `stat` and `object-table` types are used (stat resolves through humaniq's own registry.js override, which is load-bearing: the library's self-registration is tree-shaken out of the production bundle); no custom widget, no new backend endpoint, no raw-GraphQL dataSource (the steering Dashboard's _note documents why that form resolves a schema by name across every register on the instance). Widget 6 has no conditional-visibility primitive available — the dashboard widget grammar has none for stat tiles (design.md D4) — so it always renders and shows 0 for a caller who manages nobody; its caption keeps the zero legible. The stat tiles' click-through uses content.route in the vue-router LOCATION-OBJECT form ({\"name\": \"…\"}), not the bare string design.md D3 writes: widgetLink passes a string straight to <router-link :to>, where vue-router 4 reads it as a PATH, so a bare route NAME would fall through to the catch-all. Same spelling the hr-objects nav-card entries already use. The three object-table widgets carry the FLAT content contract (register/schema/filter/sort{field,dir}/limit/columns/rowRoute/viewAllRoute/emptyText), NOT the nested `source` shape design.md D3 writes — measured live 2026-08-22, not inferred: on a type:\"dashboard\" page CnDashboardPage.registryRenderer looks up getWidgetTypeEntry(canonicalWidgetType(type)), and utils/widgetTypeAliases.js maps `object-table` -> `table`, which registerDashboardWidgets.js registers INLINE to CnObjectListWidget. The alias therefore never reaches CnWidgetObjectTable's dashboardRegistration (its `object-table` key is registered under a name the canonicaliser has already rewritten away, in a side-effect module ADR-061 tree-shaking drops anyway). With the `source` shape the widget rendered its emptyText and fired ZERO fetches, because CnObjectListWidget reads content.register/content.schema and has no `source` key at all. Consequences of the real contract, accepted: `limit` is a FETCH CAP (ADR-062), not a render promise — the visible row count fits the cell — and there is no per-row-route escape, which is fine since rowRoute is already a single static route name. All three also carry allowCreate: false — CnObjectListWidget renders a \"+ Toevoegen\" create affordance by DEFAULT (measured live), and all three collections are read-only to the employee: Timesheets are server-created by the booking flow (MijnUrenstaten already sets showAdd: false), LeaveBalance is written only by LeaveAccrualJob, and payslips are payroll-generated (REQ-MHS-004's read-only posture). Labels are Dutch literals; hrmq-i18n-locale-completeness owns their conversion and this change adds no English keys.",
+				"_note": "hrmq-personal-dashboard (design.md D1/D3): the caller-scoped personal landing surface hydra ADR-097 Decision 3 requires — 'route to a type: \"dashboard\" page scoped to the caller … Not an index page, and not a bare parent with no route of its own'. The MijnHrGroup menu entry gains route: \"MijnHr\" through this fragment's menu block (mergeMenuItems fills the base group's undefined route key), so the group title lands here while its nine children stay under the collapse chevron — both of Decision 3's conditions, which moves humaniq's counted main-menu total from 6 to 5. Every widget carries a caller-scope filter (userId: \"@me\", or managerUserId: \"@me\" for the approver's own queue) plus the OPTIONAL administration token @workspace.activeAdministrationId? — unresolved means dropped, so a widget degrades to user-scoped-only, never to another user's rows. Only the built-in `stat` and `object-table` types are used (stat resolves through humaniq's own registry.js override, which is load-bearing: the library's self-registration is tree-shaken out of the production bundle); no custom widget, no new backend endpoint, no raw-GraphQL dataSource (the steering Dashboard's _note documents why that form resolves a schema by name across every register on the instance). Widget 6 has no conditional-visibility primitive available — the dashboard widget grammar has none for stat tiles (design.md D4) — so it always renders and shows 0 for a caller who manages nobody; its caption keeps the zero legible. The stat tiles' click-through uses content.route in the vue-router LOCATION-OBJECT form ({\"name\": \"…\"}), not the bare string design.md D3 writes: widgetLink passes a string straight to <router-link :to>, where vue-router 4 reads it as a PATH, so a bare route NAME would fall through to the catch-all. Same spelling the hr-objects nav-card entries already use. The three object-table widgets carry the FLAT content contract (register/schema/filter/sort{field,dir}/limit/columns/rowRoute/viewAllRoute/emptyText), NOT the nested `source` shape design.md D3 writes — measured live 2026-08-22, not inferred: on a type:\"dashboard\" page CnDashboardPage.registryRenderer looks up getWidgetTypeEntry(canonicalWidgetType(type)), and utils/widgetTypeAliases.js maps `object-table` -> `table`, which registerDashboardWidgets.js registers INLINE to CnObjectListWidget. The alias therefore never reaches CnWidgetObjectTable's dashboardRegistration (its `object-table` key is registered under a name the canonicaliser has already rewritten away, in a side-effect module ADR-061 tree-shaking drops anyway). With the `source` shape the widget rendered its emptyText and fired ZERO fetches, because CnObjectListWidget reads content.register/content.schema and has no `source` key at all. Consequences of the real contract, accepted: `limit` is a FETCH CAP (ADR-062), not a render promise — the visible row count fits the cell — and there is no per-row-route escape, which is fine since rowRoute is already a single static route name. All three also carry allowCreate: false — CnObjectListWidget renders a \"+ Toevoegen\" create affordance by DEFAULT (measured live), and all three collections are read-only to the employee: Timesheets are server-created by the booking flow (MijnUrenstaten already sets showAdd: false), LeaveBalance is written only by LeaveAccrualJob, and payslips are payroll-generated (REQ-MHS-004's read-only posture). Labels are Dutch literals; hrmq-i18n-locale-completeness owns their conversion and this change adds no English keys. self-service-announcements-and-digest (2026-09-30): the Announcements table on top is the one exception to no new endpoint: it reads GET /api/announcements/mine, because an audience of one of my departments is not a declarative filter (design D2).",
 				"description": "Your personal overview: hours, leave, expenses and payslips.",
 				"layout": [
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 7,
+						"widgetId": "mededelingen"
+					},
 					{
 						"gridHeight": 3,
 						"gridWidth": 4,
 						"gridX": 0,
-						"gridY": 0,
+						"gridY": 4,
 						"id": 1,
 						"widgetId": "uren-maand"
 					},
@@ -9221,7 +9409,7 @@
 						"gridHeight": 3,
 						"gridWidth": 4,
 						"gridX": 4,
-						"gridY": 0,
+						"gridY": 4,
 						"id": 2,
 						"widgetId": "declaraties"
 					},
@@ -9229,7 +9417,7 @@
 						"gridHeight": 3,
 						"gridWidth": 4,
 						"gridX": 8,
-						"gridY": 0,
+						"gridY": 4,
 						"id": 3,
 						"widgetId": "te-beoordelen"
 					},
@@ -9237,7 +9425,7 @@
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 0,
-						"gridY": 3,
+						"gridY": 7,
 						"id": 4,
 						"widgetId": "urenstaten"
 					},
@@ -9245,7 +9433,7 @@
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 6,
-						"gridY": 3,
+						"gridY": 7,
 						"id": 5,
 						"widgetId": "verlofsaldo"
 					},
@@ -9253,12 +9441,42 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 7,
+						"gridY": 11,
 						"id": 6,
 						"widgetId": "loonstroken"
 					}
 				],
 				"widgets": [
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "title",
+									"label": "Announcement"
+								},
+								{
+									"key": "publishFrom",
+									"label": "Shown from"
+								},
+								{
+									"key": "confirmed",
+									"label": "Confirmed by you"
+								}
+							],
+							"emptyText": "No announcements for you",
+							"endpointSource": {
+								"params": {},
+								"responsePath": "announcements",
+								"url": "/apps/humaniq/api/announcements/mine"
+							},
+							"rowRoute": "AnnouncementDetail",
+							"viewAllRoute": "MijnMededelingen"
+						},
+						"id": "mededelingen",
+						"title": "Announcements",
+						"type": "object-table"
+					},
 					{
 						"content": {
 							"caption": "logged this month",
@@ -9880,6 +10098,37 @@
 			"route": "/kalenderabonnementen/:id",
 			"title": "Calendar subscription",
 			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "self-service-announcements-and-digest (2026-09-30): REQ-AND-001. HR writes; employees read a published one on My announcements and My HR.",
+				"columns": [
+					"title",
+					"audience",
+					"publishFrom",
+					"publishUntil",
+					"requiresConfirmation",
+					"status"
+				],
+				"description": "News and policies for the employees of an administration or of chosen departments. Publish one to show it on their My HR page.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"status",
+					"audience"
+				],
+				"register": "humaniq",
+				"schema": "Announcement",
+				"sort": {
+					"field": "publishFrom",
+					"order": "desc"
+				}
+			},
+			"id": "Announcements",
+			"route": "/announcements",
+			"title": "Announcements",
+			"type": "index"
 		},
 		{
 			"config": {
