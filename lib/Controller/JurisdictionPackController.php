@@ -56,6 +56,8 @@ use Throwable;
 
 /**
  * Admin-only jurisdiction-pack upload, list, deactivation and year check.
+ *
+ * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
  */
 class JurisdictionPackController extends Controller {
 

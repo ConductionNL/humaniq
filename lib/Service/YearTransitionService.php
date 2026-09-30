@@ -35,6 +35,8 @@ use Throwable;
 
 /**
  * The resolution of a tax year to a pack and tables.
+ *
+ * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-002
  */
 class YearTransitionService {
 

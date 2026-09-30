@@ -35,6 +35,8 @@ use Throwable;
 
 /**
  * Uploaded tax tables: validation, storage and the active lookup.
+ *
+ * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
  */
 class TaxTableSetService implements TaxTableSourceInterface {
 
