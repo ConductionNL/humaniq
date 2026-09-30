@@ -51,6 +51,7 @@ use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\PayrollExpenseFoldService;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
+use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
@@ -228,10 +229,11 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @param HoursPayService|null $hoursPay The hours-and-overtime fold, or null for a run without it.
 	 * @param PayrollExpenseFoldService|null $expenses The claims-and-allowances fold, or null for a run without it.
+	 * @param PayrollRunCheckService|null $runCheck The run check, or null for a run without it.
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -253,7 +255,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses),
+			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck),
 			$fake,
 			$retentionGuard,
 		];
@@ -1909,5 +1911,33 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertEqualsWithDelta(($byAccount['4001'] + $byAccount['4002'] + $byAccount['4010']), ($byAccount['1701'] + $byAccount['1702']), 0.001);
 		$this->assertEqualsWithDelta($plainJournal['1702'] + 27.40, $byAccount['1702'], 0.001);
 	}//end testReimbursementsReachTheJournalBalanced()
+
+	/**
+	 * payroll-run-checks D2: a calculation runs the check with the skipped
+	 * list and returns its summary; a failing check does not fail the run.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-001
+	 */
+	public function testACalculationRunsTheCheckWithTheSkippedList(): void {
+		$rows = ['Employee' => [$this->employee(), ['id' => 'emp-nocontract', 'firstName' => 'Kees', 'lastName' => 'Zonder', 'startDate' => '2020-01-01']], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
+		$check = $this->createMock(PayrollRunCheckService::class);
+		$check->expects($this->once())->method('check')->with(
+			$this->isType('string'),
+			$this->callback(static fn (array $skipped): bool => $skipped !== [] && ($skipped[0]['employeeId'] ?? '') === 'emp-nocontract')
+		)->willReturn(['blocking' => 1, 'warning' => 0, 'info' => 0]);
+		[$service] = $this->service($rows, null, null, null, $check);
+
+		$result = $service->runFor('2026-05');
+
+		$this->assertSame('calculated', $result['status']);
+		$this->assertSame(1, $result['check']['blocking']);
+
+		$failing = $this->createMock(PayrollRunCheckService::class);
+		$failing->method('check')->willThrowException(new \RuntimeException('down'));
+		[$service] = $this->service($rows, null, null, null, $failing);
+		$this->assertSame('calculated', $service->runFor('2026-05')['status']);
+	}//end testACalculationRunsTheCheckWithTheSkippedList()
 
 }//end class
