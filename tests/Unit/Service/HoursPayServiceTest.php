@@ -40,6 +40,8 @@ use Psr\Container\ContainerInterface;
  */
 class HoursPayServiceTest extends TestCase {
 
+	private const RUN = '5f0c2a1e-7b3d-4c8e-9f10-2a3b4c5d6e7f';
+
 	/** @var list<array{payload: array<string, mixed>, schema: string, uuid: ?string}> */
 	private array $saved = [];
 
@@ -191,7 +193,7 @@ class HoursPayServiceTest extends TestCase {
 
 		$pay = $this->service()->payFor(
 			employee: ['id' => 'emp-1'],
-			contract: ['hoursPerWeek' => 32, 'hourlyWage' => 16.00, 'cao' => 'cao-voorbeeld'],
+			contract: ['hoursPerWeek' => 32, 'hourlyWage' => 16.00, 'cao' => 'cao-gemeenten'],
 			timesheets: [self::timesheet('ts-may', '2026-05', 10, ['overtimeHours' => 2])],
 			entries: $entries,
 			nonWorkingDates: null
@@ -203,6 +205,27 @@ class HoursPayServiceTest extends TestCase {
 	}//end testAPlaceholderCaoIsFlagged()
 
 	/**
+	 * Without the employee's choice, a confirmed CAO that says tijd-voor-tijd
+	 * credits the overtime as time off.
+	 *
+	 * @return void
+	 */
+	public function testTheCaoDefaultIsTimeOff(): void {
+		$entries = [['timesheetId' => 'ts-may', 'date' => '2026-05-18', 'hours' => 2, 'overtime' => true]];
+
+		$pay = $this->service()->payFor(
+			employee: ['id' => 'emp-1'],
+			contract: ['hoursPerWeek' => 32, 'hourlyWage' => 16.00, 'cao' => 'cao-voorbeeld'],
+			timesheets: [self::timesheet('ts-may', '2026-05', 2, ['overtimeHours' => 2])],
+			entries: $entries,
+			nonWorkingDates: []
+		);
+
+		self::assertSame(0, $pay['overtimeCents']);
+		self::assertSame([['timesheetId' => 'ts-may', 'hours' => 2.5]], $pay['timeCredits'], 'cao-voorbeeld: 25% on a weekday.');
+	}//end testTheCaoDefaultIsTimeOff()
+
+	/**
 	 * The run stamps what it paid and unstamps what it no longer pays; the
 	 * stamp writes the whole timesheet, valid for its schema.
 	 *
@@ -211,14 +234,14 @@ class HoursPayServiceTest extends TestCase {
 	public function testStamping(): void {
 		$timesheets = [
 			self::timesheet('ts-may', '2026-05', 128, ['managerUserId' => 'boss', '@self' => ['id' => 'ts-may']]),
-			self::timesheet('ts-reopened', '2026-05', 8, ['status' => 'submitted', 'payrollRunId' => 'run-may', 'paidInPeriod' => '2026-05']),
+			self::timesheet('ts-reopened', '2026-05', 8, ['status' => 'submitted', 'payrollRunId' => self::RUN, 'paidInPeriod' => '2026-05']),
 		];
 
-		$this->service()->stamp(timesheets: $timesheets, paid: ['ts-may' => 0.0], runId: 'run-may', period: '2026-05');
+		$this->service()->stamp(timesheets: $timesheets, paid: ['ts-may' => 0.0], runId: self::RUN, period: '2026-05');
 
 		self::assertCount(2, $this->saved);
 		self::assertSame('ts-may', $this->saved[0]['uuid']);
-		self::assertSame('run-may', $this->saved[0]['payload']['payrollRunId']);
+		self::assertSame(self::RUN, $this->saved[0]['payload']['payrollRunId']);
 		self::assertSame('2026-05', $this->saved[0]['payload']['paidInPeriod']);
 		self::assertSame('boss', $this->saved[0]['payload']['managerUserId']);
 		self::assertArrayNotHasKey('@self', $this->saved[0]['payload']);

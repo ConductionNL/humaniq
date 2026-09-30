@@ -144,7 +144,7 @@
                         "type": "string",
                         "title": "Leave type",
                         "description": "The kind of leave, by the code of a leave type.", "x-notes": "Holds the CODE of a LeaveType object (leave-against-a-department-schedule, REQ-LVM-T01), not a uuid and no longer a closed enum: a new kind of leave is an administered object rather than a schema change and a release. It stays a plain code string on purpose, so every request written while this was an enum (holiday, sick, unpaid, special, care, parental) still resolves to the type whose code it already holds, which a uuid reference would have broken in silence. LeaveTypeResolver::resolve() matches a stored value against a type's uuid first and its code second.",
-                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave"}
+                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave", "compensation": "Time off in lieu"}
                     },
                     "documentId": {
                         "type": "string",
@@ -247,7 +247,7 @@
             "LeaveBalance": {
                 "slug": "LeaveBalance",
                 "icon": "ScaleBalance",
-                "version": "0.4.0",
+                "version": "0.5.0",
                 "title": "Leave balance",
                 "description": "Per-employee, per-year, per-leave-type entitlement and usage ledger (verlofsaldo): the statutory plus bovenwettelijk hours granted for a year, the hours used, and a declaratively calculated remaining balance (x-openregister-calculations). Read by the nl-verlof-wettelijk-minimum / nl-verlof-saldo-niet-negatief / nl-verlof-vervaltermijn rule checks (lib/Standards/rules/labour.json, leave-verzuim-mvp). UsedHours is recomputed from the approved LeaveRequests behind it by LeaveApprovalListener, so approving, correcting or reversing a request restates the balance.",
                 "type": "object",
@@ -341,15 +341,16 @@
                     "leaveType": {
                         "type": "string",
                         "title": "Leave type",
-                        "description": "The kind of leave this balance tracks: holiday, sick, unpaid, special, care or parental.", "x-notes": "The kind of leave this balance tracks, identical to the LeaveRequest.leaveType value set: holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
-                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave"},
+                        "description": "The kind of leave this balance tracks: holiday, sick, unpaid, special, care, parental or time off in lieu of overtime.", "x-notes": "The kind of leave this balance tracks, identical to the LeaveRequest.leaveType value set: holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
+                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave", "compensation": "Time off in lieu"},
                         "enum": [
                             "holiday",
                             "sick",
                             "unpaid",
                             "special",
                             "care",
-                            "parental"
+                            "parental",
+                            "compensation"
                         ]
                     },
                     "entitledHours": {

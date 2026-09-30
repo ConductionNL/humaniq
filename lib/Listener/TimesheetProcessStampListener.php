@@ -93,7 +93,20 @@ class TimesheetProcessStampListener implements IEventListener {
 	 *
 	 * @var array<int, string>
 	 */
-	public const AGGREGATE_FIELDS = ['hours', 'entryCount', 'projectId', 'costCenter', 'billable'];
+	public const AGGREGATE_FIELDS = [
+		'hours',
+		'entryCount',
+		'projectId',
+		'costCenter',
+		'billable',
+		// time-hours-and-overtime-to-payroll D2, D3, D5: the overtime aggregate
+		// and the payroll run's stamps, written only by humaniq itself.
+		'overtimeHours',
+		'payrollRunId',
+		'paidInPeriod',
+		'overtimeCreditHours',
+		'overtimeCreditedAt',
+	];
 
 	/**
 	 * Constructor.
