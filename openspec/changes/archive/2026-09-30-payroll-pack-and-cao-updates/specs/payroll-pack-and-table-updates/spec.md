@@ -20,16 +20,22 @@ Rows: `pay-year-transition`, `ppl-cao-updates` (humaniq matrix).
 - **THEN** the page lists the 2027 pack as active and a draft run for 2027-01 is calculated
   with engine version `nl-2027@<packVersion>`
 
+@e2e exclude the upload is validated and stored on the server; covered by PackUploadServiceTest::testA2027PackWithItsTablesIsStoredAndResolves and JurisdictionPackControllerTest::testTheTablesTravelWithThePack
+
 #### Scenario: A table that breaks the golden vectors is refused whole
 - **GIVEN** a 2027 tables document with a mistyped bracket percentage
 - **WHEN** the payroll administrator uploads it with its pack
 - **THEN** the dialog shows the self-test gate's message, and neither the pack nor the tables
   exist afterwards
 
+@e2e exclude the refusal is a server-side gate; covered by PackUploadServiceTest::testATableThatBreaksTheGoldenVectorIsRefusedWhole
+
 #### Scenario: The bundled year cannot be shadowed by an upload
 - **GIVEN** the bundled `nl-2026` tables
 - **WHEN** an administrator uploads a tables document whose id is `nl-2026`
 - **THEN** the upload is refused with a message naming the bundled id
+
+@e2e exclude the refusal is a server-side gate; covered by PackUploadServiceTest::testTablesNamedAfterTheBundledYearAreRefused and TaxTablesSourceTest::testABundledIdAlwaysLoadsFromDisk
 
 ### Requirement: The page SHALL answer which pack and tables a tax year will use (REQ-PKU-002)
 
@@ -45,14 +51,19 @@ Rows: `pay-year-transition` (humaniq matrix).
 - **THEN** the page shows pack `nl-2027`, origin uploaded, tables `nl-2027`, origin uploaded,
   and self-test passed
 
+@e2e exclude the resolution is a backend read; covered by PackUploadServiceTest::testAnUploadedYearResolvesToTheUpload and PayrollYearTransitionCommandTest::testTheBundledYearIsReportedWithItsOrigins
+
 #### Scenario: A year with nothing to pay it with
 - **GIVEN** no pack for 2028
 - **WHEN** the payroll administrator checks 2028
 - **THEN** the page states that no pack resolves for NL 2028
 
+@e2e exclude the resolution is a backend read; covered by PackUploadServiceTest::testAYearWithoutAPackSaysSo and PayrollYearTransitionCommandTest::testAYearWithoutAPackFails
+
 ### Requirement: An uploaded pack SHALL be deactivatable without touching calculated runs (REQ-PKU-003)
 
-An administrator SHALL be able to deactivate an uploaded pack through a guarded action.
+An administrator SHALL be able to deactivate an uploaded pack through a guarded action
+(`POST /api/payroll/packs/{id}/deactivate`).
 Deactivation SHALL NOT change any run that is not a draft. A draft run recalculated afterwards
 SHALL resolve its pack again.
 
@@ -65,7 +76,12 @@ Rows: `pay-year-transition` (humaniq matrix).
 - **THEN** the 2027-01 run keeps its engine version, and recalculating 2027-02 reports that no
   pack resolves for NL 2027
 
+@e2e exclude deactivation is a guarded server write; covered by PackUploadServiceTest::testADeactivatedPackNoLongerResolves (a calculated run's engineVersion is a stamp on the run, which deactivation never writes)
+
 #### Scenario: A non-administrator cannot deactivate
 - **GIVEN** an HR adviser without administrator rights
 - **WHEN** they call the deactivate action
 - **THEN** the response is 403 and the pack stays active
+
+@e2e exclude the refusal is a controller guard; covered by JurisdictionPackControllerTest::testANonAdministratorCannotDeactivate
+

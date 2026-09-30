@@ -795,6 +795,12 @@
 				"label": "Integrations",
 				"icon": "PowerPlugOutline",
 				"route": "IntegrationAccounts"
+			},
+			{
+				"id": "Loonpakketten",
+				"label": "Payroll packs",
+				"icon": "PackageVariantClosed",
+				"route": "PayrollPacks"
 			}
 		]
 	},
