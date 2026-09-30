@@ -99,6 +99,16 @@ that did not resolve, and pays nothing for it. `payroll-run-checks`, when presen
 list into warnings. A new check `nl-cao-component-onbekend` flags a contract naming a key its
 agreement does not have.
 
+### Built as (2026-09-30)
+
+To keep `CaoRegistry` and `EmploymentTermsResolver` under phpmd's complexity ceiling, the
+component reading lives in `lib/Standards/CaoComponents.php` (`confirmed()`, `declared()`,
+`normalise()`, in place of `CaoRegistry::components()`) and the resolution in
+`lib/Service/CaoComponentTerms.php`; `EmploymentTermsResolver::resolveComponents()` delegates to
+it. `CaoComponentPayService` selects the entries and folds the calculator's lines into the run;
+`CaoComponentOverrideListener` refuses a wrong override when a contract is saved. The run check
+reports unpaid components as `unpaid-input` warnings with rule id `cao:<key>`.
+
 ## Declarative-vs-imperative decision (ADR-031)
 
 | behaviour | path | why |

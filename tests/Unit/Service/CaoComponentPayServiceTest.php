@@ -99,6 +99,22 @@ class CaoComponentPayServiceTest extends TestCase {
 	}//end testNothingNamedAPartMonthAndARefusedOverride()
 
 	/**
+	 * A contract naming the premium of an agreement whose leaf is a
+	 * placeholder, without an override: nothing is paid and the payslip lists
+	 * the premium as not paid.
+	 *
+	 * @return void
+	 */
+	public function testAnUnconfirmedAgreementIsListedNotPaid(): void {
+		$fold = $this->service()->foldFor(contract: ['cao' => 'cao-zorg-vvt', 'caoComponents' => ['ort']], regularWageCents: 300000, hoursPay: ['timesheetIds' => ['ts-5'], 'hourlyRate' => 20.0], entries: [['timesheetId' => 'ts-5', 'startedAt' => '2026-05-12T22:00:00+02:00', 'endedAt' => '2026-05-13T06:00:00+02:00', 'hours' => 8]], nonWorkingDates: null, period: '2026-05');
+
+		$this->assertSame(0, $fold['totalCents']);
+		$fields = $this->service()->payslipFields(fold: $fold);
+		$this->assertSame([], $fields['caoComponentLines']);
+		$this->assertSame(['ort'], $fields['caoComponentsUnresolved']);
+	}//end testAnUnconfirmedAgreementIsListedNotPaid()
+
+	/**
 	 * The share of the month a contract covers.
 	 *
 	 * @return void
