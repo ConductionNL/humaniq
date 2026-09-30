@@ -67,6 +67,28 @@
                     "administrationId": {"type": "string", "nullable": true, "title": "Administration", "description": "The administration of the employee."}
                 }
             }
-        }
+        },
+        "objects": [
+            {
+                "@self": {"register": "humaniq", "schema": "Announcement", "slug": "announcement-declaratieregeling-2027"},
+                "title": "Nieuwe declaratieregeling 2027",
+                "body": "Vanaf 1 januari 2027 geldt een nieuwe declaratieregeling. Lees het beleid in de bijlage en bevestig dat je het gelezen hebt.",
+                "audience": "administration",
+                "orgUnitIds": [],
+                "publishFrom": "2026-09-01",
+                "publishUntil": null,
+                "requiresConfirmation": true,
+                "status": "gepubliceerd",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {"register": "humaniq", "schema": "AnnouncementConfirmation", "slug": "announcementconfirmation-jansen-declaratieregeling-2027"},
+                "announcementId": "@ref:announcement-declaratieregeling-2027",
+                "employeeId": "@ref:employee-jansen",
+                "userId": "admin",
+                "confirmedAt": "2026-09-02T09:15:00+00:00",
+                "administrationId": "ADM-001"
+            }
+        ]
     }
 }

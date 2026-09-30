@@ -83,6 +83,10 @@ return [
         ['name' => 'dossier#incomplete', 'url' => '/api/dossier/incomplete', 'verb' => 'GET'],
         // self-service-approvals-inbox REQ-API-001/002: the caller's approvals inbox, open or decided.
         ['name' => 'approvals#index', 'url' => '/api/approvals', 'verb' => 'GET'],
+        // self-service-announcements-and-digest REQ-AND-001/002: the caller's announcements, their confirmation, and HR's overview.
+        ['name' => 'announcement#mine', 'url' => '/api/announcements/mine', 'verb' => 'GET'],
+        ['name' => 'announcement#confirmations', 'url' => '/api/announcements/confirmations', 'verb' => 'GET'],
+        ['name' => 'announcement#confirm', 'url' => '/api/announcements/{announcementId}/confirm', 'verb' => 'POST'],
         ['name' => 'employeeHistory#employments', 'url' => '/api/employees/{id}/employments', 'verb' => 'GET'],
         // talent-training-and-lms REQ-TRN-002: the people feed a learning platform reads, filtered by the caller's RBAC.
         ['name' => 'learning#people', 'url' => '/api/learning/people', 'verb' => 'GET'],
