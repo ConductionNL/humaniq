@@ -66,6 +66,7 @@ class TaxTableSetService implements TaxTableSourceInterface {
 	 * @throws DslException Naming the id, group or leaf that fails.
 	 *
 	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
+	 * @SuppressWarnings(PHPMD.StaticAccess) TaxTables is a pure value-object factory with static load/fromDocument/isBundled, the precedent PayrollRunService and NlPayrollChecks already use.
 	 */
 	public function validate(array $document): TaxTables {
 		$id = trim((string)($document['id'] ?? ''));

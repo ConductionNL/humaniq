@@ -58,6 +58,7 @@ class YearTransitionService {
 	 * @return array<string, mixed> `resolves`, and when it does: packId, packVersion, packOrigin, tablesId, tablesOrigin, selfTest {passed, message}, provenance; otherwise a message.
 	 *
 	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-002
+	 * @SuppressWarnings(PHPMD.StaticAccess) TaxTables is a pure value-object factory with static load/fromDocument/isBundled, the precedent PayrollRunService and NlPayrollChecks already use.
 	 */
 	public function resolution(string $jurisdiction, int $year): array {
 		$jurisdiction = strtoupper(trim($jurisdiction));

@@ -861,6 +861,7 @@ class Application extends App implements IBootstrap {
 	 * @return void
 	 *
 	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
+	 * @SuppressWarnings(PHPMD.StaticAccess) TaxTables is a pure value-object factory with static load/fromDocument/isBundled, the precedent PayrollRunService and NlPayrollChecks already use.
 	 */
 	private function registerTaxTableSource(ContainerInterface $container): void {
 		TaxTables::useSource(
