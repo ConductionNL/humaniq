@@ -29,7 +29,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 /**
- * The ordered duplicate check.
+ * The ordered duplicate check. *
+ * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-002
  */
 class HireMatchService {
 

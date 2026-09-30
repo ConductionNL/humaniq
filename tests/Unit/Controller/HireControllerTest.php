@@ -102,7 +102,10 @@ class HireControllerTest extends TestCase {
 			->with(['privateEmail' => 'sanne@example.org', 'lastName' => 'de Boer', 'bsn' => '', 'dateOfBirth' => ''])
 			->willReturn([]);
 
-		$data = $this->controller(readable: true, hr: true, matcher: $matcher)->matches('app-1')->getData();
+		$hire = $this->createMock(HireService::class);
+		$hire->method('proposedName')->with('Sanne de Boer')->willReturn(['firstName' => 'Sanne', 'lastName' => 'de Boer']);
+
+		$data = $this->controller(readable: true, hr: true, hire: $hire, matcher: $matcher)->matches('app-1')->getData();
 
 		self::assertSame('Sanne', $data['proposal']['firstName']);
 		self::assertSame('de Boer', $data['proposal']['lastName']);

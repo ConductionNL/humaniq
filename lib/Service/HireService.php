@@ -32,7 +32,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 /**
- * Create employee, attach to an existing one, or report the matches.
+ * Create employee, attach to an existing one, or report the matches. *
+ * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-001
+ * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-002
  */
 class HireService {
 
@@ -65,7 +67,7 @@ class HireService {
 	 *
 	 * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-001
 	 */
-	public static function proposedName(string $candidateName): array {
+	public function proposedName(string $candidateName): array {
 		$parts = explode(' ', (string)preg_replace('/\s+/', ' ', trim($candidateName)), 2);
 		if (count($parts) === 1) {
 			return ['firstName' => '', 'lastName' => $parts[0]];
@@ -231,8 +233,11 @@ class HireService {
 	 * @return boolean
 	 */
 	private static function isDate(string $value): bool {
-		$date = \DateTimeImmutable::createFromFormat('!Y-m-d', $value);
-		return $date !== false && $date->format('Y-m-d') === $value;
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $parts) !== 1) {
+			return false;
+		}
+
+		return checkdate((int)$parts[2], (int)$parts[3], (int)$parts[1]);
 	}//end isDate()
 
 	/**

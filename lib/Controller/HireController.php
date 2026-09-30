@@ -41,7 +41,9 @@ use OCP\IRequest;
 use OCP\IUserSession;
 
 /**
- * The hire proposal and the hire.
+ * The hire proposal and the hire. *
+ * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-001
+ * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-002
  */
 class HireController extends Controller {
 
@@ -99,7 +101,7 @@ class HireController extends Controller {
 			return new JSONResponse(['message' => 'Only HR or an administrator can create an employee from an application.'], Http::STATUS_FORBIDDEN);
 		}
 
-		$proposal = HireService::proposedName((string)($application['candidateName'] ?? ''));
+		$proposal = $this->hires->proposedName((string)($application['candidateName'] ?? ''));
 		$lastName = trim((string)$this->request->getParam('lastName', ''));
 		$matches = $this->matcher->matches(
 			[

@@ -140,8 +140,8 @@ class HireServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheProposedNameKeepsThePrefixWithTheLastName(): void {
-		self::assertSame(['firstName' => 'Sanne', 'lastName' => 'de Boer'], HireService::proposedName('Sanne de Boer'));
-		self::assertSame(['firstName' => '', 'lastName' => 'Cher'], HireService::proposedName(' Cher '));
+		self::assertSame(['firstName' => 'Sanne', 'lastName' => 'de Boer'], $this->service()->proposedName('Sanne de Boer'));
+		self::assertSame(['firstName' => '', 'lastName' => 'Cher'], $this->service()->proposedName(' Cher '));
 	}//end testTheProposedNameKeepsThePrefixWithTheLastName()
 
 	/**
