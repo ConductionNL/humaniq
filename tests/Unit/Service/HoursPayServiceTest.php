@@ -251,6 +251,35 @@ class HoursPayServiceTest extends TestCase {
 	}//end testStamping()
 
 	/**
+	 * Edge paths: a Sunday is the zondag category; an override without a reason
+	 * resolves no surcharge; an employee with neither salary nor hourly wage
+	 * has no rate and is paid nothing; a stamp that is already right is not
+	 * written again.
+	 *
+	 * @return void
+	 */
+	public function testEdgePaths(): void {
+		$service = $this->service();
+		$sunday = [['timesheetId' => 'ts-1', 'date' => '2026-05-17', 'hours' => 1, 'overtime' => true, 'overtimeCompensation' => 'pay']];
+		$override = ['hoursPerWeek' => 40, 'hourlyWage' => 10.00, 'overtimeToeslagPercentages' => ['zondag' => 100], 'overtimeTermsOverrideReason' => 'Regeling 2026.'];
+		self::assertSame(2000, $service->payFor(employee: ['id' => 'emp-1'], contract: $override, timesheets: [self::timesheet('ts-1', '2026-05', 1)], entries: $sunday, nonWorkingDates: [])['overtimeCents']);
+
+		$noReason = ['hoursPerWeek' => 40, 'hourlyWage' => 10.00, 'overtimeToeslagPercentages' => ['zondag' => 100]];
+		$pay = $service->payFor(employee: ['id' => 'emp-1'], contract: $noReason, timesheets: [self::timesheet('ts-1', '2026-05', 1)], entries: $sunday, nonWorkingDates: []);
+		self::assertTrue($pay['surchargeUnresolved']);
+		self::assertSame(1000, $pay['overtimeCents']);
+
+		$none = $service->payFor(employee: ['id' => 'emp-1'], contract: ['hoursPerWeek' => 0], timesheets: [self::timesheet('ts-1', '2026-05', 8)], entries: [], nonWorkingDates: null);
+		self::assertNull($none['hourlyRate']);
+		self::assertSame(0, $none['hourlyCents']);
+		self::assertNull($service->payFor(employee: ['id' => 'emp-1', 'grossMonthlySalary' => 3000], contract: ['hoursPerWeek' => 0], timesheets: [], entries: [], nonWorkingDates: null)['hourlyRate']);
+
+		$service->stamp(timesheets: [self::timesheet('ts-1', '2026-05', 8, ['payrollRunId' => self::RUN, 'paidInPeriod' => '2026-05'])], paid: ['ts-1' => 0.0], runId: self::RUN, period: '2026-05');
+		$service->stamp(timesheets: [self::timesheet('ts-2', '2026-05', 8, ['payrollRunId' => 'other-run'])], paid: [], runId: self::RUN, period: '2026-05');
+		self::assertSame([], $this->saved);
+	}//end testEdgePaths()
+
+	/**
 	 * The timesheet adds up its overtime hours next to its total.
 	 *
 	 * @return void

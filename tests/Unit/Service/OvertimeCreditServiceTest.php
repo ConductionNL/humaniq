@@ -139,6 +139,25 @@ class OvertimeCreditServiceTest extends TestCase {
 	}//end testTheListenerFiresOnApprovalOnly()
 
 	/**
+	 * Nothing to credit is nothing written; a listener that gets another event,
+	 * or whose credit throws, never breaks the save.
+	 *
+	 * @return void
+	 */
+	public function testEdgePaths(): void {
+		$this->timesheets['ts-1']['overtimeCreditHours'] = null;
+		self::assertSame(0, $this->service()->creditForRun('run-may'));
+		self::assertSame([], $this->saved);
+
+		$credit = $this->createMock(OvertimeCreditService::class);
+		$credit->method('creditForRun')->willThrowException(new \RuntimeException('register down'));
+		$listener = new PayrollRunApprovedListener($credit, new NullLogger());
+		$listener->handle(new \OCP\EventDispatcher\Event());
+		$listener->handle(new ObjectUpdatedEvent(self::runEntity('approved'), self::runEntity('draft')));
+		$this->addToAssertionCount(1);
+	}//end testEdgePaths()
+
+	/**
 	 * A payroll run entity.
 	 *
 	 * @param string $status The status.
