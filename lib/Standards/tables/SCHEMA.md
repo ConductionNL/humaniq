@@ -70,6 +70,21 @@ sourced, verified values and bump `RuleCatalogue::VERSION` — no PHP changes. T
 calculation engine reads whichever table file its input `engineVersion` names; it
 carries no year-specific logic of its own.
 
+## Uploaded tables: the second home
+
+The files here stay the reference. When an administrator needs next year's
+tables before a release ships them, they upload the tables together with the
+pack that uses them on the Payroll packs page (`POST /api/payroll/packs` with
+`tables`). The upload is stored as a `TaxTableSet` object in OpenRegister, and
+`TaxTables::load()` consults it only for an id no file in this directory owns,
+so an upload can never shadow a bundled year (an upload named after a bundled id
+is refused). The uploaded document must have this same shape: the required
+parameter groups, every figure a `{value, source, verified}` leaf, and a
+`checkAgainst` on every unverified leaf. The pack's own golden vectors must pass
+against the uploaded tables before either is stored
+(payroll-pack-and-cao-updates design.md D1 and D2). Once a release ships the
+same year as a file here, the file wins and the upload is no longer read.
+
 ## Formula notes
 
 A table file may carry a `_notes` object documenting the formula chain the

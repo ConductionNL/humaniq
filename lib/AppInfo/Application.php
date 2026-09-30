@@ -70,6 +70,8 @@ use OCA\Humaniq\Listener\TravelAmountListener;
 use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Service\TaxTableSetService;
 use OCA\Humaniq\Service\HrLifecycleEventService;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\JurisdictionPackService;
@@ -88,6 +90,7 @@ use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\EventDispatcher\IEventDispatcher;
+use Psr\Container\ContainerInterface;
 
 /**
  * The humaniq application bootstrap.
@@ -407,6 +410,10 @@ class Application extends App implements IBootstrap {
 	 */
 	public function boot(IBootContext $context): void {
 		$dispatcher = $context->getServerContainer()->get(IEventDispatcher::class);
+
+		// payroll-pack-and-cao-updates D1: tables uploaded with a pack are the
+		// second home TaxTables::load() consults for an id no bundled file owns.
+		$this->registerTaxTableSource($context->getAppContainer());
 
 		// The SERVER half of the `humaniq-hours` leaf (ADR-066). Its client half
 		// is src/integrations/registerHoursLeaf.js, bound by the shared id.
@@ -843,6 +850,27 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerAnnouncementListener()
+
+	/**
+	 * payroll-pack-and-cao-updates D1: install the uploaded tax tables as the
+	 * source TaxTables::load() asks for an id no bundled file owns. A factory,
+	 * so booting never constructs the service or reaches OpenRegister.
+	 *
+	 * @param ContainerInterface $container The app container.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
+	 * @SuppressWarnings(PHPMD.StaticAccess) TaxTables is a pure value-object factory with static load/fromDocument/isBundled, the precedent PayrollRunService and NlPayrollChecks already use.
+	 */
+	private function registerTaxTableSource(ContainerInterface $container): void {
+		TaxTables::useSource(
+			static function () use ($container): TaxTableSetService {
+				return $container->get(TaxTableSetService::class);
+			}
+		);
+
+	}//end registerTaxTableSource()
 
 	/**
 	 * self-service-approvals-inbox D1 and D2: a deputy record is judged before

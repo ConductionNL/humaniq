@@ -78,7 +78,8 @@ data, and the order of two uploads becomes one more thing to get wrong.
 
 ### D3. Deactivation is a guarded endpoint, not an object edit
 
-`POST /api/payroll/packs/deactivate {packObjectId}` sets `active: false` on the pack and on
+`POST /api/payroll/packs/{id}/deactivate` (changed at build from a body parameter, so the
+withdraw button posts to one URL per row) sets `active: false` on the pack and on
 tables no other active pack uses. Admin only, like upload. Calculated runs are unaffected
 (their `engineVersion` names the pack they used, and non-draft runs are never recalculated). A
 draft run recalculated afterwards resolves again: the bundled pack when one exists for that
@@ -99,13 +100,27 @@ docblock), and a raw edit could reactivate a pack without re-running its gates.
 Alternative considered: keep the preflight in the command. Rejected: the page would need a
 second copy of the same checks.
 
-### D5. One host dialog and one host section, library around them
+### D5. Two host widgets on one dashboard page, library around them
 
-The manifest page `PayrollPacks` is a plain index over `JurisdictionPack` with create, edit and
-delete switched off. A header action opens a registered host dialog `PackUploadDialog` that
-reads the chosen files, posts them, and shows the response. A body section
-`YearTransitionSection` asks for a year and renders the resolution with library components.
-Neither holds business logic.
+Changed at build. The manifest page `PayrollPacks` is a dashboard with two registered host
+widgets. `payroll-packs` (`src/widgets/PayrollPacksWidget.vue`) reads the chosen files, posts
+them, shows the response in the validator's own words, and lists the uploaded packs from
+`GET /api/payroll/packs` with a withdraw button per active pack. `year-transition`
+(`src/widgets/YearTransitionWidget.vue`) asks for a year and renders the resolution. Neither
+holds business logic.
+
+Why not an index page with a header dialog: an index over `JurisdictionPack` cannot refresh
+after a host dialog posts, so the administrator would upload and see an unchanged list; and
+the dialog would need its own list read anyway to show the refusal next to what it concerns.
+The list therefore reads a small admin endpoint instead of the object API.
+
+### D6. The services write through the humaniq register gateway (found at build)
+
+`JurisdictionPackService` wrote and read schema `jurisdiction-pack`, while the register
+declares `JurisdictionPack`: OpenRegister never matched the two, so an upload could not have
+been stored. It now uses `HoursRegisterGateway` with the declared slug (`JurisdictionPack`,
+`TaxTableSet`), reads without RBAC like the other internal reads, and a test asserts each
+service's slug against the register fragment.
 
 ## Declarative-vs-imperative decision (ADR-031)
 
@@ -129,7 +144,7 @@ year-transition section shows the bundled 2026 resolution on a fresh instance.
 - [Two homes for tables] -> the bundled file always wins for its own id, and the page names
   the origin of every table a year resolves to.
 
-## Open Questions
+## Open Questions (unchanged)
 
 - Should the page warn in November when next year resolves to nothing? This design shows the
   resolution on demand only.

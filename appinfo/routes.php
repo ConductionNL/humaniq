@@ -57,6 +57,10 @@ return [
         // (ADR-022). Every blocking gate lives in PackValidator (design.md
         // D11); this route adds only the admin check.
         ['name' => 'jurisdictionPack#upload', 'url' => '/api/payroll/packs', 'verb' => 'POST'],
+        // payroll-pack-and-cao-updates REQ-PKU-001/002/003: the packs list, the year check and withdrawing a pack.
+        ['name' => 'jurisdictionPack#index', 'url' => '/api/payroll/packs', 'verb' => 'GET'],
+        ['name' => 'jurisdictionPack#resolution', 'url' => '/api/payroll/packs/resolution', 'verb' => 'GET'],
+        ['name' => 'jurisdictionPack#deactivate', 'url' => '/api/payroll/packs/{id}/deactivate', 'verb' => 'POST'],
         // rostering — guarded trigger for the RosterDetail "ATW-controle"
         // manifest api-call action (design.md D5).
         ['name' => 'roster#check', 'url' => '/api/roster/check', 'verb' => 'POST'],

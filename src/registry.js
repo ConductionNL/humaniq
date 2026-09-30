@@ -110,7 +110,9 @@ import EmployeeHistoryWidget from './widgets/EmployeeHistoryWidget.vue'
 import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 import OnCallAverages from './widgets/OnCallAverages.vue'
 import OrgChartWidget from './widgets/OrgChartWidget.vue'
+import PayrollPacksWidget from './widgets/PayrollPacksWidget.vue'
 import TrendChartWidget from './widgets/TrendChartWidget.vue'
+import YearTransitionWidget from './widgets/YearTransitionWidget.vue'
 import { proposeRaiseForSelection } from './dialogs/proposeRaiseForSelection.js'
 import { registerTrainingAttended, registerTrainingNotAttended } from './dialogs/registerTrainingAttendance.js'
 import EndpointTableWidget from './widgets/EndpointTableWidget.js'
@@ -209,6 +211,28 @@ export default {
 		allowedSlots: ['body'],
 		propsSchema: null,
 		_note: 'people-flex-contract-rules D4 (REQ-FLX-002): the on-call average hours over a period HR picks, with a CSV download, over GET /api/contracts/on-call-averages.',
+	},
+	// @custom-widget-ratchet exclude a file upload to an endpoint has no declarative primitive, and the validator's refusal must be shown in its own words next to the list the upload changes
+	'payroll-packs': {
+		kind: 'widget',
+		component: PayrollPacksWidget,
+		defaultSize: { w: 12, h: 8 },
+		minSize: { w: 6, h: 4 },
+		maxSize: { w: 12, h: 14 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'payroll-pack-and-cao-updates D5 (REQ-PKU-001/003): upload a pack with its tax tables (POST /api/payroll/packs), list the uploaded packs (GET) and withdraw one (POST /api/payroll/packs/{id}/deactivate). Every gate runs on the server; the widget reads the files and shows the answer.',
+	},
+	// @custom-widget-ratchet exclude no built-in widget takes a year from the user and re-reads an endpoint with it
+	'year-transition': {
+		kind: 'widget',
+		component: YearTransitionWidget,
+		defaultSize: { w: 12, h: 5 },
+		minSize: { w: 6, h: 3 },
+		maxSize: { w: 12, h: 8 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'payroll-pack-and-cao-updates D4 (REQ-PKU-002): which pack and tax tables a year resolves to, their origin, the unconfirmed figures and the self-test, over GET /api/payroll/packs/resolution (the answer occ humaniq:payroll:year-transition prints).',
 	},
 	// @custom-widget-ratchet exclude on a detail page no built-in widget key reaches a table that reads endpointSource: CnDetailWidgetHost canonicalises object-table to table, whose renderer CnObjectListWidget ignores endpointSource in nextcloud-vue 2.57.1; this mounts the library's own CnWidgetObjectTable
 	'endpoint-table': {

@@ -51,6 +51,20 @@ final class TaxTables {
 	private static ?array $availableIdsCache = null;
 
 	/**
+	 * The parameter groups every tables document must carry.
+	 *
+	 * @var array<int, string>
+	 */
+	public const REQUIRED_GROUPS = ['loonheffing', 'heffingskortingen', 'volksverzekeringen', 'aow', 'zvw', 'werknemersverzekeringen', 'vakantiebijslag'];
+
+	/**
+	 * The uploaded-tables source factory (payroll-pack-and-cao-updates D1).
+	 *
+	 * @var (\Closure(): ?TaxTableSourceInterface)|null
+	 */
+	private static ?\Closure $sourceFactory = null;
+
+	/**
 	 * The raw decoded JSON `parameters` object.
 	 *
 	 * @var array<string, mixed>
@@ -70,15 +84,19 @@ final class TaxTables {
 	}//end __construct()
 
 	/**
-	 * Load and shape-validate `lib/Standards/tables/{id}.json`.
+	 * Load a tables corpus: `lib/Standards/tables/{id}.json` when a bundled
+	 * file owns the id, otherwise the active uploaded set for it
+	 * (payroll-pack-and-cao-updates design.md D1). The bundled file always
+	 * wins for its own id, so an upload can never shadow a shipped year.
 	 *
 	 * @param string $id The table id (e.g. `nl-2026`).
 	 *
 	 * @return self
 	 *
-	 * @throws \RuntimeException When the file is missing, unreadable, malformed, or missing required parameter groups.
+	 * @throws \RuntimeException When no bundled file or active upload has the id, or the document is malformed or missing required parameter groups.
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
+	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
 	 */
 	public static function load(string $id): self {
 		$id = trim($id);
@@ -88,7 +106,12 @@ final class TaxTables {
 
 		$path = self::tablesDir() . '/' . $id . '.json';
 		if (file_exists($path) === false) {
-			throw new RuntimeException('TaxTables: tabelbestand niet gevonden: ' . $path);
+			$uploaded = self::uploaded($id);
+			if ($uploaded === null) {
+				throw new RuntimeException('TaxTables: tabelbestand niet gevonden en geen actieve geüploade tabellen voor ' . $id . ': ' . $path);
+			}
+
+			return self::fromDocument($uploaded, 'geüploade tabellen ' . $id);
 		}
 
 		$content = file_get_contents($path);
@@ -101,19 +124,85 @@ final class TaxTables {
 			throw new RuntimeException('TaxTables: kon tabelbestand niet parsen: ' . $path . ' (' . json_last_error_msg() . ')');
 		}
 
+		$decoded['id'] = ($decoded['id'] ?? $id);
+
+		return self::fromDocument($decoded, $path);
+	}//end load()
+
+	/**
+	 * Shape-validate a decoded tables document and wrap it. Shared by the
+	 * bundled file and an uploaded set, so both pass the same checks.
+	 *
+	 * @param array<string, mixed> $decoded The decoded document (`id` plus `parameters`).
+	 * @param string $label Where the document came from, for the error message.
+	 *
+	 * @return self
+	 *
+	 * @throws \RuntimeException When `parameters` or a required parameter group is missing.
+	 *
+	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
+	 */
+	public static function fromDocument(array $decoded, string $label): self {
 		$parameters = ($decoded['parameters'] ?? null);
 		if (is_array($parameters) === false) {
-			throw new RuntimeException('TaxTables: tabelbestand mist "parameters": ' . $path);
+			throw new RuntimeException('TaxTables: tabelbestand mist "parameters": ' . $label);
 		}
 
-		foreach (['loonheffing', 'heffingskortingen', 'volksverzekeringen', 'aow', 'zvw', 'werknemersverzekeringen', 'vakantiebijslag'] as $group) {
+		foreach (self::REQUIRED_GROUPS as $group) {
 			if (isset($parameters[$group]) === false) {
-				throw new RuntimeException('TaxTables: tabelbestand mist parametergroep "' . $group . '": ' . $path);
+				throw new RuntimeException('TaxTables: tabelbestand mist parametergroep "' . $group . '": ' . $label);
 			}
 		}
 
-		return new self((string)($decoded['id'] ?? $id), $parameters);
-	}//end load()
+		return new self((string)($decoded['id'] ?? ''), $parameters);
+	}//end fromDocument()
+
+	/**
+	 * Whether a bundled tables file owns this id.
+	 *
+	 * @param string $id The tables id.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
+	 */
+	public static function isBundled(string $id): bool {
+		return in_array(trim($id), self::availableIds(), true);
+	}//end isBundled()
+
+	/**
+	 * Install the uploaded-tables source, as a factory resolved on first need
+	 * so booting the app never reaches OpenRegister. Null removes it.
+	 *
+	 * @param (\Closure(): ?TaxTableSourceInterface)|null $factory The source factory.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
+	 */
+	public static function useSource(?\Closure $factory): void {
+		self::$sourceFactory = $factory;
+	}//end useSource()
+
+	/**
+	 * The active uploaded document for an id, or null.
+	 *
+	 * @param string $id The tables id.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function uploaded(string $id): ?array {
+		if (self::$sourceFactory === null) {
+			return null;
+		}
+
+		$source = (self::$sourceFactory)();
+		if (($source instanceof TaxTableSourceInterface) === false) {
+			return null;
+		}
+
+		return $source->activeTables($id);
+	}//end uploaded()
 
 	/**
 	 * The table id (the run's `engineVersion` stamp).

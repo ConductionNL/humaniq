@@ -14288,6 +14288,51 @@
         "whatToImprove": "Voorbeeld Whattoimprove 3",
         "anonymisedAt": "2026-03-03T09:00:00+00:00",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "TaxTableSet",
+          "slug": "taxtableset-taxtableset-1-1"
+        },
+        "tablesId": "Voorbeeld Tablesid 1",
+        "jurisdiction": "Voorbeeld Jurisdiction 1",
+        "year": 1,
+        "document": "Voorbeeld Document 1",
+        "issued": "Voorbeeld Issued 1",
+        "active": false,
+        "provenance": "Voorbeeld Provenance 1",
+        "uploadedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "TaxTableSet",
+          "slug": "taxtableset-taxtableset-2-2"
+        },
+        "tablesId": "Voorbeeld Tablesid 2",
+        "jurisdiction": "Voorbeeld Jurisdiction 2",
+        "year": 2,
+        "document": "Voorbeeld Document 2",
+        "issued": "Voorbeeld Issued 2",
+        "active": false,
+        "provenance": "Voorbeeld Provenance 2",
+        "uploadedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "TaxTableSet",
+          "slug": "taxtableset-taxtableset-3-3"
+        },
+        "tablesId": "Voorbeeld Tablesid 3",
+        "jurisdiction": "Voorbeeld Jurisdiction 3",
+        "year": 3,
+        "document": "Voorbeeld Document 3",
+        "issued": "Voorbeeld Issued 3",
+        "active": false,
+        "provenance": "Voorbeeld Provenance 3",
+        "uploadedAt": "2026-03-03T09:00:00+00:00"
       }
     ]
   }

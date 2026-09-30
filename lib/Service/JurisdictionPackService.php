@@ -21,6 +21,10 @@
  * OBJECT, set by this service only after `PackValidator` has passed every gate
  * — including the explicit-override gate.
  *
+ * payroll-pack-and-cao-updates (D2, D3): a pack may bring its tables along.
+ * Both are validated as one unit and neither is stored unless both pass;
+ * deactivation is a guarded service call, never an object edit.
+ *
  * @category Service
  * @package  OCA\Humaniq\Service
  *
@@ -35,6 +39,8 @@
  *
  * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-005
  * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-006
+ * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
+ * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-003
  */
 
 declare(strict_types=1);
@@ -47,22 +53,21 @@ use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PackSourceInterface;
 use OCA\Humaniq\Payroll\PackValidator;
 use OCA\Humaniq\Payroll\TaxTables;
-use Psr\Container\ContainerInterface;
+use OutOfBoundsException;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 /**
- * Validates, stores and resolves uploaded jurisdiction packs.
+ * Validates, stores, resolves and deactivates uploaded jurisdiction packs.
  */
 class JurisdictionPackService implements PackSourceInterface {
 
 	/**
-	 * The `JurisdictionPack` schema slug in the humaniq register.
+	 * The `JurisdictionPack` schema in the humaniq register.
 	 *
 	 * @var string
 	 */
-	public const SCHEMA = 'jurisdiction-pack';
+	public const SCHEMA = 'JurisdictionPack';
 
 	/**
 	 * The BUNDLED-only pack resolver, for the shadowing gate.
@@ -79,15 +84,15 @@ class JurisdictionPackService implements PackSourceInterface {
 	 * would be a dependency cycle, and a resolver that already consults
 	 * uploads would answer the wrong question anyway.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister is resolved lazily at runtime).
-	 * @param SettingsService $settingsService The humaniq settings.
+	 * @param HoursRegisterGateway $gateway The humaniq register gateway (guards OpenRegister's absence).
 	 * @param PackValidator $validator The blocking upload validator.
+	 * @param TaxTableSetService $tableSets The uploaded tables home.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly HoursRegisterGateway $gateway,
 		private readonly PackValidator $validator,
+		private readonly TaxTableSetService $tableSets,
 		private readonly LoggerInterface $logger,
 	) {
 		$this->bundled = new PackRepository();
@@ -95,29 +100,36 @@ class JurisdictionPackService implements PackSourceInterface {
 	}//end __construct()
 
 	/**
-	 * Validate and store an uploaded pack. EVERY gate blocks: nothing is
-	 * stored until the pack has passed structure, vocabulary, references,
-	 * handler resolution, bounds, shadowing AND its own golden vectors
-	 * (design.md D11).
+	 * Validate and store an uploaded pack, with its tables when given. EVERY
+	 * gate blocks: nothing is stored until the tables passed their own checks
+	 * and the pack passed structure, vocabulary, references, handler
+	 * resolution, bounds, shadowing AND its own golden vectors against those
+	 * tables (design.md D11; payroll-pack-and-cao-updates D2).
 	 *
 	 * @param array<string, mixed> $document The uploaded pack document.
 	 * @param bool $override Whether the admin explicitly activated this as a recorded override of a bundled pack.
+	 * @param array<string, mixed>|null $tablesDocument The tables the pack declares, when uploaded with it.
 	 *
 	 * @return array<string, mixed> The stored object.
 	 *
-	 * @throws DslException When any gate rejects the pack, naming the offending op, ref, handler or bound.
+	 * @throws DslException When any gate rejects the pack or its tables, naming the offending op, ref, handler, bound, group or leaf.
 	 *
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-006
+	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
 	 */
-	public function upload(array $document, bool $override = false): array {
+	public function upload(array $document, bool $override = false, ?array $tablesDocument = null): array {
 		$pack = new JurisdictionPack($document, JurisdictionPack::ORIGIN_UPLOADED);
 
-		$tables = $this->tablesFor($pack);
+		$tables = $this->tablesFor($pack, $tablesDocument);
 		$provenance = $this->validator->validate($pack, $tables, $this->bundled, $override);
 
-		// Only now — after every gate has passed — does the pack become an
-		// object, and only then is it marked active. Activation is recorded on
-		// the OBJECT, never taken from the author-supplied document.
+		// Only now, after every gate has passed for both, does either become
+		// an object, and only then is it marked active. Activation is recorded
+		// on the OBJECT, never taken from the author-supplied document.
+		if ($tablesDocument !== null) {
+			$this->tableSets->store($tablesDocument);
+		}
+
 		$object = [
 			'packId' => $pack->id(),
 			'jurisdiction' => $pack->jurisdiction(),
@@ -131,11 +143,7 @@ class JurisdictionPackService implements PackSourceInterface {
 			'document' => json_encode($document),
 		];
 
-		$this->objectService()->saveObject(
-			object: $object,
-			register: $this->register(),
-			schema: self::SCHEMA
-		);
+		$this->gateway->save($object, self::SCHEMA);
 
 		return $object;
 	}//end upload()
@@ -156,27 +164,7 @@ class JurisdictionPackService implements PackSourceInterface {
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-006
 	 */
 	public function activePack(string $jurisdiction, int $taxYear): ?JurisdictionPack {
-		try {
-			$objects = $this->objectService()->findAll(
-				[
-					'register' => $this->register(),
-					'schema' => self::SCHEMA,
-					'filters' => [
-						'jurisdiction' => strtoupper($jurisdiction),
-						'taxYear' => $taxYear,
-						'active' => true,
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			// A pack store that cannot be read must never silently fall through
-			// to "no uploaded pack" when an override IS active — that would
-			// resolve the bundled pack and pay everyone from the wrong chain.
-			$this->logger->error('humaniq: kon geüploade jurisdictiepacks niet lezen: ' . $e->getMessage(), ['exception' => $e]);
-			throw new DslException('Pack: kon de geüploade jurisdictiepacks niet lezen — een run mag niet stilzwijgend terugvallen op een ander pack.', 0, $e);
-		}
-
-		foreach ($this->rows($objects) as $row) {
+		foreach ($this->activeRows($jurisdiction, $taxYear) as $row) {
 			$document = json_decode((string)($row['document'] ?? ''), true);
 			if (is_array($document) === true) {
 				return new JurisdictionPack($document, JurisdictionPack::ORIGIN_UPLOADED);
@@ -187,20 +175,118 @@ class JurisdictionPackService implements PackSourceInterface {
 	}//end activePack()
 
 	/**
+	 * Deactivate an uploaded pack, and its uploaded tables when no other active
+	 * pack uses them (payroll-pack-and-cao-updates D3). A run already
+	 * calculated keeps its engineVersion stamp; a draft recalculated
+	 * afterwards resolves its pack again.
+	 *
+	 * @param string $objectId The JurisdictionPack object id.
+	 *
+	 * @return array<string, mixed> The pack as stored now.
+	 *
+	 * @throws OutOfBoundsException When no pack has this id.
+	 *
+	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-003
+	 */
+	public function deactivate(string $objectId): array {
+		$pack = $this->gateway->findObjectData($objectId, self::SCHEMA);
+		if ($pack === null) {
+			throw new OutOfBoundsException('Geen geüpload pack met id ' . $objectId . '.');
+		}
+
+		// The gateway save is a full replace, so the whole record goes back.
+		$pack['active'] = false;
+		$this->gateway->save($pack, self::SCHEMA, $objectId);
+
+		$tablesId = (string)($pack['tables'] ?? '');
+		$stillUsed = $this->gateway->findFiltered(self::SCHEMA, ['tables' => $tablesId, 'active' => true]);
+		if ($tablesId !== '' && $stillUsed === []) {
+			$this->tableSets->deactivate($tablesId);
+		}
+
+		return $pack;
+	}//end deactivate()
+
+	/**
+	 * Every uploaded pack, newest tax year first, without the documents.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-001
+	 */
+	public function list(): array {
+		$rows = [];
+		foreach ($this->gateway->loadAll(self::SCHEMA) as $row) {
+			unset($row['document']);
+			$row['origin'] = JurisdictionPack::ORIGIN_UPLOADED;
+			$row['engineVersion'] = (string)($row['packId'] ?? '') . '@' . (string)($row['packVersion'] ?? '');
+			$rows[] = $row;
+		}
+
+		usort(
+			$rows,
+			static fn (array $left, array $right): int => [(int)($right['taxYear'] ?? 0), (string)($right['packVersion'] ?? '')] <=> [(int)($left['taxYear'] ?? 0), (string)($left['packVersion'] ?? '')]
+		);
+
+		return $rows;
+	}//end list()
+
+	/**
+	 * The active uploaded pack rows for a key. A pack store that cannot be
+	 * read must never silently fall through to "no uploaded pack" when an
+	 * override IS active: that would resolve the bundled pack and pay everyone
+	 * from the wrong chain.
+	 *
+	 * @param string $jurisdiction The jurisdiction.
+	 * @param int $taxYear The tax year.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @throws DslException When the store cannot be read.
+	 */
+	private function activeRows(string $jurisdiction, int $taxYear): array {
+		try {
+			return $this->gateway->findFiltered(
+				self::SCHEMA,
+				[
+					'jurisdiction' => strtoupper($jurisdiction),
+					'taxYear' => $taxYear,
+					'active' => true,
+				]
+			);
+		} catch (Throwable $e) {
+			$this->logger->error('humaniq: kon geüploade jurisdictiepacks niet lezen: ' . $e->getMessage(), ['exception' => $e]);
+			throw new DslException('Pack: kon de geüploade jurisdictiepacks niet lezen — een run mag niet stilzwijgend terugvallen op een ander pack.', 0, $e);
+		}
+
+	}//end activeRows()
+
+	/**
 	 * The tables corpus a pack's `@table.*` refs resolve against, as DECLARED
-	 * by the pack itself.
+	 * by the pack itself: the tables uploaded with it, or else bundled or an
+	 * earlier active upload.
 	 *
 	 * @param JurisdictionPack $pack The pack.
+	 * @param array<string, mixed>|null $tablesDocument The tables uploaded with the pack, if any.
 	 *
 	 * @return TaxTables
 	 *
-	 * @throws DslException When the declared corpus does not exist.
+	 * @throws DslException When the uploaded tables fail or are not the pack's, or the declared corpus does not exist.
 	 */
-	private function tablesFor(JurisdictionPack $pack): TaxTables {
+	private function tablesFor(JurisdictionPack $pack, ?array $tablesDocument): TaxTables {
+		if ($tablesDocument !== null) {
+			$tables = $this->tableSets->validate($tablesDocument);
+			if ($tables->id() !== $pack->tablesId()) {
+				throw new DslException('Pack: de geüploade tabellen ' . $tables->id() . ' zijn niet de tabellen die het pack gebruikt (' . $pack->tablesId() . ').');
+			}
+
+			return $tables;
+		}
+
 		try {
 			return TaxTables::load($pack->tablesId());
 		} catch (Throwable $e) {
-			throw new DslException('Pack: het gedeclareerde tabellenbestand "' . $pack->tablesId() . '" bestaat niet.', 0, $e);
+			throw new DslException('Pack: het gedeclareerde tabellenbestand "' . $pack->tablesId() . '" bestaat niet; upload de tabellen samen met het pack.', 0, $e);
 		}
 
 	}//end tablesFor()
@@ -225,56 +311,5 @@ class JurisdictionPackService implements PackSourceInterface {
 
 		return implode('; ', $parts);
 	}//end describeProvenance()
-
-	/**
-	 * Normalise an ObjectService result to a list of rows.
-	 *
-	 * @param mixed $objects The ObjectService result.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function rows(mixed $objects): array {
-		if (is_array($objects) === false) {
-			return [];
-		}
-
-		$rows = [];
-		foreach ($objects as $object) {
-			if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-				$object = $object->jsonSerialize();
-			}
-
-			if (is_array($object) === true) {
-				$rows[] = $object;
-			}
-		}
-
-		return $rows;
-	}//end rows()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService (resolved lazily — it only exists at runtime).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
-	 * @return string The configured humaniq register slug.
-	 */
-	private function register(): string {
-		return $this->settingsService->getRegisterSlug();
-	}//end register()
 
 }//end class

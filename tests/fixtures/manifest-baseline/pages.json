@@ -176,6 +176,10 @@
 		"route": "/org/chart"
 	},
 	{
+		"id": "PayrollPacks",
+		"route": "/payroll/packs"
+	},
+	{
 		"id": "ReviewCycleDetail",
 		"route": "/review-cycles/:id"
 	},
