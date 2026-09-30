@@ -128,6 +128,31 @@ class PayAnomalyDetector {
 	}//end detect()
 
 	/**
+	 * Threshold overrides from the `payroll_check_thresholds` setting: JSON
+	 * keyed by component, each with a numeric `relative` share and
+	 * `absolute` floor. An unknown component, a non-numeric value or a
+	 * setting that is not JSON is ignored, so the defaults apply.
+	 *
+	 * @param string $setting The setting's value.
+	 *
+	 * @return array<string, array{relative: float, absolute: float}>
+	 *
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-003
+	 */
+	public function thresholdsFrom(string $setting): array {
+		$decoded = json_decode($setting, true);
+		$thresholds = [];
+		foreach (array_keys(self::DEFAULT_THRESHOLDS) as $component) {
+			$entry = (is_array($decoded) === true ? ($decoded[$component] ?? null) : null);
+			if (is_array($entry) === true && is_numeric($entry['relative'] ?? null) === true && is_numeric($entry['absolute'] ?? null) === true) {
+				$thresholds[$component] = ['relative' => (float)$entry['relative'], 'absolute' => (float)$entry['absolute']];
+			}
+		}
+
+		return $thresholds;
+	}//end thresholdsFrom()
+
+	/**
 	 * One component's finding, or null when it is within its threshold or
 	 * cannot be read.
 	 *

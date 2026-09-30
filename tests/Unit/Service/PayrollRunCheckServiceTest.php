@@ -31,6 +31,7 @@ use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\PayAnomalyDetector;
 use OCA\Humaniq\Service\PayrollRunCheckService;
+use OCA\Humaniq\Service\PayrollUnpaidInputs;
 use OCA\Humaniq\Service\RuleAuditService;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCP\IAppConfig;
@@ -95,7 +96,7 @@ class PayrollRunCheckServiceTest extends TestCase {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(static fn (string $app, string $key, string $default = ''): string => ($key === 'payroll_check_thresholds' ? $thresholds : $default));
 
-		return new PayrollRunCheckService($gateway, $audit, new PayAnomalyDetector(), new InternalWriteMarker(), $config, new NullLogger());
+		return new PayrollRunCheckService($gateway, $audit, new PayAnomalyDetector(), new PayrollUnpaidInputs(), new InternalWriteMarker(), $config, new NullLogger());
 	}//end service()
 
 	/**

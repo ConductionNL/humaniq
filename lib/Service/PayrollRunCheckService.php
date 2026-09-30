@@ -54,12 +54,13 @@ class PayrollRunCheckService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway  Reads the rows, writes the findings.
-	 * @param RuleAuditService     $audit    The rule audit of a period's runs.
-	 * @param PayAnomalyDetector   $detector The deviations.
-	 * @param InternalWriteMarker  $marker   Marks the writes as humaniq's own.
-	 * @param IAppConfig           $config   The payroll_check_thresholds setting.
-	 * @param LoggerInterface      $logger   The logger.
+	 * @param HoursRegisterGateway $gateway      Reads the rows, writes the findings.
+	 * @param RuleAuditService     $audit        The rule audit of a period's runs.
+	 * @param PayAnomalyDetector   $detector     The deviations.
+	 * @param PayrollUnpaidInputs  $unpaidInputs The approved inputs no run pays.
+	 * @param InternalWriteMarker  $marker       Marks the writes as humaniq's own.
+	 * @param IAppConfig           $config       The payroll_check_thresholds setting.
+	 * @param LoggerInterface      $logger       The logger.
 	 *
 	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
 	 */
@@ -67,6 +68,7 @@ class PayrollRunCheckService {
 		private readonly HoursRegisterGateway $gateway,
 		private readonly RuleAuditService $audit,
 		private readonly PayAnomalyDetector $detector,
+		private readonly PayrollUnpaidInputs $unpaidInputs,
 		private readonly InternalWriteMarker $marker,
 		private readonly IAppConfig $config,
 		private readonly LoggerInterface $logger,
@@ -142,22 +144,10 @@ class PayrollRunCheckService {
 	 * @return list<array<string, mixed>>
 	 */
 	private function unpaidInputFindings(string $period): array {
-		$lastDay = ($period === '' ? '' : date('Y-m-t', (int)strtotime($period . '-01')));
-		$findings = [];
-		foreach ($this->rows('Timesheet') as $timesheet) {
-			if ((string)($timesheet['status'] ?? '') === 'approved' && (string)($timesheet['payrollRunId'] ?? '') === '' && (string)($timesheet['period'] ?? '') <= $period) {
-				$findings[] = self::finding(employeeId: (string)($timesheet['employeeId'] ?? ''), kind: 'unpaid-input', severity: 'warning', message: 'Een goedgekeurde urenstaat van ' . (string)($timesheet['period'] ?? '') . ' wordt door geen loonrun betaald.', ruleId: 'timesheet');
-			}
-		}
-
-		foreach ($this->rows('Expense') as $claim) {
-			$approvedOn = substr((string)($claim['approvedAt'] ?? ''), 0, 10);
-			if ((string)($claim['status'] ?? '') === 'approved' && (string)($claim['reimbursementRoute'] ?? '') === 'payroll' && (string)($claim['payrollRunId'] ?? '') === '' && $approvedOn !== '' && $approvedOn <= $lastDay) {
-				$findings[] = self::finding(employeeId: (string)($claim['employeeId'] ?? ''), kind: 'unpaid-input', severity: 'warning', message: 'Een goedgekeurde declaratie voor de salarisrun wordt door geen loonrun betaald.', ruleId: 'expense');
-			}
-		}
-
-		return $findings;
+		return array_map(
+			static fn (array $input): array => self::finding(employeeId: $input['employeeId'], kind: 'unpaid-input', severity: 'warning', message: $input['message'], ruleId: $input['ruleId']),
+			$this->unpaidInputs->find(period: $period, timesheets: $this->rows('Timesheet'), claims: $this->rows('Expense'))
+		);
 	}//end unpaidInputFindings()
 
 	/**
@@ -245,29 +235,12 @@ class PayrollRunCheckService {
 	/**
 	 * The threshold overrides from the `payroll_check_thresholds` setting.
 	 *
-	 * The setting is JSON keyed by component, each with a numeric `relative`
-	 * share and `absolute` floor. An unknown component, a non-numeric value or
-	 * a setting that is not JSON is ignored, so the defaults apply.
-	 *
 	 * @return array<string, array{relative: float, absolute: float}>
 	 *
 	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-003
 	 */
 	private function thresholds(): array {
-		$decoded = json_decode($this->config->getValueString(Application::APP_ID, 'payroll_check_thresholds', ''), true);
-		if (is_array($decoded) === false) {
-			return [];
-		}
-
-		$thresholds = [];
-		foreach (array_keys(PayAnomalyDetector::DEFAULT_THRESHOLDS) as $component) {
-			$entry = ($decoded[$component] ?? null);
-			if (is_array($entry) === true && is_numeric($entry['relative'] ?? null) === true && is_numeric($entry['absolute'] ?? null) === true) {
-				$thresholds[$component] = ['relative' => (float)$entry['relative'], 'absolute' => (float)$entry['absolute']];
-			}
-		}
-
-		return $thresholds;
+		return $this->detector->thresholdsFrom(setting: $this->config->getValueString(Application::APP_ID, 'payroll_check_thresholds', ''));
 	}//end thresholds()
 
 	/**

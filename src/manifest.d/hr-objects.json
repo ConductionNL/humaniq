@@ -1308,11 +1308,11 @@
 						"id": "stat-blocking",
 						"type": "stat",
 						"title": "Blocking findings",
-						"icon": "AlertOctagonOutline",
+						"icon": "AlertCircleOutline",
 						"content": {
 							"label": "Blocking findings",
 							"caption": "someone not paid or a mandatory rule broken",
-							"icon": "AlertOctagonOutline",
+							"icon": "AlertCircleOutline",
 							"valueColor": "#e9322d",
 							"format": {
 								"style": "number",
