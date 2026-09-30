@@ -80,6 +80,7 @@ final class NlCaoChecks implements CheckProvider, SeedsObjects, UpsertsObjects {
 		return [
 			'EmploymentContract' => [
 				'nl-cao-minimumloon-schaal' => static fn (array $o, array $context): bool => self::minimumloonSchaalSatisfied($o, $context),
+				'nl-cao-component-onbekend' => static fn (array $o): bool => self::componentsKnown($o),
 			],
 			'LeaveBalance' => [
 				'nl-cao-verlof-minimum' => static fn (array $o, array $context): bool => self::verlofMinimumSatisfied($o, $context),
@@ -192,6 +193,27 @@ final class NlCaoChecks implements CheckProvider, SeedsObjects, UpsertsObjects {
 		$salaryCents = (int)round(((float)$salary) * 100);
 		return $salaryCents >= $minCents;
 	}//end minimumloonSchaalSatisfied()
+
+	/**
+	 * The `nl-cao-component-onbekend` predicate: every component the contract
+	 * names is declared in its agreement's allowances, confirmed or not.
+	 * Vacuous when the contract names none.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-002
+	 */
+	private static function componentsKnown(array $o): bool {
+		$named = array_filter(array_map('strval', (array)($o['caoComponents'] ?? [])), static fn (string $key): bool => trim($key) !== '');
+		if ($named === []) {
+			return true;
+		}
+
+		$declared = CaoRegistry::componentShapes(trim((string)($o['cao'] ?? '')));
+		return array_diff($named, array_keys($declared)) === [];
+	}//end componentsKnown()
 
 	/**
 	 * The `nl-cao-verlof-minimum` predicate (spec.md REQ-CAO-004): vacuous

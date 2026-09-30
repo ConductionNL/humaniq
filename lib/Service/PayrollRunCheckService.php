@@ -96,7 +96,8 @@ class PayrollRunCheckService {
 			$this->skippedFindings(skipped: $skipped),
 			$this->unpaidInputFindings(period: $period),
 			$this->ruleFindings(run: $run, runId: $runId),
-			$this->deviationFindings(runId: $runId, period: $period)
+			$this->deviationFindings(runId: $runId, period: $period),
+			$this->caoComponentFindings(runId: $runId)
 		);
 
 		$this->store(runId: $runId, findings: $findings, checkedAt: $checkedAt);
@@ -268,6 +269,31 @@ class PayrollRunCheckService {
 
 		return $thresholds;
 	}//end thresholds()
+
+	/**
+	 * Every CAO component a payslip of this run could not pay is a warning
+	 * (payroll-cao-components D4).
+	 *
+	 * @param string $runId The run.
+	 *
+	 * @return list<array<string, mixed>>
+	 *
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-003
+	 */
+	private function caoComponentFindings(string $runId): array {
+		$findings = [];
+		foreach ($this->rows('Payslip') as $payslip) {
+			if ((string)($payslip['payrollRunId'] ?? '') !== $runId) {
+				continue;
+			}
+
+			foreach ((array)($payslip['caoComponentsUnresolved'] ?? []) as $key) {
+				$findings[] = self::finding(employeeId: (string)($payslip['employeeId'] ?? ''), kind: 'unpaid-input', severity: 'warning', message: 'Het cao-onderdeel ' . $key . ' staat op het contract maar is niet betaald: het cao-bedrag is niet bevestigd of het onderdeel is onbekend.', ruleId: 'cao:' . $key);
+			}
+		}
+
+		return $findings;
+	}//end caoComponentFindings()
 
 	/**
 	 * Employees whose raise reached the salary in the period.

@@ -491,4 +491,24 @@ class NlCaoChecksTest extends TestCase {
 
 	}//end testAgencyContractWithCaoAbuIsEvaluatedButVacuous()
 
+	/**
+	 * A contract naming a component its agreement does not declare is
+	 * flagged; a declared one (confirmed or not) and a contract naming none
+	 * pass (payroll-cao-components REQ-CCP-002).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-002
+	 */
+	public function testAnUnknownComponentIsFlagged(): void {
+		$this->assertContains('nl-cao-component-onbekend', RuleEngine::checkedRuleIds());
+
+		$unknown = RuleEngine::evaluate('EmploymentContract', ['employeeId' => 'emp-1', 'cao' => 'cao-voorbeeld', 'caoComponents' => ['ploegentoeslag', 'bestaat-niet']], $this->context());
+		$this->assertTrue($this->hasViolation($unknown, 'nl-cao-component-onbekend'));
+
+		foreach ([['cao' => 'cao-metaal-techniek', 'caoComponents' => ['ploegentoeslag']], ['cao' => 'cao-voorbeeld'], ['caoComponents' => []]] as $contract) {
+			$this->assertFalse($this->hasViolation(RuleEngine::evaluate('EmploymentContract', array_merge(['employeeId' => 'emp-1'], $contract), $this->context()), 'nl-cao-component-onbekend'), json_encode($contract));
+		}
+	}//end testAnUnknownComponentIsFlagged()
+
 }//end class

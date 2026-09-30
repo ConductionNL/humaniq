@@ -44,6 +44,8 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Service\CaoComponentCalculator;
+use OCA\Humaniq\Service\CaoComponentPayService;
 use OCA\Humaniq\Service\EmploymentTermsResolver;
 use OCA\Humaniq\Service\HoursPayService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
@@ -230,10 +232,11 @@ class PayrollRunServiceTest extends TestCase {
 	 * @param HoursPayService|null $hoursPay The hours-and-overtime fold, or null for a run without it.
 	 * @param PayrollExpenseFoldService|null $expenses The claims-and-allowances fold, or null for a run without it.
 	 * @param PayrollRunCheckService|null $runCheck The run check, or null for a run without it.
+	 * @param CaoComponentPayService|null $caoComponents The CAO components fold, or null for a run without it.
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -255,7 +258,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck),
+			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents),
 			$fake,
 			$retentionGuard,
 		];
@@ -1785,6 +1788,37 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertEquals($this->savedFor($fakeWithout, 'Payslip'), $this->savedFor($fakeWith, 'Payslip'));
 		$this->assertSame([], $stamps);
 	}//end testASalariedEmployeeWithoutOvertimeKeepsAnIdenticalPayslip()
+
+	/**
+	 * A contract naming the example agreement's 10% shift allowance gets it
+	 * on the payslip, in the gross the wage tax is computed over; a contract
+	 * naming no component keeps a byte-identical payslip with the fold wired.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-003
+	 */
+	public function testCaoComponentsArePaidAsWage(): void {
+		$rows = ['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
+		$fold = new CaoComponentPayService(new EmploymentTermsResolver(), new CaoComponentCalculator(), $this->createMock(LoggerInterface::class));
+		[$plainService, $plainFake] = $this->service($rows);
+		$plainService->runFor('2026-05');
+		$plain = $this->savedFor($plainFake, 'Payslip');
+		[$unnamed, $unnamedFake] = $this->service($rows, null, null, null, null, $fold);
+		$unnamed->runFor('2026-05');
+		$this->assertEquals($plain, $this->savedFor($unnamedFake, 'Payslip'));
+
+		$rows['EmploymentContract'] = [$this->contract(['cao' => 'cao-voorbeeld', 'caoComponents' => ['ploegentoeslag']])];
+		[$service, $fake] = $this->service($rows, null, null, null, null, $fold);
+		$service->runFor('2026-05');
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$this->assertEqualsWithDelta(($plain[0]['grossPay'] + 380.00), $payslip['grossPay'], 0.001);
+		$this->assertGreaterThan($plain[0]['loonheffing'], $payslip['loonheffing']);
+		$this->assertSame(380.0, $payslip['caoComponentsTotal']);
+		$this->assertSame('ploegentoeslag', $payslip['caoComponentLines'][0]['key']);
+		$this->assertSame([], $payslip['caoComponentsUnresolved']);
+	}//end testCaoComponentsArePaidAsWage()
 
 	/**
 	 * The claims-and-allowances fold over the given rows, recording its writes.

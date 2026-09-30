@@ -239,6 +239,7 @@ class PayrollRunService {
 	 * @param PayrollExpenseFoldService|null $expenses Approved claims and recurring allowances (payroll-expenses-and-allowances); null runs without them.
 	 *
 	 * @param PayrollRunCheckService|null $runCheck The run check that runs after every calculation (payroll-run-checks D2); null runs without it.
+	 * @param CaoComponentPayService|null $caoComponents The CAO components a contract names (payroll-cao-components D3); null runs without them.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each optional fold (hours, claims and allowances) and the run check is its own collaborator, so a run without one stays byte-identical and a test names which fold ran.
 	 */
@@ -254,6 +255,7 @@ class PayrollRunService {
 		private readonly ?WorkingCalendarReader $calendar = null,
 		private readonly ?PayrollExpenseFoldService $expenses = null,
 		private readonly ?PayrollRunCheckService $runCheck = null,
+		private readonly ?CaoComponentPayService $caoComponents = null,
 	) {
 
 	}//end __construct()
@@ -490,6 +492,7 @@ class PayrollRunService {
 			}
 
 			$grossMonthlySalaryCents = ($salaried === true ? (int)round(((float)$grossMonthly) * 100) : (int)($hoursPay['hourlyCents'] ?? 0));
+			$regularWageCents = $grossMonthlySalaryCents;
 
 			// sick-pay-calc (design.md D4): an open (gemeld) SickLeaveCase
 			// covering the period substitutes the doorbetaald loon for the
@@ -536,6 +539,12 @@ class PayrollRunService {
 			// unchanged.
 			$leaveBuySellCents = ($leaveBuySellByEmployeeId[$employeeId] ?? 0);
 			$grossMonthlySalaryCents += $leaveBuySellCents;
+
+			// payroll-cao-components D3: the allowances and premiums the
+			// collective agreement prescribes are wage, added before the
+			// calculator. A contract naming none folds nothing.
+			$caoFold = $this->caoComponents?->foldFor(contract: $contract, regularWageCents: $regularWageCents, hoursPay: $hoursPay, entries: $hours['entries'], nonWorkingDates: $hours['nonWorkingDates'], period: $period);
+			$grossMonthlySalaryCents += (int)($caoFold['totalCents'] ?? 0);
 
 			// payroll-expenses-and-allowances D2/D4: the taxed part of every
 			// allowance is wage and enters the gross before the calculator;
@@ -603,6 +612,7 @@ class PayrollRunService {
 			$payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents));
 			$payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
 			$payload = array_merge($payload, $this->hoursPayFields(hoursPay: $hoursPay, salaried: $salaried));
+			$payload = array_merge($payload, ($this->caoComponents?->payslipFields(fold: $caoFold) ?? []));
 			$payload = array_merge($payload, $this->expenseFields(fold: $expenseFold, netCents: ($nettoPaySoFarCents - $loonbeslagDeductionCents)));
 			$paidClaimIds = array_merge($paidClaimIds, (array)($expenseFold['claimIds'] ?? []));
 			$wkrRows = array_merge($wkrRows, (array)($expenseFold['wkr'] ?? []));

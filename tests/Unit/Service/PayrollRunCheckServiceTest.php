@@ -263,4 +263,24 @@ class PayrollRunCheckServiceTest extends TestCase {
 		$this->assertSame(1, $summary['blocking']);
 	}//end testAFailingRuleAuditKeepsTheOtherFindings()
 
+	/**
+	 * A CAO component a payslip of the run could not pay is a warning that
+	 * names the component (payroll-cao-components D4).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-003
+	 */
+	public function testAnUnresolvedCaoComponentIsAWarning(): void {
+		$rows = $this->rows();
+		$rows['Payslip'][0]['caoComponentsUnresolved'] = ['ort'];
+		$this->service($rows)->check('run-5');
+
+		$cao = array_values(array_filter($this->findings(), static fn (array $f): bool => ($f['ruleId'] ?? '') === 'cao:ort'));
+		$this->assertCount(1, $cao);
+		$this->assertSame('warning', $cao[0]['severity']);
+		$this->assertSame('unpaid-input', $cao[0]['kind']);
+		$this->assertSame([], RegisterSchemaValidator::errors('PayrollRunFinding', array_merge($cao[0], ['payrollRunId' => 'run-5', 'status' => 'open'])));
+	}//end testAnUnresolvedCaoComponentIsAWarning()
+
 }//end class

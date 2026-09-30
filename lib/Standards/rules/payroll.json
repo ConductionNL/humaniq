@@ -1331,6 +1331,18 @@
       "sourceUrl": null
     },
     {
+      "id": "nl-cao-component-onbekend",
+      "domain": "pay",
+      "jurisdiction": "NL",
+      "framework": "cao",
+      "source": "CAO-tekst allowances (per the contract's referenced CAO in lib/Standards/cao/)",
+      "statement": "When an employment contract names collective labour agreement components (caoComponents), each named component shall be declared in the allowances of the agreement the contract follows. A contract naming a component its agreement does not have pays nothing for it and shall be corrected. Vacuous when the contract names no component.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": null
+    },
+    {
       "id": "nl-hr21-vervallen-functie",
       "domain": "pay",
       "jurisdiction": "NL",
