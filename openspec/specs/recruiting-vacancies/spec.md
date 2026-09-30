@@ -21,8 +21,9 @@ candidate list via the related panel, and a seeded published vacancy.
 Grounded in the 2026-07-12 market deep-research (Spectr
 `hrmq-insight-ranked-buildlist`, rank 6): Personio and BambooHR ship an ATS
 as a core SMB-suite module; Krip — the only generic Nextcloud HR app — has
-none. External multiposting (werk.nl/LinkedIn via OpenConnector) and the
-public career page (portaliq per ADR-046) are explicitly out of scope.
+none. External multiposting (werk.nl/LinkedIn via OpenConnector) was out of
+scope here. The public career page is served by portaliq from humaniq's
+candidate audience (portal-audiences, hiring-portal-audiences 2026-09-30).
 
 ## Requirements
 

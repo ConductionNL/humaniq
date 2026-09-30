@@ -16,10 +16,10 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-001
- * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-002
- * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-003
- * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-004
+ * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-001
+ * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-002
+ * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-003
+ * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-004
  */
 
 declare(strict_types=1);

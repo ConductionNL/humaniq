@@ -148,6 +148,23 @@ No employee seed changes.
 - [Portal applications carry no administration] → `administrationId` is left empty on a
   portal application; HR sees it in the index and sets it while screening.
 
+## As built (2026-09-30)
+
+- Schema versions were already `Vacancy` 0.3.0 and `job-application` 0.3.0 at HEAD; both went to
+  0.4.0. The register went to 0.43.0.
+- `VacancyDetail` was a `simpleDetailScaffold` instance, which takes no extra widget, so it is
+  expanded into a full page in `src/manifest.d/hr-ats.json` with the `vacancy-questions` host
+  widget (`src/widgets/VacancyQuestionsWidget.vue`, CnFormBuilder, saved with a PATCH on the
+  vacancy). CnFormBuilder's answer types are `string`, `textarea`, `enum`, `boolean` and
+  `number`, so the seed's driving-licence question is an `enum` with `ja` and `nee`.
+- `ApplicationDetail` shows the answers in an `application-answers` host widget
+  (`src/widgets/ApplicationAnswersWidget.vue`), each under the question label read from the
+  vacancy; the data widget excludes the raw `answers` map.
+- Every anonymous entry declares `minTrust: low`, because portaliq's normaliser strips the
+  anonymous flag from an entry above low trust.
+- The myOnboarding collection declares `filesUpload: true` (portaliq's opt-in for uploads onto a
+  collection's objects) and projects the checklist fields.
+
 ## Open Questions
 
 - Should humaniq re-check required answers server-side, for an application created outside

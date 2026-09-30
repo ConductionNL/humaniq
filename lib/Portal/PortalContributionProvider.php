@@ -72,7 +72,7 @@ class PortalContributionProvider {
 	 * hire (preboarding) and a former employee (their own paperwork).
 	 *
 	 * @spec openspec/changes/portal-contribution/tasks.md#task-2
-	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-001
+	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-001
 	 */
 	public function getAudiences(): array {
 		return [
@@ -152,7 +152,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-001
+	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-001
 	 */
 	private function recruitingManifest(string $audience): ?array {
 		if ($audience === 'candidate') {
@@ -419,7 +419,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-001
+	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-001
 	 */
 	private function candidateManifest(): array {
 		return [
@@ -470,7 +470,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-003
+	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-003
 	 */
 	private function newHireManifest(): array {
 		return [
@@ -528,7 +528,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-004
+	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-004
 	 */
 	private function formerEmployeeManifest(): array {
 		return [

@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <!--
- ApplicationAnswersWidget (hiring-portal-audiences D3, REQ-PTA-002).
+ ApplicationAnswersWidget (hiring-portal-audiences D3, REQ-PAU-002).
 
  The candidate's answers to the vacancy's own questions, each under the
  question as HR wrote it. Reads the application and its vacancy from
@@ -70,7 +70,7 @@ export default {
 		 * Read the answers and label them with the vacancy's questions.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-002
+		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-002
 		 */
 		async load() {
 			try {

@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <!--
- VacancyQuestionsWidget (hiring-portal-audiences D3, REQ-PTA-002).
+ VacancyQuestionsWidget (hiring-portal-audiences D3, REQ-PAU-002).
 
  HR adds their own questions to a vacancy's application form with the
  library's CnFormBuilder. The list is stored as Vacancy.questions and portaliq
@@ -79,7 +79,7 @@ export default {
 		 * The answer types a candidate can be asked for.
 		 *
 		 * @return {Array<{type: string, label: string}>}
-		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-002
+		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-002
 		 */
 		types() {
 			return [
@@ -95,7 +95,7 @@ export default {
 		 * The vacancy's OpenRegister URL.
 		 *
 		 * @return {string}
-		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-002
+		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-002
 		 */
 		url() {
 			return generateUrl('/apps/openregister/api/objects/{register}/{schema}/{id}', { register: 'humaniq', schema: 'Vacancy', id: this.objectId })
@@ -111,7 +111,7 @@ export default {
 		 * Read the vacancy's questions.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-002
+		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-002
 		 */
 		async load() {
 			this.loading = true
@@ -130,7 +130,7 @@ export default {
 		 * rows without one are left out.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-002
+		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-002
 		 */
 		async save() {
 			this.saving = true

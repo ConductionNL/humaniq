@@ -221,7 +221,7 @@ export default {
 		maxSize: { w: 12, h: 14 },
 		allowedSlots: ['body'],
 		propsSchema: null,
-		_note: 'hiring-portal-audiences D3 (REQ-PTA-002): HR edits Vacancy.questions with CnFormBuilder on VacancyDetail and saves them with a PATCH on the vacancy; portaliq shows them on the public apply form.',
+		_note: 'hiring-portal-audiences D3 (REQ-PAU-002): HR edits Vacancy.questions with CnFormBuilder on VacancyDetail and saves them with a PATCH on the vacancy; portaliq shows them on the public apply form.',
 	},
 	// @custom-widget-ratchet exclude the data widget renders an answers map as raw JSON, and each answer needs the question label from another object (the vacancy)
 	'application-answers': {
@@ -232,7 +232,7 @@ export default {
 		maxSize: { w: 12, h: 10 },
 		allowedSlots: ['body'],
 		propsSchema: null,
-		_note: 'hiring-portal-audiences D3 (REQ-PTA-002): the candidate\'s answers on ApplicationDetail, each under the question label read from the vacancy.',
+		_note: 'hiring-portal-audiences D3 (REQ-PAU-002): the candidate\'s answers on ApplicationDetail, each under the question label read from the vacancy.',
 	},
 	// @custom-widget-ratchet exclude on a detail page no built-in widget key reaches a table that reads endpointSource: CnDetailWidgetHost canonicalises object-table to table, whose renderer CnObjectListWidget ignores endpointSource in nextcloud-vue 2.57.1; this mounts the library's own CnWidgetObjectTable
 	'endpoint-table': {
