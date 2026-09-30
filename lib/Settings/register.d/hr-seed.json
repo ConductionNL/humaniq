@@ -573,6 +573,60 @@
             {
                 "@self": {
                     "register": "humaniq",
+                    "schema": "Payslip",
+                    "slug": "payslip-jansen-2026-02"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "period": "2026-02",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 3800.00,
+                "hoursWorked": 152,
+                "loonheffing": 1102.00,
+                "nettoPay": 2698.00,
+                "statementProvided": true,
+                "userId": "admin",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Payslip",
+                    "slug": "payslip-jansen-2026-03"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "period": "2026-03",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 3800.00,
+                "hoursWorked": 152,
+                "loonheffing": 1102.00,
+                "nettoPay": 2698.00,
+                "statementProvided": true,
+                "userId": "admin",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Payslip",
+                    "slug": "payslip-jansen-2026-04"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "period": "2026-04",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 3800.00,
+                "hoursWorked": 152,
+                "loonheffing": 1102.00,
+                "nettoPay": 2698.00,
+                "statementProvided": true,
+                "userId": "admin",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
                     "schema": "PensionFiling",
                     "slug": "pensionfiling-2026-05-abp"
                 },
