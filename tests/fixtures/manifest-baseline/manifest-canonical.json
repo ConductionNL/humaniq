@@ -7043,7 +7043,7 @@
 		},
 		{
 			"config": {
-				"_note": "Batch/reconciliation archetype: a PayrollRun is a per-period aggregate of an administration's payslips, so its page leads with the GL-reconciliation totals (totalGross/totalNet/withholdingLiabilityBalance -- exactly the numbers xc-payroll-gl-reconciliation and xc-withholding-liability-clearing check) as stat KPIs, then the full record (period/administrationId/jurisdiction/status/glLiabilityPosted/glExpensePosted/withholdingsClearedToZero plus the engine stamps engineVersion/calculatedAt) in the data widget below. payroll-core-engine (2026-07-14): Payslip NOW carries a real payrollRunId $ref back to PayrollRun (added by payroll-core-schema), so the page gains the FK-scoped Payslips child list (allowCreate:false -- generation via the engine is the only create path, design.md D5) and the page-level api-call action \"(Her)berekenen\" (POST /api/payroll/calculate with {runId: @objectId}, guarded server-side by PayrollController::authorizeRun(), draft-only -- non-draft runs get a 400). Still NO lifecycleActions: `status` is a plain enum (draft/approved/posted/paid) with no `x-openregister-lifecycle` transition map on this schema -- driving lifecycleActions here would invent transition names the backend does not guard; the recalculate action is a page action, not a transition. Audit history is a sidebar tab.",
+				"_note": "Batch/reconciliation archetype: a PayrollRun is a per-period aggregate of an administration's payslips, so its page leads with the GL-reconciliation totals (totalGross/totalNet/withholdingLiabilityBalance -- exactly the numbers xc-payroll-gl-reconciliation and xc-withholding-liability-clearing check) as stat KPIs, then the full record (period/administrationId/jurisdiction/status/glLiabilityPosted/glExpensePosted/withholdingsClearedToZero plus the engine stamps engineVersion/calculatedAt) in the data widget below. payroll-core-engine (2026-07-14): Payslip NOW carries a real payrollRunId $ref back to PayrollRun (added by payroll-core-schema), so the page gains the FK-scoped Payslips child list (allowCreate:false -- generation via the engine is the only create path, design.md D5) and the page-level api-call action \"(Her)berekenen\" (POST /api/payroll/calculate with {runId: @objectId}, guarded server-side by PayrollController::authorizeRun(), draft-only -- non-draft runs get a 400). Still NO lifecycleActions: `status` is a plain enum (draft/approved/posted/paid) with no `x-openregister-lifecycle` transition map on this schema -- driving lifecycleActions here would invent transition names the backend does not guard; the recalculate action is a page action, not a transition. Audit history is a sidebar tab. payroll-run-checks (2026-09-30): every calculation runs the run check (PayrollRunCheckService) and \"Check run\" runs it on demand (POST /api/payroll/check, run resolved under the caller's RBAC, admin or hr role). The two extra tiles read the counts the check stores on the run (blockingFindings, warningFindings); the findings list shows the PayrollRunFinding objects of this run, each acknowledged on its own page.",
 				"headerActions": [
 					{
 						"confirm": true,
@@ -7058,6 +7058,19 @@
 						"successMessage": "Payroll run (re)calculated — payslips and totals have been updated.",
 						"type": "api-call",
 						"url": "/api/payroll/calculate"
+					},
+					{
+						"errorMessage": "Checking the payroll run failed.",
+						"icon": "ClipboardCheckOutline",
+						"id": "check-run",
+						"label": "Check run",
+						"method": "POST",
+						"params": {
+							"runId": "@objectId"
+						},
+						"successMessage": "Run checked. The findings and their counts are updated.",
+						"type": "api-call",
+						"url": "/api/payroll/check"
 					},
 					{
 						"confirm": true,
@@ -7111,10 +7124,26 @@
 						"widgetId": "stat-3"
 					},
 					{
+						"gridHeight": 3,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 3,
+						"id": 6,
+						"widgetId": "stat-blocking"
+					},
+					{
+						"gridHeight": 3,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 3,
+						"id": 7,
+						"widgetId": "stat-warning"
+					},
+					{
 						"gridHeight": 7,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 3,
+						"gridY": 6,
 						"id": 4,
 						"widgetId": "data"
 					},
@@ -7122,7 +7151,15 @@
 						"gridHeight": 5,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 10,
+						"gridY": 13,
+						"id": 8,
+						"widgetId": "findings"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 18,
 						"id": 5,
 						"widgetId": "object-list"
 					}
@@ -7211,6 +7248,56 @@
 					},
 					{
 						"content": {
+							"caption": "someone not paid or a mandatory rule broken",
+							"format": {
+								"decimals": 0,
+								"style": "number"
+							},
+							"icon": "AlertOctagonOutline",
+							"label": "Blocking findings",
+							"source": {
+								"field": "blockingFindings",
+								"filter": {
+									"id": "@objectId"
+								},
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							},
+							"valueColor": "#e9322d"
+						},
+						"icon": "AlertOctagonOutline",
+						"id": "stat-blocking",
+						"title": "Blocking findings",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"caption": "to look at before approval",
+							"format": {
+								"decimals": 0,
+								"style": "number"
+							},
+							"icon": "AlertOutline",
+							"label": "Warning findings",
+							"source": {
+								"field": "warningFindings",
+								"filter": {
+									"id": "@objectId"
+								},
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							},
+							"valueColor": "#eca700"
+						},
+						"icon": "AlertOutline",
+						"id": "stat-warning",
+						"title": "Warning findings",
+						"type": "stat"
+					},
+					{
+						"content": {
 							"columns": 2,
 							"title": "Payroll run"
 						},
@@ -7260,6 +7347,53 @@
 						"icon": "ReceiptTextOutline",
 						"id": "object-list",
 						"title": "Payslips",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"allowCreate": false,
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "severity",
+									"label": "Severity"
+								},
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "component",
+									"label": "Component"
+								},
+								{
+									"key": "message",
+									"label": "Message"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"emptyText": "No findings. Run Check run after a calculation to check the run again.",
+							"filter": {
+								"payrollRunId": "@objectId"
+							},
+							"limit": 50,
+							"register": "humaniq",
+							"rowRoute": "PayrollRunFindingDetail",
+							"schema": "PayrollRunFinding",
+							"sort": {
+								"dir": "asc",
+								"field": "severity"
+							}
+						},
+						"icon": "AlertCircleOutline",
+						"id": "findings",
+						"title": "Run check findings",
 						"type": "object-list"
 					}
 				]
@@ -14152,6 +14286,114 @@
 			"route": "/wkr-assessments",
 			"title": "WKR assessments",
 			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-run-checks (2026-09-30): one finding of a run check. The check writes it and replaces it after every calculation; an acknowledged finding that recurs keeps its acknowledgement and takes the new values. Only the note is editable; acknowledge moves it from open to acknowledged and PayrollRunFindingStampListener stamps the reviewer as acknowledgedBy.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "acknowledge",
+							"from": [
+								"open"
+							],
+							"label": "Acknowledge",
+							"to": "acknowledged"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "PayrollRunFinding",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"acknowledgedBy": {
+									"editable": false
+								},
+								"baselineValue": {
+									"editable": false
+								},
+								"checkedAt": {
+									"editable": false
+								},
+								"component": {
+									"editable": false
+								},
+								"currentValue": {
+									"editable": false
+								},
+								"employeeId": {
+									"editable": false
+								},
+								"explanation": {
+									"editable": false
+								},
+								"kind": {
+									"editable": false
+								},
+								"message": {
+									"editable": false
+								},
+								"payrollRunId": {
+									"editable": false
+								},
+								"ruleId": {
+									"editable": false
+								},
+								"severity": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								}
+							},
+							"title": "Finding"
+						},
+						"icon": "AlertCircleOutline",
+						"id": "data",
+						"title": "Finding",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "PayrollRunFindingDetail",
+			"route": "/payroll-run-findings/:id",
+			"title": "Payroll run finding",
+			"type": "detail"
 		},
 		{
 			"config": {

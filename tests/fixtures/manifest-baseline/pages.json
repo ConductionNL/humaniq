@@ -540,6 +540,10 @@
 		"route": "/wkr-assessments"
 	},
 	{
+		"id": "PayrollRunFindingDetail",
+		"route": "/payroll-run-findings/:id"
+	},
+	{
 		"id": "KeyResultDetail",
 		"route": "/key-results/:id"
 	},
