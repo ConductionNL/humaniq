@@ -172,7 +172,7 @@
             "Offboarding": {
                 "slug": "Offboarding",
                 "icon": "AccountMinus",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Offboarding case",
                 "description": "A deterministic offboarding case (one per departure): the concrete gates for a leaving employee. Exit interview held, assets returned, access revoked. And the statutory eindafrekening components (verlofsaldo paid out, vakantiegeld settled, transitievergoeding recorded, getuigschrift provided) as checklist boolean/date fields, governed by a simplified five-state declarative lifecycle (offboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/offboarding-wizard draft's 17-state machine and 7 entity schemas: no OffboardingStep/Eindafrekening/EquipmentReturn/ExitInterview/Getuigschrift/RetentionTimer side entities, no eindafrekening computation engine, no UWV WW-melding/pensioenfonds/ZVW submissions, no AVG retention timers, no per-item asset tracking (the parallel asset-management-mvp owns asset data. Loose coupling only, design.md D6). The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOffboardingChecks.php), NOT by write-time guard classes. Guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
                 "type": "object",
@@ -184,6 +184,26 @@
                     "status"
                 ],
                 "configuration": {
+                    "x-openregister-flows": [
+                        {
+                            "name": "Toegang intrekken na laatste werkdag",
+                            "app": "humaniq",
+                            "description": "Each morning disables the Nextcloud account of every leaver whose last working day has passed and whose case is still open, and ticks Access revoked on the case, recorded as done by humaniq. An administrator account is never disabled this way. The flow arrives disabled; until an administrator enables it, HR revokes access with the Revoke access action (hiring-offboarding-completion D2).",
+                            "trigger": "schedule",
+                            "cron": "0 6 * * *",
+                            "executionMode": "async",
+                            "limits": {"maxTransitions": 10},
+                            "nodes": [
+                                {"id": "start", "type": "openregister.trigger-schedule", "config": {"cron": "0 6 * * *"}},
+                                {"id": "revoke", "type": "humaniq.revoke-access", "config": {}},
+                                {"id": "end", "type": "openregister.end", "config": {}}
+                            ],
+                            "edges": [
+                                {"id": "e-start", "from": "start", "to": "revoke"},
+                                {"id": "e-done", "from": "revoke", "to": "end"}
+                            ]
+                        }
+                    ],
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "aangekondigd",
@@ -284,8 +304,11 @@
                         "type": "boolean",
                         "default": false,
                         "title": "Access revoked",
-                        "description": "Whether Nextcloud/IT access has been revoked. Records the outcome only: OCS automation is a non-goal."
+                        "description": "Whether the leaver's Nextcloud account has been disabled. Revoke access disables it and ticks this for you."
                     },
+                    "toegangIngetrokkenDoor": {"type": "string", "nullable": true, "title": "Access revoked by", "description": "Who revoked the access, or humaniq when the daily flow did.", "x-notes": "hiring-offboarding-completion D2: stamped by AccessRevocationService."},
+                    "toegangIngetrokkenOp": {"type": "string", "format": "date-time", "nullable": true, "title": "Access revoked at", "description": "When the access was revoked.", "x-notes": "hiring-offboarding-completion D2: stamped by AccessRevocationService."},
+                    "toegangIngetrokkenToelichting": {"type": "string", "nullable": true, "title": "Access note", "description": "Why there was no account to disable, such as No Nextcloud account.", "x-notes": "hiring-offboarding-completion D2: set when the employee has no nextcloudUserId."},
                     "verlofsaldoUitbetaald": {
                         "type": "boolean",
                         "default": false,
@@ -304,6 +327,7 @@
                         "title": "Transition payment amount",
                         "description": "The gross statutory transition payment in euros. Required when the employer initiated the departure; leave empty otherwise.", "x-notes": "Gross statutory transition payment in EUR (BW art. 7:673); required data for dismissal-initiated reasons, null when not applicable. Recorded input, not derived — the formula constants live as parameters on the nl-offboarding-transitievergoeding rule."
                     },
+                    "transitievergoedingBerekening": {"type": "object", "nullable": true, "title": "Transition payment calculation", "description": "What Calculate transition payment worked out: service years, monthly wage parts, the cap and whether it applied. The amount above can be changed afterwards; this keeps what the calculation said.", "x-notes": "hiring-offboarding-completion D3: written by TransitionPaymentService from TransitionPaymentCalculator."},
                     "getuigschriftVerstrekt": {
                         "type": "boolean",
                         "default": false,
@@ -316,6 +340,57 @@
                         "title": "Notes",
                         "description": "Anything worth noting about this case.", "x-notes": "Free-text case notes."
                     }
+                }
+            },
+            "ExitInterview": {
+                "slug": "ExitInterview",
+                "icon": "CommentAccountOutline",
+                "version": "0.1.0",
+                "title": "Exit interview",
+                "description": "What a leaver said in the exit interview: their own main reason for leaving, whether they would recommend the organisation and come back, and what worked and what could be better. After 90 days the person link and the free text are cleared; the reason, the scores, the department and the date stay for reporting (hiring-offboarding-completion D1).",
+                "type": "object",
+                "required": ["heldOn", "mainReason"],
+                "authorization": {
+                    "read": ["humaniq-hr"],
+                    "create": ["humaniq-hr"],
+                    "update": ["humaniq-hr"],
+                    "delete": ["humaniq-hr"]
+                },
+                "configuration": {
+                    "x-openregister-flows": [
+                        {
+                            "name": "Exit interviews anonymiseren",
+                            "app": "humaniq",
+                            "description": "Each night clears the employee, the case, who held it and both free-text answers of every exit interview held more than 90 days ago, and stamps when it did. The reason, the scores, the department and the date stay. The flow arrives disabled; until an administrator enables it, exit interviews keep their person link (hiring-offboarding-completion D1).",
+                            "trigger": "schedule",
+                            "cron": "30 2 * * *",
+                            "executionMode": "async",
+                            "limits": {"maxTransitions": 10},
+                            "nodes": [
+                                {"id": "start", "type": "openregister.trigger-schedule", "config": {"cron": "30 2 * * *"}},
+                                {"id": "anonymise", "type": "humaniq.anonymise-exit-interviews", "config": {"afterDays": 90}},
+                                {"id": "end", "type": "openregister.end", "config": {}}
+                            ],
+                            "edges": [
+                                {"id": "e-start", "from": "start", "to": "anonymise"},
+                                {"id": "e-done", "from": "anonymise", "to": "end"}
+                            ]
+                        }
+                    ]
+                },
+                "properties": {
+                    "offboardingId": {"type": "string", "format": "uuid", "nullable": true, "$ref": "Offboarding", "title": "Offboarding case", "description": "The departure this interview belongs to. Recording the interview fills in the case's exit interview date.", "x-notes": "Cleared after 90 days by the anonymisation flow."},
+                    "employeeId": {"type": "string", "format": "uuid", "nullable": true, "$ref": "Employee", "title": "Employee", "description": "Who is leaving. Filled in from the case when left empty.", "x-notes": "Cleared after 90 days by the anonymisation flow."},
+                    "orgUnitId": {"type": "string", "format": "uuid", "nullable": true, "$ref": "OrgUnit", "title": "Department", "description": "The leaver's department, kept after the interview is anonymised so reasons can be compared per department. Filled in from the leaver's placement when left empty."},
+                    "heldOn": {"type": "string", "format": "date", "title": "Held on", "description": "The day the exit interview was held."},
+                    "conductedBy": {"type": "string", "nullable": true, "title": "Held by", "description": "Who held the interview.", "x-notes": "Cleared after 90 days by the anonymisation flow."},
+                    "mainReason": {"type": "string", "enum": ["salaris", "loopbaan", "leidinggevende", "werkdruk", "werk-prive", "verhuizing", "pensioen", "anders"], "title": "Main reason", "description": "The leaver's own main reason for leaving. This is their motive, not the legal ground on the case.", "x-enum-labels": {"salaris": "Pay", "loopbaan": "Career", "leidinggevende": "Manager", "werkdruk": "Workload", "werk-prive": "Work and private life", "verhuizing": "Moving house", "pensioen": "Retirement", "anders": "Other"}},
+                    "wouldRecommend": {"type": "integer", "minimum": 0, "maximum": 10, "nullable": true, "title": "Would recommend", "description": "From 0 to 10, how likely the leaver is to recommend the organisation as an employer."},
+                    "wouldReturn": {"type": "boolean", "nullable": true, "title": "Would come back", "description": "Whether the leaver would consider coming back."},
+                    "whatWorked": {"type": "string", "maxLength": 5000, "nullable": true, "title": "What worked", "description": "What the leaver valued.", "x-notes": "Cleared after 90 days by the anonymisation flow."},
+                    "whatToImprove": {"type": "string", "maxLength": 5000, "nullable": true, "title": "What could be better", "description": "What the leaver would change.", "x-notes": "Cleared after 90 days by the anonymisation flow."},
+                    "anonymisedAt": {"type": "string", "format": "date-time", "nullable": true, "title": "Anonymised at", "description": "When the person link and the free text were cleared. Empty while the interview still names the leaver."},
+                    "administrationId": {"type": "string", "nullable": true, "title": "Administration", "description": "The administration of the leaver."}
                 }
             }
         }

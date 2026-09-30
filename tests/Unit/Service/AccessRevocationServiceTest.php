@@ -24,6 +24,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\AccessRevocationService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -115,6 +116,8 @@ class AccessRevocationServiceTest extends TestCase {
 		self::assertSame('keep me', $payload['notes'], 'OpenRegister replaces the object, so the rest of the case goes along.');
 		self::assertSame('afronding_gepland', $payload['status']);
 		self::assertArrayNotHasKey('@self', $payload);
+		self::assertSame([], array_values(array_diff(array_keys($payload), array_keys(RegisterSchemaValidator::schema('Offboarding')['properties']))), 'Every field written is an Offboarding property; OpenRegister drops the others.');
+		self::assertSame([], RegisterSchemaValidator::errors('Offboarding', array_merge($payload, ['employeeId' => '0127394a-be27-48b4-a592-b6a41774b221'])));
 	}//end testTheLeaversAccountIsDisabled()
 
 	/**
