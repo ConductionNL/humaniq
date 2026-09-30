@@ -172,6 +172,26 @@ class HoursRegisterGateway {
 	}//end save()
 
 	/**
+	 * Delete one object.
+	 *
+	 * @param string $uuid   The object.
+	 * @param string $schema The schema slug.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-001
+	 */
+	public function delete(string $uuid, string $schema): void {
+		$this->objects()->deleteObject(
+			uuid: $uuid,
+			register: $this->settingsService->getRegisterSlug(),
+			schema: $schema,
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end delete()
+
+	/**
 	 * The employee's UNIQUE resolved manager Nextcloud user id on a date, or
 	 * null (chain unresolved, or ambiguous — never guessed). The chain
 	 * itself is {@see OrgResolutionService} — the exact code path the
