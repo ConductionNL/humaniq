@@ -102,6 +102,7 @@
 
 import { CnActionButtons, CnDeltaWidget, CnStatWidget } from '@conduction/nextcloud-vue'
 import CompCycleRunDialog from './dialogs/CompCycleRunDialog.vue'
+import HireApplicationDialog from './dialogs/HireApplicationDialog.vue'
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
@@ -133,6 +134,14 @@ export default {
 		kind: 'modal',
 		component: CompCycleRunDialog,
 		_note: 'api-call cannot show what it will write before it writes, and the cycle steps touch every employee in scope; the dialog posts a dry run, shows it, and only then posts for real.',
+	},
+	// hiring-hire-to-employee: Create employee on a hired application. A host
+	// modal and not api-call, because HR confirms the name and start date and
+	// chooses between earlier records the server finds before anything is written.
+	HireApplicationDialog: {
+		kind: 'modal',
+		component: HireApplicationDialog,
+		_note: 'api-call cannot collect a start date or show the duplicate check before it writes; the dialog does both and posts POST /api/applications/{id}/hire.',
 	},
 	// The Employees list's "Propose a raise" bulk action. A handler, not an
 	// open-modal bulk action: see proposeRaiseForSelection.js for why.

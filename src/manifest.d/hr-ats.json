@@ -8,7 +8,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "job-application",
-				"_note": "recruiting-ats-basic (2026-07-13): candidate PII (candidateName/email/phone/cvFile/motivation) lives DIRECTLY on this Application -- there is deliberately no separate Candidate entity (AVG data-minimisation, design D2): one object = one retention clock = one delete. The 'Application' widget excludes vacancyId (Related resolves the Vacancy) and the three privacy fields (talentPoolOptIn/rejectedDate/retentionExpiryDate), which instead surface on the dedicated 'Privacy & retention' widget so the AVG retention clock is never buried among ordinary fields. lifecycleActions expose exactly screenen/uitnodigen/aanbieden/aannemen/afwijzen (design D3) -- no invented edges; aannemen's onboarding hand-off (creating the Employee from this data) is a MANUAL follow-up action in the MVP, no cross-object write hook fires here. Audit history is a sidebar tab. offer-esign (2026-07-16): page-level action \"request-offer-signature\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/offer/request-signature with {applicationId: @objectId}, guarded server-side by OfferController::authorizeApplication() (resolve-first RBAC) + isAdminOrHr() + the aanbod-stage guard. The 'Application' data widget's exclude list additionally hides offerLetterFileId/offerSigningRequestId (internal correlation ids) -- offerSigningStatus stays visible as the human-readable state. hiring-candidate-assessment (2026-09-30): the candidate's profile fields (education level, years, competences) and the referral source show in the data widget; Evaluations lists the CandidateEvaluation records (object-list), Average scores reads GET /api/applications/{id}/evaluation-summary (endpoint-table: OpenRegister's aggregation cannot group the nested scores list), and Score this candidate opens the evaluation form; the evaluator is stamped by the server.",
+				"_note": "recruiting-ats-basic (2026-07-13): candidate PII (candidateName/email/phone/cvFile/motivation) lives DIRECTLY on this Application -- there is deliberately no separate Candidate entity (AVG data-minimisation, design D2): one object = one retention clock = one delete. The 'Application' widget excludes vacancyId (Related resolves the Vacancy) and the three privacy fields (talentPoolOptIn/rejectedDate/retentionExpiryDate), which instead surface on the dedicated 'Privacy & retention' widget so the AVG retention clock is never buried among ordinary fields. lifecycleActions expose exactly screenen/uitnodigen/aanbieden/aannemen/afwijzen (design D3) -- no invented edges; after aannemen, the Create employee header action (hiring-hire-to-employee) opens HireApplicationDialog (src/dialogs), which creates the Employee and the Onboarding case from this application or attaches the hire to an earlier record; the transition itself writes no other object. employeeId then shows under Related, and pressing Create employee again opens the same employee. Audit history is a sidebar tab. offer-esign (2026-07-16): page-level action \"request-offer-signature\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/offer/request-signature with {applicationId: @objectId}, guarded server-side by OfferController::authorizeApplication() (resolve-first RBAC) + isAdminOrHr() + the aanbod-stage guard. The 'Application' data widget's exclude list additionally hides offerLetterFileId/offerSigningRequestId (internal correlation ids) -- offerSigningStatus stays visible as the human-readable state. hiring-candidate-assessment (2026-09-30): the candidate's profile fields (education level, years, competences) and the referral source show in the data widget; Evaluations lists the CandidateEvaluation records (object-list), Average scores reads GET /api/applications/{id}/evaluation-summary (endpoint-table: OpenRegister's aggregation cannot group the nested scores list), and Score this candidate opens the evaluation form; the evaluator is stamped by the server.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -28,7 +28,8 @@
 								"retentionExpiryDate",
 								"offerLetterFileId",
 								"offerSigningRequestId",
-								"answers"
+								"answers",
+								"employeeId"
 							],
 							"title": "Application"
 						}
@@ -315,6 +316,18 @@
 						"register": "humaniq",
 						"schema": "CandidateEvaluation",
 						"successMessage": "Your evaluation is saved."
+					},
+					{
+						"id": "create-employee",
+						"label": "Create employee",
+						"type": "open-modal",
+						"icon": "AccountPlus",
+						"target": "HireApplicationDialog",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "aangenomen"
+						}
 					}
 				]
 			}
