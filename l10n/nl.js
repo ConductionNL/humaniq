@@ -3284,7 +3284,25 @@ OC.L10N.register(
         "Run check findings": "Bevindingen van de controle",
         "No findings. Run Check run after a calculation to check the run again.": "Geen bevindingen. Kies Loonrun controleren na een berekening om de loonrun opnieuw te controleren.",
         "Finding": "Bevinding",
-        "Acknowledge": "Accepteren"
+        "Acknowledge": "Accepteren",
+        "CAO component override reason": "Reden afwijking cao-onderdelen",
+        "CAO component overrides": "Afwijkende cao-onderdelen",
+        "CAO components": "Cao-onderdelen",
+        "CAO components not paid": "Niet betaalde cao-onderdelen",
+        "CAO components total": "Totaal cao-onderdelen",
+        "Components the contract names that were not paid, because the agreement's figure is not confirmed or the component is unknown.": "Onderdelen die op het contract staan en niet zijn betaald, omdat het cao-bedrag niet is bevestigd of het onderdeel onbekend is.",
+        "Each allowance and premium of the collective labour agreement paid this period, with its basis.": "Elke cao-toeslag en -premie die deze periode is betaald, met de grondslag.",
+        "Figures this contract pays instead of the agreement's, per component. They may not be below the agreement.": "Bedragen of percentages die dit contract per onderdeel betaalt in plaats van die van de cao. Ze mogen niet lager zijn dan de cao.",
+        "How the component is computed.": "Hoe het onderdeel wordt berekend.",
+        "The agreement or the contract.": "De cao of het contract.",
+        "The allowances and premiums of the collective labour agreement that apply to this contract, such as a shift allowance or a night premium.": "De cao-toeslagen en -premies die voor dit contract gelden, zoals een ploegentoeslag of een nachttoeslag.",
+        "The amount added to the gross pay.": "Het bedrag dat bij het brutoloon komt.",
+        "The component of the collective labour agreement.": "Het onderdeel van de cao.",
+        "The hours that earn the premium.": "De uren waarover de toeslag wordt betaald.",
+        "The percentage paid.": "Het betaalde percentage.",
+        "The total of the collective labour agreement's allowances and premiums, included in the gross pay.": "Het totaal van de cao-toeslagen en -premies, inbegrepen in het brutoloon.",
+        "What the amount is computed on, such as 10% of 3000.00 or the hours in a window.": "Waarover het bedrag is berekend, zoals 10% van 3000.00 of de uren in een tijdvak.",
+        "Why this contract departs from the agreement's components. Required with any override.": "Waarom dit contract afwijkt van de cao-onderdelen. Verplicht bij elke afwijking."
     },
     "nplurals=2; plural=(n != 1);"
 )

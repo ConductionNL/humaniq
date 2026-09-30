@@ -1929,7 +1929,8 @@
                 "writtenContract": true,
                 "hoursPerWeek": 0,
                 "hourlyWage": 15.0,
-                "cao": null,
+                "cao": "cao-voorbeeld",
+                "caoComponents": ["ploegentoeslag", "nachttoeslag"],
                 "normfunctieId": null,
                 "awfTariff": "high",
                 "workingTimeDocumented": true,
@@ -1946,8 +1947,8 @@
                 },
                 "employeeId": "@ref:employee-elidrissi",
                 "period": "2026-08",
-                "hours": 72,
-                "entryCount": 4,
+                "hours": 88,
+                "entryCount": 6,
                 "description": "Oproepuren augustus 2026.",
                 "billable": false,
                 "status": "approved",
@@ -2016,6 +2017,42 @@
                 "breakMinutes": 0,
                 "hours": 18.0,
                 "description": "Oproepdienst.",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-elidrissi-2026-08-04-nacht"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "timesheetId": "@ref:timesheet-elidrissi-2026-08",
+                "date": "2026-08-04",
+                "startedAt": "2026-08-04T20:00:00Z",
+                "endedAt": "2026-08-05T04:00:00Z",
+                "breakMinutes": 0,
+                "hours": 8.0,
+                "description": "Nachtdienst 22:00 tot 06:00.",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-elidrissi-2026-08-11-nacht"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "timesheetId": "@ref:timesheet-elidrissi-2026-08",
+                "date": "2026-08-11",
+                "startedAt": "2026-08-11T20:00:00Z",
+                "endedAt": "2026-08-12T04:00:00Z",
+                "breakMinutes": 0,
+                "hours": 8.0,
+                "description": "Nachtdienst 22:00 tot 06:00.",
                 "billable": false,
                 "administrationId": "ADM-001",
                 "origin": "manual"

@@ -3284,7 +3284,25 @@ OC.L10N.register(
         "Run check findings": "Run check findings",
         "No findings. Run Check run after a calculation to check the run again.": "No findings. Run Check run after a calculation to check the run again.",
         "Finding": "Finding",
-        "Acknowledge": "Acknowledge"
+        "Acknowledge": "Acknowledge",
+        "CAO component override reason": "CAO component override reason",
+        "CAO component overrides": "CAO component overrides",
+        "CAO components": "CAO components",
+        "CAO components not paid": "CAO components not paid",
+        "CAO components total": "CAO components total",
+        "Components the contract names that were not paid, because the agreement's figure is not confirmed or the component is unknown.": "Components the contract names that were not paid, because the agreement's figure is not confirmed or the component is unknown.",
+        "Each allowance and premium of the collective labour agreement paid this period, with its basis.": "Each allowance and premium of the collective labour agreement paid this period, with its basis.",
+        "Figures this contract pays instead of the agreement's, per component. They may not be below the agreement.": "Figures this contract pays instead of the agreement's, per component. They may not be below the agreement.",
+        "How the component is computed.": "How the component is computed.",
+        "The agreement or the contract.": "The agreement or the contract.",
+        "The allowances and premiums of the collective labour agreement that apply to this contract, such as a shift allowance or a night premium.": "The allowances and premiums of the collective labour agreement that apply to this contract, such as a shift allowance or a night premium.",
+        "The amount added to the gross pay.": "The amount added to the gross pay.",
+        "The component of the collective labour agreement.": "The component of the collective labour agreement.",
+        "The hours that earn the premium.": "The hours that earn the premium.",
+        "The percentage paid.": "The percentage paid.",
+        "The total of the collective labour agreement's allowances and premiums, included in the gross pay.": "The total of the collective labour agreement's allowances and premiums, included in the gross pay.",
+        "What the amount is computed on, such as 10% of 3000.00 or the hours in a window.": "What the amount is computed on, such as 10% of 3000.00 or the hours in a window.",
+        "Why this contract departs from the agreement's components. Required with any override.": "Why this contract departs from the agreement's components. Required with any override."
     },
     "nplurals=2; plural=(n != 1);"
 )
