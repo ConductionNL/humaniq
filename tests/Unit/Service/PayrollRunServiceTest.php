@@ -48,6 +48,7 @@ use OCA\Humaniq\Service\EmploymentTermsResolver;
 use OCA\Humaniq\Service\HoursPayService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\PayrollExpenseFoldService;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunService;
@@ -226,10 +227,11 @@ class PayrollRunServiceTest extends TestCase {
 	 * @param PayrollRetentionGuardService|null $retentionGuard A mocked retention guard, or null for a permissive default (hrmq#99 -- `savePayslip()` places the AWR floor hold on every seal; most tests here are not exercising that behaviour, so a plain mock with no expectations is the default).
 	 *
 	 * @param HoursPayService|null $hoursPay The hours-and-overtime fold, or null for a run without it.
+	 * @param PayrollExpenseFoldService|null $expenses The claims-and-allowances fold, or null for a run without it.
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -251,7 +253,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay),
+			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses),
 			$fake,
 			$retentionGuard,
 		];
@@ -994,6 +996,7 @@ class PayrollRunServiceTest extends TestCase {
 		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
 		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
 		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
+		$settings->method('getGlPostAccountReimbursements')->willReturn('4010');
 
 		$glPost = new PayrollGLPostService(
 			$this->createMock(ContainerInterface::class),
@@ -1780,5 +1783,131 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertEquals($this->savedFor($fakeWithout, 'Payslip'), $this->savedFor($fakeWith, 'Payslip'));
 		$this->assertSame([], $stamps);
 	}//end testASalariedEmployeeWithoutOvertimeKeepsAnIdenticalPayslip()
+
+	/**
+	 * The claims-and-allowances fold over the given rows, recording its writes.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $rows Rows keyed by schema.
+	 * @param array<int, array{payload: array<string, mixed>, schema: string, uuid: ?string}> $writes Receives the writes.
+	 *
+	 * @return PayrollExpenseFoldService
+	 */
+	private function expenseFold(array $rows, array &$writes): PayrollExpenseFoldService {
+		$gateway = $this->createMock(HoursRegisterGateway::class);
+		$gateway->method('loadAll')->willReturnCallback(static fn (string $schema): array => ($rows[$schema] ?? []));
+		$gateway->method('save')->willReturnCallback(function (array $payload, string $schema, ?string $uuid = null) use (&$writes): object {
+			$writes[] = ['payload' => $payload, 'schema' => $schema, 'uuid' => $uuid];
+			return new \stdClass();
+		});
+
+		return new PayrollExpenseFoldService($gateway, new InternalWriteMarker());
+	}//end expenseFold()
+
+	/**
+	 * An approved payroll-route claim is paid on net, untaxed, named on the
+	 * payslip and stamped with the run; a taxed telephone allowance raises the
+	 * gross the wage tax is computed over; a home-working allowance at the norm
+	 * raises net by exactly its amount and writes one WKR row.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-002
+	 */
+	public function testClaimsAndAllowancesArePaidThroughThePayslip(): void {
+		$base = ['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
+		[$plainService, $plainFake] = $this->service($base);
+		$plainService->runFor('2026-05');
+		$plain = $this->savedFor($plainFake, 'Payslip')[0];
+
+		$foldRows = [
+			'Expense' => [['id' => 'exp-1', 'employeeId' => 'emp-1', 'title' => 'Treinkaartje', 'amount' => 27.40, 'status' => 'approved', 'approvedAt' => '2026-05-12T10:00:00Z', 'reimbursementRoute' => 'payroll']],
+			'RecurringAllowance' => [
+				['id' => 'alw-home', 'employeeId' => 'emp-1', 'kind' => 'thuiswerk', 'amountPerDay' => 2.45, 'daysPerMonth' => 8, 'taxTreatment' => 'gericht-vrijgesteld', 'startDate' => '2026-01-01', 'status' => 'active'],
+				['id' => 'alw-phone', 'employeeId' => 'emp-1', 'kind' => 'telefoon', 'amountPerMonth' => 20.00, 'taxTreatment' => 'belast', 'startDate' => '2026-01-01', 'status' => 'active'],
+			],
+		];
+		$writes = [];
+		[$service, $fake] = $this->service($base, null, null, $this->expenseFold($foldRows, $writes));
+		$result = $service->runFor('2026-05');
+
+		$this->assertSame('calculated', $result['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+		$this->assertEqualsWithDelta(($plain['grossPay'] + 20.00), $payslip['grossPay'], 0.001, 'The taxed allowance is wage.');
+		$this->assertGreaterThan($plain['loonheffing'], $payslip['loonheffing']);
+		$this->assertSame(27.40, $payslip['reimbursements']);
+		$this->assertSame(['exp-1'], $payslip['reimbursedExpenseIds']);
+		$this->assertSame(19.60, $payslip['allowancesUntaxed']);
+		$this->assertSame(20.00, $payslip['allowancesTaxed']);
+
+		// The same run with only the taxed allowance is the reference for the
+		// untaxed parts: they add exactly 27.40 + 19.60 to net.
+		$writesTaxedOnly = [];
+		[$taxedOnly, $taxedFake] = $this->service($base, null, null, $this->expenseFold(['RecurringAllowance' => [$foldRows['RecurringAllowance'][1]]], $writesTaxedOnly));
+		$taxedOnly->runFor('2026-05');
+		$reference = $this->savedFor($taxedFake, 'Payslip')[0];
+		$this->assertEqualsWithDelta(($reference['nettoPay'] + 47.00), $payslip['nettoPay'], 0.001);
+
+		$run = $fake->rowsBySchema['PayrollRun'][0];
+		$this->assertSame(47.00, $run['totalReimbursements']);
+		$stamps = array_values(array_filter($writes, static fn (array $w): bool => $w['schema'] === 'Expense'));
+		$this->assertSame('exp-1', $stamps[0]['uuid']);
+		$this->assertSame((string)$result['runId'], $stamps[0]['payload']['payrollRunId']);
+		$wkr = array_values(array_filter($writes, static fn (array $w): bool => $w['schema'] === 'WkrDeclaration'));
+		$this->assertCount(1, $wkr);
+		$this->assertSame('allowance:alw-home:2026-05', $wkr[0]['payload']['sourceReference']);
+	}//end testClaimsAndAllowancesArePaidThroughThePayslip()
+
+	/**
+	 * Without claims or allowances the payslip is byte-identical to a run
+	 * without the fold, and nothing is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
+	 */
+	public function testWithoutClaimsOrAllowancesThePayslipIsIdentical(): void {
+		$rows = ['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
+		[$without, $fakeWithout] = $this->service($rows);
+		$without->runFor('2026-05');
+		$writes = [];
+		[$with, $fakeWith] = $this->service($rows, null, null, $this->expenseFold([], $writes));
+		$with->runFor('2026-05');
+
+		$this->assertEquals($this->savedFor($fakeWithout, 'Payslip'), $this->savedFor($fakeWith, 'Payslip'));
+		$this->assertSame([], $writes);
+		$this->assertSame(0.0, $fakeWith->rowsBySchema['PayrollRun'][0]['totalReimbursements']);
+	}//end testWithoutClaimsOrAllowancesThePayslipIsIdentical()
+
+	/**
+	 * A run with reimbursements posts balanced with a debit line on the
+	 * reimbursement account; a run without keeps its four lines.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-004
+	 */
+	public function testReimbursementsReachTheJournalBalanced(): void {
+		[, $plainJournal, $plainBuilt] = $this->runAndJournal([]);
+		$this->assertCount(4, $plainBuilt['lines']);
+		$this->assertArrayNotHasKey('4010', $plainJournal);
+
+		$run = $this->runAndJournal([])[0];
+		$run['totalReimbursements'] = 27.40;
+		$run['totalNet'] = ($run['totalNet'] + 27.40);
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getGlPostAccountGross')->willReturn('4001');
+		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
+		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
+		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
+		$settings->method('getGlPostAccountReimbursements')->willReturn('4010');
+		$built = (new PayrollGLPostService($this->createMock(ContainerInterface::class), $this->createMock(IAppManager::class), $settings, $this->createMock(LoggerInterface::class)))->buildLines($run);
+
+		$this->assertNull($built['error']);
+		$byAccount = array_column($built['lines'], 'amount', 'accountNumber');
+		$this->assertSame(27.40, $byAccount['4010']);
+		$this->assertEqualsWithDelta(($byAccount['4001'] + $byAccount['4002'] + $byAccount['4010']), ($byAccount['1701'] + $byAccount['1702']), 0.001);
+		$this->assertEqualsWithDelta($plainJournal['1702'] + 27.40, $byAccount['1702'], 0.001);
+	}//end testReimbursementsReachTheJournalBalanced()
 
 }//end class

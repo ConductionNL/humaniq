@@ -415,6 +415,37 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 		}//end testThePayrollRunApprovedListenerIsSubscribed()
 
 		/**
+		 * payroll-expenses-and-allowances D1 and D3: a claim's route is judged
+		 * and an allowance is stamped with its drafter before either is saved.
+		 *
+		 * @return void
+		 */
+		public function testTheExpensePayrollListenersAreSubscribed(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			$method = new \ReflectionMethod(Application::class, 'registerExpensePayrollListeners');
+			$method->invoke($app, $this->createMock(IEventDispatcher::class));
+
+			$byListener = [];
+			foreach (ObjectEventSubscription::$recorded as $entry) {
+				$byListener[$entry['listener']][] = $entry;
+			}
+
+			$events = ['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\OpenRegister\Event\ObjectUpdatingEvent'];
+			self::assertSame($events, array_column($byListener[\OCA\Humaniq\Listener\ExpenseRouteListener::class], 'event'));
+			self::assertSame(['expense'], $byListener[\OCA\Humaniq\Listener\ExpenseRouteListener::class][0]['schemas']);
+			self::assertSame($events, array_column($byListener[\OCA\Humaniq\Listener\RecurringAllowanceStampListener::class], 'event'));
+			self::assertSame(['recurringallowance'], $byListener[\OCA\Humaniq\Listener\RecurringAllowanceStampListener::class][0]['schemas']);
+
+			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+			self::assertStringContainsString('$this->registerExpensePayrollListeners($dispatcher);', $boot);
+		}//end testTheExpensePayrollListenersAreSubscribed()
+
+		/**
 		 * REQ-HLE-001: the lifecycle listener hears every save of the six schemas that mark an HR moment.
 		 *
 		 * @return void
