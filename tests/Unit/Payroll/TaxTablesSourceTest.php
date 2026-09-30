@@ -22,8 +22,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Payroll;
 
+use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Payroll\TaxTableSourceInterface;
+use OCA\Humaniq\Service\TaxTableSetService;
+use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\PackFixtures;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -103,6 +106,24 @@ class TaxTablesSourceTest extends TestCase {
 		$this->expectExceptionMessageMatches('/zvw/');
 		TaxTables::load('nl-2027');
 	}//end testAnUploadedDocumentMissingAGroupIsRefused()
+
+	/**
+	 * The app installs the uploaded-tables service as the source at boot,
+	 * resolved lazily from the container on first need.
+	 *
+	 * @return void
+	 */
+	public function testTheAppInstallsTheUploadedTablesAsTheSource(): void {
+		$service = $this->createMock(TaxTableSetService::class);
+		$service->expects(self::once())->method('activeTables')->with('nl-2027')->willReturn(PackFixtures::tables('nl-2027'));
+		$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+		$method = new \ReflectionMethod(Application::class, 'registerTaxTableSource');
+		$method->invoke($app, new FakeContainer([TaxTableSetService::class => $service]));
+
+		self::assertSame('nl-2027', TaxTables::load('nl-2027')->id());
+		$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+		self::assertStringContainsString('$this->registerTaxTableSource($context->getAppContainer());', $boot);
+	}//end testTheAppInstallsTheUploadedTablesAsTheSource()
 
 	/**
 	 * A source that records what it was asked.

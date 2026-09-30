@@ -27,13 +27,14 @@
  * @link https://conduction.nl
  *
  * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-006
+ * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-002
  */
 
 declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Service\YearTransitionService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -45,14 +46,26 @@ use Symfony\Component\Console\Output\OutputInterface;
 class PayrollYearTransitionCommand extends Command {
 
 	/**
+	 * @param YearTransitionService $yearTransition The year resolution the Payroll packs page shows too.
+	 */
+	public function __construct(
+		private readonly YearTransitionService $yearTransition,
+	) {
+		parent::__construct();
+
+	}//end __construct()
+
+	/**
 	 * @return void
 	 *
 	 * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-006
+	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-002
 	 */
 	protected function configure(): void {
 		$this->setName('humaniq:payroll:year-transition')
-			->setDescription('Preflight for the annual tax-year roll: asserts the new nl-YYYY.json table exists and reports the data-only, period-derived design.')
-			->addOption('year', null, InputOption::VALUE_REQUIRED, 'The tax year being rolled to (YYYY).');
+			->setDescription('Preflight for the annual tax-year roll: which pack and tables the year resolves to, where each came from, and whether the pack passes its own golden vectors.')
+			->addOption('year', null, InputOption::VALUE_REQUIRED, 'The tax year being rolled to (YYYY).')
+			->addOption('jurisdiction', null, InputOption::VALUE_REQUIRED, 'The jurisdiction (ISO 3166-1 alpha-2).', 'NL');
 
 	}//end configure()
 
@@ -60,9 +73,10 @@ class PayrollYearTransitionCommand extends Command {
 	 * @param InputInterface $input Console input.
 	 * @param OutputInterface $output Console output.
 	 *
-	 * @return int 0 when the new table exists, 1 when it is missing or --year is invalid.
+	 * @return int 0 when the year resolves and the self-test passes, 1 otherwise or when --year is invalid.
 	 *
 	 * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-006
+	 * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-002
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$year = trim((string)$input->getOption('year'));
@@ -71,21 +85,24 @@ class PayrollYearTransitionCommand extends Command {
 			return 1;
 		}
 
-		$tableId = 'nl-' . $year;
-
-		if (in_array($tableId, TaxTables::availableIds(), true) === false) {
-			$output->writeln('<error>Jaarovergang-preflight FAILED: ' . $tableId . '.json ontbreekt onder lib/Standards/tables/ -- de rol naar ' . $year . ' mag pas plaatsvinden nadat dit tabelbestand is aangeleverd.</error>');
+		$answer = $this->yearTransition->resolution((string)$input->getOption('jurisdiction'), (int)$year);
+		if ($answer['resolves'] !== true) {
+			$output->writeln('<error>Jaarovergang-preflight FAILED: ' . (string)$answer['message'] . ' Upload a pack with its tables on the Payroll packs page first.</error>');
 			return 1;
 		}
 
 		$output->writeln('<info>Humaniq jaarovergang-preflight</info>');
 		$output->writeln(sprintf('  jaar              : %s', $year));
-		$output->writeln(sprintf('  tabelbestand      : %s.json — aanwezig', $tableId));
-		$output->writeln('  ontwerp           : geen mutabele "actief belastingjaar"-instelling -- elke loonrun leidt zijn tabel-id af uit zijn eigen periode (nl-{jaar van periode}).');
-		$output->writeln('  immutable-stamp   : een reeds berekende run (engineVersion/calculatedAt gestempeld, status != draft) wordt NOOIT herberekend of naar dit nieuwe jaar herwezen.');
-		$output->writeln('  resultaat         : de rol is data-only -- runs voor ' . $year . '-MM periodes gebruiken ' . $tableId . '.json automatisch; er is geen engine-status gewijzigd door dit commando.');
+		$output->writeln(sprintf('  pack              : %s (%s)', (string)$answer['engineVersion'], (string)$answer['packOrigin']));
+		$output->writeln(sprintf('  tables            : %s (%s)', (string)$answer['tablesId'], (string)$answer['tablesOrigin']));
+		$output->writeln(sprintf('  self-test         : %s', $answer['selfTest']['passed'] === true ? 'passed' : 'FAILED: ' . (string)$answer['selfTest']['message']));
+		foreach ((array)$answer['provenance'] as $leaf) {
+			$output->writeln(sprintf('  unconfirmed       : %s', (string)$leaf));
+		}
 
-		return 0;
+		$output->writeln('  immutable-stamp   : een reeds berekende run (engineVersion gestempeld, status != draft) wordt NOOIT herberekend of naar dit jaar herwezen.');
+
+		return ($answer['selfTest']['passed'] === true ? 0 : 1);
 	}//end execute()
 
 }//end class

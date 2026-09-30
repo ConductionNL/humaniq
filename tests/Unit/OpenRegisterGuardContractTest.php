@@ -82,7 +82,6 @@ class OpenRegisterGuardContractTest extends TestCase {
 			'OCA\Humaniq\Service\CostRateAccess',
 			'OCA\Humaniq\Service\HrDocumentService',
 			'OCA\Humaniq\Service\InterviewRepository',
-			'OCA\Humaniq\Service\JurisdictionPackService',
 			'OCA\Humaniq\Service\LeaveBalanceProjectionService',
 			'OCA\Humaniq\Service\LeaveBuySellSettlementService',
 			'OCA\Humaniq\Service\LeaveCalendarService',
