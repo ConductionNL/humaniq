@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-001
+ * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
 /**
  * The on-demand run check.
  *
- * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-001
+ * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
  */
 class PayrollCheckController extends Controller {
 
@@ -57,7 +57,7 @@ class PayrollCheckController extends Controller {
 	 * @param HumaniqRoles           $roles       Whether the caller is HR or payroll.
 	 * @param LoggerInterface        $logger      The logger.
 	 *
-	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-001
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
 	 */
 	public function __construct(
 		IRequest $request,
@@ -79,7 +79,7 @@ class PayrollCheckController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-001
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
 	 */
 	#[NoAdminRequired]
 	public function check(?string $runId = null): JSONResponse {

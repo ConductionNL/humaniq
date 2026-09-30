@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-004
+ * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
  */
 
 declare(strict_types=1);

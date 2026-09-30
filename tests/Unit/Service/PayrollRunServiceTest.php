@@ -1918,7 +1918,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-001
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
 	 */
 	public function testACalculationRunsTheCheckWithTheSkippedList(): void {
 		$rows = ['Employee' => [$this->employee(), ['id' => 'emp-nocontract', 'firstName' => 'Kees', 'lastName' => 'Zonder', 'startDate' => '2020-01-01']], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];

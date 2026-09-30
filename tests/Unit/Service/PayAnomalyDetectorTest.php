@@ -16,7 +16,7 @@
  * Unit tests for PayAnomalyDetector: the median of the employee's last six
  * paid payslips, a threshold per component, and a named cause.
  *
- * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-003
+ * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-003
  */
 
 declare(strict_types=1);

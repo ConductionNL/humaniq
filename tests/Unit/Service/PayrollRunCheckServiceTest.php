@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-001
+ * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
  */
 
 declare(strict_types=1);
@@ -33,6 +33,7 @@ use OCA\Humaniq\Service\PayAnomalyDetector;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\RuleAuditService;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
+use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -60,10 +61,11 @@ class PayrollRunCheckServiceTest extends TestCase {
 	 *
 	 * @param array<string, list<array<string, mixed>>> $rows       Rows keyed by schema.
 	 * @param list<array<string, mixed>>                $violations What the rule audit reports.
+	 * @param string                                    $thresholds The payroll_check_thresholds setting.
 	 *
 	 * @return PayrollRunCheckService
 	 */
-	private function service(array $rows, array $violations = []): PayrollRunCheckService {
+	private function service(array $rows, array $violations = [], string $thresholds = ''): PayrollRunCheckService {
 		$gateway = $this->createMock(HoursRegisterGateway::class);
 		$gateway->method('loadAll')->willReturnCallback(static fn (string $schema): array => ($rows[$schema] ?? []));
 		$gateway->method('findObjectData')->willReturnCallback(static function (string $uuid, string $schema) use ($rows): ?array {
@@ -85,7 +87,10 @@ class PayrollRunCheckServiceTest extends TestCase {
 		$audit = $this->createMock(RuleAuditService::class);
 		$audit->method('auditPayrollRunScope')->willReturn(['violations' => $violations]);
 
-		return new PayrollRunCheckService($gateway, $audit, new PayAnomalyDetector(), new InternalWriteMarker(), new NullLogger());
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(static fn (string $app, string $key, string $default = ''): string => ($key === 'payroll_check_thresholds' ? $thresholds : $default));
+
+		return new PayrollRunCheckService($gateway, $audit, new PayAnomalyDetector(), new InternalWriteMarker(), $config, new NullLogger());
 	}//end service()
 
 	/**
@@ -197,6 +202,34 @@ class PayrollRunCheckServiceTest extends TestCase {
 		$this->assertSame(['nettoPay'], array_column($deviations, 'component'));
 		$this->assertSame('emp-1', $deviations[0]['employeeId']);
 	}//end testADeviationFromPaidHistoryIsFound()
+
+	/**
+	 * The thresholds are a setting: a wider net threshold lets the same
+	 * doubling pass, and a setting that is not valid JSON keeps the defaults.
+	 *
+	 * @return void
+	 */
+	public function testTheThresholdsAreASetting(): void {
+		$rows = $this->rows();
+		$rows['PayrollRun'][] = ['id' => 'run-old', 'status' => 'paid', 'period' => '2026-01'];
+		$rows['Payslip'][0]['nettoPay'] = 5600.0;
+		foreach (['2026-01', '2026-02', '2026-03'] as $period) {
+			$rows['Payslip'][] = ['id' => 'h-' . $period, 'payrollRunId' => null, 'employeeId' => 'emp-1', 'period' => $period, 'grossPay' => 3800.0, 'nettoPay' => 2800.0];
+		}
+
+		$deviations = fn (): array => array_values(array_filter($this->findings(), static fn (array $f): bool => $f['kind'] === 'deviation'));
+
+		$this->service(rows: $rows, thresholds: '{"nettoPay":{"relative":1.5,"absolute":50}}')->check('run-5');
+		$this->assertSame([], $deviations());
+
+		$this->saves = [];
+		$this->service(rows: $rows, thresholds: 'not json')->check('run-5');
+		$this->assertSame(['nettoPay'], array_column($deviations(), 'component'));
+
+		$this->saves = [];
+		$this->service(rows: $rows, thresholds: '{"nettoPay":{"relative":"wide"},"unknown":{"relative":1,"absolute":1}}')->check('run-5');
+		$this->assertSame(['nettoPay'], array_column($deviations(), 'component'));
+	}//end testTheThresholdsAreASetting()
 
 	/**
 	 * An unknown run checks nothing and writes nothing.

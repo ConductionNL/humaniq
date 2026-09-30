@@ -179,7 +179,7 @@ class HoursRegisterGateway {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-001
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
 	 */
 	public function delete(string $uuid, string $schema): void {
 		$this->objects()->deleteObject(

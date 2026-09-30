@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-003
+ * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-003
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ namespace OCA\Humaniq\Service;
 /**
  * A median and a threshold anyone can recompute; no I/O.
  *
- * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-003
+ * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-003
  */
 class PayAnomalyDetector {
 
@@ -82,7 +82,7 @@ class PayAnomalyDetector {
 	 *
 	 * @param Percentile $percentile The median.
 	 *
-	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-003
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-003
 	 */
 	public function __construct(
 		private readonly Percentile $percentile = new Percentile(),
@@ -99,7 +99,7 @@ class PayAnomalyDetector {
 	 *
 	 * @return list<array{kind: string, severity: string, component: string|null, currentValue: float|null, baselineValue: float|null, explanation: string|null, message: string}>
 	 *
-	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-003
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-003
 	 */
 	public function detect(array $payslip, array $history, array $thresholds = [], bool $raiseApplied = false): array {
 		$earlier = $this->earlier(payslip: $payslip, history: $history);

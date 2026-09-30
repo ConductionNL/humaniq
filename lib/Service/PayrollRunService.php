@@ -823,7 +823,7 @@ class PayrollRunService {
 	 *
 	 * @return array<string, int>|null The counts, or null without a check.
 	 *
-	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRC-001
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
 	 */
 	private function runTheCheck(string $runId, array $skipped): ?array {
 		if ($this->runCheck === null || $runId === '') {
