@@ -1013,6 +1013,12 @@
 					"id": "Integraties",
 					"label": "Integrations",
 					"route": "IntegrationAccounts"
+				},
+				{
+					"icon": "PackageVariantClosed",
+					"id": "Loonpakketten",
+					"label": "Payroll packs",
+					"route": "PayrollPacks"
 				}
 			],
 			"icon": "CogOutline",
@@ -8278,6 +8284,48 @@
 			"id": "Organogram",
 			"route": "/org/chart",
 			"title": "Organisation chart",
+			"type": "dashboard"
+		},
+		{
+			"config": {
+				"_note": "payroll-pack-and-cao-updates (2026-09-30): REQ-PKU-001/002/003, design D4/D5. Two host widgets: payroll-packs (upload a pack with its tables, the uploaded packs, withdraw one) and year-transition (which pack and tables a year resolves to). Administrators only: every endpoint answers 403 to anyone else.",
+				"description": "Load next year's pay rules and tax tables before an app update brings them, and check which ones a year is paid with.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "payroll-packs"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 8,
+						"id": 2,
+						"widgetId": "year-transition"
+					}
+				],
+				"widgets": [
+					{
+						"content": {},
+						"id": "payroll-packs",
+						"title": "Uploaded packs",
+						"type": "payroll-packs"
+					},
+					{
+						"content": {},
+						"id": "year-transition",
+						"title": "Check a year",
+						"type": "year-transition"
+					}
+				]
+			},
+			"id": "PayrollPacks",
+			"route": "/payroll/packs",
+			"title": "Payroll packs",
 			"type": "dashboard"
 		},
 		{
