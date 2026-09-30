@@ -30,6 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Payroll\TaxTables;
+
 /**
  * Pure arithmetic over one allowance, no I/O.
  *
@@ -103,6 +105,44 @@ class AllowanceSplitter {
 
 		return $start <= $last && ($end === '' || $end >= $first);
 	}//end covers()
+
+	/**
+	 * The home-working day norm from the tables, or null when the tables do
+	 * not carry it. A placeholder leaf counts as unverified.
+	 *
+	 * @param TaxTables $tables The run's tables.
+	 *
+	 * @return array{perDayCents: int, verified: bool}|null
+	 *
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-002
+	 */
+	public function normFrom(TaxTables $tables): ?array {
+		try {
+			$leaf = $tables->resolveLeaf(['wkr', 'thuiswerkNormPerDag'], true);
+		} catch (\RuntimeException) {
+			return null;
+		}
+
+		$provenance = ($leaf['provenance'] ?? null);
+
+		return [
+			'perDayCents' => (int)$leaf['value'],
+			'verified' => ($provenance !== null && $provenance['verified'] === true && $provenance['placeholder'] === false),
+		];
+	}//end normFrom()
+
+	/**
+	 * Whether a value is a positive number.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
+	 */
+	public function positive(mixed $value): bool {
+		return is_numeric($value) === true && (float)$value > 0.0;
+	}//end positive()
 
 	/**
 	 * The monthly amount in cents: amountPerMonth, else amountPerDay times

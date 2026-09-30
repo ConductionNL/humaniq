@@ -945,33 +945,17 @@ class Application extends App implements IBootstrap {
 	}//end registerOvertimeCreditListener()
 
 	/**
-	 * payroll-expenses-and-allowances D1 and D3: a claim's route is stamped
-	 * and judged, and a recurring allowance is stamped with its drafter and
-	 * employee, before either is saved.
+	 * payroll-expenses-and-allowances D1, D3: the claim route and the allowance drafter, before save.
 	 *
 	 * @param IEventDispatcher $dispatcher The live event dispatcher.
 	 *
 	 * @return void
-	 *
-	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
-	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-002
 	 */
 	private function registerExpensePayrollListeners(IEventDispatcher $dispatcher): void {
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
-			$this->registerFilteredObjectListener(
-				dispatcher: $dispatcher,
-				event: $event,
-				listener: ExpenseRouteListener::class,
-				registers: null,
-				schemas: [ExpenseRouteListener::SLUG]
-			);
-			$this->registerFilteredObjectListener(
-				dispatcher: $dispatcher,
-				event: $event,
-				listener: RecurringAllowanceStampListener::class,
-				registers: null,
-				schemas: [RecurringAllowanceStampListener::SLUG]
-			);
+			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG] as $listener => $slug) {
+				$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: $listener, registers: null, schemas: [$slug]);
+			}
 		}
 	}//end registerExpensePayrollListeners()
 

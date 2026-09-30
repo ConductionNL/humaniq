@@ -3233,7 +3233,14 @@ OC.L10N.register(
         "With the salary": "With the salary",
         "Fixed allowances paid every month with the salary, such as a home-working, travel or telephone allowance. A second HR adviser activates each one.": "Fixed allowances paid every month with the salary, such as a home-working, travel or telephone allowance. A second HR adviser activates each one.",
         "Allowance": "Allowance",
-        "A fixed allowance paid to one employee every month through the payslip, such as a home-working, travel or telephone allowance. HR declares its tax treatment; humaniq pays the untaxed part on top of net pay, adds the taxed part to the gross, and writes the WKR ledger row itself (payroll-expenses-and-allowances).": "A fixed allowance paid to one employee every month through the payslip, such as a home-working, travel or telephone allowance. HR declares its tax treatment; humaniq pays the untaxed part on top of net pay, adds the taxed part to the gross, and writes the WKR ledger row itself (payroll-expenses-and-allowances)."
+        "A fixed allowance paid to one employee every month through the payslip, such as a home-working, travel or telephone allowance. HR declares its tax treatment; humaniq pays the untaxed part on top of net pay, adds the taxed part to the gross, and writes the WKR ledger row itself (payroll-expenses-and-allowances).": "A fixed allowance paid to one employee every month through the payslip, such as a home-working, travel or telephone allowance. HR declares its tax treatment; humaniq pays the untaxed part on top of net pay, adds the taxed part to the gross, and writes the WKR ledger row itself (payroll-expenses-and-allowances).",
+        "Paid, or why it was not paid this period.": "Paid, or why it was not paid this period.",
+        "Taxed": "Taxed",
+        "The WKR category of the untaxed part.": "The WKR category of the untaxed part.",
+        "The part added to the gross pay.": "The part added to the gross pay.",
+        "The part paid on top of net pay.": "The part paid on top of net pay.",
+        "The recurring allowance this line pays.": "The recurring allowance this line pays.",
+        "Untaxed": "Untaxed"
     },
     "nplurals=2; plural=(n != 1);"
 )

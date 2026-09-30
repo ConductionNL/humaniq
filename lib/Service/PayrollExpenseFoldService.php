@@ -80,18 +80,7 @@ class PayrollExpenseFoldService {
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-002
 	 */
 	public function normFrom(TaxTables $tables): ?array {
-		try {
-			$leaf = $tables->resolveLeaf(['wkr', 'thuiswerkNormPerDag'], true);
-		} catch (\RuntimeException) {
-			return null;
-		}
-
-		$provenance = ($leaf['provenance'] ?? null);
-
-		return [
-			'perDayCents' => (int)$leaf['value'],
-			'verified' => ($provenance !== null && $provenance['verified'] === true && $provenance['placeholder'] === false),
-		];
+		return $this->splitter->normFrom($tables);
 	}//end normFrom()
 
 	/**
@@ -299,12 +288,11 @@ class PayrollExpenseFoldService {
 	private function isPayable(array $claim, string $lastDay, string $runId): bool {
 		$heldBy = (string)($claim['payrollRunId'] ?? '');
 		$approvedOn = substr((string)($claim['approvedAt'] ?? ''), 0, 10);
-		$taxable = ($claim['taxableAmount'] ?? null);
+		$isPayrollClaim = ((string)($claim['status'] ?? '') === 'approved' && (string)($claim['reimbursementRoute'] ?? '') === 'payroll');
 
-		return (string)($claim['status'] ?? '') === 'approved'
-			&& (string)($claim['reimbursementRoute'] ?? '') === 'payroll'
-			&& is_numeric($claim['amount'] ?? null) === true && (float)$claim['amount'] > 0.0
-			&& (is_numeric($taxable) === false || (float)$taxable <= 0.0)
+		return $isPayrollClaim === true
+			&& $this->splitter->positive($claim['amount'] ?? null) === true
+			&& $this->splitter->positive($claim['taxableAmount'] ?? null) === false
 			&& $approvedOn !== '' && $approvedOn <= $lastDay
 			&& ($heldBy === '' || $heldBy === $runId);
 	}//end isPayable()
