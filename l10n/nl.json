@@ -3031,7 +3031,26 @@
         "No answers to vacancy questions": "Geen antwoorden op vacaturevragen",
         "The answers could not be read.": "De antwoorden konden niet worden gelezen.",
         "Answers to the vacancy questions": "Antwoorden op de vacaturevragen",
-        "Vacancies: draft, published, closed. Published vacancies appear on the careers page of the portal, where candidates apply.": "Vacatures: concept, gepubliceerd, gesloten. Gepubliceerde vacatures staan op de vacaturepagina van het portaal, waar kandidaten solliciteren."
+        "Vacancies: draft, published, closed. Published vacancies appear on the careers page of the portal, where candidates apply.": "Vacatures: concept, gepubliceerd, gesloten. Gepubliceerde vacatures staan op de vacaturepagina van het portaal, waar kandidaten solliciteren.",
+        "Board reference": "Kenmerk bij de vacaturesite",
+        "Job board": "Vacaturesite",
+        "Job boards": "Vacaturesites",
+        "Link": "Link",
+        "Posted to the job boards": "Geplaatst op de vacaturesites",
+        "Reason it failed": "Reden van mislukken",
+        "Set when the vacancy has been sent to its job boards, so a later save does not post it again.": "Wordt gezet zodra de vacature naar de vacaturesites is verstuurd, zodat een latere wijziging haar niet opnieuw plaatst.",
+        "The board's own reference for the advert.": "Het eigen kenmerk van de vacaturesite voor de advertentie.",
+        "The employer administration the vacancy belongs to.": "De werkgeversadministratie waartoe de vacature hoort.",
+        "The job board, by the code HR ticked on the vacancy.": "De vacaturesite, met de code die HR bij de vacature heeft aangevinkt.",
+        "The job boards this vacancy is posted to when it is published, such as werk-nl, linkedin or indeed.": "De vacaturesites waarop deze vacature bij publicatie wordt geplaatst, zoals werk-nl, linkedin of indeed.",
+        "The vacancy that was posted.": "De vacature die is geplaatst.",
+        "Vacancy posting": "Vacatureplaatsing",
+        "When the advert was taken down.": "Wanneer de advertentie is verwijderd.",
+        "When the board accepted the advert.": "Wanneer de vacaturesite de advertentie heeft geaccepteerd.",
+        "Where the advert can be read on the board.": "Waar de advertentie op de vacaturesite te lezen is.",
+        "Whether the vacancy is waiting, on the board, failed or taken down.": "Of de vacature wacht, op de site staat, mislukt is of is verwijderd.",
+        "Why the last attempt on this board failed.": "Waarom de laatste poging op deze vacaturesite mislukte.",
+        "Not posted to any job board. Tick the boards and publish; an administrator enables the posting flow first.": "Op geen enkele vacaturesite geplaatst. Vink de sites aan en publiceer; een beheerder zet eerst de plaatsingsflow aan."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

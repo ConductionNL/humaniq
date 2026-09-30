@@ -3032,7 +3032,26 @@ OC.L10N.register(
         "No answers to vacancy questions": "No answers to vacancy questions",
         "The answers could not be read.": "The answers could not be read.",
         "Answers to the vacancy questions": "Answers to the vacancy questions",
-        "Vacancies: draft, published, closed. Published vacancies appear on the careers page of the portal, where candidates apply.": "Vacancies: draft, published, closed. Published vacancies appear on the careers page of the portal, where candidates apply."
+        "Vacancies: draft, published, closed. Published vacancies appear on the careers page of the portal, where candidates apply.": "Vacancies: draft, published, closed. Published vacancies appear on the careers page of the portal, where candidates apply.",
+        "Board reference": "Board reference",
+        "Job board": "Job board",
+        "Job boards": "Job boards",
+        "Link": "Link",
+        "Posted to the job boards": "Posted to the job boards",
+        "Reason it failed": "Reason it failed",
+        "Set when the vacancy has been sent to its job boards, so a later save does not post it again.": "Set when the vacancy has been sent to its job boards, so a later save does not post it again.",
+        "The board's own reference for the advert.": "The board's own reference for the advert.",
+        "The employer administration the vacancy belongs to.": "The employer administration the vacancy belongs to.",
+        "The job board, by the code HR ticked on the vacancy.": "The job board, by the code HR ticked on the vacancy.",
+        "The job boards this vacancy is posted to when it is published, such as werk-nl, linkedin or indeed.": "The job boards this vacancy is posted to when it is published, such as werk-nl, linkedin or indeed.",
+        "The vacancy that was posted.": "The vacancy that was posted.",
+        "Vacancy posting": "Vacancy posting",
+        "When the advert was taken down.": "When the advert was taken down.",
+        "When the board accepted the advert.": "When the board accepted the advert.",
+        "Where the advert can be read on the board.": "Where the advert can be read on the board.",
+        "Whether the vacancy is waiting, on the board, failed or taken down.": "Whether the vacancy is waiting, on the board, failed or taken down.",
+        "Why the last attempt on this board failed.": "Why the last attempt on this board failed.",
+        "Not posted to any job board. Tick the boards and publish; an administrator enables the posting flow first.": "Not posted to any job board. Tick the boards and publish; an administrator enables the posting flow first."
     },
     "nplurals=2; plural=(n != 1);"
 )

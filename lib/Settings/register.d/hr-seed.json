@@ -953,6 +953,37 @@
                 "status": "gepubliceerd",
                 "publishedDate": "2026-06-15",
                 "closingDate": "2026-08-31",
+                "channels": [
+                    "werk-nl",
+                    "linkedin"
+                ],
+                "postedToChannels": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "VacancyPosting",
+                    "slug": "posting-vue-developer-werk-nl"
+                },
+                "vacancyId": "@ref:vacancy-vue-developer",
+                "channel": "werk-nl",
+                "status": "geplaatst",
+                "externalId": "WN-20260615-1",
+                "externalUrl": "https://example.org/vacature/1",
+                "postedAt": "2026-06-15T09:00:00+00:00",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "VacancyPosting",
+                    "slug": "posting-vue-developer-linkedin"
+                },
+                "vacancyId": "@ref:vacancy-vue-developer",
+                "channel": "linkedin",
+                "status": "mislukt",
+                "lastError": "no source configured",
                 "administrationId": "ADM-001"
             },
             {

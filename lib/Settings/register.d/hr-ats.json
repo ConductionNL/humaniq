@@ -5,9 +5,9 @@
             "Vacancy": {
                 "slug": "Vacancy",
                 "icon": "AccountBoxOutline",
-                "version": "0.4.0",
+                "version": "0.5.0",
                 "title": "Vacancy",
-                "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle, no external multiposting (werk.nl/LinkedIn is an OpenConnector follow-up); portaliq publishes the vacancies with status gepubliceerd on a public careers page through humaniq's candidate audience (hiring-portal-audiences). Applications reference this Vacancy via Application.vacancyId.",
+                "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle. HR ticks the job boards in channels; the shipped flows Vacature plaatsen and Vacature intrekken post the vacancy to each board through integriq when it is published and withdraw it when it closes, one VacancyPosting per board (hiring-multiposting). portaliq publishes the vacancies with status gepubliceerd on a public careers page through humaniq's candidate audience (hiring-portal-audiences). Applications reference this Vacancy via Application.vacancyId.",
                 "type": "object",
                 "x-schema-org": "schema:JobPosting",
                 "required": [
@@ -50,17 +50,799 @@
                                     "concept"
                                 ],
                                 "to": "gepubliceerd",
-                                "description": "The vacancy is published (inside humaniq only: no external channel wiring in the MVP). PublishedDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern)."
+                                "description": "The vacancy is published. PublishedDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern). Once an administrator enables the Vacature plaatsen flow, publishing also posts the vacancy to every board in channels (hiring-multiposting D1)."
                             },
                             "sluiten": {
                                 "from": [
                                     "gepubliceerd"
                                 ],
                                 "to": "gesloten",
-                                "description": "The vacancy is closed. Terminal: no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected."
+                                "description": "The vacancy is closed. Terminal: no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Once an administrator enables the Vacature intrekken flow, closing withdraws every live posting (hiring-multiposting D1)."
                             }
                         }
-                    }
+                    },
+                    "x-openregister-flows": [
+                        {
+                            "name": "Vacature plaatsen",
+                            "app": "humaniq",
+                            "description": "Posts a vacancy to every job board ticked in channels when it is published, and records one Vacancy posting per board: posted with the board's reference and link, or failed with the reason. A failed board does not stop the others, and a board with no branch in this flow is recorded as failed with no source configured. The flow arrives disabled. Before enabling it: in integriq, create a source and a mapping per board named after its code (werk-nl, linkedin, indeed; mapping humaniq-vacancy-<code>), set each post step's endpoint and responseMapping to that board's API, and delete the branch of a board you do not use (hiring-multiposting D1, D2, D4).",
+                            "trigger": "object.updated",
+                            "triggerRegister": "humaniq",
+                            "executionMode": "async",
+                            "limits": {
+                                "maxTransitions": 50
+                            },
+                            "nodes": [
+                                {
+                                    "id": "start",
+                                    "type": "openregister.trigger-object",
+                                    "config": {
+                                        "event": "object.updated",
+                                        "register": "humaniq",
+                                        "schema": "Vacancy"
+                                    }
+                                },
+                                {
+                                    "id": "only-newly-published",
+                                    "type": "openregister.filter",
+                                    "config": {
+                                        "condition": {
+                                            "and": [
+                                                {
+                                                    "==": [
+                                                        {
+                                                            "var": "json.status"
+                                                        },
+                                                        "gepubliceerd"
+                                                    ]
+                                                },
+                                                {
+                                                    "!": {
+                                                        "var": "json.postedToChannels"
+                                                    }
+                                                },
+                                                {
+                                                    "!!": {
+                                                        "var": "json.channels"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "mark-posted",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "Vacancy",
+                                        "operation": "update",
+                                        "match": [
+                                            {
+                                                "property": "uuid",
+                                                "value": "{{ id }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "uuid": "{{ id }}",
+                                            "postedToChannels": true
+                                        },
+                                        "output": "markedPosted"
+                                    }
+                                },
+                                {
+                                    "id": "stamp",
+                                    "type": "openregister.set-fields",
+                                    "config": {
+                                        "compute": {
+                                            "now": {
+                                                "now": []
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "one-per-board",
+                                    "type": "openregister.set-fields",
+                                    "config": {
+                                        "rename": {
+                                            "id": "vacancyId"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "explode",
+                                    "type": "openregister.explode",
+                                    "config": {
+                                        "path": "channels",
+                                        "as": "channel"
+                                    }
+                                },
+                                {
+                                    "id": "per-board",
+                                    "type": "openregister.route",
+                                    "config": {
+                                        "rules": [
+                                            {
+                                                "output": "werk-nl",
+                                                "condition": {
+                                                    "==": [
+                                                        {
+                                                            "var": "json.channel"
+                                                        },
+                                                        "werk-nl"
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "output": "linkedin",
+                                                "condition": {
+                                                    "==": [
+                                                        {
+                                                            "var": "json.channel"
+                                                        },
+                                                        "linkedin"
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "output": "indeed",
+                                                "condition": {
+                                                    "==": [
+                                                        {
+                                                            "var": "json.channel"
+                                                        },
+                                                        "indeed"
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                        "default": "no-source"
+                                    },
+                                    "exits": [
+                                        {
+                                            "id": "werk-nl"
+                                        },
+                                        {
+                                            "id": "linkedin"
+                                        },
+                                        {
+                                            "id": "indeed"
+                                        },
+                                        {
+                                            "id": "no-source"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "map-werk-nl",
+                                    "type": "openconnector.apply-mapping",
+                                    "config": {
+                                        "mapping": "humaniq-vacancy-werk-nl",
+                                        "output": "advert"
+                                    }
+                                },
+                                {
+                                    "id": "post-werk-nl",
+                                    "type": "openconnector.source-call",
+                                    "config": {
+                                        "source": "werk-nl",
+                                        "endpoint": "/vacancies",
+                                        "method": "POST",
+                                        "body": {
+                                            "vacancy": "{{ advert }}"
+                                        },
+                                        "output": "boardCall",
+                                        "onError": "continue",
+                                        "responseMapping": {
+                                            "boardResponse.externalId": "id",
+                                            "boardResponse.externalUrl": "url"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "map-linkedin",
+                                    "type": "openconnector.apply-mapping",
+                                    "config": {
+                                        "mapping": "humaniq-vacancy-linkedin",
+                                        "output": "advert"
+                                    }
+                                },
+                                {
+                                    "id": "post-linkedin",
+                                    "type": "openconnector.source-call",
+                                    "config": {
+                                        "source": "linkedin",
+                                        "endpoint": "/vacancies",
+                                        "method": "POST",
+                                        "body": {
+                                            "vacancy": "{{ advert }}"
+                                        },
+                                        "output": "boardCall",
+                                        "onError": "continue",
+                                        "responseMapping": {
+                                            "boardResponse.externalId": "id",
+                                            "boardResponse.externalUrl": "url"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "map-indeed",
+                                    "type": "openconnector.apply-mapping",
+                                    "config": {
+                                        "mapping": "humaniq-vacancy-indeed",
+                                        "output": "advert"
+                                    }
+                                },
+                                {
+                                    "id": "post-indeed",
+                                    "type": "openconnector.source-call",
+                                    "config": {
+                                        "source": "indeed",
+                                        "endpoint": "/vacancies",
+                                        "method": "POST",
+                                        "body": {
+                                            "vacancy": "{{ advert }}"
+                                        },
+                                        "output": "boardCall",
+                                        "onError": "continue",
+                                        "responseMapping": {
+                                            "boardResponse.externalId": "id",
+                                            "boardResponse.externalUrl": "url"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "outcome",
+                                    "type": "openregister.route",
+                                    "config": {
+                                        "rules": [
+                                            {
+                                                "output": "failed",
+                                                "condition": {
+                                                    "!!": {
+                                                        "var": "json.error"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "default": "posted"
+                                    },
+                                    "exits": [
+                                        {
+                                            "id": "failed"
+                                        },
+                                        {
+                                            "id": "posted"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "write-posted",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "VacancyPosting",
+                                        "operation": "upsert",
+                                        "match": [
+                                            {
+                                                "property": "vacancyId",
+                                                "value": "{{ vacancyId }}"
+                                            },
+                                            {
+                                                "property": "channel",
+                                                "value": "{{ channel }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "vacancyId": "{{ vacancyId }}",
+                                            "channel": "{{ channel }}",
+                                            "administrationId": "{{ administrationId }}",
+                                            "status": "geplaatst",
+                                            "externalId": "{{ boardResponse.externalId }}",
+                                            "externalUrl": "{{ boardResponse.externalUrl }}",
+                                            "postedAt": "{{ now }}"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "write-failed",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "VacancyPosting",
+                                        "operation": "upsert",
+                                        "match": [
+                                            {
+                                                "property": "vacancyId",
+                                                "value": "{{ vacancyId }}"
+                                            },
+                                            {
+                                                "property": "channel",
+                                                "value": "{{ channel }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "vacancyId": "{{ vacancyId }}",
+                                            "channel": "{{ channel }}",
+                                            "administrationId": "{{ administrationId }}",
+                                            "status": "mislukt",
+                                            "lastError": "{{ error.message }}"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "no-source-reason",
+                                    "type": "openregister.set-fields",
+                                    "config": {
+                                        "set": {
+                                            "reason": "no source configured"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "write-no-source",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "VacancyPosting",
+                                        "operation": "upsert",
+                                        "match": [
+                                            {
+                                                "property": "vacancyId",
+                                                "value": "{{ vacancyId }}"
+                                            },
+                                            {
+                                                "property": "channel",
+                                                "value": "{{ channel }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "vacancyId": "{{ vacancyId }}",
+                                            "channel": "{{ channel }}",
+                                            "administrationId": "{{ administrationId }}",
+                                            "status": "mislukt",
+                                            "lastError": "{{ reason }}"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "end",
+                                    "type": "openregister.end",
+                                    "config": {}
+                                }
+                            ],
+                            "edges": [
+                                {
+                                    "id": "e-start",
+                                    "from": "start",
+                                    "to": "only-newly-published"
+                                },
+                                {
+                                    "id": "e-filtered",
+                                    "from": "only-newly-published",
+                                    "to": "mark-posted"
+                                },
+                                {
+                                    "id": "e-marked",
+                                    "from": "mark-posted",
+                                    "to": "stamp"
+                                },
+                                {
+                                    "id": "e-stamped",
+                                    "from": "stamp",
+                                    "to": "one-per-board"
+                                },
+                                {
+                                    "id": "e-renamed",
+                                    "from": "one-per-board",
+                                    "to": "explode"
+                                },
+                                {
+                                    "id": "e-exploded",
+                                    "from": "explode",
+                                    "to": "per-board"
+                                },
+                                {
+                                    "id": "e-werk-nl",
+                                    "from": "per-board",
+                                    "to": "map-werk-nl",
+                                    "fromExit": "werk-nl"
+                                },
+                                {
+                                    "id": "e-map-werk-nl",
+                                    "from": "map-werk-nl",
+                                    "to": "post-werk-nl"
+                                },
+                                {
+                                    "id": "e-post-werk-nl",
+                                    "from": "post-werk-nl",
+                                    "to": "outcome"
+                                },
+                                {
+                                    "id": "e-linkedin",
+                                    "from": "per-board",
+                                    "to": "map-linkedin",
+                                    "fromExit": "linkedin"
+                                },
+                                {
+                                    "id": "e-map-linkedin",
+                                    "from": "map-linkedin",
+                                    "to": "post-linkedin"
+                                },
+                                {
+                                    "id": "e-post-linkedin",
+                                    "from": "post-linkedin",
+                                    "to": "outcome"
+                                },
+                                {
+                                    "id": "e-indeed",
+                                    "from": "per-board",
+                                    "to": "map-indeed",
+                                    "fromExit": "indeed"
+                                },
+                                {
+                                    "id": "e-map-indeed",
+                                    "from": "map-indeed",
+                                    "to": "post-indeed"
+                                },
+                                {
+                                    "id": "e-post-indeed",
+                                    "from": "post-indeed",
+                                    "to": "outcome"
+                                },
+                                {
+                                    "id": "e-no-source",
+                                    "from": "per-board",
+                                    "to": "no-source-reason",
+                                    "fromExit": "no-source"
+                                },
+                                {
+                                    "id": "e-reason",
+                                    "from": "no-source-reason",
+                                    "to": "write-no-source"
+                                },
+                                {
+                                    "id": "e-posted",
+                                    "from": "outcome",
+                                    "to": "write-posted",
+                                    "fromExit": "posted"
+                                },
+                                {
+                                    "id": "e-failed",
+                                    "from": "outcome",
+                                    "to": "write-failed",
+                                    "fromExit": "failed"
+                                },
+                                {
+                                    "id": "e-done-posted",
+                                    "from": "write-posted",
+                                    "to": "end"
+                                },
+                                {
+                                    "id": "e-done-failed",
+                                    "from": "write-failed",
+                                    "to": "end"
+                                },
+                                {
+                                    "id": "e-done-no-source",
+                                    "from": "write-no-source",
+                                    "to": "end"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Vacature intrekken",
+                            "app": "humaniq",
+                            "description": "Withdraws a closed vacancy from every job board it is live on, and marks each posting withdrawn with the moment. A board that refuses keeps its posting as posted, with the reason in the last error. The flow arrives disabled. Enable it together with Vacature plaatsen, after setting each withdraw step's endpoint to that board's API (hiring-multiposting D1, D4).",
+                            "trigger": "object.updated",
+                            "triggerRegister": "humaniq",
+                            "executionMode": "async",
+                            "limits": {
+                                "maxTransitions": 50
+                            },
+                            "nodes": [
+                                {
+                                    "id": "start",
+                                    "type": "openregister.trigger-object",
+                                    "config": {
+                                        "event": "object.updated",
+                                        "register": "humaniq",
+                                        "schema": "Vacancy"
+                                    }
+                                },
+                                {
+                                    "id": "only-closed",
+                                    "type": "openregister.filter",
+                                    "config": {
+                                        "condition": {
+                                            "and": [
+                                                {
+                                                    "==": [
+                                                        {
+                                                            "var": "json.status"
+                                                        },
+                                                        "gesloten"
+                                                    ]
+                                                },
+                                                {
+                                                    "!!": {
+                                                        "var": "json.postedToChannels"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "live-postings",
+                                    "type": "openregister.object-read",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "VacancyPosting",
+                                        "filters": {
+                                            "vacancyId": "{{ id }}",
+                                            "status": "geplaatst"
+                                        },
+                                        "fanOut": true,
+                                        "limit": 50
+                                    }
+                                },
+                                {
+                                    "id": "stamp",
+                                    "type": "openregister.set-fields",
+                                    "config": {
+                                        "compute": {
+                                            "now": {
+                                                "now": []
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "per-board",
+                                    "type": "openregister.route",
+                                    "config": {
+                                        "rules": [
+                                            {
+                                                "output": "werk-nl",
+                                                "condition": {
+                                                    "==": [
+                                                        {
+                                                            "var": "json.channel"
+                                                        },
+                                                        "werk-nl"
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "output": "linkedin",
+                                                "condition": {
+                                                    "==": [
+                                                        {
+                                                            "var": "json.channel"
+                                                        },
+                                                        "linkedin"
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "output": "indeed",
+                                                "condition": {
+                                                    "==": [
+                                                        {
+                                                            "var": "json.channel"
+                                                        },
+                                                        "indeed"
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                        "default": "other"
+                                    },
+                                    "exits": [
+                                        {
+                                            "id": "werk-nl"
+                                        },
+                                        {
+                                            "id": "linkedin"
+                                        },
+                                        {
+                                            "id": "indeed"
+                                        },
+                                        {
+                                            "id": "other"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "withdraw-werk-nl",
+                                    "type": "openconnector.source-call",
+                                    "config": {
+                                        "source": "werk-nl",
+                                        "endpoint": "/vacancies/{{ externalId }}",
+                                        "method": "DELETE",
+                                        "output": "boardCall",
+                                        "onError": "continue"
+                                    }
+                                },
+                                {
+                                    "id": "withdraw-linkedin",
+                                    "type": "openconnector.source-call",
+                                    "config": {
+                                        "source": "linkedin",
+                                        "endpoint": "/vacancies/{{ externalId }}",
+                                        "method": "DELETE",
+                                        "output": "boardCall",
+                                        "onError": "continue"
+                                    }
+                                },
+                                {
+                                    "id": "withdraw-indeed",
+                                    "type": "openconnector.source-call",
+                                    "config": {
+                                        "source": "indeed",
+                                        "endpoint": "/vacancies/{{ externalId }}",
+                                        "method": "DELETE",
+                                        "output": "boardCall",
+                                        "onError": "continue"
+                                    }
+                                },
+                                {
+                                    "id": "outcome",
+                                    "type": "openregister.route",
+                                    "config": {
+                                        "rules": [
+                                            {
+                                                "output": "failed",
+                                                "condition": {
+                                                    "!!": {
+                                                        "var": "json.error"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "default": "withdrawn"
+                                    },
+                                    "exits": [
+                                        {
+                                            "id": "failed"
+                                        },
+                                        {
+                                            "id": "withdrawn"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "write-withdrawn",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "VacancyPosting",
+                                        "operation": "update",
+                                        "match": [
+                                            {
+                                                "property": "uuid",
+                                                "value": "{{ id }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "uuid": "{{ id }}",
+                                            "status": "ingetrokken",
+                                            "withdrawnAt": "{{ now }}"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "write-failed",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "VacancyPosting",
+                                        "operation": "update",
+                                        "match": [
+                                            {
+                                                "property": "uuid",
+                                                "value": "{{ id }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "uuid": "{{ id }}",
+                                            "lastError": "{{ error.message }}"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "end",
+                                    "type": "openregister.end",
+                                    "config": {}
+                                }
+                            ],
+                            "edges": [
+                                {
+                                    "id": "e-start",
+                                    "from": "start",
+                                    "to": "only-closed"
+                                },
+                                {
+                                    "id": "e-filtered",
+                                    "from": "only-closed",
+                                    "to": "live-postings"
+                                },
+                                {
+                                    "id": "e-read",
+                                    "from": "live-postings",
+                                    "to": "stamp"
+                                },
+                                {
+                                    "id": "e-stamped",
+                                    "from": "stamp",
+                                    "to": "per-board"
+                                },
+                                {
+                                    "id": "e-werk-nl",
+                                    "from": "per-board",
+                                    "to": "withdraw-werk-nl",
+                                    "fromExit": "werk-nl"
+                                },
+                                {
+                                    "id": "e-withdraw-werk-nl",
+                                    "from": "withdraw-werk-nl",
+                                    "to": "outcome"
+                                },
+                                {
+                                    "id": "e-linkedin",
+                                    "from": "per-board",
+                                    "to": "withdraw-linkedin",
+                                    "fromExit": "linkedin"
+                                },
+                                {
+                                    "id": "e-withdraw-linkedin",
+                                    "from": "withdraw-linkedin",
+                                    "to": "outcome"
+                                },
+                                {
+                                    "id": "e-indeed",
+                                    "from": "per-board",
+                                    "to": "withdraw-indeed",
+                                    "fromExit": "indeed"
+                                },
+                                {
+                                    "id": "e-withdraw-indeed",
+                                    "from": "withdraw-indeed",
+                                    "to": "outcome"
+                                },
+                                {
+                                    "id": "e-other",
+                                    "from": "per-board",
+                                    "to": "end",
+                                    "fromExit": "other"
+                                },
+                                {
+                                    "id": "e-withdrawn",
+                                    "from": "outcome",
+                                    "to": "write-withdrawn",
+                                    "fromExit": "withdrawn"
+                                },
+                                {
+                                    "id": "e-failed",
+                                    "from": "outcome",
+                                    "to": "write-failed",
+                                    "fromExit": "failed"
+                                },
+                                {
+                                    "id": "e-done-withdrawn",
+                                    "from": "write-withdrawn",
+                                    "to": "end"
+                                },
+                                {
+                                    "id": "e-done-failed",
+                                    "from": "write-failed",
+                                    "to": "end"
+                                }
+                            ]
+                        }
+                    ]
                 },
                 "properties": {
                     "title": {
@@ -181,6 +963,24 @@
                             }
                         },
                         "default": []
+                    },
+                    "channels": {
+                        "type": "array",
+                        "title": "Job boards",
+                        "description": "The job boards this vacancy is posted to when it is published, such as werk-nl, linkedin or indeed.",
+                        "x-notes": "hiring-multiposting D2: each code is the name of the integriq source (and mapping) the board is reached through. No enum: which boards exist is integriq configuration.",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "default": []
+                    },
+                    "postedToChannels": {
+                        "type": "boolean",
+                        "title": "Posted to the job boards",
+                        "description": "Set when the vacancy has been sent to its job boards, so a later save does not post it again.",
+                        "x-notes": "hiring-multiposting D3: written by the Vacature plaatsen flow before it posts. Clear it to post the vacancy again; postings are updated, not duplicated.",
+                        "default": false
                     }
                 }
             },
@@ -509,6 +1309,90 @@
                         "title": "Calendar event UID",
                         "description": "Links this interview to its calendar item. Managed automatically: do not edit.",
                         "x-notes": "System-managed, never user-editable. Set by InterviewCalendarService on first successful sync (deterministic value hrmq-interview-{uuid}) and used on every later sync to look up and diff the existing calendar event, so a no-op resync writes nothing (design.md D3). Null means this Interview has never reached the calendar."
+                    }
+                }
+            },
+            "VacancyPosting": {
+                "slug": "VacancyPosting",
+                "icon": "BullhornOutline",
+                "version": "0.1.0",
+                "title": "Vacancy posting",
+                "description": "Where one vacancy stands on one job board: waiting, posted with the board's link, failed with the reason, or withdrawn. Written by the Vacature plaatsen and Vacature intrekken flows, one per vacancy and board (hiring-multiposting D3).",
+                "type": "object",
+                "x-schema-org": "schema:JobPosting",
+                "required": [
+                    "vacancyId",
+                    "channel",
+                    "status"
+                ],
+                "properties": {
+                    "vacancyId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Vacancy",
+                        "title": "Vacancy",
+                        "description": "The vacancy that was posted.",
+                        "x-notes": "UUID reference to the Vacancy. With channel the identity of a posting: the flows upsert on the pair."
+                    },
+                    "channel": {
+                        "type": "string",
+                        "minLength": 1,
+                        "title": "Job board",
+                        "description": "The job board, by the code HR ticked on the vacancy.",
+                        "x-notes": "A code from Vacancy.channels, the integriq source name."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Whether the vacancy is waiting, on the board, failed or taken down.",
+                        "x-enum-labels": {
+                            "te-plaatsen": "Waiting",
+                            "geplaatst": "Posted",
+                            "mislukt": "Failed",
+                            "ingetrokken": "Withdrawn"
+                        },
+                        "enum": [
+                            "te-plaatsen",
+                            "geplaatst",
+                            "mislukt",
+                            "ingetrokken"
+                        ],
+                        "default": "te-plaatsen"
+                    },
+                    "externalId": {
+                        "type": "string",
+                        "title": "Board reference",
+                        "description": "The board's own reference for the advert.",
+                        "x-notes": "Read from the board's answer by the source-call responseMapping; used to withdraw."
+                    },
+                    "externalUrl": {
+                        "type": "string",
+                        "format": "uri",
+                        "title": "Link",
+                        "description": "Where the advert can be read on the board."
+                    },
+                    "postedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Posted",
+                        "description": "When the board accepted the advert."
+                    },
+                    "withdrawnAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Withdrawn",
+                        "description": "When the advert was taken down."
+                    },
+                    "lastError": {
+                        "type": "string",
+                        "title": "Reason it failed",
+                        "description": "Why the last attempt on this board failed."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "title": "Administration",
+                        "description": "The employer administration the vacancy belongs to.",
+                        "x-notes": "Copied from the Vacancy by the flow."
                     }
                 }
             }

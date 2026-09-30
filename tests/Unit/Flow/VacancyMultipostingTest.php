@@ -237,8 +237,11 @@ class VacancyMultipostingTest extends TestCase {
 	 * @return void
 	 */
 	public function testEveryPostingWriteUpsertsOnVacancyAndBoard(): void {
+		// The item as it reaches a posting write: the vacancy's id renamed to
+		// vacancyId, one board, the board's answer or the error, the moment.
 		$item = [
-			'id' => '5d1d6c1e-0000-4000-8000-000000000001',
+			'vacancyId' => '5d1d6c1e-0000-4000-8000-000000000001',
+			'administrationId' => 'ADM-001',
 			'channel' => 'linkedin',
 			'boardResponse' => ['externalId' => 'LI-1', 'externalUrl' => 'https://example.org/li/1'],
 			'error' => ['message' => 'The call to source "linkedin" returned status 500.'],

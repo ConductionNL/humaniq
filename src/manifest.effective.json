@@ -3948,7 +3948,7 @@
 		},
 		{
 			"config": {
-				"_note": "recruiting-ats-basic (2026-07-13): the 'Vacancy' widget carries every field (title/description/department/status/publishedDate/closingDate). The 'Sollicitaties' related widget resolves the incoming Application.vacancyId references -- the candidate list per vacancy. lifecycleActions expose exactly publiceren/sluiten (design D3) -- no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Audit history is a sidebar tab. hiring-portal-audiences (2026-09-30): expanded from simpleDetailScaffold to carry the 'Application questions' host widget (vacancy-questions, CnFormBuilder), whose list portaliq shows on the public apply form; answers land on job-application.answers.",
+				"_note": "recruiting-ats-basic (2026-07-13): the 'Vacancy' widget carries every field (title/description/department/status/publishedDate/closingDate). The 'Sollicitaties' related widget resolves the incoming Application.vacancyId references -- the candidate list per vacancy. lifecycleActions expose exactly publiceren/sluiten (design D3) -- no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Audit history is a sidebar tab. hiring-portal-audiences (2026-09-30): expanded from simpleDetailScaffold to carry the 'Application questions' host widget (vacancy-questions, CnFormBuilder), whose list portaliq shows on the public apply form; answers land on job-application.answers. hiring-multiposting (2026-09-30): channels on the data widget (the job boards HR ticks) and a Job boards object-list of the VacancyPosting records the Vacature plaatsen and Vacature intrekken flows write, one per board.",
 				"layout": [
 					{
 						"gridHeight": 8,
@@ -3973,6 +3973,14 @@
 						"gridY": 8,
 						"id": 3,
 						"widgetId": "questions"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 16,
+						"id": 4,
+						"widgetId": "postings"
 					}
 				],
 				"lifecycleActions": {
@@ -4012,7 +4020,8 @@
 								"department",
 								"status",
 								"publishedDate",
-								"closingDate"
+								"closingDate",
+								"channels"
 							],
 							"overrides": {
 								"status": {
@@ -4041,6 +4050,51 @@
 						"id": "questions",
 						"title": "Application questions",
 						"type": "vacancy-questions"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "channel",
+									"label": "Job board"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "externalUrl",
+									"label": "Link"
+								},
+								{
+									"key": "postedAt",
+									"label": "Posted"
+								},
+								{
+									"key": "withdrawnAt",
+									"label": "Withdrawn"
+								},
+								{
+									"key": "lastError",
+									"label": "Reason it failed"
+								}
+							],
+							"emptyText": "Not posted to any job board. Tick the boards and publish; an administrator enables the posting flow first.",
+							"filter": {
+								"vacancyId": "@objectId"
+							},
+							"limit": 25,
+							"register": "humaniq",
+							"schema": "VacancyPosting",
+							"sort": {
+								"dir": "asc",
+								"field": "channel"
+							}
+						},
+						"icon": "BullhornOutline",
+						"id": "postings",
+						"title": "Job boards",
+						"type": "object-list"
 					}
 				]
 			},

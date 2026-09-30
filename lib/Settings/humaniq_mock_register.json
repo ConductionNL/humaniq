@@ -7842,9 +7842,9 @@
       "Vacancy": {
         "slug": "Vacancy",
         "icon": "AccountBoxOutline",
-        "version": "0.2.0",
+        "version": "0.5.0",
         "title": "Vacancy",
-        "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle, no external multiposting (werk.nl/LinkedIn is an OpenConnector follow-up) and no public career page (portaliq per ADR-046). Applications reference this Vacancy via Application.vacancyId.",
+        "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle. HR ticks the job boards in channels; the shipped flows Vacature plaatsen and Vacature intrekken post the vacancy to each board through integriq when it is published and withdraw it when it closes, one VacancyPosting per board (hiring-multiposting). portaliq publishes the vacancies with status gepubliceerd on a public careers page through humaniq's candidate audience (hiring-portal-audiences). Applications reference this Vacancy via Application.vacancyId.",
         "type": "object",
         "x-schema-org": "schema:JobPosting",
         "required": [
@@ -7864,14 +7864,14 @@
                   "concept"
                 ],
                 "to": "gepubliceerd",
-                "description": "The vacancy is published (inside humaniq only: no external channel wiring in the MVP). PublishedDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern)."
+                "description": "The vacancy is published. PublishedDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern). Once an administrator enables the Vacature plaatsen flow, publishing also posts the vacancy to every board in channels (hiring-multiposting D1)."
               },
               "sluiten": {
                 "from": [
                   "gepubliceerd"
                 ],
                 "to": "gesloten",
-                "description": "The vacancy is closed. Terminal: no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected."
+                "description": "The vacancy is closed. Terminal: no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Once an administrator enables the Vacature intrekken flow, closing withdraws every live posting (hiring-multiposting D1)."
               }
             }
           }
@@ -7929,12 +7929,90 @@
             "description": "The application deadline. For information only: it does not close the vacancy by itself.",
             "x-notes": "Application deadline. Informational only in the MVP — it does not drive the sluiten transition."
           },
+          "formatieplaatsId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Formatieplaats",
+            "nullable": true,
+            "title": "Formation place",
+            "description": "The formation place this vacancy recruits for. Leave empty for a vacancy outside the formation.",
+            "x-notes": "people-formation-positions D1: links recruitment to the budget it fills; the hire's contract names the same place."
+          },
           "administrationId": {
             "type": "string",
             "nullable": true,
             "title": "Administration",
             "description": "Which administration this vacancy belongs to.",
             "x-notes": "Denormalized administratie key this Vacancy is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); a vacancy has no employee to derive it from, so nl-administratie-scope-consistency does not evaluate this schema."
+          },
+          "questions": {
+            "type": "array",
+            "title": "Application questions",
+            "description": "Your own questions on the application form for this vacancy, such as whether the candidate has a driving licence.",
+            "x-notes": "hiring-portal-audiences D3: the manifest fields[] shape CnFormBuilder writes. Answers land on job-application.answers keyed by question key.",
+            "items": {
+              "type": "object",
+              "required": [
+                "key",
+                "label"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1,
+                  "title": "Key",
+                  "description": "A short name the answer is stored under."
+                },
+                "type": {
+                  "type": "string",
+                  "title": "Answer type",
+                  "description": "The kind of answer: a line of text, longer text, a choice, a number or a date."
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "title": "Question",
+                  "description": "The question as the candidate reads it."
+                },
+                "placeholder": {
+                  "type": "string",
+                  "title": "Placeholder",
+                  "description": "An example answer shown in the empty field."
+                },
+                "required": {
+                  "type": "boolean",
+                  "title": "Required",
+                  "description": "The candidate must answer before applying."
+                },
+                "options": {
+                  "type": "array",
+                  "title": "Choices",
+                  "description": "The answers a candidate can pick from, for a choice.",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "default": []
+          },
+          "channels": {
+            "type": "array",
+            "title": "Job boards",
+            "description": "The job boards this vacancy is posted to when it is published, such as werk-nl, linkedin or indeed.",
+            "x-notes": "hiring-multiposting D2: each code is the name of the integriq source (and mapping) the board is reached through. No enum: which boards exist is integriq configuration.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "default": []
+          },
+          "postedToChannels": {
+            "type": "boolean",
+            "title": "Posted to the job boards",
+            "description": "Set when the vacancy has been sent to its job boards, so a later save does not post it again.",
+            "x-notes": "hiring-multiposting D3: written by the Vacature plaatsen flow before it posts. Clear it to post the vacancy again; postings are updated, not duplicated.",
+            "default": false
           }
         }
       },
@@ -9709,6 +9787,90 @@
             "nullable": true,
             "title": "Administration",
             "description": "The administration this rule applies to. Leave empty to apply it to every administration without a rule of its own."
+          }
+        }
+      },
+      "VacancyPosting": {
+        "slug": "VacancyPosting",
+        "icon": "BullhornOutline",
+        "version": "0.1.0",
+        "title": "Vacancy posting",
+        "description": "Where one vacancy stands on one job board: waiting, posted with the board's link, failed with the reason, or withdrawn. Written by the Vacature plaatsen and Vacature intrekken flows, one per vacancy and board (hiring-multiposting D3).",
+        "type": "object",
+        "x-schema-org": "schema:JobPosting",
+        "required": [
+          "vacancyId",
+          "channel",
+          "status"
+        ],
+        "properties": {
+          "vacancyId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Vacancy",
+            "title": "Vacancy",
+            "description": "The vacancy that was posted.",
+            "x-notes": "UUID reference to the Vacancy. With channel the identity of a posting: the flows upsert on the pair."
+          },
+          "channel": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Job board",
+            "description": "The job board, by the code HR ticked on the vacancy.",
+            "x-notes": "A code from Vacancy.channels, the integriq source name."
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Whether the vacancy is waiting, on the board, failed or taken down.",
+            "x-enum-labels": {
+              "te-plaatsen": "Waiting",
+              "geplaatst": "Posted",
+              "mislukt": "Failed",
+              "ingetrokken": "Withdrawn"
+            },
+            "enum": [
+              "te-plaatsen",
+              "geplaatst",
+              "mislukt",
+              "ingetrokken"
+            ],
+            "default": "te-plaatsen"
+          },
+          "externalId": {
+            "type": "string",
+            "title": "Board reference",
+            "description": "The board's own reference for the advert.",
+            "x-notes": "Read from the board's answer by the source-call responseMapping; used to withdraw."
+          },
+          "externalUrl": {
+            "type": "string",
+            "format": "uri",
+            "title": "Link",
+            "description": "Where the advert can be read on the board."
+          },
+          "postedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Posted",
+            "description": "When the board accepted the advert."
+          },
+          "withdrawnAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Withdrawn",
+            "description": "When the advert was taken down."
+          },
+          "lastError": {
+            "type": "string",
+            "title": "Reason it failed",
+            "description": "Why the last attempt on this board failed."
+          },
+          "administrationId": {
+            "type": "string",
+            "title": "Administration",
+            "description": "The employer administration the vacancy belongs to.",
+            "x-notes": "Copied from the Vacancy by the flow."
           }
         }
       }
@@ -14333,6 +14495,54 @@
         "active": false,
         "provenance": "Voorbeeld Provenance 3",
         "uploadedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "VacancyPosting",
+          "slug": "vacancyposting-vacancyposting-1-1"
+        },
+        "vacancyId": "00000000-0000-4000-8000-000000000000",
+        "channel": "Voorbeeld Channel 1",
+        "status": "te-plaatsen",
+        "externalId": "Voorbeeld Externalid 1",
+        "externalUrl": "https://example.invalid/resource/0",
+        "postedAt": "2026-03-01T09:00:00+00:00",
+        "withdrawnAt": "2026-03-01T09:00:00+00:00",
+        "lastError": "Voorbeeld Lasterror 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "VacancyPosting",
+          "slug": "vacancyposting-vacancyposting-2-2"
+        },
+        "vacancyId": "00000000-0000-4000-8000-000000000001",
+        "channel": "Voorbeeld Channel 2",
+        "status": "geplaatst",
+        "externalId": "Voorbeeld Externalid 2",
+        "externalUrl": "https://example.invalid/resource/1",
+        "postedAt": "2026-03-02T09:00:00+00:00",
+        "withdrawnAt": "2026-03-02T09:00:00+00:00",
+        "lastError": "Voorbeeld Lasterror 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "VacancyPosting",
+          "slug": "vacancyposting-vacancyposting-3-3"
+        },
+        "vacancyId": "00000000-0000-4000-8000-000000000002",
+        "channel": "Voorbeeld Channel 3",
+        "status": "mislukt",
+        "externalId": "Voorbeeld Externalid 3",
+        "externalUrl": "https://example.invalid/resource/2",
+        "postedAt": "2026-03-03T09:00:00+00:00",
+        "withdrawnAt": "2026-03-03T09:00:00+00:00",
+        "lastError": "Voorbeeld Lasterror 3",
+        "administrationId": "Voorbeeld Administrationid 3"
       }
     ]
   }
