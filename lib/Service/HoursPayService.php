@@ -121,9 +121,11 @@ class HoursPayService {
 			}
 
 			$pay['overtimeHours'] += $overtimeHours;
-			$credit = $this->settleOvertime(entries: $overtime, contract: $contract, rate: $rate, nonWorkingDates: $nonWorkingDates, pay: $pay);
-			if ($credit > 0.0) {
-				$pay['timeCredits'][] = ['timesheetId' => $timesheetId, 'hours' => round($credit, 2)];
+			$settled = $this->settleOvertime(entries: $overtime, contract: $contract, rate: $rate, nonWorkingDates: $nonWorkingDates);
+			$pay['overtimeCents'] += $settled['cents'];
+			$pay['surchargeUnresolved'] = ($pay['surchargeUnresolved'] || $settled['unresolved']);
+			if ($settled['credit'] > 0.0) {
+				$pay['timeCredits'][] = ['timesheetId' => $timesheetId, 'hours' => round($settled['credit'], 2)];
 			}
 		}
 
@@ -166,7 +168,7 @@ class HoursPayService {
 				'paidInPeriod' => ($timesheet['paidInPeriod'] ?? null),
 				'overtimeCreditHours' => ($timesheet['overtimeCreditHours'] ?? null),
 			];
-			if ($current == $stamp) {
+			if ($current['payrollRunId'] === $stamp['payrollRunId'] && $current['paidInPeriod'] === $stamp['paidInPeriod'] && (float)$current['overtimeCreditHours'] === (float)$stamp['overtimeCreditHours']) {
 				continue;
 			}
 
@@ -177,25 +179,26 @@ class HoursPayService {
 	}//end stamp()
 
 	/**
-	 * Settle one timesheet's overtime entries: pay adds to overtimeCents, time
-	 * returns the hours to credit.
+	 * Settle one timesheet's overtime entries: the pay in cents, the hours to
+	 * credit as time off, and whether a surcharge did not resolve.
 	 *
 	 * @param list<array<string, mixed>> $entries         The overtime entries.
 	 * @param array<string, mixed>       $contract        The contract.
 	 * @param float|null                 $rate            The hourly rate.
 	 * @param list<string>|null          $nonWorkingDates The calendar dates.
-	 * @param array<string, mixed>       $pay             The running result, updated in place.
 	 *
-	 * @return float The hours to credit as time off.
+	 * @return array{cents: int, credit: float, unresolved: bool}
 	 */
-	private function settleOvertime(array $entries, array $contract, ?float $rate, ?array $nonWorkingDates, array &$pay): float {
+	private function settleOvertime(array $entries, array $contract, ?float $rate, ?array $nonWorkingDates): array {
 		$credit = 0.0;
+		$cents = 0;
+		$unresolved = false;
 		$default = $this->terms->overtimeCompensationFor($contract);
 		foreach ($entries as $entry) {
 			$hours = (float)($entry['hours'] ?? 0);
 			$percentage = $this->surcharge(contract: $contract, category: self::categoryOf(date: (string)($entry['date'] ?? ''), nonWorkingDates: $nonWorkingDates));
 			if ($percentage === null) {
-				$pay['surchargeUnresolved'] = true;
+				$unresolved = true;
 			}
 
 			$factor = ((100 + ($percentage ?? 0.0)) / 100);
@@ -204,10 +207,10 @@ class HoursPayService {
 				continue;
 			}
 
-			$pay['overtimeCents'] += (int)round($hours * ($rate ?? 0.0) * $factor * 100);
+			$cents += (int)round($hours * ($rate ?? 0.0) * $factor * 100);
 		}
 
-		return $credit;
+		return ['cents' => $cents, 'credit' => $credit, 'unresolved' => $unresolved];
 	}//end settleOvertime()
 
 	/**
