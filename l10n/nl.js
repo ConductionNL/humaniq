@@ -3141,7 +3141,20 @@ OC.L10N.register(
         "The employee this hire became. Set when HR presses Create employee.": "De medewerker die uit deze sollicitatie is aangenomen. Wordt ingevuld als HR op Medewerker aanmaken drukt.",
         "Private e-mail": "Privé-e-mailadres",
         "The employee's own e-mail address, outside work.": "Het eigen e-mailadres van de medewerker, buiten het werk.",
-        "The employee's own phone number.": "Het eigen telefoonnummer van de medewerker."
+        "The employee's own phone number.": "Het eigen telefoonnummer van de medewerker.",
+        "What this leave costs": "Wat dit verlof kost",
+        "Worked out from": "Berekend op basis van",
+        "No dates on this request yet.": "Deze aanvraag heeft nog geen data.",
+        "Day by day": "Per dag",
+        "Day": "Dag",
+        "Day off": "Vrije dag",
+        "Weekend": "Weekend",
+        "Working day, contract average": "Werkdag, gemiddelde uit het contract",
+        "Working day": "Werkdag",
+        "Hours entered on the request": "Uren ingevuld op de aanvraag",
+        "Working pattern and public holidays": "Werkpatroon en feestdagen",
+        "Working pattern; public holidays could not be checked": "Werkpatroon; feestdagen konden niet worden gecontroleerd",
+        "Contract hours, spread over five days": "Contracturen, verdeeld over vijf dagen"
     },
     "nplurals=2; plural=(n != 1);"
 )

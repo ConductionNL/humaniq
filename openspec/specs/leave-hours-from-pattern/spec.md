@@ -1,6 +1,9 @@
-# leave-hours-from-pattern
+# leave-hours-from-pattern Specification
 
-## ADDED Requirements
+## Purpose
+A leave request costs the hours the person would have worked: per day from the working pattern, their non-working times and the feestdagen in openregister's working calendar, with the basis stated and shown on the request before approval. Built by leave-hours-from-the-working-pattern (archived 2026-09-30).
+
+## Requirements
 
 ### Requirement: A leave day SHALL cost the hours the person was contracted to work that day (REQ-LHP-001)
 
@@ -16,10 +19,14 @@ Rows: `lve-hours-from-pattern` (humaniq matrix).
 - **WHEN** a manager approves leave for a Monday and Tuesday
 - **THEN** the leave balance shows 16 hours used for it, not 9.6
 
+@e2e exclude the cost is computed server-side; covered by LeaveHoursFromPatternTest::testThePatternDecidesTheHours and LeaveBalanceProjectionServiceTest::testTheCalendarIsReadOncePerProjection
+
 #### Scenario: Days the person never works cost nothing
 - **GIVEN** the same employee
 - **WHEN** leave for a Thursday and Friday is approved
 - **THEN** it costs 0 hours
+
+@e2e exclude covered by LeaveHoursFromPatternTest::testThePatternDecidesTheHours
 
 ### Requirement: Public holidays SHALL come from openregister's working calendar and nowhere else (REQ-LHP-002)
 
@@ -36,10 +43,14 @@ Rows: `lve-public-holidays` (humaniq matrix).
 - **WHEN** leave for the week of Easter Monday is approved
 - **THEN** it costs 32 hours
 
+@e2e exclude needs openregister's working calendar; covered by LeaveHoursFromPatternTest::testACalendarFeestdagCostsNothing and LeaveCostServiceTest::testTheCostNamesEachDay
+
 #### Scenario: An instance without the calendar says so
 - **GIVEN** an instance where openregister publishes no working calendar
 - **WHEN** the cost of the same week is read
 - **THEN** it is 40 hours with basis `pattern-only`
+
+@e2e exclude covered by LeaveHoursFromPatternTest::testAnUnreadCalendarIsPatternOnly and LeaveCostServiceTest::testAnUnreadCalendarSaysPatternOnly
 
 ### Requirement: Every leave cost SHALL state its basis and be visible before approval (REQ-LHP-003)
 
@@ -56,3 +67,5 @@ Rows: `lve-hours-from-pattern`, `lve-public-holidays` (humaniq matrix).
 - **WHEN** the manager opens `LeaveRequestDetail`
 - **THEN** the cost section shows 32 hours with basis `pattern`, and Easter Monday listed
   as `feestdag` with 0 hours
+
+@e2e exclude the widget renders the endpoint's rows; the rows are covered by LeaveCostServiceTest::testTheCostNamesEachDay and the 404 by LeaveCostServiceTest::testAnUnreadableRequestIs404

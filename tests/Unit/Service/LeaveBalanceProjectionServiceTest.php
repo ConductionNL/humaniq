@@ -38,7 +38,9 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\LeaveHoursCalculator;
+use OCA\Humaniq\Service\LeaveTypeResolver;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\WorkingCalendarReader;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -631,4 +633,44 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 		$this->assertSame(8.0, $this->writtenBalance($fake, 'bal-a')['expiredHours'] ?? null);
 		$this->assertSame(0.0, $this->writtenBalance($fake, 'bal-b')['expiredHours'] ?? null);
 	}//end testTheDailyRunLapsesLastYearsHoursUnlessWaived()
+
+	/**
+	 * The daily run reads the working calendar once for every balance, costs
+	 * each request from the person's pattern, and logs an unread calendar once.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-001
+	 */
+	public function testTheCalendarIsReadOncePerProjection(): void {
+		$pattern = ['employeeId' => 'emp-1', 'validFrom' => '2026-01-01', 'hoursMonday' => 8, 'hoursTuesday' => 8, 'hoursWednesday' => 8, 'hoursThursday' => 0, 'hoursFriday' => 0];
+		$rows = [
+			'LeaveBalance' => [
+				['id' => 'bal-1', 'employeeId' => 'emp-1', 'leaveType' => 'holiday', 'year' => 2026, 'entitledHours' => 96.0, 'bovenwettelijkHours' => 0.0, 'usedHours' => 0.0, 'contractHoursPerWeek' => 24.0],
+				['id' => 'bal-2', 'employeeId' => 'emp-2', 'leaveType' => 'holiday', 'year' => 2026, 'entitledHours' => 160.0, 'bovenwettelijkHours' => 0.0, 'usedHours' => 0.0, 'contractHoursPerWeek' => 40.0],
+			],
+			'LeaveRequest' => [
+				['id' => 'req-1', 'employeeId' => 'emp-1', 'leaveType' => 'holiday', 'startDate' => '2026-03-02', 'endDate' => '2026-03-03', 'status' => 'approved'],
+				['id' => 'req-2', 'employeeId' => 'emp-2', 'leaveType' => 'holiday', 'startDate' => '2026-03-02', 'endDate' => '2026-03-03', 'status' => 'approved'],
+			],
+			'WorkingPattern' => [$pattern],
+			'NonWorkingTime' => [],
+		];
+		$fake = $this->fakeObjectService($rows);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($fake);
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
+		$calendar = $this->createMock(WorkingCalendarReader::class);
+		$calendar->expects($this->once())->method('nonWorkingDates')->willReturn(['dates' => null, 'resolved' => false, 'reason' => 'no-working-calendar-service']);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('notice')->with($this->stringContains('no-working-calendar-service'));
+
+		$service = new LeaveBalanceProjectionService($container, $settings, $logger, new LeaveTypeResolver(), $calendar);
+		$service->recomputeAll('2026-09-30');
+
+		$this->assertSame(16.0, $this->writtenBalance($fake, 'bal-1')['usedHours'] ?? null, 'Monday and Tuesday of a Monday to Wednesday pattern.');
+		$this->assertSame(16.0, $this->writtenBalance($fake, 'bal-2')['usedHours'] ?? null, 'No pattern: two days of the 40-hour contract average.');
+	}//end testTheCalendarIsReadOncePerProjection()
 }
