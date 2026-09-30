@@ -1,0 +1,228 @@
+{
+    "x-humaniq-fragment": "hr-costalloc",
+    "components": {
+        "schemas": {
+            "CostAllocation": {
+                "slug": "CostAllocation",
+                "icon": "ScaleBalance",
+                "version": "0.1.0",
+                "title": "Cost allocation",
+                "description": "How one employee's wage costs are split over cost centres and projects for a period: a fixed split in percentages, or by the approved hours booked. Without one, the cost goes to the cost centre of the employee's department (payroll-cost-allocation).",
+                "type": "object",
+                "x-schema-org": "schema:MonetaryAmountDistribution",
+                "required": [
+                    "employeeId",
+                    "basis",
+                    "startDate"
+                ],
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Whose wage costs are split.",
+                        "format": "uuid"
+                    },
+                    "contractId": {
+                        "type": "string",
+                        "nullable": true,
+                        "$ref": "EmploymentContract",
+                        "title": "Contract",
+                        "description": "The contract this split is for. Leave empty to split all of the employee's pay."
+                    },
+                    "basis": {
+                        "type": "string",
+                        "title": "Basis",
+                        "description": "Split by fixed percentages, or by the approved hours the employee booked per cost centre and project in the period.",
+                        "x-enum-labels": {
+                            "fixed": "Fixed split",
+                            "hours": "By hours booked"
+                        },
+                        "enum": [
+                            "fixed",
+                            "hours"
+                        ],
+                        "default": "fixed"
+                    },
+                    "splits": {
+                        "type": "array",
+                        "title": "Splits",
+                        "description": "For a fixed split: the cost centres and projects with their percentage. The percentages add up to 100.",
+                        "x-notes": "CostAllocationGuardListener refuses a fixed allocation whose splits do not add up to 100 (to the hundredth).",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "costCenter",
+                                "percentage"
+                            ],
+                            "properties": {
+                                "costCenter": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "title": "Cost centre",
+                                    "description": "The cost-centre code, as the ledger knows it, for example CC-100."
+                                },
+                                "projectId": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "title": "Project",
+                                    "description": "The project code, when the cost is booked on a project."
+                                },
+                                "percentage": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 100,
+                                    "title": "Percentage",
+                                    "description": "The share of the wage costs, in percent."
+                                }
+                            }
+                        }
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Start date",
+                        "description": "The first day this split applies."
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "End date",
+                        "description": "The last day this split applies. Leave empty while it lasts. Two splits for one employee may not overlap."
+                    },
+                    "note": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Note",
+                        "description": "Why the costs are split this way, for example the subsidy that pays part of the job."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Which administration this belongs to. Normally the same as the employee's.",
+                        "x-notes": "Denormalized administratie key (multi-administratie, REQ-MULTI-001). Plain string, not a $ref (ADR-062 rule 7)."
+                    }
+                }
+            },
+            "WageCostAllocation": {
+                "slug": "WageCostAllocation",
+                "icon": "ChartBar",
+                "version": "0.1.0",
+                "title": "Wage cost allocation",
+                "description": "One line of a payslip's wage costs on one cost centre and project: the share of the gross and the employer charges. The payroll run writes these after every calculation, and the payroll journal books the wage costs per cost centre from them (payroll-cost-allocation).",
+                "type": "object",
+                "x-schema-org": "schema:MonetaryAmount",
+                "required": [
+                    "payslipId",
+                    "payrollRunId",
+                    "period",
+                    "percentage",
+                    "gross",
+                    "employerCharges",
+                    "totalCost",
+                    "allocationSource"
+                ],
+                "configuration": {
+                    "x-openregister-aggregations": {
+                        "wageCostByCostCenter": {
+                            "metric": "sum",
+                            "field": "totalCost",
+                            "groupBy": [
+                                "costCenter",
+                                "period"
+                            ]
+                        }
+                    }
+                },
+                "properties": {
+                    "payslipId": {
+                        "type": "string",
+                        "$ref": "Payslip",
+                        "title": "Payslip",
+                        "description": "The payslip whose costs this line carries."
+                    },
+                    "payrollRunId": {
+                        "type": "string",
+                        "$ref": "PayrollRun",
+                        "title": "Payroll run",
+                        "description": "The run that calculated the payslip."
+                    },
+                    "period": {
+                        "type": "string",
+                        "title": "Period",
+                        "description": "The wage period, as YYYY-MM."
+                    },
+                    "employeeId": {
+                        "type": "string",
+                        "nullable": true,
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Whose wage costs these are."
+                    },
+                    "costCenter": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Cost centre",
+                        "description": "The cost-centre code the costs are booked on. Empty when nothing resolved: the costs are then unallocated."
+                    },
+                    "projectId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Project",
+                        "description": "The project code, when the costs are booked on a project."
+                    },
+                    "percentage": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100,
+                        "title": "Percentage",
+                        "description": "The share of the payslip's costs on this line."
+                    },
+                    "gross": {
+                        "type": "number",
+                        "title": "Gross",
+                        "description": "The share of the gross wage, in euros."
+                    },
+                    "employerCharges": {
+                        "type": "number",
+                        "title": "Employer charges",
+                        "description": "The share of the employer's social charges, in euros."
+                    },
+                    "totalCost": {
+                        "type": "number",
+                        "title": "Total cost",
+                        "description": "Gross plus employer charges on this line, in euros."
+                    },
+                    "allocationSource": {
+                        "type": "string",
+                        "title": "Source",
+                        "description": "Where the split came from: the employee's fixed split, the hours booked, the department, several departments split equally, or nothing.",
+                        "x-enum-labels": {
+                            "fixed": "Fixed split",
+                            "hours": "Hours booked",
+                            "placement": "Department",
+                            "placement-equal-split": "Departments, split equally",
+                            "unallocated": "Unallocated"
+                        },
+                        "enum": [
+                            "fixed",
+                            "hours",
+                            "placement",
+                            "placement-equal-split",
+                            "unallocated"
+                        ]
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Which administration this belongs to. Normally the same as the employee's.",
+                        "x-notes": "Denormalized administratie key (multi-administratie, REQ-MULTI-001). Plain string, not a $ref (ADR-062 rule 7)."
+                    }
+                }
+            }
+        }
+    }
+}

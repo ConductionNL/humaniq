@@ -181,7 +181,7 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'skipped-no-shillinq', (string)($glPost['errorMessage'] ?? ''), $glPost);
 		}
 
-		$built = $this->buildLines($run);
+		$built = $this->buildLines($run, $this->allocationRowsForRun($runId));
 		if ($built['error'] !== null) {
 			$glPost = $this->createGlPost(
 				[
@@ -233,14 +233,21 @@ class PayrollGLPostService {
 	 * done in integer cents to guarantee debits equal credits by construction
 	 * regardless of float rounding.
 	 *
-	 * @param array<string, mixed> $run The PayrollRun object.
+	 * payroll-cost-allocation D4: with the run's WageCostAllocation rows the
+	 * gross and employer-charge debits are written per cost centre and
+	 * project, each with its codes; whatever the rows do not cover stays one
+	 * line without codes, so the debits still equal the run totals.
+	 *
+	 * @param array<string, mixed>       $run         The PayrollRun object.
+	 * @param list<array<string, mixed>> $allocations The run's allocation lines (none: one line per total).
 	 *
 	 * @return array<string, mixed> {lines, error, glExpensePosted, glLiabilityPosted}.
 	 *
 	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-002
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-004
+	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
 	 */
-	public function buildLines(array $run): array {
+	public function buildLines(array $run, array $allocations = []): array {
 		foreach (self::REQUIRED_TOTALS as $field) {
 			if (isset($run[$field]) === false || is_numeric($run[$field]) === false) {
 				return $this->buildFailure(sprintf('PayrollRun-veld "%s" ontbreekt of is niet numeriek.', $field));
@@ -270,15 +277,19 @@ class PayrollGLPostService {
 
 		$netLiabilityCents = ($netCents + $remainderCents);
 
-		$candidates = [
-			['side' => 'debit', 'accountNumber' => $this->settingsService->getGlPostAccountGross(), 'amount' => $grossCents, 'description' => 'Loonkosten bruto'],
-			['side' => 'debit', 'accountNumber' => $this->settingsService->getGlPostAccountEmployerCharges(), 'amount' => $chargesCents, 'description' => 'Werkgeverslasten sociale premies'],
+		$candidates = array_merge(
+			$this->costLines(allocations: $allocations, runId: (string)($run['id'] ?? $run['@self']['id'] ?? ''), field: 'gross', totalCents: $grossCents, account: $this->settingsService->getGlPostAccountGross(), description: 'Loonkosten bruto'),
+			$this->costLines(allocations: $allocations, runId: (string)($run['id'] ?? $run['@self']['id'] ?? ''), field: 'employerCharges', totalCents: $chargesCents, account: $this->settingsService->getGlPostAccountEmployerCharges(), description: 'Werkgeverslasten sociale premies')
+		);
+		$liabilities = [
 			['side' => 'credit', 'accountNumber' => $this->settingsService->getGlPostAccountWageTaxLiability(), 'amount' => $loonheffingCents, 'description' => 'Loonheffing-schuld'],
 			['side' => 'credit', 'accountNumber' => $this->settingsService->getGlPostAccountNetWagesLiability(), 'amount' => $netLiabilityCents, 'description' => 'Netto-loonschuld'],
 		];
 		if ($reimbursementCents > 0) {
-			array_splice($candidates, 2, 0, [['side' => 'debit', 'accountNumber' => $this->settingsService->getGlPostAccountReimbursements(), 'amount' => $reimbursementCents, 'description' => 'Declaraties en onbelaste vergoedingen']]);
+			$candidates[] = ['side' => 'debit', 'accountNumber' => $this->settingsService->getGlPostAccountReimbursements(), 'amount' => $reimbursementCents, 'description' => 'Declaraties en onbelaste vergoedingen'];
 		}
+
+		$candidates = array_merge($candidates, $liabilities);
 
 		$lines = [];
 		foreach ($candidates as $candidate) {
@@ -300,6 +311,80 @@ class PayrollGLPostService {
 		];
 
 	}//end buildLines()
+
+	/**
+	 * The debit lines of one cost total, per cost centre and project of the
+	 * run's allocation lines in the order they first appear, plus one line
+	 * without codes for whatever they do not cover (payroll-cost-allocation
+	 * D4). Without allocation lines: the one total line as before.
+	 *
+	 * @param list<array<string, mixed>> $allocations The allocation lines.
+	 * @param string                     $runId       The run, so another run's lines are never booked.
+	 * @param string                     $field       The allocation field: gross or employerCharges.
+	 * @param int                        $totalCents  The run total, in cents.
+	 * @param string                     $account     The debit account.
+	 * @param string                     $description The line description.
+	 *
+	 * @return list<array<string, mixed>> Lines with the amount in cents.
+	 *
+	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
+	 */
+	private function costLines(array $allocations, string $runId, string $field, int $totalCents, string $account, string $description): array {
+		$groups = [];
+		foreach ($allocations as $row) {
+			if ((string)($row['payrollRunId'] ?? '') !== $runId || is_numeric($row[$field] ?? null) === false) {
+				continue;
+			}
+
+			$costCenter = trim((string)($row['costCenter'] ?? ''));
+			$project = trim((string)($row['projectId'] ?? ''));
+			$key = $costCenter . '|' . $project;
+			$groups[$key] = ($groups[$key] ?? ['costCenterCode' => $costCenter, 'projectCode' => $project, 'cents' => 0]);
+			$groups[$key]['cents'] += (int)round(((float)$row[$field]) * 100);
+		}
+
+		$uncoded = ($totalCents - array_sum(array_column($groups, 'cents')));
+		$lines = [];
+		foreach ($groups as $group) {
+			$line = ['side' => 'debit', 'accountNumber' => $account, 'amount' => $group['cents'], 'description' => $description];
+			if ($group['costCenterCode'] === '') {
+				$uncoded += $group['cents'];
+				continue;
+			}
+
+			$line['costCenterCode'] = $group['costCenterCode'];
+			if ($group['projectCode'] !== '') {
+				$line['projectCode'] = $group['projectCode'];
+			}
+
+			$lines[] = $line;
+		}
+
+		$lines[] = ['side' => 'debit', 'accountNumber' => $account, 'amount' => $uncoded, 'description' => $description];
+
+		return $lines;
+	}//end costLines()
+
+	/**
+	 * The WageCostAllocation lines of one run; none when they cannot be read
+	 * (the journal then books one line per total, as before).
+	 *
+	 * @param string $runId The run.
+	 *
+	 * @return list<array<string, mixed>>
+	 *
+	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
+	 */
+	private function allocationRowsForRun(string $runId): array {
+		try {
+			$rows = $this->objectService()->setRegister($this->register())->setSchema('WageCostAllocation')->findAll(['limit' => 100000, 'filters' => ['payrollRunId' => $runId]]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('PayrollGLPostService: kon de kostenverdeling niet laden: ' . $e->getMessage());
+			return [];
+		}
+
+		return array_values(array_filter($this->normaliseRows($rows), static fn (array $row): bool => (string)($row['payrollRunId'] ?? '') === $runId));
+	}//end allocationRowsForRun()
 
 	/**
 	 * Build a `failed` buildLines() result shape.

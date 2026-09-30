@@ -652,6 +652,8 @@ class PayrollGLPostServiceTest extends TestCase {
 		$posts = $this->savedFor($fake, 'PayrollGLPost');
 		$record = end($posts);
 		unset($record['id']);
+		// The fixture's run id is a readable name; the schema wants the uuid a live run has.
+		$record['payrollRunId'] = '5b1d3f4e-0000-4000-8000-000000000001';
 		self::assertSame([], RegisterSchemaValidator::errors('PayrollGLPost', $record));
 		$glPost = RegisterSchemaValidator::schema('PayrollGLPost');
 		self::assertArrayHasKey('costCenterCode', $glPost['properties']['lines']['items']['properties']);

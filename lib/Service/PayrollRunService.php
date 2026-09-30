@@ -239,6 +239,7 @@ class PayrollRunService {
 	 * @param PayrollExpenseFoldService|null $expenses Approved claims and recurring allowances (payroll-expenses-and-allowances); null runs without them.
 	 * @param PayrollRunCheckService|null $runCheck The run check that runs after every calculation (payroll-run-checks D2); null runs without it.
 	 * @param CaoComponentPayService|null $caoComponents The CAO components a contract names (payroll-cao-components D3); null runs without them.
+	 * @param CostAllocationService|null $costAllocation Splits each payslip's wage costs over cost centres and projects (payroll-cost-allocation D3); null runs without it.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each optional fold (hours, claims and allowances) and the run check is its own collaborator, so a run without one stays byte-identical and a test names which fold ran.
 	 */
@@ -255,6 +256,7 @@ class PayrollRunService {
 		private readonly ?PayrollExpenseFoldService $expenses = null,
 		private readonly ?PayrollRunCheckService $runCheck = null,
 		private readonly ?CaoComponentPayService $caoComponents = null,
+		private readonly ?CostAllocationService $costAllocation = null,
 	) {
 
 	}//end __construct()
@@ -436,6 +438,7 @@ class PayrollRunService {
 		$expenseInputs = $this->expenses?->inputs(norm: $this->expenses->normFrom($tables));
 		$paidClaimIds = [];
 		$wkrRows = [];
+		$allocatable = [];
 
 		$computed = [];
 		$skipped = [];
@@ -636,6 +639,7 @@ class PayrollRunService {
 			}
 
 			$computed[] = ['employee' => $employeeLabel, 'payslipId' => $this->idOf($saved)];
+			$allocatable[] = ['payslipId' => $this->idOf($saved), 'employeeId' => $employeeId, 'grossCents' => ($result->grossPayCents + $retroAdjustment['gross']), 'chargesCents' => ($result->employerChargesCents + $retroAdjustment['employerCharges'])];
 
 			// humaniq#514: the retro nabetaling/terugvordering is paid out in
 			// net, so its gross, its wage tax and its employer charges belong
@@ -721,6 +725,7 @@ class PayrollRunService {
 		$outcome['computed'] = $computed;
 		$outcome['skipped'] = $skipped;
 		$outcome['check'] = $this->runTheCheck(runId: $runId, skipped: $skipped);
+		$outcome['allocationLines'] = $this->allocateCosts(runId: $runId, period: $period, administrationId: $administrationId, payslips: $allocatable);
 		$outcome['totals'] = [
 			'totalGross' => $this->euros($totals['gross']),
 			'totalLoonheffing' => $this->euros($totals['loonheffing']),
@@ -846,6 +851,33 @@ class PayrollRunService {
 			return null;
 		}
 	}//end runTheCheck()
+
+	/**
+	 * Split the run's wage costs over cost centres and projects; a failing
+	 * allocation is logged and never fails the run, and the journal then
+	 * books the totals without codes (payroll-cost-allocation D3, D4).
+	 *
+	 * @param string                     $runId            The run.
+	 * @param string                     $period           The run's period.
+	 * @param string                     $administrationId The run's administration.
+	 * @param list<array<string, mixed>> $payslips         Per saved payslip: id, employee, gross and charges in cents.
+	 *
+	 * @return int|null The lines written, or null without the allocation.
+	 *
+	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-001
+	 */
+	private function allocateCosts(string $runId, string $period, string $administrationId, array $payslips): ?int {
+		if ($this->costAllocation === null) {
+			return null;
+		}
+
+		try {
+			return $this->costAllocation->allocateRun(runId: $runId, period: $period, administrationId: $administrationId, payslips: $payslips);
+		} catch (\Throwable $e) {
+			$this->logger->error('PayrollRunService: the cost allocation of run ' . $runId . ' failed: ' . $e->getMessage());
+			return null;
+		}
+	}//end allocateCosts()
 
 	/**
 	 * The payslip fields of the claims-and-allowances fold; the net pay is

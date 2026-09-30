@@ -203,7 +203,7 @@ class CostAllocationServiceTest extends TestCase {
 		self::assertSame(100001, (int)round(array_sum(array_column($lines, 'gross')) * 100));
 		self::assertSame(17001, (int)round(array_sum(array_column($lines, 'employerCharges')) * 100));
 		self::assertSame(117002, (int)round(array_sum(array_column($lines, 'totalCost')) * 100));
-		self::assertSame(333.4, $lines[2]['gross']);
+		self::assertSame([333.3, 333.3, 333.41], array_column($lines, 'gross'));
 	}//end testThreeSharesAddUpToTheCent()
 
 	/**
