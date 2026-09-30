@@ -3183,7 +3183,13 @@ OC.L10N.register(
         "Hours entered on the request": "Hours entered on the request",
         "Working pattern and public holidays": "Working pattern and public holidays",
         "Working pattern; public holidays could not be checked": "Working pattern; public holidays could not be checked",
-        "Contract hours, spread over five days": "Contract hours, spread over five days"
+        "Contract hours, spread over five days": "Contract hours, spread over five days",
+        "Planned while away": "Planned while away",
+        "Absence": "Absence",
+        "Effect": "Effect",
+        "On approved leave": "On approved leave",
+        "Blocks publishing": "Blocks publishing",
+        "Nobody on this roster is planned on a day they are away": "Nobody on this roster is planned on a day they are away"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -9207,7 +9207,7 @@
 		},
 		{
 			"config": {
-				"_note": "rostering (2026-07-14): the publishable roster header. Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle (concept <-> gepubliceerd via publiceren/intrekken), so RosterDetail legitimately renders a lifecycleActions widget for exactly those two transitions -- no invented edge (the AttendanceRecordDetail sluiten/heropenen precedent). The 'Rooster' data widget carries period/administrationId/status; Related resolves and links the optional orgUnitId scope (excluded from data). The page-level 'ATW-controle' api-call action posts {rosterId: @objectId} to POST /api/roster/check (guarded server-side by RosterController::authorizeRoster()) and surfaces the Arbeidstijdenwet verdict over the roster's assignments regardless of publish status -- publishing itself is NOT hard-blocked on a violation (guard wiring is humaniq-rule-compliance-enforcement's scope, design.md Non-Goal). The FK-scoped 'Roosterindelingen' child object-list (RosterAssignment.rosterId = @objectId) is the plan itself. No stat KPI -- a header has no numeric headline. Audit history is a sidebar tab.",
+				"_note": "rostering (2026-07-14): the publishable roster header. Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle (concept <-> gepubliceerd via publiceren/intrekken), so RosterDetail legitimately renders a lifecycleActions widget for exactly those two transitions -- no invented edge (the AttendanceRecordDetail sluiten/heropenen precedent). The 'Rooster' data widget carries period/administrationId/status; Related resolves and links the optional orgUnitId scope (excluded from data). The page-level 'ATW-controle' api-call action posts {rosterId: @objectId} to POST /api/roster/check (guarded server-side by RosterController::authorizeRoster()) and surfaces the Arbeidstijdenwet verdict over the roster's assignments regardless of publish status. Working-time findings stay a report, while publiceren is refused by RosterCompetenceGuard on a competence finding (humaniq#512) and on a shift that falls on a day of approved leave (agenda-rostering-and-resource-booking, pln-leave-in-roster). The FK-scoped 'Roosterindelingen' child object-list (RosterAssignment.rosterId = @objectId) is the plan itself. No stat KPI -- a header has no numeric headline. Audit history is a sidebar tab. Planned while away (endpoint-table, GET /api/roster/{id}/leave) lists each assignment whose employee is on approved leave (blocks publishing) or absent (reported) that day, never why, so the planner sees the leave inside the roster.",
 				"headerActions": [
 					{
 						"confirm": true,
@@ -9248,6 +9248,14 @@
 						"gridY": 6,
 						"id": 3,
 						"widgetId": "object-list"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 12,
+						"id": 4,
+						"widgetId": "leave-conflicts"
 					}
 				],
 				"lifecycleActions": {
@@ -9345,6 +9353,38 @@
 						"id": "object-list",
 						"title": "Roster assignments",
 						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "date",
+									"label": "Date"
+								},
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "absence",
+									"label": "Absence"
+								},
+								{
+									"key": "effect",
+									"label": "Effect"
+								}
+							],
+							"emptyText": "Nobody on this roster is planned on a day they are away",
+							"endpointSource": {
+								"responsePath": "rows",
+								"url": "/apps/humaniq/api/roster/@objectId/leave"
+							}
+						},
+						"icon": "CalendarRemoveOutline",
+						"id": "leave-conflicts",
+						"title": "Planned while away",
+						"type": "endpoint-table"
 					}
 				]
 			},

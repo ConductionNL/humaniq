@@ -40,6 +40,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -56,6 +57,7 @@ class RosterController extends Controller {
 	 * @param RosterCheckService $rosterCheckService The on-demand roster ATW auditor.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param LoggerInterface $logger Logger.
+	 * @param IL10N $l10n Translations for the leave row labels.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -63,6 +65,7 @@ class RosterController extends Controller {
 		private readonly RosterCheckService $rosterCheckService,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly IL10N $l10n,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -134,8 +137,8 @@ class RosterController extends Controller {
 				'assignmentId' => (string)($finding['objectId'] ?? ''),
 				'date' => (string)($finding['date'] ?? ''),
 				'employeeId' => (string)($finding['employeeId'] ?? ''),
-				'absence' => ($onLeave === true ? 'On approved leave' : 'Absent'),
-				'effect' => ($onLeave === true ? 'Blocks publishing' : 'Reported'),
+				'absence' => ($onLeave === true ? $this->l10n->t('On approved leave') : $this->l10n->t('Absent')),
+				'effect' => ($onLeave === true ? $this->l10n->t('Blocks publishing') : $this->l10n->t('Reported')),
 			];
 		}
 

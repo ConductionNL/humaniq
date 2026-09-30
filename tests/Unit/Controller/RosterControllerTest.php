@@ -30,6 +30,7 @@ use OCA\Humaniq\Controller\RosterController;
 use OCA\Humaniq\Service\RosterCheckService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -130,12 +131,16 @@ class RosterControllerTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+
 		return new RosterController(
 			$this->createMock(IRequest::class),
 			$container,
 			new RosterCheckService($container, $appConfig, $logger),
 			$settings,
-			$logger
+			$logger,
+			$l10n
 		);
 	}//end controller()
 
