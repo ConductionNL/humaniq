@@ -5,7 +5,7 @@
             "Employee": {
                 "slug": "Employee",
                 "icon": "AccountTieOutline",
-                "version": "0.12.0",
+                "version": "0.13.0",
                 "title": "Employee",
                 "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",
                 "type": "object",
@@ -60,7 +60,9 @@
                     "huisnummer": {"title": "House number", "type": "string", "nullable": true, "description": "The house number, with any addition."},
                     "postcode": {"title": "Postcode", "type": "string", "nullable": true, "description": "The postcode, for example 1234 AB.", "x-notes": "people-record-change-approval D5: free text so a foreign postcode fits; the NL shape is not enforced by the schema because it depends on land."},
                     "woonplaats": {"title": "City", "type": "string", "nullable": true, "description": "The city or town the employee lives in."},
-                    "land": {"title": "Country", "type": "string", "nullable": true, "default": "NL", "description": "The country, as a two-letter code such as NL.", "x-notes": "ISO 3166-1 alpha-2 (people-record-change-approval D5)."}
+                    "land": {"title": "Country", "type": "string", "nullable": true, "default": "NL", "description": "The country, as a two-letter code such as NL.", "x-notes": "ISO 3166-1 alpha-2 (people-record-change-approval D5)."},
+                    "privateEmail": {"title": "Private e-mail", "type": "string", "format": "email", "nullable": true, "description": "The employee's own e-mail address, outside work.", "x-notes": "hiring-hire-to-employee D2: copied from the application on Create employee; one of the three keys HireMatchService uses to find a returning person.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}], "update": ["humaniq-hr"]}},
+                    "phone": {"title": "Phone", "type": "string", "nullable": true, "description": "The employee's own phone number.", "x-notes": "hiring-hire-to-employee D2: copied from the application on Create employee.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}], "update": ["humaniq-hr"]}}
                 }
             },
             "EmploymentContract": {
