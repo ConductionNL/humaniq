@@ -2006,4 +2006,33 @@ class PayrollRunServiceTest extends TestCase {
 		self::assertSame('calculated', $service->runFor('2026-05')['status']);
 	}//end testACalculationAllocatesEveryPayslip()
 
+	/**
+	 * payroll-external-bureau-handoff D1: the engine refuses an
+	 * administration whose payroll an outside bureau processes, both when a
+	 * run is created and when an existing one is recalculated, and says why.
+	 * Another administration still calculates.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-001
+	 */
+	public function testTheEngineStaysOutOfAnOutsourcedAdministration(): void {
+		$rows = [
+			'Employee' => [$this->employee()],
+			'EmploymentContract' => [$this->contract()],
+			'PayrollRun' => [['id' => 'run-adm6', 'period' => '2026-04', 'administrationId' => 'ADM-006', 'status' => 'draft']],
+			'Payslip' => [],
+			'hrAdministration' => [['id' => 'adm-6', 'administrationId' => 'ADM-006', 'name' => 'Stichting Buitenbureau', 'payrollProcessing' => 'external-bureau', 'payrollBureauName' => 'Loonbureau Noord']],
+		];
+		[$service, $fake] = $this->service($rows);
+
+		$refused = $service->runFor('2026-05', 'ADM-006');
+		self::assertSame('refused-external-bureau', $refused['status']);
+		self::assertStringContainsString('Loonbureau Noord', $refused['message']);
+		self::assertSame('refused-external-bureau', $service->recalculateRun('run-adm6')['status']);
+		self::assertSame([], array_filter($fake->saved, static fn (array $s): bool => $s['schema'] === 'Payslip'));
+
+		self::assertSame('calculated', $service->runFor('2026-05', 'ADM-001')['status']);
+	}//end testTheEngineStaysOutOfAnOutsourcedAdministration()
+
 }//end class
