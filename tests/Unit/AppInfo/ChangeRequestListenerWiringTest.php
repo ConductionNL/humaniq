@@ -393,6 +393,28 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 		}//end testTheApprovalsInboxListenersAreSubscribed()
 
 		/**
+		 * hours-and-overtime-to-payroll D5: an approved run credits the
+		 * overtime taken as time off.
+		 *
+		 * @return void
+		 */
+		public function testThePayrollRunApprovedListenerIsSubscribed(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			$method = new \ReflectionMethod(Application::class, 'registerOvertimeCreditListener');
+			$method->invoke($app, $this->createMock(IEventDispatcher::class));
+
+			self::assertSame([['listener' => \OCA\Humaniq\Listener\PayrollRunApprovedListener::class, 'event' => 'OCA\OpenRegister\Event\ObjectUpdatedEvent', 'schemas' => ['payrollrun']]], array_map(static fn (array $e): array => ['listener' => $e['listener'], 'event' => $e['event'], 'schemas' => $e['schemas']], ObjectEventSubscription::$recorded));
+
+			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+			self::assertStringContainsString('$this->registerOvertimeCreditListener($dispatcher);', $boot);
+		}//end testThePayrollRunApprovedListenerIsSubscribed()
+
+		/**
 		 * REQ-HLE-001: the lifecycle listener hears every save of the six schemas that mark an HR moment.
 		 *
 		 * @return void
