@@ -56,6 +56,8 @@ use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
 use OCA\Humaniq\Listener\RightToWorkCheckListener;
 use OCA\Humaniq\Listener\ScenarioMutationListener;
 use OCA\Humaniq\Listener\ExitInterviewListener;
+use OCA\Humaniq\Listener\CandidateEvaluationStampListener;
+use OCA\Humaniq\Listener\ReferralListener;
 use OCA\Humaniq\Listener\RelationsCaseListener;
 use OCA\Humaniq\Listener\AnnouncementConfirmationListener;
 use OCA\Humaniq\Service\AnnouncementService;
@@ -490,6 +492,7 @@ class Application extends App implements IBootstrap {
 		$this->registerSideActivityListeners($dispatcher);
 		$this->registerRelationsCaseListeners($dispatcher);
 		$this->registerExitInterviewListeners($dispatcher);
+		$this->registerCandidateAssessmentListeners($dispatcher);
 		$this->registerAnnouncementListener($dispatcher);
 		$this->registerScenarioMutationListener($dispatcher);
 		$this->registerChangeRequestListeners($dispatcher);
@@ -829,6 +832,49 @@ class Application extends App implements IBootstrap {
 		}
 
 	}//end registerExitInterviewListeners()
+
+	/**
+	 * hiring-candidate-assessment D1, D4: the evaluator stamp on a candidate
+	 * evaluation, and a referral's checks, the application it creates and the
+	 * status it follows.
+	 *
+	 * @param IEventDispatcher $dispatcher The dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-001
+	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+	 */
+	private function registerCandidateAssessmentListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: CandidateEvaluationStampListener::class,
+				registers: null,
+				schemas: [CandidateEvaluationStampListener::SLUG]
+			);
+		}
+
+		foreach ([ObjectCreatingEvent::class, ObjectCreatedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: ReferralListener::class,
+				registers: null,
+				schemas: [ReferralListener::SLUG]
+			);
+		}
+
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: ObjectUpdatedEvent::class,
+			listener: ReferralListener::class,
+			registers: null,
+			schemas: [ReferralListener::APPLICATION_SLUG]
+		);
+
+	}//end registerCandidateAssessmentListeners()
 
 	/**
 	 * self-service-announcements-and-digest D1: one confirmation per employee

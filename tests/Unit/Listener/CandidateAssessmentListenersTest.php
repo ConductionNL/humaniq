@@ -65,8 +65,8 @@ class CandidateAssessmentListenersTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->store = new FakeObjectStore();
-		$this->store->seed('Vacancy', 'vac-open', ['title' => 'Payroll adviseur', 'status' => 'gepubliceerd', 'administrationId' => 'ADM-001']);
-		$this->store->seed('Vacancy', 'vac-closed', ['title' => 'Controller', 'status' => 'gesloten', 'administrationId' => 'ADM-001']);
+		$this->store->seed('Vacancy', '5d1d6c1e-0000-4000-8000-00000000000a', ['title' => 'Payroll adviseur', 'status' => 'gepubliceerd', 'administrationId' => 'ADM-001']);
+		$this->store->seed('Vacancy', '5d1d6c1e-0000-4000-8000-00000000000b', ['title' => 'Controller', 'status' => 'gesloten', 'administrationId' => 'ADM-001']);
 	}//end setUp()
 
 	/**
@@ -133,7 +133,7 @@ class CandidateAssessmentListenersTest extends TestCase {
 	 * @return void
 	 */
 	public function testAClosedVacancyTakesNoReferral(): void {
-		$event = new ObjectCreatingEvent($this->entity('Referral', $this->referral(['vacancyId' => 'vac-closed'])));
+		$event = new ObjectCreatingEvent($this->entity('Referral', $this->referral(['vacancyId' => '5d1d6c1e-0000-4000-8000-00000000000b'])));
 
 		$this->referralListener('employee.one')->handle($event);
 
@@ -197,7 +197,7 @@ class CandidateAssessmentListenersTest extends TestCase {
 	private function referral(array $overrides=[]): array {
 		return array_merge(
 			[
-				'vacancyId' => 'vac-open',
+				'vacancyId' => '5d1d6c1e-0000-4000-8000-00000000000a',
 				'candidateName' => 'Ahmed Yilmaz',
 				'email' => 'ahmed@example.org',
 				'phone' => '0612345678',

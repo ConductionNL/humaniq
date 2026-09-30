@@ -134,12 +134,12 @@ class VacancyMatchServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testARejectedApplicantWithoutConsentIsNotProposed(): void {
-		$base = ['vacancyId' => 'other-vacancy', 'email' => 'a@example.org', 'educationLevel' => 6, 'experienceYears' => 5, 'competenceCodes' => ['loonheffing']];
+		$base = ['vacancyId' => '5d1d6c1e-0000-4000-8000-000000000009', 'email' => 'a@example.org', 'educationLevel' => 6, 'experienceYears' => 5, 'competenceCodes' => ['loonheffing']];
 		$this->store->seed('job-application', 'a-1', $base + ['candidateName' => 'Niet in de pool', 'status' => 'afgewezen', 'talentPoolOptIn' => false]);
 		$this->store->seed('job-application', 'a-2', $base + ['candidateName' => 'In de pool', 'status' => 'afgewezen', 'talentPoolOptIn' => true, 'retentionExpiryDate' => '2027-03-01']);
 		$this->store->seed('job-application', 'a-3', $base + ['candidateName' => 'Pool verlopen', 'status' => 'afgewezen', 'talentPoolOptIn' => true, 'retentionExpiryDate' => '2026-09-01']);
 		$this->store->seed('job-application', 'a-4', ['competenceCodes' => ['loonheffing', 'excel-gevorderd', 'afas']] + $base + ['candidateName' => 'Actief', 'status' => 'screening']);
-		$this->store->seed('job-application', 'a-5', $base + ['candidateName' => 'Geen profiel', 'status' => 'nieuw', 'educationLevel' => null, 'experienceYears' => null, 'competenceCodes' => []]);
+		$this->store->seed('job-application', 'a-5', array_merge($base, ['candidateName' => 'Geen profiel', 'status' => 'nieuw', 'educationLevel' => null, 'experienceYears' => null, 'competenceCodes' => []]));
 		foreach (['a-1', 'a-4'] as $id) {
 			self::assertSame([], RegisterSchemaValidator::errors('job-application', $this->store->state->objects['job-application'][$id]));
 		}
