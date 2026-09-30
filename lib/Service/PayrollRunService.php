@@ -237,7 +237,6 @@ class PayrollRunService {
 	 * @param HoursPayService|null $hoursPay Approved hours and overtime as pay (time-hours-and-overtime-to-payroll); null runs without it.
 	 * @param WorkingCalendarReader|null $calendar openregister's working calendar, for the feestdag overtime category.
 	 * @param PayrollExpenseFoldService|null $expenses Approved claims and recurring allowances (payroll-expenses-and-allowances); null runs without them.
-	 *
 	 * @param PayrollRunCheckService|null $runCheck The run check that runs after every calculation (payroll-run-checks D2); null runs without it.
 	 * @param CaoComponentPayService|null $caoComponents The CAO components a contract names (payroll-cao-components D3); null runs without them.
 	 *
