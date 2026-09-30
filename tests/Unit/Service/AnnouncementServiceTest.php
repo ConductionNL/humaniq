@@ -242,7 +242,7 @@ class AnnouncementServiceTest extends TestCase {
 			orgResolution: new OrgResolutionService()
 		);
 
-		return new AnnouncementService(gateway: $gateway, membership: new UnitMembership());
+		return new AnnouncementService(gateway: $gateway, membership: new UnitMembership(), orgResolution: new OrgResolutionService());
 	}//end service()
 
 	/**

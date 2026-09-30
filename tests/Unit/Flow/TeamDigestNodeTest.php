@@ -113,7 +113,7 @@ class TeamDigestNodeTest extends FlowNodeTestCase {
 		$items = $this->node()->execute([], ['orgUnitId' => 'unit-fin', 'includeChildren' => true], []);
 		self::assertCount(1, $items, 'Eva shares her birthday today.');
 
-		$quiet = $this->node('2026-10-12')->execute([], ['orgUnitId' => 'unit-balie', 'includeChildren' => true], []);
+		$quiet = $this->node('2026-10-05')->execute([], ['orgUnitId' => 'unit-balie', 'includeChildren' => true], []);
 		self::assertSame([], $quiet, 'Nothing to say: no item, so the Talk step posts nothing.');
 
 		$this->expectException(RuntimeException::class);
@@ -202,7 +202,7 @@ class TeamDigestNodeTest extends FlowNodeTestCase {
 			orgResolution: new OrgResolutionService()
 		);
 
-		return new TeamDigestComposer(gateway: $gateway, membership: new UnitMembership(), l10n: $this->l10n());
+		return new TeamDigestComposer(gateway: $gateway, membership: new UnitMembership(), orgResolution: new OrgResolutionService(), l10n: $this->l10n());
 	}//end composer()
 
 	/**

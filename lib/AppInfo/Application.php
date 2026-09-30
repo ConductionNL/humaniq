@@ -56,6 +56,8 @@ use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
 use OCA\Humaniq\Listener\RightToWorkCheckListener;
 use OCA\Humaniq\Listener\ScenarioMutationListener;
 use OCA\Humaniq\Listener\RelationsCaseListener;
+use OCA\Humaniq\Listener\AnnouncementConfirmationListener;
+use OCA\Humaniq\Service\AnnouncementService;
 use OCA\Humaniq\Listener\SideActivityListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimeEstimateListener;
@@ -479,6 +481,7 @@ class Application extends App implements IBootstrap {
 		$this->registerDossierListeners($dispatcher);
 		$this->registerSideActivityListeners($dispatcher);
 		$this->registerRelationsCaseListeners($dispatcher);
+		$this->registerAnnouncementListener($dispatcher);
 		$this->registerScenarioMutationListener($dispatcher);
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
@@ -793,6 +796,27 @@ class Application extends App implements IBootstrap {
 		}
 
 	}//end registerRelationsCaseListeners()
+
+	/**
+	 * self-service-announcements-and-digest D1: one confirmation per employee
+	 * per announcement, placed on the employee before it is saved.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-002
+	 */
+	private function registerAnnouncementListener(IEventDispatcher $dispatcher): void {
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: ObjectCreatingEvent::class,
+			listener: AnnouncementConfirmationListener::class,
+			registers: null,
+			schemas: [AnnouncementService::CONFIRMATION_SLUG]
+		);
+
+	}//end registerAnnouncementListener()
 
 	/**
 	 * self-service-approvals-inbox D1 and D2: a deputy record is judged before
