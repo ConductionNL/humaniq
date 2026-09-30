@@ -910,10 +910,12 @@
     "personio": "not checked: not settled: searched help centre for collective agreement and legislation rule updates; the turn of the year articles (https://support.personio.de/hc/en-us/articles/23183076578717-Overview-of-the-turn-of-the-year) cover German payroll law only, nothing on shipped collective agreement rule updates."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-pack-and-cao-updates on 2026-09-27 for the missing half: a page to load a pack or CAO update without a release; the upload endpoint is built. Before: lib/Service/JurisdictionPackService.php + lib/Controller/JurisdictionPackController.php: ONE endpoint POST /api/payroll/packs (ADR-022, no CRUD) lets an admin upload a jurisdiction pack; grep -F 'payroll/packs' _lane/research/frontend-api-paths.txt: no hits, confirming no manifest page calls it; the bundled CAO/tax corpus (lib/Standards/cao/*.json, lib/Standards/tables/nl-2026.json) ships as code and only changes on an app upgrade",
-    "reachedOn": "route POST /api/payroll/packs, not called by any frontend page (API-only); bundled CAO/tax data changes require a new app release, not an in-app action",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "Legislation half built: a pack with its tax tables is uploaded and checked on Configuration > Payroll packs without a release (lib/Service/JurisdictionPackService.php upload() with tables, lib/Service/TaxTableSetService.php, src/widgets/PayrollPacksWidget.vue). CAO revisions still arrive as data in an app release (cao-library non-goal, recorded in the change's proposal Out of scope), so the matrix cell stays partial. Tests: tests/Unit/Service/PackUploadServiceTest.php.",
+    "reachedOn": "Configuration > Payroll packs",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-payroll-pack-and-cao-updates",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4399,7 +4401,7 @@
    "id": "pay-year-transition",
    "area": "payroll",
    "name": "Move to a new tax year with the new tables without reconfiguring.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -4415,10 +4417,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/23183076578717-Overview-of-the-turn-of-the-year: at the turn of the year Personio takes over the automated calculation for German tax and social insurance changes; Personio Payroll is Germany only per https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-pack-and-cao-updates on 2026-09-27 for the missing half: loading the next year's tables from a page without a release; the year-keyed resolution is built. Before: lib/Payroll/PackRepository.php:86-104 resolves a pack purely by (jurisdiction, year-of(period)), so a new tax year is data-only in design; but lib/Command/PayrollYearTransitionCommand.php per appinfo/info.xml is only an 'Annual tax-year roll preflight: asserts the new nl-YYYY.json table exists ... Changes no engine state'; lib/Standards/packs/ ships exactly one file, nl-2026.pack.json",
-    "reachedOn": "occ humaniq:payroll:year-transition only, and it is read-only (a preflight check, not an actual roll); no 2027 (or later) pack exists yet, so payroll cannot literally run for a new year until someone ships one",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Payroll/TaxTables.php load() reads a bundled table file first and otherwise the active uploaded TaxTableSet (TaxTableSourceInterface, installed at boot); lib/Service/TaxTableSetService.php validates uploaded tables (groups, {value, source, verified} leaves, checkAgainst on unverified ones, no bundled id); lib/Service/JurisdictionPackService.php upload() validates pack and tables as one unit and stores neither unless the pack's golden vectors pass against those tables, deactivate() withdraws a pack; lib/Service/YearTransitionService.php answers which pack and tables a year resolves to, their origin and the self-test, for GET /api/payroll/packs/resolution and occ humaniq:payroll:year-transition. Tests: tests/Unit/Service/PackUploadServiceTest.php, tests/Unit/Payroll/TaxTablesSourceTest.php, tests/Unit/Controller/JurisdictionPackControllerTest.php, tests/Unit/Command/PayrollYearTransitionCommandTest.php.",
+    "reachedOn": "Configuration > Payroll packs (upload a pack with its tables, withdraw one, check a year); occ humaniq:payroll:year-transition --year",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-payroll-pack-and-cao-updates",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
