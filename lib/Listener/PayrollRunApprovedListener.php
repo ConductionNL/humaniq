@@ -29,13 +29,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\OvertimeCreditService;
+use OCA\Humaniq\Service\PayrollExpenseFoldService;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
 
 /**
- * Draft to approved: credit the time off.
+ * Draft to approved: credit the time off and mark the paid claims reimbursed.
  *
  * @template-implements IEventListener<Event>
  *
@@ -46,14 +47,17 @@ class PayrollRunApprovedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param OvertimeCreditService $credits The credit.
-	 * @param LoggerInterface       $logger  The logger.
+	 * @param OvertimeCreditService          $credits  The credit.
+	 * @param LoggerInterface                $logger   The logger.
+	 * @param PayrollExpenseFoldService|null $expenses Marks the run's claims reimbursed (payroll-expenses-and-allowances D2).
 	 *
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
 	 */
 	public function __construct(
 		private readonly OvertimeCreditService $credits,
 		private readonly LoggerInterface $logger,
+		private readonly ?PayrollExpenseFoldService $expenses = null,
 	) {
 	}//end __construct()
 
@@ -65,6 +69,7 @@ class PayrollRunApprovedListener implements IEventListener {
 	 * @return void
 	 *
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectUpdatedEvent) === false) {
@@ -82,6 +87,16 @@ class PayrollRunApprovedListener implements IEventListener {
 			$this->credits->creditForRun($runId);
 		} catch (\Throwable $e) {
 			$this->logger->error('humaniq: crediting the overtime of payroll run ' . $runId . ' failed: ' . $e->getMessage());
+		}
+
+		if ($this->expenses === null) {
+			return;
+		}
+
+		try {
+			$this->expenses->markReimbursed($runId);
+		} catch (\Throwable $e) {
+			$this->logger->error('humaniq: marking the claims of payroll run ' . $runId . ' reimbursed failed: ' . $e->getMessage());
 		}
 	}//end handle()
 

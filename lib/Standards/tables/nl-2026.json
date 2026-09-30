@@ -156,6 +156,12 @@
         "source": "Belastingdienst — Werkkostenregeling (eindheffing)",
         "verified": true,
         "note": "Eindheffing rate over the excess of designated allowances above the available vrije ruimte (wkr-administration)."
+      },
+      "thuiswerkNormPerDag": {
+        "value": 2.45,
+        "source": "Belastingdienst, Tarieven, bedragen en percentages loonheffingen vanaf 1 januari 2026 (bijlage bij de Nieuwsbrief Loonheffingen 2026), tabel 13: vergoeding thuiswerken, gerichte vrijstelling (paragraaf 23.1.2)",
+        "verified": true,
+        "note": "Euro per home-working day that a home-working allowance may be paid untaxed under the targeted exemption (payroll-expenses-and-allowances D4)."
       }
     },
     "bijtellingPrivegebruikAuto": {
