@@ -8,7 +8,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "Expense",
-				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check. expenses-travel-calculation (2026-09-29): a 'Travel' data widget at gridY 6 shows the trip (travelType, distanceKm, transportMode, fuelType) and what humaniq calculated from it (ratePerKm, taxFreeAmount, taxableAmount, amountSource, read-only: TravelAmountListener stamps them on save). Approval moves to gridY 10, the receipt to gridY 14, and Related grows to 12 rows to match the left column.",
+				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check. expenses-travel-calculation (2026-09-29): a 'Travel' data widget at gridY 6 shows the trip (travelType, distanceKm, transportMode, fuelType) and what humaniq calculated from it (ratePerKm, taxFreeAmount, taxableAmount, amountSource, read-only: TravelAmountListener stamps them on save). Approval moves to gridY 10, the receipt to gridY 14, and Related grows to 12 rows to match the left column. payroll-expenses-and-allowances (2026-09-30): Approval also shows reimbursementRoute (with the salary or directly; stamped at approval from the employer setting expense_reimbursement_route, changeable while the claim waits, refused for a claim with a taxable part or one a payroll run holds) and the read-only payrollRunId/paidInPeriod the run stamps. Reimburse stays for the direct route; a payroll-route claim is marked reimbursed when its run is approved and a manual reimburse is refused server-side (ExpenseRouteListener).",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -114,7 +114,10 @@
 								"approvedBy",
 								"approvedAt",
 								"rejectionReason",
-								"reimbursedAt"
+								"reimbursedAt",
+								"reimbursementRoute",
+								"payrollRunId",
+								"paidInPeriod"
 							],
 							"title": "Approval",
 							"overrides": {
@@ -131,6 +134,12 @@
 									"editable": false
 								},
 								"reimbursedAt": {
+									"editable": false
+								},
+								"payrollRunId": {
+									"editable": false
+								},
+								"paidInPeriod": {
 									"editable": false
 								}
 							}
@@ -159,7 +168,7 @@
 						"id": 2,
 						"widgetId": "files",
 						"gridX": 0,
-						"gridY": 14,
+						"gridY": 15,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -177,7 +186,7 @@
 						"gridX": 0,
 						"gridY": 10,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 5
 					},
 					{
 						"id": 5,
@@ -185,7 +194,7 @@
 						"gridX": 8,
 						"gridY": 2,
 						"gridWidth": 4,
-						"gridHeight": 12
+						"gridHeight": 13
 					},
 					{
 						"id": 6,
@@ -406,6 +415,91 @@
 							"action": "end",
 							"from": [
 								"approved"
+							],
+							"to": "ended",
+							"label": "End"
+						}
+					]
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "RecurringAllowance",
+			"params": {
+				"id": "RecurringAllowances",
+				"route": "/recurring-allowances",
+				"title": "Recurring allowances",
+				"columns": [
+					"employeeId",
+					"kind",
+					"amountPerMonth",
+					"amountPerDay",
+					"daysPerMonth",
+					"taxTreatment",
+					"startDate",
+					"status"
+				],
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"kind",
+					"taxTreatment"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"allowCreate": true,
+				"description": "Fixed allowances paid every month with the salary, such as a home-working, travel or telephone allowance. A second HR adviser activates each one."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "RecurringAllowance",
+			"params": {
+				"id": "RecurringAllowanceDetail",
+				"route": "/recurring-allowances/:id",
+				"title": "Recurring allowance",
+				"dataTitle": "Allowance",
+				"dataIcon": "CashSync",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"note": "payroll-expenses-and-allowances (2026-09-30): one employee's standing allowance. The payroll run pays it in every period it covers while active: the taxed part into the gross, the untaxed part (capped at the home-working norm per day, or the commuting arrangement's tax-free part for travel) on top of net, and one WKR declaration per payment. RecurringAllowanceStampListener stamps proposedBy, userId and administrationId; activate is guarded by NoSelfApprovalGuard so neither the drafter nor the employee can activate it.",
+				"exclude": [
+					"employeeId",
+					"userId"
+				],
+				"overrides": {
+					"status": {
+						"editable": false
+					},
+					"proposedBy": {
+						"editable": false
+					},
+					"administrationId": {
+						"editable": false
+					}
+				},
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "activate",
+							"from": [
+								"draft"
+							],
+							"to": "active",
+							"label": "Activate"
+						},
+						{
+							"action": "end",
+							"from": [
+								"active"
 							],
 							"to": "ended",
 							"label": "End"

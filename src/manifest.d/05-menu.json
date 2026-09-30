@@ -551,6 +551,17 @@
 					}
 				},
 				{
+					"id": "RecurringAllowances",
+					"label": "Recurring allowances",
+					"icon": "CashSync",
+					"route": "RecurringAllowances",
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
+				},
+				{
 					"id": "WpmReports",
 					"label": "Mobility reports",
 					"icon": "ChartBar",
