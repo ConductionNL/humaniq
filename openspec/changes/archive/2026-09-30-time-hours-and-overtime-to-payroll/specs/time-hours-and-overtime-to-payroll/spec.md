@@ -19,16 +19,22 @@ Rows: `tim-hours-to-payroll` (humaniq matrix).
 - **THEN** the employee has a payslip with a gross of 2048.00, 128 hours paid and that
   timesheet listed, and is no longer in the skipped list
 
+@e2e exclude the run is server-side; covered by PayrollRunServiceTest::testAnHourlyEmployeeIsPaidTheApprovedHours and HoursPayServiceTest::testHourlyPay
+
 #### Scenario: Hours approved late are paid in the next run
 - **GIVEN** the 2026-05 run is approved and the employee's 2026-05 timesheet is approved a day
   later
 - **WHEN** the payroll officer calculates the 2026-06 run
 - **THEN** the 2026-06 payslip pays that timesheet and the 2026-05 run is unchanged
 
+@e2e exclude covered by HoursPayServiceTest::testWhichTimesheetsARunPays and HoursPayServiceTest::testStamping
+
 #### Scenario: No hours means a stated skip
 - **GIVEN** an hourly employee with no approved timesheet up to 2026-05
 - **WHEN** the 2026-05 run is calculated
 - **THEN** the employee is skipped with the reason `no-approved-hours`
+
+@e2e exclude covered by PayrollRunServiceTest::testAnHourlyEmployeeWithoutHoursIsSkippedWithAReason
 
 ### Requirement: Employees SHALL register overtime and managers SHALL approve it with the timesheet (REQ-HTP-002)
 
@@ -43,6 +49,8 @@ Rows: `tim-overtime` (humaniq matrix).
 - **WHEN** the employee adds a 4-hour entry on Saturday 16 May 2026 marked as overtime on
   their timesheet
 - **THEN** the timesheet shows 4 overtime hours and the entry's compensation is `pay`
+
+@e2e exclude the aggregate and the default are server-side; covered by HoursPayServiceTest::testTheTimesheetAddsUpItsOvertime and HoursPayServiceTest::testTheCaoDefaultIsTimeOff
 
 ### Requirement: Approved overtime SHALL be paid with its surcharge or credited as time off (REQ-HTP-003)
 
@@ -62,11 +70,15 @@ Rows: `tim-overtime` (humaniq matrix).
 - **THEN** the payslip shows 4 overtime hours and an overtime pay of 4 x (3800.00 / 156) x 1.5,
   rounded to the cent, included in the gross
 
+@e2e exclude covered by HoursPayServiceTest::testSaturdayOvertimeUnderAFiftyPercentSurcharge and PayrollRunServiceTest::testASalariedEmployeeWithoutOvertimeKeepsAnIdenticalPayslip
+
 #### Scenario: Overtime becomes time off
 - **GIVEN** 3 approved weekday overtime hours to be taken off at a 25% surcharge
 - **WHEN** the run that settles them is approved
 - **THEN** the employee's compensation balance for the year rises by 3.75 hours, and approving
   the flow a second time adds nothing
+
+@e2e exclude covered by HoursPayServiceTest::testTimeOffOnAFeestdag and OvertimeCreditServiceTest::testACreditLandsOnce, ::testTheListenerFiresOnApprovalOnly
 
 #### Scenario: An unconfirmed agreement is shown, not guessed
 - **GIVEN** a contract under an agreement whose overtime article is a placeholder and no
@@ -74,3 +86,5 @@ Rows: `tim-overtime` (humaniq matrix).
 - **WHEN** the run pays 2 approved overtime hours
 - **THEN** they are paid at the base hourly rate and the payslip marks the surcharge as
   unresolved
+
+@e2e exclude covered by HoursPayServiceTest::testAPlaceholderCaoIsFlagged

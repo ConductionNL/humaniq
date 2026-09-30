@@ -266,6 +266,26 @@ class EmploymentTermsResolver {
 	}//end overtimeAdditionFor()
 
 	/**
+	 * How overtime is settled when the employee does not choose: `time` when
+	 * the contract's CAO says tijd-voor-tijd in a confirmed leaf, else `pay`
+	 * (time-hours-and-overtime-to-payroll D3).
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract as an array.
+	 *
+	 * @return string `pay` or `time`.
+	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-002
+	 */
+	public function overtimeCompensationFor(array $contract): string {
+		$caoId = $this->caoId(contract: $contract);
+		if ($caoId !== null && CaoRegistry::overtimeCompensationPreference($caoId) === 'tijd-voor-tijd') {
+			return 'time';
+		}
+
+		return 'pay';
+	}//end overtimeCompensationFor()
+
+	/**
 	 * Refuse an overtime override that is LESS favourable than the collective
 	 * terms it departs from.
 	 *

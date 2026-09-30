@@ -2863,7 +2863,7 @@
    "id": "tim-overtime",
    "area": "time",
    "name": "Register overtime and have it compensated in time or pay.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "partial",
@@ -2879,10 +2879,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/37338523068701-Manage-overtime-new-experience: review overtime balances and compensate overtime as a payout or as time off; https://support.personio.de/hc/en-us/articles/35372955485341-Create-overtime-policies."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/time-hours-and-overtime-to-payroll on 2026-09-27. Before: grep -rniF 'overtime|overwerk' lib/ src/ appinfo/: no hits outside archived spec prose",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "TimeEntry.overtime and overtimeCompensation (lib/Settings/register.d/hr-timesheet.json), Timesheet.overtimeHours aggregated by TimesheetAggregationService; the run pays overtime at the hourly rate x (100 + surcharge) / 100 per day category through EmploymentTermsResolver, flags an unresolved surcharge, and OvertimeCreditService credits overtime taken as time off to the compensation leave balance when the run is approved (lib/Listener/PayrollRunApprovedListener.php). Tests: tests/Unit/Service/HoursPayServiceTest.php, tests/Unit/Service/OvertimeCreditServiceTest.php.",
+    "reachedOn": "Hours > a time entry: Overtime and Overtime compensation; Timesheets > a timesheet: Overtime hours; the payslip: Overtime pay",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-time-hours-and-overtime-to-payroll",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2926,7 +2928,7 @@
    "id": "tim-hours-to-payroll",
    "area": "time",
    "name": "Have approved hours flow into payroll.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -2942,10 +2944,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/17710517111069-Export-hourly-salaries-with-the-DATEV-integration transfers hourly wages to German DATEV payroll, but https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration says tracked hours for hourly employees are outside the Dutch Loket integration and are added manually."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/time-hours-and-overtime-to-payroll on 2026-09-27. Before: lib/Service/PayrollRunService.php:23-26 own docblock: employees with no grossMonthlySalary are SKIPPED with a reason because '(the hourly x Timesheet path is a named fast-follow)'; PayrollCalculator/PayrollRunService read EmploymentContract.grossMonthlySalary, never TimeEntry or Timesheet",
-    "reachedOn": "nothing reaches it: approved timesheet hours are not read by any payroll calculation path",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/HoursPayService.php selects the employee's approved timesheets up to the run's period that no other live run paid and computes hours x hourlyWage; lib/Service/PayrollRunService.php folds it into the engine gross (an employee without a monthly salary is paid instead of skipped, reasons no-approved-hours and no-salary-and-no-hourly-wage) and stamps each paid timesheet with payrollRunId and paidInPeriod. Tests: tests/Unit/Service/HoursPayServiceTest.php, tests/Unit/Service/PayrollRunServiceTest.php::testAnHourlyEmployeeIsPaidTheApprovedHours.",
+    "reachedOn": "Payroll > a run: Calculate; the payslip shows Hours paid, Hourly pay and Timesheets paid",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-time-hours-and-overtime-to-payroll",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

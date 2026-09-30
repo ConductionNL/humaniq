@@ -49,6 +49,7 @@
 							"include": [
 								"period",
 								"hours",
+								"overtimeHours",
 								"entryCount",
 								"description",
 								"billable"
@@ -82,7 +83,10 @@
 								"submittedAt",
 								"approvedBy",
 								"approvedAt",
-								"rejectionReason"
+								"rejectionReason",
+								"paidInPeriod",
+								"overtimeCreditHours",
+								"overtimeCreditedAt"
 							],
 							"title": "Approval",
 							"overrides": {

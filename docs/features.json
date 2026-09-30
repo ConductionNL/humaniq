@@ -14,6 +14,13 @@
     "docsUrl": "openspec/specs/abp-aansluiting/spec.md"
   },
   {
+    "slug": "absence-deadlines-and-signals",
+    "title": "Absence Deadlines And Signals",
+    "summary": "Nobody has to remember a Wet verbetering poortwachter date: HR and the manager are reminded before each milestone and when it is overdue, the 42-week notification to UWV is generated from the case, and frequent absence is signalled at a threshold each administration sets.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/absence-deadlines-and-signals/spec.md"
+  },
+  {
     "slug": "absence-rate",
     "title": "Absence Rate",
     "summary": "Give humaniq the FTE-weighted verzuimpercentage the sector reports, by recording partial work resumption on SickLeaveCase and computing a rate from it.",
@@ -63,11 +70,25 @@
     "docsUrl": "openspec/specs/cao-library/spec.md"
   },
   {
+    "slug": "comp-collective-raise-and-step-increase",
+    "title": "Comp Collective Raise And Step Increase",
+    "summary": "Raise many salaries in one compensation cycle: a collective raise for everyone in scope or a hand-picked selection, the yearly step in the employer's own pay scale proposed when it falls due, approval that stays four eyes per adjustment, effectuation from the cycle page after a preview, and a refusal that carries a reason the employee receives.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/comp-collective-raise-and-step-increase/spec.md"
+  },
+  {
     "slug": "comp-cycles",
     "title": "Comp Cycles",
     "summary": "Humaniq owns the personnel dossier, the payroll engine that reads Employee.grossMonthlySalary, and a maintained CAO corpus, but had no surface for the recurring management ritual every employer runs on top of those numbers: a periodic compensation review where managers propose salary adjustments against a band, a second actor approves them, and the approved figure lands on the employee's compensation on a chosen effective date.",
     "status": "stable",
     "docsUrl": "openspec/specs/comp-cycles/spec.md"
+  },
+  {
+    "slug": "department-figures",
+    "title": "Department Figures",
+    "summary": "Absence rate, absence frequency and wage cost per org unit, compared side by side for HR and accountants, and a manager's own dashboard with the totals of the units they lead.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/department-figures/spec.md"
   },
   {
     "slug": "dga-payroll-mode",
@@ -84,11 +105,32 @@
     "docsUrl": "openspec/specs/document-dossier-avg/spec.md"
   },
   {
+    "slug": "employee-history",
+    "title": "Employee History",
+    "summary": "One employee's career in one place: the dated events of contracts, placements, applied pay changes, approved leave, sickness and finalised reviews, composed on read and filtered by the caller's own access, and the contracts that run side by side today with their summed hours, FTE and the person's leave balance.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/employee-history/spec.md"
+  },
+  {
+    "slug": "expenses-travel-calculation",
+    "title": "Expenses Travel Calculation",
+    "summary": "Travel claims whose amount humaniq calculates from the distance at the employer's rate, split into a tax-free and a taxable part; commuting arrangements with a fixed monthly allowance under the 214-day rule and a distance from a route planner through integriq; and the yearly business and commuting kilometres per transport mode and fuel for the werkgebonden personenmobiliteit (WPM) CO2 reporting duty.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/expenses-travel-calculation/spec.md"
+  },
+  {
     "slug": "fleet-bijtelling",
     "title": "Fleet Bijtelling",
     "summary": "Bijtelling privégebruik auto (Wet LB 1964 art.",
     "status": "stable",
     "docsUrl": "openspec/specs/fleet-bijtelling/spec.md"
+  },
+  {
+    "slug": "formation-positions",
+    "title": "Formation Positions",
+    "summary": "A unit's formation: budgeted places per unit and function, which contracts fill them, and the budgeted, filled, vacant and net FTE computed on read.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/formation-positions/spec.md"
   },
   {
     "slug": "functiehuis-hr21",
@@ -355,6 +397,13 @@
     "summary": "The dossier half of the performance-review MVP: the PerformanceReview object per employee per cycle, carrying rating, sterktes, ontwikkelpunten, afspraken and a goals array **inside** the review (one dossier document, one lifecycle, one retention context.",
     "status": "stable",
     "docsUrl": "openspec/specs/performance-reviews/spec.md"
+  },
+  {
+    "slug": "personnel-retention-expiry",
+    "title": "Personnel Retention Expiry",
+    "summary": "The other end of the retention clock avg-dsr REQ-DSR-005 starts.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/personnel-retention-expiry/spec.md"
   },
   {
     "slug": "portal-contribution",

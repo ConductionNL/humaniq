@@ -58,6 +58,7 @@ use OCA\Humaniq\Listener\ScenarioMutationListener;
 use OCA\Humaniq\Listener\ExitInterviewListener;
 use OCA\Humaniq\Listener\CandidateEvaluationStampListener;
 use OCA\Humaniq\Listener\ReferralListener;
+use OCA\Humaniq\Listener\PayrollRunApprovedListener;
 use OCA\Humaniq\Listener\RelationsCaseListener;
 use OCA\Humaniq\Listener\AnnouncementConfirmationListener;
 use OCA\Humaniq\Service\AnnouncementService;
@@ -498,6 +499,7 @@ class Application extends App implements IBootstrap {
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 		$this->registerApprovalsInboxListeners($dispatcher);
+		$this->registerOvertimeCreditListener($dispatcher);
 		$this->registerHrLifecycleEventListener($dispatcher);
 
 	}//end boot()
@@ -917,6 +919,27 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerTaxTableSource()
+
+	/**
+	 * time-hours-and-overtime-to-payroll D5: when a payroll run moves from
+	 * draft to approved, the overtime it settled as time off is credited to
+	 * the time-off-in-lieu balance.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
+	 */
+	private function registerOvertimeCreditListener(IEventDispatcher $dispatcher): void {
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: ObjectUpdatedEvent::class,
+			listener: PayrollRunApprovedListener::class,
+			registers: null,
+			schemas: ['payrollrun']
+		);
+	}//end registerOvertimeCreditListener()
 
 	/**
 	 * self-service-approvals-inbox D1 and D2: a deputy record is judged before

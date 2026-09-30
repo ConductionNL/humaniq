@@ -253,6 +253,27 @@ final class CaoRegistry {
 	}//end overtimeToeslagPercentages()
 
 	/**
+	 * The CAO's default settlement of overtime, `tijd-voor-tijd` or another
+	 * value, from a confirmed overtime leaf only; null otherwise
+	 * (time-hours-and-overtime-to-payroll D3).
+	 *
+	 * @param string $caoId The CAO id.
+	 *
+	 * @return string|null The preference, or null when unresolvable.
+	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
+	 */
+	public static function overtimeCompensationPreference(string $caoId): ?string {
+		$leaf = (self::get($caoId)['overtime'] ?? null);
+		if (self::isUsableLeaf($leaf) === false) {
+			return null;
+		}
+
+		$preference = trim((string)(((array)$leaf['value'])['compensationPreference'] ?? ''));
+		return ($preference === '' ? null : $preference);
+	}//end overtimeCompensationPreference()
+
+	/**
 	 * Reset the memoised cache (test hook).
 	 *
 	 * @return void

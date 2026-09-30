@@ -3184,7 +3184,7 @@
           "leaveType": {
             "type": "string",
             "title": "Leave type",
-            "description": "The kind of leave this balance tracks: holiday, sick, unpaid, special, care or parental.",
+            "description": "The kind of leave this balance tracks: holiday, sick, unpaid, special, care, parental or time off in lieu of overtime.",
             "x-notes": "The kind of leave this balance tracks, identical to the LeaveRequest.leaveType value set: holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
             "x-enum-labels": {
               "holiday": "Holiday",
@@ -3192,7 +3192,8 @@
               "unpaid": "Unpaid leave",
               "special": "Special leave",
               "care": "Care leave",
-              "parental": "Parental leave"
+              "parental": "Parental leave",
+              "compensation": "Time off in lieu"
             },
             "enum": [
               "holiday",
@@ -3200,7 +3201,8 @@
               "unpaid",
               "special",
               "care",
-              "parental"
+              "parental",
+              "compensation"
             ]
           },
           "entitledHours": {
@@ -6194,6 +6196,141 @@
             "nullable": true,
             "description": "The exact figures the payroll engine was given for this payslip, kept so the calculation can be reproduced later.",
             "x-notes": "audit-trail-payroll (REQ-AUDP-001): the exact CalculationInput (grossMonthlySalaryCents/taxTableColor/loonheffingskortingToegepast/dateOfBirth/period/awfTariff/aofTariff/whkPercentage/verzekeringsplichtig/jurisdiction) PayrollRunService::generate() resolved and fed to PayrollCalculator for this payslip, stored as a structured object (NOT a JSON string: OpenRegister's MagicMapper json_decodes any string column on read, so a string field would read back as an array and fail its own schema type on the next validated save -- hrmq#98 follow-up). Written once at generation time and replaced wholesale (never edited in place) on recalculation of a draft run, mirroring engineVersion/calculatedAt. Null for hand-entered payslips (payrollRunId null), identical to engineVersion's null-means-hand-entered convention. Lets `occ humaniq:payroll:reproduce` re-derive this payslip's figures independent of later Employee/EmploymentContract edits, and is checked for presence/consistency by nl-engine-provenance-complete."
+          },
+          "hoursPaid": {
+            "title": "Hours paid",
+            "type": "number",
+            "nullable": true,
+            "description": "The approved hours paid in this period at the hourly wage.",
+            "x-notes": "time-hours-and-overtime-to-payroll D6: regular hours of the timesheets this payslip paid; for an hourly employee hoursWorked equals it. Null for a salaried employee.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "hourlyPay": {
+            "title": "Hourly pay",
+            "type": "number",
+            "nullable": true,
+            "description": "The pay for the approved hours, before tax.",
+            "x-notes": "time-hours-and-overtime-to-payroll D1: hoursPaid x hourlyWage, part of grossPay.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "overtimeHours": {
+            "title": "Overtime hours",
+            "type": "number",
+            "nullable": true,
+            "description": "The approved overtime hours settled in this period, paid or taken as time off.",
+            "x-notes": "time-hours-and-overtime-to-payroll D6.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "overtimePay": {
+            "title": "Overtime pay",
+            "type": "number",
+            "nullable": true,
+            "description": "The pay for overtime, surcharge included, before tax.",
+            "x-notes": "time-hours-and-overtime-to-payroll D4: hours x hourly rate x (100 + surcharge) / 100 per entry, part of grossPay.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "overtimeSurchargeUnresolved": {
+            "title": "Overtime surcharge not resolved",
+            "type": "boolean",
+            "nullable": true,
+            "description": "Ticked when no overtime surcharge could be found, so the overtime was settled at the base rate.",
+            "x-notes": "time-hours-and-overtime-to-payroll D4: the CAO overtime leaf is unconfirmed and the contract has no override.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "timesheetIds": {
+            "title": "Timesheets paid",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "description": "The timesheets whose hours this payslip paid.",
+            "x-notes": "time-hours-and-overtime-to-payroll D6.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
           }
         },
         "configuration": {
@@ -7667,6 +7804,30 @@
             "title": "Origin",
             "description": "How this booking was created.",
             "x-notes": "The one safe readOnly use in this schema pair (Decision 2 analysis): genuinely immutable after create, optional, defaulted, and stamped only on the CREATE write where OpenRegister's readOnly enforcement does not apply. 'migration' marks the synthetic entries the MigrateHoursProcess repair step fabricates for legacy timesheets — their timestamps are bookkeeping artifacts, not claims about when work happened."
+          },
+          "overtime": {
+            "type": "boolean",
+            "order": 140,
+            "default": false,
+            "title": "Overtime",
+            "description": "Tick when these hours are overtime: worked on top of your contracted hours.",
+            "x-notes": "time-hours-and-overtime-to-payroll D3: approved with the timesheet as today; the payroll run pays or credits it with the surcharge EmploymentTermsResolver resolves for the day's category."
+          },
+          "overtimeCompensation": {
+            "type": "string",
+            "order": 150,
+            "nullable": true,
+            "enum": [
+              "pay",
+              "time"
+            ],
+            "x-enum-labels": {
+              "pay": "Paid out",
+              "time": "Time off"
+            },
+            "title": "Overtime compensation",
+            "description": "Paid out or taken as time off. Leave empty to follow your collective agreement.",
+            "x-notes": "time-hours-and-overtime-to-payroll D3: null means the default, the CAO's compensationPreference when that leaf is confirmed (tijd-voor-tijd is time), else pay."
           }
         },
         "required": [],
@@ -7949,6 +8110,46 @@
             "title": "Administration",
             "description": "The administration this timesheet belongs to.",
             "x-notes": "Denormalized administratie key (multi-administratie, REQ-MULTI-001) — plain string, NOT a $ref (ADR-062 rule 7, the PayrollRun/managerUserId convention), mirroring its employee's administrationId. Custody change: stamped by TimesheetProcessStampListener from the Employee (no longer HR hand-maintained); still audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+          },
+          "overtimeHours": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Overtime hours",
+            "description": "The part of the hours marked as overtime, calculated from the bookings.",
+            "x-notes": "Server-recomputed aggregate beside hours (TimesheetAggregationService, time-hours-and-overtime-to-payroll D3). Inert to client input."
+          },
+          "payrollRunId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "PayrollRun",
+            "nullable": true,
+            "title": "Paid in payroll run",
+            "description": "The payroll run that paid these hours. Empty until a run pays them.",
+            "x-notes": "time-hours-and-overtime-to-payroll D2: stamped by the run under InternalWriteMarker; a timesheet stamped by a run that is no longer a draft is never paid again. Inert to client input (TimesheetProcessStampListener AGGREGATE_FIELDS)."
+          },
+          "paidInPeriod": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+            "title": "Paid in period",
+            "description": "The wage period in which these hours were paid.",
+            "x-notes": "time-hours-and-overtime-to-payroll D2: stamped with payrollRunId."
+          },
+          "overtimeCreditHours": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "title": "Overtime to take off",
+            "description": "Overtime hours, with the surcharge, that go to the time-off-in-lieu balance when the payroll run is approved.",
+            "x-notes": "time-hours-and-overtime-to-payroll D5 (as built): computed by the run that settles the timesheet, credited by OvertimeCreditService on the run's approval."
+          },
+          "overtimeCreditedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "title": "Overtime credited at",
+            "description": "When the overtime to take off was added to the time-off-in-lieu balance.",
+            "x-notes": "time-hours-and-overtime-to-payroll D5: the idempotency key; a set value means the credit is never repeated."
           }
         }
       },

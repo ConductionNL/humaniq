@@ -44,6 +44,10 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Service\EmploymentTermsResolver;
+use OCA\Humaniq\Service\HoursPayService;
+use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunService;
@@ -221,9 +225,11 @@ class PayrollRunServiceTest extends TestCase {
 	 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
 	 * @param PayrollRetentionGuardService|null $retentionGuard A mocked retention guard, or null for a permissive default (hrmq#99 -- `savePayslip()` places the AWR floor hold on every seal; most tests here are not exercising that behaviour, so a plain mock with no expectations is the default).
 	 *
+	 * @param HoursPayService|null $hoursPay The hours-and-overtime fold, or null for a run without it.
+	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -245,7 +251,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger),
+			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay),
 			$fake,
 			$retentionGuard,
 		];
@@ -1674,5 +1680,105 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertSame(3081.17, $byEmployeeId['emp-1']['nettoPay']);
 
 	}//end testMixedDgaAndRegularEmployeeRunTotalsCorrectly()
+
+	/**
+	 * The hours fold with a gateway that records the timesheet stamps.
+	 *
+	 * @param array<int, array{payload: array<string, mixed>, schema: string, uuid: ?string}> $stamps Receives the writes.
+	 *
+	 * @return HoursPayService
+	 */
+	private function hoursPay(array &$stamps): HoursPayService {
+		$gateway = $this->createMock(HoursRegisterGateway::class);
+		$gateway->method('save')->willReturnCallback(function (array $payload, string $schema, ?string $uuid = null) use (&$stamps): object {
+			$stamps[] = ['payload' => $payload, 'schema' => $schema, 'uuid' => $uuid];
+			return new \stdClass();
+		});
+
+		return new HoursPayService(new EmploymentTermsResolver(), $gateway, new InternalWriteMarker());
+	}//end hoursPay()
+
+	/**
+	 * An hourly employee without a monthly salary is paid the approved hours
+	 * times the hourly wage instead of being skipped, and the timesheet is
+	 * stamped with the run that paid it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
+	 */
+	public function testAnHourlyEmployeeIsPaidTheApprovedHours(): void {
+		$stamps = [];
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['grossMonthlySalary' => null])],
+				'EmploymentContract' => [$this->contract(['hoursPerWeek' => 32.0, 'hourlyWage' => 16.00])],
+				'Timesheet' => [['id' => 'ts-1', 'employeeId' => 'emp-1', 'period' => '2026-02', 'hours' => 128, 'status' => 'approved']],
+				'TimeEntry' => [],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			],
+			null,
+			$this->hoursPay($stamps)
+		);
+
+		$result = $service->runFor('2026-02');
+
+		$this->assertSame([], $result['skipped']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+		$this->assertSame(2048.00, $payslip['grossPay']);
+		$this->assertSame(128.0, $payslip['hoursPaid']);
+		$this->assertSame(128.0, $payslip['hoursWorked']);
+		$this->assertSame(2048.00, $payslip['hourlyPay']);
+		$this->assertSame(['ts-1'], $payslip['timesheetIds']);
+		$this->assertSame('ts-1', $stamps[0]['uuid']);
+		$this->assertSame((string)$result['runId'], $stamps[0]['payload']['payrollRunId']);
+	}//end testAnHourlyEmployeeIsPaidTheApprovedHours()
+
+	/**
+	 * An hourly employee with no approved hours is skipped with a reason, never
+	 * paid zero; one with neither a salary nor an hourly wage says so.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
+	 */
+	public function testAnHourlyEmployeeWithoutHoursIsSkippedWithAReason(): void {
+		$stamps = [];
+		[$service] = $this->service(
+			[
+				'Employee' => [$this->employee(['grossMonthlySalary' => null]), $this->employee(['id' => 'emp-2', 'employeeNumber' => 'EMP-NL-0002', 'grossMonthlySalary' => null])],
+				'EmploymentContract' => [$this->contract(['hourlyWage' => 16.00]), $this->contract(['id' => 'ct-2', 'employeeId' => 'emp-2'])],
+				'Timesheet' => [],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			],
+			null,
+			$this->hoursPay($stamps)
+		);
+
+		$result = $service->runFor('2026-02');
+
+		$this->assertSame(['no-approved-hours', 'no-salary-and-no-hourly-wage'], array_column($result['skipped'], 'reason'));
+	}//end testAnHourlyEmployeeWithoutHoursIsSkippedWithAReason()
+
+	/**
+	 * A salaried employee without overtime keeps a byte-identical payslip.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
+	 */
+	public function testASalariedEmployeeWithoutOvertimeKeepsAnIdenticalPayslip(): void {
+		$rows = ['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'Timesheet' => [], 'PayrollRun' => [], 'Payslip' => []];
+		[$without, $fakeWithout] = $this->service($rows);
+		$without->runFor('2026-02');
+		$stamps = [];
+		[$with, $fakeWith] = $this->service($rows, null, $this->hoursPay($stamps));
+		$with->runFor('2026-02');
+
+		$this->assertEquals($this->savedFor($fakeWithout, 'Payslip'), $this->savedFor($fakeWith, 'Payslip'));
+		$this->assertSame([], $stamps);
+	}//end testASalariedEmployeeWithoutOvertimeKeepsAnIdenticalPayslip()
 
 }//end class

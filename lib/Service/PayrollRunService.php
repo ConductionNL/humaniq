@@ -234,6 +234,8 @@ class PayrollRunService {
 	 * @param PayrollRetentionGuardService $retentionGuard Places the AWR art. 52 lid 4 statutory-retention legal hold on every sealed Payslip (hrmq#99 regression fix -- see `savePayslip()`).
 	 * @param LoggerInterface $logger Logger.
 	 * @param PackRepository $packs The jurisdiction-pack resolver (jurisdiction-packs design.md D7).
+	 * @param HoursPayService|null $hoursPay Approved hours and overtime as pay (time-hours-and-overtime-to-payroll); null runs without it.
+	 * @param WorkingCalendarReader|null $calendar openregister's working calendar, for the feestdag overtime category.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -243,6 +245,8 @@ class PayrollRunService {
 		private readonly PayrollRetentionGuardService $retentionGuard,
 		private readonly LoggerInterface $logger,
 		private readonly PackRepository $packs = new PackRepository(),
+		private readonly ?HoursPayService $hoursPay = null,
+		private readonly ?WorkingCalendarReader $calendar = null,
 	) {
 
 	}//end __construct()
@@ -418,6 +422,8 @@ class PayrollRunService {
 		$loonbeslagenByEmployeeKey = $this->activeLoonbeslagenByEmployeeKey();
 		$assetAssignmentsByEmployeeKey = $this->openAssetAssignmentsByEmployeeKey();
 		$vehicleAssetsById = $this->vehicleAssetsById();
+		$hours = $this->hoursInputs(period: $period);
+		$paidTimesheets = [];
 
 		$computed = [];
 		$skipped = [];
@@ -450,10 +456,18 @@ class PayrollRunService {
 				continue;
 			}
 
+			// time-hours-and-overtime-to-payroll D1/D2: approved hours and
+			// overtime this run pays. An employee without a monthly salary is
+			// paid the hours at the contract's hourly wage instead of skipped.
+			$hoursPay = $this->hoursPayFor(employee: $employee, contract: $contract, period: $period, runId: $runId, hours: $hours);
 			$grossMonthly = ($employee['grossMonthlySalary'] ?? null);
-			if (is_numeric($grossMonthly) === false || ((float)$grossMonthly) <= 0.0) {
-				$skipped[] = ['employee' => $employeeLabel, 'reason' => 'no-monthly-salary (hourly path: fast-follow)'];
-				continue;
+			$salaried = (is_numeric($grossMonthly) === true && ((float)$grossMonthly) > 0.0);
+			if ($salaried === false) {
+				$hourlySkip = $this->hourlySkipReason(contract: $contract, hoursPay: $hoursPay);
+				if ($hourlySkip !== null) {
+					$skipped[] = ['employee' => $employeeLabel, 'reason' => $hourlySkip];
+					continue;
+				}
 			}
 
 			if (trim((string)($employee['bsn'] ?? '')) === '' || ($employee['identityDocumentVerified'] ?? false) !== true) {
@@ -463,7 +477,7 @@ class PayrollRunService {
 				continue;
 			}
 
-			$grossMonthlySalaryCents = (int)round(((float)$grossMonthly) * 100);
+			$grossMonthlySalaryCents = ($salaried === true ? (int)round(((float)$grossMonthly) * 100) : (int)($hoursPay['hourlyCents'] ?? 0));
 
 			// sick-pay-calc (design.md D4): an open (gemeld) SickLeaveCase
 			// covering the period substitutes the doorbetaald loon for the
@@ -477,6 +491,10 @@ class PayrollRunService {
 
 				$grossMonthlySalaryCents = $sickResult->payableGrossCents;
 			}
+
+			// time-hours-and-overtime-to-payroll D1: overtime is wage worked in
+			// the period, so it enters the gross the engine taxes.
+			$grossMonthlySalaryCents += (int)($hoursPay['overtimeCents'] ?? 0);
 
 			// fleet-bijtelling (design.md D3/D4; hrmq-asset-fleet-merge): a
 			// genuine engine-INPUT change -- unlike sick-pay-calc's
@@ -564,6 +582,10 @@ class PayrollRunService {
 			$payload = array_merge($payload, $this->retroAdjustmentFields($retroAdjustmentCents, $result->nettoPayCents));
 			$payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents));
 			$payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
+			$payload = array_merge($payload, $this->hoursPayFields(hoursPay: $hoursPay, salaried: $salaried));
+			foreach ((array)($hoursPay['timesheetIds'] ?? []) as $timesheetId) {
+				$paidTimesheets[$timesheetId] = $this->creditFor(hoursPay: $hoursPay, timesheetId: $timesheetId);
+			}
 
 			// audit-trail-payroll (REQ-AUDP-001): stamp the exact resolved
 			// CalculationInput alongside the engine output, in the SAME write
@@ -614,6 +636,13 @@ class PayrollRunService {
 			}
 		}
 
+		// time-hours-and-overtime-to-payroll D2: each paid timesheet names
+		// this run, so no later run pays it again; a timesheet this run paid
+		// before but no longer pays (reopened) is unstamped.
+		if ($this->hoursPay !== null) {
+			$this->hoursPay->stamp(timesheets: $hours['timesheets'], paid: $paidTimesheets, runId: $runId, period: $period);
+		}
+
 		// Roll-up + stamps (design.md D4): totals cents-exact, calculatedAt =
 		// now. Status and GL/clearing fields are deliberately NOT written.
 		// engineVersion is now `{packId}@{packVersion}` (jurisdiction-packs
@@ -660,6 +689,146 @@ class PayrollRunService {
 
 		return $outcome;
 	}//end generate()
+
+	/**
+	 * The timesheets, entries, runs and calendar the hours fold reads, once
+	 * per run (time-hours-and-overtime-to-payroll D2, D4).
+	 *
+	 * @param string $period The run's period.
+	 *
+	 * @return array{timesheets: list<array<string, mixed>>, entries: list<array<string, mixed>>, runsById: array<string, array<string, mixed>>, nonWorkingDates: list<string>|null}
+	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
+	 */
+	private function hoursInputs(string $period): array {
+		if ($this->hoursPay === null) {
+			return ['timesheets' => [], 'entries' => [], 'runsById' => [], 'nonWorkingDates' => null];
+		}
+
+		$runsById = [];
+		foreach ($this->loadAll('PayrollRun') as $run) {
+			$runsById[$this->idOf($run)] = $run;
+		}
+
+		$dates = null;
+		if ($this->calendar !== null) {
+			$from = new \DateTimeImmutable(((int)substr($period, 0, 4) - 1) . '-01-01');
+			$dates = $this->calendar->nonWorkingDates($from, (new \DateTimeImmutable($period . '-01'))->modify('last day of this month'))['dates'];
+		}
+
+		return [
+			'timesheets' => array_values($this->loadAll('Timesheet')),
+			'entries' => array_values($this->loadAll('TimeEntry')),
+			'runsById' => $runsById,
+			'nonWorkingDates' => $dates,
+		];
+	}//end hoursInputs()
+
+	/**
+	 * What the approved hours and overtime come to for one employee, or null
+	 * when this run pays no timesheet of theirs.
+	 *
+	 * @param array<string, mixed> $employee The employee.
+	 * @param array<string, mixed> $contract The covering contract.
+	 * @param string               $period   The run's period.
+	 * @param string               $runId    The run.
+	 * @param array<string, mixed> $hours    The inputs from hoursInputs().
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
+	 */
+	private function hoursPayFor(array $employee, array $contract, string $period, string $runId, array $hours): ?array {
+		if ($this->hoursPay === null) {
+			return null;
+		}
+
+		$toPay = $this->hoursPay->timesheetsToPay(
+			timesheets: $hours['timesheets'],
+			employeeId: $this->idOf($employee),
+			period: $period,
+			runId: $runId,
+			runsById: $hours['runsById']
+		);
+		if ($toPay === []) {
+			return null;
+		}
+
+		return $this->hoursPay->payFor(employee: $employee, contract: $contract, timesheets: $toPay, entries: $hours['entries'], nonWorkingDates: $hours['nonWorkingDates']);
+	}//end hoursPayFor()
+
+	/**
+	 * Why an employee without a monthly salary is not paid, or null when the
+	 * approved hours pay them.
+	 *
+	 * @param array<string, mixed>      $contract The covering contract.
+	 * @param array<string, mixed>|null $hoursPay The hours fold, or null.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
+	 */
+	private function hourlySkipReason(array $contract, ?array $hoursPay): ?string {
+		if ($this->hoursPay === null) {
+			return 'no-monthly-salary (hourly path: fast-follow)';
+		}
+
+		$wage = ($contract['hourlyWage'] ?? null);
+		if (is_numeric($wage) === false || (float)$wage <= 0.0) {
+			return 'no-salary-and-no-hourly-wage';
+		}
+
+		return ($hoursPay === null ? 'no-approved-hours' : null);
+	}//end hourlySkipReason()
+
+	/**
+	 * The payslip fields that say what hours and overtime were paid; none
+	 * when no timesheet was paid, so such a payslip stays as it was.
+	 *
+	 * @param array<string, mixed>|null $hoursPay The hours fold, or null.
+	 * @param bool                      $salaried Whether the employee has a monthly salary.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
+	 */
+	private function hoursPayFields(?array $hoursPay, bool $salaried): array {
+		if ($hoursPay === null) {
+			return [];
+		}
+
+		$fields = [
+			'hoursPaid' => ($salaried === true ? null : (float)$hoursPay['hoursPaid']),
+			'hourlyPay' => ($salaried === true ? null : round($hoursPay['hourlyCents'] / 100, 2)),
+			'overtimeHours' => (float)$hoursPay['overtimeHours'],
+			'overtimePay' => round($hoursPay['overtimeCents'] / 100, 2),
+			'overtimeSurchargeUnresolved' => (bool)$hoursPay['surchargeUnresolved'],
+			'timesheetIds' => $hoursPay['timesheetIds'],
+		];
+		if ($salaried === false) {
+			$fields['hoursWorked'] = (float)$hoursPay['hoursPaid'];
+		}
+
+		return $fields;
+	}//end hoursPayFields()
+
+	/**
+	 * The hours one paid timesheet credits as time off (0 when none).
+	 *
+	 * @param array<string, mixed> $hoursPay    The hours fold.
+	 * @param string               $timesheetId The timesheet.
+	 *
+	 * @return float
+	 */
+	private function creditFor(array $hoursPay, string $timesheetId): float {
+		foreach ((array)($hoursPay['timeCredits'] ?? []) as $credit) {
+			if ($credit['timesheetId'] === $timesheetId) {
+				return (float)$credit['hours'];
+			}
+		}
+
+		return 0.0;
+	}//end creditFor()
 
 	/**
 	 * Build the Payslip payload for one computed employee (design.md D4

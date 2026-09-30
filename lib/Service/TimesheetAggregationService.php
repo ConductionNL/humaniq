@@ -131,18 +131,24 @@ class TimesheetAggregationService {
 	 *
 	 * @param array<int, array<string, mixed>> $entries The TimeEntry payloads.
 	 *
-	 * @return array<string, mixed> hours, entryCount, projectId, costCenter, billable.
+	 * @return array<string, mixed> hours, overtimeHours, entryCount, projectId, costCenter, billable.
 	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-002
 	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
 	public function computeAggregates(array $entries): array {
 		$hours = 0.0;
+		$overtimeHours = 0.0;
 		$billable = (count($entries) > 0);
 		$projects = [];
 		$costCenters = [];
 
 		foreach ($entries as $entry) {
 			$hours += (float)($entry['hours'] ?? 0);
+			if (($entry['overtime'] ?? false) === true) {
+				$overtimeHours += (float)($entry['hours'] ?? 0);
+			}
+
 			if ((bool)($entry['billable'] ?? false) === false) {
 				$billable = false;
 			}
@@ -153,6 +159,7 @@ class TimesheetAggregationService {
 
 		return [
 			'hours' => round($hours, 2),
+			'overtimeHours' => round($overtimeHours, 2),
 			'entryCount' => count($entries),
 			'projectId' => $this->homogeneousOrNull($projects),
 			'costCenter' => $this->homogeneousOrNull($costCenters),

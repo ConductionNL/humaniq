@@ -5,7 +5,7 @@
             "TimeEntry": {
                 "slug": "TimeEntry",
                 "icon": "ClockPlusOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Time entry",
                 "description": "One individual booking of worked hours (urenregistratie): when the work started and ended, what it was, and optionally which project it was for. Bookings are collected automatically into the employee's monthly timesheet, which is what gets submitted for approval.",
                 "x-notes": "hours-process-redesign Decision 1: the booking granularity split out of the former all-in-one Timesheet schema. English property names per fleet decision; NL only via l10n labels (verb surface 'uren boeken'). No status and no lifecycle here — the process lives on the parent Timesheet, and entry mutability is governed by the parent's state (Decision 3, enforced by TimeEntryStampListener). Concurrency: the aggregate listener recomputes from truth on every entry write, so a stale intermediate total is self-healed by the next write (accepted for dev-stage volumes).",
@@ -130,13 +130,34 @@
                         "title": "Origin",
                         "description": "How this booking was created.",
                         "x-notes": "The one safe readOnly use in this schema pair (Decision 2 analysis): genuinely immutable after create, optional, defaulted, and stamped only on the CREATE write where OpenRegister's readOnly enforcement does not apply. 'migration' marks the synthetic entries the MigrateHoursProcess repair step fabricates for legacy timesheets — their timestamps are bookkeeping artifacts, not claims about when work happened. 'timer' marks an entry started by the hours leaf's timer, and it is load-bearing rather than descriptive: while such an entry has no endedAt it is a RUNNING timer, and TimeEntryHoursDeriver reads this value to tell it apart from a finished booking that simply lost its end. Without the marker the two are the same row, and the second would be picked up as a timer nobody started and no stop will ever close."
+                    },
+                    "overtime": {
+                        "type": "boolean",
+                        "order": 140,
+                        "default": false,
+                        "title": "Overtime",
+                        "description": "Tick when these hours are overtime: worked on top of your contracted hours.",
+                        "x-notes": "time-hours-and-overtime-to-payroll D3: approved with the timesheet as today; the payroll run pays or credits it with the surcharge EmploymentTermsResolver resolves for the day's category."
+                    },
+                    "overtimeCompensation": {
+                        "type": "string",
+                        "order": 150,
+                        "nullable": true,
+                        "enum": [
+                            "pay",
+                            "time"
+                        ],
+                        "x-enum-labels": {"pay": "Paid out", "time": "Time off"},
+                        "title": "Overtime compensation",
+                        "description": "Paid out or taken as time off. Leave empty to follow your collective agreement.",
+                        "x-notes": "time-hours-and-overtime-to-payroll D3: null means the default, the CAO's compensationPreference when that leaf is confirmed (tijd-voor-tijd is time), else pay."
                     }
                 }
             },
             "Timesheet": {
                 "slug": "Timesheet",
                 "icon": "ClockCheckOutline",
-                "version": "0.8.0",
+                "version": "0.9.0",
                 "title": "Timesheet",
                 "description": "The monthly collection of an employee's hour bookings (urenstaat). Totals are kept up to date automatically while the employee books; once submitted, a manager approves or rejects the whole month.",
                 "x-notes": "hours-process-redesign Decision 2: the period aggregate half of the former all-in-one schema — the approval lifecycle stays here and only here (a TimeEntry has none). The approval lifecycle is the correctly-homed HR/labour surface pipelinq's 'Timesheet approval' deep-link previously pointed at shillinq for; shillinq's UrenRegistratie is an append-only billing time-log with no approval state. hours/entryCount/projectId/costCenter/billable are server-recomputed aggregates (TimesheetAggregateListener, REQ-TEC-004) and the process fields are stamped on lifecycle edges (TimesheetProcessStampListener) — none of them is readOnly because humaniq's own listeners must write them and OpenRegister enforces readOnly on every UPDATE with no backend bypass; forms hide them via page-level includeFields allowlists instead. Two listeners write this schema (stamp + aggregate); both are recompute-style, so a stale intermediate total from concurrent entry writes is self-healed by the next write (accepted for dev-stage volumes).",
@@ -424,6 +445,46 @@
                         "title": "Administration",
                         "description": "The administration this timesheet belongs to.",
                         "x-notes": "Denormalized administratie key (multi-administratie, REQ-MULTI-001) — plain string, NOT a $ref (ADR-062 rule 7, the PayrollRun/managerUserId convention), mirroring its employee's administrationId. Custody change: stamped by TimesheetProcessStampListener from the Employee (no longer HR hand-maintained); still audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                    },
+                    "overtimeHours": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Overtime hours",
+                        "description": "The part of the hours marked as overtime, calculated from the bookings.",
+                        "x-notes": "Server-recomputed aggregate beside hours (TimesheetAggregationService, time-hours-and-overtime-to-payroll D3). Inert to client input."
+                    },
+                    "payrollRunId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "PayrollRun",
+                        "nullable": true,
+                        "title": "Paid in payroll run",
+                        "description": "The payroll run that paid these hours. Empty until a run pays them.",
+                        "x-notes": "time-hours-and-overtime-to-payroll D2: stamped by the run under InternalWriteMarker; a timesheet stamped by a run that is no longer a draft is never paid again. Inert to client input (TimesheetProcessStampListener AGGREGATE_FIELDS)."
+                    },
+                    "paidInPeriod": {
+                        "type": "string",
+                        "nullable": true,
+                        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+                        "title": "Paid in period",
+                        "description": "The wage period in which these hours were paid.",
+                        "x-notes": "time-hours-and-overtime-to-payroll D2: stamped with payrollRunId."
+                    },
+                    "overtimeCreditHours": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Overtime to take off",
+                        "description": "Overtime hours, with the surcharge, that go to the time-off-in-lieu balance when the payroll run is approved.",
+                        "x-notes": "time-hours-and-overtime-to-payroll D5 (as built): computed by the run that settles the timesheet, credited by OvertimeCreditService on the run's approval."
+                    },
+                    "overtimeCreditedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Overtime credited at",
+                        "description": "When the overtime to take off was added to the time-off-in-lieu balance.",
+                        "x-notes": "time-hours-and-overtime-to-payroll D5: the idempotency key; a set value means the credit is never repeated."
                     }
                 }
             }
