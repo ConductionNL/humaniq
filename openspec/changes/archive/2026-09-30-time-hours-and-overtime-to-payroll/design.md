@@ -154,3 +154,35 @@ the gross the calculator received.
 
 - Some CAOs credit time off one for one and pay the surcharge in money. This design credits at
   the surcharge factor. Should the split become a CAO leaf?
+
+## As built (2026-09-30, lane 18)
+
+- Read at `development` 47a79781 plus #595 (register 0.46.0); this change takes register 0.47.0
+  (TimeEntry 0.2.0, Timesheet 0.9.0, Payslip 0.14.0, LeaveBalance 0.5.0).
+- D1: `HoursPayService` is pure for the arithmetic (`timesheetsToPay()`, `payFor()`) and
+  writes only the stamps (`stamp()`). `PayrollRunService` takes it, and the working calendar
+  reader, as optional constructor arguments; without them a run behaves exactly as before.
+  The run reads Timesheet, TimeEntry and PayrollRun once, and the calendar once, from 1 January
+  of the year before the period to the period's last day. A salaried employee without paid
+  timesheets gets no new payslip fields, so the payslip stays byte-identical.
+- D1 skip reasons: `no-salary-and-no-hourly-wage` and `no-approved-hours`.
+- D2: the stamp fields, `overtimeHours` and the credit fields are inert to client writes
+  (`TimesheetProcessStampListener::AGGREGATE_FIELDS`) and written under `InternalWriteMarker`.
+  A timesheet stamped by a run that still exists and is not this run is not selected, whatever
+  that run's status: a timesheet reserved by another draft run waits for it.
+- D3: the default compensation is `time` only when the CAO's overtime leaf is confirmed
+  (verified, not a placeholder) and says `tijd-voor-tijd`
+  (`CaoRegistry::overtimeCompensationPreference()`, `EmploymentTermsResolver::overtimeCompensationFor()`);
+  otherwise `pay`. Every bundled CAO except the fictional example is still a placeholder.
+- D5: the hours to credit are computed by the run and stamped on the timesheet
+  (`overtimeCreditHours`); `OvertimeCreditService` credits them on approval and stamps
+  `overtimeCreditedAt` as the idempotency key. The credit raises `entitledHours` of the
+  `compensation` balance for the year of the paid period, and creates the balance when there
+  is none. `PayrollRunApprovedListener` is registered for the `payrollrun` schema on
+  `ObjectUpdatedEvent`.
+- Seed: the design's `employee-visser` starts on 2026-07-01 and has no verified ID, so every
+  run skips her. The hourly path is shown on `employee-elidrissi` instead (on call, 15.00 an
+  hour, 72 approved hours in 2026-08), who gains a test BSN so the anonymous-rate precondition
+  passes. His 4 hours of Saturday overtime in 2026-09 sit on a submitted timesheet, so the
+  on-call average of `people-flex-contract-rules` is unchanged until someone approves it.
+- Open question (credit one for one and pay the surcharge): not built.

@@ -261,7 +261,7 @@ final class CaoRegistry {
 	 *
 	 * @return string|null The preference, or null when unresolvable.
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 */
 	public static function overtimeCompensationPreference(string $caoId): ?string {
 		$leaf = (self::get($caoId)['overtime'] ?? null);

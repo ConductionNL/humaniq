@@ -25,9 +25,9 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-001
- * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-002
- * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+ * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
+ * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
+ * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use InvalidArgumentException;
 /**
  * Selection, arithmetic and stamping of paid hours.
  *
- * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-001
+ * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
  */
 class HoursPayService {
 
@@ -50,7 +50,7 @@ class HoursPayService {
 	 * @param HoursRegisterGateway    $gateway Writes the timesheet stamps.
 	 * @param InternalWriteMarker     $marker  Marks the stamps as humaniq's own writes.
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-001
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
 	 */
 	public function __construct(
 		private readonly EmploymentTermsResolver $terms,
@@ -71,7 +71,7 @@ class HoursPayService {
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-001
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
 	 */
 	public function timesheetsToPay(array $timesheets, string $employeeId, string $period, string $runId, array $runsById): array {
 		$out = [];
@@ -103,8 +103,8 @@ class HoursPayService {
 	 *
 	 * @return array{hourlyCents: int, overtimeCents: int, hoursPaid: float, overtimeHours: float, hourlyRate: ?float, surchargeUnresolved: bool, timesheetIds: list<string>, timeCredits: list<array{timesheetId: string, hours: float}>}
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-001
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-002
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 */
 	public function payFor(array $employee, array $contract, array $timesheets, array $entries, ?array $nonWorkingDates): array {
 		$salaried = (is_numeric($employee['grossMonthlySalary'] ?? null) === true && (float)$employee['grossMonthlySalary'] > 0.0);
@@ -149,7 +149,7 @@ class HoursPayService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-001
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
 	 */
 	public function stamp(array $timesheets, array $paid, string $runId, string $period): void {
 		foreach ($timesheets as $timesheet) {

@@ -698,7 +698,7 @@ class PayrollRunService {
 	 *
 	 * @return array{timesheets: list<array<string, mixed>>, entries: list<array<string, mixed>>, runsById: array<string, array<string, mixed>>, nonWorkingDates: list<string>|null}
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-001
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
 	 */
 	private function hoursInputs(string $period): array {
 		if ($this->hoursPay === null) {
@@ -736,7 +736,7 @@ class PayrollRunService {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-001
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
 	 */
 	private function hoursPayFor(array $employee, array $contract, string $period, string $runId, array $hours): ?array {
 		if ($this->hoursPay === null) {
@@ -766,7 +766,7 @@ class PayrollRunService {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-001
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
 	 */
 	private function hourlySkipReason(array $contract, ?array $hoursPay): ?string {
 		if ($this->hoursPay === null) {
@@ -790,7 +790,7 @@ class PayrollRunService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-002
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 */
 	private function hoursPayFields(?array $hoursPay, bool $salaried): array {
 		if ($hoursPay === null) {

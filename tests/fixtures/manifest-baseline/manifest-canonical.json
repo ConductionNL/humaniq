@@ -3321,6 +3321,8 @@
 								"endedAt",
 								"breakMinutes",
 								"hours",
+								"overtime",
+								"overtimeCompensation",
 								"description",
 								"projectId",
 								"billable",
@@ -9409,6 +9411,7 @@
 							"include": [
 								"period",
 								"hours",
+								"overtimeHours",
 								"entryCount",
 								"description",
 								"billable"
@@ -9442,7 +9445,10 @@
 								"submittedAt",
 								"approvedBy",
 								"approvedAt",
-								"rejectionReason"
+								"rejectionReason",
+								"paidInPeriod",
+								"overtimeCreditHours",
+								"overtimeCreditedAt"
 							],
 							"overrides": {
 								"approvedAt": {

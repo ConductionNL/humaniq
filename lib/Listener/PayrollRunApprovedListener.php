@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+ * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use Psr\Log\LoggerInterface;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+ * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
  */
 class PayrollRunApprovedListener implements IEventListener {
 
@@ -49,7 +49,7 @@ class PayrollRunApprovedListener implements IEventListener {
 	 * @param OvertimeCreditService $credits The credit.
 	 * @param LoggerInterface       $logger  The logger.
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 */
 	public function __construct(
 		private readonly OvertimeCreditService $credits,
@@ -64,7 +64,7 @@ class PayrollRunApprovedListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectUpdatedEvent) === false) {

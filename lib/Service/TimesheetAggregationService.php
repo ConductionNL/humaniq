@@ -133,6 +133,7 @@ class TimesheetAggregationService {
 	 *
 	 * @return array<string, mixed> hours, overtimeHours, entryCount, projectId, costCenter, billable.
 	 *
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-002
 	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
 	public function computeAggregates(array $entries): array {

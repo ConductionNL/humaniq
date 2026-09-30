@@ -1782,6 +1782,7 @@
                 "dateOfBirth": "2001-09-03",
                 "startDate": "2025-06-01",
                 "taxTableColor": "wit",
+                "bsn": "111222333",
                 "identityDocumentVerified": true,
                 "loonheffingenVerklaringOnFile": true,
                 "land": "NL",
@@ -1891,6 +1892,42 @@
                 "hours": 18.0,
                 "description": "Oproepdienst.",
                 "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Timesheet",
+                    "slug": "timesheet-elidrissi-2026-09"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "period": "2026-09",
+                "hours": 4,
+                "overtimeHours": 4,
+                "entryCount": 1,
+                "description": "Extra zaterdagdienst september 2026.",
+                "billable": false,
+                "status": "submitted",
+                "submittedAt": "2026-09-14T08:00:00Z",
+                "administrationId": "ADM-001",
+                "_note": "time-hours-and-overtime-to-payroll: approve it, then calculate 2026-09: the payslip pays 4 overtime hours at 15.00 and flags the surcharge as not resolved (no CAO, no contract override)."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-elidrissi-2026-09-12-overwerk"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "timesheetId": "@ref:timesheet-elidrissi-2026-09",
+                "date": "2026-09-12",
+                "breakMinutes": 0,
+                "hours": 4.0,
+                "description": "Extra zaterdagdienst.",
+                "billable": false,
+                "overtime": true,
+                "overtimeCompensation": "pay",
                 "administrationId": "ADM-001",
                 "origin": "manual"
             },

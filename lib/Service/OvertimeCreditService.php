@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+ * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ namespace OCA\Humaniq\Service;
 /**
  * The time-off credit of an approved run.
  *
- * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+ * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
  */
 class OvertimeCreditService {
 
@@ -44,7 +44,7 @@ class OvertimeCreditService {
 	 * @param HoursRegisterGateway $gateway Reads timesheets and balances, writes both.
 	 * @param InternalWriteMarker  $marker  Marks the writes as humaniq's own.
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
@@ -59,7 +59,7 @@ class OvertimeCreditService {
 	 *
 	 * @return int The number of timesheets credited.
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 */
 	public function creditForRun(string $runId): int {
 		$credited = 0;

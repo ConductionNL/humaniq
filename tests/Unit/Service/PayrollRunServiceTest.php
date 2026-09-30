@@ -1705,7 +1705,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-001
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
 	 */
 	public function testAnHourlyEmployeeIsPaidTheApprovedHours(): void {
 		$stamps = [];
@@ -1741,7 +1741,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-001
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
 	 */
 	public function testAnHourlyEmployeeWithoutHoursIsSkippedWithAReason(): void {
 		$stamps = [];
@@ -1767,7 +1767,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-002
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 */
 	public function testASalariedEmployeeWithoutOvertimeKeepsAnIdenticalPayslip(): void {
 		$rows = ['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'Timesheet' => [], 'PayrollRun' => [], 'Payslip' => []];

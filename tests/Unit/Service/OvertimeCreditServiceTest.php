@@ -16,7 +16,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+ * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
  */
 
 declare(strict_types=1);

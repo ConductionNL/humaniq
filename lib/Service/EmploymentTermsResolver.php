@@ -274,7 +274,7 @@ class EmploymentTermsResolver {
 	 *
 	 * @return string `pay` or `time`.
 	 *
-	 * @spec openspec/specs/hours-and-overtime-to-payroll/spec.md#REQ-HOP-003
+	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-002
 	 */
 	public function overtimeCompensationFor(array $contract): string {
 		$caoId = $this->caoId(contract: $contract);
