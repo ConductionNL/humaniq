@@ -325,6 +325,31 @@
             {
                 "@self": {
                     "register": "humaniq",
+                    "schema": "CostAllocation",
+                    "slug": "costallocation-devries-split"
+                },
+                "employeeId": "@ref:employee-devries",
+                "basis": "fixed",
+                "splits": [
+                    {
+                        "costCenter": "CC-100",
+                        "projectId": null,
+                        "percentage": 60
+                    },
+                    {
+                        "costCenter": "CC-200",
+                        "projectId": null,
+                        "percentage": 40
+                    }
+                ],
+                "startDate": "2026-01-01",
+                "endDate": null,
+                "note": "Half of the office manager's week supports the consultancy team.",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
                     "schema": "RecurringAllowance",
                     "slug": "allowance-jansen-thuiswerk"
                 },

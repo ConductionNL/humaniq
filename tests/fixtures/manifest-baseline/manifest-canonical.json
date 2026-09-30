@@ -848,6 +848,18 @@
 					"route": "PayrollRuns"
 				},
 				{
+					"icon": "ChartBar",
+					"id": "WageCosts",
+					"label": "Wage costs",
+					"route": "WageCosts"
+				},
+				{
+					"icon": "ScaleBalance",
+					"id": "CostAllocations",
+					"label": "Cost allocations",
+					"route": "CostAllocations"
+				},
+				{
 					"icon": "FileSendOutline",
 					"id": "LoonaangifteFilings",
 					"label": "Wage tax filings",
@@ -6055,6 +6067,14 @@
 						"gridY": 83,
 						"id": 26,
 						"widgetId": "object-list-16"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 83,
+						"id": 27,
+						"widgetId": "cost-allocations"
 					}
 				],
 				"register": "humaniq",
@@ -6892,6 +6912,44 @@
 						"id": "object-list-16",
 						"title": "Relations cases",
 						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "basis",
+									"label": "Basis"
+								},
+								{
+									"key": "startDate",
+									"label": "Start date"
+								},
+								{
+									"key": "endDate",
+									"label": "End date"
+								}
+							],
+							"emptyText": "No split: the wage costs go to the cost centre of the department",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"limit": 10,
+							"register": "humaniq",
+							"rowRoute": "CostAllocationDetail",
+							"schema": "CostAllocation",
+							"sort": {
+								"dir": "desc",
+								"field": "startDate"
+							},
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"viewAllRoute": "CostAllocations"
+						},
+						"icon": "ScaleBalance",
+						"id": "cost-allocations",
+						"title": "Cost allocation",
+						"type": "object-list"
 					}
 				]
 			},
@@ -6902,7 +6960,7 @@
 		},
 		{
 			"config": {
-				"_note": "Financial-document archetype (x-schema-org: schema:Invoice), same family as Expense's amount-first design: three headline tiles (gross pay, net pay, Related-to-Employee) lead the page since that is what an employee or approver checks first, followed by the dense data widget carrying the full gross-to-net withholding breakdown (NL loonheffing/zvw/wkr, DE Lohnsteuer/Soli/Kirchensteuer, FR cotisations/PAS, US FICA/Medicare -- the schema is genuinely multi-jurisdiction: only one jurisdiction's fields populate per real record, but which one varies per payslip so a static manifest cannot cherry-pick per-instance; all fields surface via one widget, sized to its true field count and set to 4 columns full-width rather than clipped at 2). ADR-062 round-2: data widget now excludes employeeId (resolved via Related instead of raw uuid) and the height budget was corrected from the round-1 h7 (which clipped ~54 fields behind a scrollbar) to match content. Stat format uses 'number' not 'currency' because Payslip.currency varies per record (EUR/USD) and a widget's format is static. No files/calendar/comms leaves: nothing in the schema models an attachable payslip document or appointment, and Payslip carries no x-openregister-lifecycle so there are no lifecycleActions. Audit history is a sidebar tab. payslip-pdf-docudesk (2026-07-14): page-level action \"Genereer PDF\" mirrors EmploymentContractDetail's \"Genereer arbeidsovereenkomst\" shape -- POST /api/documents/generate with {payslipId: @objectId, documentType: loonstrook}, guarded server-side by DocumentController::authorizePayslip().",
+				"_note": "Financial-document archetype (x-schema-org: schema:Invoice), same family as Expense's amount-first design: three headline tiles (gross pay, net pay, Related-to-Employee) lead the page since that is what an employee or approver checks first, followed by the dense data widget carrying the full gross-to-net withholding breakdown (NL loonheffing/zvw/wkr, DE Lohnsteuer/Soli/Kirchensteuer, FR cotisations/PAS, US FICA/Medicare -- the schema is genuinely multi-jurisdiction: only one jurisdiction's fields populate per real record, but which one varies per payslip so a static manifest cannot cherry-pick per-instance; all fields surface via one widget, sized to its true field count and set to 4 columns full-width rather than clipped at 2). ADR-062 round-2: data widget now excludes employeeId (resolved via Related instead of raw uuid) and the height budget was corrected from the round-1 h7 (which clipped ~54 fields behind a scrollbar) to match content. Stat format uses 'number' not 'currency' because Payslip.currency varies per record (EUR/USD) and a widget's format is static. No files/calendar/comms leaves: nothing in the schema models an attachable payslip document or appointment, and Payslip carries no x-openregister-lifecycle so there are no lifecycleActions. Audit history is a sidebar tab. payslip-pdf-docudesk (2026-07-14): page-level action \"Genereer PDF\" mirrors EmploymentContractDetail's \"Genereer arbeidsovereenkomst\" shape -- POST /api/documents/generate with {payslipId: @objectId, documentType: loonstrook}, guarded server-side by DocumentController::authorizePayslip(). payroll-cost-allocation (2026-09-30): Wage costs per cost centre lists the payslip's WageCostAllocation lines, which the run writes after every calculation.",
 				"headerActions": [
 					{
 						"confirm": true,
@@ -6952,6 +7010,14 @@
 						"gridY": 3,
 						"id": 4,
 						"widgetId": "data"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 17,
+						"id": 5,
+						"widgetId": "wage-costs"
 					}
 				],
 				"register": "humaniq",
@@ -7033,6 +7099,57 @@
 						"id": "data",
 						"title": "Payslip breakdown",
 						"type": "data"
+					},
+					{
+						"content": {
+							"allowCreate": false,
+							"columns": [
+								{
+									"key": "costCenter",
+									"label": "Cost centre"
+								},
+								{
+									"key": "projectId",
+									"label": "Project"
+								},
+								{
+									"key": "percentage",
+									"label": "Percentage"
+								},
+								{
+									"key": "gross",
+									"label": "Gross"
+								},
+								{
+									"key": "employerCharges",
+									"label": "Employer charges"
+								},
+								{
+									"key": "totalCost",
+									"label": "Total cost"
+								},
+								{
+									"key": "allocationSource",
+									"label": "Source"
+								}
+							],
+							"emptyText": "No wage cost lines yet. They are written when the run is calculated.",
+							"filter": {
+								"payslipId": "@objectId"
+							},
+							"limit": 20,
+							"register": "humaniq",
+							"rowRoute": "WageCostAllocationDetail",
+							"schema": "WageCostAllocation",
+							"sort": {
+								"dir": "desc",
+								"field": "totalCost"
+							}
+						},
+						"icon": "ChartBar",
+						"id": "wage-costs",
+						"title": "Wage costs per cost centre",
+						"type": "object-list"
 					}
 				]
 			},
@@ -7043,7 +7160,7 @@
 		},
 		{
 			"config": {
-				"_note": "Batch/reconciliation archetype: a PayrollRun is a per-period aggregate of an administration's payslips, so its page leads with the GL-reconciliation totals (totalGross/totalNet/withholdingLiabilityBalance -- exactly the numbers xc-payroll-gl-reconciliation and xc-withholding-liability-clearing check) as stat KPIs, then the full record (period/administrationId/jurisdiction/status/glLiabilityPosted/glExpensePosted/withholdingsClearedToZero plus the engine stamps engineVersion/calculatedAt) in the data widget below. payroll-core-engine (2026-07-14): Payslip NOW carries a real payrollRunId $ref back to PayrollRun (added by payroll-core-schema), so the page gains the FK-scoped Payslips child list (allowCreate:false -- generation via the engine is the only create path, design.md D5) and the page-level api-call action \"(Her)berekenen\" (POST /api/payroll/calculate with {runId: @objectId}, guarded server-side by PayrollController::authorizeRun(), draft-only -- non-draft runs get a 400). Still NO lifecycleActions: `status` is a plain enum (draft/approved/posted/paid) with no `x-openregister-lifecycle` transition map on this schema -- driving lifecycleActions here would invent transition names the backend does not guard; the recalculate action is a page action, not a transition. Audit history is a sidebar tab. payroll-run-checks (2026-09-30): every calculation runs the run check (PayrollRunCheckService) and \"Check run\" runs it on demand (POST /api/payroll/check, run resolved under the caller's RBAC, admin or hr role). The two extra tiles read the counts the check stores on the run (blockingFindings, warningFindings); the findings list shows the PayrollRunFinding objects of this run, each acknowledged on its own page.",
+				"_note": "Batch/reconciliation archetype: a PayrollRun is a per-period aggregate of an administration's payslips, so its page leads with the GL-reconciliation totals (totalGross/totalNet/withholdingLiabilityBalance -- exactly the numbers xc-payroll-gl-reconciliation and xc-withholding-liability-clearing check) as stat KPIs, then the full record (period/administrationId/jurisdiction/status/glLiabilityPosted/glExpensePosted/withholdingsClearedToZero plus the engine stamps engineVersion/calculatedAt) in the data widget below. payroll-core-engine (2026-07-14): Payslip NOW carries a real payrollRunId $ref back to PayrollRun (added by payroll-core-schema), so the page gains the FK-scoped Payslips child list (allowCreate:false -- generation via the engine is the only create path, design.md D5) and the page-level api-call action \"(Her)berekenen\" (POST /api/payroll/calculate with {runId: @objectId}, guarded server-side by PayrollController::authorizeRun(), draft-only -- non-draft runs get a 400). Still NO lifecycleActions: `status` is a plain enum (draft/approved/posted/paid) with no `x-openregister-lifecycle` transition map on this schema -- driving lifecycleActions here would invent transition names the backend does not guard; the recalculate action is a page action, not a transition. Audit history is a sidebar tab. payroll-run-checks (2026-09-30): every calculation runs the run check (PayrollRunCheckService) and \"Check run\" runs it on demand (POST /api/payroll/check, run resolved under the caller's RBAC, admin or hr role). The two extra tiles read the counts the check stores on the run (blockingFindings, warningFindings); the findings list shows the PayrollRunFinding objects of this run, each acknowledged on its own page. payroll-cost-allocation (2026-09-30): Wage costs per cost centre sums the run's WageCostAllocation lines (gross plus employer charges) per cost centre; a bar opens Wage costs filtered on that cost centre. Together the bars equal the run's gross plus employer charges, and the journal books the same split.",
 				"headerActions": [
 					{
 						"confirm": true,
@@ -7160,6 +7277,14 @@
 						"gridWidth": 12,
 						"gridX": 0,
 						"gridY": 18,
+						"id": 9,
+						"widgetId": "wage-costs-chart"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 23,
 						"id": 5,
 						"widgetId": "object-list"
 					}
@@ -7395,6 +7520,33 @@
 						"id": "findings",
 						"title": "Run check findings",
 						"type": "object-list"
+					},
+					{
+						"content": {
+							"chartKind": "bar",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "costCenter",
+									"metric": "sum",
+									"sumField": "totalCost"
+								},
+								"drilldown": {
+									"filterParam": "costCenter",
+									"route": "WageCosts"
+								},
+								"filter": {
+									"payrollRunId": "@objectId"
+								},
+								"register": "humaniq",
+								"schema": "WageCostAllocation"
+							},
+							"emptyLabel": "No wage cost lines yet. Calculate the run first.",
+							"valueFormat": "currency"
+						},
+						"icon": "ChartBar",
+						"id": "wage-costs-chart",
+						"title": "Wage costs per cost centre",
+						"type": "chart"
 					}
 				]
 			},
@@ -11988,6 +12140,218 @@
 			"id": "CompAdjustmentDetail",
 			"route": "/comp-adjustments/:id",
 			"title": "Compensation adjustment",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"allowCreate": true,
+				"columns": [
+					"employeeId",
+					"basis",
+					"startDate",
+					"endDate",
+					"note"
+				],
+				"description": "How each employee's wage costs are split over cost centres and projects. Without a split, the costs go to the cost centre of the employee's department.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"basis"
+				],
+				"register": "humaniq",
+				"schema": "CostAllocation",
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				}
+			},
+			"id": "CostAllocations",
+			"route": "/cost-allocations",
+			"title": "Cost allocations",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-cost-allocation (2026-09-30): one employee's split of wage costs over cost centres and projects, fixed in percentages or by the approved hours booked. CostAllocationGuardListener refuses a fixed split that does not add up to 100 percent and a split that overlaps another of the same employee. Every payroll calculation reads it (CostAllocationService) and writes the payslip's WageCostAllocation lines.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "CostAllocation",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId"
+							],
+							"title": "Split"
+						},
+						"icon": "ScaleBalance",
+						"id": "data",
+						"title": "Split",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "CostAllocationDetail",
+			"route": "/cost-allocations/:id",
+			"title": "Cost allocation",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"allowCreate": false,
+				"columns": [
+					"period",
+					"costCenter",
+					"projectId",
+					"employeeId",
+					"gross",
+					"employerCharges",
+					"totalCost",
+					"allocationSource"
+				],
+				"description": "The wage costs of every payslip per cost centre and project, as the payroll journal books them. Filter on a period to see one month; the payroll run page shows the total per cost centre.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"period",
+					"costCenter",
+					"allocationSource"
+				],
+				"register": "humaniq",
+				"schema": "WageCostAllocation",
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				}
+			},
+			"id": "WageCosts",
+			"route": "/wage-costs",
+			"title": "Wage costs",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-cost-allocation (2026-09-30): one line of a payslip's wage costs on one cost centre and project. The payroll run writes and replaces these after every calculation (CostAllocationService), so every field is read-only here; the payroll journal books its debit lines per cost centre from them.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "WageCostAllocation",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"administrationId": {
+									"editable": false
+								},
+								"allocationSource": {
+									"editable": false
+								},
+								"costCenter": {
+									"editable": false
+								},
+								"employeeId": {
+									"editable": false
+								},
+								"employerCharges": {
+									"editable": false
+								},
+								"gross": {
+									"editable": false
+								},
+								"payrollRunId": {
+									"editable": false
+								},
+								"payslipId": {
+									"editable": false
+								},
+								"percentage": {
+									"editable": false
+								},
+								"period": {
+									"editable": false
+								},
+								"projectId": {
+									"editable": false
+								},
+								"totalCost": {
+									"editable": false
+								}
+							},
+							"title": "Wage costs"
+						},
+						"icon": "ChartBar",
+						"id": "data",
+						"title": "Wage costs",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "WageCostAllocationDetail",
+			"route": "/wage-costs/:id",
+			"title": "Wage cost line",
 			"type": "detail"
 		},
 		{
