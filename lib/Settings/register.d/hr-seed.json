@@ -958,7 +958,91 @@
                     "linkedin"
                 ],
                 "postedToChannels": true,
+                "evaluationCriteria": [
+                    "Vue-kennis",
+                    "Communicatie"
+                ],
+                "minEducationLevel": 6,
+                "minExperienceYears": 3,
+                "requiredCompetences": [
+                    "vue",
+                    "typescript"
+                ],
+                "preferredCompetences": [
+                    "nextcloud"
+                ],
                 "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmployeeCompetence",
+                    "slug": "competence-jansen-vue"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "competenceCode": "vue",
+                "label": "Vue.js",
+                "issuedOn": "2025-01-01"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "job-application",
+                    "slug": "application-referral-yilmaz"
+                },
+                "vacancyId": "@ref:vacancy-vue-developer",
+                "candidateName": "Ahmed Yilmaz",
+                "email": "ahmed.yilmaz@example.org",
+                "motivation": "Aanbevolen door een collega (hiring-candidate-assessment seed).",
+                "status": "nieuw",
+                "talentPoolOptIn": false,
+                "source": "referral",
+                "referredByUserId": "admin",
+                "candidateConsented": true,
+                "educationLevel": 5,
+                "experienceYears": 2,
+                "competenceCodes": ["vue"],
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Referral",
+                    "slug": "referral-yilmaz"
+                },
+                "vacancyId": "@ref:vacancy-vue-developer",
+                "candidateName": "Ahmed Yilmaz",
+                "email": "ahmed.yilmaz@example.org",
+                "motivation": "Oud-collega, sterk in Vue.",
+                "candidateConsented": true,
+                "referrerUserId": "admin",
+                "vacancyTitle": "Medior Vue-developer",
+                "applicationId": "@ref:application-referral-yilmaz",
+                "status": "nieuw"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "CandidateEvaluation",
+                    "slug": "evaluation-voorbeeld-manager"
+                },
+                "applicationId": "@ref:application-voorbeeld-nieuw",
+                "evaluatorUserId": "admin",
+                "scores": [{"criterion": "Vue-kennis", "score": 4, "note": "Bouwde een eigen componentbibliotheek."}, {"criterion": "Communicatie", "score": 3, "note": "Helder, soms wat kort."}],
+                "recommendation": "ja",
+                "submittedAt": "2026-07-02T10:00:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "CandidateEvaluation",
+                    "slug": "evaluation-voorbeeld-hr"
+                },
+                "applicationId": "@ref:application-voorbeeld-nieuw",
+                "evaluatorUserId": "hr-demo",
+                "scores": [{"criterion": "Vue-kennis", "score": 2, "note": "Weinig ervaring met state management."}, {"criterion": "Communicatie", "score": 4}],
+                "recommendation": "neutraal",
+                "submittedAt": "2026-07-02T11:00:00+00:00"
             },
             {
                 "@self": {
@@ -994,6 +1078,12 @@
                 },
                 "vacancyId": "@ref:vacancy-vue-developer",
                 "candidateName": "Jan Voorbeeld",
+                "educationLevel": 6,
+                "experienceYears": 4,
+                "competenceCodes": [
+                    "vue",
+                    "typescript"
+                ],
                 "email": "voorbeeld@example.org",
                 "phone": "+31 6 00000000",
                 "cvFile": "00000000-0000-0000-0000-000000000000",

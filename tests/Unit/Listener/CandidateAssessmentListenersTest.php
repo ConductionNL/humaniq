@@ -173,6 +173,18 @@ class CandidateAssessmentListenersTest extends TestCase {
 	}//end testAReferralCreatesTheApplication()
 
 	/**
+	 * A seeded referral that already names its application creates no second one.
+	 *
+	 * @return void
+	 */
+	public function testAReferralWithItsApplicationCreatesNoOther(): void {
+		$referral = $this->referral(['referrerUserId' => 'employee.one', 'applicationId' => 'app-seeded']);
+		$this->referralListener('admin')->handle(new ObjectCreatedEvent($this->entity('Referral', $referral, 'ref-2')));
+
+		self::assertSame([], ($this->store->state->objects['job-application'] ?? []));
+	}//end testAReferralWithItsApplicationCreatesNoOther()
+
+	/**
 	 * The referral follows the status HR gives the application.
 	 *
 	 * @return void

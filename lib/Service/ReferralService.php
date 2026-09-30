@@ -97,6 +97,13 @@ class ReferralService {
 	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
 	 */
 	public function createApplication(array $referral, string $referralId): string {
+		// A referral that already names its application (a seeded or imported
+		// one) is not turned into a second application.
+		$existing = trim((string)($referral['applicationId'] ?? ''));
+		if ($existing !== '') {
+			return $existing;
+		}
+
 		$vacancy = ($this->vacancy(referral: $referral) ?? []);
 		$application = array_filter(
 			[

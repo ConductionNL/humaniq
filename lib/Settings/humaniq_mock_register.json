@@ -134,7 +134,7 @@
       "job-application": {
         "slug": "job-application",
         "icon": "FileAccountOutline",
-        "version": "0.3.0",
+        "version": "0.5.0",
         "title": "Application",
         "description": "A candidate's application (sollicitatie) against a Vacancy. Candidate PII (name/email/phone/CV/motivation) lives DIRECTLY on this object: there is deliberately no separate Candidate entity in the MVP (AVG data-minimisation, design D2): one object carries one retention clock (retentionExpiryDate) and one deletion (deleting the Application deletes the candidate's data atomically). The declarative pipeline lifecycle runs nieuw -> screening -> gesprek -> aanbod -> aangenomen, with afwijzen reachable from every active stage. Rejecting an application stamps rejectedDate and derives retentionExpiryDate per the Autoriteit Persoonsgegevens sollicitatie-richtlijn (4 weeks, or 1 year with explicit talentPoolOptIn consent). Enforced by the nl-ats-retentie-derivatie and nl-ats-retentie-verlopen checks (lib/Standards/Checks/NlAtsChecks.php, lib/Standards/rules/privacy.json). Aannemen documents a MANUAL onboarding hand-off (creating the Employee from this data is a manual follow-up action in the MVP. No cross-object write hook).",
         "type": "object",
@@ -190,7 +190,7 @@
                   "aanbod"
                 ],
                 "to": "afgewezen",
-                "description": "The candidate is rejected (or, absent a public career page and candidate actor, a withdrawal is also recorded this way by HR). Terminal. rejectedDate and retentionExpiryDate are stamped on the carrying write: retentionExpiryDate = rejectedDate + 4 weeks, or + 1 year with talentPoolOptIn consent (Autoriteit Persoonsgegevens sollicitatie-richtlijn)."
+                "description": "The candidate is rejected, or HR records a candidate's withdrawal this way. Terminal. rejectedDate and retentionExpiryDate are stamped on the carrying write: retentionExpiryDate = rejectedDate + 4 weeks, or + 1 year with talentPoolOptIn consent (Autoriteit Persoonsgegevens sollicitatie-richtlijn)."
               }
             }
           }
@@ -329,6 +329,65 @@
               "skipped-no-docudesk",
               "failed"
             ]
+          },
+          "answers": {
+            "type": "object",
+            "title": "Answers",
+            "description": "The candidate's answers to the vacancy's own questions, by question.",
+            "x-notes": "hiring-portal-audiences D3: keyed by Vacancy.questions[].key. Candidate data on the application, so it follows the application's retention clock.",
+            "additionalProperties": true,
+            "default": {}
+          },
+          "educationLevel": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8,
+            "title": "Education level",
+            "description": "The candidate's highest education level on the Dutch qualification scale from 1 to 8, as HR read it from the CV.",
+            "x-notes": "hiring-candidate-assessment D3 (flattened profile): filled by HR; reading it from the CV waits on filinq (hiring-cv-profile-extraction)."
+          },
+          "experienceYears": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Years of experience",
+            "description": "Years of relevant experience, as HR read them from the CV."
+          },
+          "competenceCodes": {
+            "type": "array",
+            "title": "Competences",
+            "description": "Competence codes the candidate brings, such as loonheffing.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "default": []
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "How the application came in.",
+            "x-enum-labels": {
+              "direct": "Direct",
+              "portal": "Careers page",
+              "referral": "Referral"
+            },
+            "enum": [
+              "direct",
+              "portal",
+              "referral"
+            ],
+            "x-notes": "hiring-candidate-assessment D4: referral when created from a Referral."
+          },
+          "referredByUserId": {
+            "type": "string",
+            "title": "Referred by",
+            "description": "The colleague who referred this candidate.",
+            "x-notes": "Set by the server from the Referral's referrer; never from a form."
+          },
+          "candidateConsented": {
+            "type": "boolean",
+            "title": "Candidate agreed to the referral",
+            "description": "The referrer confirmed the candidate agreed to be put forward."
           }
         }
       },
@@ -7842,7 +7901,7 @@
       "Vacancy": {
         "slug": "Vacancy",
         "icon": "AccountBoxOutline",
-        "version": "0.5.0",
+        "version": "0.6.0",
         "title": "Vacancy",
         "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle. HR ticks the job boards in channels; the shipped flows Vacature plaatsen and Vacature intrekken post the vacancy to each board through integriq when it is published and withdraw it when it closes, one VacancyPosting per board (hiring-multiposting). portaliq publishes the vacancies with status gepubliceerd on a public careers page through humaniq's candidate audience (hiring-portal-audiences). Applications reference this Vacancy via Application.vacancyId.",
         "type": "object",
@@ -8013,6 +8072,54 @@
             "description": "Set when the vacancy has been sent to its job boards, so a later save does not post it again.",
             "x-notes": "hiring-multiposting D3: written by the Vacature plaatsen flow before it posts. Clear it to post the vacancy again; postings are updated, not duplicated.",
             "default": false
+          },
+          "evaluationCriteria": {
+            "type": "array",
+            "title": "Evaluation criteria",
+            "description": "What the interviewers score for this vacancy, such as payroll knowledge or communication.",
+            "x-notes": "hiring-candidate-assessment D1: each CandidateEvaluation scores these criteria 1 to 5.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "default": []
+          },
+          "minEducationLevel": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8,
+            "title": "Minimum education level",
+            "description": "The lowest education level that meets this vacancy, on the Dutch qualification scale from 1 to 8 (4 is mbo 4, 6 is a bachelor).",
+            "x-notes": "hiring-candidate-assessment D2: 25 match points when met. NLQF level."
+          },
+          "minExperienceYears": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Minimum years of experience",
+            "description": "How many years of relevant experience this vacancy asks for.",
+            "x-notes": "hiring-candidate-assessment D2: 25 match points when met, pro rata below it."
+          },
+          "requiredCompetences": {
+            "type": "array",
+            "title": "Required competences",
+            "description": "Competence codes a candidate must hold, such as loonheffing.",
+            "x-notes": "hiring-candidate-assessment D2: 40 match points shared equally. Codes as in EmployeeCompetence.competenceCode.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "default": []
+          },
+          "preferredCompetences": {
+            "type": "array",
+            "title": "Preferred competences",
+            "description": "Competence codes that count in a candidate's favour.",
+            "x-notes": "hiring-candidate-assessment D2: 10 match points shared equally.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "default": []
           }
         }
       },
@@ -9871,6 +9978,200 @@
             "title": "Administration",
             "description": "The employer administration the vacancy belongs to.",
             "x-notes": "Copied from the Vacancy by the flow."
+          }
+        }
+      },
+      "CandidateEvaluation": {
+        "slug": "CandidateEvaluation",
+        "icon": "StarOutline",
+        "version": "0.1.0",
+        "title": "Candidate evaluation",
+        "description": "One interviewer's scores on one application: 1 to 5 and a note per evaluation criterion of the vacancy, an overall recommendation and a note. The evaluator is set by the server from the signed-in user. Deleted with its application (hiring-candidate-assessment D1).",
+        "type": "object",
+        "x-schema-org": "schema:Review",
+        "required": [
+          "applicationId",
+          "scores"
+        ],
+        "properties": {
+          "applicationId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "job-application",
+            "onDelete": "CASCADE",
+            "title": "Application",
+            "description": "The application this evaluation is about.",
+            "x-notes": "onDelete CASCADE: the evaluations keep the application's retention clock."
+          },
+          "interviewId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Interview",
+            "title": "Interview",
+            "description": "The interview round this evaluation belongs to, if any."
+          },
+          "evaluatorUserId": {
+            "type": "string",
+            "title": "Evaluator",
+            "description": "Who gave these scores.",
+            "x-notes": "Stamped by CandidateEvaluationStampListener on create and kept on every edit."
+          },
+          "scores": {
+            "type": "array",
+            "title": "Scores",
+            "description": "A score from 1 to 5 and a note for each criterion.",
+            "items": {
+              "type": "object",
+              "required": [
+                "criterion",
+                "score"
+              ],
+              "properties": {
+                "criterion": {
+                  "type": "string",
+                  "minLength": 1,
+                  "title": "Criterion",
+                  "description": "The criterion scored, as named on the vacancy."
+                },
+                "score": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5,
+                  "title": "Score",
+                  "description": "1 is poor, 5 is excellent."
+                },
+                "note": {
+                  "type": "string",
+                  "title": "Note",
+                  "description": "Why this score."
+                }
+              }
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "title": "Recommendation",
+            "description": "Whether this interviewer would hire the candidate.",
+            "x-enum-labels": {
+              "sterk-ja": "Strong yes",
+              "ja": "Yes",
+              "neutraal": "Neutral",
+              "nee": "No",
+              "sterk-nee": "Strong no"
+            },
+            "enum": [
+              "sterk-ja",
+              "ja",
+              "neutraal",
+              "nee",
+              "sterk-nee"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "description": "Anything else the interviewer wants to record."
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Submitted",
+            "description": "When the evaluation was recorded.",
+            "x-notes": "Stamped by the server."
+          }
+        }
+      },
+      "Referral": {
+        "slug": "Referral",
+        "icon": "AccountArrowRightOutline",
+        "version": "0.1.0",
+        "title": "Referral",
+        "description": "A colleague puts a candidate forward for a published vacancy. The server stamps the referrer, refuses a referral the candidate did not agree to or for a vacancy that is not published, and creates the application HR works with at nieuw with source referral. The referral follows that application's status, so the referrer sees name, vacancy and status and nothing else of the process (hiring-candidate-assessment D4).",
+        "type": "object",
+        "x-schema-org": "schema:Action",
+        "required": [
+          "vacancyId",
+          "candidateName",
+          "email",
+          "candidateConsented"
+        ],
+        "properties": {
+          "vacancyId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Vacancy",
+            "title": "Vacancy",
+            "description": "The published vacancy you refer the candidate for."
+          },
+          "candidateName": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Candidate name",
+            "description": "The full name of the person you refer."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "E-mail",
+            "description": "Where HR can reach the candidate."
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone",
+            "description": "The candidate's phone number, if you have it."
+          },
+          "motivation": {
+            "type": "string",
+            "title": "Why this candidate",
+            "description": "Why you think this person fits the vacancy."
+          },
+          "candidateConsented": {
+            "type": "boolean",
+            "title": "The candidate agreed",
+            "description": "Tick to confirm the candidate agreed to be put forward and to HR contacting them."
+          },
+          "referrerUserId": {
+            "type": "string",
+            "title": "Referred by",
+            "description": "You. Set by the server.",
+            "x-notes": "Stamped by ReferralListener on create; a sent value is replaced."
+          },
+          "vacancyTitle": {
+            "type": "string",
+            "title": "Vacancy title",
+            "description": "The vacancy's title when you referred.",
+            "x-notes": "Stamped by the server so the referrer's list reads without access to the vacancy."
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "job-application",
+            "title": "Application",
+            "description": "The application created from this referral.",
+            "x-notes": "Set by ReferralListener after the create."
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Where the application stands.",
+            "x-enum-labels": {
+              "nieuw": "New",
+              "screening": "Screening",
+              "gesprek": "Interview",
+              "aanbod": "Offer",
+              "aangenomen": "Hired",
+              "afgewezen": "Rejected"
+            },
+            "enum": [
+              "nieuw",
+              "screening",
+              "gesprek",
+              "aanbod",
+              "aangenomen",
+              "afgewezen"
+            ],
+            "default": "nieuw",
+            "x-notes": "Mirrored from job-application.status by ReferralListener."
           }
         }
       }
@@ -14543,6 +14844,117 @@
         "withdrawnAt": "2026-03-03T09:00:00+00:00",
         "lastError": "Voorbeeld Lasterror 3",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CandidateEvaluation",
+          "slug": "candidateevaluation-candidateevaluation-1-1"
+        },
+        "applicationId": "00000000-0000-4000-8000-000000000000",
+        "scores": [
+          {
+            "criterion": "Voorbeeld Criterion 1",
+            "score": 1,
+            "note": "Voorbeeld Note 1"
+          }
+        ],
+        "interviewId": "00000000-0000-4000-8000-000000000000",
+        "evaluatorUserId": "Voorbeeld Evaluatoruserid 1",
+        "recommendation": "sterk-ja",
+        "note": "Voorbeeld Note 1",
+        "submittedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CandidateEvaluation",
+          "slug": "candidateevaluation-candidateevaluation-2-2"
+        },
+        "applicationId": "00000000-0000-4000-8000-000000000001",
+        "scores": [
+          {
+            "criterion": "Voorbeeld Criterion 2",
+            "score": 2,
+            "note": "Voorbeeld Note 2"
+          }
+        ],
+        "interviewId": "00000000-0000-4000-8000-000000000001",
+        "evaluatorUserId": "Voorbeeld Evaluatoruserid 2",
+        "recommendation": "ja",
+        "note": "Voorbeeld Note 2",
+        "submittedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CandidateEvaluation",
+          "slug": "candidateevaluation-candidateevaluation-3-3"
+        },
+        "applicationId": "00000000-0000-4000-8000-000000000002",
+        "scores": [
+          {
+            "criterion": "Voorbeeld Criterion 3",
+            "score": 3,
+            "note": "Voorbeeld Note 3"
+          }
+        ],
+        "interviewId": "00000000-0000-4000-8000-000000000002",
+        "evaluatorUserId": "Voorbeeld Evaluatoruserid 3",
+        "recommendation": "neutraal",
+        "note": "Voorbeeld Note 3",
+        "submittedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "Referral",
+          "slug": "referral-referral-1-1"
+        },
+        "vacancyId": "00000000-0000-4000-8000-000000000000",
+        "candidateName": "Voorbeeld Candidatename 1",
+        "email": "voorbeeld0@example.invalid",
+        "candidateConsented": true,
+        "phone": "Voorbeeld Phone 1",
+        "motivation": "Voorbeeld Motivation 1",
+        "referrerUserId": "Voorbeeld Referreruserid 1",
+        "vacancyTitle": "Voorbeeld Vacancytitle 1",
+        "applicationId": "00000000-0000-4000-8000-000000000000",
+        "status": "nieuw"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "Referral",
+          "slug": "referral-referral-2-2"
+        },
+        "vacancyId": "00000000-0000-4000-8000-000000000001",
+        "candidateName": "Voorbeeld Candidatename 2",
+        "email": "voorbeeld1@example.invalid",
+        "candidateConsented": false,
+        "phone": "Voorbeeld Phone 2",
+        "motivation": "Voorbeeld Motivation 2",
+        "referrerUserId": "Voorbeeld Referreruserid 2",
+        "vacancyTitle": "Voorbeeld Vacancytitle 2",
+        "applicationId": "00000000-0000-4000-8000-000000000001",
+        "status": "screening"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "Referral",
+          "slug": "referral-referral-3-3"
+        },
+        "vacancyId": "00000000-0000-4000-8000-000000000002",
+        "candidateName": "Voorbeeld Candidatename 3",
+        "email": "voorbeeld2@example.invalid",
+        "candidateConsented": true,
+        "phone": "Voorbeeld Phone 3",
+        "motivation": "Voorbeeld Motivation 3",
+        "referrerUserId": "Voorbeeld Referreruserid 3",
+        "vacancyTitle": "Voorbeeld Vacancytitle 3",
+        "applicationId": "00000000-0000-4000-8000-000000000002",
+        "status": "gesprek"
       }
     ]
   }

@@ -139,6 +139,18 @@
 					"query": {
 						"managerUserId": "@me"
 					}
+				},
+				{
+					"id": "MijnVacatures",
+					"label": "Open vacancies",
+					"icon": "BriefcaseSearchOutline",
+					"route": "MijnVacatures"
+				},
+				{
+					"id": "MijnAanbevelingen",
+					"label": "My referrals",
+					"icon": "AccountArrowRightOutline",
+					"route": "MijnAanbevelingen"
 				}
 			]
 		},
