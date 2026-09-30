@@ -3118,9 +3118,8 @@ OC.L10N.register(
         "Education": "Opleiding",
         "Experience": "Ervaring",
         "No applicant or colleague has a profile to compare yet.": "Nog geen sollicitant of collega heeft een profiel om te vergelijken.",
-        "The vacancies we are hiring for. Know someone who fits? Refer them on My referrals.": "De vacatures waarvoor we mensen zoeken. Ken je iemand die past? Beveel diegene aan bij Mijn aanbevelingen.",
         "My referrals": "Mijn aanbevelingen",
-        "Put someone forward for a vacancy and follow where their application stands.": "Beveel iemand aan voor een vacature en volg waar de sollicitatie staat."
+        "Put someone forward for a published vacancy and follow where their application stands. Open vacancies lists what we are hiring for.": "Beveel iemand aan voor een gepubliceerde vacature en volg waar de sollicitatie staat. Open vacatures toont waarvoor we mensen zoeken."
     },
     "nplurals=2; plural=(n != 1);"
 )

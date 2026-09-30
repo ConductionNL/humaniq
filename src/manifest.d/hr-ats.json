@@ -538,33 +538,6 @@
 			"type": "detail"
 		},
 		{
-			"id": "MijnVacatures",
-			"route": "/mijn/vacatures",
-			"type": "index",
-			"title": "Open vacancies",
-			"config": {
-				"register": "humaniq",
-				"schema": "Vacancy",
-				"_note": "hiring-candidate-assessment D4: the published vacancies an employee can refer someone for. Read only; the referral itself is made on My referrals.",
-				"description": "The vacancies we are hiring for. Know someone who fits? Refer them on My referrals.",
-				"filter": {
-					"status": "gepubliceerd"
-				},
-				"columns": [
-					"title",
-					"department",
-					"closingDate"
-				],
-				"sort": {
-					"field": "closingDate",
-					"order": "asc"
-				},
-				"actionToggles": {
-					"showAdd": false
-				}
-			}
-		},
-		{
 			"id": "MijnAanbevelingen",
 			"route": "/mijn/aanbevelingen",
 			"type": "index",
@@ -573,7 +546,7 @@
 				"register": "humaniq",
 				"schema": "Referral",
 				"_note": "hiring-candidate-assessment D4: the employee's own referrals. The server stamps referrerUserId, refuses a referral without the candidate's agreement or for a vacancy that is not published, creates the application and keeps status in step with it; includeFields is the allowlist of what the referrer types.",
-				"description": "Put someone forward for a vacancy and follow where their application stands.",
+				"description": "Put someone forward for a published vacancy and follow where their application stands. Open vacancies lists what we are hiring for.",
 				"filter": {
 					"referrerUserId": "@me"
 				},

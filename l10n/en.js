@@ -3118,9 +3118,8 @@ OC.L10N.register(
         "Education": "Education",
         "Experience": "Experience",
         "No applicant or colleague has a profile to compare yet.": "No applicant or colleague has a profile to compare yet.",
-        "The vacancies we are hiring for. Know someone who fits? Refer them on My referrals.": "The vacancies we are hiring for. Know someone who fits? Refer them on My referrals.",
         "My referrals": "My referrals",
-        "Put someone forward for a vacancy and follow where their application stands.": "Put someone forward for a vacancy and follow where their application stands."
+        "Put someone forward for a published vacancy and follow where their application stands. Open vacancies lists what we are hiring for.": "Put someone forward for a published vacancy and follow where their application stands. Open vacancies lists what we are hiring for."
     },
     "nplurals=2; plural=(n != 1);"
 )

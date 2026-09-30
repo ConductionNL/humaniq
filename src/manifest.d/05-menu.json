@@ -144,7 +144,10 @@
 					"id": "MijnVacatures",
 					"label": "Open vacancies",
 					"icon": "BriefcaseSearchOutline",
-					"route": "MijnVacatures"
+					"route": "Vacancies",
+					"query": {
+						"status": "gepubliceerd"
+					}
 				},
 				{
 					"id": "MijnAanbevelingen",
