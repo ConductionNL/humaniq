@@ -5,9 +5,9 @@
             "Vacancy": {
                 "slug": "Vacancy",
                 "icon": "AccountBoxOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Vacancy",
-                "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle, no external multiposting (werk.nl/LinkedIn is an OpenConnector follow-up) and no public career page (portaliq per ADR-046). Applications reference this Vacancy via Application.vacancyId.",
+                "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle, no external multiposting (werk.nl/LinkedIn is an OpenConnector follow-up); portaliq publishes the vacancies with status gepubliceerd on a public careers page through humaniq's candidate audience (hiring-portal-audiences). Applications reference this Vacancy via Application.vacancyId.",
                 "type": "object",
                 "x-schema-org": "schema:JobPosting",
                 "required": [
@@ -66,13 +66,15 @@
                     "title": {
                         "type": "string",
                         "title": "Title",
-                        "description": "The job title as it appears in the advert.", "x-notes": "Job title (schema:title)."
+                        "description": "The job title as it appears in the advert.",
+                        "x-notes": "Job title (schema:title)."
                     },
                     "description": {
                         "type": "string",
                         "nullable": true,
                         "title": "Description",
-                        "description": "The advert text.", "x-notes": "Free-text vacancy text (schema:description)."
+                        "description": "The advert text.",
+                        "x-notes": "Free-text vacancy text (schema:description)."
                     },
                     "department": {
                         "type": "string",
@@ -83,8 +85,13 @@
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Where this vacancy has got to: draft, published or closed.", "x-notes": "Publish workflow status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd -> gesloten).",
-                        "x-enum-labels": {"concept": "Draft", "gepubliceerd": "Published", "gesloten": "Closed"},
+                        "description": "Where this vacancy has got to: draft, published or closed.",
+                        "x-notes": "Publish workflow status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd -> gesloten).",
+                        "x-enum-labels": {
+                            "concept": "Draft",
+                            "gepubliceerd": "Published",
+                            "gesloten": "Closed"
+                        },
                         "enum": [
                             "concept",
                             "gepubliceerd",
@@ -97,14 +104,16 @@
                         "format": "date",
                         "nullable": true,
                         "title": "Published date",
-                        "description": "When the vacancy was published.", "x-notes": "Date the vacancy was published, stamped on the publiceren carrying write."
+                        "description": "When the vacancy was published.",
+                        "x-notes": "Date the vacancy was published, stamped on the publiceren carrying write."
                     },
                     "closingDate": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "title": "Closing date",
-                        "description": "The application deadline. For information only: it does not close the vacancy by itself.", "x-notes": "Application deadline. Informational only in the MVP — it does not drive the sluiten transition."
+                        "description": "The application deadline. For information only: it does not close the vacancy by itself.",
+                        "x-notes": "Application deadline. Informational only in the MVP — it does not drive the sluiten transition."
                     },
                     "formatieplaatsId": {
                         "type": "string",
@@ -119,14 +128,66 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Which administration this vacancy belongs to.", "x-notes": "Denormalized administratie key this Vacancy is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); a vacancy has no employee to derive it from, so nl-administratie-scope-consistency does not evaluate this schema."
+                        "description": "Which administration this vacancy belongs to.",
+                        "x-notes": "Denormalized administratie key this Vacancy is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); a vacancy has no employee to derive it from, so nl-administratie-scope-consistency does not evaluate this schema."
+                    },
+                    "questions": {
+                        "type": "array",
+                        "title": "Application questions",
+                        "description": "Your own questions on the application form for this vacancy, such as whether the candidate has a driving licence.",
+                        "x-notes": "hiring-portal-audiences D3: the manifest fields[] shape CnFormBuilder writes. Answers land on job-application.answers keyed by question key.",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "key",
+                                "label"
+                            ],
+                            "properties": {
+                                "key": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "title": "Key",
+                                    "description": "A short name the answer is stored under."
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "title": "Answer type",
+                                    "description": "The kind of answer: a line of text, longer text, a choice, a number or a date."
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "title": "Question",
+                                    "description": "The question as the candidate reads it."
+                                },
+                                "placeholder": {
+                                    "type": "string",
+                                    "title": "Placeholder",
+                                    "description": "An example answer shown in the empty field."
+                                },
+                                "required": {
+                                    "type": "boolean",
+                                    "title": "Required",
+                                    "description": "The candidate must answer before applying."
+                                },
+                                "options": {
+                                    "type": "array",
+                                    "title": "Choices",
+                                    "description": "The answers a candidate can pick from, for a choice.",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "default": []
                     }
                 }
             },
             "job-application": {
                 "slug": "job-application",
                 "icon": "FileAccountOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Application",
                 "description": "A candidate's application (sollicitatie) against a Vacancy. Candidate PII (name/email/phone/CV/motivation) lives DIRECTLY on this object: there is deliberately no separate Candidate entity in the MVP (AVG data-minimisation, design D2): one object carries one retention clock (retentionExpiryDate) and one deletion (deleting the Application deletes the candidate's data atomically). The declarative pipeline lifecycle runs nieuw -> screening -> gesprek -> aanbod -> aangenomen, with afwijzen reachable from every active stage. Rejecting an application stamps rejectedDate and derives retentionExpiryDate per the Autoriteit Persoonsgegevens sollicitatie-richtlijn (4 weeks, or 1 year with explicit talentPoolOptIn consent). Enforced by the nl-ats-retentie-derivatie and nl-ats-retentie-verlopen checks (lib/Standards/Checks/NlAtsChecks.php, lib/Standards/rules/privacy.json). Aannemen documents a MANUAL onboarding hand-off (creating the Employee from this data is a manual follow-up action in the MVP. No cross-object write hook).",
                 "type": "object",
@@ -182,7 +243,7 @@
                                     "aanbod"
                                 ],
                                 "to": "afgewezen",
-                                "description": "The candidate is rejected (or, absent a public career page and candidate actor, a withdrawal is also recorded this way by HR). Terminal. rejectedDate and retentionExpiryDate are stamped on the carrying write: retentionExpiryDate = rejectedDate + 4 weeks, or + 1 year with talentPoolOptIn consent (Autoriteit Persoonsgegevens sollicitatie-richtlijn)."
+                                "description": "The candidate is rejected, or HR records a candidate's withdrawal this way. Terminal. rejectedDate and retentionExpiryDate are stamped on the carrying write: retentionExpiryDate = rejectedDate + 4 weeks, or + 1 year with talentPoolOptIn consent (Autoriteit Persoonsgegevens sollicitatie-richtlijn)."
                             }
                         }
                     }
@@ -193,12 +254,14 @@
                         "format": "uuid",
                         "$ref": "Vacancy",
                         "title": "Vacancy",
-                        "description": "The vacancy this application is for.", "x-notes": "UUID reference to the Vacancy this application is for."
+                        "description": "The vacancy this application is for.",
+                        "x-notes": "UUID reference to the Vacancy this application is for."
                     },
                     "candidateName": {
                         "type": "string",
                         "title": "Candidate name",
-                        "description": "The candidate's full name. Their personal data lives only on this record: deleting it deletes the data.", "x-notes": "Full name of the candidate. Candidate PII lives on this object only (design D2) — deleting the Application deletes this data."
+                        "description": "The candidate's full name. Their personal data lives only on this record: deleting it deletes the data.",
+                        "x-notes": "Full name of the candidate. Candidate PII lives on this object only (design D2) — deleting the Application deletes this data."
                     },
                     "email": {
                         "type": "string",
@@ -216,19 +279,29 @@
                         "type": "string",
                         "nullable": true,
                         "title": "CV file",
-                        "description": "The uploaded CV.", "x-notes": "Reference (Nextcloud Files path or OpenRegister file id) to the uploaded CV, the Expense.receiptFile pattern."
+                        "description": "The uploaded CV.",
+                        "x-notes": "Reference (Nextcloud Files path or OpenRegister file id) to the uploaded CV, the Expense.receiptFile pattern."
                     },
                     "motivation": {
                         "type": "string",
                         "nullable": true,
                         "title": "Motivation",
-                        "description": "The candidate's motivation or cover letter.", "x-notes": "Free-text motivation letter / cover note."
+                        "description": "The candidate's motivation or cover letter.",
+                        "x-notes": "Free-text motivation letter / cover note."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Where this application has got to: new, screening, interview, offer or hired. It can be rejected at any active stage.", "x-notes": "Pipeline status. Governed by the x-openregister-lifecycle state machine (nieuw -> screening -> gesprek -> aanbod -> aangenomen, afwijzen reachable from every active stage).",
-                        "x-enum-labels": {"nieuw": "New", "screening": "Screening", "gesprek": "Interview", "aanbod": "Offer", "aangenomen": "Hired", "afgewezen": "Rejected"},
+                        "description": "Where this application has got to: new, screening, interview, offer or hired. It can be rejected at any active stage.",
+                        "x-notes": "Pipeline status. Governed by the x-openregister-lifecycle state machine (nieuw -> screening -> gesprek -> aanbod -> aangenomen, afwijzen reachable from every active stage).",
+                        "x-enum-labels": {
+                            "nieuw": "New",
+                            "screening": "Screening",
+                            "gesprek": "Interview",
+                            "aanbod": "Offer",
+                            "aangenomen": "Hired",
+                            "afgewezen": "Rejected"
+                        },
                         "enum": [
                             "nieuw",
                             "screening",
@@ -244,45 +317,61 @@
                         "format": "date",
                         "nullable": true,
                         "title": "Rejected date",
-                        "description": "When the application was rejected. Empty unless it was.", "x-notes": "Date the application was rejected, stamped on the afwijzen carrying write. Null on every non-afgewezen status."
+                        "description": "When the application was rejected. Empty unless it was.",
+                        "x-notes": "Date the application was rejected, stamped on the afwijzen carrying write. Null on every non-afgewezen status."
                     },
                     "talentPoolOptIn": {
                         "type": "boolean",
                         "default": false,
                         "title": "Talent pool opt-in",
-                        "description": "The candidate agreed to be kept on file longer. This extends retention from four weeks to one year.", "x-notes": "Explicit candidate consent to extended talent-pool retention. Extends the retentionExpiryDate derivation from 4 weeks to the Autoriteit Persoonsgegevens maximum of 1 year."
+                        "description": "The candidate agreed to be kept on file longer. This extends retention from four weeks to one year.",
+                        "x-notes": "Explicit candidate consent to extended talent-pool retention. Extends the retentionExpiryDate derivation from 4 weeks to the Autoriteit Persoonsgegevens maximum of 1 year."
                     },
                     "retentionExpiryDate": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "title": "Retention expiry date",
-                        "description": "When this application must be deleted: four weeks after rejection, or a year with the candidate's consent.", "x-notes": "Stored-but-rule-checked AVG retention deadline (design D4): rejectedDate + 4 weeks without talentPoolOptIn, or + 1 year with it (Autoriteit Persoonsgegevens sollicitatie-richtlijn, AVG art. 5 lid 1 sub e). Checked by nl-ats-retentie-derivatie / nl-ats-retentie-verlopen. Null on every non-afgewezen status."
+                        "description": "When this application must be deleted: four weeks after rejection, or a year with the candidate's consent.",
+                        "x-notes": "Stored-but-rule-checked AVG retention deadline (design D4): rejectedDate + 4 weeks without talentPoolOptIn, or + 1 year with it (Autoriteit Persoonsgegevens sollicitatie-richtlijn, AVG art. 5 lid 1 sub e). Checked by nl-ats-retentie-derivatie / nl-ats-retentie-verlopen. Null on every non-afgewezen status."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Which administration this application belongs to. Normally taken from the vacancy.", "x-notes": "Denormalized administratie key this Application is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); an Application has no employee (the candidate is not yet hired), so this is set from the vacancy's administratie when known, and nl-administratie-scope-consistency does not evaluate this schema."
+                        "description": "Which administration this application belongs to. Normally taken from the vacancy.",
+                        "x-notes": "Denormalized administratie key this Application is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); an Application has no employee (the candidate is not yet hired), so this is set from the vacancy's administratie when known, and nl-administratie-scope-consistency does not evaluate this schema."
                     },
                     "offerLetterFileId": {
                         "type": "integer",
                         "nullable": true,
                         "title": "Offer letter file id",
-                        "description": "The generated offer letter. Filled in once the letter has been created.", "x-notes": "offer-esign (0.3.0): the Nextcloud file id (File::getId()) of the generated aanbiedingsbrief PDF, stored via OpenRegister's FileService::addFile(). Null until OfferEsignService::requestSignature() successfully stores one."
+                        "description": "The generated offer letter. Filled in once the letter has been created.",
+                        "x-notes": "offer-esign (0.3.0): the Nextcloud file id (File::getId()) of the generated aanbiedingsbrief PDF, stored via OpenRegister's FileService::addFile(). Null until OfferEsignService::requestSignature() successfully stores one."
                     },
                     "offerSigningRequestId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Offer signing request id",
-                        "description": "The signing request for the offer letter. Filled in once signing has been started.", "x-notes": "offer-esign (0.3.0): the docudesk signing-request id returned by SigningService::createRequest(). A plain string, NOT a $ref -- docudesk owns a different register/app than the in-register $ref targets ADR-062 rule 7 governs (the GeneratedDocument.templateRef precedent). Null until a signing request has been created."
+                        "description": "The signing request for the offer letter. Filled in once signing has been started.",
+                        "x-notes": "offer-esign (0.3.0): the docudesk signing-request id returned by SigningService::createRequest(). A plain string, NOT a $ref -- docudesk owns a different register/app than the in-register $ref targets ADR-062 rule 7 governs (the GeneratedDocument.templateRef precedent). Null until a signing request has been created."
                     },
                     "offerSigningStatus": {
                         "type": "string",
                         "nullable": true,
                         "title": "Offer signing status",
-                        "description": "Where signing the offer letter has got to. Separate from the application status: a signed offer does not move the pipeline on its own.", "x-notes": "offer-esign (0.3.0): the offer letter's e-signature lifecycle state. The first six values are verbatim docudesk SigningService::STATUS_TRANSITIONS states (PENDING/IN_PROGRESS/COMPLETED/DECLINED/CANCELLED/EXPIRED); skipped-no-docudesk and failed are this leaf's own duck-typed/failure outcomes. Null means no offer-esign attempt has been made yet. Orthogonal to Application.status -- observing COMPLETED here never advances the pipeline status (REQ-OFFR-006).",
-                        "x-enum-labels": {"PENDING": "Pending", "IN_PROGRESS": "In progress", "COMPLETED": "Completed", "DECLINED": "Declined", "CANCELLED": "Cancelled", "EXPIRED": "Expired", "skipped-no-docudesk": "Skipped (no document app)", "failed": "Failed"},
+                        "description": "Where signing the offer letter has got to. Separate from the application status: a signed offer does not move the pipeline on its own.",
+                        "x-notes": "offer-esign (0.3.0): the offer letter's e-signature lifecycle state. The first six values are verbatim docudesk SigningService::STATUS_TRANSITIONS states (PENDING/IN_PROGRESS/COMPLETED/DECLINED/CANCELLED/EXPIRED); skipped-no-docudesk and failed are this leaf's own duck-typed/failure outcomes. Null means no offer-esign attempt has been made yet. Orthogonal to Application.status -- observing COMPLETED here never advances the pipeline status (REQ-OFFR-006).",
+                        "x-enum-labels": {
+                            "PENDING": "Pending",
+                            "IN_PROGRESS": "In progress",
+                            "COMPLETED": "Completed",
+                            "DECLINED": "Declined",
+                            "CANCELLED": "Cancelled",
+                            "EXPIRED": "Expired",
+                            "skipped-no-docudesk": "Skipped (no document app)",
+                            "failed": "Failed"
+                        },
                         "enum": [
                             "PENDING",
                             "IN_PROGRESS",
@@ -293,6 +382,14 @@
                             "skipped-no-docudesk",
                             "failed"
                         ]
+                    },
+                    "answers": {
+                        "type": "object",
+                        "title": "Answers",
+                        "description": "The candidate's answers to the vacancy's own questions, by question.",
+                        "x-notes": "hiring-portal-audiences D3: keyed by Vacancy.questions[].key. Candidate data on the application, so it follows the application's retention clock.",
+                        "additionalProperties": true,
+                        "default": {}
                     }
                 }
             },
@@ -342,31 +439,39 @@
                         "format": "uuid",
                         "$ref": "job-application",
                         "title": "Application",
-                        "description": "The application this interview belongs to.", "x-notes": "UUID reference to the Application this interview round belongs to."
+                        "description": "The application this interview belongs to.",
+                        "x-notes": "UUID reference to the Application this interview round belongs to."
                     },
                     "scheduledStart": {
                         "type": "string",
                         "format": "date-time",
                         "title": "Scheduled start",
-                        "description": "When the interview starts. This is what goes in the calendar.", "x-notes": "Start of the interview slot. Rendered as the VEVENT DTSTART by InterviewCalendarService."
+                        "description": "When the interview starts. This is what goes in the calendar.",
+                        "x-notes": "Start of the interview slot. Rendered as the VEVENT DTSTART by InterviewCalendarService."
                     },
                     "scheduledEnd": {
                         "type": "string",
                         "format": "date-time",
                         "title": "Scheduled end",
-                        "description": "When the interview ends. This is what goes in the calendar.", "x-notes": "End of the interview slot. Rendered as the VEVENT DTEND by InterviewCalendarService."
+                        "description": "When the interview ends. This is what goes in the calendar.",
+                        "x-notes": "End of the interview slot. Rendered as the VEVENT DTEND by InterviewCalendarService."
                     },
                     "interviewers": {
                         "type": "string",
                         "nullable": true,
                         "title": "Interviewers",
-                        "description": "Who will conduct the interview. Shown as plain text in the calendar item; no invitations are sent.", "x-notes": "Free-text interviewer name(s). Rendered as plain DESCRIPTION text only — never as an ATTENDEE/ORGANIZER property, so no iMIP scheduling mail is ever triggered (design.md D5)."
+                        "description": "Who will conduct the interview. Shown as plain text in the calendar item; no invitations are sent.",
+                        "x-notes": "Free-text interviewer name(s). Rendered as plain DESCRIPTION text only — never as an ATTENDEE/ORGANIZER property, so no iMIP scheduling mail is ever triggered (design.md D5)."
                     },
                     "mode": {
                         "type": "string",
                         "title": "Mode",
                         "description": "How the interview is conducted. Drives how 'location' is interpreted (a room for onsite, a phone number for phone, a call URL for video).",
-                        "x-enum-labels": {"onsite": "On site", "phone": "Phone", "video": "Video"},
+                        "x-enum-labels": {
+                            "onsite": "On site",
+                            "phone": "Phone",
+                            "video": "Video"
+                        },
                         "enum": [
                             "onsite",
                             "phone",
@@ -378,13 +483,19 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Location",
-                        "description": "The room, or the video-call link when the interview is online.", "x-notes": "Physical location/room, or a video-call URL when mode is 'video'. Rendered as the VEVENT LOCATION property."
+                        "description": "The room, or the video-call link when the interview is online.",
+                        "x-notes": "Physical location/room, or a video-call URL when mode is 'video'. Rendered as the VEVENT LOCATION property."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Where this interview has got to: scheduled, completed or cancelled. Rescheduling just changes the times.", "x-notes": "Interview lifecycle status. Governed by the x-openregister-lifecycle state machine (scheduled -> completed/cancelled). Rescheduling is a plain field update to scheduledStart/scheduledEnd, not a status transition.",
-                        "x-enum-labels": {"scheduled": "Scheduled", "completed": "Completed", "cancelled": "Cancelled"},
+                        "description": "Where this interview has got to: scheduled, completed or cancelled. Rescheduling just changes the times.",
+                        "x-notes": "Interview lifecycle status. Governed by the x-openregister-lifecycle state machine (scheduled -> completed/cancelled). Rescheduling is a plain field update to scheduledStart/scheduledEnd, not a status transition.",
+                        "x-enum-labels": {
+                            "scheduled": "Scheduled",
+                            "completed": "Completed",
+                            "cancelled": "Cancelled"
+                        },
                         "enum": [
                             "scheduled",
                             "completed",
@@ -396,7 +507,8 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Calendar event UID",
-                        "description": "Links this interview to its calendar item. Managed automatically: do not edit.", "x-notes": "System-managed, never user-editable. Set by InterviewCalendarService on first successful sync (deterministic value hrmq-interview-{uuid}) and used on every later sync to look up and diff the existing calendar event, so a no-op resync writes nothing (design.md D3). Null means this Interview has never reached the calendar."
+                        "description": "Links this interview to its calendar item. Managed automatically: do not edit.",
+                        "x-notes": "System-managed, never user-editable. Set by InterviewCalendarService on first successful sync (deterministic value hrmq-interview-{uuid}) and used on every later sync to look up and diff the existing calendar event, so a no-op resync writes nothing (design.md D3). Null means this Interview has never reached the calendar."
                     }
                 }
             }

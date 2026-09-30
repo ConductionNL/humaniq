@@ -105,12 +105,14 @@ import CompCycleRunDialog from './dialogs/CompCycleRunDialog.vue'
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
+import ApplicationAnswersWidget from './widgets/ApplicationAnswersWidget.vue'
 import ApprovalsInboxWidget from './widgets/ApprovalsInboxWidget.vue'
 import EmployeeHistoryWidget from './widgets/EmployeeHistoryWidget.vue'
 import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 import OnCallAverages from './widgets/OnCallAverages.vue'
 import OrgChartWidget from './widgets/OrgChartWidget.vue'
 import TrendChartWidget from './widgets/TrendChartWidget.vue'
+import VacancyQuestionsWidget from './widgets/VacancyQuestionsWidget.vue'
 import { proposeRaiseForSelection } from './dialogs/proposeRaiseForSelection.js'
 import { registerTrainingAttended, registerTrainingNotAttended } from './dialogs/registerTrainingAttendance.js'
 import EndpointTableWidget from './widgets/EndpointTableWidget.js'
@@ -209,6 +211,28 @@ export default {
 		allowedSlots: ['body'],
 		propsSchema: null,
 		_note: 'people-flex-contract-rules D4 (REQ-FLX-002): the on-call average hours over a period HR picks, with a CSV download, over GET /api/contracts/on-call-averages.',
+	},
+	// @custom-widget-ratchet exclude the library's CnFormBuilder has no widget key, and the questions it edits are written back onto the vacancy
+	'vacancy-questions': {
+		kind: 'widget',
+		component: VacancyQuestionsWidget,
+		defaultSize: { w: 12, h: 8 },
+		minSize: { w: 6, h: 4 },
+		maxSize: { w: 12, h: 14 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'hiring-portal-audiences D3 (REQ-PTA-002): HR edits Vacancy.questions with CnFormBuilder on VacancyDetail and saves them with a PATCH on the vacancy; portaliq shows them on the public apply form.',
+	},
+	// @custom-widget-ratchet exclude the data widget renders an answers map as raw JSON, and each answer needs the question label from another object (the vacancy)
+	'application-answers': {
+		kind: 'widget',
+		component: ApplicationAnswersWidget,
+		defaultSize: { w: 8, h: 4 },
+		minSize: { w: 4, h: 2 },
+		maxSize: { w: 12, h: 10 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'hiring-portal-audiences D3 (REQ-PTA-002): the candidate\'s answers on ApplicationDetail, each under the question label read from the vacancy.',
 	},
 	// @custom-widget-ratchet exclude on a detail page no built-in widget key reaches a table that reads endpointSource: CnDetailWidgetHost canonicalises object-table to table, whose renderer CnObjectListWidget ignores endpointSource in nextcloud-vue 2.57.1; this mounts the library's own CnWidgetObjectTable
 	'endpoint-table': {

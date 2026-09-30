@@ -108,7 +108,7 @@ class PortalAudiencesTest extends TestCase {
 			'title' => 'Baliemedewerker Burgerzaken',
 			'status' => 'gepubliceerd',
 			'questions' => [
-				['key' => 'rijbewijs', 'type' => 'select', 'label' => 'Heeft u een rijbewijs B?', 'required' => true, 'options' => ['ja', 'nee']],
+				['key' => 'rijbewijs', 'type' => 'enum', 'label' => 'Heeft u een rijbewijs B?', 'required' => true, 'options' => ['ja', 'nee']],
 				['key' => 'beschikbaarheid', 'type' => 'textarea', 'label' => 'Per wanneer bent u beschikbaar?', 'required' => false],
 			],
 		];
@@ -197,7 +197,14 @@ class PortalAudiencesTest extends TestCase {
 	 * @return void
 	 */
 	private function assertFieldsExist(string $schema, array $fields): void {
-		$properties = array_keys(RegisterSchemaValidator::schema($schema)['properties']);
+		// A schema can be declared across fragments (Employee is extended by
+		// hr-cost-rate.json), so the properties are merged over all of them.
+		$properties = [];
+		foreach (glob(dirname(__DIR__, 3) . '/lib/Settings/register.d/*.json') as $file) {
+			$fragment = json_decode((string)file_get_contents($file), true);
+			$properties = array_merge($properties, array_keys((array)($fragment['components']['schemas'][$schema]['properties'] ?? [])));
+		}
+
 		self::assertSame([], array_values(array_diff($fields, $properties)), $schema . ' lacks a field the portal names');
 	}//end assertFieldsExist()
 

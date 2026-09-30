@@ -12,13 +12,19 @@
  * dependency, no constructor dependencies. Without portaliq installed it is
  * inert and humaniq behaves exactly as before (amendment A1).
  *
- * It declares two audiences: `external-employee` (payroll externals without an
+ * It declares these audiences, among them `external-employee` (payroll externals without an
  * NC account — payslips, contracts, own employee record, timesheets, expenses,
  * leave requests; create timesheet/expense/leave request) and `client` (the
  * client who reviews billable hours — read-only timesheets scoped by
  * clientRef). All scoping uses UUID domain-object references resolved from the
  * subject's server-managed claim map (`claims.humaniq.employeeId` /
  * `claims.humaniq.clientId`, amendment A4) — never Nextcloud user ids.
+ *
+ * hiring-portal-audiences adds `candidate` (the anonymous careers page and
+ * apply form: the only anonymous entries humaniq contributes), `new-hire`
+ * (preboarding: own record, onboarding case, papers and bank details) and
+ * `former-employee` (read-only own payslips, annual statements and letters).
+ * `manager` reads the timesheets of a cost centre.
  *
  * @category Portal
  * @package  OCA\Humaniq\Portal
@@ -62,13 +68,20 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, string> The audience identifiers.
 	 *
+	 * hiring-portal-audiences D1 adds a candidate (the careers page), a new
+	 * hire (preboarding) and a former employee (their own paperwork).
+	 *
 	 * @spec openspec/changes/portal-contribution/tasks.md#task-2
+	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-001
 	 */
 	public function getAudiences(): array {
 		return [
 			'external-employee',
 			'client',
 			'manager',
+			'candidate',
+			'new-hire',
+			'former-employee',
 		];
 
 	}//end getAudiences()
@@ -127,8 +140,35 @@ class PortalContributionProvider {
 			return $this->managerManifest();
 		}
 
-		return null;
+		return $this->recruitingManifest($audience);
 	}//end getContribution()
+
+	/**
+	 * The manifests of the recruiting and leaver audiences
+	 * (hiring-portal-audiences D1), or null for an audience humaniq does not
+	 * serve.
+	 *
+	 * @param string $audience The audience.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-001
+	 */
+	private function recruitingManifest(string $audience): ?array {
+		if ($audience === 'candidate') {
+			return $this->candidateManifest();
+		}
+
+		if ($audience === 'new-hire') {
+			return $this->newHireManifest();
+		}
+
+		if ($audience === 'former-employee') {
+			return $this->formerEmployeeManifest();
+		}
+
+		return null;
+	}//end recruitingManifest()
 
 	/**
 	 * The external-employee manifest: HR self-service over the subject's own
@@ -368,4 +408,167 @@ class PortalContributionProvider {
 		];
 
 	}//end managerManifest()
+
+	/**
+	 * The candidate manifest (hiring-portal-audiences D2): the only anonymous
+	 * entries humaniq contributes. The published vacancies, projected so the
+	 * administration and publish date never leave humaniq, and the apply
+	 * action with a whitelist that keeps status, retention, offer and
+	 * administration out of a visitor's hands; the lifecycle's initial state
+	 * makes every portal application `nieuw`.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-001
+	 */
+	private function candidateManifest(): array {
+		return [
+			'label' => 'Humaniq',
+			'collections' => [
+				[
+					'id' => 'openVacancies',
+					'register' => 'humaniq',
+					'schema' => 'Vacancy',
+					'anonymous' => true,
+					'minTrust' => 'low',
+					'filter' => ['status' => 'gepubliceerd'],
+					'fields' => ['title', 'description', 'department', 'closingDate', 'questions'],
+					'label' => 'Vacancies',
+					'listable' => true,
+				],
+			],
+			'actions' => [
+				[
+					'id' => 'applyToVacancy',
+					'type' => 'create',
+					'label' => 'Apply',
+					'register' => 'humaniq',
+					'schema' => 'job-application',
+					'anonymous' => true,
+					'minTrust' => 'low',
+					'fields' => [
+						'vacancyId',
+						'candidateName',
+						'email',
+						'phone',
+						'motivation',
+						'talentPoolOptIn',
+						'answers',
+					],
+				],
+			],
+			'notifications' => [],
+		];
+
+	}//end candidateManifest()
+
+	/**
+	 * The new-hire manifest (hiring-portal-audiences D4): the hire's own
+	 * employee record and onboarding case, papers uploaded onto that case, and
+	 * three of their own fields at substantial trust, because a bank account
+	 * and a BSN are what a fraudster wants. HR still ticks the checklist.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-003
+	 */
+	private function newHireManifest(): array {
+		return [
+			'label' => 'Humaniq',
+			'collections' => [
+				[
+					'id' => 'myEmployeeRecord',
+					'register' => 'humaniq',
+					'schema' => 'Employee',
+					'scopeField' => 'id',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'low',
+					'label' => 'My details',
+					'listable' => false,
+				],
+				[
+					'id' => 'myOnboarding',
+					'register' => 'humaniq',
+					'schema' => 'Onboarding',
+					'scopeField' => 'employeeId',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'low',
+					'fields' => ['startDate', 'status', 'contractSigned', 'widCheckDone', 'bsnValidated', 'ibanVerified', 'itProvisioned', 'pensioenAangemeld'],
+					'filesUpload' => true,
+					'label' => 'Before your first day',
+					'listable' => true,
+				],
+			],
+			'actions' => [
+				[
+					'id' => 'updateMyDetails',
+					'type' => 'update',
+					'label' => 'Hand in my bank account and BSN',
+					'register' => 'humaniq',
+					'schema' => 'Employee',
+					'scopeField' => 'id',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'substantial',
+					'fields' => [
+						'iban',
+						'tenaamstelling',
+						'bsn',
+					],
+				],
+			],
+			'notifications' => [],
+		];
+
+	}//end newHireManifest()
+
+	/**
+	 * The former-employee manifest (hiring-portal-audiences D5): read-only, the
+	 * leaver's own payslips, annual statements and generated letters. How long
+	 * the account lives is portaliq's account policy.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/portal-audiences/spec.md#REQ-PTA-004
+	 */
+	private function formerEmployeeManifest(): array {
+		return [
+			'label' => 'Humaniq',
+			'collections' => [
+				[
+					'id' => 'payslips',
+					'register' => 'humaniq',
+					'schema' => 'Payslip',
+					'scopeField' => 'employeeId',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'low',
+					'label' => 'My payslips',
+					'listable' => true,
+				],
+				[
+					'id' => 'annualStatements',
+					'register' => 'humaniq',
+					'schema' => 'Jaaropgaaf',
+					'scopeField' => 'employeeId',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'low',
+					'label' => 'My annual statements',
+					'listable' => true,
+				],
+				[
+					'id' => 'myDocuments',
+					'register' => 'humaniq',
+					'schema' => 'HrGeneratedDocument',
+					'scopeField' => 'employeeId',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'low',
+					'filter' => ['status' => 'generated'],
+					'label' => 'My letters and statements',
+					'listable' => true,
+				],
+			],
+			'actions' => [],
+			'notifications' => [],
+		];
+
+	}//end formerEmployeeManifest()
 }//end class

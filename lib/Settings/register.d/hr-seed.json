@@ -931,6 +931,24 @@
                 },
                 "title": "Medior Vue-developer",
                 "description": "Wij zoeken een medior Vue-developer voor ons platformteam. Placeholder vacaturetekst (recruiting-ats-basic seed).",
+                "questions": [
+                    {
+                        "key": "rijbewijs",
+                        "type": "enum",
+                        "label": "Heeft u een rijbewijs B?",
+                        "required": true,
+                        "options": [
+                            "ja",
+                            "nee"
+                        ]
+                    },
+                    {
+                        "key": "beschikbaarheid",
+                        "type": "textarea",
+                        "label": "Per wanneer bent u beschikbaar?",
+                        "required": false
+                    }
+                ],
                 "department": "Engineering",
                 "status": "gepubliceerd",
                 "publishedDate": "2026-06-15",
@@ -1005,6 +1023,24 @@
                 "offerSigningRequestId": null,
                 "offerSigningStatus": null,
                 "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "job-application",
+                    "slug": "application-portal-nieuw"
+                },
+                "vacancyId": "@ref:vacancy-vue-developer",
+                "candidateName": "Sanne de Wit",
+                "email": "sanne.dewit@example.org",
+                "phone": "+31 6 00000004",
+                "motivation": "Via de vacaturepagina gesolliciteerd (hiring-portal-audiences seed).",
+                "status": "nieuw",
+                "talentPoolOptIn": false,
+                "answers": {
+                    "rijbewijs": "ja",
+                    "beschikbaarheid": "Per 1 november 2026"
+                }
             },
             {
                 "@self": {
