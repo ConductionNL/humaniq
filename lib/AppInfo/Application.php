@@ -842,8 +842,8 @@ class Application extends App implements IBootstrap {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-001
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-001
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
 	 */
 	private function registerCandidateAssessmentListeners(IEventDispatcher $dispatcher): void {
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {

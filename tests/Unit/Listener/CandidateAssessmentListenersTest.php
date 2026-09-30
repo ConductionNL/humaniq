@@ -16,8 +16,8 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-001
- * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-001
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
  */
 
 declare(strict_types=1);

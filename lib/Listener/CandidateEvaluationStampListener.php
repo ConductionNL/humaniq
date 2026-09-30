@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-001
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-001
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use OCP\IUserSession;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-001
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-001
  */
 class CandidateEvaluationStampListener implements IEventListener {
 
@@ -54,7 +54,7 @@ class CandidateEvaluationStampListener implements IEventListener {
 	 * @param HoursRegisterGateway $gateway     Resolves the schema slug.
 	 * @param IUserSession         $userSession The signed-in user.
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-001
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-001
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
@@ -69,7 +69,7 @@ class CandidateEvaluationStampListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-001
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-001
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof ObjectCreatingEvent) {

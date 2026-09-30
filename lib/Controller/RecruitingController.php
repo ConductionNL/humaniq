@@ -20,8 +20,8 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-001
- * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-002
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-001
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
  */
 
 declare(strict_types=1);
@@ -55,7 +55,7 @@ class RecruitingController extends Controller {
 	 * @param HoursRegisterGateway $gateway     Reads the evaluations.
 	 * @param IUserSession         $userSession The caller.
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-002
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
 	 */
 	public function __construct(
 		IRequest $request,
@@ -75,7 +75,7 @@ class RecruitingController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-002
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
 	 */
 	#[NoAdminRequired]
 	public function matches(string $id): JSONResponse {
@@ -97,7 +97,7 @@ class RecruitingController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-001
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-001
 	 */
 	#[NoAdminRequired]
 	public function evaluationSummary(string $id): JSONResponse {
@@ -120,7 +120,7 @@ class RecruitingController extends Controller {
 	 *
 	 * @return list<array{criterion: string, average: float, count: int}>
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-001
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-001
 	 */
 	public static function averages(array $evaluations): array {
 		$sums = [];

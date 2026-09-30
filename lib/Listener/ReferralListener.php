@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
  */
 class ReferralListener implements IEventListener {
 
@@ -67,7 +67,7 @@ class ReferralListener implements IEventListener {
 	 * @param InternalWriteMarker  $marker      Marks humaniq's own writes.
 	 * @param LoggerInterface      $logger      The logger.
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
 	 */
 	public function __construct(
 		private readonly ReferralService $referrals,
@@ -85,7 +85,7 @@ class ReferralListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
 	 */
 	public function handle(Event $event): void {
 		if ($this->marker->isInternal() === true) {

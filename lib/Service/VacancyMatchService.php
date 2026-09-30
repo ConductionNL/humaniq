@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-002
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ class VacancyMatchService {
 	 *
 	 * @param HoursRegisterGateway $gateway Reads the register.
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-002
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
@@ -60,7 +60,7 @@ class VacancyMatchService {
 	 *
 	 * @return array{education: ?int, experience: ?float, required: list<string>, preferred: list<string>}
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-002
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
 	 */
 	public static function requirementsOf(array $vacancy): array {
 		return [
@@ -81,7 +81,7 @@ class VacancyMatchService {
 	 *
 	 * @return array{total: int, points: array{education: float, experience: float, required: float, preferred: float}, missing: list<string>}
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-002
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
 	 */
 	public static function score(array $requirements, ?int $educationLevel, ?float $experienceYears, array $competences): array {
 		$missing = [];
@@ -120,7 +120,7 @@ class VacancyMatchService {
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-002
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
 	 */
 	public function matchesFor(string $vacancyId, string $today): array {
 		$vacancy = $this->gateway->findObjectData($vacancyId, 'Vacancy');

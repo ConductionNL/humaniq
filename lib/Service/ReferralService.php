@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ class ReferralService {
 	 *
 	 * @param HoursRegisterGateway $gateway Reads and writes the register.
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
@@ -53,7 +53,7 @@ class ReferralService {
 	 *
 	 * @return string|null The reason.
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
 	 */
 	public function refusal(array $referral): ?string {
 		if (($referral['candidateConsented'] ?? false) !== true) {
@@ -76,7 +76,7 @@ class ReferralService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
 	 */
 	public function stamp(array $referral, string $uid): array {
 		return [
@@ -94,7 +94,7 @@ class ReferralService {
 	 *
 	 * @return string The new application's id.
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
 	 */
 	public function createApplication(array $referral, string $referralId): string {
 		// A referral that already names its application (a seeded or imported
@@ -140,7 +140,7 @@ class ReferralService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hiring-candidate-assessment/specs/candidate-assessment/spec.md#REQ-CAS-003
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
 	 */
 	public function followStatus(string $applicationId, string $status): void {
 		foreach ($this->gateway->findFiltered('Referral', ['applicationId' => $applicationId]) as $referral) {

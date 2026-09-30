@@ -1418,7 +1418,7 @@
    "id": "hir-candidate-evaluation",
    "area": "hiring",
    "name": "Record interviewers' scores and notes on a candidate.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "yes",
@@ -1434,10 +1434,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000880057-Use-candidate-evaluation-forms: configurable evaluation forms submitted via the candidate's evaluation tab or a feedback request; https://support.personio.de/hc/en-us/articles/360000703717-How-results-in-the-evaluation-forms-are-calculated."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-candidate-assessment on 2026-09-27. Before: lib/Settings/register.d/hr-ats.json Interview schema properties are exactly [applicationId, scheduledStart, scheduledEnd, interviewers, mode, location, status, calendarEventUid], no score/rating/feedback field; job-application schema properties are [vacancyId, candidateName, email, phone, cvFile, motivation, status, rejectedDate, talentPoolOptIn, retentionExpiryDate, administrationId, offerLetterFileId, offerSigningRequestId, offerSigningStatus], no evaluation field either; grep -nie score,feedback,rating,beoordeling,notities lib/Settings/register.d/hr-ats.json: no hits",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-ats.json: Vacancy.evaluationCriteria and CandidateEvaluation (1 to 5 and a note per criterion, recommendation, note; applicationId onDelete CASCADE); lib/Listener/CandidateEvaluationStampListener.php stamps the evaluator from the session and keeps it on an edit; lib/Controller/RecruitingController.php evaluationSummary averages per criterion. Tests: tests/Unit/Listener/CandidateAssessmentListenersTest.php, tests/Unit/Controller/RecruitingControllerTest.php.",
+    "reachedOn": "Recruitment > Applications > an application: Evaluations, Average scores and Score this candidate",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-candidate-assessment",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1514,7 +1516,7 @@
    "id": "hir-referrals",
    "area": "hiring",
    "name": "Let employees refer candidates and track the referral.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "partial",
@@ -1530,10 +1532,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/24725370605213-Set-up-employee-referrals: employees can refer candidates for vacancies once the feature is activated; https://support.personio.de/hc/en-us/articles/24727105191581-Manage-employee-referrals."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-candidate-assessment on 2026-09-27. Before: grep -rniF referral,referrer,aanbrengen lib/Settings/register.d/ src/manifest.d/ openspec/specs/: no hits anywhere in the repository",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-ats.json: Referral; lib/Listener/ReferralListener.php and lib/Service/ReferralService.php refuse a referral without the candidate's agreement or for an unpublished vacancy, stamp the referrer, create the job-application (source referral, referredByUserId) and follow its status. Tests: tests/Unit/Listener/CandidateAssessmentListenersTest.php.",
+    "reachedOn": "My HR > Open vacancies and My referrals",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-candidate-assessment",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7769,7 +7773,7 @@
    "id": "dm-vacancy-matching",
    "area": "hiring",
    "name": "Have applicants and existing employees matched to open vacancies with a score based on education, level and competences from their CV.",
-   "humaniq": "no",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "yes",
@@ -7785,10 +7789,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'vacancy.*match|match.*score|resume.?pars|cv.?pars' src/plugins src/client/src: no match; the recruitment plugin stores candidates per vacancy without any scoring"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-candidate-assessment on 2026-09-27. Before: grep -rniE 'matchScore|cvParse|matching' lib/Settings/register.d/hr-ats.json lib/Service: no hits",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "building",
+    "evidence": "lib/Service/VacancyMatchService.php scores applicants (hand-filled educationLevel, experienceYears, competenceCodes) and colleagues (current EmployeeCompetence) against the vacancy's requirements, 0 to 100 with the points per requirement; GET /api/vacancies/{id}/matches. Reading the profile from the CV is not built: filinq has no CV extraction (change hiring-cv-profile-extraction). Tests: tests/Unit/Service/VacancyMatchServiceTest.php.",
+    "reachedOn": "Recruitment > Vacancies > a vacancy: Who fits",
+    "owner": "ConductionNL/humaniq",
+    "change": "hiring-cv-profile-extraction",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
