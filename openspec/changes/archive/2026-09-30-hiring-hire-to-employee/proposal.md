@@ -83,7 +83,7 @@ supplied contract or ID into the new employee's empty fields for HR to check.
   private e-mail, and shows the matches. HR attaches the hire to one of them or creates a new
   record on purpose. Attaching clears the old `endDate`, starts the new onboarding case on
   that record, and keeps the earlier contracts as they are.
-- **A supplied document fills the empty fields.** On `OnboardingDetail`, `Read document`
+- **A supplied document fills the empty fields** (moved to `hiring-document-to-employee`, see design as built). On `OnboardingDetail`, `Read document`
   sends a file attached to the case to filinq's extraction as an employment contract or an
   identity document. humaniq fills only the employee's empty fields, records what was read,
   with what confidence and which fields it wrote, and offers `Create contract from

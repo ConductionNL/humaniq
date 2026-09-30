@@ -1484,7 +1484,7 @@
    "id": "hir-hire-to-employee",
    "area": "hiring",
    "name": "Turn a hired applicant into an employee without retyping their data.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -1500,10 +1500,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/5150116626461-Manage-an-offer-and-its-stages: when the candidate accepts, Personio automatically creates an employee profile; https://support.personio.de/hc/en-us/articles/115005462345-Create-an-offer-with-a-contract: moving to Hired transfers placeholder values to the new profile."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-hire-to-employee on 2026-09-27 for the missing half: creating the Employee from the hired application; the status flip is built. Before: src/manifest.d/hr-ats.json:11 note states plainly: 'aannemen's onboarding hand-off (creating the Employee from this data) is a MANUAL follow-up action in the MVP, no cross-object write hook fires here'; the aannemen lifecycle transition only flips job-application.status, it does not create or populate an Employee record",
-    "reachedOn": "Applications /applications, ApplicationDetail /applications/:id, aannemen lifecycle action, but HR must then create the Employee by hand on Employees /employees and retype the data",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/HireService.php creates the Employee (name confirmed by HR, privateEmail and phone from the application, start date, administration) and an Onboarding case at aangenomen, and links job-application.employeeId with the status unchanged; a linked application answers its employee and writes nothing. lib/Controller/HireController.php GET /api/applications/{id}/hire-matches and POST /api/applications/{id}/hire (resolve first, then HR or admin); src/dialogs/HireApplicationDialog.vue. Tests: tests/Unit/Service/HireServiceTest.php (payloads validated against the register schemas), tests/Unit/Controller/HireControllerTest.php.",
+    "reachedOn": "Recruitment > Applications > a hired application: Create employee",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-hire-to-employee",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8154,7 +8156,7 @@
    "id": "dm-rehire",
    "area": "hiring",
    "name": "Rehire a former employee by attaching the new employment to their existing record instead of creating a duplicate.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -8170,10 +8172,12 @@
     "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmPimPlugin/pages/employee/EmployeeJob.vue:330 shows 'Activate employment' on a terminated employee, which calls src/plugins/orangehrmPimPlugin/Api/EmployeeTerminationAPI.php:368 to clear the termination on the same record; no separate new employment spell is kept (grep -riE 'rehire|re-hire' src/plugins src/client/src: no match)"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-hire-to-employee on 2026-09-27 for the missing half: matching a hire to an existing former employee instead of creating a duplicate. Before: EmploymentContract.employeeId (lib/Settings/register.d/hr-objects.json) lets HR add a new contract to an existing Employee from EmployeeDetail (src/manifest.d/hr-objects.json:150); the hire action from an application creates no Employee at all (hir-hire-to-employee, src/manifest.d/hr-ats.json:11), so there is no duplicate check; returning is a manual new contract on the old record",
-    "reachedOn": "EmployeeDetail /employees/:id contracts list",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/HireMatchService.php finds earlier employees by BSN, by last name and date of birth, or by private e-mail, in that order, with whether they left; the hire answers 409 with the matches until HR chooses one or a new record; attaching to a former employee clears endDate, sets the new startDate and starts an onboarding case on that record, contracts untouched (lib/Service/HireService.php). Tests: tests/Unit/Service/HireMatchServiceTest.php, tests/Unit/Service/HireServiceTest.php.",
+    "reachedOn": "Recruitment > Applications > a hired application: Create employee, This person may already have a record, Use this record",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-hire-to-employee",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8421,10 +8425,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'resume.?pars|cv.?pars|\\bocr\\b' src/plugins src/client/src: no match; attachments (src/plugins/orangehrmPimPlugin/Api/EmployeeAttachmentAPI.php) are stored, not read"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-hire-to-employee on 2026-09-27. Before: grep -rniE 'extract|ocr' lib/Settings/register.d: only receipt OCR on expenses (lib/Settings/register.d/hr-expense.json:235); nothing reads a contract into an Employee",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "building",
+    "evidence": "Create employee fills the new employee from the hired application (lib/Service/HireService.php, change 2026-09-30-hiring-hire-to-employee). Reading a supplied contract or ID into the record is not built: filinq has no contract or identity-document extraction (financial extractors only, no MRZ reader), so it moved to the change hiring-document-to-employee.",
+    "reachedOn": "nothing reads a supplied document yet",
+    "owner": "ConductionNL/humaniq",
+    "change": "hiring-document-to-employee",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
