@@ -111,7 +111,7 @@ class PortalContributionProviderTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetAudiencesReturnsBothAudiences(): void {
-		$this->assertSame(['external-employee', 'client', 'manager'], $this->provider->getAudiences());
+		$this->assertSame(['external-employee', 'client', 'manager', 'candidate', 'new-hire', 'former-employee'], $this->provider->getAudiences());
 
 	}//end testGetAudiencesReturnsBothAudiences()
 
