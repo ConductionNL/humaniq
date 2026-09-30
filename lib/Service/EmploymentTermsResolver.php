@@ -157,15 +157,8 @@ class EmploymentTermsResolver {
 	}//end resolveOvertimeToeslag()
 
 	/**
-	 * The CAO components a contract names, resolved (payroll-cao-components D2).
-	 *
-	 * Each key in `caoComponents` resolves from the agreement's confirmed
-	 * allowances leaf (source `cao`) or from `caoComponentOverrides` (source
-	 * `contract-override`), which needs `caoComponentOverrideReason` and may
-	 * not be below the agreement's figure. A key whose agreement leaf is not
-	 * confirmed and that has no override is unresolved: never paid, never
-	 * guessed. A key the agreement does not declare is unknown and
-	 * unresolved.
+	 * The CAO components a contract names, resolved (payroll-cao-components
+	 * D2); see CaoComponentTerms.
 	 *
 	 * @param array<string, mixed> $contract The EmploymentContract as an array.
 	 *
@@ -176,109 +169,8 @@ class EmploymentTermsResolver {
 	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-002
 	 */
 	public function resolveComponents(array $contract): array {
-		$resolved = ['components' => [], 'unresolved' => [], 'unknown' => []];
-		$keys = array_values(array_unique(array_filter(array_map('strval', (array)($contract['caoComponents'] ?? [])), static fn (string $key): bool => trim($key) !== '')));
-		if ($keys === []) {
-			return $resolved;
-		}
-
-		$caoId = $this->caoId(contract: $contract);
-		$declared = ($caoId === null ? [] : CaoRegistry::componentShapes($caoId));
-		$confirmed = ($caoId === null ? null : CaoRegistry::components($caoId));
-		$overrides = $this->componentOverrides(contract: $contract, keys: $keys);
-
-		foreach ($keys as $key) {
-			if (isset($declared[$key]) === false) {
-				$resolved['unknown'][] = $key;
-				$resolved['unresolved'][] = $key;
-				continue;
-			}
-
-			$collective = ($confirmed[$key] ?? null);
-			if (isset($overrides[$key]) === true) {
-				$figures = array_merge(($collective ?? $declared[$key]), $overrides[$key], ['kind' => $declared[$key]['kind']]);
-				if ($collective !== null) {
-					$this->assertComponentNotWorse(key: $key, override: $figures, collective: $collective);
-				}
-
-				$resolved['components'][] = array_merge(['key' => $key], $figures, ['source' => self::SOURCE_CONTRACT]);
-				continue;
-			}
-
-			if ($collective === null) {
-				$resolved['unresolved'][] = $key;
-				continue;
-			}
-
-			$resolved['components'][] = array_merge(['key' => $key], $collective, ['source' => self::SOURCE_CAO]);
-		}//end foreach
-
-		return $resolved;
+		return (new CaoComponentTerms())->resolve(contract: $contract);
 	}//end resolveComponents()
-
-	/**
-	 * The contract's component overrides for the keys it names, normalised;
-	 * any override needs the reason.
-	 *
-	 * @param array<string, mixed> $contract The contract.
-	 * @param list<string>         $keys     The keys the contract names.
-	 *
-	 * @return array<string, array<string, mixed>>
-	 *
-	 * @throws InvalidArgumentException When an override has no reason.
-	 */
-	private function componentOverrides(array $contract, array $keys): array {
-		$overrides = [];
-		foreach ((array)($contract['caoComponentOverrides'] ?? []) as $key => $raw) {
-			if (in_array((string)$key, $keys, true) === false || is_array($raw) === false || $raw === []) {
-				continue;
-			}
-
-			$normalised = CaoRegistry::normaliseComponent(raw: array_merge($raw, ['kind' => 'hourly-surcharge']));
-			unset($normalised['kind']);
-			$overrides[(string)$key] = (array)$normalised;
-		}
-
-		if ($overrides !== [] && trim((string)($contract['caoComponentOverrideReason'] ?? '')) === '') {
-			throw new InvalidArgumentException('caoComponentOverrides is set without caoComponentOverrideReason; a contract departing from its CAO must give a reason');
-		}
-
-		return $overrides;
-	}//end componentOverrides()
-
-	/**
-	 * Refuse a component override below the agreement: a lower percentage or
-	 * amount, a lower holiday percentage, or an agreement window missing or
-	 * paid lower.
-	 *
-	 * @param string               $key        The component.
-	 * @param array<string, mixed> $override   The figures with the override applied.
-	 * @param array<string, mixed> $collective The agreement's figures.
-	 *
-	 * @return void
-	 *
-	 * @throws InvalidArgumentException When the override is below the agreement.
-	 */
-	private function assertComponentNotWorse(string $key, array $override, array $collective): void {
-		foreach (['pct', 'amountCents', 'minAmountCents', 'holidayPct'] as $field) {
-			if (isset($collective[$field]) === true && (float)($override[$field] ?? 0) < (float)$collective[$field]) {
-				throw new InvalidArgumentException('the override of "' . $key . '" sets ' . $field . ' ' . ($override[$field] ?? 'nothing') . ', below the ' . $collective[$field] . ' the collective labour agreement pays; an individual contract may improve on collective terms, never undercut them');
-			}
-		}
-
-		foreach ((array)($collective['windows'] ?? []) as $window) {
-			$best = null;
-			foreach ((array)($override['windows'] ?? []) as $candidate) {
-				if ($candidate['days'] === $window['days'] && $candidate['from'] === $window['from'] && $candidate['to'] === $window['to']) {
-					$best = max(($best ?? 0.0), $candidate['pct']);
-				}
-			}
-
-			if ($best === null || $best < $window['pct']) {
-				throw new InvalidArgumentException('the override of "' . $key . '" pays the ' . ($window['from'] ?? '?') . '-' . ($window['to'] ?? '?') . ' window below the ' . $window['pct'] . '% the collective labour agreement pays, or leaves it out; an individual contract may improve on collective terms, never undercut them');
-			}
-		}
-	}//end assertComponentNotWorse()
 
 	/**
 	 * Resolve the full-time vakantiedagen entitlement for one contract.

@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Standards;
 
+use OCA\Humaniq\Standards\CaoComponents;
 use OCA\Humaniq\Standards\CaoRegistry;
 use PHPUnit\Framework\TestCase;
 
@@ -100,19 +101,19 @@ class CaoComponentsCorpusTest extends TestCase {
 	 * @return void
 	 */
 	public function testComponentsResolveOnlyFromAConfirmedLeaf(): void {
-		$this->assertNull(CaoRegistry::components('cao-metaal-techniek'));
-		$this->assertNull(CaoRegistry::components('cao-zorg-vvt'));
-		$this->assertNull(CaoRegistry::components('cao-onbekend'));
-		$this->assertNull(CaoRegistry::components('cao-generiek'));
+		$this->assertNull(CaoComponents::confirmed('cao-metaal-techniek'));
+		$this->assertNull(CaoComponents::confirmed('cao-zorg-vvt'));
+		$this->assertNull(CaoComponents::confirmed('cao-onbekend'));
+		$this->assertNull(CaoComponents::confirmed('cao-generiek'));
 
-		$components = CaoRegistry::components('cao-voorbeeld');
+		$components = CaoComponents::confirmed('cao-voorbeeld');
 		$this->assertSame(['kind' => 'percentage-of-wage', 'pct' => 10.0], array_intersect_key($components['ploegentoeslag'], ['kind' => 1, 'pct' => 1]));
 		$this->assertSame('hourly-surcharge', $components['nachttoeslag']['kind']);
 		$this->assertSame('00:00', $components['nachttoeslag']['windows'][0]['from']);
 		$this->assertSame(40.0, $components['nachttoeslag']['windows'][0]['pct']);
 
-		$this->assertSame(['ploegentoeslag'], array_keys(CaoRegistry::componentShapes('cao-metaal-techniek')));
-		$this->assertSame([], CaoRegistry::componentShapes('cao-onbekend'));
+		$this->assertSame(['ploegentoeslag'], array_keys(CaoComponents::declared('cao-metaal-techniek')));
+		$this->assertSame([], CaoComponents::declared('cao-onbekend'));
 	}//end testComponentsResolveOnlyFromAConfirmedLeaf()
 
 }//end class

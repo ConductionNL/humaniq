@@ -52,6 +52,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Standards\Checks;
 
+use OCA\Humaniq\Standards\CaoComponents;
 use OCA\Humaniq\Standards\CaoRegistry;
 
 /**
@@ -211,7 +212,7 @@ final class NlCaoChecks implements CheckProvider, SeedsObjects, UpsertsObjects {
 			return true;
 		}
 
-		$declared = CaoRegistry::componentShapes(trim((string)($o['cao'] ?? '')));
+		$declared = CaoComponents::declared(trim((string)($o['cao'] ?? '')));
 		return array_diff($named, array_keys($declared)) === [];
 	}//end componentsKnown()
 

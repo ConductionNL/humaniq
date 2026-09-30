@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
 
@@ -153,13 +154,9 @@ class CaoComponentCalculator {
 	private function premiumMinutes(array $component, DateTimeImmutable $start, DateTimeImmutable $end, array $holidays): array {
 		$buckets = [];
 		$holidayPct = ($component['holidayPct'] ?? null);
-		for ($minute = $start; $minute < $end; $minute = $minute->modify('+1 minute')) {
-			$bucket = null;
-			if ($holidayPct !== null && isset($holidays[$minute->format('Y-m-d')]) === true) {
-				$bucket = 'public holiday|' . (float)$holidayPct;
-			} else {
-				$bucket = self::windowBucket(windows: (array)($component['windows'] ?? []), minute: $minute);
-			}
+		for ($minute = $start; $minute < $end; $minute = $minute->add(new DateInterval('PT1M'))) {
+			$holiday = ($holidayPct !== null && isset($holidays[$minute->format('Y-m-d')]) === true);
+			$bucket = ($holiday === true ? 'public holiday|' . (float)$holidayPct : self::windowBucket(windows: (array)($component['windows'] ?? []), minute: $minute));
 
 			if ($bucket !== null) {
 				$buckets[$bucket] = (($buckets[$bucket] ?? 0) + 1);
@@ -180,20 +177,10 @@ class CaoComponentCalculator {
 	private static function windowBucket(array $windows, DateTimeImmutable $minute): ?string {
 		$time = $minute->format('H:i');
 		$today = strtolower($minute->format('l'));
-		$yesterday = strtolower($minute->modify('-1 day')->format('l'));
+		$yesterday = strtolower($minute->sub(new DateInterval('P1D'))->format('l'));
 		$best = null;
 		foreach ($windows as $window) {
-			$days = ($window['days'] ?? null);
-			$from = ($window['from'] ?? null);
-			$to = ($window['to'] ?? null);
-			if (is_array($days) === false || $from === null || $to === null) {
-				continue;
-			}
-
-			$crosses = ($from > $to);
-			$inside = (in_array($today, $days, true) === true && $time >= $from && ($crosses === true || $time < $to));
-			$inside = ($inside === true || ($crosses === true && in_array($yesterday, $days, true) === true && $time < $to));
-			if ($inside === true && ($best === null || (float)$window['pct'] > (float)$best['pct'])) {
+			if (self::inside(window: $window, today: $today, yesterday: $yesterday, time: $time) === true && ($best === null || (float)$window['pct'] > (float)$best['pct'])) {
 				$best = $window;
 			}
 		}
@@ -204,6 +191,31 @@ class CaoComponentCalculator {
 
 		return ($best['from'] . '-' . $best['to'] . ' ' . implode(', ', $best['days'])) . '|' . (float)$best['pct'];
 	}//end windowBucket()
+
+	/**
+	 * Whether a minute at `time` on `today` falls in a window. A window with
+	 * no days or no times never matches; one whose `from` is after its `to`
+	 * runs from `from` on a listed day to `to` on the next day.
+	 *
+	 * @param array<string, mixed> $window    The window.
+	 * @param string               $today     The minute's weekday.
+	 * @param string               $yesterday The weekday before.
+	 * @param string               $time      The minute, `HH:MM`.
+	 *
+	 * @return bool
+	 */
+	private static function inside(array $window, string $today, string $yesterday, string $time): bool {
+		if (is_array($window['days'] ?? null) === false || isset($window['from'], $window['to']) === false) {
+			return false;
+		}
+
+		[$days, $from, $to] = [$window['days'], $window['from'], $window['to']];
+		if ($from > $to) {
+			return (in_array($today, $days, true) === true && $time >= $from) || (in_array($yesterday, $days, true) === true && $time < $to);
+		}
+
+		return in_array($today, $days, true) === true && $time >= $from && $time < $to;
+	}//end inside()
 
 	/**
 	 * An entry's worked span in local time, the break taken off the end, or
@@ -223,7 +235,7 @@ class CaoComponentCalculator {
 		try {
 			$zone = new DateTimeZone(self::TIMEZONE);
 			$start = (new DateTimeImmutable($started))->setTimezone($zone);
-			$end = (new DateTimeImmutable($ended))->setTimezone($zone)->modify('-' . max(0, (int)($entry['breakMinutes'] ?? 0)) . ' minutes');
+			$end = (new DateTimeImmutable($ended))->setTimezone($zone)->sub(new DateInterval('PT' . max(0, (int)($entry['breakMinutes'] ?? 0)) . 'M'));
 		} catch (\Exception) {
 			return null;
 		}

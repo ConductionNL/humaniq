@@ -70,20 +70,33 @@ class CaoComponentOverrideListener implements IEventListener {
 	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-002
 	 */
 	public function handle(Event $event): void {
-		if ($event instanceof ObjectCreatingEvent) {
-			$contract = ($event->getObject()->getObject() ?? []);
-		} else if ($event instanceof ObjectUpdatingEvent) {
-			$contract = ($event->getNewObject()->getObject() ?? []);
-		} else {
+		$preSave = self::preSave(event: $event);
+		if ($preSave === null) {
 			return;
 		}
 
+		$entity = ($preSave instanceof ObjectCreatingEvent ? $preSave->getObject() : $preSave->getNewObject());
 		try {
-			$this->terms->resolveComponents(contract: $contract);
+			$this->terms->resolveComponents(contract: ($entity->getObject() ?? []));
 		} catch (InvalidArgumentException $e) {
-			$event->setErrors(['message' => $e->getMessage()]);
-			$event->stopPropagation();
+			$preSave->setErrors(['message' => $e->getMessage()]);
+			$preSave->stopPropagation();
 		}
 	}//end handle()
+
+	/**
+	 * The pre-save event of a contract, or null for another event.
+	 *
+	 * @param Event $event The event.
+	 *
+	 * @return ObjectCreatingEvent|ObjectUpdatingEvent|null
+	 */
+	private static function preSave(Event $event): ObjectCreatingEvent|ObjectUpdatingEvent|null {
+		if ($event instanceof ObjectCreatingEvent || $event instanceof ObjectUpdatingEvent) {
+			return $event;
+		}
+
+		return null;
+	}//end preSave()
 
 }//end class
