@@ -156,3 +156,28 @@ and the `_note` goes.
 - Should a re-enabled account (by an admin in Nextcloud) clear `toegangIngetrokken`?
 - Which unit should an anonymised interview keep when the leaver's placement ended before
   the interview?
+
+## Changes made while building (2026-09-30)
+
+- D1: the case stamp and the 90-day anonymisation are humaniq code, not `openregister.object-write`
+  flows. `ExitInterviewListener` fills in the leaver, administration and department before the
+  create and stamps `Offboarding.exitGesprekDone` after it (OpenRegister replaces an object on
+  save, so the whole case is written). The anonymisation is the `humaniq.anonymise-exit-interviews`
+  step inside the shipped, disabled schedule flow "Exit interviews anonymiseren", so it is still
+  the flow engine that schedules it and an administrator who adopts it, and the clearing is unit
+  tested against the real schema.
+- D1: the reason count is `GET /api/offboarding/exit-reasons` (HR only) drawn as a bar chart on
+  `ExitInterviews`, not an `x-openregister-aggregations` entry: a named aggregation has no date
+  window, and the count is over the last twelve months (the same finding as the mobility report in
+  expenses-travel-calculation).
+- D2: an account name Nextcloud does not know is refused (409), not ticked, so a typo in
+  `nextcloudUserId` cannot mark access as revoked. `toegangIngetrokkenToelichting` holds "No
+  Nextcloud account" when the employee has none.
+- D3: the contract chain is the calculator's own: `ContractChainService` (people-flex-contract-rules)
+  only chains fixed-term types, while BW 7:673 lid 4 adds every contract, permanent ones too.
+  Service is the sum of the contract spans in the chain, gaps not counted. The annual salary for
+  the cap is twelve times the monthly wage the calculation uses. HR and payroll may calculate
+  (the spec's scenario has a payroll officer press it); `vso` is outside the dismissal list and
+  answers zero.
+- Seed: the seeded dismissal case `offboarding-jansen` keeps its empty amount, because it is the
+  audit rule's demonstration of a missing transition payment; the live check calculates it.

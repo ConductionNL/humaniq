@@ -341,6 +341,12 @@
 					"route": "Offboardings"
 				},
 				{
+					"id": "ExitInterviews",
+					"label": "Exit interviews",
+					"icon": "CommentAccountOutline",
+					"route": "ExitInterviews"
+				},
+				{
 					"id": "WorkingPatterns",
 					"label": "Working patterns",
 					"icon": "CalendarAccountOutline",
