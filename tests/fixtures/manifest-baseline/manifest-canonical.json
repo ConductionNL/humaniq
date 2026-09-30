@@ -7253,7 +7253,7 @@
 								"decimals": 0,
 								"style": "number"
 							},
-							"icon": "AlertOctagonOutline",
+							"icon": "AlertCircleOutline",
 							"label": "Blocking findings",
 							"source": {
 								"field": "blockingFindings",
@@ -7266,7 +7266,7 @@
 							},
 							"valueColor": "#e9322d"
 						},
-						"icon": "AlertOctagonOutline",
+						"icon": "AlertCircleOutline",
 						"id": "stat-blocking",
 						"title": "Blocking findings",
 						"type": "stat"
