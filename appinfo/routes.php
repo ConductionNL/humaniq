@@ -83,6 +83,10 @@ return [
         ['name' => 'dossier#incomplete', 'url' => '/api/dossier/incomplete', 'verb' => 'GET'],
         // self-service-approvals-inbox REQ-API-001/002: the caller's approvals inbox, open or decided.
         ['name' => 'approvals#index', 'url' => '/api/approvals', 'verb' => 'GET'],
+        // hiring-offboarding-completion REQ-OFC-001/003/004: the leavers' reasons, revoke access, calculate the transition payment.
+        ['name' => 'offboarding#exitReasons', 'url' => '/api/offboarding/exit-reasons', 'verb' => 'GET'],
+        ['name' => 'offboarding#revokeAccess', 'url' => '/api/offboarding/{id}/revoke-access', 'verb' => 'POST'],
+        ['name' => 'offboarding#transitionPayment', 'url' => '/api/offboarding/{id}/transition-payment', 'verb' => 'POST'],
         // self-service-announcements-and-digest REQ-AND-001/002: the caller's announcements, their confirmation, and HR's overview.
         ['name' => 'announcement#mine', 'url' => '/api/announcements/mine', 'verb' => 'GET'],
         ['name' => 'announcement#confirmations', 'url' => '/api/announcements/confirmations', 'verb' => 'GET'],

@@ -573,7 +573,7 @@
    "id": "ppl-transition-payment",
    "area": "people",
    "name": "Calculate the statutory transition payment when a contract ends.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -589,10 +589,12 @@
     "personio": "not checked: not settled: searched help centre for severance and transition payment; severance is only a German payroll wage type (https://support.personio.de/hc/en-us/articles/34386992832541-Manage-wage-types-in-Personio-Payroll) and https://support.personio.de/hc/en-us/articles/35527299486877-Loket-integration-Sync-employee-data says final severance pay for Dutch leavers is handled in Loket, nothing on calculating the Dutch statutory transition payment."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-offboarding-completion on 2026-09-27 for the missing half: calculating the statutory transition payment; recording a typed amount is built. Before: lib/Settings/register.d/hr-onboarding.json:299 Offboarding.transitievergoedingBedrag (nullable number, human-entered); lib/Standards/Checks/NlOffboardingChecks.php:77 and :100-125 nl-offboarding-transitievergoeding only asserts the field is a non-null number once status reaches eindafrekening_gereed for a dismissal-initiated reason; grep -rniF 'formule\\|bereken\\|calculat' lib/Standards/Checks/NlOffboardingChecks.php lib/Service/: no calculation logic found",
-    "reachedOn": "OffboardingDetail /offboardings/:id (transitievergoedingBedrag field), enforced by occ humaniq:rules:audit before the eindafrekening checklist gate is considered ready",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/TransitionPaymentCalculator.php (BW 7:673: one third of the monthly wage per service year, pro rata, contract chain with gaps up to six months, cap from the rule's capEur 102000 for 2026 or twelve monthly wages when higher, integer cents); lib/Service/TransitionPaymentService.php writes transitievergoedingBedrag and transitievergoedingBerekening; POST /api/offboarding/{id}/transition-payment. Tests: tests/Unit/Service/TransitionPaymentCalculatorTest.php (hand-computed fixtures), tests/Unit/Service/TransitionPaymentServiceTest.php.",
+    "reachedOn": "Calculate transition payment on OffboardingDetail",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-offboarding-completion",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1631,7 +1633,7 @@
    "id": "hir-exit-interview",
    "area": "hiring",
    "name": "Record an exit interview and the reason for leaving.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -1647,10 +1649,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/4405573920285-Terminate-an-employment records a termination reason; https://support.personio.de/hc/en-us/articles/23682604998813-Automate-onboarding-and-offboarding-surveys adds leavers automatically to an offboarding survey to gather feedback when they leave."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-offboarding-completion on 2026-09-27 for the missing half: a structured exit interview record; the reason for leaving is built. Before: lib/Settings/register.d/hr-onboarding.json Offboarding.reason (dismissal/departure reason, enum) and Offboarding.exitGesprekDone (boolean, checklist gate) plus a freeform Offboarding.notes field; no structured exit-interview record (no separate schema, no question/answer or score fields) exists anywhere",
-    "reachedOn": "OffboardingDetail /offboardings/:id, Checklist widget (exitGesprekDone) and notes field",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-onboarding.json ExitInterview (mainReason from a fixed list, wouldRecommend 0-10, wouldReturn, two free-text answers, orgUnitId kept); lib/Listener/ExitInterviewListener.php fills in the leaver and department and stamps Offboarding.exitGesprekDone; lib/Service/ExitInterviewService.php reasonCounts() behind GET /api/offboarding/exit-reasons and anonymiseDue() run by lib/Flow/AnonymiseExitInterviewsNode.php in the disabled schedule flow Exit interviews anonymiseren. Tests: tests/Unit/Service/ExitInterviewServiceTest.php, tests/Unit/Flow/OffboardingFlowNodesTest.php.",
+    "reachedOn": "People > Exit interviews (reason chart and list), Exit interview on OffboardingDetail",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-offboarding-completion",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1663,7 +1667,7 @@
    "id": "hir-access-revocation",
    "area": "hiring",
    "name": "Have accounts and access revoked when an employee leaves.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -1679,10 +1683,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/4405573920285-Terminate-an-employment: after termination the status changes to Inactive and employees cannot log in; https://support.personio.de/hc/en-us/articles/4408147766289-Okta and https://support.personio.de/hc/en-us/articles/4408178008849-Microsoft-Entra-ID-formerly-Azure-Active-Directory run user deprovisioning workflows from Personio."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-offboarding-completion on 2026-09-27 for the missing half: actually disabling the leaver's Nextcloud account; the checklist tick is built. Before: lib/Settings/register.d/hr-onboarding.json Offboarding.toegangIngetrokken (boolean checklist gate); grep -rniF IUserManager,setEnabled,'deactivate.*account' lib/ --include=*.php: no hits, confirming no code ever disables a Nextcloud account; grep -n toegangIngetrokken lib/Standards/Checks/*.php: no hits either, so it is not even audit-checked, purely a manual tick-box",
-    "reachedOn": "OffboardingDetail /offboardings/:id, Checklist widget (toegangIngetrokken)",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/AccessRevocationService.php disables Employee.nextcloudUserId through IUserManager::get()->setEnabled(false), refuses an admin-group account, the actor's own and an unknown account, and stamps toegangIngetrokken/Door/Op; POST /api/offboarding/{id}/revoke-access (lib/Controller/OffboardingController.php, 404 before 403); lib/Flow/RevokeAccessNode.php in the disabled daily flow Toegang intrekken na laatste werkdag. Tests: tests/Unit/Service/AccessRevocationServiceTest.php, tests/Unit/Controller/OffboardingControllerTest.php.",
+    "reachedOn": "Revoke access on OffboardingDetail; the daily flow once adopted",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-offboarding-completion",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

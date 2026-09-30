@@ -78,6 +78,7 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 	use OCA\Humaniq\Listener\HrLifecycleEventListener;
 	use OCA\Humaniq\Listener\RightToWorkCheckListener;
 	use OCA\Humaniq\Listener\ScenarioMutationListener;
+	use OCA\Humaniq\Listener\ExitInterviewListener;
 	use OCA\Humaniq\Listener\RelationsCaseListener;
 	use OCA\Humaniq\Listener\SideActivityListener;
 	use OCA\OpenRegister\Event\ObjectEventSubscription;
@@ -246,6 +247,33 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
 			self::assertStringContainsString('$this->registerRelationsCaseListeners($dispatcher);', $boot);
 		}//end testTheRelationsCaseListenerIsSubscribed()
+
+		/**
+		 * REQ-OFC-001: an exit interview is filled in before it is created and stamps its case after.
+		 *
+		 * @return void
+		 */
+		public function testTheExitInterviewListenerIsSubscribed(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			$method = new \ReflectionMethod(Application::class, 'registerExitInterviewListeners');
+			$method->invoke($app, $this->createMock(IEventDispatcher::class));
+
+			$events = [];
+			foreach (ObjectEventSubscription::$recorded as $entry) {
+				self::assertSame(ExitInterviewListener::class, $entry['listener']);
+				self::assertSame([ExitInterviewListener::SLUG], $entry['schemas']);
+				$events[] = $entry['event'];
+			}
+
+			self::assertSame(['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\OpenRegister\Event\ObjectCreatedEvent'], $events);
+			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+			self::assertStringContainsString('$this->registerExitInterviewListeners($dispatcher);', $boot);
+		}//end testTheExitInterviewListenerIsSubscribed()
 
 		/**
 		 * REQ-AND-002: a second confirmation is refused before it is saved.

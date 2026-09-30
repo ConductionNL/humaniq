@@ -164,6 +164,10 @@
 		"route": "/offboardings/:id"
 	},
 	{
+		"id": "ExitInterviews",
+		"route": "/exit-interviews"
+	},
+	{
 		"id": "OrgUnitDetail",
 		"route": "/org-units/:id"
 	},
@@ -534,6 +538,10 @@
 	{
 		"id": "Offboardings",
 		"route": "/offboardings"
+	},
+	{
+		"id": "ExitInterviewDetail",
+		"route": "/exit-interviews/:id"
 	},
 	{
 		"id": "OrgUnits",
