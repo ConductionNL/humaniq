@@ -44,15 +44,31 @@ final class RegisterSchemaValidator {
 	 * @return array<string, mixed>
 	 */
 	public static function schema(string $schemaName): array {
+		// A schema is declared once (with its slug) and may be extended with
+		// properties by other fragments (hr-cost-rate adds to Employee).
+		$declared = null;
+		$extra = [];
 		foreach (glob(dirname(__DIR__, 3) . '/lib/Settings/register.d/*.json') as $file) {
 			$fragment = json_decode((string)file_get_contents($file), true);
 			$schema = ($fragment['components']['schemas'][$schemaName] ?? null);
-			if (is_array($schema) === true) {
-				return $schema;
+			if (is_array($schema) === false) {
+				continue;
 			}
+
+			if ($declared === null && isset($schema['slug']) === true) {
+				$declared = $schema;
+				continue;
+			}
+
+			$extra = array_merge($extra, ($schema['properties'] ?? []));
 		}
 
-		throw new RuntimeException('Schema ' . $schemaName . ' is not declared in lib/Settings/register.d.');
+		if ($declared === null) {
+			throw new RuntimeException('Schema ' . $schemaName . ' is not declared in lib/Settings/register.d.');
+		}
+
+		$declared['properties'] = array_merge(($declared['properties'] ?? []), $extra);
+		return $declared;
 	}//end schema()
 
 	/**

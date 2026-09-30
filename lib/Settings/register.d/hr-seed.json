@@ -1219,6 +1219,22 @@
             {
                 "@self": {
                     "register": "humaniq",
+                    "schema": "job-application",
+                    "slug": "application-deboer-terug"
+                },
+                "vacancyId": "@ref:vacancy-vue-developer",
+                "candidateName": "Jesse de Boer",
+                "email": "jesse.deboer@example.org",
+                "phone": "+31 6 00000005",
+                "motivation": "Ik werkte hier tot mei 2026 en kom graag terug (hiring-hire-to-employee seed).",
+                "status": "aangenomen",
+                "talentPoolOptIn": false,
+                "administrationId": "ADM-001",
+                "_note": "hiring-hire-to-employee: a former employee (employee-de-boer, left 2026-05-31) applied again and was hired. Create employee lists the earlier record as a match on the private e-mail; Use this record clears the end date and starts a new onboarding case on it."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
                     "schema": "OrgUnit",
                     "slug": "orgunit-directie"
                 },
@@ -1374,6 +1390,7 @@
                 "identityDocumentRetainedUntil": "2031-12-31",
                 "loonheffingenVerklaringOnFile": true,
                 "loonheffingenVerklaringRetainedUntil": "2031-12-31",
+                "privateEmail": "jesse.deboer@example.org",
                 "administrationId": "ADM-001"
             },
             {

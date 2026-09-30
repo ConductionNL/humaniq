@@ -139,3 +139,31 @@ the honest path.
 
 - Should attaching to a former employee also restart `identityDocumentRetainedUntil`, or does
   that stay with the ID check in onboarding?
+
+## As built (2026-09-30, hiring-hire-to-employee lane 18)
+
+- Read at `development` 47a79781. `job-application` was 0.5.0 and becomes 0.6.0 (`employeeId`);
+  `Employee` was 0.12.0 and becomes 0.13.0 (`privateEmail`, `phone`, both readable by HR,
+  payroll and the employee, writable by HR, like `bsn`). Register 0.46.0.
+- D2 name split: on the FIRST space, not the last, so a Dutch prefix stays with the last
+  name ("Sanne de Boer" proposes "Sanne" and "de Boer"). HR still edits it in the dialog.
+- D2 write order: the employee, then the onboarding case, then the application link. The
+  application is saved whole (OpenRegister saves are a full replace) with its status
+  unchanged. A former employee is saved whole too, with `endDate` null and the new
+  `startDate`.
+- D1 dialog: one `Create employee` header action (open-modal, visible at `aangenomen`) opens
+  `HireApplicationDialog` (registry kind modal). The dialog reads
+  `GET /api/applications/{id}/hire-matches`, which also answers the linked employee, so a
+  second press shows `Open employee` instead of a form. There is no separate `Open employee`
+  header action: `visibleWhen` takes one condition, and the Related widget shows the link.
+- D3/D5 as designed: 409 with the matches until HR chooses `Use this record` or `Create a new
+  record`; 404 before 403.
+- D4 and REQ-HTE-003 moved to the change `hiring-document-to-employee`: filinq at
+  `development` has financial extractors only and no MRZ reader. No
+  `EmployeeDocumentExtraction` schema ships here. `dm-document-to-employee` stays `building`.
+- Seeds: the seeded `aangenomen` application (Anna Voorbeeld) stays unlinked so a fresh
+  instance can be hired from it. The look-alike is `employee-de-boer` (left 2026-05-31),
+  given `privateEmail`, and a new hired application `application-deboer-terug` from the same
+  address; it matches on the private e-mail.
+- Open question (restart `identityDocumentRetainedUntil` on a rehire): not changed; it stays
+  with the ID check in onboarding.

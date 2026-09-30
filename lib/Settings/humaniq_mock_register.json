@@ -134,9 +134,9 @@
       "job-application": {
         "slug": "job-application",
         "icon": "FileAccountOutline",
-        "version": "0.5.0",
+        "version": "0.6.0",
         "title": "Application",
-        "description": "A candidate's application (sollicitatie) against a Vacancy. Candidate PII (name/email/phone/CV/motivation) lives DIRECTLY on this object: there is deliberately no separate Candidate entity in the MVP (AVG data-minimisation, design D2): one object carries one retention clock (retentionExpiryDate) and one deletion (deleting the Application deletes the candidate's data atomically). The declarative pipeline lifecycle runs nieuw -> screening -> gesprek -> aanbod -> aangenomen, with afwijzen reachable from every active stage. Rejecting an application stamps rejectedDate and derives retentionExpiryDate per the Autoriteit Persoonsgegevens sollicitatie-richtlijn (4 weeks, or 1 year with explicit talentPoolOptIn consent). Enforced by the nl-ats-retentie-derivatie and nl-ats-retentie-verlopen checks (lib/Standards/Checks/NlAtsChecks.php, lib/Standards/rules/privacy.json). Aannemen documents a MANUAL onboarding hand-off (creating the Employee from this data is a manual follow-up action in the MVP. No cross-object write hook).",
+        "description": "A candidate's application (sollicitatie) against a Vacancy. Candidate PII (name/email/phone/CV/motivation) lives DIRECTLY on this object: there is deliberately no separate Candidate entity in the MVP (AVG data-minimisation, design D2): one object carries one retention clock (retentionExpiryDate) and one deletion (deleting the Application deletes the candidate's data atomically). The declarative pipeline lifecycle runs nieuw -> screening -> gesprek -> aanbod -> aangenomen, with afwijzen reachable from every active stage. Rejecting an application stamps rejectedDate and derives retentionExpiryDate per the Autoriteit Persoonsgegevens sollicitatie-richtlijn (4 weeks, or 1 year with explicit talentPoolOptIn consent). Enforced by the nl-ats-retentie-derivatie and nl-ats-retentie-verlopen checks (lib/Standards/Checks/NlAtsChecks.php, lib/Standards/rules/privacy.json). After aannemen, HR presses Create employee: HireService creates the Employee and the Onboarding case from this data, or attaches the hire to a former employee's record, and sets employeeId (hiring-hire-to-employee). No transition hook writes another object.",
         "type": "object",
         "x-schema-org": "schema:JobApplication",
         "required": [
@@ -180,7 +180,7 @@
                   "aanbod"
                 ],
                 "to": "aangenomen",
-                "description": "The candidate is hired. Terminal. Onboarding hand-off is a MANUAL follow-up action in the MVP: HR creates the Employee/Onboarding case by hand from this application's data (the same deferral class as leave-balance auto-posting); no cross-object write hook fires here."
+                "description": "The candidate is hired. Terminal. HR then presses Create employee, which creates the employee and the onboarding case from this application or attaches the hire to an earlier record (hiring-hire-to-employee). The transition itself writes no other object."
               },
               "afwijzen": {
                 "from": [
@@ -388,6 +388,15 @@
             "type": "boolean",
             "title": "Candidate agreed to the referral",
             "description": "The referrer confirmed the candidate agreed to be put forward."
+          },
+          "employeeId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Employee",
+            "nullable": true,
+            "title": "Employee",
+            "description": "The employee this hire became. Set when HR presses Create employee.",
+            "x-notes": "hiring-hire-to-employee D2: written by HireService only, carried with the unchanged status so no transition fires. A set value makes a second Create employee a no-op."
           }
         }
       },
@@ -1813,6 +1822,51 @@
             "default": null,
             "description": "Used only for the gender pay gap report the pay transparency law asks for. Leave empty if unknown.",
             "x-notes": "reporting-pay-transparency: the directive compares women and men; other and empty count in totals, not in the gap. Readable by HR, payroll and the employee.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "nextcloudUserId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-hr"
+              ]
+            }
+          },
+          "privateEmail": {
+            "title": "Private e-mail",
+            "type": "string",
+            "format": "email",
+            "nullable": true,
+            "description": "The employee's own e-mail address, outside work.",
+            "x-notes": "hiring-hire-to-employee D2: copied from the application on Create employee; one of the three keys HireMatchService uses to find a returning person.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "nextcloudUserId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-hr"
+              ]
+            }
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string",
+            "nullable": true,
+            "description": "The employee's own phone number.",
+            "x-notes": "hiring-hire-to-employee D2: copied from the application on Create employee.",
             "authorization": {
               "read": [
                 "humaniq-hr",
