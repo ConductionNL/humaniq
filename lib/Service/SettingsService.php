@@ -140,6 +140,33 @@ class SettingsService {
 	}//end getGlPostAccountNetWagesLiability()
 
 	/**
+	 * The GL account for employee expense reimbursements paid through payroll
+	 * (payroll-expenses-and-allowances D6: debit declaraties), configurable via
+	 * app config key `glpost_account_reimbursements`.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-004
+	 */
+	public function getGlPostAccountReimbursements(): string {
+		return $this->glPostAccount('glpost_account_reimbursements', '4010');
+	}//end getGlPostAccountReimbursements()
+
+	/**
+	 * The route an approved claim takes by default, `payroll` or `direct`
+	 * (payroll-expenses-and-allowances D1), configurable via app config key
+	 * `expense_reimbursement_route`. Unset or unknown keeps today's direct route.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
+	 */
+	public function getExpenseReimbursementRoute(): string {
+		$value = $this->appConfig->getValueString(Application::APP_ID, 'expense_reimbursement_route', 'direct');
+		return $value === 'payroll' ? 'payroll' : 'direct';
+	}//end getExpenseReimbursementRoute()
+
+	/**
 	 * Read a `glpost_account_*` config key, falling back to its placeholder
 	 * default when unset or blank.
 	 *

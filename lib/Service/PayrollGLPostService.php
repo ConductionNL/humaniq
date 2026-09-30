@@ -238,6 +238,7 @@ class PayrollGLPostService {
 	 * @return array<string, mixed> {lines, error, glExpensePosted, glLiabilityPosted}.
 	 *
 	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-002
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-004
 	 */
 	public function buildLines(array $run): array {
 		foreach (self::REQUIRED_TOTALS as $field) {
@@ -250,8 +251,11 @@ class PayrollGLPostService {
 		$chargesCents = (int)round(((float)$run['totalEmployerCharges']) * 100);
 		$loonheffingCents = (int)round(((float)$run['totalLoonheffing']) * 100);
 		$netCents = (int)round(((float)$run['totalNet']) * 100);
+		$reimbursementCents = (is_numeric($run['totalReimbursements'] ?? null) === true ? (int)round(((float)$run['totalReimbursements']) * 100) : 0);
 
-		$debitTotalCents = ($grossCents + $chargesCents);
+		// payroll-expenses-and-allowances D6: reimbursements raise net with no
+		// wage cost behind them, so they carry their own debit line.
+		$debitTotalCents = ($grossCents + $chargesCents + max(0, $reimbursementCents));
 		$creditKnownCents = ($loonheffingCents + $netCents);
 		$remainderCents = ($debitTotalCents - $creditKnownCents);
 
@@ -272,6 +276,9 @@ class PayrollGLPostService {
 			['side' => 'credit', 'accountNumber' => $this->settingsService->getGlPostAccountWageTaxLiability(), 'amount' => $loonheffingCents, 'description' => 'Loonheffing-schuld'],
 			['side' => 'credit', 'accountNumber' => $this->settingsService->getGlPostAccountNetWagesLiability(), 'amount' => $netLiabilityCents, 'description' => 'Netto-loonschuld'],
 		];
+		if ($reimbursementCents > 0) {
+			array_splice($candidates, 2, 0, [['side' => 'debit', 'accountNumber' => $this->settingsService->getGlPostAccountReimbursements(), 'amount' => $reimbursementCents, 'description' => 'Declaraties en onbelaste vergoedingen']]);
+		}
 
 		$lines = [];
 		foreach ($candidates as $candidate) {

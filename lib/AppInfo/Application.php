@@ -58,7 +58,9 @@ use OCA\Humaniq\Listener\ScenarioMutationListener;
 use OCA\Humaniq\Listener\ExitInterviewListener;
 use OCA\Humaniq\Listener\CandidateEvaluationStampListener;
 use OCA\Humaniq\Listener\ReferralListener;
+use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\PayrollRunApprovedListener;
+use OCA\Humaniq\Listener\RecurringAllowanceStampListener;
 use OCA\Humaniq\Listener\RelationsCaseListener;
 use OCA\Humaniq\Listener\AnnouncementConfirmationListener;
 use OCA\Humaniq\Service\AnnouncementService;
@@ -500,6 +502,7 @@ class Application extends App implements IBootstrap {
 		$this->registerFieldAccessListener($dispatcher);
 		$this->registerApprovalsInboxListeners($dispatcher);
 		$this->registerOvertimeCreditListener($dispatcher);
+		$this->registerExpensePayrollListeners($dispatcher);
 		$this->registerHrLifecycleEventListener($dispatcher);
 
 	}//end boot()
@@ -940,6 +943,37 @@ class Application extends App implements IBootstrap {
 			schemas: ['payrollrun']
 		);
 	}//end registerOvertimeCreditListener()
+
+	/**
+	 * payroll-expenses-and-allowances D1 and D3: a claim's route is stamped
+	 * and judged, and a recurring allowance is stamped with its drafter and
+	 * employee, before either is saved.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-002
+	 */
+	private function registerExpensePayrollListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: ExpenseRouteListener::class,
+				registers: null,
+				schemas: [ExpenseRouteListener::SLUG]
+			);
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: RecurringAllowanceStampListener::class,
+				registers: null,
+				schemas: [RecurringAllowanceStampListener::SLUG]
+			);
+		}
+	}//end registerExpensePayrollListeners()
 
 	/**
 	 * self-service-approvals-inbox D1 and D2: a deputy record is judged before
