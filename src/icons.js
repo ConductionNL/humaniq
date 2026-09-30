@@ -95,6 +95,7 @@ import FileDocumentPlusOutline from "vue-material-design-icons/FileDocumentPlusO
 import FileSendOutline from "vue-material-design-icons/FileSendOutline.vue";
 import FileSign from "vue-material-design-icons/FileSign.vue";
 import FolderOutline from "vue-material-design-icons/FolderOutline.vue";
+import FormSelect from "vue-material-design-icons/FormSelect.vue";
 import Gavel from "vue-material-design-icons/Gavel.vue";
 import GiftOutline from "vue-material-design-icons/GiftOutline.vue";
 import HandshakeOutline from "vue-material-design-icons/HandshakeOutline.vue";
@@ -215,6 +216,7 @@ export default {
 	FileSendOutline,
 	FileSign,
 	FolderOutline,
+	FormSelect,
 	Gavel,
 	GiftOutline,
 	HandshakeOutline,

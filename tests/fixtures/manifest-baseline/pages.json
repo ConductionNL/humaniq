@@ -84,6 +84,10 @@
 		"route": "/applications/:id"
 	},
 	{
+		"id": "VacancyDetail",
+		"route": "/vacancies/:id"
+	},
+	{
 		"id": "CaoDetail",
 		"route": "/caos/:id"
 	},
@@ -274,10 +278,6 @@
 	{
 		"id": "Vacancies",
 		"route": "/vacancies"
-	},
-	{
-		"id": "VacancyDetail",
-		"route": "/vacancies/:id"
 	},
 	{
 		"id": "Applications",

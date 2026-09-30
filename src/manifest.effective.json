@@ -3749,12 +3749,12 @@
 						"gridHeight": 4,
 						"gridWidth": 8,
 						"gridX": 0,
-						"gridY": 5,
+						"gridY": 9,
 						"id": 2,
 						"widgetId": "data-2"
 					},
 					{
-						"gridHeight": 9,
+						"gridHeight": 13,
 						"gridWidth": 4,
 						"gridX": 8,
 						"gridY": 0,
@@ -3765,7 +3765,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 9,
+						"gridY": 13,
 						"id": 4,
 						"widgetId": "files"
 					},
@@ -3773,9 +3773,17 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 13,
+						"gridY": 17,
 						"id": 5,
 						"widgetId": "object-list"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 5,
+						"id": 6,
+						"widgetId": "answers"
 					}
 				],
 				"lifecycleActions": {
@@ -3842,7 +3850,8 @@
 								"rejectedDate",
 								"retentionExpiryDate",
 								"offerLetterFileId",
-								"offerSigningRequestId"
+								"offerSigningRequestId",
+								"answers"
 							],
 							"title": "Application"
 						},
@@ -3850,6 +3859,13 @@
 						"id": "data",
 						"title": "Application",
 						"type": "data"
+					},
+					{
+						"content": {},
+						"icon": "FormSelect",
+						"id": "answers",
+						"title": "Answers to the vacancy questions",
+						"type": "application-answers"
 					},
 					{
 						"content": {
@@ -3928,6 +3944,163 @@
 			"id": "ApplicationDetail",
 			"route": "/applications/:id",
 			"title": "Application",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "recruiting-ats-basic (2026-07-13): the 'Vacancy' widget carries every field (title/description/department/status/publishedDate/closingDate). The 'Sollicitaties' related widget resolves the incoming Application.vacancyId references -- the candidate list per vacancy. lifecycleActions expose exactly publiceren/sluiten (design D3) -- no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Audit history is a sidebar tab. hiring-portal-audiences (2026-09-30): expanded from simpleDetailScaffold to carry the 'Application questions' host widget (vacancy-questions, CnFormBuilder), whose list portaliq shows on the public apply form; answers land on job-application.answers. hiring-multiposting (2026-09-30): channels on the data widget (the job boards HR ticks) and a Job boards object-list of the VacancyPosting records the Vacature plaatsen and Vacature intrekken flows write, one per board.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 8,
+						"id": 3,
+						"widgetId": "questions"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 16,
+						"id": 4,
+						"widgetId": "postings"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "publiceren",
+							"from": [
+								"concept"
+							],
+							"label": "Publish",
+							"to": "gepubliceerd"
+						},
+						{
+							"action": "sluiten",
+							"from": [
+								"gepubliceerd"
+							],
+							"label": "Close",
+							"to": "gesloten"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "Vacancy",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"include": [
+								"title",
+								"description",
+								"department",
+								"status",
+								"publishedDate",
+								"closingDate",
+								"channels"
+							],
+							"overrides": {
+								"status": {
+									"editable": false
+								}
+							},
+							"title": "Vacancy"
+						},
+						"icon": "BriefcaseSearchOutline",
+						"id": "data",
+						"title": "Vacancy",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Applications"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Applications",
+						"type": "related"
+					},
+					{
+						"content": {},
+						"icon": "FormSelect",
+						"id": "questions",
+						"title": "Application questions",
+						"type": "vacancy-questions"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "channel",
+									"label": "Job board"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "externalUrl",
+									"label": "Link"
+								},
+								{
+									"key": "postedAt",
+									"label": "Posted"
+								},
+								{
+									"key": "withdrawnAt",
+									"label": "Withdrawn"
+								},
+								{
+									"key": "lastError",
+									"label": "Reason it failed"
+								}
+							],
+							"emptyText": "Not posted to any job board. Tick the boards and publish; an administrator enables the posting flow first.",
+							"filter": {
+								"vacancyId": "@objectId"
+							},
+							"limit": 25,
+							"register": "humaniq",
+							"schema": "VacancyPosting",
+							"sort": {
+								"dir": "asc",
+								"field": "channel"
+							}
+						},
+						"icon": "BullhornOutline",
+						"id": "postings",
+						"title": "Job boards",
+						"type": "object-list"
+					}
+				]
+			},
+			"id": "VacancyDetail",
+			"route": "/vacancies/:id",
+			"title": "Vacancy",
 			"type": "detail"
 		},
 		{
@@ -10460,7 +10633,7 @@
 					"publishedDate",
 					"closingDate"
 				],
-				"description": "Vacancies (recruiting-ats-basic): draft -> published -> closed publish lifecycle. No external multiposting (werk.nl/LinkedIn) and no public vacancy page in the MVP.",
+				"description": "Vacancies: draft, published, closed. Published vacancies appear on the careers page of the portal, where candidates apply.",
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
@@ -10479,94 +10652,6 @@
 			"route": "/vacancies",
 			"title": "Vacancies",
 			"type": "index"
-		},
-		{
-			"config": {
-				"_note": "recruiting-ats-basic (2026-07-13): the 'Vacancy' widget carries every field (title/description/department/status/publishedDate/closingDate). The 'Sollicitaties' related widget resolves the incoming Application.vacancyId references -- the candidate list per vacancy. lifecycleActions expose exactly publiceren/sluiten (design D3) -- no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Audit history is a sidebar tab.",
-				"layout": [
-					{
-						"gridHeight": 8,
-						"gridWidth": 8,
-						"gridX": 0,
-						"gridY": 0,
-						"id": 1,
-						"widgetId": "data"
-					},
-					{
-						"gridHeight": 8,
-						"gridWidth": 4,
-						"gridX": 8,
-						"gridY": 0,
-						"id": 2,
-						"widgetId": "related"
-					}
-				],
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "publiceren",
-							"from": [
-								"concept"
-							],
-							"label": "Publish",
-							"to": "gepubliceerd"
-						},
-						{
-							"action": "sluiten",
-							"from": [
-								"gepubliceerd"
-							],
-							"label": "Close",
-							"to": "gesloten"
-						}
-					]
-				},
-				"register": "humaniq",
-				"schema": "Vacancy",
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				},
-				"widgets": [
-					{
-						"content": {
-							"columns": 2,
-							"include": [
-								"title",
-								"description",
-								"department",
-								"status",
-								"publishedDate",
-								"closingDate"
-							],
-							"overrides": {
-								"status": {
-									"editable": false
-								}
-							},
-							"title": "Vacancy"
-						},
-						"icon": "BriefcaseSearchOutline",
-						"id": "data",
-						"title": "Vacancy",
-						"type": "data"
-					},
-					{
-						"content": {
-							"title": "Applications"
-						},
-						"icon": "LinkVariant",
-						"id": "related",
-						"title": "Applications",
-						"type": "related"
-					}
-				]
-			},
-			"id": "VacancyDetail",
-			"route": "/vacancies/:id",
-			"title": "Vacancy",
-			"type": "detail"
 		},
 		{
 			"config": {

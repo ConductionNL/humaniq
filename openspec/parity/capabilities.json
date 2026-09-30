@@ -1288,7 +1288,7 @@
    "id": "hir-career-page",
    "area": "hiring",
    "name": "Publish vacancies on a public careers page where candidates can apply.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -1304,10 +1304,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/8758636857629-Set-up-the-Personio-career-page: the career page is a separate website showing published jobs where candidates apply through the application form."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-portal-audiences on 2026-09-27. Before: lib/Settings/register.d/hr-ats.json Vacancy description states explicitly: 'no public career page (portaliq per ADR-046)'; openspec/specs/recruiting-vacancies/spec.md:25: 'public career page (portaliq per ADR-046) are explicitly out of scope'; lib/Portal/PortalContributionProvider.php:getAudiences() returns only ['external-employee','client','manager'], no 'candidate' audience, and grep -n 'Vacancy|candidate' lib/Portal/PortalContributionProvider.php: no hits, confirming portaliq's contribution today carries no vacancy/candidate surface either",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Portal/PortalContributionProvider.php candidateManifest(): the anonymous openVacancies collection (Vacancy, filter status gepubliceerd, projected to title, description, department, closingDate, questions) and the anonymous applyToVacancy create action on job-application with a whitelist that leaves status, retention, offer and administration out; portaliq renders the careers page and form. Tests: tests/Unit/Portal/PortalAudiencesTest.php.",
+    "reachedOn": "the portal's careers page (portaliq, candidate audience); HR sees the application in Recruitment > Applications",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-portal-audiences",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1320,7 +1322,7 @@
    "id": "hir-multiposting",
    "area": "hiring",
    "name": "Post a vacancy to several job boards in one go.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -1336,17 +1338,19 @@
     "personio": "https://support.personio.de/hc/en-us/articles/115005416109-Promote-jobs-on-external-job-boards-via-multiposting: post a job on many paid and free job boards at once from within Personio, through the partner GoHiring."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-multiposting on 2026-09-27. Before: lib/Settings/register.d/hr-ats.json Vacancy description: 'no external multiposting (werk.nl/LinkedIn is an OpenConnector follow-up)'; grep -rniF multiposting lib/ src/manifest.d/ openspec/specs/: only this one disclaiming mention",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-ats.json: Vacancy.channels (the boards HR ticks) and postedToChannels; VacancyPosting (one per vacancy and board: te-plaatsen, geplaatst, mislukt, ingetrokken); two x-openregister-flows on Vacancy, Vacature plaatsen (object.updated, filter published and not yet posted, explode channels, route per board, integriq apply-mapping and source-call with onError continue, upsert the posting) and Vacature intrekken (closed: read live postings, DELETE on the board, mark ingetrokken). Both arrive disabled. Node configs checked with the real openregister and integriq classes. Tests: tests/Unit/Flow/VacancyMultipostingTest.php.",
+    "reachedOn": "Recruitment > Vacancies > a vacancy: Job boards on the data widget and the Job boards list; posts once an administrator enables the flows and configures a source per board in integriq",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-multiposting",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "recruiting-vacancies",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Named as a deliberate follow-up for integriq (the renamed OpenConnector), not built."
+   "note": "Posting runs through integriq (one source and mapping per board); the flows ship disabled per the engine adoption contract."
   },
   {
    "id": "hir-applicant-pipeline",
@@ -1573,7 +1577,7 @@
    "id": "hir-preboarding",
    "area": "hiring",
    "name": "Give a new hire access to information and forms before their first day.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -1589,10 +1593,12 @@
     "personio": "not checked: not settled: searched help centre for preboarding and before the first day; https://support.personio.de/hc/en-us/articles/115002474325-Common-onboarding-templates-and-steps has an HR step to invite the new employee to Personio and a hardware choice step for the employee, but no page states new hires get access to information and forms before their start date."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-portal-audiences on 2026-09-27. Before: grep -rniF preboard lib/Settings/register.d/ src/manifest.d/ openspec/specs/: no hits anywhere",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Portal/PortalContributionProvider.php newHireManifest(): the hire's own Employee and Onboarding (scoped on the employeeId claim, files uploaded onto the onboarding case) and updateMyDetails (iban, tenaamstelling, bsn at substantial trust). Tests: tests/Unit/Portal/PortalAudiencesTest.php.",
+    "reachedOn": "the portal for a new hire (portaliq, new-hire audience)",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-portal-audiences",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5559,7 +5565,7 @@
    "id": "ess-external-portal",
    "area": "self-service",
    "name": "Offer an external portal for applicants or former employees.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -5575,10 +5581,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/8758636857629-Set-up-the-Personio-career-page gives applicants an external career page and application form, and https://support.personio.de/hc/en-us/articles/360003163698-Create-an-external-profile-for-a-tax-advisor gives outside advisors access; no portal for former employees is described."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-portal-audiences on 2026-09-27 for the missing half: a candidate audience and a former-employee audience on the portal contribution. Before: lib/Portal/PortalContributionProvider.php declares audiences() = ['external-employee','client'] only (lines 57-70), duck-typed by convention FQCN, inert without portaliq installed; external-employee covers payroll externals without an NC account (own employee record, payslips, contracts, timesheets, expenses, leave requests); no 'candidate'/'applicant' or 'former-employee' audience exists anywhere in the class or the register",
-    "reachedOn": "portaliq's shared external portal, when portaliq is installed, for the external-employee and client audiences only",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Portal/PortalContributionProvider.php now also serves candidates (candidateManifest), new hires (newHireManifest) and former employees (formerEmployeeManifest: own payslips, annual statements and generated letters, read-only) beside external employees, clients and managers. Tests: tests/Unit/Portal/PortalAudiencesTest.php.",
+    "reachedOn": "the portal (portaliq) for candidates, new hires and former employees",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-portal-audiences",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7694,7 +7702,7 @@
    "id": "dm-applicant-questions",
    "area": "hiring",
    "name": "Add your own questions to the public job application form.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -7710,10 +7718,12 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmRecruitmentPlugin/config/routes.yaml:289 the apply page has fixed fields; custom fields exist only for employees (src/plugins/orangehrmPimPlugin/config/routes.yaml:324); issue open since 2019-04-03 with no replies (origin https://github.com/orangehrm/orangehrm/issues/484)"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/hiring-portal-audiences on 2026-09-27. Before: lib/Settings/register.d/hr-ats.json job-application schema has fixed properties; no public application form in humaniq (hir-career-page) and no per-vacancy question list (grep -rniE 'question' lib/Settings/register.d/hr-ats.json: no hits)",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-ats.json Vacancy.questions (fields[] shape) and job-application.answers; src/widgets/VacancyQuestionsWidget.vue (CnFormBuilder) on VacancyDetail, src/widgets/ApplicationAnswersWidget.vue on ApplicationDetail; the apply action whitelists answers. Tests: tests/Unit/Portal/PortalAudiencesTest.php.",
+    "reachedOn": "Recruitment > Vacancies > a vacancy > Application questions; the application's Answers to the vacancy questions",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-hiring-portal-audiences",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
