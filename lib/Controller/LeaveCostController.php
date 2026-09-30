@@ -37,7 +37,8 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 
 /**
- * The cost of a leave request.
+ * The cost of a leave request. *
+ * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-003
  */
 class LeaveCostController extends Controller {
 

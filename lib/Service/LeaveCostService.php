@@ -32,7 +32,8 @@ use DateTimeImmutable;
 use OCP\IL10N;
 
 /**
- * The cost of one request.
+ * The cost of one request. *
+ * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-003
  */
 class LeaveCostService {
 
