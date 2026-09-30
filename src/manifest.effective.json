@@ -373,6 +373,21 @@
 						"managerUserId": "@me"
 					},
 					"route": "ManagerDeputies"
+				},
+				{
+					"icon": "BriefcaseSearchOutline",
+					"id": "MijnVacatures",
+					"label": "Open vacancies",
+					"query": {
+						"status": "gepubliceerd"
+					},
+					"route": "Vacancies"
+				},
+				{
+					"icon": "AccountArrowRightOutline",
+					"id": "MijnAanbevelingen",
+					"label": "My referrals",
+					"route": "MijnAanbevelingen"
 				}
 			],
 			"icon": "Account",
@@ -3719,7 +3734,7 @@
 		},
 		{
 			"config": {
-				"_note": "recruiting-ats-basic (2026-07-13): candidate PII (candidateName/email/phone/cvFile/motivation) lives DIRECTLY on this Application -- there is deliberately no separate Candidate entity (AVG data-minimisation, design D2): one object = one retention clock = one delete. The 'Application' widget excludes vacancyId (Related resolves the Vacancy) and the three privacy fields (talentPoolOptIn/rejectedDate/retentionExpiryDate), which instead surface on the dedicated 'Privacy & retention' widget so the AVG retention clock is never buried among ordinary fields. lifecycleActions expose exactly screenen/uitnodigen/aanbieden/aannemen/afwijzen (design D3) -- no invented edges; aannemen's onboarding hand-off (creating the Employee from this data) is a MANUAL follow-up action in the MVP, no cross-object write hook fires here. Audit history is a sidebar tab. offer-esign (2026-07-16): page-level action \"request-offer-signature\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/offer/request-signature with {applicationId: @objectId}, guarded server-side by OfferController::authorizeApplication() (resolve-first RBAC) + isAdminOrHr() + the aanbod-stage guard. The 'Application' data widget's exclude list additionally hides offerLetterFileId/offerSigningRequestId (internal correlation ids) -- offerSigningStatus stays visible as the human-readable state.",
+				"_note": "recruiting-ats-basic (2026-07-13): candidate PII (candidateName/email/phone/cvFile/motivation) lives DIRECTLY on this Application -- there is deliberately no separate Candidate entity (AVG data-minimisation, design D2): one object = one retention clock = one delete. The 'Application' widget excludes vacancyId (Related resolves the Vacancy) and the three privacy fields (talentPoolOptIn/rejectedDate/retentionExpiryDate), which instead surface on the dedicated 'Privacy & retention' widget so the AVG retention clock is never buried among ordinary fields. lifecycleActions expose exactly screenen/uitnodigen/aanbieden/aannemen/afwijzen (design D3) -- no invented edges; aannemen's onboarding hand-off (creating the Employee from this data) is a MANUAL follow-up action in the MVP, no cross-object write hook fires here. Audit history is a sidebar tab. offer-esign (2026-07-16): page-level action \"request-offer-signature\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/offer/request-signature with {applicationId: @objectId}, guarded server-side by OfferController::authorizeApplication() (resolve-first RBAC) + isAdminOrHr() + the aanbod-stage guard. The 'Application' data widget's exclude list additionally hides offerLetterFileId/offerSigningRequestId (internal correlation ids) -- offerSigningStatus stays visible as the human-readable state. hiring-candidate-assessment (2026-09-30): the candidate's profile fields (education level, years, competences) and the referral source show in the data widget; Evaluations lists the CandidateEvaluation records (object-list), Average scores reads GET /api/applications/{id}/evaluation-summary (endpoint-table: OpenRegister's aggregation cannot group the nested scores list), and Score this candidate opens the evaluation form; the evaluator is stamped by the server.",
 				"headerActions": [
 					{
 						"confirm": true,
@@ -3734,6 +3749,15 @@
 						"successMessage": "The offer letter is being generated and an e-signature requested.",
 						"type": "api-call",
 						"url": "/api/offer/request-signature"
+					},
+					{
+						"icon": "StarOutline",
+						"id": "score-candidate",
+						"label": "Score this candidate",
+						"register": "humaniq",
+						"schema": "CandidateEvaluation",
+						"successMessage": "Your evaluation is saved.",
+						"type": "open-form"
 					}
 				],
 				"layout": [
@@ -3784,6 +3808,22 @@
 						"gridY": 5,
 						"id": 6,
 						"widgetId": "answers"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 21,
+						"id": 7,
+						"widgetId": "evaluations"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 21,
+						"id": 8,
+						"widgetId": "evaluation-averages"
 					}
 				],
 				"lifecycleActions": {
@@ -3938,6 +3978,71 @@
 						"id": "object-list",
 						"title": "Interviews",
 						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "evaluatorUserId",
+									"label": "Evaluator"
+								},
+								{
+									"key": "recommendation",
+									"label": "Recommendation"
+								},
+								{
+									"key": "submittedAt",
+									"label": "Submitted"
+								},
+								{
+									"key": "note",
+									"label": "Note"
+								}
+							],
+							"emptyText": "No one has scored this candidate yet.",
+							"filter": {
+								"applicationId": "@objectId"
+							},
+							"limit": 25,
+							"register": "humaniq",
+							"schema": "CandidateEvaluation",
+							"sort": {
+								"dir": "desc",
+								"field": "submittedAt"
+							}
+						},
+						"icon": "StarOutline",
+						"id": "evaluations",
+						"title": "Evaluations",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "criterion",
+									"label": "Criterion"
+								},
+								{
+									"key": "average",
+									"label": "Average"
+								},
+								{
+									"key": "count",
+									"label": "Scores"
+								}
+							],
+							"emptyText": "No scores yet.",
+							"endpointSource": {
+								"responsePath": "criteria",
+								"url": "/apps/humaniq/api/applications/@objectId/evaluation-summary"
+							}
+						},
+						"icon": "ChartBar",
+						"id": "evaluation-averages",
+						"title": "Average scores",
+						"type": "endpoint-table"
 					}
 				]
 			},
@@ -3948,7 +4053,7 @@
 		},
 		{
 			"config": {
-				"_note": "recruiting-ats-basic (2026-07-13): the 'Vacancy' widget carries every field (title/description/department/status/publishedDate/closingDate). The 'Sollicitaties' related widget resolves the incoming Application.vacancyId references -- the candidate list per vacancy. lifecycleActions expose exactly publiceren/sluiten (design D3) -- no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Audit history is a sidebar tab. hiring-portal-audiences (2026-09-30): expanded from simpleDetailScaffold to carry the 'Application questions' host widget (vacancy-questions, CnFormBuilder), whose list portaliq shows on the public apply form; answers land on job-application.answers. hiring-multiposting (2026-09-30): channels on the data widget (the job boards HR ticks) and a Job boards object-list of the VacancyPosting records the Vacature plaatsen and Vacature intrekken flows write, one per board.",
+				"_note": "recruiting-ats-basic (2026-07-13): the 'Vacancy' widget carries every field (title/description/department/status/publishedDate/closingDate). The 'Sollicitaties' related widget resolves the incoming Application.vacancyId references -- the candidate list per vacancy. lifecycleActions expose exactly publiceren/sluiten (design D3) -- no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Audit history is a sidebar tab. hiring-portal-audiences (2026-09-30): expanded from simpleDetailScaffold to carry the 'Application questions' host widget (vacancy-questions, CnFormBuilder), whose list portaliq shows on the public apply form; answers land on job-application.answers. hiring-multiposting (2026-09-30): channels on the data widget (the job boards HR ticks) and a Job boards object-list of the VacancyPosting records the Vacature plaatsen and Vacature intrekken flows write, one per board. hiring-candidate-assessment (2026-09-30): the evaluation criteria and the requirements (minimum education level, years, required and preferred competences) on the data widget, and Who fits: the ranked matches from GET /api/vacancies/{id}/matches with the points per requirement and what is missing. The score ranks; it never moves an application.",
 				"layout": [
 					{
 						"gridHeight": 8,
@@ -3981,6 +4086,14 @@
 						"gridY": 16,
 						"id": 4,
 						"widgetId": "postings"
+					},
+					{
+						"gridHeight": 7,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 22,
+						"id": 5,
+						"widgetId": "matches"
 					}
 				],
 				"lifecycleActions": {
@@ -4021,7 +4134,12 @@
 								"status",
 								"publishedDate",
 								"closingDate",
-								"channels"
+								"channels",
+								"evaluationCriteria",
+								"minEducationLevel",
+								"minExperienceYears",
+								"requiredCompetences",
+								"preferredCompetences"
 							],
 							"overrides": {
 								"status": {
@@ -4095,6 +4213,54 @@
 						"id": "postings",
 						"title": "Job boards",
 						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Name"
+								},
+								{
+									"key": "kind",
+									"label": "Applicant or colleague"
+								},
+								{
+									"key": "total",
+									"label": "Score"
+								},
+								{
+									"key": "educationPoints",
+									"label": "Education"
+								},
+								{
+									"key": "experiencePoints",
+									"label": "Experience"
+								},
+								{
+									"key": "requiredPoints",
+									"label": "Required competences"
+								},
+								{
+									"key": "preferredPoints",
+									"label": "Preferred competences"
+								},
+								{
+									"key": "missing",
+									"label": "Missing"
+								}
+							],
+							"emptyText": "No applicant or colleague has a profile to compare yet.",
+							"endpointSource": {
+								"responsePath": "matches",
+								"url": "/apps/humaniq/api/vacancies/@objectId/matches"
+							}
+						},
+						"icon": "AccountSearchOutline",
+						"id": "matches",
+						"title": "Who fits",
+						"type": "endpoint-table"
 					}
 				]
 			},
@@ -4102,6 +4268,41 @@
 			"route": "/vacancies/:id",
 			"title": "Vacancy",
 			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "hiring-candidate-assessment D4: the employee's own referrals. The server stamps referrerUserId, refuses a referral without the candidate's agreement or for a vacancy that is not published, creates the application and keeps status in step with it; includeFields is the allowlist of what the referrer types.",
+				"actionToggles": {
+					"showAdd": true
+				},
+				"columns": [
+					"candidateName",
+					"vacancyTitle",
+					"status"
+				],
+				"description": "Put someone forward for a published vacancy and follow where their application stands. Open vacancies lists what we are hiring for.",
+				"filter": {
+					"referrerUserId": "@me"
+				},
+				"includeFields": [
+					"vacancyId",
+					"candidateName",
+					"email",
+					"phone",
+					"motivation",
+					"candidateConsented"
+				],
+				"register": "humaniq",
+				"schema": "Referral",
+				"sort": {
+					"field": "candidateName",
+					"order": "asc"
+				}
+			},
+			"id": "MijnAanbevelingen",
+			"route": "/mijn/aanbevelingen",
+			"title": "My referrals",
+			"type": "index"
 		},
 		{
 			"config": {

@@ -120,6 +120,44 @@ Rejected: it would give every employee create and read rights on candidate data.
 - [Referrals of people who did not agree] → the consent box is required and stored on the
   application as part of the create.
 
+## As built (2026-09-30)
+
+- **Flat profile and requirements.** `job-application` carries `educationLevel`,
+  `experienceYears` and `competenceCodes` as top-level fields, and `Vacancy` carries
+  `minEducationLevel`, `minExperienceYears`, `requiredCompetences` and `preferredCompetences`,
+  instead of a nested `profile` and `requirements` object: the generic data widget edits flat
+  fields, and the match service reads them the same way. The education level is the Dutch
+  qualification scale (NLQF) 1 to 8, so "at or above the minimum" is a plain comparison. The
+  normfunctie requirement is left out: no score point hangs on it.
+- **D1 averages.** OpenRegister's aggregation `groupBy` names top-level properties only, so it
+  cannot average the nested `scores` list per criterion. `GET
+  /api/applications/{id}/evaluation-summary` (resolve first, then HR or an administrator)
+  computes the averages and `ApplicationDetail` shows them in an `endpoint-table`. The cascade
+  is the property-level `onDelete: CASCADE` on `CandidateEvaluation.applicationId`.
+  `Score this candidate` is an `open-form` action on the application page; the evaluator and
+  the moment are stamped by `CandidateEvaluationStampListener`, which also keeps the evaluator
+  on an edit.
+- **D2.** As designed. Hired applicants (`aangenomen`) are left out: they are colleagues now.
+  Colleagues appear when they hold at least one competence current on the day; unknown
+  education or experience scores zero and the breakdown says so. The list is the `Who fits`
+  table on `VacancyDetail`.
+- **D3, Read CV, not built.** filinq has no CV or profile extraction at `development` (its
+  extractors are amount, date, IBAN, KvK and totals). Task 2.4 moved to the new change
+  `hiring-cv-profile-extraction`, which owns the missing half of `dm-vacancy-matching`; the
+  contract humaniq would call is drafted for Ruben in `for-ruben/filinq-cv-profile-extraction.md`.
+  HR types the profile until then.
+- **D4, referrals through a record.** The manifest renderer has no form that posts to an app
+  endpoint (`open-form` and `showAdd` create OpenRegister objects), so an employee writes a
+  `Referral` on `My referrals` and `ReferralListener` does what the endpoint would have done:
+  it refuses a referral without the candidate's agreement or for a vacancy that is not
+  published, stamps the referrer and the vacancy title, creates the `job-application` as
+  humaniq's own write at `nieuw` with `source: referral`, `referredByUserId` and
+  `candidateConsented`, and keeps the referral's `status` in step whenever HR moves the
+  application. `Open vacancies` under My HR lists the published vacancies. A referral that
+  already names its application (a seed) creates no second one.
+- Register 0.45.0 (Vacancy 0.6.0, job-application 0.5.0, CandidateEvaluation 0.1.0,
+  Referral 0.1.0).
+
 ## Open Questions
 
 - Should the referrer be told when their candidate is hired, through the notification

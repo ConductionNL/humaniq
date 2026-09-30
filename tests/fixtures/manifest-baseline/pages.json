@@ -88,6 +88,10 @@
 		"route": "/vacancies/:id"
 	},
 	{
+		"id": "MijnAanbevelingen",
+		"route": "/mijn/aanbevelingen"
+	},
+	{
 		"id": "CaoDetail",
 		"route": "/caos/:id"
 	},

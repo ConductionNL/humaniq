@@ -26,6 +26,7 @@ import AccountMultipleOutline from "vue-material-design-icons/AccountMultipleOut
 import AccountOutline from "vue-material-design-icons/AccountOutline.vue";
 import AccountPlus from "vue-material-design-icons/AccountPlus.vue";
 import AccountPlusOutline from "vue-material-design-icons/AccountPlusOutline.vue";
+import AccountSearchOutline from "vue-material-design-icons/AccountSearchOutline.vue";
 import AccountTieOutline from "vue-material-design-icons/AccountTieOutline.vue";
 import AlertCircleOutline from "vue-material-design-icons/AlertCircleOutline.vue";
 import AlertOutline from "vue-material-design-icons/AlertOutline.vue";
@@ -121,6 +122,7 @@ import ShieldLockOutline from "vue-material-design-icons/ShieldLockOutline.vue";
 import Sitemap from "vue-material-design-icons/Sitemap.vue";
 import SitemapOutline from "vue-material-design-icons/SitemapOutline.vue";
 import StarCheckOutline from "vue-material-design-icons/StarCheckOutline.vue";
+import StarOutline from "vue-material-design-icons/StarOutline.vue";
 import StoreOutline from "vue-material-design-icons/StoreOutline.vue";
 import SwapHorizontal from "vue-material-design-icons/SwapHorizontal.vue";
 import TableClock from "vue-material-design-icons/TableClock.vue";
@@ -147,6 +149,7 @@ export default {
 	AccountOutline,
 	AccountPlus,
 	AccountPlusOutline,
+	AccountSearchOutline,
 	AccountTieOutline,
 	AlertCircleOutline,
 	AlertOutline,
@@ -242,6 +245,7 @@ export default {
 	Sitemap,
 	SitemapOutline,
 	StarCheckOutline,
+	StarOutline,
 	StoreOutline,
 	SwapHorizontal,
 	TableClock,

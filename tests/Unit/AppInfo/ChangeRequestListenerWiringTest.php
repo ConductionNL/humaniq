@@ -79,6 +79,8 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 	use OCA\Humaniq\Listener\RightToWorkCheckListener;
 	use OCA\Humaniq\Listener\ScenarioMutationListener;
 	use OCA\Humaniq\Listener\ExitInterviewListener;
+	use OCA\Humaniq\Listener\CandidateEvaluationStampListener;
+	use OCA\Humaniq\Listener\ReferralListener;
 	use OCA\Humaniq\Listener\RelationsCaseListener;
 	use OCA\Humaniq\Listener\SideActivityListener;
 	use OCA\OpenRegister\Event\ObjectEventSubscription;
@@ -274,6 +276,41 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
 			self::assertStringContainsString('$this->registerExitInterviewListeners($dispatcher);', $boot);
 		}//end testTheExitInterviewListenerIsSubscribed()
+
+		/**
+		 * REQ-CAS-001/003: the evaluator stamp and the referral listener are
+		 * subscribed on the events they act on, and boot calls the registration.
+		 *
+		 * @return void
+		 */
+		public function testTheCandidateAssessmentListenersAreSubscribed(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			$method = new \ReflectionMethod(Application::class, 'registerCandidateAssessmentListeners');
+			$method->invoke($app, $this->createMock(IEventDispatcher::class));
+
+			$seen = [];
+			foreach (ObjectEventSubscription::$recorded as $entry) {
+				$seen[] = [$entry['listener'], $entry['schemas'][0], $entry['event']];
+			}
+
+			self::assertSame(
+				[
+					[CandidateEvaluationStampListener::class, 'candidateevaluation', 'OCA\OpenRegister\Event\ObjectCreatingEvent'],
+					[CandidateEvaluationStampListener::class, 'candidateevaluation', 'OCA\OpenRegister\Event\ObjectUpdatingEvent'],
+					[ReferralListener::class, 'referral', 'OCA\OpenRegister\Event\ObjectCreatingEvent'],
+					[ReferralListener::class, 'referral', 'OCA\OpenRegister\Event\ObjectCreatedEvent'],
+					[ReferralListener::class, 'job-application', 'OCA\OpenRegister\Event\ObjectUpdatedEvent'],
+				],
+				$seen
+			);
+			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+			self::assertStringContainsString('$this->registerCandidateAssessmentListeners($dispatcher);', $boot);
+		}//end testTheCandidateAssessmentListenersAreSubscribed()
 
 		/**
 		 * REQ-AND-002: a second confirmation is refused before it is saved.

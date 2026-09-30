@@ -91,6 +91,9 @@ return [
         ['name' => 'offboarding#exitReasons', 'url' => '/api/offboarding/exit-reasons', 'verb' => 'GET'],
         ['name' => 'offboarding#revokeAccess', 'url' => '/api/offboarding/{id}/revoke-access', 'verb' => 'POST'],
         ['name' => 'offboarding#transitionPayment', 'url' => '/api/offboarding/{id}/transition-payment', 'verb' => 'POST'],
+        // hiring-candidate-assessment REQ-CAS-001/002: the average score per criterion and the ranked vacancy matches.
+        ['name' => 'recruiting#evaluationSummary', 'url' => '/api/applications/{id}/evaluation-summary', 'verb' => 'GET'],
+        ['name' => 'recruiting#matches', 'url' => '/api/vacancies/{id}/matches', 'verb' => 'GET'],
         // self-service-announcements-and-digest REQ-AND-001/002: the caller's announcements, their confirmation, and HR's overview.
         ['name' => 'announcement#mine', 'url' => '/api/announcements/mine', 'verb' => 'GET'],
         ['name' => 'announcement#confirmations', 'url' => '/api/announcements/confirmations', 'verb' => 'GET'],
