@@ -109,3 +109,28 @@ seeded working calendar marks non-working, so both corrections show on the balan
 
 - Should the cost be stamped on the request at approval, so the approver's figure stays on
   record even if the pattern later changes?
+
+## As built (2026-09-30, lane 18)
+
+- Read at `development` 47a79781. The balance projection's caller of the calculator is now
+  `LeaveAllocationCalculator::usesFrom()` (leave-expiry-and-carry-over), not the projection
+  service itself; it takes the working time as an optional argument and passes it on.
+- D1: `requestHours()` takes an optional fourth argument `$workingTime` (`patterns`,
+  `nonWorkingTimes`, `nonWorkingDates`; null or absent dates mean the calendar was not read).
+  Without it the old weekday average applies, so every other caller is unchanged. With it,
+  a day with a pattern in force costs `WorkingHoursService::contractedHoursOn()`; a day
+  without one costs the contract hours divided by five, skipping weekends and calendar
+  dates. The answer adds `basis` and `days` (`date`, `hours`, `reason`: `pattern`,
+  `contract-average`, `feestdag`, `vrije-dag`, `weekend`).
+- D3: `LeaveBalanceProjectionService` gains an optional `WorkingCalendarReader` and reads
+  the calendar once per projection over the span of all requests, plus every
+  `WorkingPattern` and `NonWorkingTime` once. An unread calendar is logged once, as a notice.
+- D4: the endpoint lives on a new `LeaveCostController` with `LeaveCostService`, not on
+  `LeaveController`, so the settlement controller's constructor and tests stay as they are.
+  The page shows two `endpoint-table` widgets on `LeaveRequestDetail`: the hours per year
+  with the basis in words, and the days with a translated label. Whoever may read the
+  request may read its cost; there is no role check beyond the resolve.
+- Seed: `employee-devries` (32 hours) gets a Monday to Thursday pattern and two approved
+  requests: Thursday and Friday 8 and 9 October (8 hours, Friday is her free day) and the
+  Easter Monday week start 6 and 7 April (8 hours when openregister marks 6 April).
+- Open question (stamp the cost at approval): not built; the cost is always recomputed.

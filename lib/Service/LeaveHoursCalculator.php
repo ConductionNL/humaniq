@@ -58,10 +58,10 @@ final class LeaveHoursCalculator {
 	/**
 	 * Count the Monday to Friday days in an inclusive date range.
 	 *
-	 * Public holidays are NOT subtracted, so a range covering one overstates
-	 * usage by a day. Overstating is the safer direction: it shows an employee
-	 * less remaining leave than they have rather than more, and the correction
-	 * is an explicit `hours` value on the request.
+	 * This is the plain weekday count behind the contract average. A request
+	 * costed with the person's working time goes through {@see requestHours()}
+	 * with `$workingTime`, which also skips the days openregister's working
+	 * calendar marks non-working (leave-hours-from-the-working-pattern).
 	 *
 	 * @param string $start First day of the range, `YYYY-MM-DD`.
 	 * @param string $end Last day of the range, inclusive, `YYYY-MM-DD`.
@@ -137,36 +137,56 @@ final class LeaveHoursCalculator {
 	}//end isCountableDay()
 
 	/**
-	 * The hours one LeaveRequest consumes from a balance.
+	 * The hours one LeaveRequest consumes from a balance, and how that was
+	 * worked out.
 	 *
-	 * An explicit `hours` above zero wins and is attributed wholly to the
-	 * calendar year of `startDate`, because a single total cannot be split
-	 * across a year boundary without inventing a distribution. A derived value
-	 * counts only the working days falling inside `$year`, so a request
+	 * An explicit `hours` above zero wins (basis `explicit`) and is attributed
+	 * wholly to the calendar year of `startDate`, because a single total cannot
+	 * be split across a year boundary without inventing a distribution. A
+	 * derived value counts only the days falling inside `$year`, so a request
 	 * spanning New Year splits across two balances.
 	 *
-	 * @param array<string, mixed> $request The LeaveRequest row.
-	 * @param float|null $contractHoursPerWeek The balance's contract hours snapshot.
-	 * @param int $year The calendar year of the balance being recomputed.
+	 * With `$workingTime` each day costs what the person was contracted to work
+	 * that day ({@see LeaveDayCosts}, {@see WorkingHoursService::contractedHoursOn()}): basis
+	 * `pattern`, or `pattern-only` when the calendar could not be read. Without
+	 * a pattern in force, a weekday costs the contract hours divided by five,
+	 * except a day the calendar marks non-working (basis `contract-average`).
+	 * Without `$workingTime` it is the contract average over weekdays, as the
+	 * balance projection computed it before.
 	 *
-	 * @return array{hours: float, derivable: bool} The hours, and whether they could be established at all.
+	 * @param array<string, mixed>      $request              The LeaveRequest row.
+	 * @param float|null                $contractHoursPerWeek The balance's contract hours snapshot.
+	 * @param int                       $year                 The calendar year of the balance being recomputed.
+	 * @param array<string, mixed>|null $workingTime          patterns, nonWorkingTimes, nonWorkingDates (null or absent: calendar unread).
+	 *
+	 * @return array{hours: float, derivable: bool, basis: string, days: list<array{date: string, hours: float, reason: string}>}
 	 *
 	 * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-002
+	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-001
+	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-002
 	 */
-	public static function requestHours(array $request, ?float $contractHoursPerWeek, int $year): array {
+	public static function requestHours(array $request, ?float $contractHoursPerWeek, int $year, ?array $workingTime = null): array {
 		$explicit = (float)($request['hours'] ?? 0);
 		if ($explicit > 0) {
 			$startYear = (int)substr((string)($request['startDate'] ?? ''), 0, 4);
 			return [
 				'hours' => ($startYear === $year ? $explicit : 0.0),
 				'derivable' => true,
+				'basis' => 'explicit',
+				'days' => [],
 			];
+		}
+
+		if ($workingTime !== null) {
+			return (new LeaveDayCosts())->cost(request: $request, contractHoursPerWeek: $contractHoursPerWeek, year: $year, workingTime: $workingTime);
 		}
 
 		if ($contractHoursPerWeek === null || $contractHoursPerWeek <= 0) {
 			return [
 				'hours' => 0.0,
 				'derivable' => false,
+				'basis' => 'contract-average',
+				'days' => [],
 			];
 		}
 
@@ -179,9 +199,12 @@ final class LeaveHoursCalculator {
 		return [
 			'hours' => ($workingDays * ($contractHoursPerWeek / 5)),
 			'derivable' => true,
+			'basis' => 'contract-average',
+			'days' => [],
 		];
 
 	}//end requestHours()
+
 
 	/**
 	 * Sum the approved requests belonging to one balance.

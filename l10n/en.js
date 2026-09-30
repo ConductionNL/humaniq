@@ -3119,7 +3119,20 @@ OC.L10N.register(
         "Experience": "Experience",
         "No applicant or colleague has a profile to compare yet.": "No applicant or colleague has a profile to compare yet.",
         "My referrals": "My referrals",
-        "Put someone forward for a published vacancy and follow where their application stands. Open vacancies lists what we are hiring for.": "Put someone forward for a published vacancy and follow where their application stands. Open vacancies lists what we are hiring for."
+        "Put someone forward for a published vacancy and follow where their application stands. Open vacancies lists what we are hiring for.": "Put someone forward for a published vacancy and follow where their application stands. Open vacancies lists what we are hiring for.",
+        "What this leave costs": "What this leave costs",
+        "Worked out from": "Worked out from",
+        "No dates on this request yet.": "No dates on this request yet.",
+        "Day by day": "Day by day",
+        "Day": "Day",
+        "Day off": "Day off",
+        "Weekend": "Weekend",
+        "Working day, contract average": "Working day, contract average",
+        "Working day": "Working day",
+        "Hours entered on the request": "Hours entered on the request",
+        "Working pattern and public holidays": "Working pattern and public holidays",
+        "Working pattern; public holidays could not be checked": "Working pattern; public holidays could not be checked",
+        "Contract hours, spread over five days": "Contract hours, spread over five days"
     },
     "nplurals=2; plural=(n != 1);"
 )

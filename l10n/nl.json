@@ -3118,7 +3118,20 @@
         "Experience": "Ervaring",
         "No applicant or colleague has a profile to compare yet.": "Nog geen sollicitant of collega heeft een profiel om te vergelijken.",
         "My referrals": "Mijn aanbevelingen",
-        "Put someone forward for a published vacancy and follow where their application stands. Open vacancies lists what we are hiring for.": "Beveel iemand aan voor een gepubliceerde vacature en volg waar de sollicitatie staat. Open vacatures toont waarvoor we mensen zoeken."
+        "Put someone forward for a published vacancy and follow where their application stands. Open vacancies lists what we are hiring for.": "Beveel iemand aan voor een gepubliceerde vacature en volg waar de sollicitatie staat. Open vacatures toont waarvoor we mensen zoeken.",
+        "What this leave costs": "Wat dit verlof kost",
+        "Worked out from": "Berekend op basis van",
+        "No dates on this request yet.": "Deze aanvraag heeft nog geen data.",
+        "Day by day": "Per dag",
+        "Day": "Dag",
+        "Day off": "Vrije dag",
+        "Weekend": "Weekend",
+        "Working day, contract average": "Werkdag, gemiddelde uit het contract",
+        "Working day": "Werkdag",
+        "Hours entered on the request": "Uren ingevuld op de aanvraag",
+        "Working pattern and public holidays": "Werkpatroon en feestdagen",
+        "Working pattern; public holidays could not be checked": "Werkpatroon; feestdagen konden niet worden gecontroleerd",
+        "Contract hours, spread over five days": "Contracturen, verdeeld over vijf dagen"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
