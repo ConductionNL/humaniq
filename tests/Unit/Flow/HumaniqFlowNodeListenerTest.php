@@ -32,9 +32,11 @@ use OCA\Humaniq\Flow\PayrollNetPayNode;
 use OCA\Humaniq\Flow\RevokeAccessNode;
 use OCA\Humaniq\Service\AccessRevocationService;
 use OCA\Humaniq\Service\ExitInterviewService;
+use OCA\Humaniq\Flow\TeamDigestNode;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\PayrollRunService;
+use OCA\Humaniq\Service\TeamDigestComposer;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent;
 use Psr\Container\ContainerInterface;
@@ -70,6 +72,7 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 			PayrollNetPayNode::class => new PayrollNetPayNode(...array_merge($common, [$this->createMock(PayrollNetPayService::class)])),
 			RevokeAccessNode::class => new RevokeAccessNode($this->l10n(), $this->urls(), $this->createMock(AccessRevocationService::class)),
 			AnonymiseExitInterviewsNode::class => new AnonymiseExitInterviewsNode($this->l10n(), $this->urls(), $this->createMock(ExitInterviewService::class)),
+			TeamDigestNode::class => new TeamDigestNode($this->l10n(), $this->urls(), $this->createMock(TeamDigestComposer::class)),
 			default => throw new RuntimeException('Unexpected node class ' . $nodeClass),
 		};
 	}//end buildNode()
@@ -112,7 +115,7 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 	}//end capturingEvent()
 
 	/**
-	 * All six nodes (four payroll, two offboarding) land on the registry under their ids.
+	 * All seven nodes (four payroll, two offboarding, one team digest) land on the registry under their ids.
 	 *
 	 * @return void
 	 */
@@ -132,6 +135,7 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 				'humaniq.payroll-netpay',
 				'humaniq.revoke-access',
 				'humaniq.anonymise-exit-interviews',
+				'humaniq.team-digest',
 			],
 			$event->registered
 		);
@@ -159,7 +163,7 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 		$listener->handle($event);
 
 		$this->assertNotContains('humaniq.payroll-approve', $event->registered);
-		$this->assertCount(5, $event->registered);
+		$this->assertCount(6, $event->registered);
 	}//end testBrokenNodeIsSkippedNotFatal()
 
 }//end class

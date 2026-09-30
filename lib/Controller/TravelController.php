@@ -115,8 +115,13 @@ class TravelController extends Controller {
 			return new JSONResponse(['message' => $e->getMessage()], Http::STATUS_CONFLICT);
 		}
 
+		// OpenRegister's save replaces the object and nulls every property
+		// the payload leaves out, so the distance goes on top of the stored
+		// arrangement (read unstripped) instead of on its own.
+		$stored = ($this->gateway->findObjectData($arrangementId, 'CommuteArrangement') ?? $arrangement);
+		unset($stored['id'], $stored['@self']);
 		$this->gateway->save(
-			['distanceKmOneWay' => $route['distanceKm'], 'distanceSource' => 'routeplanner', 'routeProvider' => $route['provider']],
+			array_merge($stored, ['distanceKmOneWay' => $route['distanceKm'], 'distanceSource' => 'routeplanner', 'routeProvider' => $route['provider']]),
 			'CommuteArrangement',
 			$arrangementId
 		);

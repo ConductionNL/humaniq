@@ -68,6 +68,14 @@
 		"route": "/configuratie/administraties"
 	},
 	{
+		"id": "MijnMededelingen",
+		"route": "/my-announcements"
+	},
+	{
+		"id": "AnnouncementDetail",
+		"route": "/announcements/:id"
+	},
+	{
 		"id": "AssetDetail",
 		"route": "/assets/:id"
 	},
@@ -242,6 +250,10 @@
 	{
 		"id": "CalendarSubscriptionDetail",
 		"route": "/kalenderabonnementen/:id"
+	},
+	{
+		"id": "Announcements",
+		"route": "/announcements"
 	},
 	{
 		"id": "Assets",

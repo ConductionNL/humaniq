@@ -1,0 +1,205 @@
+{
+	"pages": [
+		{
+			"id": "MijnMededelingen",
+			"route": "/my-announcements",
+			"type": "dashboard",
+			"title": "My announcements",
+			"config": {
+				"description": "What HR tells you: news, and policies you may be asked to confirm you read.",
+				"_note": "self-service-announcements-and-digest (2026-09-30): REQ-AND-001/002, design D2. The table reads GET /api/announcements/mine, which returns the published announcements in their period whose audience holds the caller (the whole administration, or one of the caller's live departments including their teams), each with the caller's own confirmation. A declarative filter cannot say one of my units, so this is an endpoint. Opening a row shows the text and the policy file; I have read this confirms it.",
+				"widgets": [
+					{
+						"id": "my-announcements",
+						"type": "object-table",
+						"title": "Announcements for you",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/announcements/mine",
+								"params": {},
+								"responsePath": "announcements"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Announcement",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "publishFrom",
+									"label": "Shown from"
+								},
+								{
+									"key": "requiresConfirmation",
+									"label": "Asks for confirmation"
+								},
+								{
+									"key": "confirmed",
+									"label": "Confirmed by you"
+								}
+							],
+							"rowRoute": "AnnouncementDetail",
+							"emptyText": "No announcements for you"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "my-announcements",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 6
+					}
+				]
+			}
+		},
+		{
+			"id": "AnnouncementDetail",
+			"route": "/announcements/:id",
+			"type": "detail",
+			"title": "Announcement",
+			"config": {
+				"register": "humaniq",
+				"schema": "Announcement",
+				"_note": "self-service-announcements-and-digest (2026-09-30): REQ-AND-001/002, design D1/D2. The policy document is a file on the announcement (sidebar Files tab); OpenRegister lets every employee read a published announcement and its files. I have read this posts to /api/announcements/{id}/confirm, which confirms only for an employee in the audience of a published announcement that asks for it, once. Who confirmed comes from GET /api/announcements/confirmations?id=, HR and administrators only (403 for others, so the table stays empty for an employee).",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"hiddenTabs": [
+					"notes",
+					"tags",
+					"tasks"
+				],
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Announcement",
+						"icon": "BullhornOutline",
+						"content": {
+							"columns": 1,
+							"title": "Announcement"
+						}
+					},
+					{
+						"id": "confirmations",
+						"type": "endpoint-table",
+						"title": "Who confirmed",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/announcements/confirmations",
+								"params": {
+									"id": "@objectId"
+								},
+								"responsePath": "rows"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Employee",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "confirmed",
+									"label": "Confirmed"
+								},
+								{
+									"key": "confirmedAt",
+									"label": "Confirmed at"
+								}
+							],
+							"emptyText": "Nobody in the audience yet, or only HR sees who confirmed"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 7
+					},
+					{
+						"id": 2,
+						"widgetId": "confirmations",
+						"gridX": 0,
+						"gridY": 7,
+						"gridWidth": 12,
+						"gridHeight": 6
+					}
+				],
+				"headerActions": [
+					{
+						"id": "confirm-read",
+						"label": "I have read this",
+						"type": "api-call",
+						"icon": "CheckDecagramOutline",
+						"url": "/api/announcements/@objectId/confirm",
+						"method": "POST",
+						"confirm": true
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "publiceren",
+							"from": [
+								"concept"
+							],
+							"to": "gepubliceerd",
+							"label": "Publish"
+						},
+						{
+							"action": "intrekken",
+							"from": [
+								"concept",
+								"gepubliceerd"
+							],
+							"to": "ingetrokken",
+							"label": "Withdraw"
+						}
+					]
+				}
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "Announcement",
+			"params": {
+				"id": "Announcements",
+				"route": "/announcements",
+				"title": "Announcements",
+				"columns": [
+					"title",
+					"audience",
+					"publishFrom",
+					"publishUntil",
+					"requiresConfirmation",
+					"status"
+				],
+				"sort": {
+					"field": "publishFrom",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"audience"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "News and policies for the employees of an administration or of chosen departments. Publish one to show it on their My HR page.",
+				"note": "self-service-announcements-and-digest (2026-09-30): REQ-AND-001. HR writes; employees read a published one on My announcements and My HR."
+			}
+		}
+	]
+}

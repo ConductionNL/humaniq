@@ -39,9 +39,11 @@ use OCA\Humaniq\Flow\PayrollNetPayNode;
 use OCA\Humaniq\Flow\RevokeAccessNode;
 use OCA\Humaniq\Service\AccessRevocationService;
 use OCA\Humaniq\Service\ExitInterviewService;
+use OCA\Humaniq\Flow\TeamDigestNode;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\PayrollRunService;
+use OCA\Humaniq\Service\TeamDigestComposer;
 use RuntimeException;
 
 /**
@@ -107,6 +109,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 				PayrollNetPayNode::class => new PayrollNetPayNode(...array_merge($common, [$this->createMock(PayrollNetPayService::class)])),
 				RevokeAccessNode::class => new RevokeAccessNode($this->l10n(), $this->urls(), $this->createMock(AccessRevocationService::class)),
 				AnonymiseExitInterviewsNode::class => new AnonymiseExitInterviewsNode($this->l10n(), $this->urls(), $this->createMock(ExitInterviewService::class)),
+				TeamDigestNode::class => new TeamDigestNode($this->l10n(), $this->urls(), $this->createMock(TeamDigestComposer::class)),
 				default => throw new RuntimeException('Unlisted node class ' . $nodeClass . ' — extend this map.'),
 			};
 			$ids[] = $node->getId();
@@ -148,7 +151,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 		);
 
 		foreach ($this->registeredIds() as $id) {
-			// The offboarding steps belong to their own flows (OffboardingFlowNodesTest).
+			// The offboarding and team-digest steps belong to their own flows (OffboardingFlowNodesTest, TeamDigestNodeTest).
 			if (str_starts_with($id, 'humaniq.payroll-') === false) {
 				continue;
 			}

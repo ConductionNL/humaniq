@@ -5587,7 +5587,7 @@
    "id": "ess-announcements",
    "area": "self-service",
    "name": "Publish announcements and policies for all employees.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -5603,10 +5603,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/36459341835037-Summary-of-permissions-New-experience: the Announcements permission lets roles create and manage company-wide announcements that all employees see on their homepage, via the Announcements card."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/self-service-announcements-and-digest on 2026-09-27. Before: grep -rniF 'announcement|mededeling|policy publish|beleidsdocument' lib/Settings/register.d src/manifest.d openspec/specs: no hits anywhere",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-announcements.json Announcement (lifecycle publiceren/intrekken, audience administration or orgUnits, period, requiresConfirmation) and AnnouncementConfirmation; lib/Service/AnnouncementService.php mine() matches the audience on the caller's live units (teams included), confirm() and overview(); lib/Controller/AnnouncementController.php GET /api/announcements/mine, POST /api/announcements/{id}/confirm, GET /api/announcements/confirmations (HR only); lib/Listener/AnnouncementConfirmationListener.php refuses a second confirmation. Tests: tests/Unit/Service/AnnouncementServiceTest.php, tests/Unit/Controller/AnnouncementControllerTest.php.",
+    "reachedOn": "My HR (Announcements table), My HR > My announcements, People > Announcements with Who confirmed on the detail page",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-self-service-announcements-and-digest",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7531,7 +7533,7 @@
    "id": "dm-chat-channel-digest",
    "area": "platform",
    "name": "Post a daily message about birthdays and who is on leave today to a team chat channel such as Slack, Teams or Talk.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -7547,10 +7549,12 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmWorkspaceNotificationsPlugin/entity/WorkspaceNotificationRegistration.php:33 BIRTHDAY and LEAVE_TODAY registrations delivered to Slack, Google Chat or Teams webhooks (:41), configured under /admin/workspaceNotificationConfiguration (origin https://github.com/orangehrm/orangehrm/releases/tag/v5.9)"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/self-service-announcements-and-digest on 2026-09-27. Before: grep -rniE 'slack|teams|spreed|talk' lib/Settings src/manifest.d lib/Service: no chat channel delivery of any kind",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Flow/TeamDigestNode.php (humaniq.team-digest, registered by lib/Flow/HumaniqFlowNodeListener.php) composes who in a department is away today and until when (no type or reason) and the shared birthdays (Employee.shareBirthday, no year); the Dagbericht flow on OrgUnit in lib/Settings/register.d/hr-org.json (schedule 08:00 working days, then openregister.send-talk-message) ships disabled. Tests: tests/Unit/Flow/TeamDigestNodeTest.php, tests/Unit/Flow/HumaniqFlowNodeListenerTest.php.",
+    "reachedOn": "OpenRegister Flows: the Dagbericht flow, disabled until adopted; the message in the chosen Talk conversation",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-self-service-announcements-and-digest",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

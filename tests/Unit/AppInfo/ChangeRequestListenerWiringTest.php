@@ -68,7 +68,9 @@ namespace OCA\OpenRegister\Event {
 namespace OCA\Humaniq\Tests\Unit\AppInfo {
 
 	use OCA\Humaniq\AppInfo\Application;
+	use OCA\Humaniq\Listener\AnnouncementConfirmationListener;
 	use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
+	use OCA\Humaniq\Service\AnnouncementService;
 	use OCA\Humaniq\Listener\ChangeRequestListener;
 	use OCA\Humaniq\Listener\ManagerDeputyListener;
 	use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
@@ -272,6 +274,29 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
 			self::assertStringContainsString('$this->registerExitInterviewListeners($dispatcher);', $boot);
 		}//end testTheExitInterviewListenerIsSubscribed()
+
+		/**
+		 * REQ-AND-002: a second confirmation is refused before it is saved.
+		 *
+		 * @return void
+		 */
+		public function testTheAnnouncementConfirmationListenerIsSubscribed(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			$method = new \ReflectionMethod(Application::class, 'registerAnnouncementListener');
+			$method->invoke($app, $this->createMock(IEventDispatcher::class));
+
+			self::assertCount(1, ObjectEventSubscription::$recorded);
+			self::assertSame(AnnouncementConfirmationListener::class, ObjectEventSubscription::$recorded[0]['listener']);
+			self::assertSame([AnnouncementService::CONFIRMATION_SLUG], ObjectEventSubscription::$recorded[0]['schemas']);
+			self::assertSame('OCA\OpenRegister\Event\ObjectCreatingEvent', ObjectEventSubscription::$recorded[0]['event']);
+			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+			self::assertStringContainsString('$this->registerAnnouncementListener($dispatcher);', $boot);
+		}//end testTheAnnouncementConfirmationListenerIsSubscribed()
 
 		/**
 		 * REQ-PBS-002: the fixed-scenario refusal hears every mutation write before it is saved.

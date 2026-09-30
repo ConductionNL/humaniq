@@ -33,6 +33,7 @@ parameters:
         - lib/Flow/PayrollNetPayNode.php
         - lib/Flow/RevokeAccessNode.php
         - lib/Flow/AnonymiseExitInterviewsNode.php
+        - lib/Flow/TeamDigestNode.php
         - lib/Lifecycle/ChangeApproverRoleGuard.php
         - lib/Lifecycle/CompEffectiveDateGuard.php
         - lib/Notification/CaseManagerResolver.php

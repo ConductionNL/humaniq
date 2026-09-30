@@ -34,6 +34,7 @@ import BookEditOutline from "vue-material-design-icons/BookEditOutline.vue";
 import BookOpenVariantOutline from "vue-material-design-icons/BookOpenVariantOutline.vue";
 import BriefcaseOutline from "vue-material-design-icons/BriefcaseOutline.vue";
 import BriefcaseSearchOutline from "vue-material-design-icons/BriefcaseSearchOutline.vue";
+import BullhornOutline from "vue-material-design-icons/BullhornOutline.vue";
 import BullseyeArrow from "vue-material-design-icons/BullseyeArrow.vue";
 import Calculator from "vue-material-design-icons/Calculator.vue";
 import CalculatorVariantOutline from "vue-material-design-icons/CalculatorVariantOutline.vue";
@@ -153,6 +154,7 @@ export default {
 	BookOpenVariantOutline,
 	BriefcaseOutline,
 	BriefcaseSearchOutline,
+	BullhornOutline,
 	BullseyeArrow,
 	Calculator,
 	CalculatorVariantOutline,

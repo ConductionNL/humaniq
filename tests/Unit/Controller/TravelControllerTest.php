@@ -166,17 +166,63 @@ class TravelControllerTest extends TestCase {
 	public function testTheRoutePlannerDistanceIsSavedWithItsSource(): void {
 		$controller = $this->controller($this->ownArrangement());
 		$this->routes->method('lookup')->with('2611 AB', '2628 CD')->willReturn(['distanceKm' => 7.4, 'provider' => 'ANWB Routeplanner']);
-		$this->gateway->expects(self::once())->method('save')->with(
-			['distanceKmOneWay' => 7.4, 'distanceSource' => 'routeplanner', 'routeProvider' => 'ANWB Routeplanner'],
-			'CommuteArrangement',
-			'arr-1'
-		)->willReturn(new ObjectEntity());
-		$this->gateway->method('findObjectData')->with('arr-1', 'CommuteArrangement')->willReturn(['id' => 'arr-1', 'distanceKmOneWay' => 7.4, 'monthlyAllowance' => 48.56]);
+		$stored = array_merge($this->ownArrangement(), ['employeeId' => 'emp-1', 'daysPerWeek' => 4, 'transportMode' => 'car', 'monthlyAllowance' => 90.72]);
+		$this->gateway->method('findObjectData')->with('arr-1', 'CommuteArrangement')->willReturnOnConsecutiveCalls(
+			array_merge($stored, ['@self' => ['id' => 'arr-1']]),
+			['id' => 'arr-1', 'distanceKmOneWay' => 7.4, 'monthlyAllowance' => 48.56]
+		);
+		$saved = null;
+		$this->gateway->expects(self::once())->method('save')->willReturnCallback(
+			function (array $payload, string $schema, ?string $uuid) use (&$saved): ObjectEntity {
+				self::assertSame('CommuteArrangement', $schema);
+				self::assertSame('arr-1', $uuid);
+				$saved = $payload;
+				return new ObjectEntity();
+			}
+		);
 
 		$response = $controller->routeDistance('arr-1');
 		self::assertSame(Http::STATUS_OK, $response->getStatus());
 		self::assertSame(48.56, $response->getData()['monthlyAllowance']);
+		self::assertSame(7.4, $saved['distanceKmOneWay']);
+		self::assertSame('routeplanner', $saved['distanceSource']);
+		self::assertSame('ANWB Routeplanner', $saved['routeProvider']);
 	}//end testTheRoutePlannerDistanceIsSavedWithItsSource()
+
+	/**
+	 * OpenRegister's save replaces the whole object, so the route distance is
+	 * saved on top of the stored arrangement: the fields it does not change
+	 * (employee, days, mode, postcodes, status) are carried, not nulled.
+	 *
+	 * @return void
+	 */
+	public function testTheRouteDistanceSaveKeepsTheRestOfTheArrangement(): void {
+		$controller = $this->controller($this->ownArrangement());
+		$this->routes->method('lookup')->willReturn(['distanceKm' => 7.4, 'provider' => 'ANWB Routeplanner']);
+		$stored = array_merge($this->ownArrangement(), ['employeeId' => 'emp-1', 'daysPerWeek' => 4, 'transportMode' => 'car']);
+		$this->gateway->method('findObjectData')->willReturnOnConsecutiveCalls(
+			array_merge($stored, ['@self' => ['id' => 'arr-1']]),
+			$stored
+		);
+		$saved = null;
+		$this->gateway->expects(self::once())->method('save')->willReturnCallback(
+			function (array $payload) use (&$saved): ObjectEntity {
+				$saved = $payload;
+				return new ObjectEntity();
+			}
+		);
+
+		$controller->routeDistance('arr-1');
+
+		self::assertIsArray($saved);
+		foreach (['employeeId' => 'emp-1', 'userId' => 'pjansen', 'daysPerWeek' => 4, 'transportMode' => 'car', 'originPostcode' => '2611 AB', 'destinationPostcode' => '2628 CD', 'status' => 'draft'] as $field => $value) {
+			self::assertSame($value, ($saved[$field] ?? null), $field.' is carried through the save.');
+		}
+
+		self::assertSame(7.4, $saved['distanceKmOneWay']);
+		self::assertArrayNotHasKey('@self', $saved);
+		self::assertArrayNotHasKey('id', $saved);
+	}//end testTheRouteDistanceSaveKeepsTheRestOfTheArrangement()
 
 	/**
 	 * Only HR or an administrator compiles the mobility report.

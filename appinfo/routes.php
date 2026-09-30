@@ -87,6 +87,10 @@ return [
         ['name' => 'offboarding#exitReasons', 'url' => '/api/offboarding/exit-reasons', 'verb' => 'GET'],
         ['name' => 'offboarding#revokeAccess', 'url' => '/api/offboarding/{id}/revoke-access', 'verb' => 'POST'],
         ['name' => 'offboarding#transitionPayment', 'url' => '/api/offboarding/{id}/transition-payment', 'verb' => 'POST'],
+        // self-service-announcements-and-digest REQ-AND-001/002: the caller's announcements, their confirmation, and HR's overview.
+        ['name' => 'announcement#mine', 'url' => '/api/announcements/mine', 'verb' => 'GET'],
+        ['name' => 'announcement#confirmations', 'url' => '/api/announcements/confirmations', 'verb' => 'GET'],
+        ['name' => 'announcement#confirm', 'url' => '/api/announcements/{announcementId}/confirm', 'verb' => 'POST'],
         ['name' => 'employeeHistory#employments', 'url' => '/api/employees/{id}/employments', 'verb' => 'GET'],
         // talent-training-and-lms REQ-TRN-002: the people feed a learning platform reads, filtered by the caller's RBAC.
         ['name' => 'learning#people', 'url' => '/api/learning/people', 'verb' => 'GET'],

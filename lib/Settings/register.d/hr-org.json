@@ -5,8 +5,30 @@
             "OrgUnit": {
                 "slug": "OrgUnit",
                 "icon": "SitemapOutline",
-                "version": "0.2.1",
+                "version": "0.3.0",
                 "configuration": {
+                    "x-openregister-flows": [
+                        {
+                            "name": "Dagbericht",
+                            "app": "humaniq",
+                            "description": "Posts one message each working morning to a Talk conversation of a department: who is away today and until when, without the reason, and whose birthday it is, only for employees who agreed to share it and without their age (self-service-announcements-and-digest D3). The flow arrives disabled. To adopt it, set the department in the team message step, the conversation token in the Talk step, and in the schedule step a service account that is a participant of that conversation, then enable it.",
+                            "trigger": "schedule",
+                            "cron": "0 8 * * 1-5",
+                            "executionMode": "async",
+                            "limits": {"maxTransitions": 10},
+                            "nodes": [
+                                {"id": "start", "type": "openregister.trigger-schedule", "config": {"cron": "0 8 * * 1-5"}},
+                                {"id": "compose", "type": "humaniq.team-digest", "config": {"orgUnitId": "", "includeChildren": true}},
+                                {"id": "post", "type": "openregister.send-talk-message", "config": {"conversation": "", "message": "{{ digest.message }}"}},
+                                {"id": "end", "type": "openregister.end", "config": {}}
+                            ],
+                            "edges": [
+                                {"id": "e-start", "from": "start", "to": "compose"},
+                                {"id": "e-composed", "from": "compose", "to": "post"},
+                                {"id": "e-posted", "from": "post", "to": "end"}
+                            ]
+                        }
+                    ],
                     "x-openregister-mcp": {
                         "enabled": true,
                         "tools": {
