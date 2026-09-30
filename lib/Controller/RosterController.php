@@ -33,7 +33,6 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\LeaveConflictCheckService;
 use OCA\Humaniq\Service\RosterCheckService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
@@ -48,6 +47,8 @@ use RuntimeException;
 
 /**
  * Guarded endpoint that runs the on-demand ATW cross-check for one roster.
+ *
+ * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
  */
 class RosterController extends Controller {
 
@@ -127,11 +128,7 @@ class RosterController extends Controller {
 		}
 
 		$rows = [];
-		foreach (($this->rosterCheckService->checkRoster($rosterId)['violations'] ?? []) as $finding) {
-			if (($finding['kind'] ?? '') !== LeaveConflictCheckService::FINDING_KIND) {
-				continue;
-			}
-
+		foreach ($this->rosterCheckService->leaveFindingsOf($rosterId) as $finding) {
 			$onLeave = (($finding['absence'] ?? '') === 'leave');
 			$rows[] = [
 				'assignmentId' => (string)($finding['objectId'] ?? ''),

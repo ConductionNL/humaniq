@@ -54,6 +54,8 @@ use RuntimeException;
 
 /**
  * On-demand Arbeidstijdenwet cross-check over one roster's RosterAssignments.
+ *
+ * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
  */
 class RosterCheckService {
 
@@ -174,21 +176,7 @@ class RosterCheckService {
 			return $this->emptyReport();
 		}
 
-		$rosterIds = [];
-		foreach ($rosters as $roster) {
-			$id = (string)($roster['id'] ?? $roster['@self']['id'] ?? '');
-			if ($id !== '') {
-				$rosterIds[$id] = true;
-			}
-		}
-
-		$assignments = [];
-		foreach ($this->loadAll('RosterAssignment', $register) as $assignment) {
-			$rosterId = (string)($assignment['rosterId'] ?? '');
-			if ($rosterId !== '' && isset($rosterIds[$rosterId]) === true) {
-				$assignments[] = $assignment;
-			}
-		}
+		$assignments = $this->assignmentsOf(rosters: $rosters, register: $register);
 
 		$shiftsById = [];
 		foreach ($this->loadAll('Shift', $register) as $shift) {
@@ -252,24 +240,80 @@ class RosterCheckService {
 			$competenceFindings = [];
 		}
 
-		foreach ($competenceFindings as $finding) {
-			$report['violations'][] = $finding;
-			++$report['competenceFindings'];
-			if (($finding['severity'] ?? '') === 'mandatory') {
-				$report['mandatoryViolations']++;
+		$report = $this->withFindings(report: $report, findings: $competenceFindings, counter: 'competenceFindings');
+
+		return $this->withFindings(report: $report, findings: $this->leaveFindings(assignments: $projected, register: $register), counter: 'leaveFindings');
+	}//end evaluateRosters()
+
+	/**
+	 * The leave findings of one roster: who is planned on a day of approved
+	 * leave or absence (REQ-ROST-C05).
+	 *
+	 * @param string $rosterId The Roster id.
+	 *
+	 * @return array<int, array<string, mixed>> The leave findings.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
+	 */
+	public function leaveFindingsOf(string $rosterId): array {
+		$violations = (array)($this->checkRoster($rosterId)['violations'] ?? []);
+
+		return array_values(array_filter($violations, static fn (array $finding): bool => (string)($finding['kind'] ?? '') === LeaveConflictCheckService::FINDING_KIND));
+	}//end leaveFindingsOf()
+
+	/**
+	 * The assignments that belong to the given rosters.
+	 *
+	 * @param array<int, array<string, mixed>> $rosters  The rosters.
+	 * @param string                           $register The resolved register slug.
+	 *
+	 * @return array<int, array<string, mixed>> The assignments.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C02
+	 */
+	private function assignmentsOf(array $rosters, string $register): array {
+		$rosterIds = [];
+		foreach ($rosters as $roster) {
+			$id = (string)($roster['id'] ?? $roster['@self']['id'] ?? '');
+			if ($id !== '') {
+				$rosterIds[$id] = true;
 			}
 		}
 
-		foreach ($this->leaveFindings(assignments: $projected, register: $register) as $finding) {
+		$assignments = [];
+		foreach ($this->loadAll('RosterAssignment', $register) as $assignment) {
+			$rosterId = (string)($assignment['rosterId'] ?? '');
+			if ($rosterId !== '' && isset($rosterIds[$rosterId]) === true) {
+				$assignments[] = $assignment;
+			}
+		}
+
+		return $assignments;
+	}//end assignmentsOf()
+
+	/**
+	 * Add cross-check findings to the report, counting them and their
+	 * mandatory ones.
+	 *
+	 * @param array<string, mixed>             $report   The report so far.
+	 * @param array<int, array<string, mixed>> $findings The findings.
+	 * @param string                           $counter  The report key that counts them.
+	 *
+	 * @return array<string, mixed> The report.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
+	 */
+	private function withFindings(array $report, array $findings, string $counter): array {
+		foreach ($findings as $finding) {
 			$report['violations'][] = $finding;
-			++$report['leaveFindings'];
+			++$report[$counter];
 			if (($finding['severity'] ?? '') === 'mandatory') {
 				$report['mandatoryViolations']++;
 			}
 		}
 
 		return $report;
-	}//end evaluateRosters()
+	}//end withFindings()
 
 	/**
 	 * The leave cross-check (REQ-ROST-C05), in the same act as the other two.

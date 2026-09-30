@@ -94,32 +94,12 @@ final class RosterCompetenceGuard implements LifecycleGuardInterface {
 		}
 
 		$report = $this->rosterCheck->checkRoster($rosterId);
-		if (($report['registerResolved'] ?? false) !== true) {
-			return GuardResult::deny(
-				'De bevoegdheden konden niet worden gecontroleerd: '
-				. (string)($report['error'] ?? 'het humaniq-register is niet gevonden.')
-				. ' Publiceren is geweigerd.'
-			);
+		$unchecked = $this->uncheckedReason(report: $report);
+		if ($unchecked !== null) {
+			return GuardResult::deny($unchecked);
 		}
 
-		if ((int)($report['rostersChecked'] ?? 0) === 0) {
-			return GuardResult::deny('Dit rooster is niet gevonden, dus de bevoegdheden kunnen niet worden gecontroleerd. Publiceren is geweigerd.');
-		}
-
-		$competence = [];
-		$leave = [];
-		foreach (($report['violations'] ?? []) as $finding) {
-			$kind = ($finding['kind'] ?? '');
-			if ($kind === CompetenceCheckService::FINDING_KIND) {
-				$competence[] = (string)($finding['statement'] ?? '');
-			}
-
-			// Approved leave refuses (REQ-ROST-C05); open sick leave is advisory and only reports.
-			if ($kind === LeaveConflictCheckService::FINDING_KIND && ($finding['severity'] ?? '') === 'mandatory') {
-				$leave[] = (string)($finding['statement'] ?? '');
-			}
-		}
-
+		[$competence, $leave] = $this->blockingStatements(report: $report);
 		if ($competence === [] && $leave === []) {
 			return GuardResult::allow();
 		}
@@ -133,6 +113,57 @@ final class RosterCompetenceGuard implements LifecycleGuardInterface {
 
 		return GuardResult::deny($message);
 	}//end check()
+
+	/**
+	 * Why the roster could not be checked, or null when it was.
+	 *
+	 * @param array<string, mixed> $report The roster check report.
+	 *
+	 * @return string|null The refusal, or null.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C02
+	 */
+	private function uncheckedReason(array $report): ?string {
+		if (($report['registerResolved'] ?? false) !== true) {
+			return 'De bevoegdheden konden niet worden gecontroleerd: '
+				. (string)($report['error'] ?? 'het humaniq-register is niet gevonden.')
+				. ' Publiceren is geweigerd.';
+		}
+
+		if ((int)($report['rostersChecked'] ?? 0) === 0) {
+			return 'Dit rooster is niet gevonden, dus de bevoegdheden kunnen niet worden gecontroleerd. Publiceren is geweigerd.';
+		}
+
+		return null;
+	}//end uncheckedReason()
+
+	/**
+	 * The statements that refuse publication: shifts without a valid
+	 * competence, and shifts on a day of approved leave (REQ-ROST-C05; open
+	 * sick leave is advisory and only reports).
+	 *
+	 * @param array<string, mixed> $report The roster check report.
+	 *
+	 * @return array{0: list<string>, 1: list<string>} Competence and leave statements.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
+	 */
+	private function blockingStatements(array $report): array {
+		$competence = [];
+		$leave = [];
+		foreach (($report['violations'] ?? []) as $finding) {
+			$kind = ($finding['kind'] ?? '');
+			if ($kind === CompetenceCheckService::FINDING_KIND) {
+				$competence[] = (string)($finding['statement'] ?? '');
+			}
+
+			if ($kind === LeaveConflictCheckService::FINDING_KIND && ($finding['severity'] ?? '') === 'mandatory') {
+				$leave[] = (string)($finding['statement'] ?? '');
+			}
+		}
+
+		return [$competence, $leave];
+	}//end blockingStatements()
 
 	/**
 	 * One part of the refusal: a count and the first few statements.
