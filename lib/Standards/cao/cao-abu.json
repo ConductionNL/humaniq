@@ -24,6 +24,7 @@
   "allowances": {
     "value": {
       "ploegentoeslag": {
+        "kind": "percentage-of-wage",
         "pct": 0
       }
     },

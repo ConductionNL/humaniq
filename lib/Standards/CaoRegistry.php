@@ -48,7 +48,7 @@ final class CaoRegistry {
 	 *
 	 * @var string
 	 */
-	public const VERSION = '2026-08.19';
+	public const VERSION = '2026-09.20';
 
 	/**
 	 * Required top-level keys on every well-formed CAO file.
@@ -272,6 +272,115 @@ final class CaoRegistry {
 		$preference = trim((string)(((array)$leaf['value'])['compensationPreference'] ?? ''));
 		return ($preference === '' ? null : $preference);
 	}//end overtimeCompensationPreference()
+
+	/**
+	 * The component kinds a CAO allowance can have (cao/SCHEMA.md).
+	 *
+	 * @var list<string>
+	 */
+	public const COMPONENT_KINDS = ['percentage-of-wage', 'fixed-monthly', 'hourly-surcharge'];
+
+	/**
+	 * The components of a CAO's confirmed allowances leaf, keyed by
+	 * component key, or null when the CAO is unknown, the leaf is unverified
+	 * or a placeholder, or it holds no component (payroll-cao-components D1).
+	 *
+	 * @param string $caoId The CAO id.
+	 *
+	 * @return array<string, array<string, mixed>>|null
+	 *
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-001
+	 */
+	public static function components(string $caoId): ?array {
+		$leaf = (self::get($caoId)['allowances'] ?? null);
+		if (self::isUsableLeaf($leaf) === false) {
+			return null;
+		}
+
+		$components = self::componentShapes($caoId);
+		return ($components === [] ? null : $components);
+	}//end components()
+
+	/**
+	 * Every component a CAO declares, confirmed or not, normalised: which
+	 * keys exist and their kind. Only components() may be paid from.
+	 *
+	 * @param string $caoId The CAO id.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-001
+	 */
+	public static function componentShapes(string $caoId): array {
+		$value = ((self::get($caoId)['allowances'] ?? [])['value'] ?? []);
+		$components = [];
+		foreach ((array)$value as $key => $raw) {
+			$component = self::normaliseComponent(raw: $raw);
+			if ($component !== null) {
+				$components[(string)$key] = $component;
+			}
+		}
+
+		return $components;
+	}//end componentShapes()
+
+	/**
+	 * One component in its computable form, or null when its kind is not one
+	 * of the three. Unknown keys (notes, history) are dropped.
+	 *
+	 * @param mixed $raw The corpus entry or a contract override.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-001
+	 */
+	public static function normaliseComponent(mixed $raw): ?array {
+		if (is_array($raw) === false || in_array(($raw['kind'] ?? null), self::COMPONENT_KINDS, true) === false) {
+			return null;
+		}
+
+		$component = ['kind' => $raw['kind']];
+		foreach (['pct', 'holidayPct'] as $field) {
+			if (array_key_exists($field, $raw) === true) {
+				$component[$field] = (is_numeric($raw[$field]) === true ? (float)$raw[$field] : null);
+			}
+		}
+
+		foreach (['amountCents', 'minAmountCents'] as $field) {
+			if (is_numeric($raw[$field] ?? null) === true) {
+				$component[$field] = (int)$raw[$field];
+			}
+		}
+
+		if (is_array($raw['windows'] ?? null) === true) {
+			$component['windows'] = array_values(array_map(static fn (mixed $window): array => self::normaliseWindow(raw: $window), $raw['windows']));
+		}
+
+		return $component;
+	}//end normaliseComponent()
+
+	/**
+	 * One surcharge window: days (weekday names, null when not transcribed),
+	 * from and to (HH:MM, null when not transcribed; `to` may be 24:00, and
+	 * a `from` after `to` crosses midnight into the next day) and pct.
+	 *
+	 * @param mixed $raw The window.
+	 *
+	 * @return array{label: string|null, days: list<string>|null, from: string|null, to: string|null, pct: float}
+	 */
+	private static function normaliseWindow(mixed $raw): array {
+		$raw = (array)$raw;
+		$days = (is_array($raw['days'] ?? null) === true ? array_values(array_map(static fn (mixed $day): string => strtolower((string)$day), $raw['days'])) : null);
+		$time = static fn (mixed $value): ?string => ((is_string($value) === true && preg_match('/^([01]\d|2[0-4]):[0-5]\d$/', $value) === 1) ? $value : null);
+
+		return [
+			'label' => (isset($raw['label']) === true ? (string)$raw['label'] : null),
+			'days' => $days,
+			'from' => $time($raw['from'] ?? null),
+			'to' => $time($raw['to'] ?? null),
+			'pct' => (float)($raw['pct'] ?? 0),
+		];
+	}//end normaliseWindow()
 
 	/**
 	 * Reset the memoised cache (test hook).

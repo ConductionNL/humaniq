@@ -35,21 +35,45 @@
   "allowances": {
     "value": {
       "ort": {
-        "avond": {
-          "pct": 20
-        },
-        "nacht": {
-          "pct": 40
-        },
-        "zaterdag": {
-          "pct": 35
-        },
-        "zondagFeestdag": {
-          "pct": 65
-        }
+        "kind": "hourly-surcharge",
+        "windows": [
+          {
+            "label": "avond",
+            "days": null,
+            "from": null,
+            "to": null,
+            "pct": 20
+          },
+          {
+            "label": "nacht",
+            "days": null,
+            "from": null,
+            "to": null,
+            "pct": 40
+          },
+          {
+            "label": "zaterdag",
+            "days": [
+              "saturday"
+            ],
+            "from": null,
+            "to": null,
+            "pct": 35
+          },
+          {
+            "label": "zondagFeestdag",
+            "days": [
+              "sunday"
+            ],
+            "from": "00:00",
+            "to": "24:00",
+            "pct": 65
+          }
+        ],
+        "holidayPct": 65
       }
     },
-    "source": "Illustrative ORT (onregelmatigheidstoeslag) reference-rate shape pending confirmation against the official CAO-tekst — day/time bands and stacking rules not transcribed in this pass. Display-only: no check, resolver, or payroll-calculator hook applies these rates to an actual worked shift (design.md Named gap 2 — no shift/roster object exists in humaniq's schema).",
+    "source": "Illustrative ORT (onregelmatigheidstoeslag) reference-rate shape pending confirmation against the official CAO-tekst — day/time bands and stacking rules not transcribed in this pass. The evening, night and Saturday windows carry no times (null): they were not transcribed, so they can never pay, and the leaf stays a placeholder (payroll-cao-components).",
     "verified": false,
     "placeholder": true,
     "checkAgainst": "cao-ziekenhuizen.nl 'Salariëring en vakantiebijslag'"
