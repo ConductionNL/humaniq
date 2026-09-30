@@ -51,6 +51,8 @@ class TeamDigestNode implements IFlowNode {
 	 * @param IURLGenerator      $urls     For the step icon.
 	 * @param TeamDigestComposer $composer Builds the message.
 	 * @param string|null        $today    The day to compose for; today when null (tests pin it).
+	 *
+	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
 	 */
 	public function __construct(
 		private readonly IL10N $l10n,
@@ -65,6 +67,8 @@ class TeamDigestNode implements IFlowNode {
 	 * The step type id.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
 	 */
 	public function getId(): string {
 		return 'humaniq.team-digest';
@@ -74,6 +78,8 @@ class TeamDigestNode implements IFlowNode {
 	 * The step name in the builder.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
 	 */
 	public function getDisplayName(): string {
 		return $this->l10n->t('Compose the daily team message');
@@ -83,6 +89,8 @@ class TeamDigestNode implements IFlowNode {
 	 * The step description in the builder.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
 	 */
 	public function getDescription(): string {
 		return $this->l10n->t('Say who in a department is away today and until when, and whose birthday it is, without a leave type, reason or age.');
@@ -92,6 +100,8 @@ class TeamDigestNode implements IFlowNode {
 	 * The step icon.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
 	 */
 	public function getIcon(): string {
 		return $this->urls->imagePath('humaniq', 'app-dark.svg');
@@ -103,6 +113,8 @@ class TeamDigestNode implements IFlowNode {
 	 * @param int $scope The scope.
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
 	 */
 	public function isAvailableForScope(int $scope): bool {
 		return in_array($scope, [IManager::SCOPE_ADMIN, IManager::SCOPE_USER], true);
@@ -116,6 +128,8 @@ class TeamDigestNode implements IFlowNode {
 	 * @return void
 	 *
 	 * @throws InvalidArgumentException Without an orgUnitId.
+	 *
+	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
 	 */
 	public function validateConfig(array $config): void {
 		if (trim((string)($config['orgUnitId'] ?? '')) === '') {
@@ -135,6 +149,7 @@ class TeamDigestNode implements IFlowNode {
 	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
 	 */
 	public function execute(array $items, array $config, array $context): array {
+		unset($context);
 		$this->validateConfig($config);
 		$digest = $this->composer->compose(
 			orgUnitId: trim((string)$config['orgUnitId']),

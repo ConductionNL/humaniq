@@ -70,16 +70,7 @@ class TeamDigestComposer {
 	 */
 	public function compose(string $orgUnitId, bool $includeChildren, string $today): array {
 		$units = $this->gateway->loadAll('OrgUnit');
-		$unit = null;
-		foreach ($units as $candidate) {
-			if ($this->membership->rowId($candidate) === $orgUnitId) {
-				$unit = $candidate;
-			}
-		}
-
-		if ($unit === null) {
-			throw new RuntimeException('Org unit ' . $orgUnitId . ' does not exist.');
-		}
+		$unit = $this->unitOf(orgUnitId: $orgUnitId, units: $units);
 
 		$unitIds = ($includeChildren === true) ? $this->membership->subtree($orgUnitId, $units) : [$orgUnitId];
 		$members = $this->members(unitIds: $unitIds, today: $today);
@@ -92,8 +83,7 @@ class TeamDigestComposer {
 				$away[] = ['name' => $this->nameOf($employee), 'until' => $absence];
 			}
 
-			$born = trim((string)($employee['dateOfBirth'] ?? ''));
-			if (($employee['shareBirthday'] ?? false) === true && strlen($born) >= 10 && substr($born, 5, 5) === substr($today, 5, 5)) {
+			if ($this->sharesBirthdayOn(employee: $employee, today: $today) === true) {
 				$birthdays[] = $this->nameOf($employee);
 			}
 		}
@@ -144,12 +134,9 @@ class TeamDigestComposer {
 	 * @return string|null|false
 	 */
 	private function absence(string $employeeId, string $today): string|null|false {
-		foreach ($this->gateway->findFiltered('LeaveRequest', ['employeeId' => $employeeId, 'status' => 'approved']) as $leave) {
-			$start = (string)($leave['startDate'] ?? '');
-			$end = (string)($leave['endDate'] ?? '');
-			if ($start !== '' && $start <= $today && ($end === '' || $end >= $today)) {
-				return ($end !== '' ? substr($end, 0, 10) : null);
-			}
+		$leave = $this->leaveUntil(employeeId: $employeeId, today: $today);
+		if ($leave !== false) {
+			return $leave;
 		}
 
 		foreach ($this->gateway->findFiltered('SickLeaveCase', ['employeeId' => $employeeId, 'status' => 'gemeld']) as $case) {
@@ -161,6 +148,61 @@ class TeamDigestComposer {
 
 		return false;
 	}//end absence()
+
+	/**
+	 * The unit by id.
+	 *
+	 * @param string                           $orgUnitId The unit.
+	 * @param array<int, array<string, mixed>> $units     Every unit.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws RuntimeException When the unit does not exist.
+	 */
+	private function unitOf(string $orgUnitId, array $units): array {
+		foreach ($units as $candidate) {
+			if ($this->membership->rowId($candidate) === $orgUnitId) {
+				return $candidate;
+			}
+		}
+
+		throw new RuntimeException('Org unit ' . $orgUnitId . ' does not exist.');
+	}//end unitOf()
+
+	/**
+	 * Whether the employee agreed to share their birthday and it is today.
+	 *
+	 * @param array<string, mixed> $employee The employee.
+	 * @param string               $today    The day.
+	 *
+	 * @return bool
+	 */
+	private function sharesBirthdayOn(array $employee, string $today): bool {
+		$born = trim((string)($employee['dateOfBirth'] ?? ''));
+
+		return ($employee['shareBirthday'] ?? false) === true && strlen($born) >= 10 && substr($born, 5, 5) === substr($today, 5, 5);
+	}//end sharesBirthdayOn()
+
+	/**
+	 * The last day of approved leave that covers today, null when it has no
+	 * end, false when there is none.
+	 *
+	 * @param string $employeeId The employee.
+	 * @param string $today      The day.
+	 *
+	 * @return string|null|false
+	 */
+	private function leaveUntil(string $employeeId, string $today): string|null|false {
+		foreach ($this->gateway->findFiltered('LeaveRequest', ['employeeId' => $employeeId, 'status' => 'approved']) as $leave) {
+			$start = (string)($leave['startDate'] ?? '');
+			$end = (string)($leave['endDate'] ?? '');
+			if ($start !== '' && $start <= $today && ($end === '' || $end >= $today)) {
+				return ($end !== '' ? substr($end, 0, 10) : null);
+			}
+		}
+
+		return false;
+	}//end leaveUntil()
 
 	/**
 	 * The message text, or '' when there is nothing to say.
