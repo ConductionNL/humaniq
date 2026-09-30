@@ -3881,7 +3881,7 @@
    "id": "pay-run-check",
    "area": "payroll",
    "name": "Get a pre-run check that flags missing or odd data before payroll is final.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -3897,10 +3897,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360001796137-Monthly-Payroll-Accounting-With-Personio-Payroll: the task column shows warnings and blockers per employee before approval; https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration has you resolve open tasks and validation errors in the payroll table before the Loket sync."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-run-checks on 2026-09-27 for the missing half: the pre-run check on the payroll run page; the occ check is built. Before: lib/Command/PayrollVerifyCommand.php: 'Run-scoped corpus audit over one period's PayrollRun(s) + their payslips; exits non-zero on any mandatory violation' (appinfo/info.xml commands block); no controller route or manifest page calls this check",
-    "reachedOn": "occ humaniq:payroll:verify only, no page",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/PayrollRunCheckService.php stores the check of one run as PayrollRunFinding objects (schema in lib/Settings/register.d/hr-objects.json, acknowledge transition, reviewer stamped by lib/Listener/PayrollRunFindingStampListener.php): every skipped employee blocking, approved timesheets and payroll-route claims no run pays as warnings, the rule audit (RuleAuditService::auditPayrollRunScope) with a mandatory violation blocking, and deviations from each employee's paid history; an acknowledged finding that recurs keeps its acknowledgement. lib/Service/PayrollRunService.php runs it after every calculation and writes checkedAt, blockingFindings and warningFindings on the run; POST /api/payroll/check (lib/Controller/PayrollCheckController.php, admin or hr role, run read under RBAC) runs it on demand. Tests: tests/Unit/Service/PayrollRunCheckServiceTest.php, tests/Unit/Controller/PayrollCheckControllerTest.php, tests/Unit/Listener/PayrollRunFindingStampListenerTest.php, tests/Unit/Settings/PayrollRunChecksDeclarationTest.php, tests/Unit/Service/PayrollRunServiceTest.php::testACalculationRunsTheCheckWithTheSkippedList.",
+    "reachedOn": "Payroll runs > a run: Check run, the Blocking findings and Warning findings tiles and the Run check findings list; a finding (/payroll-run-findings/:id) with Acknowledge",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-payroll-run-checks",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8139,7 +8141,7 @@
    "id": "dm-pay-anomaly",
    "area": "payroll",
    "name": "Have pay runs compared with each employee's own pay history so unusual amounts are flagged before payroll closes.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -8155,10 +8157,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'anomal|outlier|payroll' src/plugins src/client/src: no match; no pay runs exist to compare"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-run-checks on 2026-09-27 for the missing half: comparing each employee's pay with their own history and flagging outliers before close. Before: lib/Service/PayrollMutationService.php compares a run with the previous one per employee (pay-mutation-report, PayrollMutationReportDetail /payroll-mutations/:id); no learned history or per-component sensitivity (grep -rniE 'anomal|outlier' lib: no hits)",
-    "reachedOn": "PayrollMutations /payroll-mutations, PayrollMutationReportDetail",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/PayAnomalyDetector.php compares gross, net, wage tax, employer cost and hours paid on each payslip of the run with the median of the employee's last six paid payslips (runs approved, posted or paid, plus hand-entered ones), flags a difference above the component's relative threshold and absolute floor (defaults 15% and 50.00, hours 20% and 8; setting payroll_check_thresholds), names a known cause (sick pay, retro correction, leave bought or sold, garnishment, bijtelling, a raise applied in the period) as info, and reports fewer than three prior payslips as too little history. Tests: tests/Unit/Service/PayAnomalyDetectorTest.php, tests/Unit/Service/PayrollRunCheckServiceTest.php::testADeviationFromPaidHistoryIsFound and ::testTheThresholdsAreASetting.",
+    "reachedOn": "Payroll runs > a run: Run check findings of kind Unusual amount, with Usual value and the known cause",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-payroll-run-checks",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
