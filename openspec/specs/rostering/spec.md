@@ -311,3 +311,50 @@ documented Advanced Roadmaps auto-schedule, admitted under decision D21.
 - **WHEN** a consuming app asks humaniq for a proposed set of dates
 - **THEN** humaniq answers with available capacity per person per period, and the
   consuming app composes the schedule from its own dependencies
+
+### Requirement: A roster SHALL show and refuse a shift on a day the person is away (REQ-ROST-C05)
+
+`RosterCheckService` SHALL gain a leave cross-check beside the working-time and
+competence checks, in the same act. For every `RosterAssignment` on the roster, an
+approved `LeaveRequest` of the assigned employee covering the assignment's date SHALL
+produce a finding of kind `leave` with severity `mandatory`, and an open
+`SickLeaveCase` covering that date SHALL produce a finding of kind `leave` with
+severity `advisory`. At most one finding SHALL be made per assignment, approved leave
+first. A finding SHALL name the employee, the date and whether the person is on leave
+or absent, and SHALL carry no leave type, reason or case content: the AVG boundary of
+`leave-calendar-nc` holds.
+
+The Roster `publiceren` transition SHALL be refused by `RosterCompetenceGuard` while a
+`mandatory` leave finding stands, naming the employee and the date. Open sick leave
+SHALL be reported and SHALL NOT block publishing, because an open case has no end date
+to plan around.
+
+The roster's detail page SHALL list the assignments whose employee is away that day,
+read from `GET /api/roster/{rosterId}/leave`, resolved under the caller's RBAC like
+`POST /api/roster/check`.
+
+Row `pln-leave-in-roster` (competitor matrix: afas, visma-raet, hr2day and personio
+partial).
+
+#### Scenario: A shift on a day of approved leave is reported and refused
+@e2e exclude a lifecycle-guard refusal asserted with the real RosterCheckService and LeaveConflictCheckService; covered by RosterCompetenceGuardTest::testPublishingARosterThatPlansSomeoneOnApprovedLeaveIsRefused, with ::testSubmittedLeaveAndSickLeaveDoNotBlockPublishing as the control
+- **GIVEN** a concept roster assigning an employee to a shift on 13 July
+- **AND** that employee's approved leave from 13 to 17 July
+- **WHEN** a planner runs the `publiceren` transition
+- **THEN** the transition is refused with a message naming the employee and 13 July,
+  and the roster stays `concept`
+
+#### Scenario: Sick leave is shown and does not block
+@e2e exclude covered by RosterCheckServiceTest::testLeaveOnARosteredDayIsReportedInTheSameCheck and LeaveConflictCheckServiceTest::testAnOpenSickLeaveCaseIsAnAdvisoryFindingWithoutAReason
+- **GIVEN** an employee with an open sick leave case, rostered on a day inside it
+- **WHEN** the roster check runs
+- **THEN** it reports an advisory `leave` finding saying the person is absent, with no
+  reason, and publishing is not refused for it
+
+#### Scenario: The planner sees the leave on the roster
+@e2e exclude the rows are asserted from the endpoint the page reads; covered by RosterControllerTest::testTheRostersLeaveRowsListWhoIsPlannedWhileAway, with RosterControllerTest::testAnUnreadableRosterIs404AndABlankIdIs400 for the RBAC probe
+- **GIVEN** a roster with one employee on approved leave and one absent on their
+  rostered days
+- **WHEN** the planner opens the roster
+- **THEN** Planned while away lists both, with the date, the employee, "On approved
+  leave" or "Absent", and whether it blocks publishing, and nobody else

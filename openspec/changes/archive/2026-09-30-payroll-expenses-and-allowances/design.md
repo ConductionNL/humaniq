@@ -157,3 +157,33 @@ reimbursements fails the post.
 
 - Should an allowance follow the contract's part-time factor automatically? This design keeps
   the amount as HR enters it.
+
+## As built (2026-09-30)
+
+- D1: the employer default is the app config key `expense_reimbursement_route` (`payroll` or
+  `direct`); unset or unknown means `direct`, so nothing changes for an employer until it opts
+  in. `ExpenseRouteListener` stamps the route on the approval edge (direct for a claim with a
+  taxable part), refuses the payroll route to a claim with a taxable part, refuses a route
+  change once a run holds the claim, and refuses a manual `reimburse` of a payroll-route
+  claim. humaniq's own writes pass (the `InternalWriteMarker`).
+- D2: `PayrollRunApprovedListener` (added by time-hours-and-overtime-to-payroll) gained the
+  claim step as an optional third argument, as the design foresaw. The claim fold is added to
+  net before the garnishment; a payslip without claims or allowances gains no field at all.
+- D3: `RecurringAllowanceStampListener` stamps `proposedBy`, the employee's `userId` and
+  `administrationId`, so `NoSelfApprovalGuard` refuses both the drafter and the employee. An
+  update keeps the original drafter.
+- D4: the split lives in a pure `AllowanceSplitter`. An allowance that pays nothing is listed
+  on the payslip with its reason: `norm-unverified`, `days-missing`, `no-amount`,
+  `arrangement-missing` or `treatment-unknown`. The norm is the new leaf
+  `parameters.wkr.thuiswerkNormPerDag` (2.45 a day, Belastingdienst, Tarieven, bedragen en
+  percentages loonheffingen vanaf 1 januari 2026, table 13); a placeholder leaf counts as
+  unverified. A travel allowance with a targeted exemption takes the commuting arrangement's
+  `taxFreeMonthly` and `taxableMonthly`; the per-kilometre corpus rate is not read directly.
+- D5: WKR rows are upserted on `sourceReference`. Known limit: when a recalculation no longer
+  pays an allowance (it ended, or was deactivated), the row written by the earlier
+  calculation of that draft stays; nothing deletes it.
+- D6: the reimbursement account is the app config key `glpost_account_reimbursements`
+  (placeholder `4010`, like the other journal accounts). The debit line is only built when
+  the run has reimbursements, so every other journal keeps its four lines.
+- Register 0.48.0: Expense 0.10.0, Payslip 0.15.0, PayrollRun 0.4.0, RecurringAllowance 0.1.0.
+

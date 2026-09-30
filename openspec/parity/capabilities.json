@@ -3429,7 +3429,7 @@
    "id": "pln-leave-in-roster",
    "area": "planning",
    "name": "See approved leave inside the roster so nobody is planned while away.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "partial",
    "hr2day": "partial",
@@ -3445,11 +3445,12 @@
     "personio": "https://developer.personio.de/docs/key-points-for-implementing-shift-planning-integration-with-personio-hris: shift planning partners consume approved absences from Personio for accurate shift planning; the roster itself lives in the partner app."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/agenda-rostering-and-resource-booking (REQ agenda and availability: approved leave and open sick leave appear on the person's agenda and are taken out of availability for rostering), matched 2026-09-28. Before: grep -niF leave lib/Service/RosterCheckService.php lib/Standards/Checks/NlRosterChecks.php lib/Controller/RosterController.php: no hits; RosterAssignmentProjectionService.php only composes a Shift's start/end times, not leave; RosterAssignments/RosterDetail manifest pages show no leave column",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "evidence": "lib/Service/LeaveConflictCheckService.php finds a RosterAssignment on a day of approved LeaveRequest (mandatory) or open SickLeaveCase (advisory) of its employee, no reason copied; lib/Service/RosterCheckService.php runs it in the same act as the working-time and competence checks (leaveFindings); lib/Lifecycle/RosterCompetenceGuard.php refuses publiceren on approved leave; GET /api/roster/{rosterId}/leave (lib/Controller/RosterController.php::leave) feeds the Planned while away widget on RosterDetail (src/manifest.d/hr-roster.json). The agenda (lib/Service/AgendaComposer.php) and availability (lib/Service/AvailabilityService.php) already carry leave. Tests: tests/Unit/Service/LeaveConflictCheckServiceTest.php, tests/Unit/Service/RosterCheckServiceTest.php, tests/Unit/Lifecycle/RosterCompetenceGuardTest.php, tests/Unit/Controller/RosterControllerTest.php.",
+    "reachedOn": "Planning > a roster: Planned while away; Publish refused while someone is rostered on approved leave",
     "owner": "ConductionNL/humaniq",
-    "change": "agenda-rostering-and-resource-booking"
+    "change": "2026-09-30-agenda-rostering-and-resource-booking",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3591,7 +3592,7 @@
    "id": "exp-reimburse-in-pay",
    "area": "expenses",
    "name": "Reimburse approved expenses through the payslip.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -3607,17 +3608,18 @@
     "personio": "not checked: not settled: searched help centre for expense reimbursement through payroll; one-time compensations exist (https://support.personio.de/hc/en-us/articles/360000406549-Create-and-manage-one-time-compensations) but no page describes approved expenses flowing onto the payslip."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-expenses-and-allowances on 2026-09-27 for the missing half: paying the approved claim as a payslip line; the status flip is built. Before: lib/Settings/register.d/hr-expense.json Expense.reimburse transition (approved->reimbursed) carries no requires guard and is a bare status flip with a reimbursedAt timestamp; grep -rln Expense lib/Command lib/Payroll: no hits, and grep -n Expense lib/Service/PayrollRunService.php: no hits, unlike sick pay and lease-car bijtelling which both do appear there",
-    "reachedOn": "ExpenseDetail 'reimburse' lifecycle action only marks the claim reimbursed; no PayrollRun or Payslip ever reads it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "Expense.reimbursementRoute (payroll or direct, stamped at approval from the employer setting expense_reimbursement_route by lib/Listener/ExpenseRouteListener.php, which refuses the payroll route to a claim with a taxable part and a manual reimburse of a payroll-route claim). lib/Service/PayrollExpenseFoldService.php selects approved payroll-route claims once per run; lib/Service/PayrollRunService.php adds them to net before the garnishment and stamps each claim with the run; lib/Listener/PayrollRunApprovedListener.php marks them reimbursed when the run is approved. Tests: tests/Unit/Service/PayrollExpenseFoldServiceTest.php, tests/Unit/Listener/ExpensePayrollListenersTest.php, tests/Unit/Service/PayrollRunServiceTest.php::testClaimsAndAllowancesArePaidThroughThePayslip.",
+    "reachedOn": "Expenses > a claim: Approval shows Reimbursement route, Paid in payroll run and Paid in period; the payslip: Reimbursements and Claims paid",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-payroll-expenses-and-allowances",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "humaniq-expenses",
    "featureConfidence": "high",
-   "source": "competitor",
-   "note": "Reimbursement is recorded as having happened; nothing pays it through payroll or a payslip line."
+   "source": "competitor"
   },
   {
    "id": "exp-team-approval",
@@ -3716,7 +3718,7 @@
    "id": "exp-fixed-allowances",
    "area": "expenses",
    "name": "Pay fixed allowances such as a home working or travel allowance.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -3732,10 +3734,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000401925-Create-and-manage-recurring-payments: recurring compensations are salary components paid monthly, quarterly, half-yearly or yearly at a constant amount, such as a public transport subsidy; https://support.personio.de/hc/en-us/articles/35527325688605-Loket-integration-Sync-compensation-data syncs monthly recurring compensations to Loket for Dutch payroll."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-expenses-and-allowances on 2026-09-27 for the missing half: a recurring fixed allowance that pays itself on each payslip. Before: lib/Settings/register.d/hr-objects.json:460-504 WkrDeclaration: a hand-entered ledger row (date/description/amount/wkrCategory/sourceReference, optional employeeId for a collective allowance) categorised vrije-ruimte/gericht-vrijgesteld/eindheffing, summed into vrijeRuimteUsed; src/manifest.d/hr-objects.json:1829,1872 WkrDeclarations index + WkrDeclarationDetail, menu 05-menu.json:462; grep -n homeWorking/travelAllowance/reiskostenvergoeding/thuiswerkvergoeding lib/Settings/register.d/hr-objects.json lib/Service/PayrollRunService.php: no hits, so there is no dedicated recurring-allowance field",
-    "reachedOn": "WkrDeclarations /wkr-declarations (menu), one row per payment; no lifecycleActions, carries no workflow",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "RecurringAllowance schema (lib/Settings/register.d/hr-expense.json) with activate guarded by NoSelfApprovalGuard and the drafter stamped by lib/Listener/RecurringAllowanceStampListener.php; lib/Service/AllowanceSplitter.php splits each active allowance into a taxed part (added to the gross) and an untaxed part (on top of net, the home-working allowance capped at the sourced 2.45 a day norm in lib/Standards/tables/nl-2026.json, travel from the commuting arrangement); the run writes one WkrDeclaration per untaxed payment keyed on allowance and period. Tests: tests/Unit/Service/AllowanceSplitterTest.php, tests/Unit/Service/PayrollExpenseFoldServiceTest.php, tests/Unit/Settings/PayrollExpensesDeclarationTest.php.",
+    "reachedOn": "Expenses > Recurring allowances (/recurring-allowances) and a detail page with Activate and End; the payslip: Allowances taxed, Allowances untaxed, Allowances",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-payroll-expenses-and-allowances",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6494,10 +6498,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/19284187332509-Set-up-the-Accounting-Report-for-Personio-Payroll produces a DATEV SKR03/04 booking report for German payroll, and https://support.personio.de/hc/en-us/articles/17475536553885-Set-up-the-Xero-integration syncs employee data to Xero Payroll for UK entities; no automatic posting of payroll and expenses into accounting software for Dutch entities is described."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-expenses-and-allowances on 2026-09-27 for the missing half: expenses posting through payroll, since reimbursed expenses reach no ledger or payslip; the payroll half is covered by payroll-run-as-a-flow. Before: lib/Flow/PayrollGlPostNode.php:43 posts an approved payroll run's journal to shillinq, duck-typed ('skipped-no-shillinq' outcome when absent); lib/Flow/PayrollNetPayNode.php does the same for SEPA net-pay; lib/Command/GlPostRunCommand.php and lib/Command/NetPayRunCommand.php are the occ entry points; no route for glpost/netpay exists in appinfo/routes.php and no headerAction exists in src/manifest.d/hr-paybatch.json, reachable only via occ or via the Loonrun Flow (lib/Settings/register.d/hr-objects.json:193), which arrives DISABLED by default",
-    "reachedOn": "occ humaniq:glpost:run / occ humaniq:netpay:run, or the Loonrun flow's glpost/netpay nodes once an admin deliberately enables the flow in OpenRegister, no humaniq page button",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "The expenses half: PayrollRun.totalReimbursements and a debit line on the reimbursement account (setting glpost_account_reimbursements) in lib/Service/PayrollGLPostService.php::buildLines, so claims and untaxed allowances paid through payroll post to shillinq with the run's journal and the journal stays balanced. The payroll journal post itself (occ humaniq:glpost:run, the Loonrun flow's glpost node) predates this change; a page button for it is payroll-run-as-a-flow's half. Tests: tests/Unit/Service/PayrollRunServiceTest.php::testReimbursementsReachTheJournalBalanced.",
+    "reachedOn": "occ humaniq:glpost:run or the Loonrun flow's glpost node, now with the Declaraties en onbelaste vergoedingen line",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-payroll-expenses-and-allowances",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

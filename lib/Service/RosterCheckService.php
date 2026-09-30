@@ -54,6 +54,8 @@ use RuntimeException;
 
 /**
  * On-demand Arbeidstijdenwet cross-check over one roster's RosterAssignments.
+ *
+ * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
  */
 class RosterCheckService {
 
@@ -69,12 +71,14 @@ class RosterCheckService {
 	 * @param IAppConfig $appConfig App config for the register slug.
 	 * @param LoggerInterface $logger Logger.
 	 * @param CompetenceCheckService $competences The competence cross-check (design D3).
+	 * @param LeaveConflictCheckService $leave The leave cross-check (design D10).
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly CompetenceCheckService $competences = new CompetenceCheckService(),
+		private readonly LeaveConflictCheckService $leave = new LeaveConflictCheckService(),
 	) {
 
 	}//end __construct()
@@ -172,21 +176,7 @@ class RosterCheckService {
 			return $this->emptyReport();
 		}
 
-		$rosterIds = [];
-		foreach ($rosters as $roster) {
-			$id = (string)($roster['id'] ?? $roster['@self']['id'] ?? '');
-			if ($id !== '') {
-				$rosterIds[$id] = true;
-			}
-		}
-
-		$assignments = [];
-		foreach ($this->loadAll('RosterAssignment', $register) as $assignment) {
-			$rosterId = (string)($assignment['rosterId'] ?? '');
-			if ($rosterId !== '' && isset($rosterIds[$rosterId]) === true) {
-				$assignments[] = $assignment;
-			}
-		}
+		$assignments = $this->assignmentsOf(rosters: $rosters, register: $register);
 
 		$shiftsById = [];
 		foreach ($this->loadAll('Shift', $register) as $shift) {
@@ -211,6 +201,7 @@ class RosterCheckService {
 			'violations' => [],
 			'mandatoryViolations' => 0,
 			'competenceFindings' => 0,
+			'leaveFindings' => 0,
 			'registerResolved' => true,
 		];
 
@@ -249,16 +240,106 @@ class RosterCheckService {
 			$competenceFindings = [];
 		}
 
-		foreach ($competenceFindings as $finding) {
+		$report = $this->withFindings(report: $report, findings: $competenceFindings, counter: 'competenceFindings');
+
+		return $this->withFindings(report: $report, findings: $this->leaveFindings(assignments: $projected, register: $register), counter: 'leaveFindings');
+	}//end evaluateRosters()
+
+	/**
+	 * The leave findings of one roster: who is planned on a day of approved
+	 * leave or absence (REQ-ROST-C05).
+	 *
+	 * @param string $rosterId The Roster id.
+	 *
+	 * @return array<int, array<string, mixed>> The leave findings.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
+	 */
+	public function leaveFindingsOf(string $rosterId): array {
+		$violations = (array)($this->checkRoster($rosterId)['violations'] ?? []);
+
+		return array_values(array_filter($violations, static fn (array $finding): bool => (string)($finding['kind'] ?? '') === LeaveConflictCheckService::FINDING_KIND));
+	}//end leaveFindingsOf()
+
+	/**
+	 * The assignments that belong to the given rosters.
+	 *
+	 * @param array<int, array<string, mixed>> $rosters  The rosters.
+	 * @param string                           $register The resolved register slug.
+	 *
+	 * @return array<int, array<string, mixed>> The assignments.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C02
+	 */
+	private function assignmentsOf(array $rosters, string $register): array {
+		$rosterIds = [];
+		foreach ($rosters as $roster) {
+			$id = (string)($roster['id'] ?? $roster['@self']['id'] ?? '');
+			if ($id !== '') {
+				$rosterIds[$id] = true;
+			}
+		}
+
+		$assignments = [];
+		foreach ($this->loadAll('RosterAssignment', $register) as $assignment) {
+			$rosterId = (string)($assignment['rosterId'] ?? '');
+			if ($rosterId !== '' && isset($rosterIds[$rosterId]) === true) {
+				$assignments[] = $assignment;
+			}
+		}
+
+		return $assignments;
+	}//end assignmentsOf()
+
+	/**
+	 * Add cross-check findings to the report, counting them and their
+	 * mandatory ones.
+	 *
+	 * @param array<string, mixed>             $report   The report so far.
+	 * @param array<int, array<string, mixed>> $findings The findings.
+	 * @param string                           $counter  The report key that counts them.
+	 *
+	 * @return array<string, mixed> The report.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
+	 */
+	private function withFindings(array $report, array $findings, string $counter): array {
+		foreach ($findings as $finding) {
 			$report['violations'][] = $finding;
-			++$report['competenceFindings'];
+			++$report[$counter];
 			if (($finding['severity'] ?? '') === 'mandatory') {
 				$report['mandatoryViolations']++;
 			}
 		}
 
 		return $report;
-	}//end evaluateRosters()
+	}//end withFindings()
+
+	/**
+	 * The leave cross-check (REQ-ROST-C05), in the same act as the other two.
+	 *
+	 * Never-throw: leave that cannot be read costs its own findings and
+	 * nothing else, like the competence cross-check.
+	 *
+	 * @param array<int, array<string, mixed>> $assignments The projected assignments.
+	 * @param string $register The resolved register slug.
+	 *
+	 * @return array<int, array<string, mixed>> The leave findings.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
+	 */
+	private function leaveFindings(array $assignments, string $register): array {
+		try {
+			return $this->leave->findings(
+				assignments: $assignments,
+				leaveRequests: $this->loadAll('LeaveRequest', $register),
+				sickLeaveCases: $this->loadAll('SickLeaveCase', $register)
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('humaniq: the leave cross-check could not run: ' . $e->getMessage());
+			return [];
+		}
+	}//end leaveFindings()
 
 	/**
 	 * The zero-result report shape: the register WAS read, and it held no
@@ -280,6 +361,7 @@ class RosterCheckService {
 			'violations' => [],
 			'mandatoryViolations' => 0,
 			'competenceFindings' => 0,
+			'leaveFindings' => 0,
 			'registerResolved' => true,
 		];
 
@@ -308,6 +390,7 @@ class RosterCheckService {
 			'violations' => [],
 			'mandatoryViolations' => 0,
 			'competenceFindings' => 0,
+			'leaveFindings' => 0,
 			'registerResolved' => false,
 			'error' => $message,
 		];

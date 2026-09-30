@@ -18,16 +18,22 @@ Rows: `exp-reimburse-in-pay` (humaniq matrix).
 - **THEN** the employee's payslip shows a reimbursement of 27.40 and a net pay 27.40 higher,
   and the claim names that run
 
+@e2e exclude the run is server-side; covered by PayrollRunServiceTest::testClaimsAndAllowancesArePaidThroughThePayslip and PayrollExpenseFoldServiceTest::testAnApprovedPayrollClaimIsFoldedIntoNet
+
 #### Scenario: The next run does not pay it again
 - **GIVEN** the 2026-05 run approved with that claim
 - **WHEN** the 2026-06 run is calculated
 - **THEN** the claim is not on the 2026-06 payslip and its status is `reimbursed`
+
+@e2e exclude covered by PayrollExpenseFoldServiceTest::testOnlyTheRightClaimsAreSelected, PayrollExpenseFoldServiceTest::testApprovingTheRunMarksItsClaimsReimbursedOnce and PayrollExpenseFoldServiceTest::testTheApprovalListenerMarksTheRunsClaims
 
 #### Scenario: A claim above the tax-free rate keeps the direct route
 - **GIVEN** an approved mileage claim with a taxable part of 10.50
 - **WHEN** an HR adviser sets its route to payroll
 - **THEN** the change is refused with a message that the taxable part cannot yet be paid
   through payroll
+
+@e2e exclude the refusal is a server-side listener; covered by ExpensePayrollListenersTest::testATaxableClaimIsRefusedThePayrollRoute
 
 ### Requirement: A recurring allowance SHALL pay itself every period with its tax treatment (REQ-PEA-002)
 
@@ -46,15 +52,21 @@ Rows: `exp-fixed-allowances` (humaniq matrix).
 - **THEN** the payslip shows the allowance as untaxed and the net pay rises by exactly that
   amount
 
+@e2e exclude the run is server-side; covered by AllowanceSplitterTest::testAHomeWorkingAllowanceAtTheNormIsUntaxed and PayrollRunServiceTest::testClaimsAndAllowancesArePaidThroughThePayslip
+
 #### Scenario: A taxed telephone allowance
 - **GIVEN** an active telephone allowance of 20.00 a month declared as taxed
 - **WHEN** the run is calculated
 - **THEN** the payslip's gross is 20.00 higher and the wage tax is computed over it
 
+@e2e exclude the run is server-side; covered by AllowanceSplitterTest::testTaxedFreeMarginAndDeclaredTreatments and PayrollRunServiceTest::testClaimsAndAllowancesArePaidThroughThePayslip
+
 #### Scenario: An allowance cannot be activated by the person who drafted it
 - **GIVEN** a draft allowance created by an HR adviser
 - **WHEN** the same HR adviser tries to activate it
 - **THEN** the transition is refused
+
+@e2e exclude the guard is server-side; covered by PayrollExpensesDeclarationTest::testActivationIsRefusedToTheDrafter and ExpensePayrollListenersTest::testANewAllowanceIsStampedWithItsDrafterAndEmployee
 
 ### Requirement: Allowance payments SHALL write the WKR ledger themselves (REQ-PEA-003)
 
@@ -70,6 +82,8 @@ Rows: `exp-fixed-allowances` (humaniq matrix).
 - **THEN** one row of 50.00 with category `vrije-ruimte` references that allowance and period,
   and recalculating the draft run leaves exactly one such row
 
+@e2e exclude covered by PayrollExpenseFoldServiceTest::testAllowancesAreSplitListedAndProduceWkrRows and PayrollExpenseFoldServiceTest::testWkrRowsAreUpsertedOnTheirSourceReference
+
 ### Requirement: Reimbursements SHALL reach the ledger in the payroll journal (REQ-PEA-004)
 
 A payroll run SHALL carry the total of reimbursements and untaxed allowances it paid, and the
@@ -84,7 +98,11 @@ Rows: `plt-accounting-link` (humaniq matrix).
 - **THEN** the journal carries a 27.40 debit line on the reimbursement account and debits
   equal credits
 
+@e2e exclude the journal is built server-side; covered by PayrollRunServiceTest::testReimbursementsReachTheJournalBalanced
+
 #### Scenario: A run without reimbursements is unchanged
 - **GIVEN** an approved run without claims or untaxed allowances
 - **WHEN** the journal is built
 - **THEN** it carries the same four lines as before this change
+
+@e2e exclude covered by PayrollRunServiceTest::testReimbursementsReachTheJournalBalanced and PayrollRunServiceTest::testWithoutClaimsOrAllowancesThePayslipIsIdentical

@@ -5,7 +5,7 @@
             "Expense": {
                 "slug": "Expense",
                 "icon": "ReceiptOutline",
-                "version": "0.9.0",
+                "version": "0.10.0",
                 "title": "Expense",
                 "description": "An employee expense-reimbursement claim (onkostendeclaratie / declaratie). An employee submits a claim (amount, category, date, receipt), a manager approves or rejects it, and once approved the amount is reimbursed to the employee. The submit → approve → reimburse lifecycle is owned here in humaniq, the HR/labour app: re-homing the Expenses feature that previously lived in pipelinq. The pipelinq-specific Shillinq accounts-payable sync coupling is intentionally NOT ported: reimbursement here is the HR-side claim workflow; any downstream AP/GL posting is a separate integration concern that OpenConnector/shillinq own.",
                 "type": "object",
@@ -437,6 +437,37 @@
                             "lpg",
                             "other"
                         ]
+                    },
+                    "reimbursementRoute": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Reimbursement route",
+                        "description": "How the approved claim is paid: with the salary on the payslip, or directly. Filled in at approval from the employer's setting; an HR adviser may change it while the claim waits for payment.",
+                        "x-notes": "payroll-expenses-and-allowances D1. Stamped by ExpenseRouteListener; a claim with a taxableAmount above 0 is refused the payroll route, and a claim a run holds keeps its route.",
+                        "x-enum-labels": {
+                            "payroll": "With the salary",
+                            "direct": "Directly"
+                        },
+                        "enum": [
+                            "payroll",
+                            "direct"
+                        ]
+                    },
+                    "payrollRunId": {
+                        "type": "string",
+                        "nullable": true,
+                        "$ref": "PayrollRun",
+                        "title": "Paid in payroll run",
+                        "description": "The payroll run that pays this claim on the payslip. Filled in by humaniq.",
+                        "x-notes": "payroll-expenses-and-allowances D2: stamped by the run when it pays the claim, cleared when a recalculation no longer pays it."
+                    },
+                    "paidInPeriod": {
+                        "type": "string",
+                        "nullable": true,
+                        "pattern": "^\\d{4}-\\d{2}$",
+                        "title": "Paid in period",
+                        "description": "The wage period whose payslip pays this claim. Filled in by humaniq.",
+                        "x-notes": "payroll-expenses-and-allowances D2, YYYY-MM."
                     }
                 }
             },
@@ -713,6 +744,169 @@
                         "title": "Administration",
                         "description": "Which administration this arrangement belongs to. Filled in from the employee.",
                         "x-notes": "Plain administratie key (ADR-062 rule 7), stamped from the Employee by TravelAmountListener."
+                    }
+                }
+            },
+            "RecurringAllowance": {
+                "slug": "RecurringAllowance",
+                "icon": "CashSync",
+                "version": "0.1.0",
+                "title": "Recurring allowance",
+                "description": "A fixed allowance paid to one employee every month through the payslip, such as a home-working, travel or telephone allowance. HR declares its tax treatment; humaniq pays the untaxed part on top of net pay, adds the taxed part to the gross, and writes the WKR ledger row itself (payroll-expenses-and-allowances).",
+                "type": "object",
+                "x-schema-org": "schema:MonetaryAmount",
+                "required": [
+                    "employeeId",
+                    "kind",
+                    "taxTreatment",
+                    "startDate",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "draft",
+                        "terminal": [
+                            "ended"
+                        ],
+                        "transitions": {
+                            "activate": {
+                                "from": [
+                                    "draft"
+                                ],
+                                "to": "active",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "A second HR adviser activates the allowance. The person who drafted it and the employee cannot."
+                            },
+                            "end": {
+                                "from": [
+                                    "active"
+                                ],
+                                "to": "ended",
+                                "description": "The allowance stops. Set the end date first."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Who receives the allowance. This person cannot activate it."
+                    },
+                    "kind": {
+                        "type": "string",
+                        "title": "Kind",
+                        "description": "What the allowance is for.",
+                        "x-enum-labels": {
+                            "thuiswerk": "Home working",
+                            "reiskosten": "Travel",
+                            "telefoon": "Telephone",
+                            "other": "Other"
+                        },
+                        "enum": [
+                            "thuiswerk",
+                            "reiskosten",
+                            "telefoon",
+                            "other"
+                        ]
+                    },
+                    "amountPerMonth": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Amount per month",
+                        "description": "The fixed amount paid each month. Leave empty when the allowance is paid per day."
+                    },
+                    "amountPerDay": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Amount per day",
+                        "description": "The amount per day, paid for the number of days a month below."
+                    },
+                    "daysPerMonth": {
+                        "type": "integer",
+                        "nullable": true,
+                        "minimum": 1,
+                        "maximum": 31,
+                        "title": "Days per month",
+                        "description": "How many days a month the allowance covers. A home-working allowance needs it to apply the tax-free amount per day."
+                    },
+                    "taxTreatment": {
+                        "type": "string",
+                        "title": "Tax treatment",
+                        "description": "How the allowance is taxed: untaxed under a targeted exemption up to its norm, charged to the WKR free margin, or taxed as wage.",
+                        "x-enum-labels": {
+                            "gericht-vrijgesteld": "Targeted exemption",
+                            "vrije-ruimte": "WKR free margin",
+                            "belast": "Taxed as wage"
+                        },
+                        "enum": [
+                            "gericht-vrijgesteld",
+                            "vrije-ruimte",
+                            "belast"
+                        ],
+                        "default": "gericht-vrijgesteld"
+                    },
+                    "commuteArrangementId": {
+                        "type": "string",
+                        "nullable": true,
+                        "$ref": "CommuteArrangement",
+                        "title": "Commuting arrangement",
+                        "description": "For a travel allowance: the approved commuting arrangement whose monthly amount and tax-free part are paid."
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Start date",
+                        "description": "The first day the allowance is paid for."
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "End date",
+                        "description": "The last day the allowance is paid for. Leave empty while it lasts."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Draft until a second HR adviser activates it; active while it pays; ended when it stops.",
+                        "x-enum-labels": {
+                            "draft": "Draft",
+                            "active": "Active",
+                            "ended": "Ended"
+                        },
+                        "enum": [
+                            "draft",
+                            "active",
+                            "ended"
+                        ],
+                        "default": "draft"
+                    },
+                    "proposedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Drafted by",
+                        "description": "The account that drafted the allowance. Filled in by humaniq.",
+                        "x-notes": "Stamped by RecurringAllowanceStampListener; NoSelfApprovalGuard refuses this account the activate transition."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "User ID",
+                        "description": "The Nextcloud account of the employee. Filled in by humaniq.",
+                        "x-notes": "Stamped from the Employee's nextcloudUserId, so NoSelfApprovalGuard refuses the employee."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Which administration this allowance belongs to. Filled in from the employee.",
+                        "x-notes": "Plain administratie key (ADR-062 rule 7)."
                     }
                 }
             },

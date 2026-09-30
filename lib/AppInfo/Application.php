@@ -58,7 +58,9 @@ use OCA\Humaniq\Listener\ScenarioMutationListener;
 use OCA\Humaniq\Listener\ExitInterviewListener;
 use OCA\Humaniq\Listener\CandidateEvaluationStampListener;
 use OCA\Humaniq\Listener\ReferralListener;
+use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\PayrollRunApprovedListener;
+use OCA\Humaniq\Listener\RecurringAllowanceStampListener;
 use OCA\Humaniq\Listener\RelationsCaseListener;
 use OCA\Humaniq\Listener\AnnouncementConfirmationListener;
 use OCA\Humaniq\Service\AnnouncementService;
@@ -500,6 +502,7 @@ class Application extends App implements IBootstrap {
 		$this->registerFieldAccessListener($dispatcher);
 		$this->registerApprovalsInboxListeners($dispatcher);
 		$this->registerOvertimeCreditListener($dispatcher);
+		$this->registerExpensePayrollListeners($dispatcher);
 		$this->registerHrLifecycleEventListener($dispatcher);
 
 	}//end boot()
@@ -940,6 +943,21 @@ class Application extends App implements IBootstrap {
 			schemas: ['payrollrun']
 		);
 	}//end registerOvertimeCreditListener()
+
+	/**
+	 * payroll-expenses-and-allowances D1, D3: the claim route and the allowance drafter, before save.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 */
+	private function registerExpensePayrollListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG] as $listener => $slug) {
+				$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: $listener, registers: null, schemas: [$slug]);
+			}
+		}
+	}//end registerExpensePayrollListeners()
 
 	/**
 	 * self-service-approvals-inbox D1 and D2: a deputy record is judged before

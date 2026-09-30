@@ -64,6 +64,8 @@ return [
         // rostering — guarded trigger for the RosterDetail "ATW-controle"
         // manifest api-call action (design.md D5).
         ['name' => 'roster#check', 'url' => '/api/roster/check', 'verb' => 'POST'],
+        // agenda-rostering-and-resource-booking (pln-leave-in-roster): who on a roster is planned while away
+        ['name' => 'roster#leave', 'url' => '/api/roster/{rosterId}/leave', 'verb' => 'GET'],
         // leave-against-a-department-schedule — one org unit's leave over a
         // period, composed on read (REQ-LVM-S01), and the coverage warning an
         // approver is shown before approving (REQ-LVM-S02). Reads only: the

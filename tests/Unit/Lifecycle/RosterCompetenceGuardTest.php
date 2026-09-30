@@ -181,6 +181,57 @@ class RosterCompetenceGuardTest extends TestCase {
 	}//end testACompetenceExpiredBeforeTheShiftDateRefuses()
 
 	/**
+	 * A roster that plans somebody on a day of their approved leave does not
+	 * publish, and the refusal names the employee and the date
+	 * (pln-leave-in-roster, REQ-ROST-C05).
+	 *
+	 * @return void
+	 */
+	public function testPublishingARosterThatPlansSomeoneOnApprovedLeaveIsRefused(): void {
+		$rows = $this->boaRoster([['employeeId' => 'emp-jan', 'competenceCode' => 'boa-domein-1', 'issuedOn' => '2025-01-01']]);
+		$rows['LeaveRequest'] = [['id' => 'lr-1', 'employeeId' => 'emp-jan', 'status' => 'approved', 'startDate' => '2026-07-13', 'endDate' => '2026-07-17']];
+		$guard = $this->guardWithRows($rows);
+
+		$result = $guard->check(['id' => 'roster-w28'], 'publiceren', 'planner');
+
+		$this->assertFalse($result->isAllowed());
+		$message = (string)$result->getMessage();
+		$this->assertStringContainsString('niet worden gepubliceerd', $message);
+		$this->assertStringContainsString('verlof', $message);
+		$this->assertStringContainsString('emp-jan', $message);
+		$this->assertStringContainsString('2026-07-13', $message);
+	}//end testPublishingARosterThatPlansSomeoneOnApprovedLeaveIsRefused()
+
+	/**
+	 * Controls: leave that is only submitted, and open sick leave, do not
+	 * block publishing (sick leave is reported, not refused).
+	 *
+	 * @return void
+	 */
+	public function testSubmittedLeaveAndSickLeaveDoNotBlockPublishing(): void {
+		$rows = $this->boaRoster([['employeeId' => 'emp-jan', 'competenceCode' => 'boa-domein-1', 'issuedOn' => '2025-01-01']]);
+		$rows['LeaveRequest'] = [['id' => 'lr-1', 'employeeId' => 'emp-jan', 'status' => 'submitted', 'startDate' => '2026-07-13', 'endDate' => '2026-07-17']];
+		$rows['SickLeaveCase'] = [['id' => 'sick-1', 'employeeId' => 'emp-jan', 'status' => 'gemeld', 'firstSickDay' => '2026-07-01']];
+		$guard = $this->guardWithRows($rows);
+
+		$this->assertTrue($guard->check(['id' => 'roster-w28'], 'publiceren', 'planner')->isAllowed());
+	}//end testSubmittedLeaveAndSickLeaveDoNotBlockPublishing()
+
+	/**
+	 * Both refusals at once are named in one message.
+	 *
+	 * @return void
+	 */
+	public function testACompetenceAndALeaveRefusalAreBothNamed(): void {
+		$rows = $this->boaRoster([]);
+		$rows['LeaveRequest'] = [['id' => 'lr-1', 'employeeId' => 'emp-jan', 'status' => 'approved', 'startDate' => '2026-07-13', 'endDate' => '2026-07-13']];
+		$message = (string)$this->guardWithRows($rows)->check(['id' => 'roster-w28'], 'publiceren', 'planner')->getMessage();
+
+		$this->assertStringContainsString('boa-domein-1', $message);
+		$this->assertStringContainsString('verlof', $message);
+	}//end testACompetenceAndALeaveRefusalAreBothNamed()
+
+	/**
 	 * Fail closed: no id, an unknown roster and an unresolved register all
 	 * deny rather than publish unchecked.
 	 *

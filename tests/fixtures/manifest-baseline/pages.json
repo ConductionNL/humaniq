@@ -416,6 +416,14 @@
 		"route": "/commute-arrangements/:id"
 	},
 	{
+		"id": "RecurringAllowances",
+		"route": "/recurring-allowances"
+	},
+	{
+		"id": "RecurringAllowanceDetail",
+		"route": "/recurring-allowances/:id"
+	},
+	{
 		"id": "WpmReports",
 		"route": "/mobility-reports"
 	},

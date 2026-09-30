@@ -113,3 +113,24 @@ available capacity, is documented only (Jira Data Center, Advanced Roadmaps,
 auto-schedule issues) and needs a dependency graph dossiq owns. humaniq ships the
 capacity side of it here. The proposing side is recorded in the spec as an explicit
 non-requirement so the next reader finds the decision rather than the gap.
+
+## D10. Leave inside the roster: refuse approved leave, report sick leave (added 2026-09-30)
+
+Row `pln-leave-in-roster` asks that approved leave shows inside the roster so nobody is
+planned while away. The agenda (D4) and availability (D5) already take leave into
+account, but the roster itself did not: `RosterCheckService` never read a
+`LeaveRequest`, and `RosterDetail` showed no leave. So a planner could publish a roster
+with someone on a day of their approved holiday.
+
+The leave cross-check joins the same path as competence (D3): a dependency-free
+`LeaveConflictCheckService`, run by `RosterCheckService` in the same act, with its own
+finding kind `leave`. Approved leave is `mandatory`, and `RosterCompetenceGuard`
+refuses to publish on it, as it does on a competence finding. Open sick leave is
+`advisory`: an open case has no end date, so refusing on it would block every future
+roster the person is on, and a planner needs to see it, not be stopped by it. The
+guard keeps its name; it now guards both rules a roster cannot publish past.
+
+The page reads `GET /api/roster/{rosterId}/leave`, the check's `leave` findings as rows
+(date, employee, "On approved leave" or "Absent", "Blocks publishing" or "Reported"),
+behind the same resolve-first RBAC probe as `POST /api/roster/check`. Nothing about why
+a person is away leaves the check.

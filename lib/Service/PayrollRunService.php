@@ -236,6 +236,9 @@ class PayrollRunService {
 	 * @param PackRepository $packs The jurisdiction-pack resolver (jurisdiction-packs design.md D7).
 	 * @param HoursPayService|null $hoursPay Approved hours and overtime as pay (time-hours-and-overtime-to-payroll); null runs without it.
 	 * @param WorkingCalendarReader|null $calendar openregister's working calendar, for the feestdag overtime category.
+	 * @param PayrollExpenseFoldService|null $expenses Approved claims and recurring allowances (payroll-expenses-and-allowances); null runs without them.
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each optional fold (hours, claims and allowances) is its own collaborator, so a run without one stays byte-identical and a test names which fold ran.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -247,6 +250,7 @@ class PayrollRunService {
 		private readonly PackRepository $packs = new PackRepository(),
 		private readonly ?HoursPayService $hoursPay = null,
 		private readonly ?WorkingCalendarReader $calendar = null,
+		private readonly ?PayrollExpenseFoldService $expenses = null,
 	) {
 
 	}//end __construct()
@@ -387,6 +391,7 @@ class PayrollRunService {
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
 	 * @spec openspec/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-002
 	 */
 	private function generate(array $run): array {
 		$runId = $this->idOf($run);
@@ -424,6 +429,9 @@ class PayrollRunService {
 		$vehicleAssetsById = $this->vehicleAssetsById();
 		$hours = $this->hoursInputs(period: $period);
 		$paidTimesheets = [];
+		$expenseInputs = $this->expenses?->inputs(norm: $this->expenses->normFrom($tables));
+		$paidClaimIds = [];
+		$wkrRows = [];
 
 		$computed = [];
 		$skipped = [];
@@ -433,6 +441,7 @@ class PayrollRunService {
 			'employerCharges' => 0,
 			'withholdings' => 0,
 			'net' => 0,
+			'reimbursements' => 0,
 		];
 
 		foreach ($this->loadAll('Employee') as $employee) {
@@ -525,6 +534,14 @@ class PayrollRunService {
 			$leaveBuySellCents = ($leaveBuySellByEmployeeId[$employeeId] ?? 0);
 			$grossMonthlySalaryCents += $leaveBuySellCents;
 
+			// payroll-expenses-and-allowances D2/D4: the taxed part of every
+			// allowance is wage and enters the gross before the calculator;
+			// approved payroll-route claims and the untaxed allowance parts
+			// are added to net after the leave fold, before the garnishment.
+			$expenseFold = $this->expenses?->foldFor(inputs: $expenseInputs, employeeId: $employeeId, period: $period, runId: $runId);
+			$grossMonthlySalaryCents += (int)($expenseFold['taxedCents'] ?? 0);
+			$expenseNetCents = ((int)($expenseFold['claimCents'] ?? 0) + (int)($expenseFold['untaxedCents'] ?? 0));
+
 			// 30-procent-regeling (design.md D2/D7): a granted 30%-ruling feeds
 			// its applied rate into the engine, which reduces the TAXABLE base
 			// (pack `belastbaarLoon` binding) while leaving the net-fold's gross
@@ -571,7 +588,7 @@ class PayrollRunService {
 			// beslagvrije voet protects the employee's actual take-home this
 			// period, never an intermediate figure a same-period
 			// nabetaling/leave-payout would still inflate past.
-			$nettoPaySoFarCents = ($result->nettoPayCents + $retroAdjustmentCents);
+			$nettoPaySoFarCents = ($result->nettoPayCents + $retroAdjustmentCents + $expenseNetCents);
 			$loonbeslag = $this->activeLoonbeslagFor($employee, $loonbeslagenByEmployeeKey, $period);
 			$loonbeslagDeductionCents = ($loonbeslag !== null) ? $this->loonbeslagDeductionCents($loonbeslag, $nettoPaySoFarCents) : 0;
 
@@ -583,6 +600,9 @@ class PayrollRunService {
 			$payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents));
 			$payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
 			$payload = array_merge($payload, $this->hoursPayFields(hoursPay: $hoursPay, salaried: $salaried));
+			$payload = array_merge($payload, $this->expenseFields(fold: $expenseFold, netCents: ($nettoPaySoFarCents - $loonbeslagDeductionCents)));
+			$paidClaimIds = array_merge($paidClaimIds, (array)($expenseFold['claimIds'] ?? []));
+			$wkrRows = array_merge($wkrRows, (array)($expenseFold['wkr'] ?? []));
 			foreach ((array)($hoursPay['timesheetIds'] ?? []) as $timesheetId) {
 				$paidTimesheets[$timesheetId] = $this->creditFor(hoursPay: $hoursPay, timesheetId: $timesheetId);
 			}
@@ -616,6 +636,7 @@ class PayrollRunService {
 			$totals['employerCharges'] += ($result->employerChargesCents + $retroAdjustment['employerCharges']);
 			$totals['withholdings'] += ($result->loonheffingCents + $retroAdjustment['loonheffing']);
 			$totals['net'] += ($nettoPaySoFarCents - $loonbeslagDeductionCents);
+			$totals['reimbursements'] += $expenseNetCents;
 		}//end foreach
 
 		// Orphan cleanup (design.md D4): engine payslips of THIS run whose
@@ -643,6 +664,13 @@ class PayrollRunService {
 			$this->hoursPay->stamp(timesheets: $hours['timesheets'], paid: $paidTimesheets, runId: $runId, period: $period);
 		}
 
+		// payroll-expenses-and-allowances D2/D5: each paid claim names this
+		// run, and every untaxed allowance payment has its one WKR row.
+		if ($this->expenses !== null && $expenseInputs !== null) {
+			$this->expenses->stampClaims(expenses: $expenseInputs['expenses'], paidIds: $paidClaimIds, runId: $runId, period: $period);
+			$this->expenses->writeWkr(inputs: $expenseInputs, rows: $wkrRows, administrationId: $administrationId);
+		}
+
 		// Roll-up + stamps (design.md D4): totals cents-exact, calculatedAt =
 		// now. Status and GL/clearing fields are deliberately NOT written.
 		// engineVersion is now `{packId}@{packVersion}` (jurisdiction-packs
@@ -656,6 +684,7 @@ class PayrollRunService {
 				'totalEmployerCharges' => $this->euros($totals['employerCharges']),
 				'totalWithholdings' => $this->euros($totals['withholdings']),
 				'totalNet' => $this->euros($totals['net']),
+				'totalReimbursements' => $this->euros($totals['reimbursements']),
 				'engineVersion' => $pack->engineVersion(),
 				'calculatedAt' => gmdate('Y-m-d\TH:i:s\Z'),
 			]
@@ -780,6 +809,30 @@ class PayrollRunService {
 
 		return ($hoursPay === null ? 'no-approved-hours' : null);
 	}//end hourlySkipReason()
+
+	/**
+	 * The payslip fields of the claims-and-allowances fold; the net pay is
+	 * restated only when the fold added to it (payroll-expenses-and-allowances D2).
+	 *
+	 * @param array<string, mixed>|null $fold     The fold, or null without the service.
+	 * @param int                       $netCents The final net pay, in cents.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
+	 */
+	private function expenseFields(?array $fold, int $netCents): array {
+		if ($fold === null || $this->expenses === null) {
+			return [];
+		}
+
+		$fields = $this->expenses->payslipFields($fold);
+		if (((int)$fold['claimCents'] + (int)$fold['untaxedCents']) > 0) {
+			$fields['nettoPay'] = $this->euros($netCents);
+		}
+
+		return $fields;
+	}//end expenseFields()
 
 	/**
 	 * The payslip fields that say what hours and overtime were paid; none

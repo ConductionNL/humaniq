@@ -39,6 +39,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -46,6 +47,8 @@ use RuntimeException;
 
 /**
  * Guarded endpoint that runs the on-demand ATW cross-check for one roster.
+ *
+ * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
  */
 class RosterController extends Controller {
 
@@ -55,6 +58,7 @@ class RosterController extends Controller {
 	 * @param RosterCheckService $rosterCheckService The on-demand roster ATW auditor.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param LoggerInterface $logger Logger.
+	 * @param IL10N $l10n Translations for the leave row labels.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -62,6 +66,7 @@ class RosterController extends Controller {
 		private readonly RosterCheckService $rosterCheckService,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly IL10N $l10n,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -97,6 +102,45 @@ class RosterController extends Controller {
 
 		return new JSONResponse($report);
 	}//end check()
+
+	/**
+	 * `GET /api/roster/{rosterId}/leave`: who on this roster is planned on a
+	 * day they are away (row pln-leave-in-roster, REQ-ROST-C05). One row per
+	 * assignment: the date, the employee, whether they are on approved leave
+	 * (blocks publishing) or absent (reported), never why. Resolve-first like
+	 * `check()`: an unknown or unreadable roster answers 404.
+	 *
+	 * @param string $rosterId The Roster id.
+	 *
+	 * @return JSONResponse {rows: [{assignmentId, date, employeeId, absence, effect}]}, 400 on a blank id, 404 when the roster does not resolve.
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
+	 */
+	#[NoAdminRequired]
+	public function leave(string $rosterId): JSONResponse {
+		$rosterId = trim($rosterId);
+		if ($rosterId === '') {
+			return new JSONResponse(['error' => 'rosterId is verplicht.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($this->authorizeRoster($rosterId) === null) {
+			return new JSONResponse(['error' => 'Roster niet gevonden.'], Http::STATUS_NOT_FOUND);
+		}
+
+		$rows = [];
+		foreach ($this->rosterCheckService->leaveFindingsOf($rosterId) as $finding) {
+			$onLeave = (($finding['absence'] ?? '') === 'leave');
+			$rows[] = [
+				'assignmentId' => (string)($finding['objectId'] ?? ''),
+				'date' => (string)($finding['date'] ?? ''),
+				'employeeId' => (string)($finding['employeeId'] ?? ''),
+				'absence' => ($onLeave === true ? $this->l10n->t('On approved leave') : $this->l10n->t('Absent')),
+				'effect' => ($onLeave === true ? $this->l10n->t('Blocks publishing') : $this->l10n->t('Reported')),
+			];
+		}
+
+		return new JSONResponse(['rows' => $rows]);
+	}//end leave()
 
 	/**
 	 * Resolve the posted rosterId through OpenRegister's ObjectService under

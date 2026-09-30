@@ -14074,6 +14074,56 @@
       {
         "@self": {
           "register": "humaniq",
+          "schema": "RecurringAllowance",
+          "slug": "recurringallowance-recurringallowance-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "kind": "thuiswerk",
+        "amountPerDay": 2.45,
+        "daysPerMonth": 8,
+        "taxTreatment": "gericht-vrijgesteld",
+        "startDate": "2026-03-01",
+        "status": "active",
+        "proposedBy": "Voorbeeld Proposedby 1",
+        "userId": "Voorbeeld Userid 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "RecurringAllowance",
+          "slug": "recurringallowance-recurringallowance-2-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "kind": "telefoon",
+        "amountPerMonth": 20.0,
+        "taxTreatment": "belast",
+        "startDate": "2026-03-01",
+        "status": "draft",
+        "proposedBy": "Voorbeeld Proposedby 2",
+        "userId": "Voorbeeld Userid 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "RecurringAllowance",
+          "slug": "recurringallowance-recurringallowance-3-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "kind": "other",
+        "amountPerMonth": 50.0,
+        "taxTreatment": "vrije-ruimte",
+        "startDate": "2026-03-01",
+        "status": "ended",
+        "proposedBy": "Voorbeeld Proposedby 3",
+        "userId": "Voorbeeld Userid 3",
+        "administrationId": "Voorbeeld Administrationid 3",
+        "endDate": "2026-06-30"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
           "schema": "WpmReport",
           "slug": "wpmreport-wpmreport-1-1"
         },

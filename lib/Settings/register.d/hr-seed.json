@@ -319,6 +319,24 @@
                 "submittedAt": "2026-05-20T18:00:00Z",
                 "approvedBy": "manager-pietersen",
                 "approvedAt": "2026-05-21T09:15:00Z",
+                "administrationId": "ADM-001",
+                "reimbursementRoute": "payroll"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "RecurringAllowance",
+                    "slug": "allowance-jansen-thuiswerk"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "kind": "thuiswerk",
+                "amountPerDay": 2.45,
+                "daysPerMonth": 8,
+                "taxTreatment": "gericht-vrijgesteld",
+                "startDate": "2026-01-01",
+                "status": "active",
+                "proposedBy": "hr-demo",
+                "userId": "admin",
                 "administrationId": "ADM-001"
             },
             {

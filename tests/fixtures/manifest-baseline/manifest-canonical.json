@@ -757,6 +757,17 @@
 					}
 				},
 				{
+					"icon": "CashSync",
+					"id": "RecurringAllowances",
+					"label": "Recurring allowances",
+					"route": "RecurringAllowances",
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
+				},
+				{
 					"icon": "ChartBar",
 					"id": "WpmReports",
 					"label": "Mobility reports",
@@ -4581,7 +4592,7 @@
 		},
 		{
 			"config": {
-				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check. expenses-travel-calculation (2026-09-29): a 'Travel' data widget at gridY 6 shows the trip (travelType, distanceKm, transportMode, fuelType) and what humaniq calculated from it (ratePerKm, taxFreeAmount, taxableAmount, amountSource, read-only: TravelAmountListener stamps them on save). Approval moves to gridY 10, the receipt to gridY 14, and Related grows to 12 rows to match the left column.",
+				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check. expenses-travel-calculation (2026-09-29): a 'Travel' data widget at gridY 6 shows the trip (travelType, distanceKm, transportMode, fuelType) and what humaniq calculated from it (ratePerKm, taxFreeAmount, taxableAmount, amountSource, read-only: TravelAmountListener stamps them on save). Approval moves to gridY 10, the receipt to gridY 14, and Related grows to 12 rows to match the left column. payroll-expenses-and-allowances (2026-09-30): Approval also shows reimbursementRoute (with the salary or directly; stamped at approval from the employer setting expense_reimbursement_route, changeable while the claim waits, refused for a claim with a taxable part or one a payroll run holds) and the read-only payrollRunId/paidInPeriod the run stamps. Reimburse stays for the direct route; a payroll-route claim is marked reimbursed when its run is approved and a manual reimburse is refused server-side (ExpenseRouteListener).",
 				"headerActions": [
 					{
 						"confirm": true,
@@ -4611,7 +4622,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 14,
+						"gridY": 15,
 						"id": 2,
 						"widgetId": "files"
 					},
@@ -4624,7 +4635,7 @@
 						"widgetId": "data"
 					},
 					{
-						"gridHeight": 4,
+						"gridHeight": 5,
 						"gridWidth": 8,
 						"gridX": 0,
 						"gridY": 10,
@@ -4632,7 +4643,7 @@
 						"widgetId": "data-2"
 					},
 					{
-						"gridHeight": 12,
+						"gridHeight": 13,
 						"gridWidth": 4,
 						"gridX": 8,
 						"gridY": 2,
@@ -4789,13 +4800,22 @@
 								"approvedBy",
 								"approvedAt",
 								"rejectionReason",
-								"reimbursedAt"
+								"reimbursedAt",
+								"reimbursementRoute",
+								"payrollRunId",
+								"paidInPeriod"
 							],
 							"overrides": {
 								"approvedAt": {
 									"editable": false
 								},
 								"approvedBy": {
+									"editable": false
+								},
+								"paidInPeriod": {
+									"editable": false
+								},
+								"payrollRunId": {
 									"editable": false
 								},
 								"reimbursedAt": {
@@ -9207,7 +9227,7 @@
 		},
 		{
 			"config": {
-				"_note": "rostering (2026-07-14): the publishable roster header. Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle (concept <-> gepubliceerd via publiceren/intrekken), so RosterDetail legitimately renders a lifecycleActions widget for exactly those two transitions -- no invented edge (the AttendanceRecordDetail sluiten/heropenen precedent). The 'Rooster' data widget carries period/administrationId/status; Related resolves and links the optional orgUnitId scope (excluded from data). The page-level 'ATW-controle' api-call action posts {rosterId: @objectId} to POST /api/roster/check (guarded server-side by RosterController::authorizeRoster()) and surfaces the Arbeidstijdenwet verdict over the roster's assignments regardless of publish status -- publishing itself is NOT hard-blocked on a violation (guard wiring is humaniq-rule-compliance-enforcement's scope, design.md Non-Goal). The FK-scoped 'Roosterindelingen' child object-list (RosterAssignment.rosterId = @objectId) is the plan itself. No stat KPI -- a header has no numeric headline. Audit history is a sidebar tab.",
+				"_note": "rostering (2026-07-14): the publishable roster header. Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle (concept <-> gepubliceerd via publiceren/intrekken), so RosterDetail legitimately renders a lifecycleActions widget for exactly those two transitions -- no invented edge (the AttendanceRecordDetail sluiten/heropenen precedent). The 'Rooster' data widget carries period/administrationId/status; Related resolves and links the optional orgUnitId scope (excluded from data). The page-level 'ATW-controle' api-call action posts {rosterId: @objectId} to POST /api/roster/check (guarded server-side by RosterController::authorizeRoster()) and surfaces the Arbeidstijdenwet verdict over the roster's assignments regardless of publish status. Working-time findings stay a report, while publiceren is refused by RosterCompetenceGuard on a competence finding (humaniq#512) and on a shift that falls on a day of approved leave (agenda-rostering-and-resource-booking, pln-leave-in-roster). The FK-scoped 'Roosterindelingen' child object-list (RosterAssignment.rosterId = @objectId) is the plan itself. No stat KPI -- a header has no numeric headline. Audit history is a sidebar tab. Planned while away (endpoint-table, GET /api/roster/{id}/leave) lists each assignment whose employee is on approved leave (blocks publishing) or absent (reported) that day, never why, so the planner sees the leave inside the roster.",
 				"headerActions": [
 					{
 						"confirm": true,
@@ -9248,6 +9268,14 @@
 						"gridY": 6,
 						"id": 3,
 						"widgetId": "object-list"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 12,
+						"id": 4,
+						"widgetId": "leave-conflicts"
 					}
 				],
 				"lifecycleActions": {
@@ -9345,6 +9373,38 @@
 						"id": "object-list",
 						"title": "Roster assignments",
 						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "date",
+									"label": "Date"
+								},
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "absence",
+									"label": "Absence"
+								},
+								{
+									"key": "effect",
+									"label": "Effect"
+								}
+							],
+							"emptyText": "Nobody on this roster is planned on a day they are away",
+							"endpointSource": {
+								"responsePath": "rows",
+								"url": "/apps/humaniq/api/roster/@objectId/leave"
+							}
+						},
+						"icon": "CalendarRemoveOutline",
+						"id": "leave-conflicts",
+						"title": "Planned while away",
+						"type": "endpoint-table"
 					}
 				]
 			},
@@ -12765,6 +12825,130 @@
 			"id": "CommuteArrangementDetail",
 			"route": "/commute-arrangements/:id",
 			"title": "Commuting arrangement",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"allowCreate": true,
+				"columns": [
+					"employeeId",
+					"kind",
+					"amountPerMonth",
+					"amountPerDay",
+					"daysPerMonth",
+					"taxTreatment",
+					"startDate",
+					"status"
+				],
+				"description": "Fixed allowances paid every month with the salary, such as a home-working, travel or telephone allowance. A second HR adviser activates each one.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"status",
+					"kind",
+					"taxTreatment"
+				],
+				"register": "humaniq",
+				"schema": "RecurringAllowance",
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				}
+			},
+			"id": "RecurringAllowances",
+			"route": "/recurring-allowances",
+			"title": "Recurring allowances",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-expenses-and-allowances (2026-09-30): one employee's standing allowance. The payroll run pays it in every period it covers while active: the taxed part into the gross, the untaxed part (capped at the home-working norm per day, or the commuting arrangement's tax-free part for travel) on top of net, and one WKR declaration per payment. RecurringAllowanceStampListener stamps proposedBy, userId and administrationId; activate is guarded by NoSelfApprovalGuard so neither the drafter nor the employee can activate it.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "activate",
+							"from": [
+								"draft"
+							],
+							"label": "Activate",
+							"to": "active"
+						},
+						{
+							"action": "end",
+							"from": [
+								"active"
+							],
+							"label": "End",
+							"to": "ended"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "RecurringAllowance",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"userId"
+							],
+							"overrides": {
+								"administrationId": {
+									"editable": false
+								},
+								"proposedBy": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								}
+							},
+							"title": "Allowance"
+						},
+						"icon": "CashSync",
+						"id": "data",
+						"title": "Allowance",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "RecurringAllowanceDetail",
+			"route": "/recurring-allowances/:id",
+			"title": "Recurring allowance",
 			"type": "detail"
 		},
 		{
