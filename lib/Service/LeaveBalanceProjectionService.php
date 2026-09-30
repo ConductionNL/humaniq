@@ -42,6 +42,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use DateTimeImmutable;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -297,7 +298,7 @@ class LeaveBalanceProjectionService {
 
 		$dates = null;
 		if ($this->calendar !== null && $first !== null) {
-			$answer = $this->calendar->nonWorkingDates(new \DateTimeImmutable($first), new \DateTimeImmutable((string)$last));
+			$answer = $this->calendar->nonWorkingDates(new DateTimeImmutable($first), new DateTimeImmutable((string)$last));
 			$dates = $answer['dates'];
 			if ($dates === null) {
 				$this->logger->notice(

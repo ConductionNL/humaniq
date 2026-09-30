@@ -147,7 +147,7 @@ final class LeaveHoursCalculator {
 	 * spanning New Year splits across two balances.
 	 *
 	 * With `$workingTime` each day costs what the person was contracted to work
-	 * that day ({@see WorkingHoursService::contractedHoursOn()}): basis
+	 * that day ({@see LeaveDayCosts}, {@see WorkingHoursService::contractedHoursOn()}): basis
 	 * `pattern`, or `pattern-only` when the calendar could not be read. Without
 	 * a pattern in force, a weekday costs the contract hours divided by five,
 	 * except a day the calendar marks non-working (basis `contract-average`).
@@ -178,7 +178,7 @@ final class LeaveHoursCalculator {
 		}
 
 		if ($workingTime !== null) {
-			return self::perDay(request: $request, contractHoursPerWeek: $contractHoursPerWeek, year: $year, workingTime: $workingTime);
+			return (new LeaveDayCosts())->cost(request: $request, contractHoursPerWeek: $contractHoursPerWeek, year: $year, workingTime: $workingTime);
 		}
 
 		if ($contractHoursPerWeek === null || $contractHoursPerWeek <= 0) {
@@ -205,110 +205,6 @@ final class LeaveHoursCalculator {
 
 	}//end requestHours()
 
-	/**
-	 * The cost of a request day by day, from the person's working time.
-	 *
-	 * @param array<string, mixed> $request              The LeaveRequest row.
-	 * @param float|null           $contractHoursPerWeek The contract hours snapshot, for days without a pattern.
-	 * @param int                  $year                 The balance year.
-	 * @param array<string, mixed> $workingTime          patterns, nonWorkingTimes, nonWorkingDates.
-	 *
-	 * @return array{hours: float, derivable: bool, basis: string, days: list<array{date: string, hours: float, reason: string}>}
-	 */
-	private static function perDay(array $request, ?float $contractHoursPerWeek, int $year, array $workingTime): array {
-		$calendar = (is_array($workingTime['nonWorkingDates'] ?? null) === true ? array_values($workingTime['nonWorkingDates']) : null);
-		$range = (self::parseRange((string)($request['startDate'] ?? ''), (string)($request['endDate'] ?? '')) ?? [1, 0]);
-		$average = ($contractHoursPerWeek !== null && $contractHoursPerWeek > 0 ? $contractHoursPerWeek / 5 : null);
-		$hoursService = new WorkingHoursService();
-
-		$total = 0.0;
-		$days = [];
-		$usedPattern = false;
-		for ($ts = $range[0]; $ts <= $range[1]; $ts += self::ONE_DAY) {
-			if ((int)gmdate('Y', $ts) !== $year) {
-				continue;
-			}
-
-			$date = gmdate('Y-m-d', $ts);
-			$answer = $hoursService->contractedHoursOn(
-				employeeId: (string)($request['employeeId'] ?? ''),
-				date: new \DateTimeImmutable($date),
-				patterns: (array)($workingTime['patterns'] ?? []),
-				nonWorkingTimes: (array)($workingTime['nonWorkingTimes'] ?? []),
-				nonWorkingDates: $calendar
-			);
-			$day = self::dayCost(date: $date, answer: $answer, average: $average, calendar: $calendar);
-			if ($day === null) {
-				return ['hours' => 0.0, 'derivable' => false, 'basis' => 'contract-average', 'days' => []];
-			}
-
-			$usedPattern = ($usedPattern || $answer['patternFound']);
-			$total += $day['hours'];
-			$days[] = $day;
-		}
-
-		$basis = 'contract-average';
-		if ($usedPattern === true) {
-			$basis = ($calendar === null ? 'pattern-only' : 'pattern');
-		}
-
-		return ['hours' => round($total, 2), 'derivable' => true, 'basis' => $basis, 'days' => $days];
-
-	}//end perDay()
-
-	/**
-	 * One day's cost and why, or null when it cannot be derived (no pattern
-	 * in force and no contract hours).
-	 *
-	 * @param string                                                                        $date     The day, `Y-m-d`.
-	 * @param array{hours: float, patternOnly: bool, patternFound: bool, calendarApplied: bool} $answer   WorkingHoursService's answer for the day.
-	 * @param float|null                                                                    $average  Contract hours divided by five, or null.
-	 * @param list<string>|null                                                             $calendar The calendar's non-working dates, or null when unread.
-	 *
-	 * @return array{date: string, hours: float, reason: string}|null
-	 */
-	private static function dayCost(string $date, array $answer, ?float $average, ?array $calendar): ?array {
-		$weekend = ((int)gmdate('N', (int)strtotime($date . ' 00:00:00 UTC')) > 5);
-		$feestdag = ($calendar !== null && in_array($date, $calendar, true) === true);
-
-		if ($answer['patternFound'] === true) {
-			$hours = (float)$answer['hours'];
-			$reason = 'pattern';
-			if ($hours <= 0.0) {
-				$reason = self::freeReason(feestdag: $answer['calendarApplied'], weekend: $weekend);
-			}
-
-			return ['date' => $date, 'hours' => $hours, 'reason' => $reason];
-		}
-
-		if ($average === null) {
-			return null;
-		}
-
-		if ($weekend === true || $feestdag === true) {
-			return ['date' => $date, 'hours' => 0.0, 'reason' => self::freeReason(feestdag: $feestdag, weekend: $weekend)];
-		}
-
-		return ['date' => $date, 'hours' => $average, 'reason' => 'contract-average'];
-
-	}//end dayCost()
-
-	/**
-	 * Why a day costs nothing.
-	 *
-	 * @param bool $feestdag Whether the calendar marks it non-working.
-	 * @param bool $weekend  Whether it is a Saturday or Sunday.
-	 *
-	 * @return string feestdag, weekend or vrije-dag.
-	 */
-	private static function freeReason(bool $feestdag, bool $weekend): string {
-		if ($feestdag === true) {
-			return 'feestdag';
-		}
-
-		return ($weekend === true ? 'weekend' : 'vrije-dag');
-
-	}//end freeReason()
 
 	/**
 	 * Sum the approved requests belonging to one balance.
