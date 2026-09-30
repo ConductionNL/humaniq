@@ -77,6 +77,7 @@ class HumaniqFlowNodeListener implements IEventListener {
 		PayrollApproveNode::class,
 		PayrollGlPostNode::class,
 		PayrollNetPayNode::class,
+		TeamDigestNode::class,
 	];
 
 	/**

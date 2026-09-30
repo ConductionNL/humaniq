@@ -1,0 +1,94 @@
+{
+    "x-humaniq-fragment": "hr-announcements",
+    "components": {
+        "schemas": {
+            "Announcement": {
+                "slug": "Announcement",
+                "icon": "BullhornOutline",
+                "version": "0.1.0",
+                "title": "Announcement",
+                "description": "A message or policy HR publishes to the employees of an administration or of chosen departments, for a period, optionally asking each employee to confirm they read it (self-service-announcements-and-digest D1).",
+                "type": "object",
+                "required": ["title", "body", "audience", "status"],
+                "authorization": {
+                    "read": ["humaniq-hr", {"group": "authenticated", "match": {"status": "gepubliceerd"}}],
+                    "create": ["humaniq-hr"],
+                    "update": ["humaniq-hr"],
+                    "delete": ["humaniq-hr"]
+                },
+                "x-openregister-lifecycle": {
+                    "field": "status",
+                    "initial": "concept",
+                    "terminal": ["ingetrokken"],
+                    "transitions": {
+                        "publiceren": {
+                            "from": ["concept"],
+                            "to": "gepubliceerd",
+                            "description": "Employees in the audience see the announcement from its start date."
+                        },
+                        "intrekken": {
+                            "from": ["concept", "gepubliceerd"],
+                            "to": "ingetrokken",
+                            "description": "The announcement is no longer shown. Confirmations already given are kept."
+                        }
+                    }
+                },
+                "properties": {
+                    "title": {"type": "string", "maxLength": 200, "title": "Title", "description": "What the announcement is about, such as New expense policy 2027."},
+                    "body": {"type": "string", "maxLength": 20000, "title": "Text", "description": "The announcement itself. Attach a policy document to the announcement as a file."},
+                    "audience": {"type": "string", "enum": ["administration", "orgUnits"], "default": "administration", "title": "Audience", "description": "Everyone in the administration, or only the departments you choose.", "x-enum-labels": {"administration": "Everyone in the administration", "orgUnits": "Chosen departments"}},
+                    "orgUnitIds": {"type": "array", "items": {"type": "string", "format": "uuid", "$ref": "OrgUnit"}, "default": [], "title": "Departments", "description": "The departments that see it, including their teams. Only used when the audience is chosen departments."},
+                    "publishFrom": {"type": "string", "format": "date", "nullable": true, "title": "Show from", "description": "The first day employees see it. Empty means from publication."},
+                    "publishUntil": {"type": "string", "format": "date", "nullable": true, "title": "Show until", "description": "The last day employees see it. Empty means until it is withdrawn."},
+                    "requiresConfirmation": {"type": "boolean", "default": false, "title": "Ask for confirmation", "description": "Ask each employee to confirm they read it, so you can see who did."},
+                    "status": {"type": "string", "enum": ["concept", "gepubliceerd", "ingetrokken"], "default": "concept", "title": "Status", "description": "Draft, published or withdrawn.", "x-enum-labels": {"concept": "Draft", "gepubliceerd": "Published", "ingetrokken": "Withdrawn"}},
+                    "administrationId": {"type": "string", "nullable": true, "title": "Administration", "description": "The administration whose employees it is for."}
+                }
+            },
+            "AnnouncementConfirmation": {
+                "slug": "AnnouncementConfirmation",
+                "icon": "CheckDecagramOutline",
+                "version": "0.1.0",
+                "title": "Announcement confirmation",
+                "description": "One employee's confirmation that they read an announcement. There is at most one per employee per announcement (self-service-announcements-and-digest D1).",
+                "type": "object",
+                "required": ["announcementId", "employeeId", "confirmedAt"],
+                "authorization": {
+                    "read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}],
+                    "create": ["humaniq-hr"],
+                    "update": ["humaniq-hr"],
+                    "delete": ["humaniq-hr"]
+                },
+                "properties": {
+                    "announcementId": {"type": "string", "format": "uuid", "$ref": "Announcement", "title": "Announcement", "description": "The announcement that was read."},
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "title": "Employee", "description": "Who confirmed."},
+                    "userId": {"type": "string", "nullable": true, "title": "Employee account", "description": "The employee's Nextcloud account. Filled in automatically."},
+                    "confirmedAt": {"type": "string", "format": "date-time", "title": "Confirmed at", "description": "When the employee confirmed."},
+                    "administrationId": {"type": "string", "nullable": true, "title": "Administration", "description": "The administration of the employee."}
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {"register": "humaniq", "schema": "Announcement", "slug": "announcement-declaratieregeling-2027"},
+                "title": "Nieuwe declaratieregeling 2027",
+                "body": "Vanaf 1 januari 2027 geldt een nieuwe declaratieregeling. Lees het beleid in de bijlage en bevestig dat je het gelezen hebt.",
+                "audience": "administration",
+                "orgUnitIds": [],
+                "publishFrom": "2026-09-01",
+                "publishUntil": null,
+                "requiresConfirmation": true,
+                "status": "gepubliceerd",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {"register": "humaniq", "schema": "AnnouncementConfirmation", "slug": "announcementconfirmation-jansen-declaratieregeling-2027"},
+                "announcementId": "@ref:announcement-declaratieregeling-2027",
+                "employeeId": "@ref:employee-jansen",
+                "userId": "admin",
+                "confirmedAt": "2026-09-02T09:15:00+00:00",
+                "administrationId": "ADM-001"
+            }
+        ]
+    }
+}

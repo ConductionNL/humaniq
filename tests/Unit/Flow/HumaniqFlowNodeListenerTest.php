@@ -28,9 +28,11 @@ use OCA\Humaniq\Flow\PayrollApproveNode;
 use OCA\Humaniq\Flow\PayrollCalculateNode;
 use OCA\Humaniq\Flow\PayrollGlPostNode;
 use OCA\Humaniq\Flow\PayrollNetPayNode;
+use OCA\Humaniq\Flow\TeamDigestNode;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\PayrollRunService;
+use OCA\Humaniq\Service\TeamDigestComposer;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent;
 use Psr\Container\ContainerInterface;
@@ -64,6 +66,7 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 			PayrollApproveNode::class => new PayrollApproveNode(...$common),
 			PayrollGlPostNode::class => new PayrollGlPostNode(...array_merge($common, [$this->createMock(PayrollGLPostService::class)])),
 			PayrollNetPayNode::class => new PayrollNetPayNode(...array_merge($common, [$this->createMock(PayrollNetPayService::class)])),
+			TeamDigestNode::class => new TeamDigestNode($this->l10n(), $this->urls(), $this->createMock(TeamDigestComposer::class)),
 			default => throw new RuntimeException('Unexpected node class ' . $nodeClass),
 		};
 	}//end buildNode()
@@ -106,7 +109,7 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 	}//end capturingEvent()
 
 	/**
-	 * All four payroll nodes land on the registry under their ids.
+	 * All five nodes (four payroll, one team digest) land on the registry under their ids.
 	 *
 	 * @return void
 	 */
@@ -124,6 +127,7 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 				'humaniq.payroll-approve',
 				'humaniq.payroll-glpost',
 				'humaniq.payroll-netpay',
+				'humaniq.team-digest',
 			],
 			$event->registered
 		);
@@ -151,7 +155,7 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 		$listener->handle($event);
 
 		$this->assertNotContains('humaniq.payroll-approve', $event->registered);
-		$this->assertCount(3, $event->registered);
+		$this->assertCount(4, $event->registered);
 	}//end testBrokenNodeIsSkippedNotFatal()
 
 }//end class

@@ -14147,6 +14147,90 @@
         "userId": "Voorbeeld Userid 3",
         "managerUserId": "Voorbeeld Manageruserid 3",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "Announcement",
+          "slug": "announcement-voorbeeld-title-1-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "body": "Voorbeeld Body 1",
+        "audience": "administration",
+        "status": "concept",
+        "orgUnitIds": [],
+        "publishFrom": "2026-03-01",
+        "publishUntil": "2026-03-01",
+        "requiresConfirmation": false,
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "Announcement",
+          "slug": "announcement-voorbeeld-title-2-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "body": "Voorbeeld Body 2",
+        "audience": "orgUnits",
+        "status": "gepubliceerd",
+        "orgUnitIds": [],
+        "publishFrom": "2026-03-02",
+        "publishUntil": "2026-03-02",
+        "requiresConfirmation": false,
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "Announcement",
+          "slug": "announcement-voorbeeld-title-3-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "body": "Voorbeeld Body 3",
+        "audience": "administration",
+        "status": "ingetrokken",
+        "orgUnitIds": [],
+        "publishFrom": "2026-03-03",
+        "publishUntil": "2026-03-03",
+        "requiresConfirmation": false,
+        "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "AnnouncementConfirmation",
+          "slug": "announcementconfirmation-announcementconfirmation-1-1"
+        },
+        "announcementId": "00000000-0000-4000-8000-000000000000",
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "confirmedAt": "2026-03-01T09:00:00+00:00",
+        "userId": "Voorbeeld Userid 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "AnnouncementConfirmation",
+          "slug": "announcementconfirmation-announcementconfirmation-2-2"
+        },
+        "announcementId": "00000000-0000-4000-8000-000000000001",
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "confirmedAt": "2026-03-02T09:00:00+00:00",
+        "userId": "Voorbeeld Userid 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "AnnouncementConfirmation",
+          "slug": "announcementconfirmation-announcementconfirmation-3-3"
+        },
+        "announcementId": "00000000-0000-4000-8000-000000000002",
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "confirmedAt": "2026-03-03T09:00:00+00:00",
+        "userId": "Voorbeeld Userid 3",
+        "administrationId": "Voorbeeld Administrationid 3"
       }
     ]
   }

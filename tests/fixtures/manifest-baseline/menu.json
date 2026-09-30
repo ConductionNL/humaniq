@@ -13,6 +13,12 @@
 		"order": 20,
 		"children": [
 			{
+				"id": "MijnMededelingen",
+				"label": "My announcements",
+				"icon": "BullhornOutline",
+				"route": "MijnMededelingen"
+			},
+			{
 				"id": "MijnUren",
 				"label": "My hours",
 				"icon": "ClockCheckOutline",
@@ -274,6 +280,12 @@
 				"label": "Relations cases",
 				"icon": "ScaleBalance",
 				"route": "RelationsCases"
+			},
+			{
+				"id": "Announcements",
+				"label": "Announcements",
+				"icon": "BullhornOutline",
+				"route": "Announcements"
 			},
 			{
 				"id": "GeneratedDocuments",
