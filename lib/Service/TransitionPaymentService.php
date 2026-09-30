@@ -34,6 +34,8 @@ use OCA\Humaniq\Standards\RuleCatalogue;
 
 /**
  * Calculates and stores the payment on a case.
+ *
+ * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-004
  */
 class TransitionPaymentService {
 
@@ -44,6 +46,8 @@ class TransitionPaymentService {
 	 *
 	 * @param HoursRegisterGateway        $gateway    The register read and write.
 	 * @param TransitionPaymentCalculator $calculator The statutory arithmetic.
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-004
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
@@ -90,9 +94,12 @@ class TransitionPaymentService {
 	}//end calculateFor()
 
 	/**
-	 * The parameters of the shipped transition payment rule.
+	 * The parameters of the shipped transition payment rule. RuleCatalogue is
+	 * the static rule data every check reads the same way.
 	 *
 	 * @return array<string, mixed>
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess)
 	 */
 	private function parameters(): array {
 		foreach (RuleCatalogue::all() as $rule) {

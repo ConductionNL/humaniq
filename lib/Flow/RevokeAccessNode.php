@@ -32,6 +32,8 @@ use OCP\WorkflowEngine\IManager;
 
 /**
  * A scheduled step over every due record.
+ *
+ * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
  */
 class RevokeAccessNode implements IFlowNode {
 
@@ -44,6 +46,8 @@ class RevokeAccessNode implements IFlowNode {
 	 * @param IURLGenerator  $urls  The icon.
 	 * @param AccessRevocationService $revocation The work.
 	 * @param string|null    $today The day to run on; null is today.
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
 	 */
 	public function __construct(
 		private readonly IL10N $l10n,
@@ -58,6 +62,8 @@ class RevokeAccessNode implements IFlowNode {
 	 * The node id.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
 	 */
 	public function getId(): string {
 		return 'humaniq.revoke-access';
@@ -67,6 +73,8 @@ class RevokeAccessNode implements IFlowNode {
 	 * The name in the flow editor.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
 	 */
 	public function getDisplayName(): string {
 		return $this->l10n->t('Revoke the access of leavers');
@@ -76,6 +84,8 @@ class RevokeAccessNode implements IFlowNode {
 	 * What the step does.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
 	 */
 	public function getDescription(): string {
 		return $this->l10n->t('Disable the Nextcloud account of every leaver whose last working day has passed and whose case is still open, and tick Access revoked on the case.');
@@ -85,6 +95,8 @@ class RevokeAccessNode implements IFlowNode {
 	 * The icon.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
 	 */
 	public function getIcon(): string {
 		return $this->urls->imagePath('humaniq', 'app-dark.svg');
@@ -96,6 +108,8 @@ class RevokeAccessNode implements IFlowNode {
 	 * @param int $scope The scope.
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
 	 */
 	public function isAvailableForScope(int $scope): bool {
 		return $scope === IManager::SCOPE_ADMIN;
@@ -107,6 +121,8 @@ class RevokeAccessNode implements IFlowNode {
 	 * @param array<string, mixed> $config The step config.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
 	 */
 	public function validateConfig(array $config): void {
 		unset($config);

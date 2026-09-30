@@ -37,6 +37,8 @@ use InvalidArgumentException;
 
 /**
  * A pure calculator: no reads, no writes.
+ *
+ * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-004
  */
 class TransitionPaymentCalculator {
 

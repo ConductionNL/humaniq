@@ -39,6 +39,8 @@ use Psr\Log\LoggerInterface;
  * Fills in and stamps around an exit interview create.
  *
  * @template-implements IEventListener<Event>
+ *
+ * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-001
  */
 class ExitInterviewListener implements IEventListener {
 
@@ -53,6 +55,8 @@ class ExitInterviewListener implements IEventListener {
 	 * @param ExitInterviewService $interviews The exit interview rules.
 	 * @param HoursRegisterGateway $gateway    Resolves the schema slug.
 	 * @param LoggerInterface      $logger     The logger.
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-001
 	 */
 	public function __construct(
 		private readonly ExitInterviewService $interviews,

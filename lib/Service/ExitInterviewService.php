@@ -34,6 +34,8 @@ use OCP\IL10N;
 
 /**
  * Exit interview fill-in, case stamp, reason counts and anonymisation.
+ *
+ * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-001
  */
 class ExitInterviewService {
 
@@ -50,6 +52,8 @@ class ExitInterviewService {
 	 * @param HoursRegisterGateway $gateway The register read and write.
 	 * @param InternalWriteMarker  $marker  Marks humaniq's own writes.
 	 * @param IL10N                $l10n    The reason labels.
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-001
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,

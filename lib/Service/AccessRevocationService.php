@@ -35,6 +35,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Revokes access on one case, or on every due case.
+ *
+ * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
  */
 class AccessRevocationService {
 
@@ -57,6 +59,8 @@ class AccessRevocationService {
 	 * @param IUserManager         $users   Nextcloud's user manager.
 	 * @param IGroupManager        $groups  Whether an account is an administrator.
 	 * @param LoggerInterface      $logger  The logger.
+	 *
+	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
