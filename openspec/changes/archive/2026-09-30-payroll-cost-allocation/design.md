@@ -112,3 +112,32 @@ before; a run without allocation rows produces the same four lines as today.
 
 - Should a project allocation also carry shillinq's cost carrier (`costCarrierCode`)? This
   design passes only cost centre and project.
+
+## As built (2026-09-30)
+
+- **Amounts allocated.** The lines split the same gross and employer charges the run adds to its
+  totals (the engine's gross and charges plus a retro adjustment's gross and charges), not
+  `werknemersverzekeringen + zvw` of the payslip. That keeps the wage costs page equal to the
+  journal, which books the run totals.
+- **Where the run writes them.** `PayrollRunService` collects each saved payslip's figures and
+  calls `CostAllocationService::allocateRun()` once after the loop. It removes every earlier line
+  of the run first, so a payslip that no longer computes loses its lines too. A failing allocation
+  is logged and never fails the run; the journal then books the totals without codes.
+- **Hours with no hours.** An `hours` allocation with no approved hours in the period falls back to
+  the placement, as a fixed allocation without valid splits does.
+- **Placements covering the period.** A placement counts when it is active on the first day of the
+  period or starts within it. Distinct cost centres split equally.
+- **Guards.** One listener, `CostAllocationGuardListener`, refuses a fixed allocation without
+  splits, fixed splits that do not add up to 100 (to the hundredth), and an allocation that
+  overlaps another of the same employee (fail closed when the stored ones cannot be read).
+- **Journal.** `buildLines()` takes the run's allocation lines; groups without a cost centre and
+  whatever the lines do not cover form one debit line without codes, so the debits always equal
+  the run totals. `PayrollGLPost.lines` declares `costCenterCode` and `projectCode` (schema 0.3.0).
+- **Wage costs per cost centre.** Shown on the payroll run page as a bar chart summing
+  `totalCost` per cost centre over the run's lines (the declared `wageCostByCostCenter`
+  aggregation's shape), with a drill-down to the Wage costs page, which lists the lines and filters
+  on period, cost centre and source. A run is one period, so the run page is the per-period view.
+- **shillinq.** Its posting materialiser already copies `costCenterCode` and `projectCode` from the
+  journal lines onto `GLLine` (`MaterialiseGlTransactionAction`), and its JournalEntry line schema
+  accepts them (no `additionalProperties: false`). It does not declare them; a note for shillinq
+  is drafted outside this repo.

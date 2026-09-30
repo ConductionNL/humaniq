@@ -4403,7 +4403,7 @@
    "id": "pay-cost-allocation",
    "area": "payroll",
    "name": "Allocate wage costs to cost centres or projects.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -4419,10 +4419,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/29589909415837-Summary-of-data-available-for-reporting has a cost center allocation attribute per employee, and https://support.personio.de/hc/en-us/articles/19284187332509-Set-up-the-Accounting-Report-for-Personio-Payroll groups booked wage costs by cost center in German payroll only."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-cost-allocation on 2026-09-27. Before: grep -rniF 'costcent|cost.centre|projectid' lib/Settings/register.d/hr-objects.json and grep -rniF 'kostenplaats|cost.?cent' lib openspec src/manifest.d (excluding archive): no hits anywhere; PayrollRun/Payslip carry no cost-centre or project field",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "CostAllocation (lib/Settings/register.d/hr-costalloc.json) splits an employee's wage costs by fixed percentages or by approved hours, refused on save when fixed splits do not add up to 100 or overlap another (lib/Listener/CostAllocationGuardListener.php). lib/Service/CostAllocationService.php resolves each payslip's split (fixed, hours, the placements' OrgUnit.costCenter split equally, else unallocated) and lib/Service/PayrollRunService.php writes cent-exact WageCostAllocation lines after every calculation. lib/Service/PayrollGLPostService.php::buildLines() books the gross and employer-charge debits per cost centre and project with costCenterCode and projectCode, liabilities as totals, balanced. Tests: tests/Unit/Service/CostAllocationServiceTest.php, tests/Unit/Listener/CostAllocationGuardListenerTest.php, tests/Unit/Service/PayrollGLPostServiceTest.php::testTheJournalCarriesTwoCostCentres, tests/Unit/Service/PayrollRunServiceTest.php::testACalculationAllocatesEveryPayslip, tests/Unit/Settings/CostAllocationDeclarationTest.php.",
+    "reachedOn": "Payroll > Cost allocations and the employee page's Cost allocation list; the payslip's Wage costs per cost centre; the payroll run's Wage costs per cost centre chart; Payroll > Wage costs; the shillinq payroll journal's debit lines",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-payroll-cost-allocation",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
