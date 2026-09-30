@@ -237,7 +237,6 @@ class PayrollRunService {
 	 * @param HoursPayService|null $hoursPay Approved hours and overtime as pay (time-hours-and-overtime-to-payroll); null runs without it.
 	 * @param WorkingCalendarReader|null $calendar openregister's working calendar, for the feestdag overtime category.
 	 * @param PayrollExpenseFoldService|null $expenses Approved claims and recurring allowances (payroll-expenses-and-allowances); null runs without them.
-	 *
 	 * @param PayrollRunCheckService|null $runCheck The run check that runs after every calculation (payroll-run-checks D2); null runs without it.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each optional fold (hours, claims and allowances) and the run check is its own collaborator, so a run without one stays byte-identical and a test names which fold ran.
