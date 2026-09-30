@@ -128,6 +128,7 @@ return [
         // settle is deliberately NOT a bare lifecycleActions button. BEFORE
         // the SPA catch-all per REQ-BUYSELL-004.
         ['name' => 'leave#settle', 'url' => '/api/leave/settle', 'verb' => 'POST'],
+        ['name' => 'leaveCost#cost', 'url' => '/api/leave/requests/{id}/cost', 'verb' => 'GET'],
         // loonbeslag — guarded, admin/HR-only activate/settle/withdraw
         // triggers for the LoonbeslagDetail manifest api-call actions
         // (design.md D5/D6): Loonbeslag.status carries no

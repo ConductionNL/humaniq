@@ -1904,7 +1904,7 @@
    "id": "lve-hours-from-pattern",
    "area": "leave",
    "name": "Calculate the leave hours a request costs from the employee's working pattern and public holidays.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "partial",
@@ -1920,10 +1920,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/35372841985565-Create-work-schedules: the system uses the work schedule assigned to employees when calculating time off; https://support.personio.de/hc/en-us/articles/22919070507037-Create-and-manage-custom-bank-holiday-calendars."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/leave-hours-from-the-working-pattern on 2026-09-27 for the missing half: using the employee's working pattern and the calendar's public holidays instead of contract hours divided by five. Before: lib/Service/LeaveHoursCalculator.php:59-65 counts only Monday-Friday days (docblock: 'Public holidays are NOT subtracted, so a range covering one overstates usage by a day'); requestHours() derives hours as workingDays*(contractHoursPerWeek/5), a flat daily average, never reading the employee's actual per-weekday WorkingPattern; lib/Service/WorkingHoursService.php implements the real per-weekday WorkingPattern math but `grep -rl LeaveHoursCalculator lib/` shows only LeaveBalanceProjectionService calls it, never WorkingHoursService",
-    "reachedOn": "computed server-side inside LeaveBalanceProjectionService whenever a LeaveRequest is approved; the resulting number lands in the LeaveBalances usedHours column, no direct page trigger",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/LeaveHoursCalculator.php requestHours() with the person's working time costs each day from WorkingHoursService::contractedHoursOn() (WorkingPattern minus NonWorkingTime, zero on openregister's non-working dates) and states the basis; lib/Service/LeaveBalanceProjectionService.php loads patterns, non-working times and the calendar once per projection; GET /api/leave/requests/{id}/cost (lib/Controller/LeaveCostController.php, lib/Service/LeaveCostService.php). Tests: tests/Unit/Service/LeaveHoursFromPatternTest.php, tests/Unit/Service/LeaveCostServiceTest.php, tests/Unit/Service/LeaveBalanceProjectionServiceTest.php.",
+    "reachedOn": "Leave & absence > a leave request: What this leave costs, Day by day",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-leave-hours-from-the-working-pattern",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2097,7 +2099,7 @@
    "id": "lve-public-holidays",
    "area": "leave",
    "name": "Keep a list of public holidays and non-working days that leave calculations respect.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "unknown",
@@ -2113,10 +2115,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/22919070507037-Create-and-manage-custom-bank-holiday-calendars: custom bank holiday calendars; https://support.personio.de/hc/en-us/articles/35372841985565-Create-work-schedules: work schedules drive time off calculations."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/leave-hours-from-the-working-pattern on 2026-09-27 for the missing half: leave calculations reading the public holidays from openregister's working calendar. Before: lib/Settings/register.d/hr-working-calendar.json:22-35 NonWorkingTime models only per-employee arrangements (reason enum: vaste-vrije-dag/aangepast-rooster/re-integratie/onbetaald-verlofafspraak/anders), not a shared public-holiday list; lib/Service/LeaveHoursCalculator.php:59-65 docblock states plainly 'Public holidays are NOT subtracted'; grep -rliF 'feestdag|public holiday|publicholiday' lib/Settings/register.d src/manifest.d lib/Service: no hits",
-    "reachedOn": "NonWorkingTimes /niet-werkdagen page exists but models a different concept (individual non-working arrangements); no page or service holds a company-wide holiday calendar that leave math reads",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "Leave costs skip the dates openregister's working calendar marks non-working, read through lib/Service/WorkingCalendarReader.php (decision D19 of a-working-calendar-per-person: openregister owns the holiday list, humaniq holds none); an unread calendar is stated as basis pattern-only. The day-by-day cost names each public holiday. Tests: tests/Unit/Service/LeaveHoursFromPatternTest.php::testACalendarFeestdagCostsNothing, tests/Unit/Service/LeaveCostServiceTest.php.",
+    "reachedOn": "Leave & absence > a leave request: Day by day (Public holiday rows)",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-leave-hours-from-the-working-pattern",
+    "readOn": "2026-09-30"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
