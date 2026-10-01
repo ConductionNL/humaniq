@@ -1725,7 +1725,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "LoonaangifteFiling",
-				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained'. loonaangifte-filing-lifecycle (2026-07-12) gave NL filings a real create->review->confirm->send workflow, so the page now leads with a compact status/tijdvakcode/deadline/response widget (fi-status) before the full filing data widget, and exposes the klaarzetten/bevestigen/verzenden/heropenen/corrigeren transitions via lifecycleActions (Timesheet pattern). No stats-block KPI tile is used for Status/Deadline: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation, which cannot echo a non-numeric field (enum/date) of the current object, so fi-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. Audit history is a sidebar tab.",
+				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained'. loonaangifte-filing-lifecycle (2026-07-12) gave NL filings a real create->review->confirm->send workflow, so the page now leads with a compact status/tijdvakcode/deadline/response widget (fi-status) before the full filing data widget, and exposes the klaarzetten/bevestigen/verzenden/heropenen/corrigeren transitions via lifecycleActions (Timesheet pattern). No stats-block KPI tile is used for Status/Deadline: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation, which cannot echo a non-numeric field (enum/date) of the current object, so fi-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. Audit history is a sidebar tab. filings-wage-tax-message (2026-10-02): Make message posts to /api/loonaangifte/filings/{id}/message (HR, payroll or an administrator; the filing read under the caller's RBAC first): the wage tax return made from the approved payroll run of the period, validated against the Belastingdienst's 2026 XSD and stored as messageXml; what stops it is listed per employee and element in messageFindings. Set ready (klaarzetten) is refused for a Dutch loonaangifte while findings block or no message exists (LoonaangifteMessageGuard).",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -1755,13 +1755,135 @@
 						}
 					},
 					{
+						"id": "stat-blocking",
+						"type": "stat",
+						"title": "Blocking findings",
+						"icon": "AlertCircleOutline",
+						"content": {
+							"label": "Blocking findings",
+							"caption": "fix these before setting it ready",
+							"icon": "AlertCircleOutline",
+							"valueColor": "#e9322d",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "humaniq",
+								"schema": "LoonaangifteFiling",
+								"metric": "sum",
+								"field": "blockingFindings",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "message",
+						"type": "data",
+						"title": "Wage tax return message",
+						"icon": "FileSendOutline",
+						"content": {
+							"columns": 2,
+							"title": "Wage tax return message",
+							"include": [
+								"messageFileName",
+								"messageVersion",
+								"messageRenderedAt",
+								"messageRenderedBy",
+								"blockingFindings",
+								"warningFindings",
+								"messageFindings",
+								"collectiveTotals",
+								"messageXml"
+							],
+							"overrides": {
+								"messageXml": {
+									"editable": false
+								},
+								"messageFileName": {
+									"editable": false
+								},
+								"messageVersion": {
+									"editable": false
+								},
+								"collectiveTotals": {
+									"editable": false
+								},
+								"messageFindings": {
+									"editable": false
+								},
+								"blockingFindings": {
+									"editable": false
+								},
+								"warningFindings": {
+									"editable": false
+								},
+								"messageRenderedAt": {
+									"editable": false
+								},
+								"messageRenderedBy": {
+									"editable": false
+								},
+								"messageRunId": {
+									"editable": false
+								},
+								"messageRunCalculatedAt": {
+									"editable": false
+								},
+								"messageRunTotalLoonheffing": {
+									"editable": false
+								}
+							}
+						}
+					},
+					{
 						"id": "data-2",
 						"type": "data",
 						"title": "Filing",
 						"icon": "FileDocument",
 						"content": {
 							"columns": 2,
-							"title": "Filing"
+							"title": "Filing",
+							"overrides": {
+								"messageXml": {
+									"editable": false
+								},
+								"messageFileName": {
+									"editable": false
+								},
+								"messageVersion": {
+									"editable": false
+								},
+								"collectiveTotals": {
+									"editable": false
+								},
+								"messageFindings": {
+									"editable": false
+								},
+								"blockingFindings": {
+									"editable": false
+								},
+								"warningFindings": {
+									"editable": false
+								},
+								"messageRenderedAt": {
+									"editable": false
+								},
+								"messageRenderedBy": {
+									"editable": false
+								},
+								"messageRunId": {
+									"editable": false
+								},
+								"messageRunCalculatedAt": {
+									"editable": false
+								},
+								"messageRunTotalLoonheffing": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -1777,22 +1899,38 @@
 						"widgetId": "data",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 12,
+						"gridWidth": 9,
 						"gridHeight": 3
 					},
 					{
 						"id": 2,
-						"widgetId": "data-2",
+						"widgetId": "stat-blocking",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "message",
 						"gridX": 0,
 						"gridY": 3,
+						"gridWidth": 12,
+						"gridHeight": 6
+					},
+					{
+						"id": 4,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 9,
 						"gridWidth": 12,
 						"gridHeight": 9
 					},
 					{
-						"id": 3,
+						"id": 5,
 						"widgetId": "files",
 						"gridX": 0,
-						"gridY": 12,
+						"gridY": 18,
 						"gridWidth": 12,
 						"gridHeight": 4
 					}
@@ -1842,7 +1980,21 @@
 							"label": "Correct"
 						}
 					]
-				}
+				},
+				"headerActions": [
+					{
+						"id": "make-message",
+						"label": "Make message",
+						"type": "api-call",
+						"icon": "FileSendOutline",
+						"url": "/api/loonaangifte/filings/@objectId/message",
+						"method": "POST",
+						"params": {},
+						"confirm": true,
+						"successMessage": "Message made. Check the warnings, then set the filing ready.",
+						"errorMessage": "The message could not be made. The filing lists what stops it, per employee."
+					}
+				]
 			}
 		},
 		{
