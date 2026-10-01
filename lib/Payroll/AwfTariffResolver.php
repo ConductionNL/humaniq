@@ -220,6 +220,24 @@ final class AwfTariffResolver {
 	}//end contractHoursIn()
 
 	/**
+	 * Whether a contract runs on at least one day of a month period.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param string               $period   The period (`YYYY-MM`).
+	 *
+	 * @return bool
+	 */
+	public static function coversPeriod(array $contract, string $period): bool {
+		$first = self::date($period . '-01');
+		if ($first === null) {
+			return false;
+		}
+
+		return self::overlapDays(contract: $contract, from: $first, until: $first->modify('last day of this month')) > 0;
+
+	}//end coversPeriod()
+
+	/**
 	 * The number of calendar days a contract runs between two dates,
 	 * inclusive.
 	 *
