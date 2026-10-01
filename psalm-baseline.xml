@@ -42,6 +42,9 @@
       <code><![CDATA[TimesheetNotEmptyGuard]]></code>
       <code><![CDATA[TimesheetNotEmptyGuard]]></code>
       <code><![CDATA[TimesheetNotEmptyGuard]]></code>
+      <code><![CDATA[UbdReportReadyGuard]]></code>
+      <code><![CDATA[UbdReportReadyGuard]]></code>
+      <code><![CDATA[UbdReportReadyGuard]]></code>
     </MissingDependency>
   </file>
   <file src="lib/Service/RuleAuditService.php">

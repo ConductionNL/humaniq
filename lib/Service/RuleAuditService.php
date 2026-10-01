@@ -119,6 +119,10 @@ class RuleAuditService {
 		// stays a pure fn(array $o, array $context) instead of re-querying siblings.
 		$context['glpost'] = $this->buildGlPostContext();
 
+		// filings-ib47 D3: the administration|year keys of sent ThirdPartyReports and
+		// the ids of payees with payments, so NlThirdPartyChecks stays a pure predicate.
+		$context['ubd'] = $this->buildThirdPartyContext();
+
 		// time-attendance-mvp: a per-employee date-indexed AttendanceRecord clock
 		// index so NlAttendanceChecks::checks()['AttendanceRecord']
 		// ['nl-atw-dagelijkse-rust'] can resolve the previous working day's
@@ -1037,6 +1041,34 @@ class RuleAuditService {
 
 		return $aggregate;
 	}//end buildWkrContext()
+
+	/**
+	 * The third-party payments index (filings-ib47 D3): `sent` holds the
+	 * `administrationId|year` keys of every ThirdPartyReport in verzonden,
+	 * `paidPayees` the ids of payees with at least one ThirdPartyPayment.
+	 *
+	 * @return array{sent: array<string, bool>, paidPayees: array<string, bool>}
+	 *
+	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-002
+	 */
+	private function buildThirdPartyContext(): array {
+		$sent = [];
+		foreach ($this->loadAll('ThirdPartyReport') as $report) {
+			if ((string)($report['status'] ?? '') === 'verzonden') {
+				$sent[trim((string)($report['administrationId'] ?? '')) . '|' . (int)($report['year'] ?? 0)] = true;
+			}
+		}
+
+		$paidPayees = [];
+		foreach ($this->loadAll('ThirdPartyPayment') as $payment) {
+			$payeeId = trim((string)($payment['payeeId'] ?? ''));
+			if ($payeeId !== '') {
+				$paidPayees[$payeeId] = true;
+			}
+		}
+
+		return ['sent' => $sent, 'paidPayees' => $paidPayees];
+	}//end buildThirdPartyContext()
 
 	/**
 	 * Derive a calendar year from a wage period (`YYYY-MM` or `YYYY-Pnn`) —

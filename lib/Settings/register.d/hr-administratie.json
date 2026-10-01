@@ -5,7 +5,7 @@
             "hrAdministration": {
                 "slug": "hrAdministration",
                 "icon": "Domain",
-                "version": "1.5.0",
+                "version": "1.6.0",
                 "title": "HR administration",
                 "description": "The HR view of an administratie: loonheffingennummer, ABP obligation, and the short code every HR record uses to say which administratie it belongs to. NOT the legal entity itself: shillinq's `Administration` owns that, with the fiscal year, VAT regime and chart of accounts, and `administration` below points at it. The two used to share the slug `Administration`, and a slug is global per organisation, so SchemaMapper::find() answered whichever row it reached first. Child HR/payroll objects still do NOT `$ref` this schema (ADR-062 rule 7); they carry a plain-string copy of `administrationId`.",
                 "required": ["administrationId", "name"],
@@ -23,7 +23,8 @@
                     "brpGrondslag": {"title": "Legal basis for the BRP", "type": "string", "nullable": true, "description": "The legal basis on which this employer may consult the population register (BRP). Leave it empty unless you have one: without it the population register is never consulted.", "x-notes": "people-register-prefill D3. Empty: the Fill from BRP action is hidden and POST /api/prefill/employee refuses (no-legal-basis)."},
                     "signatoryUserId": {"title": "Signatory", "type": "string", "nullable": true, "description": "The Nextcloud account that signs HR documents for the employer. Left empty, the HR user who sends the document signs.", "x-notes": "people-esign-hr-documents D2."},
                     "payrollProcessing": {"title": "Payroll processing", "type": "string", "enum": ["engine", "external-bureau"], "x-enum-labels": {"engine": "In humaniq", "external-bureau": "By an outside bureau"}, "default": "engine", "description": "Who calculates the payroll of this administration: humaniq, or an outside payroll bureau that receives the mutations each period. With an outside bureau humaniq calculates no payroll run for it.", "x-notes": "payroll-external-bureau-handoff D1. PayrollRunService::runFor() and recalculateRun() refuse an external-bureau administration with refused-external-bureau; the calculate flow node throws on that outcome."},
-                    "payrollBureauName": {"title": "Payroll bureau", "type": "string", "nullable": true, "description": "The name of the outside bureau that runs the payroll.", "x-notes": "payroll-external-bureau-handoff D1. Shown in the engine's refusal."}
+                    "payrollBureauName": {"title": "Payroll bureau", "type": "string", "nullable": true, "description": "The name of the outside bureau that runs the payroll.", "x-notes": "payroll-external-bureau-handoff D1. Shown in the engine's refusal."},
+                    "postalAddress": {"title": "Postal address", "type": "string", "maxLength": 250, "nullable": true, "description": "The administration's address on one line, as the tax authority knows it.", "x-notes": "filings-ib47: the UBD bron address (Adresvrij/adresregel, an1..250, land NL). Without it the third-party payments report has a blocking finding."}
                 }
             },
             "AdministrationAccess": {

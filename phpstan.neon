@@ -49,6 +49,7 @@ parameters:
         - lib/Lifecycle/RightToWorkGuard.php
         - lib/Lifecycle/RosterCompetenceGuard.php
         - lib/Lifecycle/TimesheetNotEmptyGuard.php
+        - lib/Lifecycle/UbdReportReadyGuard.php
 
     ignoreErrors:
         # AuthorizedAdminSetting's constructor is typed

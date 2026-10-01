@@ -43,6 +43,7 @@ use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Lifecycle\RightToWorkGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Humaniq\Lifecycle\UbdReportReadyGuard;
 use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
 use OCA\Humaniq\Listener\ChangeRequestListener;
 use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
@@ -315,6 +316,8 @@ class Application extends App implements IBootstrap {
 		// payroll-external-bureau-handoff D3, D4: four eyes on klaarzetten, no afsluiten over blocking findings.
 		$context->registerService(HandoffReleaseGuard::class, static fn ($c): HandoffReleaseGuard => new HandoffReleaseGuard());
 		$context->registerService(HandoffCloseGuard::class, static fn ($c): HandoffCloseGuard => new HandoffCloseGuard());
+		// filings-ib47 D2: a third-party payments report is made ready only with a validated message and no blocking finding.
+		$context->registerService(UbdReportReadyGuard::class, static fn ($c): UbdReportReadyGuard => new UbdReportReadyGuard());
 
 		// jurisdiction-packs (design.md D7): the pack resolver spans two homes —
 		// bundled packs in lib/Standards/packs/ (universal facts live in code)
