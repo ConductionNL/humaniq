@@ -143,8 +143,8 @@ class ThirdPartyReportService {
 		return [
 			'status' => 'assembled',
 			'reportId' => (string)$saved->getUuid(),
-			'lineCount' => $payload['lineCount'],
-			'totalAmount' => $payload['totalAmount'],
+			'lineCount' => (int)$payload['lineCount'],
+			'totalAmount' => (int)$payload['totalAmount'],
 			'blockingFindings' => $payload['blockingFindings'],
 			'warningFindings' => $payload['warningFindings'],
 		];

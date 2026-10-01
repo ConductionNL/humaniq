@@ -114,10 +114,10 @@
                             "type": "object",
                             "required": ["kind", "severity", "message"],
                             "properties": {
-                                "kind": {"type": "string"},
-                                "severity": {"type": "string", "enum": ["blocking", "warning"]},
-                                "payeeId": {"type": "string"},
-                                "message": {"type": "string"}
+                                "kind": {"type": "string", "title": "Kind", "description": "What kind of problem this is."},
+                                "severity": {"type": "string", "enum": ["blocking", "warning"], "title": "Severity", "description": "Whether the problem stops the report."},
+                                "payeeId": {"type": "string", "title": "Payee", "description": "The payee the problem is about, if any."},
+                                "message": {"type": "string", "title": "Message", "description": "The problem in words."}
                             }
                         }
                     }

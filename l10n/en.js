@@ -3485,7 +3485,11 @@ OC.L10N.register(
         "Problems worth checking that do not stop the report.": "Problems worth checking that do not stop the report.",
         "Findings": "Findings",
         "What the last assembly found, per payee.": "What the last assembly found, per payee.",
-        "Any words that come before the surname.": "Any words that come before the surname."
+        "Any words that come before the surname.": "Any words that come before the surname.",
+        "What kind of problem this is.": "What kind of problem this is.",
+        "Whether the problem stops the report.": "Whether the problem stops the report.",
+        "The payee the problem is about, if any.": "The payee the problem is about, if any.",
+        "The problem in words.": "The problem in words."
     },
     "nplurals=2; plural=(n != 1);"
 )

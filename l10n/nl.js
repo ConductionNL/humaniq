@@ -3485,7 +3485,11 @@ OC.L10N.register(
         "Problems worth checking that do not stop the report.": "Punten om na te kijken die de opgaaf niet tegenhouden.",
         "Findings": "Bevindingen",
         "What the last assembly found, per payee.": "Wat de laatste samenstelling vond, per ontvanger.",
-        "Any words that come before the surname.": "Woorden die voor de achternaam staan, zoals van of de."
+        "Any words that come before the surname.": "Woorden die voor de achternaam staan, zoals van of de.",
+        "What kind of problem this is.": "Wat voor probleem dit is.",
+        "Whether the problem stops the report.": "Of het probleem de opgaaf tegenhoudt.",
+        "The payee the problem is about, if any.": "De ontvanger waar het probleem over gaat, als die er is.",
+        "The problem in words.": "Het probleem in woorden."
     },
     "nplurals=2; plural=(n != 1);"
 )
