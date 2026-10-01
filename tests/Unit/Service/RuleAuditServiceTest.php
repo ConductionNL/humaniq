@@ -1569,7 +1569,8 @@ class RuleAuditServiceTest extends TestCase {
 					'endDate' => $this->stagiairDateOffset(700),
 					'hoursPerWeek' => 32,
 					'hourlyWage' => 16.00,
-					'awfTariff' => 'high',
+					// filings-premium-differentiation: a signed BBL contract is low (Handboek 2026 par. 7.2).
+					'awfTariff' => 'low',
 					'aanzegdOn' => null,
 					'workingTimeDocumented' => true,
 					'overtimeMultiplier' => 1.5,

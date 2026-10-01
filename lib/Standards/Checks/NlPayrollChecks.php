@@ -32,6 +32,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Standards\Checks;
 
+use OCA\Humaniq\Payroll\AwfHoursReview;
+use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\TaxTables;
 
 /**
@@ -78,6 +80,10 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	public static function checks(): array {
 		return [
 			'Payslip' => [
+				// Handboek Loonheffingen 2026 par. 7.2.3 — a low-premium employee on 30
+				// contracted hours a week or less, paid more than 30% above the contract
+				// this year so far, is heading for the review (filings-premium-differentiation).
+				'nl-awf-herziening-uren-signaal' => static fn (array $o): bool => self::awfHoursWithinLine($o),
 				// Wet LB 1964 art. 27 — a loonheffing must be withheld at each payment.
 				'nl-loonheffingen-inhouding' => static fn (array $o): bool => self::numeric($o, 'loonheffing') && ((float)$o['loonheffing']) >= 0.0,
 				// Wfsv / art. 27b — premie volksverzekeringen is levied inside the combined
@@ -167,8 +173,10 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 					&& self::withinMonths($o, 'startDate', 'a1ValidUntil', 24)),
 			],
 			'EmploymentContract' => [
-				// Wfsv (Wab) — the Awf low tariff applies only to permanent written contracts;
-				// every other contract takes the high tariff. The applied tariff must match.
+				// Wfsv (Wab), Handboek Loonheffingen 2026 par. 7.2 — the Awf low tariff applies
+				// to permanent written contracts and signed BBL contracts without an
+				// uitzendbeding; every other contract takes the high tariff. The applied
+				// tariff must match (the under-21 hours exception is per period, on the payslip).
 				'nl-awf-laag-hoog-tarief' => static fn (array $o): bool => self::present($o, 'awfTariff')
 					&& ((string)$o['awfTariff'] === self::expectedAwfTariff($o)),
 				// WML art. 8 — from 1 Jan 2026 the statutory minimum hourly wage is EUR 14,71
@@ -373,18 +381,52 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	}//end isGlPosted()
 
 	/**
-	 * The Awf tariff a contract should carry: low only for a permanent written
-	 * contract, high in every other case.
+	 * The Awf tariff a contract should carry: the shared resolution
+	 * (filings-premium-differentiation D1), low for a permanent written
+	 * contract and a signed BBL contract, high otherwise.
 	 *
 	 * @param array<string, mixed> $o The EmploymentContract.
 	 *
 	 * @return string 'low' or 'high'.
+	 *
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-101
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) The pure Awf helpers are static by design.
 	 */
 	private static function expectedAwfTariff(array $o): string {
-		$permanent = ((string)($o['type'] ?? '') === 'permanent');
-		$written = (($o['writtenContract'] ?? false) === true);
-		return ($permanent === true && $written === true) ? 'low' : 'high';
+		return AwfTariffResolver::contractTariff($o);
+
 	}//end expectedAwfTariff()
+
+	/**
+	 * Whether a payslip stays inside the extra-hours line: anything but a
+	 * reviewable low payslip with year-to-date figures passes.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) The pure Awf helpers are static by design.
+	 */
+	private static function awfHoursWithinLine(array $o): bool {
+		if ((string)($o['awfTariff'] ?? '') !== 'low'
+			|| in_array((string)($o['awfTariffBasis'] ?? ''), AwfTariffResolver::REVIEWABLE_BASES, true) === false
+			|| self::numeric($o, 'awfContractHoursYearToDate') === false
+		) {
+			return true;
+		}
+
+		return AwfHoursReview::exceeds(
+			[
+				'contract' => (float)$o['awfContractHoursYearToDate'],
+				'averageHoursPerWeek' => (int)($o['awfAverageContractHoursPerWeek'] ?? 0),
+				'overrunPercent' => (int)($o['awfOverrunPercentYearToDate'] ?? 0),
+			]
+		) === false;
+
+	}//end awfHoursWithinLine()
 
 	/**
 	 * True when an object field holds a non-empty value.

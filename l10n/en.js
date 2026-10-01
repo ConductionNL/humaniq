@@ -3489,7 +3489,26 @@ OC.L10N.register(
         "What kind of problem this is.": "What kind of problem this is.",
         "Whether the problem stops the report.": "Whether the problem stops the report.",
         "The payee the problem is about, if any.": "The payee the problem is about, if any.",
-        "The problem in words.": "The problem in words."
+        "The problem in words.": "The problem in words.",
+        "Apprenticeship (BBL)": "Apprenticeship (BBL)",
+        "Average contracted hours a week": "Average contracted hours a week",
+        "Contract ended within two months": "Contract ended within two months",
+        "Contracted hours this year": "Contracted hours this year",
+        "Flexible contract": "Flexible contract",
+        "How far the paid hours run above the contracted hours this year, in whole percent. Above 30 the low premium is reviewed after the year.": "How far the paid hours run above the contracted hours this year, in whole percent. Above 30 the low premium is reviewed after the year.",
+        "Paid above contract": "Paid above contract",
+        "Paid hours this year": "Paid hours this year",
+        "Permanent written contract": "Permanent written contract",
+        "Reason for the premium rate": "Reason for the premium rate",
+        "Set on the contract": "Set on the contract",
+        "The contracted hours a week on average this year, rounded up. Above 30 the extra-hours review does not apply.": "The contracted hours a week on average this year, rounded up. Above 30 the extra-hours review does not apply.",
+        "The contracted hours this calendar year up to and including this period.": "The contracted hours this calendar year up to and including this period.",
+        "The hours paid this calendar year up to and including this period.": "The hours paid this calendar year up to and including this period.",
+        "The unemployment-fund rate applied: low for a permanent written contract or a signed apprenticeship (BBL), high otherwise. An employee under 21 on few hours is charged the low rate per period on the payslip.": "The unemployment-fund rate applied: low for a permanent written contract or a signed apprenticeship (BBL), high otherwise. An employee under 21 on few hours is charged the low rate per period on the payslip.",
+        "The unemployment-fund rate this payslip was charged.": "The unemployment-fund rate this payslip was charged.",
+        "Under 21 on few hours": "Under 21 on few hours",
+        "Unemployment premium rate": "Unemployment premium rate",
+        "Why this payslip was charged the low or the high unemployment premium.": "Why this payslip was charged the low or the high unemployment premium."
     },
     "nplurals=2; plural=(n != 1);"
 )

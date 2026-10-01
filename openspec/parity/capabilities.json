@@ -4866,7 +4866,7 @@
    "id": "fil-premium-differentiation",
    "area": "filings",
    "name": "Apply the lower unemployment premium for permanent contracts and the higher one for flex.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -4882,10 +4882,12 @@
     "personio": "not checked: not settled: the help centre says Personio Payroll is Germany only (https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, updated 2026-09-25) and Dutch pay is run in Loket (https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration), while https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26) announces 'Personio Payroll, powered by Loket', managed payroll delivery for the Netherlands; no page states whether the unemployment premium differentiation is applied (the Loket integration syncs contract duration type, https://support.personio.de/hc/en-us/articles/35527484814621-Loket-integration-Summary-of-supported-attributes)."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/filings-premium-differentiation on 2026-09-27 for the missing half: the low premium for BBL apprentices and young part-timers and the review (herziening) on early ending and extra hours; matrix corrected from no and none, since low and high by contract type are applied (PayrollRunService::awfTariffFor, pack binding awfRate, rule nl-awf-laag-hoog-tarief). Before: Matrix corrected 2026-09-27 in the openspec pass: lib/Service/PayrollRunService.php:1611 awfTariffFor() gives low for a permanent written contract and high otherwise (or the contract's EmploymentContract.awfTariff), lib/Standards/packs/nl-2026.pack.json:284 binding awfRate matches it to werknemersverzekeringen.awf.laag or .hoog (lib/Standards/tables/nl-2026.json:103), audited by nl-awf-laag-hoog-tarief (lib/Standards/rules/payroll.json:42). Partial: BBL and young part-timers get the high rate and there is no review (herziening). The earlier search missed the pack's laag and hoog keys. Before: grep -rniF 'premiedifferentiatie|premie.?differentiation|\\bWAB\\b' lib src openspec (excluding archive): no hits; grep -n -iE 'ww.premie|laag.*tarief|hoog.*tarief|permanent|flex|contractType|onbepaalde|bepaalde.*tijd' lib/Standards/packs/nl-2026.pack.json: no hits, so the pack's employer premium steps are not differentiated by contract type at all",
-    "reachedOn": "every payroll run (employer charges on the payslip); audited by occ humaniq:rules:audit",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Payroll/AwfTariffResolver.php resolves the Awf rate for the run (PayrollRunService), the retro recalculation (RetroAdjustmentService) and the audit (NlPayrollChecks::expectedAwfTariff): low for a permanent written contract, for a signed BBL contract without an uitzendbeding and for an employee under 21 at the start of the period paid at most 52 hours a month (48 a four weeks); high for an early end. lib/Service/AwfReviewService.php reviews the low rate (early end within two months; after the year, more than 30 percent extra paid hours at 30 contracted hours a week or less, lib/Payroll/AwfHoursReview.php) and writes awf-herziening PayrollAdjustments the run settles as employer charges. Payslip.awfTariff/awfTariffBasis and the year-to-date fields; rule nl-awf-herziening-uren-signaal. Thresholds from the Handboek Loonheffingen 2026 (maart 2026) par. 7.2-7.2.3. Tests: tests/Unit/Payroll/AwfTariffResolverTest.php, tests/Unit/Service/AwfReviewServiceTest.php, PayrollRunServiceTest (testABblApprenticeIsChargedTheLowPremium and three more), RetroAdjustmentServiceTest::testTheRecalculationUsesTheSharedAwfResolution, NlPayrollChecksTest.",
+    "reachedOn": "every payroll run (employer charges and the rate with its reason on the payslip, review adjustments settled in the run); audited by occ humaniq:rules:audit",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-10-02-filings-premium-differentiation",
+    "readOn": "2026-10-02"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

@@ -44,6 +44,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Service\AwfReviewService;
 use OCA\Humaniq\Service\CaoComponentCalculator;
 use OCA\Humaniq\Service\CaoComponentPayService;
 use OCA\Humaniq\Service\CostAllocationService;
@@ -235,10 +236,11 @@ class PayrollRunServiceTest extends TestCase {
 	 * @param PayrollRunCheckService|null $runCheck The run check, or null for a run without it.
 	 * @param CaoComponentPayService|null $caoComponents The CAO components fold, or null for a run without it.
 	 * @param CostAllocationService|null $costAllocation The cost allocation, or null for a run without it.
+	 * @param AwfReviewService|null $awfReview The Awf review, or null for a run without it.
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -260,7 +262,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation),
+			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview),
 			$fake,
 			$retentionGuard,
 		];
@@ -2034,5 +2036,117 @@ class PayrollRunServiceTest extends TestCase {
 
 		self::assertSame('calculated', $service->runFor('2026-05', 'ADM-001')['status']);
 	}//end testTheEngineStaysOutOfAnOutsourcedAdministration()
+
+	/**
+	 * filings-premium-differentiation REQ-AWF-101: a signed BBL
+	 * praktijkovereenkomst is charged the low Awf rate, and the payslip says
+	 * so and why.
+	 *
+	 * @return void
+	 */
+	public function testABblApprenticeIsChargedTheLowPremium(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['dateOfBirth' => '2004-09-01'])],
+				'EmploymentContract' => [$this->contract(['type' => 'bbl', 'writtenContract' => true, 'bpvOvereenkomstOndertekend' => true, 'awfTariff' => null, 'hoursPerWeek' => 32.0])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-06')['status']);
+
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+		$this->assertSame(['low', 'bbl'], [$payslip['awfTariff'], $payslip['awfTariffBasis']]);
+		$this->assertSame('low', $payslip['engineInputSnapshot']['awfTariff']);
+
+	}//end testABblApprenticeIsChargedTheLowPremium()
+
+	/**
+	 * REQ-AWF-101: a 19-year-old on a temporary 10-hour contract, salaried,
+	 * is paid the contract's 43,33 hours a month (10 x 13/3), within the
+	 * 52-hour norm: low. On 16 hours (69,33) the rate stays high.
+	 *
+	 * @return void
+	 */
+	public function testAYoungPartTimerIsChargedTheLowPremiumWithinTheHoursNorm(): void {
+		foreach ([[10.0, 'low', 'young-part-time'], [16.0, 'high', 'flex']] as [$hours, $tariff, $basis]) {
+			[$service, $fake] = $this->service(
+				[
+					'Employee' => [$this->employee(['dateOfBirth' => '2007-02-10', 'grossMonthlySalary' => 600.00])],
+					'EmploymentContract' => [$this->contract(['type' => 'temporary', 'awfTariff' => null, 'hoursPerWeek' => $hours])],
+					'PayrollRun' => [],
+					'Payslip' => [],
+				]
+			);
+
+			$service->runFor('2026-06');
+
+			$payslip = $this->savedFor($fake, 'Payslip')[0];
+			$this->assertSame([$tariff, $basis], [$payslip['awfTariff'], $payslip['awfTariffBasis']], $hours . ' hours a week');
+			$this->assertSame($tariff, $payslip['engineInputSnapshot']['awfTariff']);
+		}
+
+	}//end testAYoungPartTimerIsChargedTheLowPremiumWithinTheHoursNorm()
+
+	/**
+	 * REQ-AWF-102: a low contract that ends within two months is charged the
+	 * high rate in its last period already.
+	 *
+	 * @return void
+	 */
+	public function testAContractEndingWithinTwoMonthsIsChargedHighInTheRun(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['startDate' => '2026-01-01'])],
+				'EmploymentContract' => [$this->contract(['startDate' => '2026-01-01', 'endDate' => '2026-02-11', 'awfTariff' => 'low'])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$service->runFor('2026-02');
+
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+		$this->assertSame(['high', 'early-end'], [$payslip['awfTariff'], $payslip['awfTariffBasis']]);
+
+	}//end testAContractEndingWithinTwoMonthsIsChargedHighInTheRun()
+
+	/**
+	 * REQ-AWF-102: the review runs before the run reads its adjustments, so
+	 * an awf-herziening it writes is settled in this run's employer charges
+	 * (net pay untouched), and the payslip carries the year-to-date figures
+	 * the signal rule reads.
+	 *
+	 * @return void
+	 */
+	public function testTheReviewSettlesInTheRunAndThePayslipCarriesTheYearToDateHours(): void {
+		$review = $this->createMock(AwfReviewService::class);
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'EmploymentContract' => [$this->contract(['hoursPerWeek' => 24.0])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			],
+			awfReview: $review
+		);
+		$review->expects($this->once())->method('review')->with('2026-06', $this->anything())->willReturnCallback(
+			static function () use ($fake): array {
+				$fake->rowsBySchema['PayrollAdjustment'][] = ['id' => 'adj-awf', 'employeeId' => 'emp-1', 'originalPeriod' => '2026-01', 'correctionType' => 'awf-herziening', 'correctionRef' => 'awf-herziening-early-end-x', 'status' => 'applied', 'settlementPeriod' => '2026-06', 'deltaNet' => 0.0, 'deltaGross' => 0.0, 'deltaLoonheffing' => 0.0, 'deltaWerknemersverzekeringen' => 150.00];
+				return ['earlyEnd' => 1, 'extraHours' => 0, 'skipped' => []];
+			}
+		);
+		$review->method('yearToDate')->willReturn(['paid' => 883.98, 'contract' => 624.0, 'averageHoursPerWeek' => 25, 'overrunPercent' => 41]);
+
+		$plain = $this->service(['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract(['hoursPerWeek' => 24.0])], 'PayrollRun' => [], 'Payslip' => []])[0]->runFor('2026-06');
+		$result = $service->runFor('2026-06');
+
+		$this->assertSame(round($plain['totals']['totalEmployerCharges'] + 150.00, 2), $result['totals']['totalEmployerCharges']);
+		$this->assertSame($plain['totals']['totalNet'], $result['totals']['totalNet']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+		$this->assertSame([883.98, 624.0, 25, 41], [$payslip['awfPaidHoursYearToDate'], $payslip['awfContractHoursYearToDate'], $payslip['awfAverageContractHoursPerWeek'], $payslip['awfOverrunPercentYearToDate']]);
+
+	}//end testTheReviewSettlesInTheRunAndThePayslipCarriesTheYearToDateHours()
 
 }//end class

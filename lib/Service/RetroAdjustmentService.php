@@ -49,6 +49,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
@@ -322,7 +323,7 @@ class RetroAdjustmentService {
 			loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true),
 			dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null),
 			period: $originalPeriod,
-			awfTariff: $this->awfTariffFor($contract),
+			awfTariff: $this->awfTariffFor($contract, $employee, $payslip, $originalPeriod),
 			aofTariff: $aofTariff,
 			whkPercentage: $whkPercentage
 		);
@@ -498,22 +499,29 @@ class RetroAdjustmentService {
 	}//end coversPeriod()
 
 	/**
-	 * The contract's Awf tariff (`low`/`high`), the PayrollRunService
-	 * Wab-derived fallback precedent.
+	 * The Awf tariff of the corrected period: what the run charged when the
+	 * original payslip says so, otherwise the shared resolution (contract,
+	 * BBL, young part-timer with the payslip's paid hours) the run uses
+	 * (filings-premium-differentiation D1).
 	 *
-	 * @param array<string, mixed> $contract The covering EmploymentContract.
+	 * @param array<string, mixed> $contract       The covering EmploymentContract.
+	 * @param array<string, mixed> $employee       The Employee.
+	 * @param array<string, mixed> $payslip        The sealed original payslip.
+	 * @param string               $originalPeriod The corrected period.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-101
 	 */
-	private function awfTariffFor(array $contract): string {
-		$tariff = trim((string)($contract['awfTariff'] ?? ''));
-		if (in_array($tariff, ['low', 'high'], true) === true) {
-			return $tariff;
+	private function awfTariffFor(array $contract, array $employee, array $payslip, string $originalPeriod): string {
+		$stamped = (string)($payslip['awfTariff'] ?? '');
+		if (in_array($stamped, ['low', 'high'], true) === true) {
+			return $stamped;
 		}
 
-		$permanent = ((string)($contract['type'] ?? '') === 'permanent');
-		$written = (($contract['writtenContract'] ?? false) === true);
-		return ($permanent === true && $written === true) ? 'low' : 'high';
+		$paidHours = (is_numeric($payslip['hoursWorked'] ?? null) === true ? ((float)$payslip['hoursWorked'] + (float)($payslip['overtimeHours'] ?? 0.0)) : null);
+		$dateOfBirth = (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null);
+		return AwfTariffResolver::resolve($contract, $dateOfBirth, $originalPeriod, $paidHours)['tariff'];
 	}//end awfTariffFor()
 
 	/**

@@ -482,4 +482,40 @@ class NlPayrollChecksTest extends TestCase {
 
 	}//end testLoonbelastingverklaringRuleIsCataloguedWithItsSource()
 
+	/**
+	 * filings-premium-differentiation REQ-AWF-101: a signed BBL contract is
+	 * expected at the low Awf rate; a fixed-term one at the high rate.
+	 *
+	 * @return void
+	 */
+	public function testTheAwfRuleExpectsLowForASignedBblContract(): void {
+		$rule = $this->checks['EmploymentContract']['nl-awf-laag-hoog-tarief'];
+		$bbl = ['type' => 'bbl', 'writtenContract' => true, 'bpvOvereenkomstOndertekend' => true];
+		$this->assertTrue($rule(array_merge($bbl, ['awfTariff' => 'low'])));
+		$this->assertFalse($rule(array_merge($bbl, ['awfTariff' => 'high'])));
+		$this->assertTrue($rule(['type' => 'temporary', 'writtenContract' => true, 'awfTariff' => 'high']));
+		$this->assertTrue($rule(['type' => 'permanent', 'writtenContract' => true, 'awfTariff' => 'low']));
+
+	}//end testTheAwfRuleExpectsLowForASignedBblContract()
+
+	/**
+	 * REQ-AWF-102: the signal flags a low payslip whose year-to-date paid
+	 * hours run more than 30% above the contract at 30 contracted hours a
+	 * week or less; a payslip without the figures, a high one, an exception
+	 * and a full-timer pass.
+	 *
+	 * @return void
+	 */
+	public function testTheExtraHoursSignalFlagsARunningOverrun(): void {
+		$rule = $this->checks['Payslip']['nl-awf-herziening-uren-signaal'];
+		$slip = ['awfTariff' => 'low', 'awfTariffBasis' => 'contract', 'awfPaidHoursYearToDate' => 883.98, 'awfContractHoursYearToDate' => 624.0, 'awfAverageContractHoursPerWeek' => 25, 'awfOverrunPercentYearToDate' => 41];
+		$this->assertFalse($rule($slip));
+		$this->assertTrue($rule(array_merge($slip, ['awfOverrunPercentYearToDate' => 30])));
+		$this->assertTrue($rule(array_merge($slip, ['awfAverageContractHoursPerWeek' => 31])));
+		$this->assertTrue($rule(array_merge($slip, ['awfTariffBasis' => 'bbl'])));
+		$this->assertTrue($rule(array_merge($slip, ['awfTariff' => 'high'])));
+		$this->assertTrue($rule(['awfTariff' => 'low']));
+
+	}//end testTheExtraHoursSignalFlagsARunningOverrun()
+
 }//end class
