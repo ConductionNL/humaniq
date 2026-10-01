@@ -13,7 +13,7 @@
  * - berekening 2: the paid hours of the year against the contracted hours of
  *   every contract, as a percentage rounded DOWN; above 30 the low rate is
  *   reviewed.
- * Contracted hours per period follow `AwfTariffResolver::contractHoursIn()`.
+ * Contracted hours per period follow `self::contractHoursIn()`.
  *
  * @category Payroll
  * @package  OCA\Humaniq\Payroll
@@ -39,6 +39,8 @@ use DateTimeImmutable;
 /**
  * Pure arithmetic of the extra-hours review.
  *
+ * @SuppressWarnings(PHPMD.StaticAccess) AwfTariffResolver is a pure static resolver, the TaxTables precedent.
+ *
  * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
  */
 final class AwfHoursReview {
@@ -63,6 +65,7 @@ final class AwfHoursReview {
 	 * @param string                           $lastPeriod The last period counted (`YYYY-MM`).
 	 *
 	 * @return array{paid: float, contract: float, averageHoursPerWeek: int, overrunPercent: int}
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
 	public static function figures(array $contracts, array $slips, string $lastPeriod): array {
 		$year = substr($lastPeriod, 0, 4);
@@ -79,7 +82,7 @@ final class AwfHoursReview {
 		$contractLow = 0.0;
 		foreach (self::periods($lastPeriod) as $period) {
 			foreach ($contracts as $contract) {
-				$hours = AwfTariffResolver::contractHoursIn($contract, $period);
+				$hours = self::contractHoursIn($contract, $period);
 				$contractAll += $hours;
 				$contractLow += (isset($lowPeriods[$period]) === true ? $hours : 0.0);
 			}
@@ -108,6 +111,7 @@ final class AwfHoursReview {
 	 * @param array<string, mixed> $figures The figures.
 	 *
 	 * @return bool
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
 	public static function exceeds(array $figures): bool {
 		return (float)($figures['contract'] ?? 0.0) > 0.0
@@ -115,6 +119,127 @@ final class AwfHoursReview {
 			&& (int)($figures['overrunPercent'] ?? 0) > self::OVERRUN_PERCENT;
 
 	}//end exceeds()
+
+	/**
+	 * The contracted hours of a contract in one period (Handboek 2026, 7.2.3
+	 * stap 2): hours a week x 13/3 for a month and x 4 for a four-week
+	 * period; for a month the contract covers in part, hours a week x the
+	 * calendar days it ran / 7. Rounded to two decimals.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param string               $period   The period, `YYYY-MM` or `YYYY-P##`.
+	 *
+	 * @return float
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
+	 */
+	public static function contractHoursIn(array $contract, string $period): float {
+		$perWeek = (is_numeric($contract['hoursPerWeek'] ?? null) === true ? (float)$contract['hoursPerWeek'] : 0.0);
+		if ($perWeek <= 0.0) {
+			return 0.0;
+		}
+
+		if (preg_match('/^\d{4}-P\d{2}$/', $period) === 1) {
+			return round($perWeek * 4, 2);
+		}
+
+		$first = self::date($period . '-01');
+		if ($first === null) {
+			return 0.0;
+		}
+
+		$last = $first->modify('last day of this month');
+		$days = self::overlapDays(contract: $contract, from: $first, until: $last);
+		if ($days === (int)$last->format('j')) {
+			return round($perWeek * 13 / 3, 2);
+		}
+
+		return round($perWeek * $days / 7, 2);
+
+	}//end contractHoursIn()
+
+	/**
+	 * Whether a contract runs on at least one day of a month period.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param string               $period   The period (`YYYY-MM`).
+	 *
+	 * @return bool
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
+	 */
+	public static function coversPeriod(array $contract, string $period): bool {
+		$first = self::date($period . '-01');
+		if ($first === null) {
+			return false;
+		}
+
+		return self::overlapDays(contract: $contract, from: $first, until: $first->modify('last day of this month')) > 0;
+
+	}//end coversPeriod()
+
+	/**
+	 * The number of calendar days a contract runs between two dates,
+	 * inclusive.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param DateTimeImmutable    $from     The first day.
+	 * @param DateTimeImmutable    $until    The last day.
+	 *
+	 * @return int
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
+	 */
+	public static function overlapDays(array $contract, DateTimeImmutable $from, DateTimeImmutable $until): int {
+		$start = (self::date((string)($contract['startDate'] ?? '')) ?? $from);
+		$end   = (self::date((string)($contract['endDate'] ?? '')) ?? $until);
+		$start = max($start, $from);
+		$end   = min($end, $until);
+		if ($end < $start) {
+			return 0;
+		}
+
+		return ((int)$start->diff($end)->days + 1);
+
+	}//end overlapDays()
+
+	/**
+	 * Whether a payslip was charged the low rate on a basis that may be
+	 * reviewed (not the BBL or young part-timer exception). A payslip from
+	 * before the basis was stamped counts when its input was low.
+	 *
+	 * @param array<string, mixed> $slip The payslip.
+	 *
+	 * @return bool
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
+	 */
+	public static function reviewable(array $slip): bool {
+		$basis = trim((string)($slip['awfTariffBasis'] ?? ''));
+		if ($basis !== '') {
+			return ((string)($slip['awfTariff'] ?? '') === 'low') && in_array($basis, AwfTariffResolver::REVIEWABLE_BASES, true) === true;
+		}
+
+		$snapshot = ($slip['engineInputSnapshot'] ?? null);
+		return (is_array($snapshot) === true && (string)($snapshot['awfTariff'] ?? '') === 'low');
+
+	}//end reviewable()
+
+	/**
+	 * A payslip as an hours row for the year figures: the paid hours
+	 * (worked plus overtime) and whether the period was charged low.
+	 *
+	 * @param array<string, mixed> $slip The payslip.
+	 *
+	 * @return array{period: string, hours: float, low: bool}
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
+	 */
+	public static function hoursRow(array $slip): array {
+		$snapshot = ($slip['engineInputSnapshot'] ?? null);
+		$low = ((string)($slip['awfTariff'] ?? (is_array($snapshot) === true ? ($snapshot['awfTariff'] ?? '') : '')) === 'low');
+		return [
+			'period' => (string)($slip['period'] ?? ''),
+			'hours' => ((float)($slip['hoursWorked'] ?? 0.0) + (float)($slip['overtimeHours'] ?? 0.0)),
+			'low' => $low,
+		];
+
+	}//end hoursRow()
 
 	/**
 	 * The months of the year up to and including the last period.
@@ -147,7 +272,7 @@ final class AwfHoursReview {
 	private static function employedDays(array $contracts, DateTimeImmutable $from, DateTimeImmutable $until): int {
 		$covered = [];
 		foreach ($contracts as $contract) {
-			$days = AwfTariffResolver::overlapDays(contract: $contract, from: $from, until: $until);
+			$days = self::overlapDays(contract: $contract, from: $from, until: $until);
 			if ($days === 0) {
 				continue;
 			}
@@ -162,4 +287,24 @@ final class AwfHoursReview {
 		return count($covered);
 
 	}//end employedDays()
+	/**
+	 * A Y-m-d date (the first ten characters), or null.
+	 *
+	 * @param string $value The value.
+	 *
+	 * @return DateTimeImmutable|null
+	 */
+	private static function date(string $value): ?DateTimeImmutable {
+		$value = substr(trim($value), 0, 10);
+		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
+			return null;
+		}
+
+		try {
+			return new DateTimeImmutable($value);
+		} catch (\Exception) {
+			return null;
+		}
+
+	}//end date()
 }//end class

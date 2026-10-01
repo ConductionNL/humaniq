@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Payroll;
 
+use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use PHPUnit\Framework\TestCase;
 
@@ -194,11 +195,11 @@ class AwfTariffResolverTest extends TestCase {
 	 * @return void
 	 */
 	public function testContractHoursPerPeriod(): void {
-		$this->assertSame(93.6, AwfTariffResolver::contractHoursIn($this->contract(['hoursPerWeek' => 21.6]), '2026-03'));
-		$this->assertSame(86.4, AwfTariffResolver::contractHoursIn($this->contract(['hoursPerWeek' => 21.6]), '2026-P03'));
+		$this->assertSame(93.6, AwfHoursReview::contractHoursIn($this->contract(['hoursPerWeek' => 21.6]), '2026-03'));
+		$this->assertSame(86.4, AwfHoursReview::contractHoursIn($this->contract(['hoursPerWeek' => 21.6]), '2026-P03'));
 		// Voorbeeld 2: in on 20 May at 30 hours, 12 days in May.
-		$this->assertSame(51.43, AwfTariffResolver::contractHoursIn($this->contract(['hoursPerWeek' => 30.0, 'startDate' => '2026-05-20']), '2026-05'));
-		$this->assertSame(0.0, AwfTariffResolver::contractHoursIn($this->contract(['startDate' => '2026-07-01']), '2026-05'));
+		$this->assertSame(51.43, AwfHoursReview::contractHoursIn($this->contract(['hoursPerWeek' => 30.0, 'startDate' => '2026-05-20']), '2026-05'));
+		$this->assertSame(0.0, AwfHoursReview::contractHoursIn($this->contract(['startDate' => '2026-07-01']), '2026-05'));
 
 	}//end testContractHoursPerPeriod()
 }//end class

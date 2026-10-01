@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use DateTimeImmutable;
 use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\CalculationInput;
@@ -49,6 +50,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * The early-end and extra-hours review of the low Awf premium.
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess) The pure Awf helpers, TaxTables::load and CalculationInput::fromDecoded are static by design, the PayrollRunService precedent.
  *
  * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
  */
@@ -83,6 +86,7 @@ class AwfReviewService {
 	 * @param string $runId  The run being calculated.
 	 *
 	 * @return array{earlyEnd: int, extraHours: int, skipped: array<int, array<string, string>>}
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
 	public function review(string $period, string $runId): array {
 		$outcome = ['earlyEnd' => 0, 'extraHours' => 0, 'skipped' => []];
@@ -138,6 +142,7 @@ class AwfReviewService {
 	 * @param bool                             $low        Whether this period is charged the low rate.
 	 *
 	 * @return array{paid: float, contract: float, averageHoursPerWeek: int, overrunPercent: int}
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
 	public function yearToDate(string $employeeId, array $contracts, string $period, float $paidHours, bool $low=true): array {
 		$year  = substr($period, 0, 4);
@@ -145,7 +150,7 @@ class AwfReviewService {
 		foreach ($this->payslipsByEmployee()[$employeeId] ?? [] as $slip) {
 			$slipPeriod = (string)($slip['period'] ?? '');
 			if (substr($slipPeriod, 0, 4) === $year && $slipPeriod < $period) {
-				$slips[] = $this->hoursRow($slip);
+				$slips[] = AwfHoursReview::hoursRow($slip);
 			}
 		}
 
@@ -159,6 +164,7 @@ class AwfReviewService {
 	 * @param array<string, mixed> $figures The figures.
 	 *
 	 * @return bool
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
 	public static function signals(array $figures): bool {
 		return AwfHoursReview::exceeds($figures);
@@ -181,7 +187,7 @@ class AwfReviewService {
 			}
 
 			foreach ($slips as $slip) {
-				if ($this->reviewable($slip) === true && AwfTariffResolver::coversPeriod($contract, (string)($slip['period'] ?? '')) === true) {
+				if (AwfHoursReview::reviewable($slip) === true && AwfHoursReview::coversPeriod($contract, (string)($slip['period'] ?? '')) === true) {
 					$out[] = $slip;
 				}
 			}
@@ -204,12 +210,12 @@ class AwfReviewService {
 	 */
 	private function extraHoursSlips(array $contracts, array $slips, array $reviewable, string $year): array {
 		$inYear = static fn (array $slip): bool => substr((string)($slip['period'] ?? ''), 0, 4) === $year;
-		$targets = array_values(array_filter($reviewable, fn (array $slip): bool => $inYear($slip) === true && $this->reviewable($slip) === true));
+		$targets = array_values(array_filter($reviewable, fn (array $slip): bool => $inYear($slip) === true && AwfHoursReview::reviewable($slip) === true));
 		if ($targets === []) {
 			return [];
 		}
 
-		$rows    = array_map(fn (array $slip): array => $this->hoursRow($slip), array_values(array_filter($slips, $inYear)));
+		$rows    = array_map(fn (array $slip): array => AwfHoursReview::hoursRow($slip), array_values(array_filter($slips, $inYear)));
 		$figures = AwfHoursReview::figures(contracts: $contracts, slips: $rows, lastPeriod: $year . '-12');
 
 		return (AwfHoursReview::exceeds($figures) === true ? $targets : []);
@@ -266,7 +272,7 @@ class AwfReviewService {
 				'settlementPeriod' => $period,
 				'settlementPayrollRunId' => $runId,
 				'status' => 'applied',
-				'calculatedAt' => (new \DateTimeImmutable())->format(\DATE_ATOM),
+				'calculatedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
 			],
 			'PayrollAdjustment'
 		);
@@ -274,45 +280,6 @@ class AwfReviewService {
 		return null;
 
 	}//end settle()
-
-	/**
-	 * Whether a payslip was charged the low rate on a basis that may be
-	 * reviewed (not the BBL or young part-timer exception). A payslip from
-	 * before the basis was stamped counts when its input was low.
-	 *
-	 * @param array<string, mixed> $slip The payslip.
-	 *
-	 * @return bool
-	 */
-	private function reviewable(array $slip): bool {
-		$basis = trim((string)($slip['awfTariffBasis'] ?? ''));
-		if ($basis !== '') {
-			return ((string)($slip['awfTariff'] ?? '') === 'low') && in_array($basis, AwfTariffResolver::REVIEWABLE_BASES, true) === true;
-		}
-
-		$snapshot = ($slip['engineInputSnapshot'] ?? null);
-		return (is_array($snapshot) === true && (string)($snapshot['awfTariff'] ?? '') === 'low');
-
-	}//end reviewable()
-
-	/**
-	 * A payslip as an hours row for the year figures: the paid hours
-	 * (worked plus overtime) and whether the period was charged low.
-	 *
-	 * @param array<string, mixed> $slip The payslip.
-	 *
-	 * @return array{period: string, hours: float, low: bool}
-	 */
-	private function hoursRow(array $slip): array {
-		$snapshot = ($slip['engineInputSnapshot'] ?? null);
-		$low = ((string)($slip['awfTariff'] ?? (is_array($snapshot) === true ? ($snapshot['awfTariff'] ?? '') : '')) === 'low');
-		return [
-			'period' => (string)($slip['period'] ?? ''),
-			'hours' => ((float)($slip['hoursWorked'] ?? 0.0) + (float)($slip['overtimeHours'] ?? 0.0)),
-			'low' => $low,
-		];
-
-	}//end hoursRow()
 
 	/**
 	 * Every employee's contracts, keyed by the employee's object id (a

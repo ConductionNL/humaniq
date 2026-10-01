@@ -390,6 +390,8 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	 * @return string 'low' or 'high'.
 	 *
 	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-101
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) The pure Awf helpers are static by design.
 	 */
 	private static function expectedAwfTariff(array $o): string {
 		return AwfTariffResolver::contractTariff($o);
@@ -405,6 +407,8 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	 * @return bool
 	 *
 	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) The pure Awf helpers are static by design.
 	 */
 	private static function awfHoursWithinLine(array $o): bool {
 		if ((string)($o['awfTariff'] ?? '') !== 'low'

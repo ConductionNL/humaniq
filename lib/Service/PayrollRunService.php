@@ -162,6 +162,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\CalculationResult;
@@ -2027,7 +2028,7 @@ class PayrollRunService {
 			return ((float)($hoursPay['hoursPaid'] ?? 0.0) + $overtime);
 		}
 
-		$contracted = AwfTariffResolver::contractHoursIn($contract, $period);
+		$contracted = AwfHoursReview::contractHoursIn($contract, $period);
 		return ($contracted > 0.0 ? round($contracted + $overtime, 2) : null);
 	}//end awfPaidHours()
 
