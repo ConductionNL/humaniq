@@ -866,6 +866,24 @@
 					"route": "PayrollHandoffs"
 				},
 				{
+					"icon": "AccountArrowRightOutline",
+					"id": "ThirdPartyPayees",
+					"label": "Third-party payees",
+					"route": "ThirdPartyPayees"
+				},
+				{
+					"icon": "CashMultiple",
+					"id": "ThirdPartyPayments",
+					"label": "Third-party payments",
+					"route": "ThirdPartyPayments"
+				},
+				{
+					"icon": "FileSendOutline",
+					"id": "ThirdPartyReports",
+					"label": "Third-party reports",
+					"route": "ThirdPartyReports"
+				},
+				{
 					"icon": "FileSendOutline",
 					"id": "LoonaangifteFilings",
 					"label": "Wage tax filings",
@@ -9997,6 +10015,289 @@
 		},
 		{
 			"config": {
+				"_note": "filings-ib47 (2026-10-01): Assemble posts {administrationId, year} to /api/third-party/reports/assemble (HR, payroll or an administrator; the administration resolved under the caller's RBAC first): one melding per payee with the year's total including expense allowances, rounded down to whole euros, validated against the Belastingdienst's UBD XSD; what stops it is listed as a blocking finding. Set ready (klaarzetten) is refused while findings block or no message exists (UbdReportReadyGuard). Statements posts to /api/third-party/reports/{id}/statements and generates the ubd-jaaropgaaf of every payee through filinq.",
+				"headerActions": [
+					{
+						"confirm": true,
+						"errorMessage": "The report could not be assembled. It may already be set ready, or the year has no payments.",
+						"icon": "Calculator",
+						"id": "assemble-report",
+						"label": "Assemble",
+						"method": "POST",
+						"params": {
+							"administrationId": "@object.administrationId",
+							"year": "@object.year"
+						},
+						"successMessage": "Report assembled. Check the findings before you set it ready.",
+						"type": "api-call",
+						"url": "/api/third-party/reports/assemble"
+					},
+					{
+						"errorMessage": "No statement could be generated. Check that filinq has one template for ubd-jaaropgaaf.",
+						"icon": "FileDocumentMultipleOutline",
+						"id": "payee-statements",
+						"label": "Statements",
+						"method": "POST",
+						"params": {},
+						"successMessage": "Statements generated and stored with each payee.",
+						"type": "api-call",
+						"url": "/api/third-party/reports/@objectId/statements"
+					}
+				],
+				"layout": [
+					{
+						"gridHeight": 3,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "stat-lines"
+					},
+					{
+						"gridHeight": 3,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "stat-total"
+					},
+					{
+						"gridHeight": 3,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 3,
+						"widgetId": "stat-blocking"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 3,
+						"id": 4,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 11,
+						"id": 5,
+						"widgetId": "payments"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "klaarzetten",
+							"from": [
+								"concept"
+							],
+							"label": "Set ready",
+							"to": "klaargezet"
+						},
+						{
+							"action": "verzenden",
+							"from": [
+								"klaargezet"
+							],
+							"label": "Mark sent",
+							"to": "verzonden"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"klaargezet",
+								"verzonden"
+							],
+							"label": "Reopen",
+							"to": "concept"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "ThirdPartyReport",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"caption": "one line each",
+							"format": {
+								"decimals": 0,
+								"style": "number"
+							},
+							"icon": "AccountArrowRightOutline",
+							"label": "Payees reported",
+							"source": {
+								"field": "lineCount",
+								"filter": {
+									"id": "@objectId"
+								},
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "ThirdPartyReport"
+							},
+							"valueColor": "#0082c9"
+						},
+						"icon": "AccountArrowRightOutline",
+						"id": "stat-lines",
+						"title": "Payees reported",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"caption": "whole euros",
+							"format": {
+								"decimals": 0,
+								"style": "number"
+							},
+							"icon": "CurrencyEur",
+							"label": "Total reported",
+							"source": {
+								"field": "totalAmount",
+								"filter": {
+									"id": "@objectId"
+								},
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "ThirdPartyReport"
+							},
+							"valueColor": "#0082c9"
+						},
+						"icon": "CurrencyEur",
+						"id": "stat-total",
+						"title": "Total reported",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"caption": "fix these before setting it ready",
+							"format": {
+								"decimals": 0,
+								"style": "number"
+							},
+							"icon": "AlertCircleOutline",
+							"label": "Blocking findings",
+							"source": {
+								"field": "blockingFindings",
+								"filter": {
+									"id": "@objectId"
+								},
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "ThirdPartyReport"
+							},
+							"valueColor": "#e9322d"
+						},
+						"icon": "AlertCircleOutline",
+						"id": "stat-blocking",
+						"title": "Blocking findings",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"assembledAt": {
+									"editable": false
+								},
+								"assembledBy": {
+									"editable": false
+								},
+								"blockingFindings": {
+									"editable": false
+								},
+								"deadline": {
+									"editable": false
+								},
+								"findings": {
+									"editable": false
+								},
+								"leveringsId": {
+									"editable": false
+								},
+								"lineCount": {
+									"editable": false
+								},
+								"messageFileName": {
+									"editable": false
+								},
+								"messageXml": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								},
+								"totalAmount": {
+									"editable": false
+								},
+								"warningFindings": {
+									"editable": false
+								}
+							},
+							"title": "Third-party payment report"
+						},
+						"icon": "FileSendOutline",
+						"id": "data",
+						"title": "Third-party payment report",
+						"type": "data"
+					},
+					{
+						"content": {
+							"allowCreate": false,
+							"columns": [
+								{
+									"key": "payeeId",
+									"label": "Payee"
+								},
+								{
+									"key": "paidOn",
+									"label": "Paid on"
+								},
+								{
+									"key": "amount",
+									"label": "Amount"
+								},
+								{
+									"key": "expenseAllowance",
+									"label": "Expense allowance"
+								}
+							],
+							"emptyText": "No payments to third parties registered for this administration.",
+							"filter": {
+								"administrationId": "@object.administrationId"
+							},
+							"limit": 50,
+							"register": "humaniq",
+							"rowRoute": "ThirdPartyPaymentDetail",
+							"schema": "ThirdPartyPayment",
+							"sort": {
+								"dir": "desc",
+								"field": "paidOn"
+							},
+							"viewAllQuery": {
+								"administrationId": "@object.administrationId"
+							},
+							"viewAllRoute": "ThirdPartyPayments"
+						},
+						"icon": "CashMultiple",
+						"id": "payments",
+						"title": "Payments",
+						"type": "object-list"
+					}
+				]
+			},
+			"id": "ThirdPartyReportDetail",
+			"route": "/third-party-reports/:id",
+			"title": "Third-party payment report",
+			"type": "detail"
+		},
+		{
+			"config": {
 				"_note": "HR/labour approval record (urenstaat). hrmq-hours-process-redesign (design.md Decision 8): the Timesheet is now the period AGGREGATE of TimeEntry bookings, so (1) the total-hours KPI stat sums the TRUTH — TimeEntry.hours filtered on timesheetId = @objectId — not the cached Timesheet.hours field; (2) the 'Urenstaat' data widget shows the aggregate facts (period/hours/entryCount/description/billable) with everything but the timesheet-level description read-only (hours/entryCount are server-recomputed aggregates, REQ-TEC-004). description is the ONLY page-editable field: the design's page-level includeFields [description] edit allowlist is expressed through this widget's editable overrides, because CnDetailPage has no page-level includeFields prop — a config key no component reads is a comment, so none is declared; (3) the 'Goedkeuring' panel (status/submittedAt/approvedBy/approvedAt/rejectionReason) is fully read-only — process fields are lifecycle-stamped server-side and inert to client input; (4) the new 'Urenboekingen' object-list lists the TimeEntry bookings (timesheetId = @objectId), rowRoute to TimeEntryDetail — entry mutability is governed server-side by the parent's state (REQ-TEC-005). Related resolves the claiming Employee (employeeId excluded from data widgets). Files keeps approval evidence full-width on the body. NO email/calendar/talk widgets — the Timesheet schema declares no comms linkedTypes; any communication is with the person (Employee), not the record. lifecycleActions expose the schema's own submit/approve/reject/reopen transitions (guarded server-side by NoSelfApprovalGuard, and TimesheetNotEmptyGuard on submit). Audit history stays a sidebar tab as a rarely-scanned surface.",
 				"layout": [
 					{
@@ -16673,6 +16974,211 @@
 			"route": "/stagiairs/:id",
 			"title": "Intern",
 			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "filings-ib47 (2026-10-01): ThirdPartyPayee. The BSN carries the same field authorization as an employee's (HR and payroll only); nl-ubd-payee-identification flags a paid payee without BSN or date of birth.",
+				"allowCreate": true,
+				"columns": [
+					"lastName",
+					"initials",
+					"activity",
+					"dateOfBirth",
+					"city",
+					"administrationId"
+				],
+				"description": "People you pay who are neither employees nor entrepreneurs, such as guest lecturers and committee members. Their payments are reported to the tax authority once a year.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"administrationId",
+					"city"
+				],
+				"register": "humaniq",
+				"schema": "ThirdPartyPayee",
+				"sort": {
+					"field": "lastName",
+					"order": "asc"
+				}
+			},
+			"id": "ThirdPartyPayees",
+			"route": "/third-party-payees",
+			"title": "Third-party payees",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "filings-ib47 (2026-10-01): one payee; the year statement is generated from the report's page for every payee it covers.",
+				"layout": [
+					{
+						"gridHeight": 10,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 10,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "ThirdPartyPayee",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Payee"
+						},
+						"icon": "AccountArrowRightOutline",
+						"id": "data",
+						"title": "Payee",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "ThirdPartyPayeeDetail",
+			"route": "/third-party-payees/:id",
+			"title": "Third-party payee",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "filings-ib47 (2026-10-01): ThirdPartyPayment. ThirdPartyReportService sums them per payee and year.",
+				"allowCreate": true,
+				"columns": [
+					"payeeId",
+					"paidOn",
+					"amount",
+					"expenseAllowance",
+					"description",
+					"administrationId"
+				],
+				"description": "Every payment to a third-party payee, with the expense allowance paid on top. Both count towards the yearly report.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"payeeId",
+					"administrationId"
+				],
+				"register": "humaniq",
+				"schema": "ThirdPartyPayment",
+				"sort": {
+					"field": "paidOn",
+					"order": "desc"
+				}
+			},
+			"id": "ThirdPartyPayments",
+			"route": "/third-party-payments",
+			"title": "Third-party payments",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "filings-ib47 (2026-10-01): one payment to a third-party payee.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "ThirdPartyPayment",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Payment"
+						},
+						"icon": "CashMultiple",
+						"id": "data",
+						"title": "Payment",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "ThirdPartyPaymentDetail",
+			"route": "/third-party-payments/:id",
+			"title": "Third-party payment",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "filings-ib47 (2026-10-01): one ThirdPartyReport per administration and year; nl-ubd-deadline flags a year with payments whose report is not sent by 31 January of the next year.",
+				"allowCreate": true,
+				"columns": [
+					"administrationId",
+					"year",
+					"status",
+					"lineCount",
+					"totalAmount",
+					"blockingFindings",
+					"deadline"
+				],
+				"description": "The yearly report of payments to third parties (formerly IB47), due on 31 January. Add one for a year, assemble it, set it ready and upload the file to the tax authority.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"status",
+					"year"
+				],
+				"register": "humaniq",
+				"schema": "ThirdPartyReport",
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				}
+			},
+			"id": "ThirdPartyReports",
+			"route": "/third-party-reports",
+			"title": "Third-party payment reports",
+			"type": "index"
 		},
 		{
 			"config": {

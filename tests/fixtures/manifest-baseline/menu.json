@@ -648,6 +648,24 @@
 				"route": "PayrollHandoffs"
 			},
 			{
+				"id": "ThirdPartyPayees",
+				"label": "Third-party payees",
+				"icon": "AccountArrowRightOutline",
+				"route": "ThirdPartyPayees"
+			},
+			{
+				"id": "ThirdPartyPayments",
+				"label": "Third-party payments",
+				"icon": "CashMultiple",
+				"route": "ThirdPartyPayments"
+			},
+			{
+				"id": "ThirdPartyReports",
+				"label": "Third-party reports",
+				"icon": "FileSendOutline",
+				"route": "ThirdPartyReports"
+			},
+			{
 				"id": "LoonaangifteFilings",
 				"label": "Wage tax filings",
 				"icon": "FileSendOutline",

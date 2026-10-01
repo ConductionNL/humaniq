@@ -17,7 +17,7 @@
                 ],
                 "properties": {
                     "initials": {"title": "Initials", "type": "string", "maxLength": 12, "description": "The payee's initials, for example J.P.", "x-notes": "UBD ONTVANGER/voorletters (an1..6). ThirdPartyReportService cuts a longer value to five characters plus a hyphen, as the Belastingdienst handbook (Deel 2, 4.5.4) prescribes."},
-                    "prefix": {"title": "Prefix", "type": "string", "maxLength": 10, "description": "Words before the surname, such as van or de.", "x-notes": "UBD ONTVANGER/voorvoegsels (an1..10, optional)."},
+                    "prefix": {"title": "Prefix", "type": "string", "maxLength": 10, "description": "Any words that come before the surname.", "x-notes": "UBD ONTVANGER/voorvoegsels (an1..10, optional)."},
                     "lastName": {"title": "Surname", "type": "string", "maxLength": 50, "description": "The payee's surname, without prefix.", "x-notes": "UBD ONTVANGER/achternaam (an1..50)."},
                     "bsn": {"title": "BSN", "type": "string", "pattern": "^[0-9]{9}$", "description": "The payee's citizen service number. Without it the payee cannot be reported.", "x-notes": "UBD IHPOpvoerWijziging/bSN (9 digits). Same property authorization as Employee.bsn: HR and payroll read and write, nobody else (compliance-roles-and-field-access).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"]}},
                     "dateOfBirth": {"title": "Date of birth", "type": "string", "format": "date", "description": "The payee's date of birth.", "x-notes": "UBD ONTVANGER/geboortedatum."},
