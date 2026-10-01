@@ -52,9 +52,12 @@ next run.
 
 ### D3. Extra hours
 
-At the run for the last period of a year, the service sums `hoursWorked` per low-premium contract
-under 35 hours a week and compares with `hoursPerWeek` times the weeks the contract ran; above
-130 percent it recomputes the year's periods with `high` and writes the adjustments as in D2.
+At the first run of the next year, the service applies the Handboek's two calculations
+(paragraaf 7.2.3): the contracted hours of the low periods (hours a week x 13/3 a month, part
+months by calendar days / 7) divided by the weeks employed, rounded up, must be 30 or less; and
+the paid hours (`hoursWorked` plus `overtimeHours`) must run more than 30 percent above the
+contracted hours of every contract, rounded down. Then it recomputes the year's sealed low
+periods with `high` and writes the adjustments as in D2.
 `nl-awf-herziening-uren-signaal` (recommended) flags, in any period, a contract whose year-to-date
 paid hours already exceed that line.
 
@@ -80,3 +83,31 @@ paid hours already exceed that line.
 ## Open Questions
 
 - None.
+
+## Build notes (2026-10-02)
+
+The thresholds were taken from the Handboek Loonheffingen 2026, versie maart 2026
+(https://download.belastingdienst.nl/belastingdienst/docs/handboek-loonheffingen-lh0221t61fd.pdf),
+paragraaf 7.2 (p. 122-125), 7.2.2 and 7.2.3 (p. 126-131). Three points differ from the design as
+first written:
+
+- **30 hours, not 35.** From 2025 the extra-hours review applies at an average of 30 contracted
+  hours a week or less ("Tot en met 2024 was herzien niet van toepassing bij gemiddeld 35 uur of
+  meer per week. Vanaf 2025 is dat gemiddeld meer dan 30 uur per week"). The 130 percent line is
+  "more than 30 percent, rounded down to whole percent", so 30,9 percent is not reviewed.
+- **After the year, not in December.** The December payslip is not sealed while the December run
+  calculates, and the Handboek says the calculation can usually only be made after the year. The
+  review runs at the first run of the next year and settles there, one adjustment per original
+  period (the losse correcties route); the signal rule covers the year itself.
+- **The exceptions are never reviewed, and BBL needs a signed contract without an uitzendbeding.**
+  Let op 3 and 9 exclude the BBL and under-21 exceptions from the review; paragraaf 7.2 makes the
+  BBL low rate depend on a signed praktijkovereenkomst and, from 2023, no uitzendbeding. The
+  resolver reads `bpvOvereenkomstOndertekend` and `uitzendbedingVanToepassing`.
+
+An early end is also charged high in the run of its last period directly (`AwfTariffResolver`
+basis `early-end`), so only the sealed earlier periods need an adjustment. A rate set explicitly on
+the contract wins, but the under-21 exception still applies, because the Handboek says the low
+rate is "always" applied there. Each payslip records `awfTariff` and `awfTariffBasis`; with the
+review wired it also records the year-to-date figures `nl-awf-herziening-uren-signaal` reads.
+A four-week period uses the 48-hour norm and hours a week x 4; part four-week periods are not
+prorated (humaniq runs monthly).
