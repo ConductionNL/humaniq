@@ -564,4 +564,100 @@ class PayrollGLPostServiceTest extends TestCase {
 
 	}//end testPostApprovedRunsSelectsOnlyApprovedRunsForTheGivenPeriod()
 
+	/**
+	 * The run's allocation lines, for the cost-allocation journal tests:
+	 * 3800.00 gross and 649.80 charges over CC-100 and CC-200/PRJ-7.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function allocationRows(): array {
+		return [
+			['id' => 'wca-1', 'payrollRunId' => 'run-1', 'payslipId' => 'slip-1', 'costCenter' => 'CC-100', 'projectId' => null, 'gross' => 2280.00, 'employerCharges' => 389.88, 'totalCost' => 2669.88],
+			['id' => 'wca-2', 'payrollRunId' => 'run-1', 'payslipId' => 'slip-1', 'costCenter' => 'CC-200', 'projectId' => 'PRJ-7', 'gross' => 1520.00, 'employerCharges' => 259.92, 'totalCost' => 1779.92],
+			['id' => 'wca-other', 'payrollRunId' => 'run-other', 'payslipId' => 'slip-9', 'costCenter' => 'CC-900', 'projectId' => null, 'gross' => 999.00, 'employerCharges' => 1.00, 'totalCost' => 1000.00],
+		];
+	}//end allocationRows()
+
+	/**
+	 * payroll-cost-allocation REQ-PCA-002: a run allocated over two cost
+	 * centres books a gross and an employer-charges debit line for each,
+	 * with its codes; the liability lines stay totals and the journal
+	 * balances. Another run's lines are not read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
+	 */
+	public function testTheJournalCarriesTwoCostCentres(): void {
+		[$service] = $this->service();
+		$built = $service->buildLines($this->payrollRun(), $this->allocationRows());
+
+		self::assertNull($built['error']);
+		$debits = array_values(array_filter($built['lines'], static fn (array $l): bool => $l['side'] === 'debit'));
+		self::assertCount(4, $debits);
+		self::assertSame(
+			[['4001', 2280.0, 'CC-100', null], ['4001', 1520.0, 'CC-200', 'PRJ-7'], ['4002', 389.88, 'CC-100', null], ['4002', 259.92, 'CC-200', 'PRJ-7']],
+			array_map(static fn (array $l): array => [$l['accountNumber'], $l['amount'], $l['costCenterCode'] ?? null, $l['projectCode'] ?? null], $debits)
+		);
+		self::assertArrayNotHasKey('projectCode', $debits[0]);
+
+		$credits = array_values(array_filter($built['lines'], static fn (array $l): bool => $l['side'] === 'credit'));
+		self::assertCount(2, $credits);
+		self::assertArrayNotHasKey('costCenterCode', $credits[0]);
+		self::assertEqualsWithDelta(array_sum(array_column($debits, 'amount')), array_sum(array_column($credits, 'amount')), 0.001);
+		self::assertEqualsWithDelta(4449.80, $built['glExpensePosted'], 0.001);
+	}//end testTheJournalCarriesTwoCostCentres()
+
+	/**
+	 * Allocation lines that do not cover the run's totals (a payslip
+	 * without lines) leave the rest as one line without codes, so the
+	 * journal still balances.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
+	 */
+	public function testAPartlyAllocatedRunKeepsTheRestUncoded(): void {
+		[$service] = $this->service();
+		$built = $service->buildLines($this->payrollRun(), [$this->allocationRows()[0]]);
+
+		$gross = array_values(array_filter($built['lines'], static fn (array $l): bool => $l['accountNumber'] === '4001'));
+		self::assertSame([2280.0, 1520.0], array_column($gross, 'amount'));
+		self::assertArrayNotHasKey('costCenterCode', $gross[1]);
+		$debit = array_sum(array_map(static fn (array $l): float => ($l['side'] === 'debit' ? $l['amount'] : 0.0), $built['lines']));
+		$credit = array_sum(array_map(static fn (array $l): float => ($l['side'] === 'credit' ? $l['amount'] : 0.0), $built['lines']));
+		self::assertEqualsWithDelta($debit, $credit, 0.001);
+	}//end testAPartlyAllocatedRunKeepsTheRestUncoded()
+
+	/**
+	 * Posting reads the run's allocation lines, and the posted journal and
+	 * its humaniq record both fit their real schemas with the codes on.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
+	 */
+	public function testThePostedJournalCarriesTheCodesAndFitsBothSchemas(): void {
+		[$service, $fake] = $this->service(['WageCostAllocation' => $this->allocationRows()]);
+
+		$service->postRun($this->payrollRun());
+
+		$journal = $this->savedFor($fake, 'JournalEntry')[0];
+		self::assertContains('CC-200', array_column($journal['lines'], 'costCenterCode'));
+		self::assertContains('PRJ-7', array_column($journal['lines'], 'projectCode'));
+		self::assertNotContains('CC-900', array_column($journal['lines'], 'costCenterCode'));
+		$fixture = json_decode((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/shillinq/journal-entry-schema.json'), true);
+		self::assertSame([], RegisterSchemaValidator::errorsAgainst($fixture['JournalEntry'], $journal));
+
+		$posts = $this->savedFor($fake, 'PayrollGLPost');
+		$record = end($posts);
+		unset($record['id']);
+		// The fixture's run id is a readable name; the schema wants the uuid a live run has.
+		$record['payrollRunId'] = '5b1d3f4e-0000-4000-8000-000000000001';
+		self::assertSame([], RegisterSchemaValidator::errors('PayrollGLPost', $record));
+		$glPost = RegisterSchemaValidator::schema('PayrollGLPost');
+		self::assertArrayHasKey('costCenterCode', $glPost['properties']['lines']['items']['properties']);
+		self::assertArrayHasKey('projectCode', $glPost['properties']['lines']['items']['properties']);
+	}//end testThePostedJournalCarriesTheCodesAndFitsBothSchemas()
+
 }//end class

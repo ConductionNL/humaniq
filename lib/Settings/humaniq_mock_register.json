@@ -15323,6 +15323,126 @@
         "vacancyTitle": "Voorbeeld Vacancytitle 3",
         "applicationId": "00000000-0000-4000-8000-000000000002",
         "status": "gesprek"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CostAllocation",
+          "slug": "costallocation-costallocation-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "basis": "fixed",
+        "startDate": "2026-03-01",
+        "contractId": "Voorbeeld Contractid 1",
+        "splits": [
+          {
+            "costCenter": "Voorbeeld Costcenter 1",
+            "percentage": 100.0,
+            "projectId": "Voorbeeld Projectid 1"
+          }
+        ],
+        "endDate": null,
+        "note": "Voorbeeld Note 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CostAllocation",
+          "slug": "costallocation-costallocation-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "basis": "hours",
+        "startDate": "2026-03-02",
+        "contractId": "Voorbeeld Contractid 2",
+        "splits": [
+          {
+            "costCenter": "Voorbeeld Costcenter 2",
+            "percentage": 100.0,
+            "projectId": "Voorbeeld Projectid 2"
+          }
+        ],
+        "endDate": "2026-03-02",
+        "note": "Voorbeeld Note 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CostAllocation",
+          "slug": "costallocation-costallocation-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "basis": "fixed",
+        "startDate": "2026-03-03",
+        "contractId": "Voorbeeld Contractid 3",
+        "splits": [
+          {
+            "costCenter": "Voorbeeld Costcenter 3",
+            "percentage": 100.0,
+            "projectId": "Voorbeeld Projectid 3"
+          }
+        ],
+        "endDate": "2026-03-03",
+        "note": "Voorbeeld Note 3",
+        "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WageCostAllocation",
+          "slug": "wagecostallocation-wagecostallocation-1-1"
+        },
+        "payslipId": "Voorbeeld Payslipid 1",
+        "payrollRunId": "Voorbeeld Payrollrunid 1",
+        "period": "Voorbeeld Period 1",
+        "percentage": 0.0,
+        "gross": 1.0,
+        "employerCharges": 1.0,
+        "totalCost": 1.0,
+        "allocationSource": "fixed",
+        "employeeId": "Voorbeeld Employeeid 1",
+        "costCenter": "Voorbeeld Costcenter 1",
+        "projectId": "Voorbeeld Projectid 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WageCostAllocation",
+          "slug": "wagecostallocation-wagecostallocation-2-2"
+        },
+        "payslipId": "Voorbeeld Payslipid 2",
+        "payrollRunId": "Voorbeeld Payrollrunid 2",
+        "period": "Voorbeeld Period 2",
+        "percentage": 1.0,
+        "gross": 2.0,
+        "employerCharges": 2.0,
+        "totalCost": 2.0,
+        "allocationSource": "hours",
+        "employeeId": "Voorbeeld Employeeid 2",
+        "costCenter": "Voorbeeld Costcenter 2",
+        "projectId": "Voorbeeld Projectid 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WageCostAllocation",
+          "slug": "wagecostallocation-wagecostallocation-3-3"
+        },
+        "payslipId": "Voorbeeld Payslipid 3",
+        "payrollRunId": "Voorbeeld Payrollrunid 3",
+        "period": "Voorbeeld Period 3",
+        "percentage": 2.0,
+        "gross": 3.0,
+        "employerCharges": 3.0,
+        "totalCost": 3.0,
+        "allocationSource": "placement",
+        "employeeId": "Voorbeeld Employeeid 3",
+        "costCenter": "Voorbeeld Costcenter 3",
+        "projectId": "Voorbeeld Projectid 3",
+        "administrationId": "Voorbeeld Administrationid 3"
       }
     ]
   }

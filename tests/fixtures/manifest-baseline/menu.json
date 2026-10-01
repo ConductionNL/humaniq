@@ -630,6 +630,18 @@
 				"route": "PayrollRuns"
 			},
 			{
+				"id": "WageCosts",
+				"label": "Wage costs",
+				"icon": "ChartBar",
+				"route": "WageCosts"
+			},
+			{
+				"id": "CostAllocations",
+				"label": "Cost allocations",
+				"icon": "ScaleBalance",
+				"route": "CostAllocations"
+			},
+			{
 				"id": "LoonaangifteFilings",
 				"label": "Wage tax filings",
 				"icon": "FileSendOutline",

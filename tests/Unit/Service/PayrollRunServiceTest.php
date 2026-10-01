@@ -46,6 +46,7 @@ use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
 use OCA\Humaniq\Service\CaoComponentCalculator;
 use OCA\Humaniq\Service\CaoComponentPayService;
+use OCA\Humaniq\Service\CostAllocationService;
 use OCA\Humaniq\Service\EmploymentTermsResolver;
 use OCA\Humaniq\Service\HoursPayService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
@@ -233,10 +234,11 @@ class PayrollRunServiceTest extends TestCase {
 	 * @param PayrollExpenseFoldService|null $expenses The claims-and-allowances fold, or null for a run without it.
 	 * @param PayrollRunCheckService|null $runCheck The run check, or null for a run without it.
 	 * @param CaoComponentPayService|null $caoComponents The CAO components fold, or null for a run without it.
+	 * @param CostAllocationService|null $costAllocation The cost allocation, or null for a run without it.
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -258,7 +260,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents),
+			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation),
 			$fake,
 			$retentionGuard,
 		];
@@ -1973,5 +1975,35 @@ class PayrollRunServiceTest extends TestCase {
 		[$service] = $this->service($rows, null, null, null, $failing);
 		$this->assertSame('calculated', $service->runFor('2026-05')['status']);
 	}//end testACalculationRunsTheCheckWithTheSkippedList()
+
+	/**
+	 * payroll-cost-allocation D3: a calculation hands every saved payslip's
+	 * gross and employer charges to the allocation once, with the run; a
+	 * failing allocation is logged and does not fail the run.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-001
+	 */
+	public function testACalculationAllocatesEveryPayslip(): void {
+		$rows = ['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
+		$allocation = $this->createMock(CostAllocationService::class);
+		$allocation->expects($this->once())->method('allocateRun')->with(
+			$this->isType('string'),
+			'2026-05',
+			$this->isType('string'),
+			$this->callback(static fn (array $payslips): bool => count($payslips) === 1 && $payslips[0]['grossCents'] > 0 && $payslips[0]['chargesCents'] > 0 && ($payslips[0]['payslipId'] ?? '') !== '' && ($payslips[0]['employeeId'] ?? '') !== '')
+		)->willReturn(1);
+		[$service] = $this->service($rows, null, null, null, null, null, $allocation);
+
+		$result = $service->runFor('2026-05');
+		self::assertSame('calculated', $result['status']);
+		self::assertSame(1, $result['allocationLines']);
+
+		$failing = $this->createMock(CostAllocationService::class);
+		$failing->method('allocateRun')->willThrowException(new \RuntimeException('down'));
+		[$service] = $this->service($rows, null, null, null, null, null, $failing);
+		self::assertSame('calculated', $service->runFor('2026-05')['status']);
+	}//end testACalculationAllocatesEveryPayslip()
 
 }//end class

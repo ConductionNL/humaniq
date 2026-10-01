@@ -348,6 +348,22 @@
 		"route": "/comp-adjustments/:id"
 	},
 	{
+		"id": "CostAllocations",
+		"route": "/cost-allocations"
+	},
+	{
+		"id": "CostAllocationDetail",
+		"route": "/cost-allocations/:id"
+	},
+	{
+		"id": "WageCosts",
+		"route": "/wage-costs"
+	},
+	{
+		"id": "WageCostAllocationDetail",
+		"route": "/wage-costs/:id"
+	},
+	{
 		"id": "GeneratedDocuments",
 		"route": "/documents"
 	},
