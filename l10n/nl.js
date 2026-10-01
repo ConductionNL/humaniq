@@ -3489,7 +3489,26 @@ OC.L10N.register(
         "What kind of problem this is.": "Wat voor probleem dit is.",
         "Whether the problem stops the report.": "Of het probleem de opgaaf tegenhoudt.",
         "The payee the problem is about, if any.": "De ontvanger waar het probleem over gaat, als die er is.",
-        "The problem in words.": "Het probleem in woorden."
+        "The problem in words.": "Het probleem in woorden.",
+        "Apprenticeship (BBL)": "Leerwerkovereenkomst (BBL)",
+        "Average contracted hours a week": "Gemiddeld aantal contracturen per week",
+        "Contract ended within two months": "Dienstverband binnen twee maanden beëindigd",
+        "Contracted hours this year": "Contracturen dit jaar",
+        "Flexible contract": "Flexibel contract",
+        "How far the paid hours run above the contracted hours this year, in whole percent. Above 30 the low premium is reviewed after the year.": "Hoeveel de verloonde uren dit jaar boven de contracturen liggen, in hele procenten. Boven 30 wordt de lage premie na afloop van het jaar herzien.",
+        "Paid above contract": "Verloond boven contract",
+        "Paid hours this year": "Verloonde uren dit jaar",
+        "Permanent written contract": "Schriftelijk contract voor onbepaalde tijd",
+        "Reason for the premium rate": "Reden voor het premietarief",
+        "Set on the contract": "Vastgelegd op het contract",
+        "The contracted hours a week on average this year, rounded up. Above 30 the extra-hours review does not apply.": "Het gemiddeld aantal contracturen per week dit jaar, naar boven afgerond. Boven 30 geldt de herziening voor extra uren niet.",
+        "The contracted hours this calendar year up to and including this period.": "De contracturen in dit kalenderjaar tot en met deze periode.",
+        "The hours paid this calendar year up to and including this period.": "De verloonde uren in dit kalenderjaar tot en met deze periode.",
+        "The unemployment-fund rate applied: low for a permanent written contract or a signed apprenticeship (BBL), high otherwise. An employee under 21 on few hours is charged the low rate per period on the payslip.": "Het toegepaste AWf-tarief: laag voor een schriftelijk contract voor onbepaalde tijd of een ondertekende BBL-leerwerkovereenkomst, anders hoog. Voor een werknemer jonger dan 21 met weinig uren geldt per periode het lage tarief op de loonstrook.",
+        "The unemployment-fund rate this payslip was charged.": "Het AWf-tarief waartegen deze loonstrook is berekend.",
+        "Under 21 on few hours": "Jonger dan 21 met weinig uren",
+        "Unemployment premium rate": "Premietarief AWf",
+        "Why this payslip was charged the low or the high unemployment premium.": "Waarom op deze loonstrook de lage of de hoge AWf-premie is toegepast."
     },
     "nplurals=2; plural=(n != 1);"
 )

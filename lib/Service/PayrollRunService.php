@@ -162,6 +162,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\PackRepository;
@@ -240,6 +241,7 @@ class PayrollRunService {
 	 * @param PayrollRunCheckService|null $runCheck The run check that runs after every calculation (payroll-run-checks D2); null runs without it.
 	 * @param CaoComponentPayService|null $caoComponents The CAO components a contract names (payroll-cao-components D3); null runs without them.
 	 * @param CostAllocationService|null $costAllocation Splits each payslip's wage costs over cost centres and projects (payroll-cost-allocation D3); null runs without it.
+	 * @param AwfReviewService|null $awfReview Reviews the low Awf premium before the run reads its adjustments (filings-premium-differentiation D2/D3); null runs without it.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each optional fold (hours, claims and allowances) and the run check is its own collaborator, so a run without one stays byte-identical and a test names which fold ran.
 	 */
@@ -257,6 +259,7 @@ class PayrollRunService {
 		private readonly ?PayrollRunCheckService $runCheck = null,
 		private readonly ?CaoComponentPayService $caoComponents = null,
 		private readonly ?CostAllocationService $costAllocation = null,
+		private readonly ?AwfReviewService $awfReview = null,
 	) {
 
 	}//end __construct()
@@ -438,6 +441,9 @@ class PayrollRunService {
 		$contractsByEmployeeKey = $this->contractsByEmployeeKey();
 		$sickCasesByEmployeeKey = $this->openSickCasesByEmployeeKey();
 		$existingByEmployeeId = $this->enginePayslipsByEmployeeId($runId);
+		// filings-premium-differentiation D2/D3: the review writes its
+		// awf-herziening adjustments first, so this run settles them.
+		$this->awfReview?->review(period: $period, runId: $runId);
 		$retroAdjustmentsByEmployeeId = $this->appliedRetroAdjustmentsByEmployeeId($period);
 		$leaveBuySellByEmployeeId = $this->settledLeaveTransactionsByEmployeeId($period);
 		$loonbeslagenByEmployeeKey = $this->activeLoonbeslagenByEmployeeKey();
@@ -505,6 +511,12 @@ class PayrollRunService {
 
 			$grossMonthlySalaryCents = ($salaried === true ? (int)round(((float)$grossMonthly) * 100) : (int)($hoursPay['hourlyCents'] ?? 0));
 			$regularWageCents = $grossMonthlySalaryCents;
+
+			// filings-premium-differentiation D1: the Awf tariff follows the
+			// contract, the BBL and young part-timer exceptions and an early end.
+			$employeeContracts = $this->employeeContracts($employee, $contractsByEmployeeKey);
+			$awfPaidHours = $this->awfPaidHours(contract: $contract, hoursPay: $hoursPay, salaried: $salaried, period: $period);
+			$awf = AwfTariffResolver::resolve($contract, (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null), $period, $awfPaidHours, AwfTariffResolver::endsEarly($contract, $employeeContracts));
 
 			// sick-pay-calc (design.md D4): an open (gemeld) SickLeaveCase
 			// covering the period substitutes the doorbetaald loon for the
@@ -581,7 +593,7 @@ class PayrollRunService {
 				loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true),
 				dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null),
 				period: $period,
-				awfTariff: $this->awfTariffFor($contract),
+				awfTariff: $awf['tariff'],
 				aofTariff: $aofTariff,
 				whkPercentage: $whkPercentage,
 				verzekeringsplichtig: (($employee['isDga'] ?? false) !== true),
@@ -624,6 +636,7 @@ class PayrollRunService {
 			$payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents));
 			$payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
 			$payload = array_merge($payload, $this->hoursPayFields(hoursPay: $hoursPay, salaried: $salaried));
+			$payload = array_merge($payload, $this->awfFields(awf: $awf, employeeId: $employeeId, contracts: $employeeContracts, period: $period, paidHours: $awfPaidHours));
 			$payload = array_merge($payload, ($this->caoComponents?->payslipFields(fold: $caoFold) ?? []));
 			$payload = array_merge($payload, $this->expenseFields(fold: $expenseFold, netCents: ($nettoPaySoFarCents - $loonbeslagDeductionCents)));
 			$paidClaimIds = array_merge($paidClaimIds, (array)($expenseFold['claimIds'] ?? []));
@@ -1994,24 +2007,80 @@ class PayrollRunService {
 	}//end coversPeriod()
 
 	/**
-	 * The contract's Awf tariff for the calculator (`low`/`high`), falling
-	 * back to the Wab-derived expectation (permanent + written -> low, else
-	 * high) when the field is absent.
+	 * The hours paid in the period for the young part-timer test: the
+	 * approved hours of an hourly employee, the contracted hours of a
+	 * salaried one (hours a week x 13/3), plus overtime paid. Null when
+	 * nothing tells the hours, so the exception is not applied blindly.
 	 *
-	 * @param array<string, mixed> $contract The covering EmploymentContract.
+	 * @param array<string, mixed>      $contract The covering contract.
+	 * @param array<string, mixed>|null $hoursPay The hours fold, or null.
+	 * @param bool                      $salaried Whether the employee has a monthly salary.
+	 * @param string                    $period   The period.
 	 *
-	 * @return string `low` or `high`.
+	 * @return float|null
+	 *
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-101
 	 */
-	private function awfTariffFor(array $contract): string {
-		$tariff = trim((string)($contract['awfTariff'] ?? ''));
-		if (in_array($tariff, ['low', 'high'], true) === true) {
-			return $tariff;
+	private function awfPaidHours(array $contract, ?array $hoursPay, bool $salaried, string $period): ?float {
+		$overtime = (float)($hoursPay['overtimeHours'] ?? 0.0);
+		if ($salaried === false) {
+			return ((float)($hoursPay['hoursPaid'] ?? 0.0) + $overtime);
 		}
 
-		$permanent = ((string)($contract['type'] ?? '') === 'permanent');
-		$written = (($contract['writtenContract'] ?? false) === true);
-		return ($permanent === true && $written === true) ? 'low' : 'high';
-	}//end awfTariffFor()
+		$contracted = AwfTariffResolver::contractHoursIn($contract, $period);
+		return ($contracted > 0.0 ? round($contracted + $overtime, 2) : null);
+	}//end awfPaidHours()
+
+	/**
+	 * The Awf fields of a payslip: the tariff and why, and with the review
+	 * wired the year-to-date hours the signal rule reads.
+	 *
+	 * @param array{tariff: string, basis: string} $awf        The resolved tariff.
+	 * @param string                               $employeeId The employee.
+	 * @param array<int, array<string, mixed>>     $contracts  The employee's contracts.
+	 * @param string                               $period     The period.
+	 * @param float|null                           $paidHours  The hours paid, or null.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
+	 */
+	private function awfFields(array $awf, string $employeeId, array $contracts, string $period, ?float $paidHours): array {
+		$fields = ['awfTariff' => $awf['tariff'], 'awfTariffBasis' => $awf['basis']];
+		if ($this->awfReview === null) {
+			return $fields;
+		}
+
+		$ytd = $this->awfReview->yearToDate(employeeId: $employeeId, contracts: $contracts, period: $period, paidHours: (float)$paidHours, low: $awf['tariff'] === 'low');
+		return array_merge(
+			$fields,
+			[
+				'awfPaidHoursYearToDate' => $ytd['paid'],
+				'awfContractHoursYearToDate' => $ytd['contract'],
+				'awfAverageContractHoursPerWeek' => $ytd['averageHoursPerWeek'],
+				'awfOverrunPercentYearToDate' => $ytd['overrunPercent'],
+			]
+		);
+	}//end awfFields()
+
+	/**
+	 * Every contract of an employee, over the id/slug/employeeNumber keys.
+	 *
+	 * @param array<string, mixed>                            $employee               The Employee.
+	 * @param array<string, array<int, array<string, mixed>>> $contractsByEmployeeKey The contract index.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function employeeContracts(array $employee, array $contractsByEmployeeKey): array {
+		$out = [];
+		foreach ([$this->idOf($employee), (string)($employee['@self']['slug'] ?? ''), trim((string)($employee['employeeNumber'] ?? ''))] as $key) {
+			if ($key !== '') {
+				$out = array_merge($out, ($contractsByEmployeeKey[$key] ?? []));
+			}
+		}
+
+		return $out;
+	}//end employeeContracts()
 
 	/**
 	 * A human label for an Employee in outcome reporting.

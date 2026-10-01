@@ -504,4 +504,28 @@ class RetroAdjustmentServiceTest extends TestCase {
 
 	}//end testApplyStampsSettlementRunAndFlipsStatus()
 
+	/**
+	 * filings-premium-differentiation REQ-AWF-101: the recalculation charges
+	 * a signed BBL contract the low Awf rate like the run does (the anchor's
+	 * 33,14), not the high rate the old private copy gave every non-permanent
+	 * contract (5% x 3.800 = 190,00 more). A period the run stamped high
+	 * stays high.
+	 *
+	 * @return void
+	 */
+	public function testTheRecalculationUsesTheSharedAwfResolution(): void {
+		$rows = $this->sealedRows();
+		$rows['EmploymentContract'] = [$this->contract(['type' => 'bbl', 'writtenContract' => true, 'bpvOvereenkomstOndertekend' => true, 'awfTariff' => null])];
+		[$service, $fake] = $this->service($rows);
+		$service->adjustFor('2026-02', 'emp-1', 't1', 3800.00, 'backdated-raise', '2026-04');
+		$this->assertSame(33.14, $this->savedFor($fake, 'PayrollAdjustment')[0]['deltaWerknemersverzekeringen']);
+
+		$rows = $this->sealedRows();
+		$rows['Payslip'] = [$this->storedPayslip(['awfTariff' => 'high', 'awfTariffBasis' => 'early-end'])];
+		[$service, $fake] = $this->service($rows);
+		$service->adjustFor('2026-02', 'emp-1', 't1', 3800.00, 'backdated-raise', '2026-04');
+		$this->assertSame(223.14, $this->savedFor($fake, 'PayrollAdjustment')[0]['deltaWerknemersverzekeringen']);
+
+	}//end testTheRecalculationUsesTheSharedAwfResolution()
+
 }//end class

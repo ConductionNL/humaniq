@@ -44,11 +44,23 @@
       "jurisdiction": "NL",
       "framework": "nl-loonheffingen",
       "source": "Wfsv (Wab) Awf low/high tariff",
-      "statement": "The Algemeen werkloosheidsfonds (Awf) premium shall apply the low tariff for permanent written contracts and the high tariff (5 percentage points higher) for flexible/temporary contracts.",
+      "statement": "The Algemeen werkloosheidsfonds (Awf) premium shall apply the low tariff for permanent written contracts, for signed BBL contracts without an uitzendbeding and for employees under 21 at the start of the period paid at most 52 hours in a month (48 in four weeks), and the high tariff (5 percentage points higher) for every other contract.",
       "severity": "conditional",
       "machineCheckable": true,
       "effectiveDate": "2020-01-01",
       "sourceUrl": "https://wetten.overheid.nl/BWBR0019057"
+    },
+    {
+      "id": "nl-awf-herziening-uren-signaal",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Handboek Loonheffingen 2026 par. 7.2.3 (herzien lage premie AWf)",
+      "statement": "An employee charged the low Awf premium on an average of 30 contracted hours a week or less who is paid more than 30 percent above the contracted hours in a calendar year shall have the low premium reviewed to the high premium over that year; the payroll should signal the overrun while the year runs.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": "2025-01-01",
+      "sourceUrl": "https://download.belastingdienst.nl/belastingdienst/docs/handboek-loonheffingen-lh0221t61fd.pdf"
     },
     {
       "id": "nl-zvw-werkgeversheffing",
