@@ -157,6 +157,8 @@ class ThirdPartyReportService {
 	 * @param string $initials The payee's initials.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-001
 	 */
 	public static function initials(string $initials): string {
 		$initials = trim($initials);
@@ -342,6 +344,8 @@ class ThirdPartyReportService {
 	 * @param list<array<string, string>>     $findings       The findings, appended to.
 	 *
 	 * @return array<string, string>
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) UbdMessage is a stateless renderer and validator.
 	 */
 	private function message(array $administration, array $lines, int $year, array &$findings): array {
 		$now = new DateTimeImmutable('now', new DateTimeZone('Europe/Amsterdam'));

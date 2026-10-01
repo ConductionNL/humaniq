@@ -161,12 +161,7 @@ class Application extends App implements IBootstrap {
 		// by its FQCN so OpenRegister's LifecycleGuardRegistry resolves the
 		// `requires` tag declared on the transitions. The guard has no app
 		// dependencies, so a plain construction closure suffices.
-		$context->registerService(
-			NoSelfApprovalGuard::class,
-			static function ($c): NoSelfApprovalGuard {
-				return new NoSelfApprovalGuard();
-			}
-		);
+		$context->registerService(NoSelfApprovalGuard::class, static fn ($c): NoSelfApprovalGuard => new NoSelfApprovalGuard());
 
 		// OpenRegister lifecycle guard for the PensionFiling `controleren` transition
 		// (pension-filing-upa-mvp) — denies review unless the referenced PayrollRun is
@@ -313,10 +308,9 @@ class Application extends App implements IBootstrap {
 			}
 		);
 
-		// payroll-external-bureau-handoff D3, D4: four eyes on klaarzetten, no afsluiten over blocking findings.
+		// payroll-external-bureau-handoff D3, D4 (four eyes, no afsluiten over blocking findings); filings-ib47 D2 (UBD report ready only when valid).
 		$context->registerService(HandoffReleaseGuard::class, static fn ($c): HandoffReleaseGuard => new HandoffReleaseGuard());
 		$context->registerService(HandoffCloseGuard::class, static fn ($c): HandoffCloseGuard => new HandoffCloseGuard());
-		// filings-ib47 D2: a third-party payments report is made ready only with a validated message and no blocking finding.
 		$context->registerService(UbdReportReadyGuard::class, static fn ($c): UbdReportReadyGuard => new UbdReportReadyGuard());
 
 		// jurisdiction-packs (design.md D7): the pack resolver spans two homes —

@@ -158,11 +158,11 @@ class ThirdPartyReportControllerTest extends TestCase {
 		$service = $this->createMock(ThirdPartyReportService::class);
 		$service->expects($this->never())->method('assemble');
 		$statements = $this->createMock(ThirdPartyStatementService::class);
-		$statements->expects($this->never())->method('generate');
+		$statements->expects($this->never())->method('generateForReport');
 		$controller = $this->controller(false, ['hrAdministration' => [['administrationId' => 'ADM-001']]], $service, $statements);
 
 		$this->assertSame(403, $controller->assemble('ADM-001', '2026')->getStatus());
-		$this->assertSame(403, $controller->statement('payee-1', '2026')->getStatus());
+		$this->assertSame(403, $controller->statements('r-1')->getStatus());
 	}//end testAnEmployeeIsRefused()
 
 	/**
@@ -201,25 +201,25 @@ class ThirdPartyReportControllerTest extends TestCase {
 	}//end testPayrollAssemblesAYear()
 
 	/**
-	 * The statement needs a payee the caller can read; a failed or skipped
-	 * generation is a 409 with its message.
+	 * The statements need a report the caller can read; a run that
+	 * generated nothing is a 409 with its outcome.
 	 *
 	 * @return void
 	 */
-	public function testTheStatementResolvesThePayeeFirst(): void {
+	public function testTheStatementsResolveTheReportFirst(): void {
 		$statements = $this->createMock(ThirdPartyStatementService::class);
-		$statements->expects($this->exactly(2))->method('generate')->with('payee-1', 2026, 'payroll-1')->willReturnOnConsecutiveCalls(
-			['status' => 'generated', 'message' => 'Jaaropgaaf gegenereerd en opgeslagen.'],
-			['status' => 'skipped-no-filinq', 'message' => 'filinq is niet beschikbaar.']
+		$report = ['id' => 'r-1', 'administrationId' => 'ADM-001', 'year' => 2026, 'status' => 'verzonden'];
+		$statements->expects($this->exactly(2))->method('generateForReport')->with($report, 'payroll-1')->willReturnOnConsecutiveCalls(
+			['generated' => 2, 'results' => []],
+			['generated' => 0, 'results' => [['payeeId' => 'p-1', 'status' => 'skipped-no-filinq', 'message' => 'filinq is niet geïnstalleerd.']]]
 		);
-		$controller = $this->controller(true, ['ThirdPartyPayee' => [['id' => 'payee-1', 'lastName' => 'Dijk']]], null, $statements);
+		$controller = $this->controller(true, ['ThirdPartyReport' => [$report]], null, $statements);
 
-		$this->assertSame(404, $controller->statement('forbidden', '2026')->getStatus());
-		$this->assertSame(404, $controller->statement('payee-x', '2026')->getStatus());
-		$this->assertSame(400, $controller->statement('', '2026')->getStatus());
-		$this->assertSame(400, $controller->statement('payee-1', '')->getStatus());
-		$this->assertSame(200, $controller->statement('payee-1', '2026')->getStatus());
-		$this->assertSame(409, $controller->statement('payee-1', '2026')->getStatus());
-	}//end testTheStatementResolvesThePayeeFirst()
+		$this->assertSame(404, $controller->statements('forbidden')->getStatus());
+		$this->assertSame(404, $controller->statements('r-x')->getStatus());
+		$this->assertSame(400, $controller->statements('')->getStatus());
+		$this->assertSame(200, $controller->statements('r-1')->getStatus());
+		$this->assertSame(409, $controller->statements('r-1')->getStatus());
+	}//end testTheStatementsResolveTheReportFirst()
 
 }//end class

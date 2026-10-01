@@ -102,7 +102,7 @@ class ThirdPartyStatementService {
 			'documentType' => self::DOCUMENT_TYPE,
 			'year' => $year,
 			'payee' => [
-				'name' => trim(implode(' ', array_filter([(string)($payee['initials'] ?? ''), (string)($payee['prefix'] ?? ''), (string)($payee['lastName'] ?? '')], static fn (string $p): bool => trim($p) !== ''))),
+				'name' => trim(implode(' ', array_filter([(string)($payee['initials'] ?? ''), (string)($payee['prefix'] ?? ''), (string)($payee['lastName'] ?? '')], static fn (string $part): bool => trim($part) !== ''))),
 				'addressLines' => [
 					trim((string)($payee['street'] ?? '') . ' ' . (string)($payee['houseNumber'] ?? '') . (string)($payee['houseNumberAddition'] ?? '')),
 					trim((string)($payee['postcode'] ?? '') . ' ' . (string)($payee['city'] ?? '')),
@@ -172,5 +172,36 @@ class ThirdPartyStatementService {
 
 		return ['status' => 'generated', 'message' => 'Jaaropgaaf gegenereerd en bij de ontvanger opgeslagen.', 'fileName' => $fileName];
 	}//end generate()
+
+	/**
+	 * Generate the statement of every payee with payments in a report's
+	 * administration and year.
+	 *
+	 * @param array<string, mixed> $report The ThirdPartyReport.
+	 * @param string               $userId The account generating them.
+	 *
+	 * @return array{generated: int, results: list<array{payeeId: string, status: string, message: string}>}
+	 *
+	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-003
+	 */
+	public function generateForReport(array $report, string $userId): array {
+		$year = (int)($report['year'] ?? 0);
+		$payeeIds = [];
+		foreach ($this->gateway->findFiltered('ThirdPartyPayment', ['administrationId' => (string)($report['administrationId'] ?? '')]) as $payment) {
+			if (str_starts_with((string)($payment['paidOn'] ?? ''), $year . '-') === true && (string)($payment['payeeId'] ?? '') !== '') {
+				$payeeIds[(string)$payment['payeeId']] = true;
+			}
+		}
+
+		$payeeIds = array_keys($payeeIds);
+		sort($payeeIds);
+		$results = [];
+		foreach ($payeeIds as $payeeId) {
+			$outcome = $this->generate(payeeId: (string)$payeeId, year: $year, userId: $userId);
+			$results[] = ['payeeId' => (string)$payeeId, 'status' => $outcome['status'], 'message' => $outcome['message']];
+		}
+
+		return ['generated' => count(array_filter($results, static fn (array $result): bool => $result['status'] === 'generated')), 'results' => $results];
+	}//end generateForReport()
 
 }//end class

@@ -34,7 +34,6 @@ use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\ThirdPartyReportService;
 use OCA\Humaniq\Service\ThirdPartyStatementService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -100,64 +99,63 @@ class ThirdPartyReportController extends Controller {
 		$administrationId = trim((string)$administrationId);
 		$year = $this->year($year);
 		if ($administrationId === '' || $year === null) {
-			return new JSONResponse(['error' => 'administrationId en year (JJJJ) zijn verplicht.'], Http::STATUS_BAD_REQUEST);
+			return new JSONResponse(['error' => 'administrationId en year (JJJJ) zijn verplicht.'], 400);
 		}
 
 		if ($this->administrationReadable($administrationId) === false) {
-			return new JSONResponse(['error' => 'Administratie niet gevonden.'], Http::STATUS_NOT_FOUND);
+			return new JSONResponse(['error' => 'Administratie niet gevonden.'], 404);
 		}
 
 		$outcome = $this->reports->assemble($administrationId, $year, $uid);
 		if (($outcome['status'] ?? '') !== 'assembled') {
-			return new JSONResponse($outcome, Http::STATUS_CONFLICT);
+			return new JSONResponse($outcome, 409);
 		}
 
 		return new JSONResponse($outcome);
 	}//end assemble()
 
 	/**
-	 * Generate a payee's statement for a year. 403 outside HR and payroll,
-	 * 400 on a blank payee or a year that is not a year, 404 when the payee
+	 * Generate the yearly statement of every payee a report covers. 403
+	 * outside HR and payroll, 400 on a blank report id, 404 when the report
 	 * does not resolve for the caller, 409 when nothing was generated.
 	 *
-	 * @param string|null $payeeId The ThirdPartyPayee id.
-	 * @param string|null $year    The year, YYYY.
+	 * @param string|null $reportId The ThirdPartyReport id.
 	 *
 	 * @return JSONResponse
 	 *
 	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-003
 	 */
 	#[NoAdminRequired]
-	public function statement(?string $payeeId = null, ?string $year = null): JSONResponse {
+	public function statements(?string $reportId = null): JSONResponse {
 		$uid = $this->allowedCaller();
 		if ($uid === null) {
 			return $this->forbidden();
 		}
 
-		$payeeId = trim((string)$payeeId);
-		$year = $this->year($year);
-		if ($payeeId === '' || $year === null) {
-			return new JSONResponse(['error' => 'payeeId en year (JJJJ) zijn verplicht.'], Http::STATUS_BAD_REQUEST);
+		$reportId = trim((string)$reportId);
+		if ($reportId === '') {
+			return new JSONResponse(['error' => 'reportId is verplicht.'], 400);
 		}
 
 		try {
-			$payee = $this->objects()->find(id: $payeeId, register: $this->settings->getRegisterSlug(), schema: 'ThirdPartyPayee');
+			$report = $this->objects()->find(id: $reportId, register: $this->settings->getRegisterSlug(), schema: 'ThirdPartyReport');
 		} catch (\Throwable $e) {
-			$this->logger->info('ThirdPartyReportController: payee ' . $payeeId . ' could not be read: ' . $e->getMessage());
-			$payee = null;
+			$this->logger->info('ThirdPartyReportController: report ' . $reportId . ' could not be read: ' . $e->getMessage());
+			$report = null;
 		}
 
-		if ($payee === null || $this->settings->isOpenRegisterAvailable() === false) {
-			return new JSONResponse(['error' => 'Ontvanger niet gevonden.'], Http::STATUS_NOT_FOUND);
+		if ($report === null || $this->settings->isOpenRegisterAvailable() === false) {
+			return new JSONResponse(['error' => 'Overzicht niet gevonden.'], 404);
 		}
 
-		$outcome = $this->statements->generate($payeeId, $year, $uid);
-		if (($outcome['status'] ?? '') !== 'generated') {
-			return new JSONResponse($outcome, Http::STATUS_CONFLICT);
+		$report = (is_object($report) === true && method_exists($report, 'jsonSerialize') === true) ? (array)$report->jsonSerialize() : (array)$report;
+		$outcome = $this->statements->generateForReport($report, $uid);
+		if ($outcome['generated'] === 0) {
+			return new JSONResponse($outcome, 409);
 		}
 
 		return new JSONResponse($outcome);
-	}//end statement()
+	}//end statements()
 
 	/**
 	 * The year as an integer between 2000 and 2100, or null.
@@ -196,7 +194,7 @@ class ThirdPartyReportController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function forbidden(): JSONResponse {
-		return new JSONResponse(['error' => 'Alleen HR, de salarisadministratie en beheerders mogen betalingen aan derden opgeven.'], Http::STATUS_FORBIDDEN);
+		return new JSONResponse(['error' => 'Alleen HR, de salarisadministratie en beheerders mogen betalingen aan derden opgeven.'], 403);
 	}//end forbidden()
 
 	/**

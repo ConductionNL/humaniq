@@ -196,4 +196,22 @@ class ThirdPartyStatementServiceTest extends TestCase {
 		self::assertSame('failed', $this->service->generate(payeeId: 'payee-lecturer', year: 2026, userId: 'payroll-1')['status']);
 	}//end testGenerationThroughFilinq()
 
+	/**
+	 * Generating for a report makes one statement per payee with payments
+	 * in the report's administration and year, and reports each outcome.
+	 *
+	 * @return void
+	 */
+	public function testGenerationForAReport(): void {
+		$this->store->seed('ThirdPartyPayee', 'payee-member', ['initials' => 'A.', 'lastName' => 'Bos', 'administrationId' => 'ADM-001']);
+		$this->store->seed('ThirdPartyPayment', 'pay-3', ['payeeId' => 'payee-member', 'paidOn' => '2026-04-15', 'amount' => 275.75, 'administrationId' => 'ADM-001']);
+		$this->store->seed('ThirdPartyPayment', 'pay-other', ['payeeId' => 'payee-other', 'paidOn' => '2026-05-01', 'amount' => 999.00, 'administrationId' => 'ADM-002']);
+
+		$outcome = $this->service->generateForReport(report: ['id' => 'r-1', 'administrationId' => 'ADM-001', 'year' => 2026], userId: 'payroll-1');
+
+		self::assertSame(0, $outcome['generated']);
+		self::assertSame(['payee-lecturer', 'payee-member'], array_column($outcome['results'], 'payeeId'));
+		self::assertSame(['skipped-no-filinq', 'skipped-no-filinq'], array_column($outcome['results'], 'status'));
+	}//end testGenerationForAReport()
+
 }//end class

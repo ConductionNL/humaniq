@@ -46,16 +46,18 @@ final class NlThirdPartyChecks implements CheckProvider {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-002
 	 */
 	public static function checks(): array {
 		return [
 			'ThirdPartyPayment' => [
 				// Belastingdienst, opgaaf uitbetaalde bedragen aan derden: report by 31 January of the next year.
-				'nl-ubd-deadline' => static fn (array $o, array $c): bool => self::reportedInTime($o, $c),
+				'nl-ubd-deadline' => static fn (array $object, array $context): bool => self::reportedInTime($object, $context),
 			],
 			'ThirdPartyPayee' => [
 				// UBD message: ONTVANGER/geboortedatum and bSN are mandatory for a natural person.
-				'nl-ubd-payee-identification' => static fn (array $o, array $c): bool => self::identified($o, $c),
+				'nl-ubd-payee-identification' => static fn (array $object, array $context): bool => self::identified($object, $context),
 			],
 		];
 
@@ -65,6 +67,8 @@ final class NlThirdPartyChecks implements CheckProvider {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-002
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -75,43 +79,43 @@ final class NlThirdPartyChecks implements CheckProvider {
 	 * administration's report for that year is sent. The audit date is
 	 * `context['today']` when given, else today.
 	 *
-	 * @param array<string, mixed> $o The ThirdPartyPayment.
-	 * @param array<string, mixed> $c Evaluation context (carries `ubd.sent`).
+	 * @param array<string, mixed> $object  The ThirdPartyPayment.
+	 * @param array<string, mixed> $context Evaluation context (carries `ubd.sent`).
 	 *
 	 * @return bool
 	 */
-	private static function reportedInTime(array $o, array $c): bool {
-		$paidOn = (string)($o['paidOn'] ?? '');
+	private static function reportedInTime(array $object, array $context): bool {
+		$paidOn = (string)($object['paidOn'] ?? '');
 		if (preg_match('/^(\d{4})-\d{2}-\d{2}$/', $paidOn, $matches) !== 1) {
 			return true;
 		}
 
 		$year = (int)$matches[1];
-		$today = new DateTimeImmutable((string)($c['today'] ?? 'today'));
+		$today = new DateTimeImmutable((string)($context['today'] ?? 'today'));
 		if ($today <= new DateTimeImmutable(($year + 1) . '-01-31')) {
 			return true;
 		}
 
-		$key = trim((string)($o['administrationId'] ?? '')) . '|' . $year;
-		return isset($c['ubd']['sent'][$key]) === true;
+		$key = trim((string)($object['administrationId'] ?? '')) . '|' . $year;
+		return isset($context['ubd']['sent'][$key]) === true;
 	}//end reportedInTime()
 
 	/**
 	 * True when the payee has a BSN and a date of birth, or nobody paid
 	 * them.
 	 *
-	 * @param array<string, mixed> $o The ThirdPartyPayee.
-	 * @param array<string, mixed> $c Evaluation context (carries `ubd.paidPayees`).
+	 * @param array<string, mixed> $object  The ThirdPartyPayee.
+	 * @param array<string, mixed> $context Evaluation context (carries `ubd.paidPayees`).
 	 *
 	 * @return bool
 	 */
-	private static function identified(array $o, array $c): bool {
-		$id = (string)($o['id'] ?? $o['@self']['id'] ?? '');
-		if (isset($c['ubd']['paidPayees'][$id]) === false) {
+	private static function identified(array $object, array $context): bool {
+		$id = (string)($object['id'] ?? $object['@self']['id'] ?? '');
+		if (isset($context['ubd']['paidPayees'][$id]) === false) {
 			return true;
 		}
 
-		return trim((string)($o['bsn'] ?? '')) !== '' && trim((string)($o['dateOfBirth'] ?? '')) !== '';
+		return trim((string)($object['bsn'] ?? '')) !== '' && trim((string)($object['dateOfBirth'] ?? '')) !== '';
 	}//end identified()
 
 }//end class
