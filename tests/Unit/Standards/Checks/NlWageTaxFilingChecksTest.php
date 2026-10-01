@@ -226,4 +226,30 @@ class NlWageTaxFilingChecksTest extends TestCase {
 
 	}//end testAllThreeNewRuleIdsAreRegistered()
 
+	/**
+	 * A filing whose run was recalculated after the message was made, or
+	 * whose run's wage tax changed, drifted; a filing without a message, or
+	 * whose run still matches, does not (filings-wage-tax-message D4).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 */
+	public function testTheMessageDriftRule(): void {
+		$rule = $this->checks['nl-loonaangifte-message-drift'];
+		$run = ['id' => 'run-06', 'calculatedAt' => '2026-06-24T10:00:00Z', 'totalLoonheffing' => 1036.66];
+		$context = ['payroll' => ['runsById' => ['run-06' => $run]]];
+		$filing = $this->filing(['period' => '2026-06', 'messageXml' => '<Loonaangifte/>', 'messageRunId' => 'run-06', 'messageRunCalculatedAt' => '2026-06-24T10:00:00Z', 'messageRunTotalLoonheffing' => 1036.66]);
+
+		$this->assertTrue($rule($filing, $context), 'the run still matches');
+		$this->assertTrue($rule($this->filing(), $context), 'no message made');
+		$this->assertTrue($rule($filing, []), 'no payroll context built');
+
+		$recalculated = ['payroll' => ['runsById' => ['run-06' => array_merge($run, ['calculatedAt' => '2026-06-25T09:00:00Z'])]]];
+		$this->assertFalse($rule($filing, $recalculated), 'recalculated after the message');
+		$changed = ['payroll' => ['runsById' => ['run-06' => array_merge($run, ['totalLoonheffing' => 1100.00])]]];
+		$this->assertFalse($rule($filing, $changed), 'the wage tax changed');
+		$this->assertFalse($rule($filing, ['payroll' => ['runsById' => []]]), 'the run is gone');
+	}//end testTheMessageDriftRule()
+
 }//end class
