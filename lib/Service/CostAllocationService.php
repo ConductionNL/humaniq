@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -51,11 +52,13 @@ class CostAllocationService {
 	 * @param HoursRegisterGateway $gateway       The register plumbing.
 	 * @param OrgResolutionService $orgResolution The placement date rule.
 	 * @param LoggerInterface      $logger        The logger.
+	 * @param CostAllocationShares $shares        The share arithmetic.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly OrgResolutionService $orgResolution,
 		private readonly LoggerInterface $logger,
+		private readonly CostAllocationShares $shares = new CostAllocationShares(),
 	) {
 
 	}//end __construct()
@@ -103,7 +106,7 @@ class CostAllocationService {
 		$placement = $this->placementCostCenters(employeeId: $employeeId, inputs: $inputs, from: $from, until: $until);
 
 		if ($allocation !== null && ($allocation['basis'] ?? 'fixed') === 'fixed') {
-			$shares = $this->fixedShares($allocation);
+			$shares = $this->shares->fixedShares($allocation);
 			if ($shares !== []) {
 				return $shares;
 			}
@@ -111,23 +114,35 @@ class CostAllocationService {
 
 		if ($allocation !== null && ($allocation['basis'] ?? '') === 'hours') {
 			$fallback = (count($placement) === 1 ? $placement[0] : null);
-			$shares = $this->hoursShares(entries: ($inputs['hoursByEmployee'][$employeeId] ?? []), fallbackCostCenter: $fallback);
+			$shares = $this->shares->hoursShares(entries: ($inputs['hoursByEmployee'][$employeeId] ?? []), fallbackCostCenter: $fallback);
 			if ($shares !== []) {
 				return $shares;
 			}
 		}
 
-		if ($placement !== []) {
-			$source = (count($placement) === 1 ? 'placement' : 'placement-equal-split');
-			$each = round((100 / count($placement)), 2);
-			return array_map(
-				static fn (string $costCenter): array => ['costCenter' => $costCenter, 'projectId' => null, 'percentage' => $each, 'allocationSource' => $source],
-				$placement
-			);
+		return $this->placementShares($placement);
+	}//end splitFor()
+
+	/**
+	 * The shares of the placements' cost centres, split equally; one
+	 * unallocated share when there is none.
+	 *
+	 * @param list<string> $placement The distinct cost centres.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function placementShares(array $placement): array {
+		if ($placement === []) {
+			return [['costCenter' => null, 'projectId' => null, 'percentage' => 100.0, 'allocationSource' => 'unallocated']];
 		}
 
-		return [['costCenter' => null, 'projectId' => null, 'percentage' => 100.0, 'allocationSource' => 'unallocated']];
-	}//end splitFor()
+		$source = (count($placement) === 1 ? 'placement' : 'placement-equal-split');
+		$each = round((100 / count($placement)), 2);
+		return array_map(
+			static fn (string $costCenter): array => ['costCenter' => $costCenter, 'projectId' => null, 'percentage' => $each, 'allocationSource' => $source],
+			$placement
+		);
+	}//end placementShares()
 
 	/**
 	 * The allocation lines of one payslip: its gross and employer charges
@@ -144,8 +159,8 @@ class CostAllocationService {
 	 */
 	public function linesFor(array $shares, int $grossCents, int $chargesCents): array {
 		$weights = array_map(static fn (array $share): float => max(0.0, (float)$share['percentage']), $shares);
-		$gross = $this->splitCents(total: $grossCents, weights: $weights);
-		$charges = $this->splitCents(total: $chargesCents, weights: $weights);
+		$gross = $this->shares->splitCents(total: $grossCents, weights: $weights);
+		$charges = $this->shares->splitCents(total: $chargesCents, weights: $weights);
 
 		$lines = [];
 		foreach ($shares as $i => $share) {
@@ -277,65 +292,6 @@ class CostAllocationService {
 	}//end coveringAllocation()
 
 	/**
-	 * The shares of a fixed split.
-	 *
-	 * @param array<string, mixed> $allocation The allocation.
-	 *
-	 * @return list<array<string, mixed>>
-	 */
-	private function fixedShares(array $allocation): array {
-		$shares = [];
-		foreach ((array)($allocation['splits'] ?? []) as $split) {
-			$costCenter = trim((string)($split['costCenter'] ?? ''));
-			if ($costCenter === '' || is_numeric($split['percentage'] ?? null) === false) {
-				continue;
-			}
-
-			$shares[] = ['costCenter' => $costCenter, 'projectId' => $this->codeOrNull($split['projectId'] ?? null), 'percentage' => (float)$split['percentage'], 'allocationSource' => 'fixed'];
-		}
-
-		return $shares;
-	}//end fixedShares()
-
-	/**
-	 * The shares of the hours booked, per cost centre and project, in the
-	 * order they first appear.
-	 *
-	 * @param list<array<string, mixed>> $entries            The approved entries.
-	 * @param string|null                $fallbackCostCenter The placement's cost centre for entries without one.
-	 *
-	 * @return list<array<string, mixed>>
-	 */
-	private function hoursShares(array $entries, ?string $fallbackCostCenter): array {
-		$hours = [];
-		$keys = [];
-		foreach ($entries as $entry) {
-			$value = (is_numeric($entry['hours'] ?? null) === true ? (float)$entry['hours'] : 0.0);
-			if ($value <= 0.0) {
-				continue;
-			}
-
-			$costCenter = ($this->codeOrNull($entry['costCenter'] ?? null) ?? $fallbackCostCenter);
-			$projectId = $this->codeOrNull($entry['projectId'] ?? null);
-			$key = ($costCenter ?? '') . '|' . ($projectId ?? '');
-			$keys[$key] = [$costCenter, $projectId];
-			$hours[$key] = (($hours[$key] ?? 0.0) + $value);
-		}
-
-		$total = array_sum($hours);
-		if ($total <= 0.0) {
-			return [];
-		}
-
-		$shares = [];
-		foreach ($hours as $key => $value) {
-			$shares[] = ['costCenter' => $keys[$key][0], 'projectId' => $keys[$key][1], 'percentage' => round(($value / $total * 100), 2), 'allocationSource' => 'hours'];
-		}
-
-		return $shares;
-	}//end hoursShares()
-
-	/**
 	 * The distinct cost centres of the placements covering any day of the
 	 * period, in placement order.
 	 *
@@ -355,7 +311,7 @@ class CostAllocationService {
 				continue;
 			}
 
-			$costCenter = $this->codeOrNull($inputs['unitsById'][(string)($assignment['orgUnitId'] ?? '')]['costCenter'] ?? null);
+			$costCenter = $this->shares->codeOrNull($inputs['unitsById'][(string)($assignment['orgUnitId'] ?? '')]['costCenter'] ?? null);
 			if ($costCenter !== null && in_array($costCenter, $found, true) === false) {
 				$found[] = $costCenter;
 			}
@@ -385,41 +341,6 @@ class CostAllocationService {
 	}//end overlaps()
 
 	/**
-	 * Split an amount in cents by weights; the remainder goes to the
-	 * largest weight.
-	 *
-	 * @param int         $total   The amount, in cents.
-	 * @param list<float> $weights The weights.
-	 *
-	 * @return list<int>
-	 */
-	private function splitCents(int $total, array $weights): array {
-		$sum = array_sum($weights);
-		if ($sum <= 0.0) {
-			$weights = array_fill(0, count($weights), 1.0);
-			$sum = (float)count($weights);
-		}
-
-		$parts = array_map(static fn (float $weight): int => (int)round($total * $weight / $sum), $weights);
-		$largest = array_keys($weights, max($weights), true)[0];
-		$parts[$largest] += ($total - array_sum($parts));
-
-		return $parts;
-	}//end splitCents()
-
-	/**
-	 * A trimmed code, or null when empty.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return string|null
-	 */
-	private function codeOrNull(mixed $value): ?string {
-		$code = trim((string)($value ?? ''));
-		return ($code === '' ? null : $code);
-	}//end codeOrNull()
-
-	/**
 	 * The first and last day of a YYYY-MM period.
 	 *
 	 * @param string $period The period.
@@ -427,9 +348,10 @@ class CostAllocationService {
 	 * @return array{0: string, 1: string}
 	 */
 	private function periodBounds(string $period): array {
-		$first = \DateTimeImmutable::createFromFormat('!Y-m-d', $period . '-01');
-		if ($first === false) {
-			$first = new \DateTimeImmutable('first day of this month');
+		try {
+			$first = new DateTimeImmutable($period . '-01');
+		} catch (\Exception $e) {
+			$first = new DateTimeImmutable('first day of this month');
 		}
 
 		return [$first->format('Y-m-d'), $first->modify('last day of this month')->format('Y-m-d')];
