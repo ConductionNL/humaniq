@@ -5,7 +5,7 @@
             "Employee": {
                 "slug": "Employee",
                 "icon": "AccountTieOutline",
-                "version": "0.13.0",
+                "version": "0.14.0",
                 "title": "Employee",
                 "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",
                 "type": "object",
@@ -23,6 +23,8 @@
                     "shareBirthday": {"title": "Share my birthday", "type": "boolean", "default": false, "description": "Whether your team may see your birthday, without the year, in the daily team message.", "x-notes": "self-service-announcements-and-digest D4: opt-in, default false. TeamDigestNode reads day and month only for employees with true, and never writes the year into the message."},
                     "startDate": {"title": "Start date", "type": "string", "format": "date", "description": "When employment started.", "x-notes": "Employment start date (ISO 8601)."},
                     "endDate": {"title": "End date", "type": "string", "format": "date", "nullable": true, "description": "When employment ends. Leave empty while the employee is still with you.", "x-notes": "Employment end date, or null while active."},
+                    "incomeRelationshipNumber": {"title": "Income relationship number", "type": "integer", "minimum": 0, "maximum": 9999, "default": 1, "description": "The number this employment carries in the wage tax return. Keep it once used; give a rehired employee a new number.", "x-notes": "Nummer inkomstenverhouding (Gegevensspecificaties aangifte loonheffingen 2026 p58-59): ascending per BSN from 1, never renumbered, not reused within 7 years. filings-wage-tax-message D5."},
+                    "endReason": {"title": "Reason employment ended", "type": "string", "nullable": true, "enum": ["01", "03", "04", "05", "06", "20", "21", "30", "32", "33", "34", "40", "41", "50", "51", "90", "91", "92", "99", null], "x-enum-labels": {"01": "Dismissed by the employer during the probation period", "03": "Dissolved by the court at the employer's request", "04": "Ended by mutual consent at the employer's initiative", "05": "Dismissed by the employer for long-term incapacity", "06": "Dismissed by the employer for economic reasons", "20": "Ended by the employee or at the employee's initiative", "21": "Summary dismissal for an urgent reason", "30": "Fixed-term contract expired", "32": "Ended by retirement", "33": "Ended by death", "34": "Ended by law for another reason", "40": "Agency contract ended, hirer invoked the agency clause for sickness", "41": "Agency contract ended, hirer invoked the agency clause for another reason", "50": "Public appointment ended for incompetence or unsuitability", "51": "Public appointment ended for age or retirement", "90": "Employment continues, income relationship closed administratively", "91": "Employment continues with a new employer", "92": "Followed without a break by a new employment with the same employer", "99": "Another reason"}, "description": "Why the employment ended. The wage tax return needs it once an end date is reported.", "x-notes": "Code reden einde arbeidsverhouding (Gegevensspecificaties aangifte loonheffingen 2026 p64-65, condition 2501). filings-wage-tax-message D5."},
                     "grossMonthlySalary": {"title": "Gross monthly salary", "type": "number", "description": "Gross monthly salary in the pay currency.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}], "update": ["humaniq-hr", "humaniq-payroll"]}},
                     "taxTableColor": {"title": "Tax table color", "type": "string", "enum": ["wit", "groen"], "x-enum-labels": {"wit": "White table (employment)", "groen": "Green table (pension / benefit)"}, "description": "Which payroll-tax table applies: the white table for current employment, the green table for a pension or benefit.", "x-notes": "Loonheffing tax table colour (wit = current employment, groen = pensions/benefits). Drives the combined loonheffing/volksverzekeringen levy (nl-loonheffingen-volksverzekeringen)."},
                     "identityDocumentVerified": {"title": "Identity document verified", "type": "boolean", "description": "Tick this once you have checked the employee's ID and filed a copy with the payroll records.", "x-notes": "Whether a valid identity document was verified and copied into the loonadministratie (nl-id-bewaarplicht-5jaar).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}], "update": ["humaniq-hr"]}},
@@ -551,7 +553,7 @@
             "LoonaangifteFiling": {
                 "slug": "LoonaangifteFiling",
                 "icon": "FileSendOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Wage Tax Filing",
                 "description": "A wage-tax / social-security filing for one wage period (NL loonaangifte / DE Lohnsteuer-Anmeldung & Beitragsnachweis / FR DSN / US Form 941 & deposits). Carries the period, deadline, submission, and tijdvak attributes the filing-window checks read. For NL, the filing also carries a declarative create->review->confirm->send lifecycle (concept -> klaargezet -> bevestigd -> verzonden) plus tijdvakcode/response-capture fields (loonaangifte-filing-lifecycle).",
                 "type": "object",
@@ -570,7 +572,8 @@
                                     "concept"
                                 ],
                                 "to": "klaargezet",
-                                "description": "Marks the filing as review-ready. Requires period, tijdvak, tijdvakcode and deadline to be present (schema-required plus the nl-loonaangifte-tijdvakcode / nl-loonaangifte-deadline-derivation checks)."
+                                "requires": "OCA\\Humaniq\\Lifecycle\\LoonaangifteMessageGuard",
+                                "description": "Marks the filing as review-ready. Requires period, tijdvak, tijdvakcode and deadline to be present (schema-required plus the nl-loonaangifte-tijdvakcode / nl-loonaangifte-deadline-derivation checks). For a Dutch loonaangifte, LoonaangifteMessageGuard also requires a validated message without blocking findings (filings-wage-tax-message)."
                             },
                             "bevestigen": {
                                 "from": [
@@ -670,6 +673,18 @@
                         "title": "Sent by",
                         "description": "Who sent the filing.", "x-notes": "Display name of the person who sent the filing, stamped on the verzenden carrying write (the Timesheet approvedBy pattern)."
                     },
+                    "messageXml": {"title": "Wage tax return message", "type": "string", "nullable": true, "description": "The wage tax return to upload, validated against the tax authority's schema for the year.", "x-notes": "filings-wage-tax-message D1: rendered by LoonaangifteMessageService, validated against lib/Standards/loonaangifte/."},
+                    "messageFileName": {"title": "Message file name", "type": "string", "nullable": true, "description": "The file name to save the message under."},
+                    "messageVersion": {"title": "Message version", "type": "string", "nullable": true, "description": "The version of the tax authority's message format the message follows."},
+                    "collectiveTotals": {"title": "Collective totals", "type": "object", "nullable": true, "description": "The totals of the return in whole euros, as in the message.", "x-notes": "filings-wage-tax-message D6: TotLnLbPh ... TotGen, cut to whole euros."},
+                    "messageFindings": {"title": "Message findings", "type": "array", "items": {"type": "object", "properties": {"kind": {"type": "string", "title": "Kind", "description": "What kind of problem it is."}, "severity": {"type": "string", "enum": ["blocking", "warning"], "title": "Severity", "description": "Whether it stops the return."}, "employeeId": {"type": "string", "title": "Employee", "description": "The employee it concerns, if any."}, "element": {"type": "string", "title": "Element", "description": "The part of the message it concerns."}, "problem": {"type": "string", "title": "Problem", "description": "What is wrong."}}}, "description": "What stopped the message, or what to check, per employee and part of the message."},
+                    "blockingFindings": {"title": "Blocking findings", "type": "integer", "nullable": true, "description": "How many findings stop the return from being made ready."},
+                    "warningFindings": {"title": "Warnings", "type": "integer", "nullable": true, "description": "How many findings are worth checking but do not stop the return."},
+                    "messageRenderedAt": {"title": "Message made at", "type": "string", "format": "date-time", "nullable": true, "description": "When the message was last made."},
+                    "messageRenderedBy": {"title": "Message made by", "type": "string", "nullable": true, "description": "Who last made the message."},
+                    "messageRunId": {"title": "Payroll run", "type": "string", "nullable": true, "description": "The approved payroll run the message was made from."},
+                    "messageRunCalculatedAt": {"title": "Run calculated at", "type": "string", "nullable": true, "description": "When that payroll run was calculated, at the time the message was made.", "x-notes": "filings-wage-tax-message D4: nl-loonaangifte-message-drift compares it with the run."},
+                    "messageRunTotalLoonheffing": {"title": "Run wage tax", "type": "number", "nullable": true, "description": "The payroll run's total wage tax when the message was made."},
                     "administrationId": {"title": "Administration ID", "type": "string", "nullable": true, "description": "Which administration this filing covers.", "x-notes": "Denormalized administratie key this filing is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun convention); an organisation-level filing has no employee/parent to derive it from, so nl-administratie-scope-consistency does not evaluate this schema."}
                 }
             },

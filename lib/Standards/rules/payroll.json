@@ -1464,6 +1464,18 @@
       "machineCheckable": true,
       "effectiveDate": "2024-01-01",
       "sourceUrl": "https://odb.belastingdienst.nl/documentatie/uitbetaalde-bedragen-aan-derden-v08/"
+    },
+    {
+      "id": "nl-loonaangifte-message-drift",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Belastingdienst, Gegevensspecificaties aangifte loonheffingen 2026 v3.0, 4.1 Collectieve aangifte (0001, 0002, 2315)",
+      "statement": "A LoonaangifteFiling whose message was made from a PayrollRun that has since been recalculated, changed in total wage tax or removed is a violation: the message no longer reports the run. Make the message again.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://odb.belastingdienst.nl/documentatie/loonheffingen-aangifte-2026v09/"
     }
   ]
 }

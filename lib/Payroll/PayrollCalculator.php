@@ -65,6 +65,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Payroll;
 
+use OCA\Humaniq\Payroll\Dsl\DslException;
 use OCA\Humaniq\Payroll\Dsl\PackInterpreter;
 use OCA\Humaniq\Payroll\Dsl\PackRunResult;
 
@@ -168,9 +169,30 @@ final class PayrollCalculator {
 			whkCents: $out->cents('whk'),
 			werknemersverzekeringenCents: $out->cents('werknemersverzekeringen'),
 			employerChargesCents: $out->employerCharges(),
-			aboveLmax: (bool)$out->binding('aboveLmax')
+			aboveLmax: (bool)$out->binding('aboveLmax'),
+			taxableWageCents: $this->optionalCents($out, 'belastbaarLoon'),
+			premiumWageCents: min($this->optionalCents($out, 'belastbaarLoon'), $this->optionalCents($out, 'premieloonCap'))
 		);
 
 	}//end resultFrom()
+
+	/**
+	 * A binding in cents, or 0 when the pack does not declare it (a third-party
+	 * pack need not carry the Dutch wage bindings).
+	 *
+	 * @param PackRunResult $out The interpreter output.
+	 * @param string        $id  The binding id.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 */
+	private function optionalCents(PackRunResult $out, string $id): int {
+		try {
+			return (int)$out->binding($id);
+		} catch (DslException $e) {
+			return 0;
+		}
+	}//end optionalCents()
 
 }//end class

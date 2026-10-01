@@ -38,6 +38,7 @@ return [
         ['name' => 'payrollHandoff#checkIntake', 'url' => '/api/payroll/handoffs/check-intake', 'verb' => 'POST'],
         ['name' => 'thirdPartyReport#assemble', 'url' => '/api/third-party/reports/assemble', 'verb' => 'POST'],
         ['name' => 'thirdPartyReport#statements', 'url' => '/api/third-party/reports/{reportId}/statements', 'verb' => 'POST'],
+        ['name' => 'loonaangifteMessage#render', 'url' => '/api/loonaangifte/filings/{filingId}/message', 'verb' => 'POST'],
         // payroll-mutation-reports — guarded, admin/HR-only trigger for the
         // PayrollRunDetail "Mutatieoverzicht" manifest api-call action
         // (design.md D6).

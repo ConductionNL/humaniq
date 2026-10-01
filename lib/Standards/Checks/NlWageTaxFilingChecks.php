@@ -81,6 +81,12 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 				// AWR art. 19 — an unsent filing does not sit within 14 days of, or past, its deadline.
 				'nl-loonaangifte-deadline-alert' => static fn (array $o): bool => self::isNlLoonaangifte($o) === false
 					|| self::deadlineNotAlerting($o),
+				// Gegevensspecificaties 2026 p39-55 (0001, 0002, 2315): the message reports
+				// the run's figures, so a run recalculated after the message was made, or
+				// whose wage tax changed, leaves a message that no longer matches it
+				// (filings-wage-tax-message D4).
+				'nl-loonaangifte-message-drift' => static fn (array $o, array $context = []): bool => self::isNlLoonaangifte($o) === false
+					|| self::messageMatchesRun($o, $context),
 			],
 		];
 
@@ -123,6 +129,33 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 		];
 
 	}//end seedObjects()
+
+	/**
+	 * Whether a filing's message still matches the run it was made from. A
+	 * filing without a message, or an audit that built no payroll context,
+	 * passes; a run that is gone, recalculated or changed in wage tax fails.
+	 *
+	 * @param array<string, mixed> $o       The LoonaangifteFiling.
+	 * @param array<string, mixed> $context The audit context (`payroll.runsById`).
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 */
+	private static function messageMatchesRun(array $o, array $context): bool {
+		$runId = (string)($o['messageRunId'] ?? '');
+		if (trim((string)($o['messageXml'] ?? '')) === '' || $runId === '' || isset($context['payroll']['runsById']) === false) {
+			return true;
+		}
+
+		$run = ($context['payroll']['runsById'][$runId] ?? null);
+		if (is_array($run) === false) {
+			return false;
+		}
+
+		return (string)($run['calculatedAt'] ?? '') === (string)($o['messageRunCalculatedAt'] ?? '')
+			&& abs((float)($run['totalLoonheffing'] ?? 0) - (float)($o['messageRunTotalLoonheffing'] ?? 0)) < 0.005;
+	}//end messageMatchesRun()
 
 	/**
 	 * True when the object is an NL loonaangifte filing (the scope of the
