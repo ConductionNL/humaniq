@@ -28,6 +28,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DOMDocument;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\Loonaangifte\PayslipRecalculator;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\HoursRegisterGateway;
@@ -384,7 +385,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn($relNr);
 
-		return new LoonaangifteMessageService(gateway: $gateway, calculator: new PayrollCalculator(), appConfig: $appConfig, logger: new NullLogger());
+		return new LoonaangifteMessageService(gateway: $gateway, recalculator: new PayslipRecalculator(new PayrollCalculator(), new NullLogger()), appConfig: $appConfig);
 	}//end serviceWithRelNr()
 
 	/**

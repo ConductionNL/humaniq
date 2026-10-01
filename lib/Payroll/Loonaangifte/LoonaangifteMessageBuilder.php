@@ -32,6 +32,8 @@ namespace OCA\Humaniq\Payroll\Loonaangifte;
 /**
  * The wage tax return's header, period and collective part.
  *
+ * @SuppressWarnings(PHPMD.StaticAccess) PersonPart::elfproef is a pure check.
+ *
  * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 final class LoonaangifteMessageBuilder {
@@ -86,7 +88,7 @@ final class LoonaangifteMessageBuilder {
 	 * @param array<string, mixed>        $administration The hrAdministration.
 	 * @param array<string, string>       $header         idBer, createdAt, relNr, software.
 	 * @param array{0: string, 1: string} $period         The declaration period's first and last day.
-	 * @param list<array{tree: array<string, mixed>, cents: array<string, int>, findings: list<array<string, string>>}> $lines The income relationships.
+	 * @param list<array<string, mixed>> $lines The income relationships (IncomeRelationshipLine::make): tree, cents, findings.
 	 *
 	 * @return array{tree: array<string, mixed>, collective: array<string, int>, findings: list<array<string, string>>}
 	 *
@@ -96,7 +98,7 @@ final class LoonaangifteMessageBuilder {
 		$collective = self::collective($lines);
 		$findings = self::headerFindings($administration, $header);
 		foreach ($lines as $line) {
-			$findings = array_merge($findings, $line['findings']);
+			$findings = array_merge($findings, array_values((array)($line['findings'] ?? [])));
 		}
 
 		$collectivePart = array_map(static fn (int $euros): string => (string)$euros, $collective);
@@ -118,7 +120,7 @@ final class LoonaangifteMessageBuilder {
 					'DatEindTv' => $period[1],
 					'VolledigeAangifte' => [
 						'CollectieveAangifte' => $collectivePart,
-						'InkomstenverhoudingInitieel' => array_map(static fn (array $line): array => $line['tree'], $lines),
+						'InkomstenverhoudingInitieel' => array_map(static fn (array $line): array => (array)($line['tree'] ?? []), $lines),
 					],
 				],
 			],
@@ -130,7 +132,7 @@ final class LoonaangifteMessageBuilder {
 	/**
 	 * The collective amounts in whole euros, cut towards zero (GS p38).
 	 *
-	 * @param list<array{cents: array<string, int>}> $lines The income relationships.
+	 * @param list<array<string, mixed>> $lines The income relationships, each with its `cents`.
 	 *
 	 * @return array<string, int>
 	 *
@@ -141,7 +143,7 @@ final class LoonaangifteMessageBuilder {
 		foreach (self::COLLECTIVE as $total => $element) {
 			$cents = 0;
 			foreach ($lines as $line) {
-				$cents += (int)($line['cents'][$element] ?? 0);
+				$cents += (int)(((array)($line['cents'] ?? []))[$element] ?? 0);
 			}
 
 			$totals[$total] = intdiv($cents, 100);
@@ -164,7 +166,7 @@ final class LoonaangifteMessageBuilder {
 	private static function headerFindings(array $administration, array $header): array {
 		$findings = [];
 		$taxNumber = (string)($administration['loonheffingennummer'] ?? '');
-		if (preg_match('/^(\d{9})L(\d{2})$/', $taxNumber, $m) !== 1 || $m[2] === '00' || IncomeRelationshipLine::elfproef($m[1]) === false) {
+		if (preg_match('/^(\d{9})L(\d{2})$/', $taxNumber, $match) !== 1 || $match[2] === '00' || PersonPart::elfproef($match[1]) === false) {
 			$findings[] = self::finding('administration-tax-number-invalid', 'LhNr', 'Het loonheffingennummer van de administratie moet bestaan uit negen cijfers die aan de elfproef voldoen, de letter L en een subnummer van 01 tot en met 99.');
 		}
 

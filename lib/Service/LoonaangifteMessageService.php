@@ -32,23 +32,18 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Payroll\CalculationInput;
-use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\Loonaangifte\IncomeRelationshipLine;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessage;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessageBuilder;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteYear;
-use OCA\Humaniq\Payroll\PackRepository;
-use OCA\Humaniq\Payroll\PayrollCalculator;
-use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\Loonaangifte\PayslipRecalculator;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
-use Psr\Log\LoggerInterface;
 
 /**
  * Render, validate and store the wage tax return message of a filing.
  *
- * @SuppressWarnings(PHPMD.StaticAccess) The pure message classes, TaxTables::load and CalculationInput::fromDecoded are static by design, the AwfReviewService precedent.
+ * @SuppressWarnings(PHPMD.StaticAccess) The pure message classes are static by design, the UbdMessage precedent.
  *
  * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
@@ -64,19 +59,15 @@ class LoonaangifteMessageService {
 	/**
 	 * The service.
 	 *
-	 * @param HoursRegisterGateway $gateway    Register reads and writes.
-	 * @param PayrollCalculator    $calculator The payroll engine, to recalculate a payslip's components.
-	 * @param IAppConfig           $appConfig  The software relation number.
-	 * @param LoggerInterface      $logger     Logger.
-	 * @param PackRepository       $packs      The jurisdiction-pack resolver.
-	 * @param IAppManager|null     $appManager The app version for the message header.
+	 * @param HoursRegisterGateway $gateway      Register reads and writes.
+	 * @param PayslipRecalculator  $recalculator The engine, to recalculate a payslip's components.
+	 * @param IAppConfig           $appConfig    The software relation number.
+	 * @param IAppManager|null     $appManager   The app version for the message header.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
-		private readonly PayrollCalculator $calculator,
+		private readonly PayslipRecalculator $recalculator,
 		private readonly IAppConfig $appConfig,
-		private readonly LoggerInterface $logger,
-		private readonly PackRepository $packs=new PackRepository(),
 		private readonly ?IAppManager $appManager=null,
 	) {
 	}//end __construct()
@@ -195,7 +186,7 @@ class LoonaangifteMessageService {
 	 * @param array<string, mixed>        $run    The run.
 	 * @param array{0: string, 1: string} $period The declaration period.
 	 *
-	 * @return list<array{tree: array<string, mixed>, cents: array<string, int>, findings: list<array<string, string>>}>
+	 * @return list<array{employeeId: string, tree: array<string, mixed>, cents: array<string, int>, findings: list<array{kind: string, severity: string, employeeId: string, element: string, problem: string}>}>
 	 */
 	private function lines(array $run, array $period): array {
 		$lines = [];
@@ -203,7 +194,7 @@ class LoonaangifteMessageService {
 			$employeeId = (string)($slip['employeeId'] ?? '');
 			$employee = ($this->gateway->findObjectData($employeeId, 'Employee') ?? ['id' => $employeeId]);
 			$employee['id'] = $employeeId;
-			$lines[] = IncomeRelationshipLine::make($employee, $this->contractOf($employeeId, $period), $slip, $this->recalculate($slip), $period);
+			$lines[] = IncomeRelationshipLine::make($employee, $this->contractOf($employeeId, $period), $slip, $this->recalculator->recalculate($slip), $period);
 		}
 
 		return $lines;
@@ -230,28 +221,6 @@ class LoonaangifteMessageService {
 		krsort($covering);
 		return (array_values($covering)[0] ?? []);
 	}//end contractOf()
-
-	/**
-	 * The engine's recalculation of a payslip from its stored input, or null.
-	 *
-	 * @param array<string, mixed> $slip The payslip.
-	 *
-	 * @return CalculationResult|null
-	 */
-	private function recalculate(array $slip): ?CalculationResult {
-		$snapshot = ($slip['engineInputSnapshot'] ?? null);
-		if (is_array($snapshot) === false || $snapshot === []) {
-			return null;
-		}
-
-		try {
-			$tables = TaxTables::load($this->packs->resolve((string)($snapshot['jurisdiction'] ?? 'NL'), (string)($slip['period'] ?? ''))->tablesId());
-			return $this->calculator->calculate(CalculationInput::fromDecoded($snapshot), $tables);
-		} catch (\Throwable $e) {
-			$this->logger->warning('LoonaangifteMessageService: payslip ' . (string)($slip['id'] ?? '') . ' could not be recalculated: ' . $e->getMessage());
-			return null;
-		}
-	}//end recalculate()
 
 	/**
 	 * Store the outcome on the filing.

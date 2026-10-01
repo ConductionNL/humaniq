@@ -45,6 +45,9 @@
       <code><![CDATA[UbdReportReadyGuard]]></code>
       <code><![CDATA[UbdReportReadyGuard]]></code>
       <code><![CDATA[UbdReportReadyGuard]]></code>
+      <code><![CDATA[LoonaangifteMessageGuard]]></code>
+      <code><![CDATA[LoonaangifteMessageGuard]]></code>
+      <code><![CDATA[LoonaangifteMessageGuard]]></code>
     </MissingDependency>
   </file>
   <file src="lib/Service/RuleAuditService.php">

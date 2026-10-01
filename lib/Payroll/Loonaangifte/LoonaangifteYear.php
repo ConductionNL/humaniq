@@ -99,27 +99,45 @@ final class LoonaangifteYear {
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 */
 	public static function periodDates(string $period, string $tijdvak): ?array {
-		if (preg_match('/^(\d{4})(?:-(\d{2})|-P(\d{2}))?$/', $period, $m) !== 1 || isset(self::YEARS[(int)$m[1]]) === false) {
+		if (preg_match('/^(\d{4})(?:-(\d{2})|-P(\d{2}))?$/', $period, $match) !== 1 || isset(self::YEARS[(int)$match[1]]) === false) {
 			return null;
 		}
 
-		$year = (int)$m[1];
-		$month = (int)($m[2] ?? 0);
-		$fourWeek = (int)($m[3] ?? 0);
-		if ($tijdvak === 'maand' && $month >= 1 && $month <= 12) {
-			$first = sprintf('%04d-%02d-01', $year, $month);
-			return [$first, date('Y-m-t', (int)strtotime($first))];
-		}
+		$year = (int)$match[1];
+		$month = (int)($match[2] ?? 0);
+		$fourWeek = (int)($match[3] ?? 0);
+		$weeks = self::fourWeeks($year);
+		$dates = [
+			'maand' => ($month >= 1 && $month <= 12) ? self::month($year, $month) : null,
+			'vierweken' => ($weeks[($fourWeek - 1)] ?? null),
+			'jaar' => ($month === 0 && $fourWeek === 0) ? [$year . '-01-01', $year . '-12-31'] : null,
+		];
 
-		if ($tijdvak === 'vierweken' && $fourWeek >= 1) {
-			return (self::YEARS[$year]['fourWeekly'][($fourWeek - 1)] ?? null);
-		}
-
-		if ($tijdvak === 'jaar' && $month === 0 && $fourWeek === 0) {
-			return [$year . '-01-01', $year . '-12-31'];
-		}
-
-		return null;
+		return ($dates[$tijdvak] ?? null);
 	}//end periodDates()
+
+	/**
+	 * The four-week periods of a year, in order.
+	 *
+	 * @param int $year The year.
+	 *
+	 * @return list<array{0: string, 1: string}>
+	 */
+	private static function fourWeeks(int $year): array {
+		return (self::YEARS[$year]['fourWeekly'] ?? []);
+	}//end fourWeeks()
+
+	/**
+	 * The first and last day of a month.
+	 *
+	 * @param int $year  The year.
+	 * @param int $month The month.
+	 *
+	 * @return array{0: string, 1: string}
+	 */
+	private static function month(int $year, int $month): array {
+		$first = sprintf('%04d-%02d-01', $year, $month);
+		return [$first, date('Y-m-t', (int)strtotime($first))];
+	}//end month()
 
 }//end class
