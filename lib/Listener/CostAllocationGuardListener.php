@@ -154,14 +154,29 @@ class CostAllocationGuardListener implements IEventListener {
 			}
 
 			$rowStart = trim((string)($row['startDate'] ?? ''));
-			$rowEnd = trim((string)($row['endDate'] ?? ''));
-			if (($end === '' || $rowStart === '' || $rowStart <= $end) && ($rowEnd === '' || $start <= $rowEnd)) {
+			if ($this->overlaps(start: $start, end: $end, rowStart: $rowStart, rowEnd: trim((string)($row['endDate'] ?? ''))) === true) {
 				return sprintf('Deze medewerker heeft al een kostenverdeling vanaf %s die deze periode overlapt. Beëindig die eerst.', ($rowStart === '' ? '?' : $rowStart));
 			}
 		}
 
 		return null;
 	}//end overlapRefusal()
+
+	/**
+	 * Whether two date ranges share a day; an empty end is open-ended, an
+	 * empty start has always applied.
+	 *
+	 * @param string $start    The incoming start.
+	 * @param string $end      The incoming end, or ''.
+	 * @param string $rowStart The stored start, or ''.
+	 * @param string $rowEnd   The stored end, or ''.
+	 *
+	 * @return bool
+	 */
+	private function overlaps(string $start, string $end, string $rowStart, string $rowEnd): bool {
+		$startsBeforeEnd = ($end === '' || $rowStart === '' || $rowStart <= $end);
+		return ($startsBeforeEnd === true && ($rowEnd === '' || $start <= $rowEnd));
+	}//end overlaps()
 
 	/**
 	 * The payload and uuid of a CostAllocation write, or null for any other
