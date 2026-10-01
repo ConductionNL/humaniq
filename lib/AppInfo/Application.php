@@ -46,6 +46,7 @@ use OCA\Humaniq\Listener\ChangeRequestListener;
 use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 use OCA\Humaniq\Listener\FieldAccessListener;
 use OCA\Humaniq\Listener\FrequentAbsenceListener;
+use OCA\Humaniq\Listener\HandoffIntakeListener;
 use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
@@ -951,7 +952,7 @@ class Application extends App implements IBootstrap {
 	 * payroll-expenses-and-allowances D1, D3: the claim route and the allowance drafter, before save;
 	 * payroll-run-checks D5: the reviewer who acknowledges a finding; payroll-cao-components D2: a
 	 * contract's CAO component overrides; payroll-cost-allocation D1: a cost allocation's splits
-	 * and overlap.
+	 * and overlap; payroll-external-bureau-handoff D4: the intake check when a handoff is received.
 	 *
 	 * @param IEventDispatcher $dispatcher The live event dispatcher.
 	 *
@@ -963,6 +964,8 @@ class Application extends App implements IBootstrap {
 				$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: $listener, registers: null, schemas: [$slug]);
 			}
 		}
+
+		$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: ObjectUpdatedEvent::class, listener: HandoffIntakeListener::class, registers: null, schemas: [HandoffIntakeListener::SLUG]);
 	}//end registerExpensePayrollListeners()
 
 	/**

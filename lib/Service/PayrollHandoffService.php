@@ -39,35 +39,35 @@ use Psr\Log\LoggerInterface;
 class PayrollHandoffService {
 
 	/**
-	 * The employee-level payroll facts per mutation kind.
+	 * The period items (D2).
 	 *
-	 * @var array<string, list<string>>
+	 * @var HandoffPeriodItems
 	 */
-	private const EMPLOYEE_SLICES = [
-		'salary' => ['grossMonthlySalary'],
-		'bank-account' => ['iban'],
-		'tax-settings' => ['taxTableColor', 'loonheffingskortingToegepast'],
-		'leave' => ['endDate'],
-	];
+	private readonly HandoffPeriodItems $items;
 
 	/**
-	 * The contract facts a bureau needs.
+	 * The employee-level view (D2).
 	 *
-	 * @var list<string>
+	 * @var HandoffEmployeeView
 	 */
-	private const CONTRACT_FIELDS = ['type', 'hoursPerWeek', 'hourlyWage', 'cao', 'caoSchaal'];
+	private readonly HandoffEmployeeView $view;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway The register plumbing.
-	 * @param LoggerInterface      $logger  The logger.
+	 * @param HoursRegisterGateway     $gateway The register plumbing.
+	 * @param LoggerInterface          $logger  The logger.
+	 * @param HandoffPeriodItems|null  $items   The period items; built on the gateway when absent.
+	 * @param HandoffEmployeeView|null $view    The employee view; built on the gateway when absent.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly LoggerInterface $logger,
+		?HandoffPeriodItems $items = null,
+		?HandoffEmployeeView $view = null,
 	) {
-
+		$this->items = ($items ?? new HandoffPeriodItems($gateway));
+		$this->view = ($view ?? new HandoffEmployeeView(gateway: $gateway, items: $this->items));
 	}//end __construct()
 
 	/**
@@ -88,42 +88,17 @@ class PayrollHandoffService {
 		}
 
 		$handoffs = $this->gateway->findFiltered('PayrollHandoff', ['administrationId' => $administrationId]);
-		$current = null;
-		foreach ($handoffs as $handoff) {
-			if ((string)($handoff['period'] ?? '') === $period) {
-				$current = $handoff;
-			}
-		}
-
+		$current = $this->handoffOf(handoffs: $handoffs, period: $period);
 		if ($current !== null && (string)($current['status'] ?? '') !== 'concept') {
 			return ['status' => 'refused-not-concept', 'handoffId' => (string)$current['id'], 'mutationCount' => (int)($current['mutationCount'] ?? 0), 'message' => 'Deze overdracht is al klaargezet of verzonden; heropen hem eerst.'];
 		}
 
-		$handoffId = ($current === null ? '' : (string)$current['id']);
-		if ($handoffId !== '') {
-			foreach ($this->gateway->findFiltered('PayrollHandoffMutation', ['handoffId' => $handoffId]) as $stale) {
-				$this->gateway->delete((string)$stale['id'], 'PayrollHandoffMutation');
-			}
-		}
+		$handoffId = $this->clearConcept($current);
+		$mutations = $this->mutationsOf(administrationId: $administrationId, period: $period, baseline: $this->baseline(handoffs: $handoffs, period: $period, exceptId: $handoffId));
 
-		$baseline = $this->baseline(handoffs: $handoffs, period: $period, exceptId: $handoffId);
-		$mutations = [];
-		foreach ($this->employeesIn(administrationId: $administrationId, period: $period) as $employee) {
-			$view = $this->viewOf(employee: $employee);
-			$employeeId = (string)$employee['id'];
-			foreach ($this->differences(employee: $employee, view: $view, sent: ($baseline[$employeeId] ?? null), period: $period) as $mutation) {
-				$mutations[] = $mutation;
-			}
-		}
-
-		$saved = $this->gateway->save(
-			payload: array_merge(
-				($current ?? []),
-				['administrationId' => $administrationId, 'period' => $period, 'status' => 'concept', 'compiledBy' => $userId, 'compiledAt' => gmdate('Y-m-d\TH:i:s\Z'), 'mutationCount' => count($mutations)]
-			),
-			schema: 'PayrollHandoff',
-			uuid: ($handoffId === '' ? null : $handoffId)
-		);
+		$payload = array_merge(($current ?? []), ['administrationId' => $administrationId, 'period' => $period, 'status' => 'concept', 'compiledBy' => $userId, 'compiledAt' => gmdate('Y-m-d\TH:i:s\Z'), 'mutationCount' => count($mutations)]);
+		unset($payload['id']);
+		$saved = $this->gateway->save(payload: $payload, schema: 'PayrollHandoff', uuid: ($handoffId === '' ? null : $handoffId));
 		$handoffId = (string)$saved->getUuid();
 
 		foreach ($mutations as $mutation) {
@@ -132,6 +107,68 @@ class PayrollHandoffService {
 
 		return ['status' => 'compiled', 'handoffId' => $handoffId, 'mutationCount' => count($mutations)];
 	}//end compile()
+
+	/**
+	 * The administration's handoff of a period, or null.
+	 *
+	 * @param list<array<string, mixed>> $handoffs The administration's handoffs.
+	 * @param string                     $period   The period.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function handoffOf(array $handoffs, string $period): ?array {
+		foreach ($handoffs as $handoff) {
+			if ((string)($handoff['period'] ?? '') === $period) {
+				return $handoff;
+			}
+		}
+
+		return null;
+	}//end handoffOf()
+
+	/**
+	 * Remove the mutations of a concept handoff about to be recompiled.
+	 *
+	 * @param array<string, mixed>|null $current The handoff, or null.
+	 *
+	 * @return string The handoff id, or '' when there is none yet.
+	 */
+	private function clearConcept(?array $current): string {
+		if ($current === null) {
+			return '';
+		}
+
+		$handoffId = (string)$current['id'];
+		foreach ($this->gateway->findFiltered('PayrollHandoffMutation', ['handoffId' => $handoffId]) as $stale) {
+			$this->gateway->delete((string)$stale['id'], 'PayrollHandoffMutation');
+		}
+
+		return $handoffId;
+	}//end clearConcept()
+
+	/**
+	 * The mutations of every employee of the administration in the period.
+	 *
+	 * @param string                              $administrationId The administration.
+	 * @param string                              $period           The period.
+	 * @param array<string, array<string, mixed>> $baseline         What earlier handoffs sent, per employee.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function mutationsOf(string $administrationId, string $period, array $baseline): array {
+		$mutations = [];
+		foreach ($this->employeesIn(administrationId: $administrationId, period: $period) as $employee) {
+			$employeeId = (string)$employee['id'];
+			$sent = ($baseline[$employeeId] ?? null);
+			$mutations = array_merge(
+				$mutations,
+				$this->view->differences(employee: $employee, sent: $sent, period: $period),
+				$this->items->mutationsFor(employeeId: $employeeId, period: $period, sent: ($sent ?? []))
+			);
+		}
+
+		return $mutations;
+	}//end mutationsOf()
 
 	/**
 	 * Check the bureau's returned payslips: every employee of the period
@@ -252,132 +289,6 @@ class PayrollHandoffService {
 	}//end employeesIn()
 
 	/**
-	 * The payroll view of one employee, per mutation kind.
-	 *
-	 * @param array<string, mixed> $employee The employee.
-	 *
-	 * @return array<string, array<string, mixed>>
-	 */
-	private function viewOf(array $employee): array {
-		$view = [];
-		foreach (self::EMPLOYEE_SLICES as $kind => $fields) {
-			foreach ($fields as $field) {
-				$view[$kind][$field] = $this->normalise($employee[$field] ?? null);
-			}
-		}
-
-		$contract = $this->latestContract((string)$employee['id']);
-		foreach (self::CONTRACT_FIELDS as $field) {
-			$view['contract'][$field] = $this->normalise($contract[$field] ?? null);
-		}
-
-		return $view;
-	}//end viewOf()
-
-	/**
-	 * The mutations of one employee: one start for someone never sent, else
-	 * one per kind whose values differ from what was sent.
-	 *
-	 * @param array<string, mixed>                     $employee The employee.
-	 * @param array<string, array<string, mixed>>      $view     The payroll view.
-	 * @param array<string, mixed>|null                $sent     What earlier handoffs sent, or null.
-	 * @param string                                   $period   The period.
-	 *
-	 * @return list<array<string, mixed>>
-	 */
-	private function differences(array $employee, array $view, ?array $sent, string $period): array {
-		$employeeId = (string)$employee['id'];
-		if ($sent === null) {
-			$fields = [];
-			foreach ($view as $values) {
-				foreach ($values as $field => $value) {
-					$fields[$field] = ['old' => null, 'new' => $value];
-				}
-			}
-
-			return [['employeeId' => $employeeId, 'kind' => 'start', 'effectiveDate' => ((string)($employee['startDate'] ?? '') === '' ? $period . '-01' : (string)$employee['startDate']), 'fields' => $fields, 'sourceSchema' => 'Employee', 'sourceId' => $employeeId, 'sentState' => $view]];
-		}
-
-		$mutations = [];
-		foreach ($view as $kind => $values) {
-			$fields = [];
-			foreach ($values as $field => $value) {
-				$old = ($sent[$kind][$field] ?? null);
-				if ($old !== $value) {
-					$fields[$field] = ['old' => $old, 'new' => $value];
-				}
-			}
-
-			if ($fields === []) {
-				continue;
-			}
-
-			[$sourceSchema, $sourceId, $effective] = $this->sourceOf(kind: $kind, employee: $employee, period: $period);
-			$mutations[] = ['employeeId' => $employeeId, 'kind' => $kind, 'effectiveDate' => $effective, 'fields' => $fields, 'sourceSchema' => $sourceSchema, 'sourceId' => $sourceId, 'sentState' => [$kind => $values]];
-		}
-
-		return $mutations;
-	}//end differences()
-
-	/**
-	 * Where a change came from and from when it applies: a salary change
-	 * from the latest applied pay change, a contract change from the
-	 * contract, anything else from the employee record.
-	 *
-	 * @param string               $kind     The mutation kind.
-	 * @param array<string, mixed> $employee The employee.
-	 * @param string               $period   The period.
-	 *
-	 * @return array{0: string, 1: string, 2: string}
-	 */
-	private function sourceOf(string $kind, array $employee, string $period): array {
-		$employeeId = (string)$employee['id'];
-		if ($kind === 'salary') {
-			$latest = null;
-			foreach ($this->gateway->findFiltered('CompAdjustment', ['employeeId' => $employeeId, 'status' => 'applied']) as $adjustment) {
-				if ($latest === null || (string)($adjustment['appliedAt'] ?? '') > (string)($latest['appliedAt'] ?? '')) {
-					$latest = $adjustment;
-				}
-			}
-
-			if ($latest !== null) {
-				return ['CompAdjustment', (string)$latest['id'], substr((string)($latest['appliedAt'] ?? ''), 0, 10)];
-			}
-		}
-
-		if ($kind === 'contract') {
-			$contract = $this->latestContract($employeeId);
-			if ($contract !== []) {
-				return ['EmploymentContract', (string)$contract['id'], (string)($contract['startDate'] ?? ($period . '-01'))];
-			}
-		}
-
-		if ($kind === 'leave' && (string)($employee['endDate'] ?? '') !== '') {
-			return ['Employee', $employeeId, (string)$employee['endDate']];
-		}
-
-		return ['Employee', $employeeId, $period . '-01'];
-	}//end sourceOf()
-
-	/**
-	 * The employee's most recent contract, or [].
-	 *
-	 * @param string $employeeId The employee.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function latestContract(string $employeeId): array {
-		$latest = [];
-		foreach ($this->gateway->findFiltered('EmploymentContract', ['employeeId' => $employeeId]) as $contract) {
-			if ($latest === [] || (string)($contract['startDate'] ?? '') > (string)($latest['startDate'] ?? '')) {
-				$latest = $contract;
-			}
-		}
-
-		return $latest;
-	}//end latestContract()
-
-	/**
 	 * Stamp a returned payslip with the employee's account and its source.
 	 *
 	 * @param array<string, mixed> $payslip  The payslip.
@@ -404,20 +315,5 @@ class PayrollHandoffService {
 			$this->logger->warning('PayrollHandoffService: could not stamp payslip ' . $id . ': ' . $e->getMessage());
 		}
 	}//end stampPayslip()
-
-	/**
-	 * A comparable value: numbers as floats, empty strings as null.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return mixed
-	 */
-	private function normalise(mixed $value): mixed {
-		if (is_int($value) === true || (is_string($value) === true && is_numeric($value) === true && preg_match('/^\d+(\.\d+)?$/', $value) === 1 && str_contains($value, '.'))) {
-			return (float)$value;
-		}
-
-		return ($value === '' ? null : $value);
-	}//end normalise()
 
 }//end class
