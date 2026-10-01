@@ -120,6 +120,10 @@
 		"route": "/formation-scenarios/:id"
 	},
 	{
+		"id": "PayrollHandoffDetail",
+		"route": "/payroll-handoffs/:id"
+	},
+	{
 		"id": "NormfunctieDetail",
 		"route": "/normfuncties/:id"
 	},
@@ -470,6 +474,18 @@
 	{
 		"id": "PayrollGLPostDetail",
 		"route": "/gl-posts/:id"
+	},
+	{
+		"id": "PayrollHandoffs",
+		"route": "/payroll-handoffs"
+	},
+	{
+		"id": "PayrollHandoffMutations",
+		"route": "/payroll-handoff-mutations"
+	},
+	{
+		"id": "PayrollHandoffMutationDetail",
+		"route": "/payroll-handoff-mutations/:id"
 	},
 	{
 		"id": "Normfuncties",

@@ -15443,6 +15443,143 @@
         "costCenter": "Voorbeeld Costcenter 3",
         "projectId": "Voorbeeld Projectid 3",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollHandoff",
+          "slug": "payrollhandoff-payrollhandoff-1-1"
+        },
+        "administrationId": "Voorbeeld Administrationid 1",
+        "period": "2026-03",
+        "status": "concept",
+        "compiledBy": "Voorbeeld Compiledby 1",
+        "compiledAt": "2026-03-25T09:00:00Z",
+        "mutationCount": 2,
+        "deliveryReference": null,
+        "deliveredAt": null,
+        "receivedAt": null,
+        "blockingFindings": null,
+        "intakeFindings": []
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollHandoff",
+          "slug": "payrollhandoff-payrollhandoff-2-2"
+        },
+        "administrationId": "Voorbeeld Administrationid 2",
+        "period": "2026-04",
+        "status": "verzonden",
+        "compiledBy": "Voorbeeld Compiledby 2",
+        "compiledAt": "2026-04-24T09:00:00Z",
+        "mutationCount": 1,
+        "deliveryReference": "Voorbeeld Deliveryreference 2",
+        "deliveredAt": "2026-04-25T10:00:00Z",
+        "receivedAt": null,
+        "blockingFindings": null,
+        "intakeFindings": []
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollHandoff",
+          "slug": "payrollhandoff-payrollhandoff-3-3"
+        },
+        "administrationId": "Voorbeeld Administrationid 3",
+        "period": "2026-05",
+        "status": "ontvangen",
+        "compiledBy": "Voorbeeld Compiledby 3",
+        "compiledAt": "2026-05-22T09:00:00Z",
+        "mutationCount": 3,
+        "deliveryReference": "Voorbeeld Deliveryreference 3",
+        "deliveredAt": "2026-05-23T10:00:00Z",
+        "receivedAt": "2026-05-27T08:00:00Z",
+        "blockingFindings": 1,
+        "intakeFindings": [
+          {
+            "kind": "missing-payslip",
+            "employeeId": "00000000-0000-4000-8000-000000000002",
+            "message": "Voorbeeld Message 3"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollHandoffMutation",
+          "slug": "payrollhandoffmutation-payrollhandoffmutation-1-1"
+        },
+        "handoffId": "00000000-0000-4000-8000-000000000000",
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "kind": "start",
+        "effectiveDate": "2026-03-01",
+        "fields": {
+          "grossMonthlySalary": {
+            "old": null,
+            "new": 3800.0
+          }
+        },
+        "sourceSchema": "Employee",
+        "sourceId": "Voorbeeld Sourceid 1",
+        "sentState": {
+          "salary": {
+            "grossMonthlySalary": 3800.0
+          }
+        },
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollHandoffMutation",
+          "slug": "payrollhandoffmutation-payrollhandoffmutation-2-2"
+        },
+        "handoffId": "00000000-0000-4000-8000-000000000001",
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "kind": "salary",
+        "effectiveDate": "2026-04-01",
+        "fields": {
+          "grossMonthlySalary": {
+            "old": 3800.0,
+            "new": 3876.0
+          }
+        },
+        "sourceSchema": "CompAdjustment",
+        "sourceId": "Voorbeeld Sourceid 2",
+        "sentState": {
+          "salary": {
+            "grossMonthlySalary": 3876.0
+          }
+        },
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollHandoffMutation",
+          "slug": "payrollhandoffmutation-payrollhandoffmutation-3-3"
+        },
+        "handoffId": "00000000-0000-4000-8000-000000000002",
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "kind": "hours",
+        "effectiveDate": "2026-05-01",
+        "fields": {
+          "hours": {
+            "old": null,
+            "new": 152.0
+          }
+        },
+        "sourceSchema": "Timesheet",
+        "sourceId": "Voorbeeld Sourceid 3",
+        "sentState": {
+          "item:Voorbeeld Sourceid 3": {
+            "period": "2026-05",
+            "hours": 152.0,
+            "overtimeHours": null
+          }
+        },
+        "administrationId": "Voorbeeld Administrationid 3"
       }
     ]
   }

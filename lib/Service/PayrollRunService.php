@@ -286,6 +286,11 @@ class PayrollRunService {
 			return $this->outcome('', $period, $administrationId, 'failed', 'Ongeldige periode "' . $period . '" (verwacht JJJJ-MM).');
 		}
 
+		$outsourced = $this->bureauRefusal(runId: '', period: $period, administrationId: $administrationId);
+		if ($outsourced !== null) {
+			return $outsourced;
+		}
+
 		$existing = $this->findRun($period, $administrationId);
 
 		if ($existing !== null) {
@@ -358,6 +363,11 @@ class PayrollRunService {
 
 		if ($run === null) {
 			return $this->outcome($runId, '', '', 'failed', 'Loonrun niet gevonden.');
+		}
+
+		$outsourced = $this->bureauRefusal(runId: $runId, period: (string)($run['period'] ?? ''), administrationId: (string)($run['administrationId'] ?? ''));
+		if ($outsourced !== null) {
+			return $outsourced;
 		}
 
 		$status = (string)($run['status'] ?? '');
@@ -851,6 +861,41 @@ class PayrollRunService {
 			return null;
 		}
 	}//end runTheCheck()
+
+	/**
+	 * The refusal for an administration whose payroll an outside bureau
+	 * processes, or null when humaniq's engine runs it
+	 * (payroll-external-bureau-handoff D1). Two sources of payslips for one
+	 * period would disagree, and every sum downstream would double.
+	 *
+	 * @param string $runId            The run, or '' before one exists.
+	 * @param string $period           The period.
+	 * @param string $administrationId The administration.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-001
+	 */
+	private function bureauRefusal(string $runId, string $period, string $administrationId): ?array {
+		foreach ($this->loadAll('hrAdministration') as $administration) {
+			if ((string)($administration['administrationId'] ?? '') !== $administrationId
+				|| (string)($administration['payrollProcessing'] ?? 'engine') !== 'external-bureau'
+			) {
+				continue;
+			}
+
+			$bureau = trim((string)($administration['payrollBureauName'] ?? ''));
+			return $this->outcome(
+				$runId,
+				$period,
+				$administrationId,
+				'refused-external-bureau',
+				'De salarisverwerking van deze administratie ligt bij een extern bureau' . ($bureau === '' ? '' : ' (' . $bureau . ')') . '; humaniq berekent hier geen loonrun. Stuur de mutaties via een overdracht.'
+			);
+		}
+
+		return null;
+	}//end bureauRefusal()
 
 	/**
 	 * Split the run's wage costs over cost centres and projects; a failing

@@ -860,6 +860,12 @@
 					"route": "CostAllocations"
 				},
 				{
+					"icon": "SwapHorizontal",
+					"id": "PayrollHandoffs",
+					"label": "Bureau handoffs",
+					"route": "PayrollHandoffs"
+				},
+				{
 					"icon": "FileSendOutline",
 					"id": "LoonaangifteFilings",
 					"label": "Wage tax filings",
@@ -5373,6 +5379,296 @@
 			"id": "FormationScenarioDetail",
 			"route": "/formation-scenarios/:id",
 			"title": "Formation scenario",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "payroll-external-bureau-handoff (2026-10-01): D3 lifecycle. Compile posts {administrationId, period} from the handoff to /api/payroll/handoffs/compile (HR, payroll or an administrator; the administration resolved under the caller's RBAC first) and replaces the mutations while the handoff is in concept. Set ready (klaarzetten) is refused for the person who compiled it (HandoffReleaseGuard). Sent and Received are integriq's transitions; receiving runs the intake check (HandoffIntakeListener), and Check intake runs it on demand. Close (afsluiten) is refused while the intake has blocking findings (HandoffCloseGuard).",
+				"headerActions": [
+					{
+						"confirm": true,
+						"errorMessage": "The handoff could not be compiled. It may already be set ready, or the administration's payroll is run by humaniq.",
+						"icon": "Calculator",
+						"id": "compile-handoff",
+						"label": "Compile",
+						"method": "POST",
+						"params": {
+							"administrationId": "@object.administrationId",
+							"period": "@object.period"
+						},
+						"successMessage": "Handoff compiled. The mutations are up to date.",
+						"type": "api-call",
+						"url": "/api/payroll/handoffs/compile"
+					},
+					{
+						"errorMessage": "Checking the bureau's payslips failed.",
+						"icon": "ClipboardCheckOutline",
+						"id": "check-intake",
+						"label": "Check intake",
+						"method": "POST",
+						"params": {
+							"handoffId": "@objectId"
+						},
+						"successMessage": "Intake checked. The findings are updated.",
+						"type": "api-call",
+						"url": "/api/payroll/handoffs/check-intake"
+					}
+				],
+				"layout": [
+					{
+						"gridHeight": 3,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "stat-mutations"
+					},
+					{
+						"gridHeight": 3,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "stat-blocking"
+					},
+					{
+						"gridHeight": 7,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 3,
+						"id": 3,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 10,
+						"id": 4,
+						"widgetId": "mutations"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 15,
+						"id": 5,
+						"widgetId": "payslips"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "klaarzetten",
+							"from": [
+								"concept"
+							],
+							"label": "Set ready",
+							"to": "klaargezet"
+						},
+						{
+							"action": "afsluiten",
+							"from": [
+								"ontvangen"
+							],
+							"label": "Close",
+							"to": "afgesloten"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"klaargezet",
+								"verzonden"
+							],
+							"label": "Reopen",
+							"to": "concept"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "PayrollHandoff",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"caption": "changes for the bureau",
+							"format": {
+								"decimals": 0,
+								"style": "number"
+							},
+							"icon": "SwapHorizontal",
+							"label": "Mutations",
+							"source": {
+								"field": "mutationCount",
+								"filter": {
+									"id": "@objectId"
+								},
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "PayrollHandoff"
+							},
+							"valueColor": "#0082c9"
+						},
+						"icon": "SwapHorizontal",
+						"id": "stat-mutations",
+						"title": "Mutations",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"caption": "payslips missing or for someone else",
+							"format": {
+								"decimals": 0,
+								"style": "number"
+							},
+							"icon": "AlertCircleOutline",
+							"label": "Blocking findings",
+							"source": {
+								"field": "blockingFindings",
+								"filter": {
+									"id": "@objectId"
+								},
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "PayrollHandoff"
+							},
+							"valueColor": "#e9322d"
+						},
+						"icon": "AlertCircleOutline",
+						"id": "stat-blocking",
+						"title": "Blocking findings",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"blockingFindings": {
+									"editable": false
+								},
+								"compiledAt": {
+									"editable": false
+								},
+								"compiledBy": {
+									"editable": false
+								},
+								"deliveredAt": {
+									"editable": false
+								},
+								"deliveryReference": {
+									"editable": false
+								},
+								"intakeFindings": {
+									"editable": false
+								},
+								"mutationCount": {
+									"editable": false
+								},
+								"receivedAt": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								}
+							},
+							"title": "Bureau handoff"
+						},
+						"icon": "FileSendOutline",
+						"id": "data",
+						"title": "Bureau handoff",
+						"type": "data"
+					},
+					{
+						"content": {
+							"allowCreate": false,
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "effectiveDate",
+									"label": "Effective date"
+								},
+								{
+									"key": "sourceSchema",
+									"label": "Source"
+								}
+							],
+							"emptyText": "No mutations yet. Compile the handoff to collect the period's changes.",
+							"filter": {
+								"handoffId": "@objectId"
+							},
+							"limit": 50,
+							"register": "humaniq",
+							"rowRoute": "PayrollHandoffMutationDetail",
+							"schema": "PayrollHandoffMutation",
+							"sort": {
+								"dir": "asc",
+								"field": "employeeId"
+							},
+							"viewAllQuery": {
+								"handoffId": "@objectId"
+							},
+							"viewAllRoute": "PayrollHandoffMutations"
+						},
+						"icon": "SwapHorizontal",
+						"id": "mutations",
+						"title": "Mutations",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"allowCreate": false,
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "grossPay",
+									"label": "Gross"
+								},
+								{
+									"key": "loonheffing",
+									"label": "Payroll tax"
+								},
+								{
+									"key": "nettoPay",
+									"label": "Net"
+								}
+							],
+							"emptyText": "No payslips back from the bureau yet.",
+							"filter": {
+								"payrollHandoffId": "@objectId"
+							},
+							"limit": 50,
+							"register": "humaniq",
+							"rowRoute": "PayslipDetail",
+							"schema": "Payslip",
+							"sort": {
+								"dir": "asc",
+								"field": "employeeId"
+							}
+						},
+						"icon": "ReceiptTextOutline",
+						"id": "payslips",
+						"title": "Payslips from the bureau",
+						"type": "object-list"
+					}
+				]
+			},
+			"id": "PayrollHandoffDetail",
+			"route": "/payroll-handoffs/:id",
+			"title": "Bureau handoff",
 			"type": "detail"
 		},
 		{
@@ -13833,6 +14129,153 @@
 			"id": "PayrollGLPostDetail",
 			"route": "/gl-posts/:id",
 			"title": "Payroll GL post",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "payroll-external-bureau-handoff (2026-10-01): one PayrollHandoff per administration and period, for an administration whose payrollProcessing is external-bureau. integriq delivers a handoff that is set ready and writes the bureau's payslips back.",
+				"allowCreate": true,
+				"columns": [
+					"administrationId",
+					"period",
+					"status",
+					"mutationCount",
+					"blockingFindings",
+					"deliveryReference"
+				],
+				"description": "The monthly handoffs to the outside bureau that runs an administration's payroll. Add one for a period, compile it, and let a colleague set it ready; the bureau's payslips come back on the same handoff.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"status",
+					"period"
+				],
+				"register": "humaniq",
+				"schema": "PayrollHandoff",
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				}
+			},
+			"id": "PayrollHandoffs",
+			"route": "/payroll-handoffs",
+			"title": "Bureau handoffs",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-external-bureau-handoff (2026-10-01): written only by PayrollHandoffService::compile(); reached from a handoff's mutation list (View all).",
+				"allowCreate": false,
+				"columns": [
+					"handoffId",
+					"employeeId",
+					"kind",
+					"effectiveDate",
+					"sourceSchema"
+				],
+				"description": "Every change humaniq sent to the bureau, with its old and new values and the record it came from. Compiling a handoff writes them; nobody edits them by hand.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"kind",
+					"handoffId",
+					"employeeId"
+				],
+				"register": "humaniq",
+				"schema": "PayrollHandoffMutation",
+				"sort": {
+					"field": "effectiveDate",
+					"order": "desc"
+				}
+			},
+			"id": "PayrollHandoffMutations",
+			"route": "/payroll-handoff-mutations",
+			"title": "Handoff mutations",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-external-bureau-handoff (2026-10-01): one difference between what earlier handoffs sent and the employee's payroll facts now, or one period item (hours, a claim, an allowance, a leave trade, a sickness case, a garnishment). Compiling the handoff writes and replaces these, so every field is read-only.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "PayrollHandoffMutation",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"administrationId": {
+									"editable": false
+								},
+								"effectiveDate": {
+									"editable": false
+								},
+								"employeeId": {
+									"editable": false
+								},
+								"fields": {
+									"editable": false
+								},
+								"handoffId": {
+									"editable": false
+								},
+								"kind": {
+									"editable": false
+								},
+								"sentState": {
+									"editable": false
+								},
+								"sourceId": {
+									"editable": false
+								},
+								"sourceSchema": {
+									"editable": false
+								}
+							},
+							"title": "Mutation"
+						},
+						"icon": "SwapHorizontal",
+						"id": "data",
+						"title": "Mutation",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "PayrollHandoffMutationDetail",
+			"route": "/payroll-handoff-mutations/:id",
+			"title": "Handoff mutation",
 			"type": "detail"
 		},
 		{

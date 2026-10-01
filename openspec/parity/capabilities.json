@@ -4534,7 +4534,7 @@
    "id": "pay-outsourced",
    "area": "payroll",
    "name": "Hand payroll processing to the vendor's own payroll service.",
-   "humaniq": "no",
+   "humaniq": "partial",
    "afas": "partial",
    "visma-raet": "yes",
    "hr2day": "unknown",
@@ -4550,17 +4550,19 @@
     "personio": "https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26): 'Personio Payroll, powered by Loket. Managed payroll delivery for the Netherlands, combining Personio's HR workflows with compliant, local payroll expertise'; for Germany https://support.personio.de/hc/en-us/articles/24333241923485-About-the-Personio-Payroll-Expert-plan adds support from Personio's tax consulting partners."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-external-bureau-handoff on 2026-09-27. Before: grep -rniF 'youforce|uitbesteed|outsourc' lib openspec README.md (excluding archive): no hits; humaniq's own README describes it as the payroll engine itself, not a hand-off to a bureau",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "hrAdministration.payrollProcessing external-bureau stops the engine (lib/Service/PayrollRunService.php refused-external-bureau). PayrollHandoff and PayrollHandoffMutation (lib/Settings/register.d/hr-handoff.json) with a declared lifecycle; lib/Service/PayrollHandoffService.php::compile() writes the period's mutations as differences from what earlier handoffs sent (HandoffEmployeeView: start, salary, contract, bank account, tax settings, leaving; HandoffPeriodItems: approved hours, payroll-route claims, allowances, leave trades, sickness, garnishments), checkIntake() checks the bureau's payslips and stamps the employee's account; HandoffReleaseGuard (four eyes on klaarzetten), HandoffCloseGuard (no closing over blocking findings), HandoffIntakeListener (intake on ontvangen), PayrollHandoffController (POST /api/payroll/handoffs/compile and /check-intake). Delivery and return are integriq's synchronisation, not built (drafted for Ruben), so the cell is partial. Tests: tests/Unit/Service/PayrollHandoffServiceTest.php, tests/Unit/Service/PayrollHandoffPeriodItemsTest.php, tests/Unit/Lifecycle/HandoffGuardsTest.php, tests/Unit/Listener/HandoffIntakeListenerTest.php, tests/Unit/Controller/PayrollHandoffControllerTest.php, tests/Unit/Service/PayrollRunServiceTest.php::testTheEngineStaysOutOfAnOutsourcedAdministration.",
+    "reachedOn": "Payroll > Bureau handoffs (Compile, Check intake, Set ready, Close, Reopen); an administration's Payroll processing field; the bureau's payslips on My payslips",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-10-01-payroll-external-bureau-handoff",
+    "readOn": "2026-10-01"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "payroll-core-engine",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "humaniq is built to be the alternative to outsourcing, not a broker for it; this is a deliberate scope choice, not a gap in the areas it does cover."
+   "note": "humaniq is built to be the alternative to outsourcing; payroll-external-bureau-handoff (2026-10-01) adds the handoff for an employer who keeps an outside bureau: humaniq compiles and checks, integriq carries."
   },
   {
    "id": "fil-wage-tax-return",

@@ -33,6 +33,8 @@ use OCA\Humaniq\Command\RulesSeedTestDataCommand;
 use OCA\Humaniq\Lifecycle\ChangeApproverRoleGuard;
 use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
+use OCA\Humaniq\Lifecycle\HandoffCloseGuard;
+use OCA\Humaniq\Lifecycle\HandoffReleaseGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
@@ -46,6 +48,7 @@ use OCA\Humaniq\Listener\ChangeRequestListener;
 use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 use OCA\Humaniq\Listener\FieldAccessListener;
 use OCA\Humaniq\Listener\FrequentAbsenceListener;
+use OCA\Humaniq\Listener\HandoffIntakeListener;
 use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
@@ -198,12 +201,7 @@ class Application extends App implements IBootstrap {
 		// to check()), constructed exactly like NoSelfApprovalGuard, keyed by
 		// its FQCN so OpenRegister's LifecycleGuardRegistry resolves the
 		// `requires` tag declared on the `submit` transition.
-		$context->registerService(
-			TimesheetNotEmptyGuard::class,
-			static function ($c): TimesheetNotEmptyGuard {
-				return new TimesheetNotEmptyGuard();
-			}
-		);
+		$context->registerService(TimesheetNotEmptyGuard::class, static fn ($c): TimesheetNotEmptyGuard => new TimesheetNotEmptyGuard());
 
 		// OpenRegister lifecycle guard for the LeaveRequest `submit` transition
 		// (leave-against-a-department-schedule REQ-LVM-T02): a type that needs a
@@ -313,6 +311,10 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+
+		// payroll-external-bureau-handoff D3, D4: four eyes on klaarzetten, no afsluiten over blocking findings.
+		$context->registerService(HandoffReleaseGuard::class, static fn ($c): HandoffReleaseGuard => new HandoffReleaseGuard());
+		$context->registerService(HandoffCloseGuard::class, static fn ($c): HandoffCloseGuard => new HandoffCloseGuard());
 
 		// jurisdiction-packs (design.md D7): the pack resolver spans two homes —
 		// bundled packs in lib/Standards/packs/ (universal facts live in code)
@@ -951,7 +953,7 @@ class Application extends App implements IBootstrap {
 	 * payroll-expenses-and-allowances D1, D3: the claim route and the allowance drafter, before save;
 	 * payroll-run-checks D5: the reviewer who acknowledges a finding; payroll-cao-components D2: a
 	 * contract's CAO component overrides; payroll-cost-allocation D1: a cost allocation's splits
-	 * and overlap.
+	 * and overlap; payroll-external-bureau-handoff D4: the intake check when a handoff is received.
 	 *
 	 * @param IEventDispatcher $dispatcher The live event dispatcher.
 	 *
@@ -963,6 +965,7 @@ class Application extends App implements IBootstrap {
 				$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: $listener, registers: null, schemas: [$slug]);
 			}
 		}
+		$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: ObjectUpdatedEvent::class, listener: HandoffIntakeListener::class, registers: null, schemas: [HandoffIntakeListener::SLUG]);
 	}//end registerExpensePayrollListeners()
 
 	/**

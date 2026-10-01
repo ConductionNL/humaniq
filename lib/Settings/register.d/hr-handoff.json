@@ -1,0 +1,279 @@
+{
+    "x-humaniq-fragment": "hr-handoff",
+    "components": {
+        "schemas": {
+            "PayrollHandoff": {
+                "slug": "PayrollHandoff",
+                "icon": "FileSendOutline",
+                "version": "0.1.0",
+                "title": "Payroll handoff",
+                "description": "One period's payroll mutations for an administration whose payroll an outside bureau runs: compiled by humaniq, set ready by a second person, delivered and answered through integriq, and closed once the bureau's payslips are complete (payroll-external-bureau-handoff).",
+                "type": "object",
+                "x-schema-org": "schema:Report",
+                "required": [
+                    "administrationId",
+                    "period",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "terminal": [
+                            "afgesloten"
+                        ],
+                        "transitions": {
+                            "klaarzetten": {
+                                "from": [
+                                    "concept"
+                                ],
+                                "to": "klaargezet",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\HandoffReleaseGuard",
+                                "description": "A second HR adviser sets the handoff ready for the bureau. The person who compiled it cannot."
+                            },
+                            "verzenden": {
+                                "from": [
+                                    "klaargezet"
+                                ],
+                                "to": "verzonden",
+                                "description": "integriq delivered the handoff to the bureau and records the delivery reference."
+                            },
+                            "ontvangen": {
+                                "from": [
+                                    "verzonden"
+                                ],
+                                "to": "ontvangen",
+                                "description": "integriq wrote the bureau's payslips back; humaniq checks them for completeness."
+                            },
+                            "afsluiten": {
+                                "from": [
+                                    "ontvangen"
+                                ],
+                                "to": "afgesloten",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\HandoffCloseGuard",
+                                "description": "Close the period. Refused while the intake check has blocking findings."
+                            },
+                            "heropenen": {
+                                "from": [
+                                    "klaargezet",
+                                    "verzonden"
+                                ],
+                                "to": "concept",
+                                "description": "The bureau rejected the handoff: back to concept to correct and compile again."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "administrationId": {
+                        "type": "string",
+                        "title": "Administration",
+                        "description": "The administration whose payroll the bureau runs."
+                    },
+                    "period": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+                        "title": "Period",
+                        "description": "The wage period, as YYYY-MM."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Where the handoff is: concept while HR compiles, ready for the bureau, sent, received back, or closed.",
+                        "x-enum-labels": {
+                            "concept": "Concept",
+                            "klaargezet": "Ready",
+                            "verzonden": "Sent",
+                            "ontvangen": "Received",
+                            "afgesloten": "Closed"
+                        },
+                        "enum": [
+                            "concept",
+                            "klaargezet",
+                            "verzonden",
+                            "ontvangen",
+                            "afgesloten"
+                        ],
+                        "default": "concept"
+                    },
+                    "compiledBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Compiled by",
+                        "description": "The account that compiled the mutations. This person cannot set the handoff ready."
+                    },
+                    "compiledAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Compiled at",
+                        "description": "When the mutations were last compiled."
+                    },
+                    "mutationCount": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "title": "Mutations",
+                        "description": "How many mutations the handoff holds."
+                    },
+                    "deliveryReference": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Delivery reference",
+                        "description": "The bureau's reference for the delivery, written by integriq."
+                    },
+                    "deliveredAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Delivered at",
+                        "description": "When integriq delivered the handoff."
+                    },
+                    "receivedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Received at",
+                        "description": "When the bureau's payslips came back."
+                    },
+                    "blockingFindings": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "nullable": true,
+                        "title": "Blocking findings",
+                        "description": "How many problems the intake check found that stop closing the period."
+                    },
+                    "intakeFindings": {
+                        "type": "array",
+                        "title": "Intake findings",
+                        "description": "What the intake check found: an employee without a returned payslip, or a payslip for someone outside the administration.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "kind": {
+                                    "type": "string",
+                                    "title": "Kind",
+                                    "description": "The kind of finding.",
+                                    "enum": [
+                                        "missing-payslip",
+                                        "unknown-employee",
+                                        "duplicate-payslip"
+                                    ]
+                                },
+                                "employeeId": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "title": "Employee",
+                                    "description": "The employee the finding is about."
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "title": "Message",
+                                    "description": "What is wrong."
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "PayrollHandoffMutation": {
+                "slug": "PayrollHandoffMutation",
+                "icon": "SwapHorizontal",
+                "version": "0.1.0",
+                "title": "Payroll handoff mutation",
+                "description": "One change to an employee's payroll facts since the previous handoff, as sent to the outside bureau: what changed, from what to what, from when, and the record it came from (payroll-external-bureau-handoff).",
+                "type": "object",
+                "x-schema-org": "schema:UpdateAction",
+                "required": [
+                    "handoffId",
+                    "employeeId",
+                    "kind"
+                ],
+                "properties": {
+                    "handoffId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "PayrollHandoff",
+                        "title": "Handoff",
+                        "description": "The handoff this mutation belongs to."
+                    },
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Whose payroll facts changed."
+                    },
+                    "kind": {
+                        "type": "string",
+                        "title": "Kind",
+                        "description": "What changed.",
+                        "x-enum-labels": {
+                            "start": "Starter",
+                            "leave": "Leaver",
+                            "contract": "Contract",
+                            "salary": "Salary",
+                            "hours": "Hours",
+                            "claim": "Claim",
+                            "allowance": "Allowance",
+                            "leave-transaction": "Leave sold or bought",
+                            "sickness": "Sickness",
+                            "garnishment": "Wage garnishment",
+                            "bank-account": "Bank account",
+                            "tax-settings": "Tax settings"
+                        },
+                        "enum": [
+                            "start",
+                            "leave",
+                            "contract",
+                            "salary",
+                            "hours",
+                            "claim",
+                            "allowance",
+                            "leave-transaction",
+                            "sickness",
+                            "garnishment",
+                            "bank-account",
+                            "tax-settings"
+                        ]
+                    },
+                    "effectiveDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Effective date",
+                        "description": "From when the change applies."
+                    },
+                    "fields": {
+                        "type": "object",
+                        "title": "Changes",
+                        "description": "Per field, the value the bureau had and the new value."
+                    },
+                    "sourceSchema": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Source",
+                        "description": "The kind of record the change came from."
+                    },
+                    "sourceId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Source record",
+                        "description": "The record the change came from."
+                    },
+                    "sentState": {
+                        "type": "object",
+                        "title": "Sent state",
+                        "description": "The values as sent, which the next handoff compares against.",
+                        "x-notes": "payroll-external-bureau-handoff D2: the baseline of the next compile."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration of the handoff."
+                    }
+                }
+            }
+        }
+    }
+}

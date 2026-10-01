@@ -122,3 +122,30 @@ administration under the caller's RBAC first. Everything else is the object API 
 - Should an administration be able to switch from `external-bureau` to `engine` mid-year?
   `payroll-period-edge-cases` adds opening balances that would make it possible; this design
   allows the switch only from 1 January.
+
+## As built (2026-10-01)
+
+- **Three classes instead of one.** `PayrollHandoffService` keeps `compile()` and `checkIntake()`;
+  the employee-level view and its differences live in `HandoffEmployeeView`, the period items in
+  `HandoffPeriodItems` (phpmd complexity). The services are what the endpoints and the listener call.
+- **Period items.** Each item kind (approved timesheets of the period, approved payroll-route
+  claims, active allowances running in the period, approved leave trades, sickness cases running in
+  the period, active garnishments) travels once as its own mutation keyed `item:<sourceId>` in
+  `sentState`. An item that went out and changed later (a recovery date, a settled garnishment)
+  travels again with only the changed fields; its effective date is then the new end date. An item
+  that never went out and is no longer due (a garnishment already settled) is not sent.
+- **Four eyes.** `klaarzetten` uses `HandoffReleaseGuard` (compiledBy differs from the acting user),
+  not `NoSelfApprovalGuard`, which compares against an employee. `afsluiten` uses
+  `HandoffCloseGuard` (no blocking findings). Both are registered in `Application`.
+- **Intake on receipt.** `HandoffIntakeListener` runs `checkIntake()` on the verzonden to
+  ontvangen edge of a PayrollHandoff; the Check intake button runs it on demand.
+- **Endpoints.** `POST /api/payroll/handoffs/compile {administrationId, period}` and
+  `POST /api/payroll/handoffs/check-intake {handoffId}`: HR, payroll or an administrator (the
+  `HumaniqRoles` groups, as `PayrollCheckController`), the administration or handoff resolved under
+  the caller's RBAC first (404), a refused compile answers 409 with the service's message.
+- **Pages.** Payroll > Bureau handoffs: add a handoff for a period, then Compile on its page
+  (the WPM report pattern). The page lists its mutations and the bureau's payslips, with the
+  lifecycle actions a person takes (Set ready, Close, Reopen); Sent and Received are integriq's.
+- **integriq.** The synchronisation is drafted for Ruben in
+  `for-ruben/integriq-humaniq-payroll-handoff-sync.md`; nothing is filed on integriq.
+
