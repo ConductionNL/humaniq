@@ -642,6 +642,12 @@
 				"route": "CostAllocations"
 			},
 			{
+				"id": "PayrollHandoffs",
+				"label": "Bureau handoffs",
+				"icon": "SwapHorizontal",
+				"route": "PayrollHandoffs"
+			},
+			{
 				"id": "LoonaangifteFilings",
 				"label": "Wage tax filings",
 				"icon": "FileSendOutline",
