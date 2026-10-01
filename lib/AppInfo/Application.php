@@ -201,12 +201,7 @@ class Application extends App implements IBootstrap {
 		// to check()), constructed exactly like NoSelfApprovalGuard, keyed by
 		// its FQCN so OpenRegister's LifecycleGuardRegistry resolves the
 		// `requires` tag declared on the `submit` transition.
-		$context->registerService(
-			TimesheetNotEmptyGuard::class,
-			static function ($c): TimesheetNotEmptyGuard {
-				return new TimesheetNotEmptyGuard();
-			}
-		);
+		$context->registerService(TimesheetNotEmptyGuard::class, static fn ($c): TimesheetNotEmptyGuard => new TimesheetNotEmptyGuard());
 
 		// OpenRegister lifecycle guard for the LeaveRequest `submit` transition
 		// (leave-against-a-department-schedule REQ-LVM-T02): a type that needs a
@@ -317,23 +312,9 @@ class Application extends App implements IBootstrap {
 			}
 		);
 
-		// OpenRegister lifecycle guards for the PayrollHandoff `klaarzetten` and
-		// `afsluiten` transitions (payroll-external-bureau-handoff D3, D4): the
-		// person who compiled a handoff cannot set it ready, and a handoff with
-		// blocking intake findings cannot be closed. Stateless, keyed by their
-		// FQCN so OpenRegister's LifecycleGuardRegistry resolves the `requires` tags.
-		$context->registerService(
-			HandoffReleaseGuard::class,
-			static function ($c): HandoffReleaseGuard {
-				return new HandoffReleaseGuard();
-			}
-		);
-		$context->registerService(
-			HandoffCloseGuard::class,
-			static function ($c): HandoffCloseGuard {
-				return new HandoffCloseGuard();
-			}
-		);
+		// payroll-external-bureau-handoff D3, D4: four eyes on klaarzetten, no afsluiten over blocking findings.
+		$context->registerService(HandoffReleaseGuard::class, static fn ($c): HandoffReleaseGuard => new HandoffReleaseGuard());
+		$context->registerService(HandoffCloseGuard::class, static fn ($c): HandoffCloseGuard => new HandoffCloseGuard());
 
 		// jurisdiction-packs (design.md D7): the pack resolver spans two homes —
 		// bundled packs in lib/Standards/packs/ (universal facts live in code)
@@ -984,7 +965,6 @@ class Application extends App implements IBootstrap {
 				$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: $listener, registers: null, schemas: [$slug]);
 			}
 		}
-
 		$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: ObjectUpdatedEvent::class, listener: HandoffIntakeListener::class, registers: null, schemas: [HandoffIntakeListener::SLUG]);
 	}//end registerExpensePayrollListeners()
 

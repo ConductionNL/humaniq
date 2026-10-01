@@ -39,6 +39,8 @@ parameters:
         - lib/Notification/CaseManagerResolver.php
         - lib/Notification/ManagerOrDeputyRecipientResolver.php
         - lib/Lifecycle/DecisionReasonGuard.php
+        - lib/Lifecycle/HandoffCloseGuard.php
+        - lib/Lifecycle/HandoffReleaseGuard.php
         - lib/Lifecycle/LeaveBuySellApprovalGuard.php
         - lib/Lifecycle/LeaveSettlementPeriodGuard.php
         - lib/Lifecycle/LeaveTypeConditionGuard.php

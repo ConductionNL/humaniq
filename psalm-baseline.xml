@@ -8,6 +8,12 @@
       <code><![CDATA[DecisionReasonGuard]]></code>
       <code><![CDATA[DecisionReasonGuard]]></code>
       <code><![CDATA[DecisionReasonGuard]]></code>
+      <code><![CDATA[HandoffCloseGuard]]></code>
+      <code><![CDATA[HandoffCloseGuard]]></code>
+      <code><![CDATA[HandoffCloseGuard]]></code>
+      <code><![CDATA[HandoffReleaseGuard]]></code>
+      <code><![CDATA[HandoffReleaseGuard]]></code>
+      <code><![CDATA[HandoffReleaseGuard]]></code>
       <code><![CDATA[LeaveBuySellApprovalGuard]]></code>
       <code><![CDATA[LeaveBuySellApprovalGuard]]></code>
       <code><![CDATA[LeaveBuySellApprovalGuard]]></code>
