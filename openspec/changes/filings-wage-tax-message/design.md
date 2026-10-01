@@ -70,8 +70,11 @@ file that drifted from the run (a re-calculated run after rendering) is flagged.
 
 ## Seed data
 
-- The seeded approved run for 2026-06 renders a message for the seed administration; one seed
-  employee without a BSN makes a second administration's filing refuse with a named finding.
+- Amended 2026-10-02: the seeded payslips carry no `engineInputSnapshot` and no run reference,
+  so the seed cannot render a message (every line would be `payslip-not-reproducible`). The seed
+  gives `ADM-001` its contact for the return; its tax number `000000000L01` stays a placeholder,
+  so a render on the seed shows the `LhNr` finding. The live check (task 3.2) uses a run the
+  engine calculated on the instance.
 
 ## Risks / Trade-offs
 
