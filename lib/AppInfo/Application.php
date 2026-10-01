@@ -33,6 +33,8 @@ use OCA\Humaniq\Command\RulesSeedTestDataCommand;
 use OCA\Humaniq\Lifecycle\ChangeApproverRoleGuard;
 use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
+use OCA\Humaniq\Lifecycle\HandoffCloseGuard;
+use OCA\Humaniq\Lifecycle\HandoffReleaseGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
@@ -312,6 +314,24 @@ class Application extends App implements IBootstrap {
 				return new RosterCompetenceGuard(
 					rosterCheck: $c->get(RosterCheckService::class)
 				);
+			}
+		);
+
+		// OpenRegister lifecycle guards for the PayrollHandoff `klaarzetten` and
+		// `afsluiten` transitions (payroll-external-bureau-handoff D3, D4): the
+		// person who compiled a handoff cannot set it ready, and a handoff with
+		// blocking intake findings cannot be closed. Stateless, keyed by their
+		// FQCN so OpenRegister's LifecycleGuardRegistry resolves the `requires` tags.
+		$context->registerService(
+			HandoffReleaseGuard::class,
+			static function ($c): HandoffReleaseGuard {
+				return new HandoffReleaseGuard();
+			}
+		);
+		$context->registerService(
+			HandoffCloseGuard::class,
+			static function ($c): HandoffCloseGuard {
+				return new HandoffCloseGuard();
 			}
 		);
 
