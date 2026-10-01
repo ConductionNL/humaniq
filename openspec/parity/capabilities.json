@@ -4802,7 +4802,7 @@
    "id": "fil-ib47",
    "area": "filings",
    "name": "Report payments to third parties who are not employees.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "yes",
@@ -4818,10 +4818,12 @@
     "personio": "not checked: not settled: the help centre says Personio Payroll is Germany only (https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, updated 2026-09-25) and Dutch pay is run in Loket (https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration), while https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26) announces 'Personio Payroll, powered by Loket', managed payroll delivery for the Netherlands; no page states whether IB47 reports are produced."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/filings-ib47 on 2026-09-27. Before: grep -rniF 'ib.?47' lib src openspec (excluding archive): no hits anywhere",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "ThirdPartyPayee, ThirdPartyPayment and ThirdPartyReport (lib/Settings/register.d/hr-third-party.json, report lifecycle klaarzetten/verzenden/heropenen). lib/Service/ThirdPartyReportService.php::assemble() sums a year's payments plus expense allowances per payee, rounds down to whole euros, dates each melding on the last payment and renders the Belastingdienst's UBD 1.0 message (lib/Service/UbdMessage.php), validated against the official XSD shipped in lib/Standards/ubd/UBD_1.0_V1.20211028.xsd; blocking findings (payee without BSN, date of birth or address; administration without loonheffingennummer or postal address) keep the message out and UbdReportReadyGuard refuses klaarzetten. Rules nl-ubd-deadline and nl-ubd-payee-identification (lib/Standards/Checks/NlThirdPartyChecks.php). The payee statement (ubd-jaaropgaaf) through filinq: lib/Service/ThirdPartyStatementService.php. Endpoints POST /api/third-party/reports/assemble and /api/third-party/reports/{reportId}/statements (ThirdPartyReportController). Tests: tests/Unit/Service/ThirdPartyReportServiceTest.php (golden file tests/fixtures/ubd/ubd-2026-adm-001.xml), ThirdPartyStatementServiceTest, ThirdPartyReportControllerTest, tests/Unit/Lifecycle/UbdReportReadyGuardTest.php, tests/Unit/Standards/Checks/NlThirdPartyChecksTest.php.",
+    "reachedOn": "Payroll > Third-party payees, Third-party payments, Third-party reports (Assemble, Statements, Set ready, Mark sent, Reopen)",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-10-01-filings-ib47",
+    "readOn": "2026-10-01"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

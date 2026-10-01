@@ -68,3 +68,31 @@ year's schema (shipped under `lib/Standards/ubd/`), and stores the file on the r
 
 - Should payments be imported from shillinq's payables instead of entered? This design records
   them in humaniq; an import is a later change.
+
+## As built (2026-10-01): where the code differs from the decisions above
+
+- **The official format is per melding, not a free file.** The Belastingdienst's UBD 1.0 XSD
+  (ODB product zip "Uitbetaalde Bedragen aan Derden m.i.v. 01-01-2024 v08", CC0) has one
+  `Uitbetalingsmelding` per payment, and allows summing a payee's payments of a year into one
+  melding dated on the last payment (Handleiding Deel 2, 2.3.4). humaniq sends one melding per
+  payee and year, amount including expense allowances (Deel 1, 1.4), rounded down to whole
+  euros. The meldingsID is a hash of administration, year and payee, so a report assembled
+  again after reopening a sent one corrects the earlier meldingen (Deel 2, 2.3.5).
+- **D1 names.** The format needs surname, prefix and initials apart, so `ThirdPartyPayee` has
+  `lastName`, `prefix` and `initials` instead of `name`, and the address as street, house
+  number, addition, postcode, city and country (the format's `adresvast`).
+- **D1 file.** The report stores the message itself (`messageXml`) with its upload file name
+  (`UBD_<loonheffingennummer>_<leveringsID>.xml`) and `leveringsId`, instead of a
+  `messageFileId`; a yearly message is small, and it keeps the report one object.
+- **D2 guard.** Assembly is an endpoint (`POST /api/third-party/reports/assemble`), not a
+  side effect of `klaarzetten`; the guard on `klaarzetten` (UbdReportReadyGuard) refuses while
+  the report has blocking findings or no message.
+- **The bron address.** The format needs the employer's address; `hrAdministration` gains
+  `postalAddress` (one line, sent as `adresvrij`).
+- **relNr.** The message carries the software developer's relation number with the
+  Belastingdienst (SWOxxxxx). It is the app config key `ubd_relnr`; while it is empty the
+  report has a warning, not a blocking finding.
+- **D3 rules** read a `ubd` index RuleAuditService builds (sent report keys, paid payees).
+- **The statement** is generated for every payee of a report in one action
+  (`POST /api/third-party/reports/{reportId}/statements`), through filinq's `hrmq` template
+  namespace with category `ubd-jaaropgaaf`, and stored as a file on the payee.
