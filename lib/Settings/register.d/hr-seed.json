@@ -2183,7 +2183,7 @@
                 "hourlyWage": 16.00,
                 "cao": null,
                 "normfunctieId": null,
-                "awfTariff": "high",
+                "awfTariff": "low",
                 "aanzegdOn": null,
                 "workingTimeDocumented": true,
                 "overtimeMultiplier": 1.5,
@@ -3400,6 +3400,129 @@
                 "status": "concept",
                 "deadline": "2027-01-31",
                 "_note": "filings-ib47 (design.md Seed data): the 2026 report in concept. Assemble on its page: two lines (J.P. van Dijk 932, A. Bos 294), total 1226."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-ilse-de-boer"
+                },
+                "gender": "woman",
+                "_note": "filings-premium-differentiation: the BBL contract above (contract-visser-bbl) is charged the low Awf premium. Ilse de Boer is 19 on a temporary 10-hour weekend contract: the contract itself is high, but each month she is paid 52 hours or less, so her payslip is charged low (young-part-time). Femke Bakker works 24 contracted hours and is paid about 34 a week: her June payslip carries the year-to-date figures and raises nl-awf-herziening-uren-signaal; the first run of 2027 reviews her 2026 low premium.",
+                "employeeNumber": "EMP-0190",
+                "firstName": "Ilse",
+                "lastName": "de Boer",
+                "dateOfBirth": "2007-05-20",
+                "startDate": "2026-03-01",
+                "grossMonthlySalary": 650.0,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-de-boer-weekend"
+                },
+                "employeeId": "@ref:employee-ilse-de-boer",
+                "type": "temporary",
+                "writtenContract": true,
+                "startDate": "2026-03-01",
+                "endDate": "2027-02-28",
+                "hoursPerWeek": 10,
+                "hourlyWage": 15.0,
+                "cao": null,
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Payslip",
+                    "slug": "payslip-de-boer-2026-05"
+                },
+                "employeeId": "@ref:employee-ilse-de-boer",
+                "period": "2026-05",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 650.0,
+                "hoursWorked": 43.33,
+                "loonheffing": 0.0,
+                "nettoPay": 650.0,
+                "awfTariff": "low",
+                "awfTariffBasis": "young-part-time",
+                "statementProvided": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-femke-bakker"
+                },
+                "gender": "woman",
+                "employeeNumber": "EMP-0191",
+                "firstName": "Femke",
+                "lastName": "Bakker",
+                "dateOfBirth": "1985-09-02",
+                "startDate": "2025-06-01",
+                "grossMonthlySalary": 2400.0,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-femke-bakker-24"
+                },
+                "employeeId": "@ref:employee-femke-bakker",
+                "type": "permanent",
+                "writtenContract": true,
+                "startDate": "2025-06-01",
+                "endDate": null,
+                "hoursPerWeek": 24,
+                "hourlyWage": 23.08,
+                "cao": null,
+                "normfunctieId": null,
+                "awfTariff": "low",
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Payslip",
+                    "slug": "payslip-femke-bakker-2026-06"
+                },
+                "employeeId": "@ref:employee-femke-bakker",
+                "period": "2026-06",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 2400.0,
+                "hoursWorked": 147.33,
+                "loonheffing": 310.0,
+                "nettoPay": 2090.0,
+                "awfTariff": "low",
+                "awfTariffBasis": "contract",
+                "awfPaidHoursYearToDate": 883.98,
+                "awfContractHoursYearToDate": 624.0,
+                "awfAverageContractHoursPerWeek": 25,
+                "awfOverrunPercentYearToDate": 41,
+                "statementProvided": true,
+                "administrationId": "ADM-001"
             }
         ]
     }
