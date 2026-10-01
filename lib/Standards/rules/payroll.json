@@ -1428,6 +1428,30 @@
       "machineCheckable": true,
       "effectiveDate": "2013-01-01",
       "sourceUrl": "https://wetten.overheid.nl/BWBR0032249"
+    },
+    {
+      "id": "nl-ubd-deadline",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Belastingdienst, opgaaf uitbetaalde bedragen aan derden (art. 53 AWR, art. 22 Uitv.reg. AWR)",
+      "statement": "A ThirdPartyPayment whose year's ThirdPartyReport for the same administration is not in verzonden by 31 January of the next year is a violation, to be surfaced by occ humaniq:rules:audit.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2024-01-01",
+      "sourceUrl": "https://odb.belastingdienst.nl/opgaven-derden-uitbetalingen-ib47/"
+    },
+    {
+      "id": "nl-ubd-payee-identification",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Belastingdienst, Handleiding gegevensaanlevering uitbetalingen aan derden, Deel 2 (ONTVANGER, bSN)",
+      "statement": "A ThirdPartyPayee with at least one ThirdPartyPayment and no BSN or no date of birth is a violation: the UBD message cannot identify them.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2024-01-01",
+      "sourceUrl": "https://odb.belastingdienst.nl/documentatie/uitbetaalde-bedragen-aan-derden-v08/"
     }
   ]
 }

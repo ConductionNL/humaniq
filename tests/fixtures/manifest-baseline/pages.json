@@ -204,6 +204,10 @@
 		"route": "/rosters/:id"
 	},
 	{
+		"id": "ThirdPartyReportDetail",
+		"route": "/third-party-reports/:id"
+	},
+	{
 		"id": "TimesheetDetail",
 		"route": "/timesheets/:id"
 	},
@@ -690,6 +694,26 @@
 	{
 		"id": "StagiairDetail",
 		"route": "/stagiairs/:id"
+	},
+	{
+		"id": "ThirdPartyPayees",
+		"route": "/third-party-payees"
+	},
+	{
+		"id": "ThirdPartyPayeeDetail",
+		"route": "/third-party-payees/:id"
+	},
+	{
+		"id": "ThirdPartyPayments",
+		"route": "/third-party-payments"
+	},
+	{
+		"id": "ThirdPartyPaymentDetail",
+		"route": "/third-party-payments/:id"
+	},
+	{
+		"id": "ThirdPartyReports",
+		"route": "/third-party-reports"
 	},
 	{
 		"id": "Timesheets",

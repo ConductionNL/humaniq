@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 rel. 2 sp1 (x64) (http://www.altova.com) by - (Belastingdienst CFD) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://xml.belastingdienst.nl/schemas/UBD/DELIVERY/1.0" targetNamespace="http://xml.belastingdienst.nl/schemas/UBD/DELIVERY/1.0" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="UBD">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="berichttype">
+					<xs:simpleType>
+						<xs:restriction base="an3Type">
+							<xs:enumeration value="UBD"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+				<xs:element name="aanmaakmoment" type="CreationDateTimeType"/>
+				<xs:element name="LeveringsID">
+					<xs:simpleType>
+						<xs:restriction base="an1_32VarType">
+							<xs:maxLength value="32"/>
+							<xs:pattern value="([A-Z]|[a-z]|[0-9]){1,32}"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+				<xs:element name="relNr" type="an8VarType"/>
+				<xs:element name="naamSwPakket" type="an1_27VarType"/>
+				<xs:element name="versieSwPakket" type="an1_27VarType"/>
+				<xs:element name="berichtgever" type="Berichtgever_Type"/>
+				<xs:element name="bronbericht" type="Bronbericht_Type" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="version" type="xs:string" use="required" fixed="1.0"/>
+			<xs:attribute name="build" type="xs:string" use="prohibited" fixed="20210101"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="Adres_Type">
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="adresvast" type="Adresvast"/>
+				<xs:element name="adresvrij" type="Adresvrij"/>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Adresvast">
+		<xs:sequence>
+			<xs:element name="straat" type="an1_35VarType"/>
+			<xs:sequence>
+				<xs:element name="huisnummer" type="an1_10VarType"/>
+				<xs:element name="huisnummerToev" type="an1_10VarType" minOccurs="0"/>
+			</xs:sequence>
+			<xs:element name="postcode" type="an1_9VarType"/>
+			<xs:element name="plaats" type="an1_35VarType"/>
+			<xs:element name="land" type="LatinAlphabetCapsString2Type"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Adresvrij">
+		<xs:sequence>
+			<xs:element name="adresregel" type="an1_250VarType"/>
+			<xs:element name="land" type="LatinAlphabetCapsString2Type"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Berichtgever_Type">
+		<xs:sequence>
+			<xs:element name="naamBerichtgever" type="an1_200VarType"/>
+			<xs:choice>
+				<xs:element name="LHnrBerichtgever">
+					<xs:simpleType>
+						<xs:restriction base="an12VarType"/>
+					</xs:simpleType>
+				</xs:element>
+				<xs:element name="RSINBerichtgever" type="NumberString9Type"/>
+				<xs:element name="BSNBerichtgever" type="NumberString9Type"/>
+				<xs:element name="FInrBerichtgever" type="NumberString9Type"/>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Bronbericht_Type">
+		<xs:sequence>
+			<xs:element name="naamBron" type="an1_200VarType"/>
+			<xs:element name="geboorteOprichtingsdatum" type="xs:date" minOccurs="0"/>
+			<xs:element name="adresBron" type="Adres_Type"/>
+			<xs:choice>
+				<xs:element name="IHPbron" type="IHPBronlevering_Type"/>
+				<xs:element name="NIHPbron" type="NIHPBronlevering_Type"/>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IHPBronlevering_Type">
+		<xs:sequence>
+			<xs:element name="LHnrBron">
+				<xs:simpleType>
+					<xs:restriction base="an12VarType"/>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Uitbetalingsmelding" type="IHPMelding_Type" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IHPMelding_Type">
+		<xs:choice>
+			<xs:element name="intrekking" type="Intrekking_Type"/>
+			<xs:element name="opvoerofwijziging" type="IHPOpvoerWijziging_Type"/>
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="IHPOpvoerWijziging_Type">
+		<xs:sequence>
+			<xs:element name="meldingsID" type="an1_32VarType"/>
+			<xs:element name="uitbetaling" type="Uitbetaling_Type"/>
+			<xs:element name="ontvanger" type="Ontvanger_Type"/>
+			<xs:element name="bSN" type="NumberString9Type"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Ontvanger_Type">
+		<xs:sequence>
+			<xs:element name="achternaam" type="an1_50VarType"/>
+			<xs:element name="voorvoegsels" type="an1_10VarType" minOccurs="0"/>
+			<xs:element name="voorletters" type="an1_6VarType"/>
+			<xs:element name="geboortedatum" type="DateOfBirth19_20Type"/>
+			<xs:element name="adresOntvanger" type="Adres_Type"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Intrekking_Type">
+		<xs:sequence>
+			<xs:element name="meldingsID" type="an1_32VarType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="NIHPBronlevering_Type">
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="RSINBron" type="NumberString9Type"/>
+				<xs:element name="BSNBron" type="NumberString9Type"/>
+				<xs:element name="FInrBron" type="NumberString9Type"/>
+			</xs:choice>
+			<xs:element name="Uitbetalingsmelding" type="NIHPMelding_Type" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="NIHPOpvoerWijziging_Type">
+		<xs:sequence>
+			<xs:element name="meldingsID" type="an1_32VarType"/>
+			<xs:element name="uitbetaling" type="Uitbetaling_Type"/>
+			<xs:element name="ontvanger" type="Ontvanger_Type"/>
+			<xs:element name="IBAN" type="an1_50VarType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="NIHPMelding_Type">
+		<xs:choice>
+			<xs:element name="intrekking" type="Intrekking_Type"/>
+			<xs:element name="opvoerofwijziging" type="NIHPOpvoerWijziging_Type"/>
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="Uitbetaling_Type">
+		<xs:sequence>
+			<xs:element name="bedrag" type="n1_7Type"/>
+			<xs:element name="uitbetalingsDatum" type="xs:date"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="an1_6VarType">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="6"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an1_9VarType">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="9"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an1_10VarType">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="10"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an1_12VarType">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="12"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an1_27VarType">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="27"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an1_32VarType">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="32"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an1_35VarType">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="35"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an1_50VarType">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="50"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an1_70VarType">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="70"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an1_200VarType">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="200"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an1_250VarType">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="250"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an3Type">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="3"/>
+			<xs:maxLength value="3"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an8VarType">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="8"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an10VarType">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="10"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an12VarType">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="12"/>
+			<xs:pattern value="\d{9}L\d{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an32VarType">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="32"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="an36VarType">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="36"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="n1_7Type">
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="1"/>
+			<xs:pattern value="\d{1,7}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CreationDateTimeType">
+		<xs:restriction base="xs:dateTime">
+			<xs:pattern value="\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DateOfBirth19_20Type">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:date">
+					<xs:annotation>
+						<xs:documentation xml:lang="nl">een geldige datum (yyyy-dd-mm) met als eeuw 19 of 20</xs:documentation>
+					</xs:annotation>
+					<xs:pattern value="(19|20)\d{2}-\d{2}-\d{2}"/>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:annotation>
+						<xs:documentation xml:lang="nl">ofwel een 'datum' met dag=00 en een geldig jaar en maand, ofwel een 'datum' met maand=00 en dag=00 en een geldig jaar, ofwel een 'datum' met jaar=0000 en maand=00 en dag=00</xs:documentation>
+					</xs:annotation>
+					<xs:pattern value="(((19|20)\d\d-((0[1-9])|(1[0-2]))-00)|((19|20)\d\d-00-00)|(0000-00-00))"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:simpleType name="LatinAlphabetCapsString2Type">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="NumberString9Type">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="\d{9}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="NumberStringNoLeadingZero1_5Type">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[1-9]\d{0,4}"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

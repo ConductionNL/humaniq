@@ -15580,6 +15580,170 @@
           }
         },
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ThirdPartyPayee",
+          "slug": "thirdpartypayee-thirdpartypayee-1-1"
+        },
+        "lastName": "Voorbeeld Achternaam 1",
+        "initials": "J.P.",
+        "administrationId": "Voorbeeld Administrationid 1",
+        "bsn": "111222333",
+        "dateOfBirth": "1971-05-14",
+        "street": "Voorbeeld Straat 1",
+        "houseNumber": "1",
+        "postcode": "1234AB",
+        "city": "Voorbeeld Plaats 1",
+        "country": "NL",
+        "activity": "Gastlessen",
+        "prefix": "van"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ThirdPartyPayee",
+          "slug": "thirdpartypayee-thirdpartypayee-2-2"
+        },
+        "lastName": "Voorbeeld Achternaam 2",
+        "initials": "A.",
+        "administrationId": "Voorbeeld Administrationid 2",
+        "bsn": "123456782",
+        "dateOfBirth": "1960-01-30",
+        "street": "Voorbeeld Straat 2",
+        "houseNumber": "2",
+        "postcode": "2345BC",
+        "city": "Voorbeeld Plaats 2",
+        "country": "NL",
+        "activity": "Lid bezwaarcommissie"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ThirdPartyPayee",
+          "slug": "thirdpartypayee-thirdpartypayee-3-3"
+        },
+        "lastName": "Voorbeeld Achternaam 3",
+        "initials": "M.",
+        "administrationId": "Voorbeeld Administrationid 3",
+        "bsn": "012345672",
+        "dateOfBirth": "1985-09-03",
+        "street": "Voorbeeld Straat 3",
+        "houseNumber": "3",
+        "postcode": "3456CD",
+        "city": "Voorbeeld Plaats 3",
+        "country": "NL",
+        "activity": "Vrijwilliger boven de vrijwilligersvergoeding",
+        "prefix": "de"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ThirdPartyPayment",
+          "slug": "thirdpartypayment-thirdpartypayment-1-1"
+        },
+        "payeeId": "00000000-0000-4000-8000-000000000000",
+        "paidOn": "2026-03-10",
+        "amount": 450.0,
+        "expenseAllowance": 32.4,
+        "description": "Voorbeeld gastles",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ThirdPartyPayment",
+          "slug": "thirdpartypayment-thirdpartypayment-2-2"
+        },
+        "payeeId": "00000000-0000-4000-8000-000000000000",
+        "paidOn": "2026-04-15",
+        "amount": 275.75,
+        "expenseAllowance": 18.9,
+        "description": "Voorbeeld vacatiegeld",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ThirdPartyPayment",
+          "slug": "thirdpartypayment-thirdpartypayment-3-3"
+        },
+        "payeeId": "00000000-0000-4000-8000-000000000000",
+        "paidOn": "2026-06-02",
+        "amount": 1200.0,
+        "expenseAllowance": 0,
+        "description": "Voorbeeld vergoeding",
+        "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ThirdPartyReport",
+          "slug": "thirdpartyreport-thirdpartyreport-1-1"
+        },
+        "administrationId": "Voorbeeld Administrationid 1",
+        "year": 2026,
+        "status": "concept",
+        "deadline": "2027-01-31",
+        "lineCount": 0,
+        "totalAmount": 0,
+        "assembledAt": "2027-01-11T09:00:00+00:00",
+        "assembledBy": "Voorbeeld Assembledby 1",
+        "blockingFindings": 0,
+        "warningFindings": 0,
+        "findings": [],
+        "leveringsId": "UBD20260110090000",
+        "messageFileName": "UBD_000000000L01_UBD20260110090000.xml",
+        "messageXml": "Voorbeeld Messagexml 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ThirdPartyReport",
+          "slug": "thirdpartyreport-thirdpartyreport-2-2"
+        },
+        "administrationId": "Voorbeeld Administrationid 2",
+        "year": 2025,
+        "status": "klaargezet",
+        "deadline": "2026-01-31",
+        "lineCount": 2,
+        "totalAmount": 1226,
+        "assembledAt": "2026-01-12T09:00:00+00:00",
+        "assembledBy": "Voorbeeld Assembledby 2",
+        "blockingFindings": 0,
+        "warningFindings": 0,
+        "findings": [],
+        "leveringsId": "UBD20250110090000",
+        "messageFileName": "UBD_000000000L02_UBD20250110090000.xml",
+        "messageXml": "Voorbeeld Messagexml 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ThirdPartyReport",
+          "slug": "thirdpartyreport-thirdpartyreport-3-3"
+        },
+        "administrationId": "Voorbeeld Administrationid 3",
+        "year": 2024,
+        "status": "verzonden",
+        "deadline": "2025-01-31",
+        "lineCount": 1,
+        "totalAmount": 1200,
+        "assembledAt": "2025-01-13T09:00:00+00:00",
+        "assembledBy": "Voorbeeld Assembledby 3",
+        "blockingFindings": 0,
+        "warningFindings": 1,
+        "findings": [
+          {
+            "kind": "software-relation-number-missing",
+            "severity": "warning",
+            "message": "Voorbeeld Message 3"
+          }
+        ],
+        "leveringsId": "UBD20240110090000",
+        "messageFileName": "UBD_000000000L03_UBD20240110090000.xml",
+        "messageXml": "Voorbeeld Messagexml 3"
       }
     ]
   }

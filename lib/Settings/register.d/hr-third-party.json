@@ -1,0 +1,128 @@
+{
+    "x-humaniq-fragment": "hr-third-party",
+    "components": {
+        "schemas": {
+            "ThirdPartyPayee": {
+                "slug": "ThirdPartyPayee",
+                "icon": "AccountArrowRightOutline",
+                "version": "0.1.0",
+                "title": "Third-party payee",
+                "description": "A person the organisation pays who is neither an employee nor an entrepreneur: a guest lecturer, a committee member, a volunteer paid above the tax-free amount. Payments to them are reported to the Belastingdienst once a year (filings-ib47).",
+                "type": "object",
+                "x-schema-org": "schema:Person",
+                "required": [
+                    "lastName",
+                    "initials",
+                    "administrationId"
+                ],
+                "properties": {
+                    "initials": {"title": "Initials", "type": "string", "maxLength": 12, "description": "The payee's initials, for example J.P.", "x-notes": "UBD ONTVANGER/voorletters (an1..6). ThirdPartyReportService cuts a longer value to five characters plus a hyphen, as the Belastingdienst handbook (Deel 2, 4.5.4) prescribes."},
+                    "prefix": {"title": "Prefix", "type": "string", "maxLength": 10, "description": "Any words that come before the surname.", "x-notes": "UBD ONTVANGER/voorvoegsels (an1..10, optional)."},
+                    "lastName": {"title": "Surname", "type": "string", "maxLength": 50, "description": "The payee's surname, without prefix.", "x-notes": "UBD ONTVANGER/achternaam (an1..50)."},
+                    "bsn": {"title": "BSN", "type": "string", "pattern": "^[0-9]{9}$", "description": "The payee's citizen service number. Without it the payee cannot be reported.", "x-notes": "UBD IHPOpvoerWijziging/bSN (9 digits). Same property authorization as Employee.bsn: HR and payroll read and write, nobody else (compliance-roles-and-field-access).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"]}},
+                    "dateOfBirth": {"title": "Date of birth", "type": "string", "format": "date", "description": "The payee's date of birth.", "x-notes": "UBD ONTVANGER/geboortedatum."},
+                    "street": {"title": "Street", "type": "string", "maxLength": 35, "description": "Street of the payee's home address.", "x-notes": "UBD Adresvast/straat (an1..35)."},
+                    "houseNumber": {"title": "House number", "type": "string", "maxLength": 10, "description": "House number of the payee's home address.", "x-notes": "UBD Adresvast/huisnummer (an1..10)."},
+                    "houseNumberAddition": {"title": "Addition", "type": "string", "maxLength": 10, "description": "Addition to the house number, such as A or bis.", "x-notes": "UBD Adresvast/huisnummerToev (optional)."},
+                    "postcode": {"title": "Postcode", "type": "string", "maxLength": 9, "description": "Postcode of the payee's home address.", "x-notes": "UBD Adresvast/postcode (an1..9)."},
+                    "city": {"title": "City", "type": "string", "maxLength": 35, "description": "Town or city of the payee's home address.", "x-notes": "UBD Adresvast/plaats (an1..35)."},
+                    "country": {"title": "Country", "type": "string", "pattern": "^[A-Z]{2}$", "default": "NL", "description": "Country of the payee's home address, as a two-letter code.", "x-notes": "UBD Adresvast/land (ISO 3166 alpha-2)."},
+                    "activity": {"title": "Work done", "type": "string", "description": "What the payee is paid for, such as guest lessons or committee meetings.", "x-notes": "Shown on the payee's yearly statement; not part of the UBD message."},
+                    "administrationId": {"title": "Administration", "type": "string", "description": "Which administration pays this person.", "x-notes": "Denormalized administratie key (REQ-MULTI-001), a plain string, not a $ref (ADR-062 rule 7). The UBD report is assembled per administration."}
+                }
+            },
+            "ThirdPartyPayment": {
+                "slug": "ThirdPartyPayment",
+                "icon": "CashMultiple",
+                "version": "0.1.0",
+                "title": "Third-party payment",
+                "description": "One payment to a third-party payee, with any expense allowance paid on top. The yearly report sums them per payee (filings-ib47).",
+                "type": "object",
+                "x-schema-org": "schema:PayAction",
+                "required": [
+                    "payeeId",
+                    "paidOn",
+                    "amount",
+                    "administrationId"
+                ],
+                "properties": {
+                    "payeeId": {"title": "Payee", "type": "string", "format": "uuid", "$ref": "ThirdPartyPayee", "description": "Who was paid."},
+                    "paidOn": {"title": "Paid on", "type": "string", "format": "date", "description": "The date the money was paid out.", "x-notes": "Decides the tax year; the report uses the last payment date of the year as uitbetalingsDatum (Deel 2, 2.3.4)."},
+                    "amount": {"title": "Amount", "type": "number", "minimum": 0, "description": "The fee paid, in euros.", "x-notes": "Reported together with expenseAllowance: the UBD amount includes cost allowances (Deel 1, 1.4)."},
+                    "expenseAllowance": {"title": "Expense allowance", "type": "number", "minimum": 0, "default": 0, "description": "Travel and other costs paid on top of the fee, in euros. They are reported too."},
+                    "description": {"title": "Description", "type": "string", "description": "What this payment was for."},
+                    "administrationId": {"title": "Administration", "type": "string", "description": "Which administration made the payment.", "x-notes": "Denormalized administratie key (REQ-MULTI-001), a plain string."}
+                }
+            },
+            "ThirdPartyReport": {
+                "slug": "ThirdPartyReport",
+                "icon": "FileSendOutline",
+                "version": "0.1.0",
+                "title": "Third-party payments report",
+                "description": "The yearly report of payments to third parties (UBD, formerly IB47) of one administration, in the Belastingdienst's delivery format, due on 31 January of the next year (filings-ib47).",
+                "type": "object",
+                "x-schema-org": "schema:Report",
+                "required": [
+                    "administrationId",
+                    "year",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "terminal": [],
+                        "transitions": {
+                            "klaarzetten": {
+                                "from": ["concept"],
+                                "to": "klaargezet",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\UbdReportReadyGuard",
+                                "description": "Marks the report ready to upload. UbdReportReadyGuard denies it while the report has no validated message or carries blocking findings."
+                            },
+                            "verzenden": {
+                                "from": ["klaargezet"],
+                                "to": "verzonden",
+                                "description": "Records that the file was uploaded to the Belastingdienst."
+                            },
+                            "heropenen": {
+                                "from": ["klaargezet", "verzonden"],
+                                "to": "concept",
+                                "description": "Reopens the report to assemble it again. A sent report assembled again keeps its message ids, so the Belastingdienst treats the new delivery as a correction (Deel 2, 2.3.5)."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "administrationId": {"title": "Administration", "type": "string", "description": "Which administration this report covers.", "x-notes": "Denormalized administratie key (REQ-MULTI-001)."},
+                    "year": {"title": "Year", "type": "integer", "minimum": 2000, "maximum": 2100, "description": "The year whose payments are reported."},
+                    "status": {"title": "Status", "type": "string", "enum": ["concept", "klaargezet", "verzonden"], "x-enum-labels": {"concept": "Draft", "klaargezet": "Ready", "verzonden": "Sent"}, "default": "concept", "description": "Where the report has got to: draft, ready to upload, or sent."},
+                    "deadline": {"title": "Deadline", "type": "string", "format": "date", "description": "The last day to send the report: 31 January of the next year.", "x-notes": "Derived at assembly: {year+1}-01-31 (nl-ubd-deadline)."},
+                    "lineCount": {"title": "Payees reported", "type": "integer", "minimum": 0, "description": "How many payees the report lists."},
+                    "totalAmount": {"title": "Total reported", "type": "integer", "minimum": 0, "description": "The total reported, in whole euros.", "x-notes": "Sum of the per-payee amounts, each rounded down to whole euros as the format requires (Deel 2, 4.5.3 bedrag)."},
+                    "messageXml": {"title": "Message", "type": "string", "description": "The report in the Belastingdienst's UBD format, validated against its XSD.", "x-notes": "UBD 1.0 (UBD_1.0_V1.20211028.xsd, shipped in lib/Standards/ubd/). Absent while blocking findings remain."},
+                    "messageFileName": {"title": "File name", "type": "string", "description": "The file name to upload the message under.", "x-notes": "UBD_<berichtgeverID>_<leveringsID>.xml (Deel 2, 2.5.1)."},
+                    "leveringsId": {"title": "Delivery id", "type": "string", "pattern": "^[A-Za-z0-9]{1,32}$", "description": "The id of this delivery, unique for the administration."},
+                    "assembledAt": {"title": "Assembled at", "type": "string", "format": "date-time", "description": "When the report was last assembled."},
+                    "assembledBy": {"title": "Assembled by", "type": "string", "description": "Who assembled the report."},
+                    "blockingFindings": {"title": "Blocking findings", "type": "integer", "minimum": 0, "description": "Problems that stop the report from being made ready."},
+                    "warningFindings": {"title": "Warnings", "type": "integer", "minimum": 0, "description": "Problems worth checking that do not stop the report."},
+                    "findings": {
+                        "title": "Findings",
+                        "type": "array",
+                        "description": "What the last assembly found, per payee.",
+                        "items": {
+                            "type": "object",
+                            "required": ["kind", "severity", "message"],
+                            "properties": {
+                                "kind": {"type": "string", "title": "Kind", "description": "What kind of problem this is."},
+                                "severity": {"type": "string", "enum": ["blocking", "warning"], "title": "Severity", "description": "Whether the problem stops the report."},
+                                "payeeId": {"type": "string", "title": "Payee", "description": "The payee the problem is about, if any."},
+                                "message": {"type": "string", "title": "Message", "description": "The problem in words."}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

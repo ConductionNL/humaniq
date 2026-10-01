@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<UBD xmlns="http://xml.belastingdienst.nl/schemas/UBD/DELIVERY/1.0" version="1.0">
+  <berichttype>UBD</berichttype>
+  <aanmaakmoment>2027-01-05T10:00:00</aanmaakmoment>
+  <LeveringsID>UBD2026X</LeveringsID>
+  <relNr>SWO12345</relNr>
+  <naamSwPakket>humaniq</naamSwPakket>
+  <versieSwPakket>dev</versieSwPakket>
+  <berichtgever>
+    <naamBerichtgever>Conduction Demo B.V.</naamBerichtgever>
+    <LHnrBerichtgever>123456789L01</LHnrBerichtgever>
+  </berichtgever>
+  <bronbericht>
+    <naamBron>Conduction Demo B.V.</naamBron>
+    <adresBron>
+      <adresvrij>
+        <adresregel>Lauriergracht 14h, 1016 RL Amsterdam</adresregel>
+        <land>NL</land>
+      </adresvrij>
+    </adresBron>
+    <IHPbron>
+      <LHnrBron>123456789L01</LHnrBron>
+      <Uitbetalingsmelding>
+        <opvoerofwijziging>
+          <meldingsID>8178f5b0ac73857e527736928a197b44</meldingsID>
+          <uitbetaling>
+            <bedrag>932</bedrag>
+            <uitbetalingsDatum>2026-06-02</uitbetalingsDatum>
+          </uitbetaling>
+          <ontvanger>
+            <achternaam>Dijk</achternaam>
+            <voorvoegsels>van</voorvoegsels>
+            <voorletters>J.P.</voorletters>
+            <geboortedatum>1971-05-14</geboortedatum>
+            <adresOntvanger>
+              <adresvast>
+                <straat>Kerkstraat</straat>
+                <huisnummer>12</huisnummer>
+                <postcode>3511AB</postcode>
+                <plaats>Utrecht</plaats>
+                <land>NL</land>
+              </adresvast>
+            </adresOntvanger>
+          </ontvanger>
+          <bSN>111222333</bSN>
+        </opvoerofwijziging>
+      </Uitbetalingsmelding>
+      <Uitbetalingsmelding>
+        <opvoerofwijziging>
+          <meldingsID>4fcce4a222094c82bbbec402a63f8dfb</meldingsID>
+          <uitbetaling>
+            <bedrag>294</bedrag>
+            <uitbetalingsDatum>2026-04-15</uitbetalingsDatum>
+          </uitbetaling>
+          <ontvanger>
+            <achternaam>Bos</achternaam>
+            <voorletters>A.</voorletters>
+            <geboortedatum>1960-01-30</geboortedatum>
+            <adresOntvanger>
+              <adresvast>
+                <straat>Dorpsweg</straat>
+                <huisnummer>3</huisnummer>
+                <huisnummerToev>A</huisnummerToev>
+                <postcode>1234AB</postcode>
+                <plaats>Ede</plaats>
+                <land>NL</land>
+              </adresvast>
+            </adresOntvanger>
+          </ontvanger>
+          <bSN>123456782</bSN>
+        </opvoerofwijziging>
+      </Uitbetalingsmelding>
+    </IHPbron>
+  </bronbericht>
+</UBD>

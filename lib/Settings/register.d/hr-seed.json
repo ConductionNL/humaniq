@@ -2563,6 +2563,7 @@
                 "name": "Example: Conduction Demo B.V.",
                 "kvkNumber": "12345678",
                 "loonheffingennummer": "000000000L01",
+                "postalAddress": "Voorbeeldstraat 1, 1234 AB Amsterdam",
                 "active": true,
                 "frequentAbsenceThreshold": 3,
                 "frequentAbsenceWindowMonths": 12,
@@ -3297,6 +3298,108 @@
                 "loonheffingenVerklaringOnFile": true,
                 "administrationId": "ADM-006",
                 "_note": "payroll-external-bureau-handoff: the one employee of ADM-006, so a compile on a dev instance produces a first handoff with one start mutation."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayee",
+                    "slug": "thirdpartypayee-gastdocent-dijk"
+                },
+                "initials": "J.P.",
+                "prefix": "van",
+                "lastName": "Dijk",
+                "bsn": "111222333",
+                "dateOfBirth": "1971-05-14",
+                "street": "Kerkstraat",
+                "houseNumber": "12",
+                "postcode": "3511AB",
+                "city": "Utrecht",
+                "country": "NL",
+                "activity": "Gastlessen arbeidsrecht",
+                "administrationId": "ADM-001",
+                "_note": "filings-ib47 (design.md Seed data): a guest lecturer paid twice in 2026."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayee",
+                    "slug": "thirdpartypayee-commissielid-bos"
+                },
+                "initials": "A.",
+                "lastName": "Bos",
+                "bsn": "123456782",
+                "dateOfBirth": "1960-01-30",
+                "street": "Dorpsweg",
+                "houseNumber": "3",
+                "houseNumberAddition": "A",
+                "postcode": "1234AB",
+                "city": "Ede",
+                "country": "NL",
+                "activity": "Lid bezwaarcommissie",
+                "administrationId": "ADM-001",
+                "_note": "filings-ib47 (design.md Seed data): a committee member paid once in 2026 and once in 2025. No 2025 report is sent, so occ humaniq:rules:audit reports nl-ubd-deadline on the 2025 payment (deliberate, like the other seeded violations)."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayment",
+                    "slug": "thirdpartypayment-dijk-2026-03"
+                },
+                "payeeId": "@ref:thirdpartypayee-gastdocent-dijk",
+                "paidOn": "2026-03-10",
+                "amount": 450.0,
+                "expenseAllowance": 32.4,
+                "description": "Gastles maart, met reiskosten",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayment",
+                    "slug": "thirdpartypayment-dijk-2026-06"
+                },
+                "payeeId": "@ref:thirdpartypayee-gastdocent-dijk",
+                "paidOn": "2026-06-02",
+                "amount": 450.0,
+                "description": "Gastles juni",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayment",
+                    "slug": "thirdpartypayment-bos-2026-04"
+                },
+                "payeeId": "@ref:thirdpartypayee-commissielid-bos",
+                "paidOn": "2026-04-15",
+                "amount": 275.75,
+                "expenseAllowance": 18.9,
+                "description": "Vacatiegeld zitting april",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayment",
+                    "slug": "thirdpartypayment-bos-2025-11"
+                },
+                "payeeId": "@ref:thirdpartypayee-commissielid-bos",
+                "paidOn": "2025-11-20",
+                "amount": 100.0,
+                "description": "Vacatiegeld zitting november",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyReport",
+                    "slug": "thirdpartyreport-adm-001-2026"
+                },
+                "administrationId": "ADM-001",
+                "year": 2026,
+                "status": "concept",
+                "deadline": "2027-01-31",
+                "_note": "filings-ib47 (design.md Seed data): the 2026 report in concept. Assemble on its page: two lines (J.P. van Dijk 932, A. Bos 294), total 1226."
             }
         ]
     }
