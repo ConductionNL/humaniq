@@ -239,6 +239,35 @@ class LoonaangifteCorrectionServiceTest extends TestCase {
 	}//end testABaselineWithoutAMessageBlocks()
 
 	/**
+	 * Making a correction is refused when it is no longer a concept or its
+	 * year has no specification, and blocks without an approved run; a
+	 * yearly filer's correction is always its own message (GS 2.4.2).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 */
+	public function testTheEdgesOfMakingACorrection(): void {
+		$service = $this->service('2026-05-15');
+		$correctionId = $service->open($this->row('filing-03'), 'payroll-1')['filingId'];
+		$correction = $this->row($correctionId);
+
+		self::assertSame('refused-not-concept', $service->render(array_merge($correction, ['status' => 'klaargezet']), 'payroll-1')['status']);
+		self::assertSame('refused-no-specification', $service->render(array_merge($correction, ['period' => '2019-03']), 'payroll-1')['status']);
+
+		$this->store->seed('PayrollRun', 'run-03', ['administrationId' => 'ADM-001', 'period' => '2026-03', 'status' => 'draft', 'calculatedAt' => '2026-04-10T10:00:00Z', 'totalLoonheffing' => 0.0]);
+		self::assertSame('blocked', $service->render($correction, 'payroll-1')['status']);
+		self::assertSame('run-not-approved', $this->row($correctionId)['messageFindings'][0]['kind']);
+
+		$yearly = array_merge($this->row('filing-03'), ['tijdvak' => 'jaar']);
+		$this->store->seed('LoonaangifteFiling', 'filing-03', array_diff_key($yearly, ['id' => true]));
+		$this->store->seed('LoonaangifteFiling', $correctionId, array_merge(array_diff_key($correction, ['id' => true]), ['status' => 'verzonden']));
+		$other = $service->open($this->row('filing-03'), 'payroll-1');
+		self::assertSame('opened', $other['status']);
+		self::assertSame('correctiebericht', $this->row($other['filingId'])['correctionRoute']);
+	}//end testTheEdgesOfMakingACorrection()
+
+	/**
 	 * The correction service on a given day.
 	 *
 	 * @param string $today The day.
