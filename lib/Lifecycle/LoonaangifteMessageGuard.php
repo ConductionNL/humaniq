@@ -52,7 +52,7 @@ class LoonaangifteMessageGuard implements LifecycleGuardInterface {
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
-		if ((string)($object['jurisdiction'] ?? '') !== 'NL' || (string)($object['filingType'] ?? '') !== 'loonaangifte') {
+		if ((string)($object['jurisdiction'] ?? '') !== 'NL' || in_array((string)($object['filingType'] ?? ''), ['loonaangifte', 'correctie'], true) === false) {
 			return GuardResult::allow();
 		}
 
@@ -70,6 +70,10 @@ class LoonaangifteMessageGuard implements LifecycleGuardInterface {
 			}
 
 			return GuardResult::deny('Het aangiftebericht heeft ' . (int)$blocking . ' blokkerende bevinding(en): ' . implode(' ', $problems));
+		}
+
+		if (($object['filingType'] ?? '') === 'correctie' && ($object['correctionRoute'] ?? '') === 'volgende-aangifte' && is_array($object['correctionTree'] ?? null) === true && $object['correctionTree'] !== []) {
+			return GuardResult::allow();
 		}
 
 		if (trim((string)($object['messageXml'] ?? '')) === '') {

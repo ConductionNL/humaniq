@@ -553,7 +553,7 @@
             "LoonaangifteFiling": {
                 "slug": "LoonaangifteFiling",
                 "icon": "FileSendOutline",
-                "version": "0.4.0",
+                "version": "0.5.0",
                 "title": "Wage Tax Filing",
                 "description": "A wage-tax / social-security filing for one wage period (NL loonaangifte / DE Lohnsteuer-Anmeldung & Beitragsnachweis / FR DSN / US Form 941 & deposits). Carries the period, deadline, submission, and tijdvak attributes the filing-window checks read. For NL, the filing also carries a declarative create->review->confirm->send lifecycle (concept -> klaargezet -> bevestigd -> verzonden) plus tijdvakcode/response-capture fields (loonaangifte-filing-lifecycle).",
                 "type": "object",
@@ -596,13 +596,6 @@
                                 ],
                                 "to": "concept",
                                 "description": "Reopens a not-yet-sent filing for correction before it is confirmed or sent."
-                            },
-                            "corrigeren": {
-                                "from": [
-                                    "verzonden"
-                                ],
-                                "to": "concept",
-                                "description": "A sent filing can be superseded by a correction (NL allows correcties binnen het tijdvak). The usual route is a NEW filing object for the same period; this transition's reset-to-concept semantics are a simplified placeholder: full correctie-berichten (VL/IB-correcties) are a future spec."
                             }
                         }
                     }
@@ -685,6 +678,13 @@
                     "messageRunId": {"title": "Payroll run", "type": "string", "nullable": true, "description": "The approved payroll run the message was made from."},
                     "messageRunCalculatedAt": {"title": "Run calculated at", "type": "string", "nullable": true, "description": "When that payroll run was calculated, at the time the message was made.", "x-notes": "filings-wage-tax-message D4: nl-loonaangifte-message-drift compares it with the run."},
                     "messageRunTotalLoonheffing": {"title": "Run wage tax", "type": "number", "nullable": true, "description": "The payroll run's total wage tax when the message was made."},
+                    "corrects": {"title": "Corrects", "type": "string", "nullable": true, "description": "The sent filing this correction corrects.", "x-notes": "filings-correction-message D1: a correction is a new filing (filingType correctie); the sent filing is never reopened."},
+                    "correctionRoute": {"title": "Correction route", "type": "string", "nullable": true, "enum": ["volgende-aangifte", "correctiebericht", null], "x-enum-labels": {"volgende-aangifte": "With the next return", "correctiebericht": "Separate correction message"}, "description": "How the correction reaches the tax authority: with the next return in the same tax year, or as a separate correction message for a closed year.", "x-notes": "Gegevensspecificaties aangifte loonheffingen 2026, 2.4.1 and 2.4.3. filings-correction-message D3."},
+                    "correctionLines": {"title": "Corrected employees", "type": "array", "items": {"type": "object", "properties": {"employeeId": {"type": "string", "title": "Employee", "description": "The employee it concerns, if any."}, "kind": {"type": "string", "enum": ["changed", "added", "withdrawn"], "title": "Kind", "description": "Whether the employee's figures changed, the employee was missing, or should not have been reported."}, "changes": {"type": "object", "title": "Changes", "description": "Per part of the message, what was sent and what it is now."}}}, "description": "One line per employee whose figures changed since the return was sent."},
+                    "correctionTree": {"title": "Corrected period", "type": "object", "nullable": true, "description": "The corrected period as it goes into the message: the new totals and the employees that changed.", "x-notes": "The TijdvakCorrectie element tree; LoonaangifteMessageService inserts it in the next return (GS 2.4.1)."},
+                    "correctionSaldo": {"title": "Correction balance", "type": "integer", "nullable": true, "description": "What the correction adds to or takes off the amount to pay, in whole euros.", "x-notes": "Saldo (Gegevensspecificaties 2026 p56-57): the corrected period's new TotTeBet minus the last one received."},
+                    "carriedBy": {"title": "Sent with return", "type": "string", "nullable": true, "description": "The return this correction travels with."},
+                    "carriedCorrectionIds": {"title": "Corrections carried", "type": "array", "items": {"type": "string"}, "description": "The corrections of earlier periods this return carries."},
                     "administrationId": {"title": "Administration ID", "type": "string", "nullable": true, "description": "Which administration this filing covers.", "x-notes": "Denormalized administratie key this filing is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun convention); an organisation-level filing has no employee/parent to derive it from, so nl-administratie-scope-consistency does not evaluate this schema."}
                 }
             },

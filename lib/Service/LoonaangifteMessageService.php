@@ -82,6 +82,7 @@ class LoonaangifteMessageService {
 	 *
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public function render(array $filing, string $userId): array {
 		$filingId = (string)($filing['id'] ?? '');
@@ -93,8 +94,8 @@ class LoonaangifteMessageService {
 		$period = (string)$filing['period'];
 		$dates = (array)LoonaangifteYear::periodDates($period, (string)($filing['tijdvak'] ?? 'maand'));
 		$year = (array)LoonaangifteYear::forYear((int)substr($period, 0, 4));
-		$administrationId = (string)($filing['administrationId'] ?? '');
-		$run = $this->approvedRun($administrationId, $period);
+		$current = $this->periodLines((string)($filing['administrationId'] ?? ''), $period, [$dates[0], $dates[1]]);
+		$run = $current['run'];
 
 		$stored = ['messageRenderedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'messageRenderedBy' => $userId, 'messageVersion' => $year['version']];
 		if ($run === null) {
@@ -102,35 +103,153 @@ class LoonaangifteMessageService {
 			return $this->store($filing, $stored, $findings, null);
 		}
 
-		$administration = ($this->gateway->findFiltered('hrAdministration', ['administrationId' => $administrationId])[0] ?? []);
-		$createdAt = gmdate('Y-m-d\TH:i:s');
-		$header = [
-			'idBer' => mb_substr('LA' . $period . gmdate('YmdHis'), 0, 32),
-			'createdAt' => $createdAt,
-			'relNr' => trim($this->appConfig->getValueString(Application::APP_ID, ThirdPartyReportService::RELNR_KEY, '')),
-			'software' => 'humaniq ' . $this->softwareVersion(),
-		];
-		$built = LoonaangifteMessageBuilder::build($administration, $header, [$dates[0], $dates[1]], $this->lines($run, [$dates[0], $dates[1]]));
+		$corrections = $this->carriedCorrections($filing);
+		$parts = array_map(static fn (array $correction): array => ['tree' => (array)$correction['correctionTree'], 'saldo' => (int)($correction['correctionSaldo'] ?? 0)], $corrections);
+		$built = LoonaangifteMessageBuilder::build($current['administration'], $this->header('LA' . $period), [$dates[0], $dates[1]], $current['lines'], $parts);
 
 		$stored = array_merge($stored, [
 			'messageRunId' => (string)$run['id'],
 			'messageRunCalculatedAt' => (string)($run['calculatedAt'] ?? ''),
 			'messageRunTotalLoonheffing' => (float)($run['totalLoonheffing'] ?? 0),
 			'collectiveTotals' => $built['collective'],
+			'carriedCorrectionIds' => array_map(static fn (array $correction): string => (string)$correction['id'], $corrections),
 		]);
+		$findings = $built['findings'];
 		$message = null;
-		if ($this->blocking($built['findings']) === 0) {
-			$xml = LoonaangifteMessage::render($year['namespace'], $year['version'], $built['tree']);
-			$errors = LoonaangifteMessage::errors($xml, $year['xsd']);
-			foreach ($errors as $error) {
-				$built['findings'][] = ['kind' => 'schema-invalid', 'severity' => 'blocking', 'employeeId' => '', 'element' => 'Loonaangifte', 'problem' => 'Het bericht voldoet niet aan het XSD van de Belastingdienst: ' . $error];
-			}
-
-			$message = ($errors === []) ? ['xml' => $xml, 'fileName' => 'LH_' . (string)$administration['loonheffingennummer'] . '_' . $period . '_' . gmdate('YmdHis') . '.xml'] : null;
+		if ($this->blocking($findings) === 0) {
+			$fileName = 'LH_' . (string)($current['administration']['loonheffingennummer'] ?? '') . '_' . $period . '_' . gmdate('YmdHis') . '.xml';
+			[$message, $findings] = $this->validated($built['tree'], $year, $fileName, $findings);
 		}
 
-		return $this->store($filing, $stored, $built['findings'], $message);
+		$outcome = $this->store($filing, $stored, $findings, $message);
+		if ($message !== null) {
+			foreach ($corrections as $correction) {
+				$this->stampCarrier($correction, $filingId);
+			}
+		}
+
+		return $outcome;
 	}//end render()
+
+	/**
+	 * The approved run of a period and one income relationship per payslip,
+	 * for the regular return and for a correction of the period.
+	 *
+	 * @param string                      $administrationId The administration.
+	 * @param string                      $period           The period.
+	 * @param array{0: string, 1: string} $dates            The declaration period's first and last day.
+	 *
+	 * @return array{run: array<string, mixed>|null, administration: array<string, mixed>, lines: list<array{employeeId: string, tree: array<string, mixed>, cents: array<string, int>, findings: list<array{kind: string, severity: string, employeeId: string, element: string, problem: string}>}>}
+	 *
+	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 */
+	public function periodLines(string $administrationId, string $period, array $dates): array {
+		$run = $this->approvedRun($administrationId, $period);
+		return [
+			'run' => $run,
+			'administration' => ($this->gateway->findFiltered('hrAdministration', ['administrationId' => $administrationId])[0] ?? []),
+			'lines' => ($run === null ? [] : $this->lines($run, $dates)),
+		];
+	}//end periodLines()
+
+	/**
+	 * The message header values (GS p30-33).
+	 *
+	 * @param string $prefix The message id prefix with the period.
+	 *
+	 * @return array{idBer: string, createdAt: string, relNr: string, software: string}
+	 *
+	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 */
+	public function header(string $prefix): array {
+		return [
+			'idBer' => mb_substr($prefix . gmdate('YmdHis'), 0, 32),
+			'createdAt' => gmdate('Y-m-d\TH:i:s'),
+			'relNr' => trim($this->appConfig->getValueString(Application::APP_ID, ThirdPartyReportService::RELNR_KEY, '')),
+			'software' => 'humaniq ' . $this->softwareVersion(),
+		];
+	}//end header()
+
+	/**
+	 * Serialise and validate a message tree.
+	 *
+	 * @param array<string, mixed>                                   $tree     The tree.
+	 * @param array{version: string, namespace: string, xsd: string} $year     The year entry.
+	 * @param string                                                 $fileName The file name.
+	 * @param list<array<string, string>>                            $findings The findings so far.
+	 *
+	 * @return array{0: array{xml: string, fileName: string}|null, 1: list<array<string, string>>}
+	 *
+	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 */
+	public function validated(array $tree, array $year, string $fileName, array $findings): array {
+		$xml = LoonaangifteMessage::render($year['namespace'], $year['version'], $tree);
+		$errors = LoonaangifteMessage::errors($xml, $year['xsd']);
+		foreach ($errors as $error) {
+			$findings[] = ['kind' => 'schema-invalid', 'severity' => 'blocking', 'employeeId' => '', 'element' => 'Loonaangifte', 'problem' => 'Het bericht voldoet niet aan het XSD van de Belastingdienst: ' . $error];
+		}
+
+		return [($errors === [] ? ['xml' => $xml, 'fileName' => $fileName] : null), $findings];
+	}//end validated()
+
+	/**
+	 * The corrections that travel with this return (GS 2.4.1): made ready,
+	 * for an earlier period of the same year, routed to the next return, not
+	 * carried by another return. At most 13 (XSD).
+	 *
+	 * @param array<string, mixed> $filing The regular filing.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function carriedCorrections(array $filing): array {
+		$carried = [];
+		foreach ($this->gateway->findFiltered('LoonaangifteFiling', ['administrationId' => (string)($filing['administrationId'] ?? ''), 'filingType' => 'correctie']) as $correction) {
+			if ($this->travelsWith($correction, $filing) === true) {
+				$carried[] = $correction;
+			}
+		}
+
+		usort($carried, static fn (array $one, array $two): int => strcmp((string)$one['period'], (string)$two['period']));
+		return array_slice($carried, 0, 13);
+	}//end carriedCorrections()
+
+	/**
+	 * Whether a correction travels with a regular return.
+	 *
+	 * @param array<string, mixed> $correction The correction.
+	 * @param array<string, mixed> $filing     The regular filing.
+	 *
+	 * @return bool
+	 */
+	private function travelsWith(array $correction, array $filing): bool {
+		$period = (string)$filing['period'];
+		$other = (string)($correction['period'] ?? '');
+		$carrier = (string)($correction['carriedBy'] ?? '');
+
+		return (string)($correction['correctionRoute'] ?? '') === 'volgende-aangifte'
+			&& in_array((string)($correction['status'] ?? ''), ['klaargezet', 'bevestigd', 'verzonden'], true) === true
+			&& substr($other, 0, 4) === substr($period, 0, 4) && $other < $period
+			&& ($carrier === '' || $carrier === (string)($filing['id'] ?? ''))
+			&& is_array($correction['correctionTree'] ?? null) === true;
+	}//end travelsWith()
+
+	/**
+	 * Record which return carries a correction.
+	 *
+	 * @param array<string, mixed> $correction The correction.
+	 * @param string               $filingId   The regular filing.
+	 *
+	 * @return void
+	 */
+	private function stampCarrier(array $correction, string $filingId): void {
+		if ($filingId === '' || (string)($correction['carriedBy'] ?? '') === $filingId) {
+			return;
+		}
+
+		$correctionId = (string)$correction['id'];
+		unset($correction['id']);
+		$this->gateway->save(payload: array_merge($correction, ['carriedBy' => $filingId]), schema: 'LoonaangifteFiling', uuid: $correctionId);
+	}//end stampCarrier()
 
 	/**
 	 * Why a filing is not rendered at all, or null.
