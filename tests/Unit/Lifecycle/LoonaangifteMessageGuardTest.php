@@ -61,4 +61,24 @@ class LoonaangifteMessageGuardTest extends TestCase {
 		self::assertTrue($guard->check(['jurisdiction' => 'NL', 'filingType' => 'deposit', 'status' => 'concept'], 'klaarzetten', 'u')->isAllowed());
 	}//end testOtherFilingsPass()
 
+	/**
+	 * A correction is made ready only without blocking findings and with its
+	 * correction tree (next return) or its own validated message (closed year).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 */
+	public function testACorrectionNeedsItsTreeOrItsMessage(): void {
+		$guard = new LoonaangifteMessageGuard();
+		$base = ['jurisdiction' => 'NL', 'filingType' => 'correctie', 'status' => 'concept', 'blockingFindings' => 0];
+
+		$nothing = array_merge($base, ['blockingFindings' => 1, 'messageFindings' => [['kind' => 'nothing-to-correct', 'severity' => 'blocking', 'problem' => 'Er is niets te corrigeren.']]]);
+		self::assertStringContainsString('Er is niets te corrigeren.', (string)$guard->check($nothing, 'klaarzetten', 'u')->getMessage());
+		self::assertTrue($guard->check(array_merge($base, ['correctionRoute' => 'volgende-aangifte', 'correctionTree' => ['DatAanvTv' => '2026-03-01']]), 'klaarzetten', 'u')->isAllowed());
+		self::assertFalse($guard->check(array_merge($base, ['correctionRoute' => 'volgende-aangifte', 'correctionTree' => []]), 'klaarzetten', 'u')->isAllowed());
+		self::assertFalse($guard->check(array_merge($base, ['correctionRoute' => 'correctiebericht', 'correctionTree' => ['DatAanvTv' => '2025-03-01']]), 'klaarzetten', 'u')->isAllowed());
+		self::assertTrue($guard->check(array_merge($base, ['correctionRoute' => 'correctiebericht', 'messageXml' => '<Loonaangifte/>']), 'klaarzetten', 'u')->isAllowed());
+	}//end testACorrectionNeedsItsTreeOrItsMessage()
+
 }//end class
