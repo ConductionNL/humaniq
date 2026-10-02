@@ -57,19 +57,29 @@ class LoonaangifteMessageService {
 	private const FILED_RUN_STATES = ['approved', 'posted', 'paid'];
 
 	/**
+	 * The corrections a return carries.
+	 *
+	 * @var CarriedCorrections
+	 */
+	private readonly CarriedCorrections $carried;
+
+	/**
 	 * The service.
 	 *
 	 * @param HoursRegisterGateway $gateway      Register reads and writes.
 	 * @param PayslipRecalculator  $recalculator The engine, to recalculate a payslip's components.
 	 * @param IAppConfig           $appConfig    The software relation number.
-	 * @param IAppManager|null     $appManager   The app version for the message header.
+	 * @param IAppManager|null        $appManager   The app version for the message header.
+	 * @param CarriedCorrections|null $carried      The corrections a return carries (defaults to one over the gateway).
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly PayslipRecalculator $recalculator,
 		private readonly IAppConfig $appConfig,
 		private readonly ?IAppManager $appManager=null,
+		?CarriedCorrections $carried=null,
 	) {
+		$this->carried = ($carried ?? new CarriedCorrections($gateway));
 	}//end __construct()
 
 	/**
@@ -93,7 +103,8 @@ class LoonaangifteMessageService {
 
 		$period = (string)$filing['period'];
 		$dates = (array)LoonaangifteYear::periodDates($period, (string)($filing['tijdvak'] ?? 'maand'));
-		$year = (array)LoonaangifteYear::forYear((int)substr($period, 0, 4));
+		// The refusal above has checked that the year and the period are known.
+		$year = (LoonaangifteYear::forYear((int)substr($period, 0, 4)) ?? ['version' => '', 'namespace' => '', 'xsd' => '']);
 		$current = $this->periodLines((string)($filing['administrationId'] ?? ''), $period, [$dates[0], $dates[1]]);
 		$run = $current['run'];
 
@@ -103,7 +114,7 @@ class LoonaangifteMessageService {
 			return $this->store($filing, $stored, $findings, null);
 		}
 
-		$corrections = $this->carriedCorrections($filing);
+		$corrections = $this->carried->forReturn($filing);
 		$parts = array_map(static fn (array $correction): array => ['tree' => (array)$correction['correctionTree'], 'saldo' => (int)($correction['correctionSaldo'] ?? 0)], $corrections);
 		$built = LoonaangifteMessageBuilder::build($current['administration'], $this->header('LA' . $period), [$dates[0], $dates[1]], $current['lines'], $parts);
 
@@ -124,7 +135,7 @@ class LoonaangifteMessageService {
 		$outcome = $this->store($filing, $stored, $findings, $message);
 		if ($message !== null) {
 			foreach ($corrections as $correction) {
-				$this->stampCarrier($correction, $filingId);
+				$this->carried->stamp($correction, $filingId);
 			}
 		}
 
@@ -191,65 +202,6 @@ class LoonaangifteMessageService {
 
 		return [($errors === [] ? ['xml' => $xml, 'fileName' => $fileName] : null), $findings];
 	}//end validated()
-
-	/**
-	 * The corrections that travel with this return (GS 2.4.1): made ready,
-	 * for an earlier period of the same year, routed to the next return, not
-	 * carried by another return. At most 13 (XSD).
-	 *
-	 * @param array<string, mixed> $filing The regular filing.
-	 *
-	 * @return list<array<string, mixed>>
-	 */
-	private function carriedCorrections(array $filing): array {
-		$carried = [];
-		foreach ($this->gateway->findFiltered('LoonaangifteFiling', ['administrationId' => (string)($filing['administrationId'] ?? ''), 'filingType' => 'correctie']) as $correction) {
-			if ($this->travelsWith($correction, $filing) === true) {
-				$carried[] = $correction;
-			}
-		}
-
-		usort($carried, static fn (array $one, array $two): int => strcmp((string)$one['period'], (string)$two['period']));
-		return array_slice($carried, 0, 13);
-	}//end carriedCorrections()
-
-	/**
-	 * Whether a correction travels with a regular return.
-	 *
-	 * @param array<string, mixed> $correction The correction.
-	 * @param array<string, mixed> $filing     The regular filing.
-	 *
-	 * @return bool
-	 */
-	private function travelsWith(array $correction, array $filing): bool {
-		$period = (string)$filing['period'];
-		$other = (string)($correction['period'] ?? '');
-		$carrier = (string)($correction['carriedBy'] ?? '');
-
-		return (string)($correction['correctionRoute'] ?? '') === 'volgende-aangifte'
-			&& in_array((string)($correction['status'] ?? ''), ['klaargezet', 'bevestigd', 'verzonden'], true) === true
-			&& substr($other, 0, 4) === substr($period, 0, 4) && $other < $period
-			&& ($carrier === '' || $carrier === (string)($filing['id'] ?? ''))
-			&& is_array($correction['correctionTree'] ?? null) === true;
-	}//end travelsWith()
-
-	/**
-	 * Record which return carries a correction.
-	 *
-	 * @param array<string, mixed> $correction The correction.
-	 * @param string               $filingId   The regular filing.
-	 *
-	 * @return void
-	 */
-	private function stampCarrier(array $correction, string $filingId): void {
-		if ($filingId === '' || (string)($correction['carriedBy'] ?? '') === $filingId) {
-			return;
-		}
-
-		$correctionId = (string)$correction['id'];
-		unset($correction['id']);
-		$this->gateway->save(payload: array_merge($correction, ['carriedBy' => $filingId]), schema: 'LoonaangifteFiling', uuid: $correctionId);
-	}//end stampCarrier()
 
 	/**
 	 * Why a filing is not rendered at all, or null.

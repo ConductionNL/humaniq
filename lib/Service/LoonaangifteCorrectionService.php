@@ -168,6 +168,29 @@ class LoonaangifteCorrectionService {
 			return $this->store($correction, $stored, [$this->finding('run-not-approved', 'Er is voor ' . $period . ' geen goedgekeurde loonrun.')]);
 		}
 
+		[$stored, $findings, $tree] = $this->compared($baseline, $current, [$dates[0], $dates[1]], $stored, $period);
+
+		if ($this->blocking($findings) === 0 && (string)($correction['correctionRoute'] ?? '') === self::ROUTE_OWN_MESSAGE) {
+			$findings = array_merge($findings, $this->ownMessage($current['administration'], $period, $tree, $year, $stored));
+		}
+
+		return $this->store($correction, $stored, $findings);
+	}//end render()
+
+	/**
+	 * Compare the current lines with the last stand received: the changed
+	 * relationships, the new collective stand and the saldo (GS 2.4.5, p56-57).
+	 *
+	 * @param array{relationships: array<string, array{numIv: string, bsn: string, persNr: string, values: array<string, string>}>, totTeBet: int} $baseline The last stand received.
+	 * @param array{run: array<string, mixed>|null, administration: array<string, mixed>, lines: list<array<string, mixed>>}                      $current  The period's current lines.
+	 * @param array{0: string, 1: string}                                                                                                         $dates    The period's first and last day.
+	 * @param array<string, mixed>                                                                                                                $stored   The facts so far.
+	 * @param string                                                                                                                              $period   The period.
+	 *
+	 * @return array{0: array<string, mixed>, 1: list<array<string, string>>, 2: array<string, mixed>} The facts, the findings and the TijdvakCorrectie.
+	 */
+	private function compared(array $baseline, array $current, array $dates, array $stored, string $period): array {
+		$run = (array)$current['run'];
 		$diff = CorrectionDiff::compare($baseline['relationships'], $current['lines']);
 		$stand = LoonaangifteMessageBuilder::collective($current['lines']);
 		unset($stand['TotGen']);
@@ -185,21 +208,17 @@ class LoonaangifteCorrectionService {
 			'InkomstenverhoudingIntrekking' => $diff['withdrawn'],
 		];
 		$stored = array_merge($stored, [
-			'messageRunId' => (string)$current['run']['id'],
-			'messageRunCalculatedAt' => (string)($current['run']['calculatedAt'] ?? ''),
-			'messageRunTotalLoonheffing' => (float)($current['run']['totalLoonheffing'] ?? 0),
+			'messageRunId' => (string)$run['id'],
+			'messageRunCalculatedAt' => (string)($run['calculatedAt'] ?? ''),
+			'messageRunTotalLoonheffing' => (float)($run['totalLoonheffing'] ?? 0),
 			'collectiveTotals' => $stand,
 			'correctionLines' => $this->withEmployees($diff['lines']),
 			'correctionTree' => $tree,
 			'correctionSaldo' => $saldo,
 		]);
 
-		if ($this->blocking($findings) === 0 && (string)($correction['correctionRoute'] ?? '') === self::ROUTE_OWN_MESSAGE) {
-			$findings = array_merge($findings, $this->ownMessage($current['administration'], $period, $tree, $year, $stored));
-		}
-
-		return $this->store($correction, $stored, $findings);
-	}//end render()
+		return [$stored, $findings, $tree];
+	}//end compared()
 
 	/**
 	 * The route: the next return inside the tax year, its own message after
@@ -226,7 +245,7 @@ class LoonaangifteCorrectionService {
 	 *
 	 * @param array<string, mixed> $correction The correction.
 	 *
-	 * @return array{relationships: array<string, array<string, string>>, totTeBet: int}|null
+	 * @return array{relationships: array<string, array{numIv: string, bsn: string, persNr: string, values: array<string, string>}>, totTeBet: int}|null
 	 */
 	private function baseline(array $correction): ?array {
 		$original = $this->gateway->findObjectData((string)($correction['corrects'] ?? ''), 'LoonaangifteFiling');
@@ -315,14 +334,14 @@ class LoonaangifteCorrectionService {
 	/**
 	 * The blocking findings of the current lines: a wrong line makes a wrong stand.
 	 *
-	 * @param list<array{findings: list<array<string, string>>}> $lines The current lines.
+	 * @param list<array<string, mixed>> $lines The current lines, each with its findings.
 	 *
 	 * @return list<array<string, string>>
 	 */
 	private function lineFindings(array $lines): array {
 		$findings = [];
 		foreach ($lines as $line) {
-			$findings = array_merge($findings, $line['findings']);
+			$findings = array_merge($findings, array_values((array)($line['findings'] ?? [])));
 		}
 
 		return $findings;

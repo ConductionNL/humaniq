@@ -62,17 +62,10 @@ class LoonaangifteMessageGuard implements LifecycleGuardInterface {
 		}
 
 		if ((int)$blocking > 0) {
-			$problems = [];
-			foreach ((array)($object['messageFindings'] ?? []) as $finding) {
-				if (is_array($finding) === true && ($finding['severity'] ?? '') === 'blocking') {
-					$problems[] = (string)($finding['problem'] ?? '');
-				}
-			}
-
-			return GuardResult::deny('Het aangiftebericht heeft ' . (int)$blocking . ' blokkerende bevinding(en): ' . implode(' ', $problems));
+			return GuardResult::deny('Het aangiftebericht heeft ' . (int)$blocking . ' blokkerende bevinding(en): ' . implode(' ', $this->blockingProblems($object)));
 		}
 
-		if (($object['filingType'] ?? '') === 'correctie' && ($object['correctionRoute'] ?? '') === 'volgende-aangifte' && is_array($object['correctionTree'] ?? null) === true && $object['correctionTree'] !== []) {
+		if ($this->correctionTravelsWithTheNextReturn($object) === true) {
 			return GuardResult::allow();
 		}
 
@@ -82,5 +75,38 @@ class LoonaangifteMessageGuard implements LifecycleGuardInterface {
 
 		return GuardResult::allow();
 	}//end check()
+
+	/**
+	 * The problems of the blocking findings.
+	 *
+	 * @param array<string, mixed> $object The filing.
+	 *
+	 * @return list<string>
+	 */
+	private function blockingProblems(array $object): array {
+		$problems = [];
+		foreach ((array)($object['messageFindings'] ?? []) as $finding) {
+			if (is_array($finding) === true && ($finding['severity'] ?? '') === 'blocking') {
+				$problems[] = (string)($finding['problem'] ?? '');
+			}
+		}
+
+		return $problems;
+	}//end blockingProblems()
+
+	/**
+	 * Whether this is a correction that travels with the next return and has
+	 * its correction tree (filings-correction-message D3).
+	 *
+	 * @param array<string, mixed> $object The filing.
+	 *
+	 * @return bool
+	 */
+	private function correctionTravelsWithTheNextReturn(array $object): bool {
+		return ($object['filingType'] ?? '') === 'correctie'
+			&& ($object['correctionRoute'] ?? '') === 'volgende-aangifte'
+			&& is_array($object['correctionTree'] ?? null) === true
+			&& $object['correctionTree'] !== [];
+	}//end correctionTravelsWithTheNextReturn()
 
 }//end class

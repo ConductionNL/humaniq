@@ -104,7 +104,7 @@ final class CorrectionDiff {
 	 * Compare the received stand with the current lines.
 	 *
 	 * @param array<string, array{numIv: string, bsn: string, persNr: string, values: array<string, string>}> $received The last received stand.
-	 * @param list<array{tree: array<string, mixed>, employeeId?: string}>                                    $current  The current lines.
+	 * @param list<array<string, mixed>>                                                                      $current  The current lines, each with its tree and employeeId.
 	 *
 	 * @return array{lines: list<array<string, mixed>>, initial: list<array<string, mixed>>, withdrawn: list<array<string, string>>}
 	 *
@@ -113,7 +113,7 @@ final class CorrectionDiff {
 	public static function compare(array $received, array $current): array {
 		$out = ['lines' => [], 'initial' => [], 'withdrawn' => []];
 		foreach ($current as $line) {
-			$now = self::fromTree($line['tree']);
+			$now = self::fromTree((array)($line['tree'] ?? []));
 			$key = self::key($now);
 			$before = ($received[$key] ?? null);
 			unset($received[$key]);
@@ -123,7 +123,7 @@ final class CorrectionDiff {
 			}
 
 			$out['lines'][] = ['employeeId' => (string)($line['employeeId'] ?? ''), 'kind' => ($before === null ? 'added' : 'changed'), 'changes' => $changes];
-			$out['initial'][] = $line['tree'];
+			$out['initial'][] = (array)($line['tree'] ?? []);
 		}
 
 		foreach ($received as $gone) {
@@ -234,7 +234,7 @@ final class CorrectionDiff {
 	/**
 	 * The key of a relationship.
 	 *
-	 * @param array{numIv: string, bsn: string, persNr: string} $relationship The relationship.
+	 * @param array{numIv: string, bsn: string, persNr: string, values?: array<string, string>} $relationship The relationship.
 	 *
 	 * @return string
 	 */
