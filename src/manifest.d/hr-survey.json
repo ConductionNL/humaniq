@@ -1,0 +1,309 @@
+{
+	"pages": [
+		{
+			"id": "SurveyDetail",
+			"route": "/surveys/:id",
+			"type": "detail",
+			"title": "Survey",
+			"config": {
+				"register": "humaniq",
+				"schema": "Survey",
+				"_note": "talent-engagement-surveys (2026-10-02): REQ-SRV-001/003, design D1-D4. HR builds the questions with CnFormBuilder (survey-questions widget, the vacancy-questions component on the Survey schema). Open survey posts to /api/surveys/{id}/open, which moves a draft to open and creates one SurveyInvitation per active employee in scope with an account (the invitation and reminder are notification rules on SurveyInvitation). The figures and results tables read GET /api/surveys/results?id=, HR and administrators only, computed on read: a department below minGroupSize is folded into Other or left out, free text is never shown per department. Who has not answered is on the Survey invitations page, never who answered what.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"hiddenTabs": [
+					"notes",
+					"tags",
+					"tasks"
+				],
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Survey",
+						"icon": "ClipboardTextOutline",
+						"content": {
+							"columns": 2,
+							"title": "Survey",
+							"exclude": [
+								"questions"
+							],
+							"overrides": {
+								"invitedCount": {
+									"editable": false
+								},
+								"withoutAccountCount": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								}
+							}
+						}
+					},
+					{
+						"id": "questions",
+						"type": "survey-questions",
+						"title": "Questions",
+						"content": {}
+					},
+					{
+						"id": "figures",
+						"type": "endpoint-table",
+						"title": "Responses",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/surveys/results",
+								"params": {
+									"id": "@objectId"
+								},
+								"responsePath": "figures"
+							},
+							"columns": [
+								{
+									"key": "figure",
+									"label": "Figure",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "value",
+									"label": "Value"
+								}
+							],
+							"emptyText": "Only HR sees the response figures"
+						}
+					},
+					{
+						"id": "results",
+						"type": "endpoint-table",
+						"title": "Results",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/surveys/results",
+								"params": {
+									"id": "@objectId"
+								},
+								"responsePath": "rows"
+							},
+							"columns": [
+								{
+									"key": "group",
+									"label": "Group",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "question",
+									"label": "Question"
+								},
+								{
+									"key": "answers",
+									"label": "Answers"
+								},
+								{
+									"key": "average",
+									"label": "Average"
+								},
+								{
+									"key": "enps",
+									"label": "eNPS"
+								}
+							],
+							"emptyText": "No results yet: fewer answers than the minimum group size"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "questions",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 8
+					},
+					{
+						"id": 3,
+						"widgetId": "figures",
+						"gridX": 0,
+						"gridY": 14,
+						"gridWidth": 4,
+						"gridHeight": 5
+					},
+					{
+						"id": 4,
+						"widgetId": "results",
+						"gridX": 4,
+						"gridY": 14,
+						"gridWidth": 8,
+						"gridHeight": 8
+					}
+				],
+				"headerActions": [
+					{
+						"id": "open-survey",
+						"label": "Open survey",
+						"type": "api-call",
+						"icon": "SendOutline",
+						"url": "/api/surveys/@objectId/open",
+						"method": "POST",
+						"params": {},
+						"confirm": true,
+						"successMessage": "The survey is open and the employees in scope are invited.",
+						"errorMessage": "The survey could not be opened. Only a draft with questions can be opened.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "concept"
+						}
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "sluiten",
+							"from": [
+								"open"
+							],
+							"to": "gesloten",
+							"label": "Close survey"
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": "SurveyInvitationDetail",
+			"route": "/survey-invitations/:id",
+			"type": "detail",
+			"title": "Survey invitation",
+			"config": {
+				"register": "humaniq",
+				"schema": "SurveyInvitation",
+				"_note": "talent-engagement-surveys (2026-10-02): REQ-SRV-002, design D1. The employee opens their own invitation from My surveys (OpenRegister lets them read only invitations with their userId) and answers in the survey-answer widget, which reads the survey's questions and posts to /api/surveys/{id}/responses. The response is stored without the employee; the invitation only turns answered.",
+				"sidebar": {
+					"enabled": false
+				},
+				"hiddenTabs": [
+					"notes",
+					"tags",
+					"tasks",
+					"files"
+				],
+				"widgets": [
+					{
+						"id": "answer",
+						"type": "survey-answer",
+						"title": "Your answers",
+						"content": {}
+					},
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Invitation",
+						"icon": "EmailOutline",
+						"content": {
+							"columns": 2,
+							"title": "Invitation",
+							"include": [
+								"surveyId",
+								"status",
+								"closesOn"
+							],
+							"editable": false
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "answer",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 10
+					},
+					{
+						"id": 2,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 12,
+						"gridHeight": 3
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "Survey",
+			"params": {
+				"id": "Surveys",
+				"route": "/surveys",
+				"title": "Surveys",
+				"columns": [
+					"title",
+					"scope",
+					"opensOn",
+					"closesOn",
+					"status",
+					"invitedCount"
+				],
+				"sort": {
+					"field": "opensOn",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"scope"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Ask employees how they feel about their work. Answers are anonymous, and a department with too few answers is not shown on its own.",
+				"note": "talent-engagement-surveys (2026-10-02): REQ-SRV-001. HR builds and opens a survey; employees answer on My surveys."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "SurveyInvitation",
+			"params": {
+				"id": "SurveyInvitations",
+				"route": "/survey-invitations",
+				"title": "Survey invitations",
+				"columns": [
+					"surveyId",
+					"employeeId",
+					"status",
+					"closesOn"
+				],
+				"sort": {
+					"field": "closesOn",
+					"order": "desc"
+				},
+				"filters": [
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Who is invited to a survey and whether they answered. What anyone answered is never shown here.",
+				"note": "talent-engagement-surveys (2026-10-02): REQ-SRV-002, design D4. HR sees who has not answered yet; an employee sees only their own invitations (My surveys, userId @me)."
+			}
+		}
+	]
+}

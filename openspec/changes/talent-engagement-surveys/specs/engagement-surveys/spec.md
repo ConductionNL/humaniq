@@ -18,6 +18,8 @@ Rows: `tal-surveys` (humaniq matrix).
 - **THEN** nine invitations exist, each employee is notified, and the survey page shows 0 of
   9 answered
 
+@e2e exclude opening is a server-side step that invites from the register; covered by SurveyServiceTest::testASurveyGoesToTwoTeams and ::testOpeningRules, SurveyControllerTest::testOnlyHrOpensASurvey and SurveyOpenGuardTest::testOnlyOpenSurveyOpensASurvey
+
 ### Requirement: An answer SHALL be stored without anything that identifies the employee (REQ-SRV-002)
 
 When an employee answers, humaniq SHALL mark their invitation answered and SHALL store the
@@ -33,10 +35,14 @@ Rows: `tal-surveys` (humaniq matrix).
 - **THEN** no response names an employee or account, and the invitation shows only that the
   employee answered
 
+@e2e exclude the separation happens server-side in the stored records; covered by SurveyServiceTest::testAnAnswerNamesNobody, which validates the stored response against the real SurveyResponse schema
+
 #### Scenario: One answer per person
 - **GIVEN** an employee whose invitation is answered
 - **WHEN** they submit again
 - **THEN** the second answer is refused
+
+@e2e exclude server-side refusal; covered by SurveyServiceTest::testOneAnswerPerPerson and SurveyControllerTest::testAnsweringPassesTheServiceStatusOn
 
 ### Requirement: Results SHALL never show a group smaller than the minimum (REQ-SRV-003)
 
@@ -53,3 +59,5 @@ Rows: `tal-surveys` (humaniq matrix).
 - **WHEN** an HR adviser opens the results
 - **THEN** Finance and HR are shown on their own, Legal does not appear, and the overall
   figures include all 14 responses
+
+@e2e exclude results are computed server-side on read; covered by SurveyServiceTest::testASmallTeamStaysAnonymous and ::testSmallDepartmentsFoldIntoOther, SurveyControllerTest::testOnlyHrReadsTheResults

@@ -101,3 +101,18 @@ be sent, which is what the invitation record is for.
 
 - Should HR be able to see the open invitations only as a count, to keep reminders from
   becoming pressure on named people?
+
+## Build notes (2026-10-02)
+
+- **Opening is guarded.** OpenRegister's lifecycle listener refuses a direct `concept` to `open`
+  write unless a transition allows it, so the lifecycle declares `openen` with
+  `requires: SurveyOpenGuard`. The guard allows it only inside SurveyService's own write (the
+  `InternalWriteMarker`), so a survey cannot be opened anywhere without its invitations.
+- **The reminder** is a `scheduled` rule on `SurveyInvitation` with a `withinNext P3D` filter on
+  `closesOn`, which the invitation copies from its survey, and `status: open`.
+- **The results endpoint** is `GET /api/surveys/results?id=`, because the page's endpoint table
+  passes the object id as a query parameter.
+- **Questions are frozen once the survey opens**: the questions widget only saves on a draft, so
+  every answer belongs to the same question list.
+- Seed: one closed survey with fourteen responses (seven, five and two per department), one open
+  pulse survey with an open invitation for the employee linked to `admin`, and one draft.
