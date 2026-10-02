@@ -36,6 +36,7 @@ use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
 use OCA\Humaniq\Lifecycle\HandoffCloseGuard;
 use OCA\Humaniq\Lifecycle\HandoffReleaseGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
+use OCA\Humaniq\Lifecycle\LoonaangifteMessageGuard;
 use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
@@ -312,6 +313,7 @@ class Application extends App implements IBootstrap {
 		$context->registerService(HandoffReleaseGuard::class, static fn ($c): HandoffReleaseGuard => new HandoffReleaseGuard());
 		$context->registerService(HandoffCloseGuard::class, static fn ($c): HandoffCloseGuard => new HandoffCloseGuard());
 		$context->registerService(UbdReportReadyGuard::class, static fn ($c): UbdReportReadyGuard => new UbdReportReadyGuard());
+		$context->registerService(LoonaangifteMessageGuard::class, static fn ($c): LoonaangifteMessageGuard => new LoonaangifteMessageGuard());
 
 		// jurisdiction-packs (design.md D7): the pack resolver spans two homes —
 		// bundled packs in lib/Standards/packs/ (universal facts live in code)

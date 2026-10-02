@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Standards\Checks;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Payroll\Loonaangifte\MessageDrift;
 use OCA\Humaniq\Standards\RuleCatalogue;
 
 /**
@@ -81,6 +82,12 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 				// AWR art. 19 — an unsent filing does not sit within 14 days of, or past, its deadline.
 				'nl-loonaangifte-deadline-alert' => static fn (array $o): bool => self::isNlLoonaangifte($o) === false
 					|| self::deadlineNotAlerting($o),
+				// Gegevensspecificaties 2026 p39-55 (0001, 0002, 2315): the message reports
+				// the run's figures, so a run recalculated after the message was made, or
+				// whose wage tax changed, leaves a message that no longer matches it
+				// (filings-wage-tax-message D4).
+				'nl-loonaangifte-message-drift' => static fn (array $o, array $context = []): bool => self::isNlLoonaangifte($o) === false
+					|| MessageDrift::matchesRun($o, $context),
 			],
 		];
 

@@ -53,8 +53,11 @@ final class CalculationResult {
 	 * @param int $werknemersverzekeringenCents `awf+aof+wko+whk` (the Payslip field).
 	 * @param int $employerChargesCents `werknemersverzekeringen + zvw`.
 	 * @param bool $aboveLmax Whether the tabelloon exceeded the tables' `Lmax` ceiling (documented edge, design.md D2 step 3).
+	 * @param int $taxableWageCents The pack's `belastbaarLoon`: the wage the tax and premiums are calculated over (filings-wage-tax-message D5).
+	 * @param int $premiumWageCents `belastbaarLoon` capped at the period's maximum premium wage: the base of Awf, Aof, Wko and Whk (filings-wage-tax-message D5).
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
+	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 */
 	public function __construct(
 		public readonly int $grossPayCents,
@@ -75,6 +78,8 @@ final class CalculationResult {
 		public readonly int $werknemersverzekeringenCents,
 		public readonly int $employerChargesCents,
 		public readonly bool $aboveLmax,
+		public readonly int $taxableWageCents=0,
+		public readonly int $premiumWageCents=0,
 	) {
 
 	}//end __construct()
