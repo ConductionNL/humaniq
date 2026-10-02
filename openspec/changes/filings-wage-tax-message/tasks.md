@@ -1,7 +1,7 @@
 ## 1. Message
 
 - [x] 1.1 Ship the 2026 XSD and version entry beside the tax tables. Verify: a test loads it.
-      Built: `lib/Standards/loonaangifte/Loonaangifte2026v2.0.xsd` with its README notice,
+      Built: `lib/Standards/loonaangifte/Loonaangifte2026v2.0.xsd` with its NOTICE,
       `LoonaangifteYear` (D2 amended); `LoonaangifteYearTest`.
 - [x] 1.2 Add `LoonaangifteMessageBuilder` (collective and nominative parts). Verify: golden
       file test against a hand-checked message for the seeded run, validating against the XSD.
