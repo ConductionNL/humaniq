@@ -82,10 +82,7 @@ class SurveyAnswers {
 	private function valid(array $question, mixed $value): int|string|null {
 		$type = (string)($question['type'] ?? 'textarea');
 		if ($type === 'scale' || $type === 'recommend') {
-			[$min, $max] = $this->range($question);
-			$number = filter_var($value, FILTER_VALIDATE_INT);
-
-			return ($number !== false && $number >= $min && $number <= $max) ? $number : null;
+			return $this->validNumber(question: $question, value: $value);
 		}
 
 		if (is_string($value) === false || trim($value) === '') {
@@ -100,12 +97,33 @@ class SurveyAnswers {
 	}//end valid()
 
 	/**
+	 * The answer to a scale or recommend question when it is a whole number
+	 * inside the question's range, else null.
+	 *
+	 * @param array<string, mixed> $question The question.
+	 * @param mixed                $value    The answer.
+	 *
+	 * @return int|null
+	 */
+	private function validNumber(array $question, mixed $value): ?int {
+		[$min, $max] = $this->range($question);
+		$number = filter_var($value, FILTER_VALIDATE_INT);
+		if ($number === false || $number < $min || $number > $max) {
+			return null;
+		}
+
+		return $number;
+	}//end validNumber()
+
+	/**
 	 * The lowest and highest value of a scale (default 1 to 5) or of the
 	 * recommend question (always 0 to 10, the eNPS scale).
 	 *
 	 * @param array<string, mixed> $question The question.
 	 *
 	 * @return array{0: int, 1: int}
+	 *
+	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function range(array $question): array {
 		if (($question['type'] ?? '') === 'recommend') {

@@ -48,6 +48,9 @@
       <code><![CDATA[LoonaangifteMessageGuard]]></code>
       <code><![CDATA[LoonaangifteMessageGuard]]></code>
       <code><![CDATA[LoonaangifteMessageGuard]]></code>
+      <code><![CDATA[SurveyOpenGuard]]></code>
+      <code><![CDATA[SurveyOpenGuard]]></code>
+      <code><![CDATA[SurveyOpenGuard]]></code>
     </MissingDependency>
   </file>
   <file src="lib/Service/RuleAuditService.php">

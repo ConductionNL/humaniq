@@ -49,6 +49,7 @@ parameters:
         - lib/Lifecycle/PayrollRunApprovedGuard.php
         - lib/Lifecycle/RightToWorkGuard.php
         - lib/Lifecycle/RosterCompetenceGuard.php
+        - lib/Lifecycle/SurveyOpenGuard.php
         - lib/Lifecycle/TimesheetNotEmptyGuard.php
         - lib/Lifecycle/UbdReportReadyGuard.php
 

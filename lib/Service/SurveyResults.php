@@ -68,6 +68,28 @@ class SurveyResults {
 	public function compute(array $survey, array $responses, array $unitNames): array {
 		$min = max(3, (int)($survey['minGroupSize'] ?? self::DEFAULT_MIN));
 		$questions = array_values(array_filter((array)($survey['questions'] ?? []), static fn (mixed $question): bool => is_array($question) === true && trim((string)($question['key'] ?? '')) !== ''));
+		[$units, $notes] = $this->breakdown(questions: $questions, responses: $responses, min: $min, unitNames: $unitNames);
+		usort($units, static fn (array $one, array $two): int => [$one['unitId'] === 'other', $one['name']] <=> [$two['unitId'] === 'other', $two['name']]);
+		$overall = (count($responses) >= $min) ? $this->summaries($questions, $responses, true) : [];
+		if ($overall === [] && $responses !== []) {
+			$notes[] = 'Fewer responses than the minimum group size: no results are shown yet.';
+		}
+
+		return ['responses' => count($responses), 'minGroupSize' => $min, 'overall' => $overall, 'units' => $units, 'notes' => $notes, 'rows' => $this->rows($overall, $units)];
+	}//end compute()
+
+	/**
+	 * The per-department results, with departments below the minimum folded
+	 * into Other, and Other left out when it is itself too small.
+	 *
+	 * @param list<array<string, mixed>> $questions The questions.
+	 * @param list<array<string, mixed>> $responses The responses.
+	 * @param int                        $min       The minimum group size.
+	 * @param array<string, string>      $unitNames Department names by id.
+	 *
+	 * @return array{0: list<array<string, mixed>>, 1: list<string>}
+	 */
+	private function breakdown(array $questions, array $responses, int $min, array $unitNames): array {
 		$byUnit = [];
 		foreach ($responses as $response) {
 			$byUnit[(string)($response['orgUnitId'] ?? '')][] = $response;
@@ -91,14 +113,8 @@ class SurveyResults {
 			$notes[] = 'Departments with too few responses are left out of the breakdown; their answers count in the overall figures.';
 		}
 
-		usort($units, static fn (array $one, array $two): int => [$one['unitId'] === 'other', $one['name']] <=> [$two['unitId'] === 'other', $two['name']]);
-		$overall = (count($responses) >= $min) ? $this->summaries($questions, $responses, true) : [];
-		if ($overall === [] && $responses !== []) {
-			$notes[] = 'Fewer responses than the minimum group size: no results are shown yet.';
-		}
-
-		return ['responses' => count($responses), 'minGroupSize' => $min, 'overall' => $overall, 'units' => $units, 'notes' => $notes, 'rows' => $this->rows($overall, $units)];
-	}//end compute()
+		return [$units, $notes];
+	}//end breakdown()
 
 	/**
 	 * One summary per question.

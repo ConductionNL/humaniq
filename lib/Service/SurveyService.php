@@ -59,6 +59,13 @@ class SurveyService {
 	public const RESPONSE = 'SurveyResponse';
 
 	/**
+	 * Who a survey goes to, and an employee's department and contract on a day.
+	 *
+	 * @var SurveyAudience
+	 */
+	private readonly SurveyAudience $audience;
+
+	/**
 	 * The survey service.
 	 *
 	 * @param HoursRegisterGateway $gateway       Register reads and writes.
@@ -71,11 +78,12 @@ class SurveyService {
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly UnitMembership $membership,
-		private readonly OrgResolutionService $orgResolution,
+		OrgResolutionService $orgResolution,
 		private readonly InternalWriteMarker $marker,
 		private readonly SurveyResults $results,
 		private readonly SurveyAnswers $answers,
 	) {
+		$this->audience = new SurveyAudience(gateway: $gateway, membership: $membership, orgResolution: $orgResolution);
 	}//end __construct()
 
 	/**
@@ -105,7 +113,7 @@ class SurveyService {
 
 		$invited = 0;
 		$withoutAccount = 0;
-		foreach ($this->inScope(survey: $survey, today: $today) as $employee) {
+		foreach ($this->audience->employeesFor(survey: $survey, today: $today) as $employee) {
 			$userId = trim((string)($employee['nextcloudUserId'] ?? ''));
 			if ($userId === '') {
 				$withoutAccount++;
@@ -173,8 +181,8 @@ class SurveyService {
 		$employeeId = $this->membership->rowId($employee);
 		$response = [
 			'surveyId' => $surveyId,
-			'orgUnitId' => $this->unitOf(employeeId: $employeeId, today: $today),
-			'contractType' => $this->contractTypeOf(employeeId: $employeeId, today: $today),
+			'orgUnitId' => $this->audience->unitOf(employeeId: $employeeId, today: $today),
+			'contractType' => $this->audience->contractTypeOf(employeeId: $employeeId, today: $today),
 			'answers' => $clean['answers'],
 			'submittedOn' => $today,
 			'administrationId' => ($survey['administrationId'] ?? null),
@@ -250,108 +258,5 @@ class SurveyService {
 	private function invitationOf(string $surveyId, string $employeeId): ?array {
 		return ($this->gateway->findFiltered(self::INVITATION, ['surveyId' => $surveyId, 'employeeId' => $employeeId])[0] ?? null);
 	}//end invitationOf()
-
-	/**
-	 * The active employees the survey goes to.
-	 *
-	 * @param array<string, mixed> $survey The survey.
-	 * @param string               $today  The day.
-	 *
-	 * @return list<array<string, mixed>>
-	 */
-	private function inScope(array $survey, string $today): array {
-		$administration = trim((string)($survey['administrationId'] ?? ''));
-		$scope = (string)($survey['scope'] ?? 'everyone');
-		$audience = ($scope === 'orgUnits') ? $this->audienceUnits(survey: $survey) : [];
-		$out = [];
-		foreach ($this->gateway->loadAll('Employee') as $employee) {
-			if ($this->isActive(employee: $employee, today: $today) === false
-				|| ($administration !== '' && $administration !== trim((string)($employee['administrationId'] ?? '')))
-			) {
-				continue;
-			}
-
-			$employeeId = $this->membership->rowId($employee);
-			if (($scope === 'orgUnits' && in_array($this->unitOf(employeeId: $employeeId, today: $today), $audience, true) === false)
-				|| ($scope === 'contractType' && $this->contractTypeOf(employeeId: $employeeId, today: $today) !== (string)($survey['contractType'] ?? ''))
-			) {
-				continue;
-			}
-
-			$out[] = $employee;
-		}
-
-		return $out;
-	}//end inScope()
-
-	/**
-	 * Whether the employee is in service on the day.
-	 *
-	 * @param array<string, mixed> $employee The employee.
-	 * @param string               $today    The day.
-	 *
-	 * @return bool
-	 */
-	private function isActive(array $employee, string $today): bool {
-		$start = trim((string)($employee['startDate'] ?? ''));
-		$end = trim((string)($employee['endDate'] ?? ''));
-
-		return ($start === '' || $start <= $today) && ($end === '' || $end >= $today);
-	}//end isActive()
-
-	/**
-	 * The chosen departments with their teams.
-	 *
-	 * @param array<string, mixed> $survey The survey.
-	 *
-	 * @return list<string>
-	 */
-	private function audienceUnits(array $survey): array {
-		$units = $this->gateway->loadAll('OrgUnit');
-		$out = [];
-		foreach ((array)($survey['orgUnitIds'] ?? []) as $unitId) {
-			$out = array_merge($out, $this->membership->subtree((string)$unitId, $units));
-		}
-
-		return array_values(array_unique($out));
-	}//end audienceUnits()
-
-	/**
-	 * The employee's department on the day: the first active placement.
-	 *
-	 * @param string $employeeId The employee.
-	 * @param string $today      The day.
-	 *
-	 * @return string|null
-	 */
-	private function unitOf(string $employeeId, string $today): ?string {
-		foreach ($this->gateway->findFiltered('OrgAssignment', ['employeeId' => $employeeId]) as $assignment) {
-			if ($this->orgResolution->isActiveOn($assignment, $today) === true) {
-				return (string)($assignment['orgUnitId'] ?? '');
-			}
-		}
-
-		return null;
-	}//end unitOf()
-
-	/**
-	 * The type of the employee's contract on the day.
-	 *
-	 * @param string $employeeId The employee.
-	 * @param string $today      The day.
-	 *
-	 * @return string|null
-	 */
-	private function contractTypeOf(string $employeeId, string $today): ?string {
-		foreach ($this->gateway->findFiltered('EmploymentContract', ['employeeId' => $employeeId]) as $contract) {
-			$start = trim((string)($contract['startDate'] ?? ''));
-			$end = trim((string)($contract['endDate'] ?? ''));
-			if (($start === '' || $start <= $today) && ($end === '' || $end >= $today)) {
-				return (string)($contract['type'] ?? '');
-			}
-		}
-
-		return null;
-	}//end contractTypeOf()
 
 }//end class
