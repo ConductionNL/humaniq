@@ -25,7 +25,7 @@ namespace OCA\Humaniq\Tests\Unit\Listener;
 use OCA\Humaniq\Listener\HandoffIntakeListener;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\OrgResolutionService;
-use OCA\Humaniq\Service\PayrollHandoffService;
+use OCA\Humaniq\Service\SalaryBureauExchangeService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
@@ -73,7 +73,7 @@ class HandoffIntakeListenerTest extends TestCase {
 			settingsService: $settings,
 			orgResolution: new OrgResolutionService()
 		);
-		$this->listener = new HandoffIntakeListener(handoffs: new PayrollHandoffService(gateway: $gateway, logger: new NullLogger()), logger: new NullLogger());
+		$this->listener = new HandoffIntakeListener(handoffs: new SalaryBureauExchangeService(gateway: $gateway, logger: new NullLogger()), logger: new NullLogger());
 
 		$this->store->seed('Employee', 'emp-a', ['firstName' => 'Anna', 'lastName' => 'Smit', 'administrationId' => 'ADM-006', 'startDate' => '2025-01-01', 'nextcloudUserId' => 'anna']);
 		$this->store->seed('PayrollHandoff', 'ho-apr', ['administrationId' => 'ADM-006', 'period' => '2026-04', 'status' => 'ontvangen']);
@@ -105,7 +105,7 @@ class HandoffIntakeListenerTest extends TestCase {
 
 		self::assertArrayNotHasKey('blockingFindings', $this->store->find('ho-apr', schema: 'PayrollHandoff')->getObject());
 
-		$failing = $this->createMock(PayrollHandoffService::class);
+		$failing = $this->createMock(SalaryBureauExchangeService::class);
 		$failing->method('checkIntake')->willThrowException(new \RuntimeException('register down'));
 		(new HandoffIntakeListener(handoffs: $failing, logger: new NullLogger()))->handle(new ObjectUpdatedEvent(self::handoff('ontvangen'), self::handoff('verzonden')));
 		self::assertArrayNotHasKey('blockingFindings', $this->store->find('ho-apr', schema: 'PayrollHandoff')->getObject());

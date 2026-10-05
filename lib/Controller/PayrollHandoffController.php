@@ -30,7 +30,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\HumaniqRoles;
-use OCA\Humaniq\Service\PayrollHandoffService;
+use OCA\Humaniq\Service\SalaryBureauExchangeService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -54,7 +54,7 @@ class PayrollHandoffController extends Controller {
 	 * @param IRequest              $request     The request.
 	 * @param ContainerInterface    $container   Resolves OpenRegister's ObjectService.
 	 * @param SettingsService       $settings    The register slug.
-	 * @param PayrollHandoffService $handoffs    Compile and intake.
+	 * @param SalaryBureauExchangeService $handoffs    Compile and intake.
 	 * @param IUserSession          $userSession The caller.
 	 * @param HumaniqRoles          $roles       Whether the caller is HR or payroll.
 	 * @param LoggerInterface       $logger      The logger.
@@ -65,7 +65,7 @@ class PayrollHandoffController extends Controller {
 		IRequest $request,
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settings,
-		private readonly PayrollHandoffService $handoffs,
+		private readonly SalaryBureauExchangeService $handoffs,
 		private readonly IUserSession $userSession,
 		private readonly HumaniqRoles $roles,
 		private readonly LoggerInterface $logger,

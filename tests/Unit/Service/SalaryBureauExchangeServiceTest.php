@@ -25,7 +25,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\OrgResolutionService;
-use OCA\Humaniq\Service\PayrollHandoffService;
+use OCA\Humaniq\Service\SalaryBureauExchangeService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
@@ -37,7 +37,7 @@ use Psr\Log\NullLogger;
 /**
  * Design D2 (compile) and D4 (intake), over the real gateway.
  */
-class PayrollHandoffServiceTest extends TestCase {
+class SalaryBureauExchangeServiceTest extends TestCase {
 
 	/**
 	 * The in-memory register.
@@ -49,9 +49,9 @@ class PayrollHandoffServiceTest extends TestCase {
 	/**
 	 * The subject.
 	 *
-	 * @var PayrollHandoffService
+	 * @var SalaryBureauExchangeService
 	 */
-	private PayrollHandoffService $service;
+	private SalaryBureauExchangeService $service;
 
 	/**
 	 * {@inheritDoc}
@@ -71,7 +71,7 @@ class PayrollHandoffServiceTest extends TestCase {
 			settingsService: $settings,
 			orgResolution: new OrgResolutionService()
 		);
-		$this->service = new PayrollHandoffService(gateway: $gateway, logger: new NullLogger());
+		$this->service = new SalaryBureauExchangeService(gateway: $gateway, logger: new NullLogger());
 
 		$this->store->seed('hrAdministration', 'adm-6', ['administrationId' => 'ADM-006', 'name' => 'Stichting Buitenbureau', 'payrollProcessing' => 'external-bureau']);
 		$this->store->seed('Employee', 'emp-a', ['firstName' => 'Anna', 'lastName' => 'Smit', 'administrationId' => 'ADM-006', 'startDate' => '2025-01-01', 'grossMonthlySalary' => 3800.00, 'iban' => 'NL91ABNA0417164300', 'taxTableColor' => 'wit', 'loonheffingskortingToegepast' => true, 'nextcloudUserId' => 'anna']);
