@@ -926,7 +926,7 @@
 					"route": "PayrollPaymentBatches"
 				},
 				{
-					"icon": "BankTransferOut",
+					"icon": "BankTransfer",
 					"id": "WageTaxRemittances",
 					"label": "Wage tax payments",
 					"route": "WageTaxRemittances"
@@ -16678,7 +16678,7 @@
 							],
 							"title": "Wage tax payment"
 						},
-						"icon": "BankTransferOut",
+						"icon": "BankTransfer",
 						"id": "data-2",
 						"title": "Wage tax payment",
 						"type": "data"

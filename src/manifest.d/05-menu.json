@@ -719,7 +719,7 @@
 				{
 					"id": "WageTaxRemittances",
 					"label": "Wage tax payments",
-					"icon": "BankTransferOut",
+					"icon": "BankTransfer",
 					"route": "WageTaxRemittances"
 				},
 				{

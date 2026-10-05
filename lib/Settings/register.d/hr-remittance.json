@@ -4,7 +4,7 @@
         "schemas": {
             "WageTaxRemittance": {
                 "slug": "WageTaxRemittance",
-                "icon": "BankTransferOut",
+                "icon": "BankTransfer",
                 "version": "0.1.0",
                 "title": "Wage tax remittance",
                 "description": "Each time humaniq hands a confirmed wage tax return to the bookkeeping app as a draft payable to the Belastingdienst, this records it. It is a log of the hand-off, never the payable itself (payroll-wage-tax-remittance-shillinq).",

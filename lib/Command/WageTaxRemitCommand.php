@@ -32,6 +32,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * occ command for the wage tax remittance hand-off.
+ *
+ * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 class WageTaxRemitCommand extends Command {
 

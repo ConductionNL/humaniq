@@ -52,7 +52,7 @@
 					}
 				},
 				"dataTitle": "Wage tax payment",
-				"dataIcon": "BankTransferOut",
+				"dataIcon": "BankTransfer",
 				"dataExclude": [
 					"payrollRunId",
 					"filingId"

@@ -28,7 +28,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
-use DateTimeImmutable;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -173,7 +172,7 @@ class WageTaxRemittanceService {
 			return $this->finish(runId: $runId, fields: $base + ['status' => 'failed', 'errorMessage' => $problem]);
 		}
 
-		$payload = $this->payableFor(run: $run, filing: $filing, amount: $amount);
+		$payload = (new WageTaxPayable())->build(run: $run, filing: $filing, amount: $amount, payeeId: $this->settingsService->getWageTaxPayeeId(), account: $this->settingsService->getGlPostAccountWageTaxLiability());
 		try {
 			$payableId = $this->createOrAdopt(payload: $payload);
 		} catch (\Throwable $e) {
@@ -187,39 +186,6 @@ class WageTaxRemittanceService {
 		);
 	}//end processRun()
 
-	/**
-	 * The draft APTransaction for a return (design D4).
-	 *
-	 * @param array<string, mixed> $run    The PayrollRun.
-	 * @param array<string, mixed> $filing The confirmed return.
-	 * @param float                $amount The return's TotGen in euros.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function payableFor(array $run, array $filing, float $amount): array {
-		$period = (string)($filing['period'] ?? '');
-		$number = (string)($filing['aangiftenummer'] ?? '');
-
-		return [
-			'vendorId' => $this->settingsService->getWageTaxPayeeId(),
-			'invoiceNumber' => trim((string)$filing['betalingskenmerk']),
-			'invoiceReference' => self::nullable(value: $number),
-			'invoiceDate' => self::lastDayOf(period: $period),
-			'dueDate' => (string)($filing['deadline'] ?? ''),
-			'currency' => 'EUR',
-			'totalAmount' => $amount,
-			'taxAmount' => 0.0,
-			'lines' => [
-				[
-					'description' => 'Loonheffingen ' . $period . ($number !== '' ? ', aangifte ' . $number : ''),
-					'accountNumber' => $this->settingsService->getGlPostAccountWageTaxLiability(),
-					'amount' => $amount,
-				],
-			],
-			'state' => 'draft',
-			'administrationId' => (string)($run['administrationId'] ?? ''),
-		];
-	}//end payableFor()
 
 	/**
 	 * Why nothing may be written, or null (design D4, fail closed).
@@ -403,21 +369,6 @@ class WageTaxRemittanceService {
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 
-	/**
-	 * The last day of a YYYY-MM period.
-	 *
-	 * @param string $period The period.
-	 *
-	 * @return string
-	 */
-	private static function lastDayOf(string $period): string {
-		$first = DateTimeImmutable::createFromFormat('!Y-m-d', $period . '-01');
-		if ($first === false) {
-			return $period;
-		}
-
-		return $first->format('Y-m-t');
-	}//end lastDayOf()
 
 	/**
 	 * An outcome array.
