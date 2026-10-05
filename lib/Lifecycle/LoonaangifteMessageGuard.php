@@ -52,7 +52,7 @@ class LoonaangifteMessageGuard implements LifecycleGuardInterface {
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
-		if ((string)($object['jurisdiction'] ?? '') !== 'NL' || (string)($object['filingType'] ?? '') !== 'loonaangifte') {
+		if ((string)($object['jurisdiction'] ?? '') !== 'NL' || in_array((string)($object['filingType'] ?? ''), ['loonaangifte', 'correctie'], true) === false) {
 			return GuardResult::allow();
 		}
 
@@ -62,14 +62,11 @@ class LoonaangifteMessageGuard implements LifecycleGuardInterface {
 		}
 
 		if ((int)$blocking > 0) {
-			$problems = [];
-			foreach ((array)($object['messageFindings'] ?? []) as $finding) {
-				if (is_array($finding) === true && ($finding['severity'] ?? '') === 'blocking') {
-					$problems[] = (string)($finding['problem'] ?? '');
-				}
-			}
+			return GuardResult::deny('Het aangiftebericht heeft ' . (int)$blocking . ' blokkerende bevinding(en): ' . implode(' ', $this->blockingProblems($object)));
+		}
 
-			return GuardResult::deny('Het aangiftebericht heeft ' . (int)$blocking . ' blokkerende bevinding(en): ' . implode(' ', $problems));
+		if ($this->correctionTravelsWithTheNextReturn($object) === true) {
+			return GuardResult::allow();
 		}
 
 		if (trim((string)($object['messageXml'] ?? '')) === '') {
@@ -78,5 +75,38 @@ class LoonaangifteMessageGuard implements LifecycleGuardInterface {
 
 		return GuardResult::allow();
 	}//end check()
+
+	/**
+	 * The problems of the blocking findings.
+	 *
+	 * @param array<string, mixed> $object The filing.
+	 *
+	 * @return list<string>
+	 */
+	private function blockingProblems(array $object): array {
+		$problems = [];
+		foreach ((array)($object['messageFindings'] ?? []) as $finding) {
+			if (is_array($finding) === true && ($finding['severity'] ?? '') === 'blocking') {
+				$problems[] = (string)($finding['problem'] ?? '');
+			}
+		}
+
+		return $problems;
+	}//end blockingProblems()
+
+	/**
+	 * Whether this is a correction that travels with the next return and has
+	 * its correction tree (filings-correction-message D3).
+	 *
+	 * @param array<string, mixed> $object The filing.
+	 *
+	 * @return bool
+	 */
+	private function correctionTravelsWithTheNextReturn(array $object): bool {
+		return ($object['filingType'] ?? '') === 'correctie'
+			&& ($object['correctionRoute'] ?? '') === 'volgende-aangifte'
+			&& is_array($object['correctionTree'] ?? null) === true
+			&& $object['correctionTree'] !== [];
+	}//end correctionTravelsWithTheNextReturn()
 
 }//end class

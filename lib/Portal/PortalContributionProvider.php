@@ -128,20 +128,64 @@ class PortalContributionProvider {
 	 */
 	public function getContribution(array $subject): ?array {
 		$audience = ($subject['audience'] ?? '');
-		if ($audience === 'external-employee') {
-			return $this->externalEmployeeManifest();
+		$manifest = match ($audience) {
+			'external-employee' => $this->externalEmployeeManifest(),
+			'client' => $this->clientManifest(),
+			'manager' => $this->managerManifest(),
+			default => $this->recruitingManifest($audience),
+		};
+		if ($manifest === null) {
+			return null;
 		}
 
-		if ($audience === 'client') {
-			return $this->clientManifest();
-		}
-
-		if ($audience === 'manager') {
-			return $this->managerManifest();
-		}
-
-		return $this->recruitingManifest($audience);
+		return $this->withPages(manifest: $manifest);
 	}//end getContribution()
+
+	/**
+	 * Give every page the audience's menu group, declaring the default pages where none are.
+	 *
+	 * Portaliq's group contract: pages with the same `group` share one
+	 * heading in the site's menu, instead of the app's name. A page carries a
+	 * group only when it is declared, so an audience without pages gets the
+	 * ones portaliq would make (the create action for the collection's schema,
+	 * the list, the selected row) and the screens stay as they were.
+	 *
+	 * @param array<string, mixed> $manifest The audience's manifest; its `label` is the group.
+	 *
+	 * @return array<string, mixed> The manifest with grouped pages.
+	 *
+	 * @spec openspec/changes/portal-pages-in-dutch-groups/specs/portal-contribution/spec.md#requirement-every-portal-page-names-its-menu-group-in-dutch
+	 */
+	private function withPages(array $manifest): array {
+		$group = (string)$manifest['label'];
+		$pages = ($manifest['pages'] ?? []);
+		if ($pages === []) {
+			foreach ($manifest['collections'] as $collection) {
+				if (($collection['listable'] ?? true) !== true) {
+					continue;
+				}
+
+				$blocks = [];
+				foreach ($manifest['actions'] as $action) {
+					if (($action['type'] ?? '') === 'create' && ($action['schema'] ?? '') === ($collection['schema'] ?? '')) {
+						$blocks[] = ['type' => 'action', 'action' => (string)$action['id']];
+						break;
+					}
+				}
+
+				$blocks[] = ['type' => 'collection', 'collection' => (string)$collection['id']];
+				$blocks[] = ['type' => 'detail', 'collection' => (string)$collection['id']];
+				$pages[] = ['id' => (string)$collection['id'], 'label' => (string)$collection['label'], 'blocks' => $blocks];
+			}
+		}
+
+		$manifest['pages'] = array_map(
+			static fn (array $page): array => (['group' => $group] + $page),
+			$pages
+		);
+
+		return $manifest;
+	}//end withPages()
 
 	/**
 	 * The manifests of the recruiting and leaver audiences
@@ -182,7 +226,7 @@ class PortalContributionProvider {
 	 */
 	private function externalEmployeeManifest(): array {
 		return [
-			'label' => 'Humaniq',
+			'label' => 'Werk en uren',
 			'collections' => [
 				[
 					'id' => 'myEmployeeRecord',
@@ -191,7 +235,7 @@ class PortalContributionProvider {
 					'scopeField' => 'id',
 					'scopeClaim' => 'employeeId',
 					'minTrust' => 'low',
-					'label' => 'My employee record',
+					'label' => 'Mijn personeelsgegevens',
 					'listable' => false,
 				],
 				[
@@ -201,7 +245,7 @@ class PortalContributionProvider {
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
 					'minTrust' => 'low',
-					'label' => 'My payslips',
+					'label' => 'Mijn loonstroken',
 					'listable' => true,
 				],
 				[
@@ -211,7 +255,7 @@ class PortalContributionProvider {
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
 					'minTrust' => 'low',
-					'label' => 'My employment contracts',
+					'label' => 'Mijn arbeidscontracten',
 					'listable' => true,
 				],
 				[
@@ -221,7 +265,7 @@ class PortalContributionProvider {
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
 					'minTrust' => 'low',
-					'label' => 'My timesheets',
+					'label' => 'Mijn urenstaten',
 					'listable' => true,
 				],
 				[
@@ -231,7 +275,7 @@ class PortalContributionProvider {
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
 					'minTrust' => 'low',
-					'label' => 'My expenses',
+					'label' => 'Mijn declaraties',
 					'listable' => true,
 				],
 				[
@@ -241,7 +285,7 @@ class PortalContributionProvider {
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
 					'minTrust' => 'low',
-					'label' => 'My leave requests',
+					'label' => 'Mijn verlofaanvragen',
 					'listable' => true,
 				],
 			],
@@ -249,7 +293,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'createTimesheet',
 					'type' => 'create',
-					'label' => 'Log hours',
+					'label' => 'Uren schrijven',
 					'register' => 'humaniq',
 					'schema' => 'Timesheet',
 					'fields' => [
@@ -265,7 +309,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'createExpense',
 					'type' => 'create',
-					'label' => 'Submit an expense',
+					'label' => 'Een declaratie indienen',
 					'register' => 'humaniq',
 					'schema' => 'Expense',
 					'fields' => [
@@ -280,7 +324,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'createLeaveRequest',
 					'type' => 'create',
-					'label' => 'Request leave',
+					'label' => 'Verlof aanvragen',
 					'register' => 'humaniq',
 					'schema' => 'LeaveRequest',
 					'fields' => [
@@ -312,7 +356,7 @@ class PortalContributionProvider {
 	 */
 	private function clientManifest(): array {
 		return [
-			'label' => 'Humaniq',
+			'label' => 'Werk en uren',
 			'collections' => [
 				[
 					'id' => 'clientTimesheets',
@@ -321,7 +365,7 @@ class PortalContributionProvider {
 					'scopeField' => 'clientRef',
 					'scopeClaim' => 'clientId',
 					'minTrust' => 'low',
-					'label' => 'Timesheets to review',
+					'label' => 'Te beoordelen urenstaten',
 					'listable' => true,
 				],
 			],
@@ -358,7 +402,7 @@ class PortalContributionProvider {
 	 */
 	private function managerManifest(): array {
 		return [
-			'label' => 'Humaniq',
+			'label' => 'Werk en uren',
 			'collections' => [
 				[
 					'id' => 'teamTimesheets',
@@ -367,7 +411,7 @@ class PortalContributionProvider {
 					'scopeField' => 'costCenter',
 					'scopeClaim' => 'costCenter',
 					'minTrust' => 'low',
-					'label' => 'Team timesheets',
+					'label' => 'Urenstaten van uw team',
 					'listable' => true,
 					// Read-side projection (the DATA authority): only review
 					// fields leave humaniq. costCenter (the scope key), billable,
@@ -393,12 +437,12 @@ class PortalContributionProvider {
 			'pages' => [
 				[
 					'id' => 'timesheets',
-					'label' => 'Urenbriefjes',
+					'label' => 'Urenstaten van uw team',
 					'icon' => 'ClockCheck',
 					'blocks' => [
 						[
 							'type' => 'richText',
-							'markdown' => '## Urenbriefjes van uw team' . "\n" . 'Bekijk de ingediende urenbriefjes van uw kostenplaats.',
+							'markdown' => 'Bekijk de ingediende urenstaten van uw kostenplaats.',
 						],
 						['type' => 'collection', 'collection' => 'teamTimesheets'],
 					],
@@ -423,7 +467,7 @@ class PortalContributionProvider {
 	 */
 	private function candidateManifest(): array {
 		return [
-			'label' => 'Humaniq',
+			'label' => 'Vacatures',
 			'collections' => [
 				[
 					'id' => 'openVacancies',
@@ -433,7 +477,7 @@ class PortalContributionProvider {
 					'minTrust' => 'low',
 					'filter' => ['status' => 'gepubliceerd'],
 					'fields' => ['title', 'description', 'department', 'closingDate', 'questions'],
-					'label' => 'Vacancies',
+					'label' => 'Vacatures',
 					'listable' => true,
 				],
 			],
@@ -441,7 +485,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'applyToVacancy',
 					'type' => 'create',
-					'label' => 'Apply',
+					'label' => 'Solliciteren',
 					'register' => 'humaniq',
 					'schema' => 'job-application',
 					'anonymous' => true,
@@ -474,7 +518,7 @@ class PortalContributionProvider {
 	 */
 	private function newHireManifest(): array {
 		return [
-			'label' => 'Humaniq',
+			'label' => 'Uw nieuwe baan',
 			'collections' => [
 				[
 					'id' => 'myEmployeeRecord',
@@ -483,7 +527,7 @@ class PortalContributionProvider {
 					'scopeField' => 'id',
 					'scopeClaim' => 'employeeId',
 					'minTrust' => 'low',
-					'label' => 'My details',
+					'label' => 'Mijn gegevens',
 					'listable' => false,
 				],
 				[
@@ -495,7 +539,7 @@ class PortalContributionProvider {
 					'minTrust' => 'low',
 					'fields' => ['startDate', 'status', 'contractSigned', 'widCheckDone', 'bsnValidated', 'ibanVerified', 'itProvisioned', 'pensioenAangemeld'],
 					'filesUpload' => true,
-					'label' => 'Before your first day',
+					'label' => 'Voor uw eerste werkdag',
 					'listable' => true,
 				],
 			],
@@ -503,7 +547,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'updateMyDetails',
 					'type' => 'update',
-					'label' => 'Hand in my bank account and BSN',
+					'label' => 'Mijn bankrekening en BSN doorgeven',
 					'register' => 'humaniq',
 					'schema' => 'Employee',
 					'scopeField' => 'id',
@@ -532,7 +576,7 @@ class PortalContributionProvider {
 	 */
 	private function formerEmployeeManifest(): array {
 		return [
-			'label' => 'Humaniq',
+			'label' => 'Uw vroegere baan',
 			'collections' => [
 				[
 					'id' => 'payslips',
@@ -541,7 +585,7 @@ class PortalContributionProvider {
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
 					'minTrust' => 'low',
-					'label' => 'My payslips',
+					'label' => 'Mijn loonstroken',
 					'listable' => true,
 				],
 				[
@@ -551,7 +595,7 @@ class PortalContributionProvider {
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
 					'minTrust' => 'low',
-					'label' => 'My annual statements',
+					'label' => 'Mijn jaaropgaven',
 					'listable' => true,
 				],
 				[
@@ -562,7 +606,7 @@ class PortalContributionProvider {
 					'scopeClaim' => 'employeeId',
 					'minTrust' => 'low',
 					'filter' => ['status' => 'generated'],
-					'label' => 'My letters and statements',
+					'label' => 'Mijn brieven en verklaringen',
 					'listable' => true,
 				],
 			],

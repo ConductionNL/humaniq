@@ -89,29 +89,34 @@ final class LoonaangifteMessageBuilder {
 	 * @param array<string, string>       $header         idBer, createdAt, relNr, software.
 	 * @param array{0: string, 1: string} $period         The declaration period's first and last day.
 	 * @param list<array<string, mixed>> $lines The income relationships (IncomeRelationshipLine::make): tree, cents, findings.
+	 * @param list<array{tree: array<string, mixed>, saldo: int}> $corrections Corrections of earlier periods of the year that travel with this return (GS 2.4.1).
 	 *
 	 * @return array{tree: array<string, mixed>, collective: array<string, int>, findings: list<array<string, string>>}
 	 *
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
-	public static function build(array $administration, array $header, array $period, array $lines): array {
+	public static function build(array $administration, array $header, array $period, array $lines, array $corrections=[]): array {
 		$collective = self::collective($lines);
 		$findings = self::headerFindings($administration, $header);
 		foreach ($lines as $line) {
 			$findings = array_merge($findings, array_values((array)($line['findings'] ?? [])));
 		}
 
+		// GS p56: one saldo per corrected period; GS p55 (0011): TotGen is TotTeBet plus the saldi.
+		$saldi = [];
+		foreach ($corrections as $correction) {
+			$saldi[] = ['DatAanvTv' => (string)$correction['tree']['DatAanvTv'], 'DatEindTv' => (string)$correction['tree']['DatEindTv'], 'Saldo' => (string)$correction['saldo']];
+			$collective['TotGen'] += (int)$correction['saldo'];
+		}
+
 		$collectivePart = array_map(static fn (int $euros): string => (string)$euros, $collective);
+		unset($collectivePart['TotGen']);
+		$collectivePart['SaldoCorrectiesVoorgaandTijdvak'] = $saldi;
+		$collectivePart['TotGen'] = (string)$collective['TotGen'];
 
 		$tree = [
-			'Bericht' => [
-				'IdBer' => $header['idBer'],
-				'DatTdAanm' => $header['createdAt'],
-				'ContPers' => mb_substr(trim((string)($administration['aangifteContactName'] ?? '')), 0, 35),
-				'TelNr' => mb_substr(trim((string)($administration['aangifteContactPhone'] ?? '')), 0, 25),
-				'RelNr' => $header['relNr'],
-				'GebrSwPakket' => mb_substr($header['software'], 0, 27),
-			],
+			'Bericht' => self::bericht($administration, $header),
 			'AdministratieveEenheid' => [
 				'LhNr' => (string)($administration['loonheffingennummer'] ?? ''),
 				'NmIP' => mb_substr(trim((string)($administration['name'] ?? '')), 0, 200),
@@ -123,11 +128,57 @@ final class LoonaangifteMessageBuilder {
 						'InkomstenverhoudingInitieel' => array_map(static fn (array $line): array => (array)($line['tree'] ?? []), $lines),
 					],
 				],
+				'TijdvakCorrectie' => array_map(static fn (array $correction): array => $correction['tree'], $corrections),
 			],
 		];
 
 		return ['tree' => $tree, 'collective' => $collective, 'findings' => $findings];
 	}//end build()
+
+	/**
+	 * A correction message on its own (losse correctie, GS 2.4.2-2.4.3): the
+	 * header and one TijdvakCorrectie per corrected period, no return.
+	 *
+	 * @param array<string, mixed>       $administration The hrAdministration.
+	 * @param array<string, string>      $header         idBer, createdAt, relNr, software.
+	 * @param list<array<string, mixed>> $corrections    The TijdvakCorrectie trees.
+	 *
+	 * @return array{tree: array<string, mixed>, findings: list<array<string, string>>}
+	 *
+	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 */
+	public static function correctionMessage(array $administration, array $header, array $corrections): array {
+		return [
+			'tree' => [
+				'Bericht' => self::bericht($administration, $header),
+				'AdministratieveEenheid' => [
+					'LhNr' => (string)($administration['loonheffingennummer'] ?? ''),
+					'NmIP' => mb_substr(trim((string)($administration['name'] ?? '')), 0, 200),
+					'TijdvakCorrectie' => $corrections,
+				],
+			],
+			'findings' => self::headerFindings($administration, $header),
+		];
+	}//end correctionMessage()
+
+	/**
+	 * The Bericht group (GS p30-33).
+	 *
+	 * @param array<string, mixed>  $administration The hrAdministration.
+	 * @param array<string, string> $header         The header values.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function bericht(array $administration, array $header): array {
+		return [
+			'IdBer' => $header['idBer'],
+			'DatTdAanm' => $header['createdAt'],
+			'ContPers' => mb_substr(trim((string)($administration['aangifteContactName'] ?? '')), 0, 35),
+			'TelNr' => mb_substr(trim((string)($administration['aangifteContactPhone'] ?? '')), 0, 25),
+			'RelNr' => $header['relNr'],
+			'GebrSwPakket' => mb_substr($header['software'], 0, 27),
+		];
+	}//end bericht()
 
 	/**
 	 * The collective amounts in whole euros, cut towards zero (GS p38).

@@ -178,7 +178,7 @@ class PortalContributionProviderTest extends TestCase {
 		$manifest = $this->provider->getContribution(self::EMPLOYEE_SUBJECT);
 
 		$this->assertIsArray($manifest);
-		$this->assertSame('Humaniq', $manifest['label']);
+		$this->assertNotSame('Humaniq', $manifest['label']);
 		$this->assertSame([], $manifest['notifications']);
 
 		$expected = [
@@ -296,7 +296,7 @@ class PortalContributionProviderTest extends TestCase {
 		$manifest = $this->provider->getContribution(self::CLIENT_SUBJECT);
 
 		$this->assertIsArray($manifest);
-		$this->assertSame('Humaniq', $manifest['label']);
+		$this->assertNotSame('Humaniq', $manifest['label']);
 		$this->assertSame([], $manifest['actions']);
 		$this->assertSame([], $manifest['notifications']);
 		$this->assertCount(1, $manifest['collections']);
@@ -311,5 +311,54 @@ class PortalContributionProviderTest extends TestCase {
 		$this->assertTrue($collection['listable']);
 
 	}//end testClientManifestIsReadOnlyClientRefScopedTimesheets()
+
+	/**
+	 * Every page of every audience names its menu group, says its name once, and every label is Dutch.
+	 *
+	 * Portaliq's group contract: pages with the same `group` share one heading
+	 * in the site's menu. Without declared pages the menu named them after the
+	 * app ("Humaniq") and in English ("Timesheets to review").
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portal-pages-in-dutch-groups/specs/portal-contribution/spec.md#requirement-every-portal-page-names-its-menu-group-in-dutch
+	 */
+	public function testEveryPageHasAGroupAndEveryLabelIsDutch(): void {
+		$english = '/\b(My|Log|Submit|Request|Timesheets?|Team|Vacancies|Apply|Before|Hand|details|record)\b/';
+		$groups = [
+			'external-employee' => 'Werk en uren',
+			'client' => 'Werk en uren',
+			'manager' => 'Werk en uren',
+			'candidate' => 'Vacatures',
+			'new-hire' => 'Uw nieuwe baan',
+			'former-employee' => 'Uw vroegere baan',
+		];
+		foreach ($groups as $audience => $group) {
+			$manifest = $this->provider->getContribution(['audience' => $audience]);
+			$this->assertSame($group, $manifest['label'], $audience);
+			$this->assertNotEmpty($manifest['pages'], $audience);
+
+			$collections = array_column($manifest['collections'], 'label', 'id');
+			foreach ($manifest['pages'] as $page) {
+				$this->assertSame($group, $page['group'], $page['id']);
+				foreach ($page['blocks'] as $block) {
+					if ($block['type'] === 'richText') {
+						$this->assertStringNotContainsString('#', $block['markdown'], $page['id']);
+					}
+
+					if ($block['type'] === 'collection') {
+						$this->assertSame($page['label'], $collections[$block['collection']], 'one heading on '.$page['id']);
+					}
+				}
+			}
+
+			foreach ([...$manifest['collections'], ...$manifest['actions']] as $entry) {
+				$this->assertDoesNotMatchRegularExpression($english, $entry['label'], $entry['id']);
+			}
+		}//end foreach
+
+		$client = $this->provider->getContribution(['audience' => 'client']);
+		$this->assertSame('Te beoordelen urenstaten', $client['pages'][0]['label']);
+	}//end testEveryPageHasAGroupAndEveryLabelIsDutch()
 
 }//end class

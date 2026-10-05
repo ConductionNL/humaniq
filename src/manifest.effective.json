@@ -7886,7 +7886,7 @@
 		},
 		{
 			"config": {
-				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained'. loonaangifte-filing-lifecycle (2026-07-12) gave NL filings a real create->review->confirm->send workflow, so the page now leads with a compact status/tijdvakcode/deadline/response widget (fi-status) before the full filing data widget, and exposes the klaarzetten/bevestigen/verzenden/heropenen/corrigeren transitions via lifecycleActions (Timesheet pattern). No stats-block KPI tile is used for Status/Deadline: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation, which cannot echo a non-numeric field (enum/date) of the current object, so fi-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. Audit history is a sidebar tab. filings-wage-tax-message (2026-10-02): Make message posts to /api/loonaangifte/filings/{id}/message (HR, payroll or an administrator; the filing read under the caller's RBAC first): the wage tax return made from the approved payroll run of the period, validated against the Belastingdienst's 2026 XSD and stored as messageXml; what stops it is listed per employee and element in messageFindings. Set ready (klaarzetten) is refused for a Dutch loonaangifte while findings block or no message exists (LoonaangifteMessageGuard).",
+				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained'. loonaangifte-filing-lifecycle (2026-07-12) gave NL filings a real create->review->confirm->send workflow, so the page now leads with a compact status/tijdvakcode/deadline/response widget (fi-status) before the full filing data widget, and exposes the klaarzetten/bevestigen/verzenden/heropenen transitions via lifecycleActions (Timesheet pattern). No stats-block KPI tile is used for Status/Deadline: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation, which cannot echo a non-numeric field (enum/date) of the current object, so fi-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. Audit history is a sidebar tab. filings-wage-tax-message (2026-10-02): Make message posts to /api/loonaangifte/filings/{id}/message (HR, payroll or an administrator; the filing read under the caller's RBAC first): the wage tax return made from the approved payroll run of the period, validated against the Belastingdienst's 2026 XSD and stored as messageXml; what stops it is listed per employee and element in messageFindings. Set ready (klaarzetten) is refused for a Dutch loonaangifte while findings block or no message exists (LoonaangifteMessageGuard). filings-correction-message (2026-10-02): Correct posts to /api/loonaangifte/filings/{id}/correction and opens a linked correction filing (filingType correctie, corrects = this filing) for a sent return; the sent filing is never reopened, so the corrigeren transition is gone. Make message on a correction compares the period's approved payslips with the last stand sent and stores the changed employees (correctionLines), the new stand and the saldo; inside the tax year it travels with the next return, for a closed year it is its own correction message.",
 				"headerActions": [
 					{
 						"confirm": true,
@@ -7899,6 +7899,18 @@
 						"successMessage": "Message made. Check the warnings, then set the filing ready.",
 						"type": "api-call",
 						"url": "/api/loonaangifte/filings/@objectId/message"
+					},
+					{
+						"confirm": true,
+						"errorMessage": "Only a sent return can be corrected.",
+						"icon": "PencilOutline",
+						"id": "correct-filing",
+						"label": "Correct",
+						"method": "POST",
+						"params": {},
+						"successMessage": "Correction opened. Find it in the wage tax filings for the same period.",
+						"type": "api-call",
+						"url": "/api/loonaangifte/filings/@objectId/correction"
 					}
 				],
 				"layout": [
@@ -7978,14 +7990,6 @@
 							],
 							"label": "Reopen",
 							"to": "concept"
-						},
-						{
-							"action": "corrigeren",
-							"from": [
-								"verzonden"
-							],
-							"label": "Correct",
-							"to": "concept"
 						}
 					]
 				},
@@ -8056,13 +8060,40 @@
 								"warningFindings",
 								"messageFindings",
 								"collectiveTotals",
-								"messageXml"
+								"messageXml",
+								"corrects",
+								"correctionRoute",
+								"correctionSaldo",
+								"correctionLines",
+								"carriedBy",
+								"carriedCorrectionIds"
 							],
 							"overrides": {
 								"blockingFindings": {
 									"editable": false
 								},
+								"carriedBy": {
+									"editable": false
+								},
+								"carriedCorrectionIds": {
+									"editable": false
+								},
 								"collectiveTotals": {
+									"editable": false
+								},
+								"correctionLines": {
+									"editable": false
+								},
+								"correctionRoute": {
+									"editable": false
+								},
+								"correctionSaldo": {
+									"editable": false
+								},
+								"correctionTree": {
+									"editable": false
+								},
+								"corrects": {
 									"editable": false
 								},
 								"messageFileName": {
@@ -8110,7 +8141,28 @@
 								"blockingFindings": {
 									"editable": false
 								},
+								"carriedBy": {
+									"editable": false
+								},
+								"carriedCorrectionIds": {
+									"editable": false
+								},
 								"collectiveTotals": {
+									"editable": false
+								},
+								"correctionLines": {
+									"editable": false
+								},
+								"correctionRoute": {
+									"editable": false
+								},
+								"correctionSaldo": {
+									"editable": false
+								},
+								"correctionTree": {
+									"editable": false
+								},
+								"corrects": {
 									"editable": false
 								},
 								"messageFileName": {
