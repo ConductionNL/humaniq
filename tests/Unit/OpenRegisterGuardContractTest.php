@@ -91,6 +91,7 @@ class OpenRegisterGuardContractTest extends TestCase {
 			'OCA\Humaniq\Service\PayrollGLPostService',
 			'OCA\Humaniq\Service\PayrollMutationService',
 			'OCA\Humaniq\Service\PayrollNetPayService',
+			'OCA\Humaniq\Service\WageTaxRemittanceService',
 			'OCA\Humaniq\Service\PayrollReproduceService',
 			'OCA\Humaniq\Service\PayrollRunService',
 			'OCA\Humaniq\Service\ReceiptExtractionRepository',

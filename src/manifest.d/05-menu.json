@@ -717,6 +717,12 @@
 					"route": "PayrollPaymentBatches"
 				},
 				{
+					"id": "WageTaxRemittances",
+					"label": "Wage tax payments",
+					"icon": "BankTransferOut",
+					"route": "WageTaxRemittances"
+				},
+				{
 					"id": "WkrDeclarations",
 					"label": "WKR declarations",
 					"icon": "GiftOutline",

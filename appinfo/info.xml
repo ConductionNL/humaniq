@@ -378,6 +378,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
              (payroll-sepa-netpay-shillinq MVP trigger). Duck-typed no-op when
              shillinq is absent. -->
         <command>OCA\Humaniq\Command\NetPayRunCommand</command>
+        <!-- Put the confirmed wage tax return of each payable PayrollRun into
+             shillinq as a draft payable to the Belastingdienst
+             (payroll-wage-tax-remittance-shillinq). Duck-typed no-op when
+             shillinq is absent. -->
+        <command>OCA\Humaniq\Command\WageTaxRemitCommand</command>
         <!-- Generate standard HR documents (arbeidsovereenkomst, aanbiedingsbrief,
              werkgeversverklaring, getuigschrift) via docudesk's template/rendering
              engine (humaniq-docudesk-documents MVP trigger). Duck-typed no-op

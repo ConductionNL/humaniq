@@ -1,0 +1,129 @@
+{
+    "x-humaniq-fragment": "hr-remittance",
+    "components": {
+        "schemas": {
+            "WageTaxRemittance": {
+                "slug": "WageTaxRemittance",
+                "icon": "BankTransferOut",
+                "version": "0.1.0",
+                "title": "Wage tax remittance",
+                "description": "Each time humaniq hands a confirmed wage tax return to the bookkeeping app as a draft payable to the Belastingdienst, this records it. It is a log of the hand-off, never the payable itself (payroll-wage-tax-remittance-shillinq).",
+                "type": "object",
+                "x-schema-org": "schema:PayAction",
+                "required": [
+                    "payrollRunId",
+                    "filingId",
+                    "period",
+                    "status"
+                ],
+                "properties": {
+                    "payrollRunId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "PayrollRun",
+                        "title": "Payroll run",
+                        "description": "The payroll run whose wage tax return this pays.",
+                        "x-notes": "payroll-wage-tax-remittance-shillinq D3."
+                    },
+                    "filingId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "LoonaangifteFiling",
+                        "title": "Wage tax return",
+                        "description": "The confirmed wage tax return this pays.",
+                        "x-notes": "At most one created record per return (D5)."
+                    },
+                    "period": {
+                        "type": "string",
+                        "title": "Period",
+                        "description": "The wage period, as YYYY-MM."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration ID",
+                        "description": "The administration of the payroll run."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "created",
+                            "nothing-to-pay",
+                            "skipped-no-shillinq",
+                            "failed"
+                        ],
+                        "x-enum-labels": {
+                            "created": "Ready in bookkeeping",
+                            "nothing-to-pay": "Nothing to pay",
+                            "skipped-no-shillinq": "Skipped (no bookkeeping app)",
+                            "failed": "Failed"
+                        },
+                        "title": "Status",
+                        "description": "How the hand-off ended. Ready in bookkeeping means a draft payable waits there: nobody has paid yet.",
+                        "x-notes": "created = draft APTransaction in shillinq, not paid. failed, skipped-no-shillinq and nothing-to-pay are tried again on the next occ humaniq:wagetax:remit."
+                    },
+                    "amount": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Amount",
+                        "description": "The total to pay on the return, in euros.",
+                        "x-notes": "collectiveTotals.TotGen of the return: wage tax plus the employee insurance premiums and the Zvw contribution (D2)."
+                    },
+                    "paymentReference": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Payment reference",
+                        "description": "The Belastingdienst payment reference the payment carries."
+                    },
+                    "dueDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Due date",
+                        "description": "The last day to pay, from the return."
+                    },
+                    "shillinqPayableRef": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Payable in bookkeeping",
+                        "description": "The draft payable this hand-off wrote in the bookkeeping app.",
+                        "x-notes": "shillinq APTransaction id; a plain string, not $ref, because it lives in another app's register (ADR-062 rule 7)."
+                    },
+                    "errorMessage": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Reason",
+                        "description": "Why the hand-off failed or was skipped, and what to fix."
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Handed over at",
+                        "description": "When the payable was written to the bookkeeping app."
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "WageTaxRemittance",
+                    "slug": "wagetax-remittance-2026-05-adm-001"
+                },
+                "payrollRunId": "@ref:payrollrun-2026-05",
+                "filingId": "@ref:loonaangifte-2026-05",
+                "period": "2026-05",
+                "administrationId": "ADM-001",
+                "status": "created",
+                "amount": 1840.0,
+                "paymentReference": "1234000000006050",
+                "dueDate": "2026-06-30",
+                "shillinqPayableRef": "ap-humaniq-wagetax-2026-05-placeholder",
+                "errorMessage": null,
+                "createdAt": "2026-06-24T09:00:00Z"
+            }
+        ]
+    }
+}
