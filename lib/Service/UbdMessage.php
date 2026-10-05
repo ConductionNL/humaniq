@@ -31,6 +31,7 @@ namespace OCA\Humaniq\Service;
 
 use DOMDocument;
 use DOMElement;
+use OCA\Humaniq\Payroll\XsdFile;
 
 /**
  * The UBD 1.0 delivery message.
@@ -109,7 +110,7 @@ final class UbdMessage {
 		$previous = libxml_use_internal_errors(true);
 		libxml_clear_errors();
 		$doc = new DOMDocument();
-		$valid = ($xml !== '' && $doc->loadXML($xml) === true && $doc->schemaValidate(self::XSD) === true);
+		$valid = ($xml !== '' && $doc->loadXML($xml) === true && (new XsdFile())->validates(doc: $doc, xsd: self::XSD) === true);
 		$errors = [];
 		foreach (libxml_get_errors() as $error) {
 			$errors[] = trim($error->message) . ' (regel ' . $error->line . ')';

@@ -97,7 +97,7 @@ class ThirdPartyReportServiceTest extends TestCase {
 
 		$xml = new DOMDocument();
 		$xml->loadXML($report['messageXml']);
-		self::assertTrue($xml->schemaValidate(dirname(__DIR__, 3) . '/lib/Standards/ubd/UBD_1.0_V1.20211028.xsd'));
+		self::assertTrue($xml->schemaValidateSource((string)file_get_contents(dirname(__DIR__, 3) . '/lib/Standards/ubd/UBD_1.0_V1.20211028.xsd')));
 
 		$ns = 'http://xml.belastingdienst.nl/schemas/UBD/DELIVERY/1.0';
 		self::assertSame('SWO12345', $xml->getElementsByTagNameNS($ns, 'relNr')->item(0)->textContent);
