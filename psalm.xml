@@ -16,6 +16,9 @@
     </projectFiles>
     <stubs>
         <file name="vendor/nextcloud/ocp/OCP/Capabilities/ICapability.php" preloadClasses="true" />
+        <!-- OpenRegister's lifecycle guard contract, the same stub the tests load (it mirrors
+             OpenRegister lib/Lifecycle/LifecycleGuardInterface.php and GuardResult.php). -->
+        <file name="tests/stubs/OpenRegisterLifecycleStub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
@@ -61,8 +64,6 @@
                 <referencedClass name="OCA\OpenRegister\Service\Notification\RecipientResolverInterface"/>
                 <referencedClass name="OCA\OpenRegister\Exception\FolderAccessDeniedException"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatingEvent"/>
-                <referencedClass name="OCA\OpenRegister\Lifecycle\GuardResult"/>
-                <referencedClass name="OCA\OpenRegister\Lifecycle\LifecycleGuardInterface"/>
                 <referencedClass name="OCA\OpenRegister\Service\Flow\IFlowNode"/>
                 <referencedClass name="OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent"/>
                 <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>

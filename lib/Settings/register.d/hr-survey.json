@@ -1,0 +1,887 @@
+{
+    "x-humaniq-fragment": "hr-survey",
+    "components": {
+        "schemas": {
+            "Survey": {
+                "slug": "Survey",
+                "icon": "ClipboardTextOutline",
+                "version": "0.1.0",
+                "title": "Survey",
+                "description": "An employee survey HR builds and sends to a group of employees: its questions, who it goes to, when it is open, and the minimum group size below which results are not shown (talent-engagement-surveys D1-D3).",
+                "type": "object",
+                "x-schema-org": "schema:CreativeWork",
+                "required": [
+                    "title",
+                    "questions",
+                    "scope",
+                    "status"
+                ],
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "status": "open"
+                            }
+                        }
+                    ],
+                    "create": [
+                        "humaniq-hr"
+                    ],
+                    "update": [
+                        "humaniq-hr"
+                    ],
+                    "delete": [
+                        "humaniq-hr"
+                    ]
+                },
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "terminal": [
+                            "gesloten"
+                        ],
+                        "transitions": {
+                            "openen": {
+                                "from": [
+                                    "concept"
+                                ],
+                                "to": "open",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\SurveyOpenGuard",
+                                "description": "Open the survey. Only Open survey does this, because it invites the employees in scope in the same step."
+                            },
+                            "sluiten": {
+                                "from": [
+                                    "open"
+                                ],
+                                "to": "gesloten",
+                                "description": "Close the survey. No answers are taken after this, and the results are final."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200,
+                        "title": "Title",
+                        "description": "What the survey is about, such as Engagement survey autumn 2026."
+                    },
+                    "introduction": {
+                        "type": "string",
+                        "maxLength": 5000,
+                        "nullable": true,
+                        "title": "Introduction",
+                        "description": "What employees read before the questions: why you ask, and that answers are anonymous."
+                    },
+                    "questions": {
+                        "type": "array",
+                        "title": "Questions",
+                        "description": "The questions, in the order employees see them. A recommend question (0 to 10) gives the eNPS.",
+                        "x-notes": "talent-engagement-surveys D1: the manifest fields[] shape {key, type, label, required, options} that CnFormBuilder edits; type scale (1 to 5, or options.min/max), enum (a choice, options is the list), textarea (free text) or recommend (0 to 10, the eNPS question).",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "key",
+                                "type",
+                                "label"
+                            ],
+                            "properties": {
+                                "key": {
+                                    "type": "string",
+                                    "title": "Key",
+                                    "description": "The name the answers are stored under."
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "scale",
+                                        "enum",
+                                        "textarea",
+                                        "recommend"
+                                    ],
+                                    "title": "Kind",
+                                    "description": "A scale from 1 to 5, a choice, free text, or the 0 to 10 recommend question.",
+                                    "x-enum-labels": {
+                                        "scale": "Scale 1 to 5",
+                                        "enum": "Choice",
+                                        "textarea": "Free text",
+                                        "recommend": "Would you recommend us"
+                                    }
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "title": "Question",
+                                    "description": "The question as employees read it."
+                                },
+                                "required": {
+                                    "type": "boolean",
+                                    "title": "Required",
+                                    "description": "Whether the question must be answered."
+                                },
+                                "options": {
+                                    "title": "Options",
+                                    "description": "The choices of a choice question, or the lowest and highest value of a scale.",
+                                    "oneOf": [
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        {
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "scope": {
+                        "type": "string",
+                        "enum": [
+                            "everyone",
+                            "orgUnits",
+                            "contractType"
+                        ],
+                        "default": "everyone",
+                        "title": "Sent to",
+                        "description": "Everyone in the administration, the departments you choose, or one contract type.",
+                        "x-enum-labels": {
+                            "everyone": "Everyone",
+                            "orgUnits": "Chosen departments",
+                            "contractType": "One contract type"
+                        }
+                    },
+                    "orgUnitIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid",
+                            "$ref": "OrgUnit"
+                        },
+                        "default": [],
+                        "title": "Departments",
+                        "description": "The departments it goes to, including their teams. Only used when it is sent to chosen departments."
+                    },
+                    "contractType": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Contract type",
+                        "description": "The contract type it goes to, such as permanent. Only used when it is sent to one contract type."
+                    },
+                    "opensOn": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Opens on",
+                        "description": "The first day employees can answer."
+                    },
+                    "closesOn": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Closes on",
+                        "description": "The last day employees can answer. Employees who have not answered get a reminder in the three days before."
+                    },
+                    "minGroupSize": {
+                        "type": "integer",
+                        "minimum": 3,
+                        "default": 5,
+                        "title": "Minimum group size",
+                        "description": "A department with fewer answers than this is not shown on its own in the results, so nobody can be recognised."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "concept",
+                            "open",
+                            "gesloten"
+                        ],
+                        "default": "concept",
+                        "title": "Status",
+                        "description": "Draft, open for answers, or closed.",
+                        "x-enum-labels": {
+                            "concept": "Draft",
+                            "open": "Open",
+                            "gesloten": "Closed"
+                        },
+                        "x-notes": "Open is set by POST /api/surveys/{id}/open, which also creates the invitations (D2); the openen transition's guard refuses every other way. Close is the sluiten transition."
+                    },
+                    "invitedCount": {
+                        "type": "integer",
+                        "default": 0,
+                        "title": "Invited",
+                        "description": "How many employees were invited when the survey opened."
+                    },
+                    "withoutAccountCount": {
+                        "type": "integer",
+                        "default": 0,
+                        "title": "Not invited, no account",
+                        "description": "Employees in scope without a Nextcloud account, who could not be invited."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration whose employees it is for."
+                    }
+                }
+            },
+            "SurveyInvitation": {
+                "slug": "SurveyInvitation",
+                "icon": "EmailOutline",
+                "version": "0.1.0",
+                "title": "Survey invitation",
+                "description": "One employee's invitation to a survey. It records only whether the employee answered, never what (talent-engagement-surveys D1).",
+                "type": "object",
+                "required": [
+                    "surveyId",
+                    "employeeId",
+                    "status"
+                ],
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "userId": "$userId"
+                            }
+                        }
+                    ],
+                    "create": [
+                        "humaniq-hr"
+                    ],
+                    "update": [
+                        "humaniq-hr"
+                    ],
+                    "delete": [
+                        "humaniq-hr"
+                    ]
+                },
+                "configuration": {
+                    "x-openregister-notifications": {
+                        "survey-invited": {
+                            "trigger": {
+                                "type": "created"
+                            },
+                            "enabled": true,
+                            "originApp": "humaniq",
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "field",
+                                    "field": "userId"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Je bent uitgenodigd voor een enquête",
+                                "en": "You are invited to a survey"
+                            },
+                            "message": {
+                                "nl": "Je vindt de enquête bij Mijn enquêtes. Je antwoorden zijn anoniem.",
+                                "en": "You find the survey under My surveys. Your answers are anonymous."
+                            },
+                            "_note": "talent-engagement-surveys D2: the invited employee in userId hears it once, when the invitation is created."
+                        },
+                        "survey-reminder": {
+                            "trigger": {
+                                "type": "scheduled",
+                                "intervalSec": 86400,
+                                "filter": {
+                                    "status": "open",
+                                    "closesOn": {
+                                        "operator": "withinNext",
+                                        "value": "P3D"
+                                    }
+                                }
+                            },
+                            "enabled": true,
+                            "originApp": "humaniq",
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "field",
+                                    "field": "userId"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Herinnering: de enquête sluit bijna",
+                                "en": "Reminder: the survey closes soon"
+                            },
+                            "message": {
+                                "nl": "Je hebt de enquête nog niet ingevuld. Je vindt haar bij Mijn enquêtes.",
+                                "en": "You have not answered the survey yet. You find it under My surveys."
+                            },
+                            "_note": "talent-engagement-surveys D2: daily in the three days before closesOn (copied onto the invitation so the filter can read it), only while the invitation is open."
+                        }
+                    }
+                },
+                "properties": {
+                    "surveyId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Survey",
+                        "title": "Survey",
+                        "description": "The survey."
+                    },
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Who is invited."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Employee account",
+                        "description": "The employee's Nextcloud account, who gets the invitation and the reminder."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "open",
+                            "beantwoord"
+                        ],
+                        "default": "open",
+                        "title": "Status",
+                        "description": "Whether the employee has answered.",
+                        "x-enum-labels": {
+                            "open": "Not answered",
+                            "beantwoord": "Answered"
+                        }
+                    },
+                    "closesOn": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Closes on",
+                        "description": "The survey's last day, for the reminder.",
+                        "x-notes": "Copied from the survey when the invitation is created; the reminder rule's withinNext filter reads it here."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration of the employee."
+                    }
+                }
+            },
+            "SurveyResponse": {
+                "slug": "SurveyResponse",
+                "icon": "CommentTextMultipleOutline",
+                "version": "0.1.0",
+                "title": "Survey response",
+                "description": "One set of answers to a survey. It holds the department and contract type of whoever answered and the date, and nothing that names them: no employee, account, invitation or time of day (talent-engagement-surveys D1).",
+                "type": "object",
+                "required": [
+                    "surveyId",
+                    "answers",
+                    "submittedOn"
+                ],
+                "authorization": {
+                    "read": [
+                        "humaniq-hr"
+                    ],
+                    "create": [
+                        "humaniq-hr"
+                    ],
+                    "update": [
+                        "humaniq-hr"
+                    ],
+                    "delete": [
+                        "humaniq-hr"
+                    ]
+                },
+                "properties": {
+                    "surveyId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Survey",
+                        "title": "Survey",
+                        "description": "The survey answered."
+                    },
+                    "orgUnitId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Department",
+                        "description": "The department of whoever answered, on the day they answered."
+                    },
+                    "contractType": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Contract type",
+                        "description": "The contract type of whoever answered."
+                    },
+                    "answers": {
+                        "type": "object",
+                        "title": "Answers",
+                        "description": "The answers, by question key."
+                    },
+                    "submittedOn": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Answered on",
+                        "description": "The day of the answer, without the time."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration of the survey."
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Survey",
+                    "slug": "survey-najaar-2026"
+                },
+                "title": "Medewerkersonderzoek najaar 2026",
+                "introduction": "Hoe gaat het met je werk? Je antwoorden zijn anoniem: niemand ziet wat jij hebt ingevuld, en een afdeling met minder dan vijf antwoorden staat niet apart in de uitslag.",
+                "questions": [
+                    {
+                        "key": "werkplezier",
+                        "type": "scale",
+                        "label": "Hoeveel plezier heb je in je werk?",
+                        "required": true,
+                        "options": {}
+                    },
+                    {
+                        "key": "leidinggevende",
+                        "type": "scale",
+                        "label": "Hoe goed helpt je leidinggevende je?",
+                        "required": true,
+                        "options": {}
+                    },
+                    {
+                        "key": "werkdruk",
+                        "type": "enum",
+                        "label": "Hoe ervaar je de werkdruk?",
+                        "required": true,
+                        "options": [
+                            "te laag",
+                            "goed",
+                            "te hoog"
+                        ]
+                    },
+                    {
+                        "key": "aanbevelen",
+                        "type": "recommend",
+                        "label": "Hoe waarschijnlijk is het dat je deze werkgever aanbeveelt aan vrienden of bekenden?",
+                        "required": true,
+                        "options": {}
+                    },
+                    {
+                        "key": "toelichting",
+                        "type": "textarea",
+                        "label": "Wat zou je willen verbeteren?",
+                        "required": false,
+                        "options": []
+                    }
+                ],
+                "scope": "everyone",
+                "orgUnitIds": [],
+                "contractType": null,
+                "opensOn": "2026-09-01",
+                "closesOn": "2026-09-21",
+                "minGroupSize": 5,
+                "status": "gesloten",
+                "invitedCount": 16,
+                "withoutAccountCount": 0,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Survey",
+                    "slug": "survey-pulse-q4-2026"
+                },
+                "title": "Pulse-enquete vierde kwartaal 2026",
+                "introduction": "Drie korte vragen over de afgelopen weken.",
+                "questions": [
+                    {
+                        "key": "werkplezier",
+                        "type": "scale",
+                        "label": "Hoeveel plezier heb je in je werk?",
+                        "required": true,
+                        "options": {}
+                    },
+                    {
+                        "key": "werkdruk",
+                        "type": "enum",
+                        "label": "Hoe ervaar je de werkdruk?",
+                        "required": true,
+                        "options": [
+                            "te laag",
+                            "goed",
+                            "te hoog"
+                        ]
+                    },
+                    {
+                        "key": "aanbevelen",
+                        "type": "recommend",
+                        "label": "Hoe waarschijnlijk is het dat je deze werkgever aanbeveelt aan vrienden of bekenden?",
+                        "required": true,
+                        "options": {}
+                    }
+                ],
+                "scope": "everyone",
+                "orgUnitIds": [],
+                "contractType": null,
+                "opensOn": "2026-10-01",
+                "closesOn": "2026-12-15",
+                "minGroupSize": 5,
+                "status": "open",
+                "invitedCount": 1,
+                "withoutAccountCount": 4,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Survey",
+                    "slug": "survey-exit-concept"
+                },
+                "title": "Vertrekenquete (concept)",
+                "introduction": "Voor medewerkers die uit dienst gaan.",
+                "questions": [
+                    {
+                        "key": "aanbevelen",
+                        "type": "recommend",
+                        "label": "Hoe waarschijnlijk is het dat je deze werkgever aanbeveelt aan vrienden of bekenden?",
+                        "required": true,
+                        "options": {}
+                    },
+                    {
+                        "key": "toelichting",
+                        "type": "textarea",
+                        "label": "Wat zou je willen verbeteren?",
+                        "required": false,
+                        "options": []
+                    }
+                ],
+                "scope": "contractType",
+                "orgUnitIds": [],
+                "contractType": "temporary",
+                "opensOn": null,
+                "closesOn": null,
+                "minGroupSize": 5,
+                "status": "concept",
+                "invitedCount": 0,
+                "withoutAccountCount": 0,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyInvitation",
+                    "slug": "surveyinvitation-jansen-pulse-q4-2026"
+                },
+                "surveyId": "@ref:survey-pulse-q4-2026",
+                "employeeId": "@ref:employee-jansen",
+                "userId": "admin",
+                "status": "open",
+                "closesOn": "2026-12-15",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyInvitation",
+                    "slug": "surveyinvitation-jansen-najaar-2026"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "employeeId": "@ref:employee-jansen",
+                "userId": "admin",
+                "status": "beantwoord",
+                "closesOn": "2026-09-21",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyInvitation",
+                    "slug": "surveyinvitation-bakker-najaar-2026"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "employeeId": "@ref:employee-bakker",
+                "userId": null,
+                "status": "open",
+                "closesOn": "2026-09-21",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-01"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-consultancy",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 5,
+                    "leidinggevende": 4,
+                    "werkdruk": "goed",
+                    "aanbevelen": 10,
+                    "toelichting": "Meer tijd voor overleg met het team."
+                },
+                "submittedOn": "2026-09-03",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-02"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-consultancy",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 4,
+                    "leidinggevende": 4,
+                    "werkdruk": "te hoog",
+                    "aanbevelen": 9
+                },
+                "submittedOn": "2026-09-04",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-03"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-consultancy",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 4,
+                    "leidinggevende": 4,
+                    "werkdruk": "goed",
+                    "aanbevelen": 9,
+                    "toelichting": "Duidelijker prioriteiten."
+                },
+                "submittedOn": "2026-09-05",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-04"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-consultancy",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 4,
+                    "leidinggevende": 4,
+                    "werkdruk": "goed",
+                    "aanbevelen": 8
+                },
+                "submittedOn": "2026-09-06",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-05"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-consultancy",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 3,
+                    "leidinggevende": 4,
+                    "werkdruk": "te laag",
+                    "aanbevelen": 7,
+                    "toelichting": "Betere laptops."
+                },
+                "submittedOn": "2026-09-07",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-06"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-consultancy",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 3,
+                    "leidinggevende": 2,
+                    "werkdruk": "te hoog",
+                    "aanbevelen": 6
+                },
+                "submittedOn": "2026-09-08",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-07"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-consultancy",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 2,
+                    "leidinggevende": 2,
+                    "werkdruk": "goed",
+                    "aanbevelen": 3,
+                    "toelichting": "Minder vergaderingen."
+                },
+                "submittedOn": "2026-09-09",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-08"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-backoffice",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 4,
+                    "leidinggevende": 4,
+                    "werkdruk": "goed",
+                    "aanbevelen": 10,
+                    "toelichting": "Meer tijd voor overleg met het team."
+                },
+                "submittedOn": "2026-09-10",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-09"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-backoffice",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 5,
+                    "leidinggevende": 4,
+                    "werkdruk": "te hoog",
+                    "aanbevelen": 10
+                },
+                "submittedOn": "2026-09-11",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-10"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-backoffice",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 3,
+                    "leidinggevende": 4,
+                    "werkdruk": "goed",
+                    "aanbevelen": 8,
+                    "toelichting": "Duidelijker prioriteiten."
+                },
+                "submittedOn": "2026-09-12",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-11"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-backoffice",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 2,
+                    "leidinggevende": 2,
+                    "werkdruk": "goed",
+                    "aanbevelen": 5
+                },
+                "submittedOn": "2026-09-13",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-12"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-backoffice",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 4,
+                    "leidinggevende": 4,
+                    "werkdruk": "te laag",
+                    "aanbevelen": 9,
+                    "toelichting": "Betere laptops."
+                },
+                "submittedOn": "2026-09-14",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-13"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-directie",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 3,
+                    "leidinggevende": 2,
+                    "werkdruk": "goed",
+                    "aanbevelen": 2,
+                    "toelichting": "Meer tijd voor overleg met het team."
+                },
+                "submittedOn": "2026-09-15",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SurveyResponse",
+                    "slug": "surveyresponse-najaar-2026-14"
+                },
+                "surveyId": "@ref:survey-najaar-2026",
+                "orgUnitId": "@ref:orgunit-directie",
+                "contractType": "permanent",
+                "answers": {
+                    "werkplezier": 5,
+                    "leidinggevende": 4,
+                    "werkdruk": "te hoog",
+                    "aanbevelen": 10
+                },
+                "submittedOn": "2026-09-16",
+                "administrationId": "ADM-001"
+            }
+        ]
+    }
+}

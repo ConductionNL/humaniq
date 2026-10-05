@@ -112,6 +112,15 @@
 				"route": "MijnDoelen"
 			},
 			{
+				"id": "MijnEnquetes",
+				"label": "My surveys",
+				"icon": "ClipboardTextOutline",
+				"route": "SurveyInvitations",
+				"query": {
+					"userId": "@me"
+				}
+			},
+			{
 				"id": "MijnVerlofKopenVerkopen",
 				"label": "Buy/sell leave",
 				"icon": "CalendarWeekendOutline",
@@ -331,6 +340,12 @@
 				"label": "Review cycles",
 				"icon": "CalendarSyncOutline",
 				"route": "ReviewCycles"
+			},
+			{
+				"id": "Surveys",
+				"label": "Surveys",
+				"icon": "ClipboardTextOutline",
+				"route": "Surveys"
 			},
 			{
 				"id": "Onboardings",

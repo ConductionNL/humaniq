@@ -212,6 +212,10 @@ return [
         ['name' => 'timeEntry#timer',      'url' => '/api/time-entries/timer',       'verb' => 'GET'],
         ['name' => 'timeEntry#startTimer', 'url' => '/api/time-entries/timer/start', 'verb' => 'POST'],
         ['name' => 'timeEntry#stopTimer',  'url' => '/api/time-entries/timer/stop',  'verb' => 'POST'],
+        // talent-engagement-surveys: open (HR), answer (the invited employee), results (HR), design D1-D3.
+        ['name' => 'survey#open', 'url' => '/api/surveys/{id}/open', 'verb' => 'POST'],
+        ['name' => 'survey#respond', 'url' => '/api/surveys/{id}/responses', 'verb' => 'POST'],
+        ['name' => 'survey#results', 'url' => '/api/surveys/results', 'verb' => 'GET'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],

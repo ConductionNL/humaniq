@@ -113,6 +113,8 @@ import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 import OnCallAverages from './widgets/OnCallAverages.vue'
 import OrgChartWidget from './widgets/OrgChartWidget.vue'
 import PayrollPacksWidget from './widgets/PayrollPacksWidget.vue'
+import SurveyAnswerWidget from './widgets/SurveyAnswerWidget.vue'
+import SurveyQuestionsWidget from './widgets/SurveyQuestionsWidget.vue'
 import TrendChartWidget from './widgets/TrendChartWidget.vue'
 import VacancyQuestionsWidget from './widgets/VacancyQuestionsWidget.vue'
 import YearTransitionWidget from './widgets/YearTransitionWidget.vue'
@@ -255,6 +257,28 @@ export default {
 		allowedSlots: ['body'],
 		propsSchema: null,
 		_note: 'hiring-portal-audiences D3 (REQ-PAU-002): HR edits Vacancy.questions with CnFormBuilder on VacancyDetail and saves them with a PATCH on the vacancy; portaliq shows them on the public apply form.',
+	},
+	// @custom-widget-ratchet exclude the library's CnFormBuilder has no widget key, and the questions it edits are written back onto the survey
+	'survey-questions': {
+		kind: 'widget',
+		component: SurveyQuestionsWidget,
+		defaultSize: { w: 12, h: 8 },
+		minSize: { w: 6, h: 4 },
+		maxSize: { w: 12, h: 14 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'talent-engagement-surveys D1 (REQ-SRV-001): HR edits Survey.questions with CnFormBuilder on SurveyDetail while the survey is a draft, and saves them with a PATCH on the survey.',
+	},
+	// @custom-widget-ratchet exclude answering posts to a humaniq endpoint that stores the answers without the employee; no built-in widget renders another object's questions as a form
+	'survey-answer': {
+		kind: 'widget',
+		component: SurveyAnswerWidget,
+		defaultSize: { w: 12, h: 10 },
+		minSize: { w: 6, h: 4 },
+		maxSize: { w: 12, h: 16 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'talent-engagement-surveys D1 (REQ-SRV-002): the employee answers the survey their invitation names; POST /api/surveys/{id}/responses marks the invitation answered and stores the answers without anything that names them.',
 	},
 	// @custom-widget-ratchet exclude the data widget renders an answers map as raw JSON, and each answer needs the question label from another object (the vacancy)
 	'application-answers': {

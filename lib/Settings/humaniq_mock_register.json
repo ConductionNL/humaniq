@@ -15748,6 +15748,202 @@
       {
         "@self": {
           "register": "humaniq",
+          "schema": "Survey",
+          "slug": "survey-voorbeeld-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "introduction": "Voorbeeld Introduction 1",
+        "questions": [
+          {
+            "key": "werkplezier",
+            "type": "scale",
+            "label": "Hoeveel plezier heb je in je werk?",
+            "required": true,
+            "options": {}
+          }
+        ],
+        "scope": "everyone",
+        "orgUnitIds": [],
+        "contractType": "Voorbeeld Contracttype 1",
+        "opensOn": "2026-03-01",
+        "closesOn": "2026-03-01",
+        "minGroupSize": 5,
+        "status": "concept",
+        "invitedCount": 1,
+        "withoutAccountCount": 1,
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "Survey",
+          "slug": "survey-voorbeeld-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "introduction": "Voorbeeld Introduction 2",
+        "questions": [
+          {
+            "key": "werkplezier",
+            "type": "scale",
+            "label": "Hoeveel plezier heb je in je werk?",
+            "required": true,
+            "options": {}
+          },
+          {
+            "key": "leidinggevende",
+            "type": "scale",
+            "label": "Hoe goed helpt je leidinggevende je?",
+            "required": true,
+            "options": {}
+          }
+        ],
+        "scope": "orgUnits",
+        "orgUnitIds": [],
+        "contractType": "Voorbeeld Contracttype 2",
+        "opensOn": "2026-04-01",
+        "closesOn": "2026-04-01",
+        "minGroupSize": 5,
+        "status": "open",
+        "invitedCount": 2,
+        "withoutAccountCount": 2,
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "Survey",
+          "slug": "survey-voorbeeld-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "introduction": "Voorbeeld Introduction 3",
+        "questions": [
+          {
+            "key": "werkplezier",
+            "type": "scale",
+            "label": "Hoeveel plezier heb je in je werk?",
+            "required": true,
+            "options": {}
+          },
+          {
+            "key": "leidinggevende",
+            "type": "scale",
+            "label": "Hoe goed helpt je leidinggevende je?",
+            "required": true,
+            "options": {}
+          },
+          {
+            "key": "werkdruk",
+            "type": "enum",
+            "label": "Hoe ervaar je de werkdruk?",
+            "required": true,
+            "options": [
+              "te laag",
+              "goed",
+              "te hoog"
+            ]
+          }
+        ],
+        "scope": "contractType",
+        "orgUnitIds": [],
+        "contractType": "Voorbeeld Contracttype 3",
+        "opensOn": "2026-05-01",
+        "closesOn": "2026-05-01",
+        "minGroupSize": 5,
+        "status": "gesloten",
+        "invitedCount": 3,
+        "withoutAccountCount": 3,
+        "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "SurveyInvitation",
+          "slug": "surveyinvitation-voorbeeld-1"
+        },
+        "surveyId": "Voorbeeld Surveyid 1",
+        "employeeId": "Voorbeeld Employeeid 1",
+        "userId": "Voorbeeld Userid 1",
+        "status": "open",
+        "closesOn": "2026-03-01",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "SurveyInvitation",
+          "slug": "surveyinvitation-voorbeeld-2"
+        },
+        "surveyId": "Voorbeeld Surveyid 2",
+        "employeeId": "Voorbeeld Employeeid 2",
+        "userId": "Voorbeeld Userid 2",
+        "status": "beantwoord",
+        "closesOn": "2026-04-01",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "SurveyInvitation",
+          "slug": "surveyinvitation-voorbeeld-3"
+        },
+        "surveyId": "Voorbeeld Surveyid 3",
+        "employeeId": "Voorbeeld Employeeid 3",
+        "userId": "Voorbeeld Userid 3",
+        "status": "open",
+        "closesOn": "2026-05-01",
+        "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "SurveyResponse",
+          "slug": "surveyresponse-voorbeeld-1"
+        },
+        "surveyId": "Voorbeeld Surveyid 1",
+        "orgUnitId": "Voorbeeld Orgunitid 1",
+        "contractType": "Voorbeeld Contracttype 1",
+        "answers": {
+          "werkplezier": 3,
+          "aanbevelen": 7
+        },
+        "submittedOn": "2026-03-01",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "SurveyResponse",
+          "slug": "surveyresponse-voorbeeld-2"
+        },
+        "surveyId": "Voorbeeld Surveyid 2",
+        "orgUnitId": "Voorbeeld Orgunitid 2",
+        "contractType": "Voorbeeld Contracttype 2",
+        "answers": {
+          "werkplezier": 4,
+          "aanbevelen": 8
+        },
+        "submittedOn": "2026-04-01",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "SurveyResponse",
+          "slug": "surveyresponse-voorbeeld-3"
+        },
+        "surveyId": "Voorbeeld Surveyid 3",
+        "orgUnitId": "Voorbeeld Orgunitid 3",
+        "contractType": "Voorbeeld Contracttype 3",
+        "answers": {
+          "werkplezier": 5,
+          "aanbevelen": 9
+        },
+        "submittedOn": "2026-05-01",
+        "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
           "schema": "WageTaxRemittance",
           "slug": "wagetaxremittance-wagetaxremittance-1-1"
         },

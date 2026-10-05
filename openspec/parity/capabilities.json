@@ -5278,7 +5278,7 @@
    "id": "tal-surveys",
    "area": "talent",
    "name": "Run an employee engagement survey.",
-   "humaniq": "no",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -5294,10 +5294,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/13444341561501-Overview-of-Personio-Surveys and https://support.personio.de/hc/en-us/articles/13670980555293-Create-a-survey: confidential employee surveys with analytics, as a separate Surveys app."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/talent-engagement-surveys on 2026-09-27. Before: grep -rliF survey lib src openspec: hits only in comp-cycles spec (salary-band reference language, unrelated) and the parity output file itself; no Survey schema or page",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "building",
+    "evidence": "lib/Settings/register.d/hr-survey.json: Survey (questions in the manifest fields shape, scope everyone/org units/contract type, opensOn/closesOn, minGroupSize; lifecycle concept -> open (openen, guarded by lib/Lifecycle/SurveyOpenGuard.php so only Open survey opens it) -> gesloten), SurveyInvitation (status open/beantwoord; notification rules survey-invited on create and survey-reminder daily in the three days before closesOn) and SurveyResponse (surveyId, orgUnitId, contractType, answers, submittedOn; no employee, account, invitation or time). lib/Service/SurveyService.php open/respond/results, lib/Service/SurveyAnswers.php checks answers against the questions, lib/Service/SurveyResults.php folds departments below minGroupSize into Other (left out when Other is itself too small), eNPS, free text overall only. lib/Controller/SurveyController.php: POST /api/surveys/{id}/open and GET /api/surveys/results (HR), POST /api/surveys/{id}/responses (the invited employee). Pages Surveys, SurveyDetail (CnFormBuilder questions, response figures, results), Survey invitations and My surveys. Tests: tests/Unit/Service/SurveyServiceTest.php, tests/Unit/Controller/SurveyControllerTest.php, tests/Unit/Lifecycle/SurveyOpenGuardTest.php. Live check (task 4.2) still owed.",
+    "reachedOn": "Surveys and My surveys in the menu; Open survey on SurveyDetail; answering on the invitation page",
+    "owner": "ConductionNL/humaniq",
+    "change": "talent-engagement-surveys",
+    "readOn": "2026-10-02"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

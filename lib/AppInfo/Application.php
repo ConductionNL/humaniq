@@ -43,6 +43,7 @@ use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Lifecycle\RightToWorkGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
+use OCA\Humaniq\Lifecycle\SurveyOpenGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
 use OCA\Humaniq\Lifecycle\UbdReportReadyGuard;
 use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
@@ -314,6 +315,7 @@ class Application extends App implements IBootstrap {
 		$context->registerService(HandoffCloseGuard::class, static fn ($c): HandoffCloseGuard => new HandoffCloseGuard());
 		$context->registerService(UbdReportReadyGuard::class, static fn ($c): UbdReportReadyGuard => new UbdReportReadyGuard());
 		$context->registerService(LoonaangifteMessageGuard::class, static fn ($c): LoonaangifteMessageGuard => new LoonaangifteMessageGuard());
+		$context->registerService(SurveyOpenGuard::class, static fn ($c): SurveyOpenGuard => new SurveyOpenGuard($c->get(InternalWriteMarker::class)));
 
 		// jurisdiction-packs (design.md D7): the pack resolver spans two homes —
 		// bundled packs in lib/Standards/packs/ (universal facts live in code)

@@ -204,6 +204,14 @@
 		"route": "/rosters/:id"
 	},
 	{
+		"id": "SurveyDetail",
+		"route": "/surveys/:id"
+	},
+	{
+		"id": "SurveyInvitationDetail",
+		"route": "/survey-invitations/:id"
+	},
+	{
 		"id": "ThirdPartyReportDetail",
 		"route": "/third-party-reports/:id"
 	},
@@ -702,6 +710,14 @@
 	{
 		"id": "StagiairDetail",
 		"route": "/stagiairs/:id"
+	},
+	{
+		"id": "Surveys",
+		"route": "/surveys"
+	},
+	{
+		"id": "SurveyInvitations",
+		"route": "/survey-invitations"
 	},
 	{
 		"id": "ThirdPartyPayees",

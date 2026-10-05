@@ -70,6 +70,7 @@ import ClipboardCheckOutline from "vue-material-design-icons/ClipboardCheckOutli
 import ClipboardList from "vue-material-design-icons/ClipboardList.vue";
 import ClipboardListOutline from "vue-material-design-icons/ClipboardListOutline.vue";
 import ClipboardPulseOutline from "vue-material-design-icons/ClipboardPulseOutline.vue";
+import ClipboardTextOutline from "vue-material-design-icons/ClipboardTextOutline.vue";
 import ClockCheckOutline from "vue-material-design-icons/ClockCheckOutline.vue";
 import ClockOutline from "vue-material-design-icons/ClockOutline.vue";
 import ClockPlusOutline from "vue-material-design-icons/ClockPlusOutline.vue";
@@ -77,6 +78,7 @@ import CloseCircleOutline from "vue-material-design-icons/CloseCircleOutline.vue
 import CogOutline from "vue-material-design-icons/CogOutline.vue";
 import CogPlayOutline from "vue-material-design-icons/CogPlayOutline.vue";
 import CommentAccountOutline from "vue-material-design-icons/CommentAccountOutline.vue";
+import CommentTextMultipleOutline from "vue-material-design-icons/CommentTextMultipleOutline.vue";
 import CreditCardOutline from "vue-material-design-icons/CreditCardOutline.vue";
 import CurrencyEur from "vue-material-design-icons/CurrencyEur.vue";
 import DatabaseExportOutline from "vue-material-design-icons/DatabaseExportOutline.vue";
@@ -85,6 +87,7 @@ import DesktopTowerMonitor from "vue-material-design-icons/DesktopTowerMonitor.v
 import Domain from "vue-material-design-icons/Domain.vue";
 import DoorOpen from "vue-material-design-icons/DoorOpen.vue";
 import DownloadOutline from "vue-material-design-icons/DownloadOutline.vue";
+import EmailOutline from "vue-material-design-icons/EmailOutline.vue";
 import EmoticonSickOutline from "vue-material-design-icons/EmoticonSickOutline.vue";
 import EyeOutline from "vue-material-design-icons/EyeOutline.vue";
 import FileAccountOutline from "vue-material-design-icons/FileAccountOutline.vue";
@@ -116,6 +119,7 @@ import ReceiptOutline from "vue-material-design-icons/ReceiptOutline.vue";
 import ReceiptTextOutline from "vue-material-design-icons/ReceiptTextOutline.vue";
 import ScaleBalance from "vue-material-design-icons/ScaleBalance.vue";
 import SchoolOutline from "vue-material-design-icons/SchoolOutline.vue";
+import SendOutline from "vue-material-design-icons/SendOutline.vue";
 import ShieldAccountOutline from "vue-material-design-icons/ShieldAccountOutline.vue";
 import ShieldCheckOutline from "vue-material-design-icons/ShieldCheckOutline.vue";
 import ShieldLockOutline from "vue-material-design-icons/ShieldLockOutline.vue";
@@ -256,4 +260,8 @@ export default {
 	TimelineClockOutline,
 	TimerSand,
 	ViewDashboardOutline,
+	ClipboardTextOutline,
+	EmailOutline,
+	CommentTextMultipleOutline,
+	SendOutline,
 };
