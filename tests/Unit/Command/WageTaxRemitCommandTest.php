@@ -107,7 +107,10 @@ class WageTaxRemitCommandTest extends TestCase {
 	 * @return void
 	 */
 	public function testInfoXmlRegistersTheCommand(): void {
-		$xml = simplexml_load_file(dirname(__DIR__, 3) . '/appinfo/info.xml');
+		// Read the file as a string: under a booted Nextcloud (CI's pgsql cell)
+		// OC::boot() blocks libxml's own file loading, so simplexml_load_file()
+		// returns false there however correct info.xml is.
+		$xml = simplexml_load_string((string)file_get_contents(dirname(__DIR__, 3) . '/appinfo/info.xml'));
 		self::assertNotFalse($xml);
 		$commands = array_map('strval', iterator_to_array($xml->commands->command, false));
 		self::assertContains(WageTaxRemitCommand::class, $commands);
