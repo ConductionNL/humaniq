@@ -45,7 +45,7 @@ class LoonaangifteYearTest extends TestCase {
 		$doc = new DOMDocument();
 		$doc->loadXML('<Loonaangifte xmlns="' . $year['namespace'] . '" version="2.0"/>');
 		$previous = libxml_use_internal_errors(true);
-		self::assertFalse($doc->schemaValidate($year['xsd']), 'An empty return is not valid, so the schema was really read.');
+		self::assertFalse($doc->schemaValidateSource((string)file_get_contents($year['xsd'])), 'An empty return is not valid, so the schema was really read.');
 		$messages = array_map(static fn ($e): string => $e->message, libxml_get_errors());
 		libxml_clear_errors();
 		libxml_use_internal_errors($previous);

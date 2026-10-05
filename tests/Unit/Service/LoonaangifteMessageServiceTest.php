@@ -83,7 +83,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 
 		$xml = new DOMDocument();
 		$xml->loadXML($filing['messageXml']);
-		self::assertTrue($xml->schemaValidate(dirname(__DIR__, 3) . '/lib/Standards/loonaangifte/Loonaangifte2026v2.0.xsd'));
+		self::assertTrue($xml->schemaValidateSource((string)file_get_contents(dirname(__DIR__, 3) . '/lib/Standards/loonaangifte/Loonaangifte2026v2.0.xsd')));
 		self::assertSame(['2026-06-01', '2026-06-30'], [$this->text($xml, 'DatAanvTv'), $this->text($xml, 'DatEindTv')]);
 		self::assertSame(2, $xml->getElementsByTagNameNS(self::NS, 'InkomstenverhoudingInitieel')->length);
 

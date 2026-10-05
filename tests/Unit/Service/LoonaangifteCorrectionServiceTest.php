@@ -189,7 +189,7 @@ class LoonaangifteCorrectionServiceTest extends TestCase {
 		self::assertSame('prepared', $outcome['status']);
 		$xml = new DOMDocument();
 		$xml->loadXML($this->row($correctionId)['messageXml']);
-		self::assertTrue($xml->schemaValidate(dirname(__DIR__, 3) . self::XSD));
+		self::assertTrue($xml->schemaValidateSource((string)file_get_contents(dirname(__DIR__, 3) . self::XSD)));
 		self::assertSame([1, 0, 1], [$xml->getElementsByTagNameNS(self::NS, 'TijdvakCorrectie')->length, $xml->getElementsByTagNameNS(self::NS, 'TijdvakAangifte')->length, $xml->getElementsByTagNameNS(self::NS, 'InkomstenverhoudingInitieel')->length]);
 	}//end testAClosedYearCorrectionIsItsOwnMessage()
 
@@ -213,7 +213,7 @@ class LoonaangifteCorrectionServiceTest extends TestCase {
 		$april = $this->row('filing-04');
 		$xml = new DOMDocument();
 		$xml->loadXML($april['messageXml']);
-		self::assertTrue($xml->schemaValidate(dirname(__DIR__, 3) . self::XSD));
+		self::assertTrue($xml->schemaValidateSource((string)file_get_contents(dirname(__DIR__, 3) . self::XSD)));
 		$saldo = $this->row($correctionId)['correctionSaldo'];
 		self::assertSame((string)$saldo, $xml->getElementsByTagNameNS(self::NS, 'Saldo')->item(0)->textContent);
 		self::assertSame($april['collectiveTotals']['TotTeBet'] + $saldo, $april['collectiveTotals']['TotGen']);
