@@ -14670,7 +14670,7 @@
 		},
 		{
 			"config": {
-				"_note": "payroll-external-bureau-handoff (2026-10-01): written only by PayrollHandoffService::compile(); reached from a handoff's mutation list (View all).",
+				"_note": "payroll-external-bureau-handoff (2026-10-01): written only by SalaryBureauExchangeService::compile(); reached from a handoff's mutation list (View all).",
 				"allowCreate": false,
 				"columns": [
 					"handoffId",

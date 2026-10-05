@@ -38,7 +38,7 @@ Rows: `pay-outsourced` (humaniq matrix).
 - **THEN** the handoff holds one salary mutation for that employee from 3800.00 to 3876.00,
   linked to the raise
 
-@e2e exclude the comparison is server-side; covered by PayrollHandoffServiceTest::testARaiseBecomesOneMutation, the period items by PayrollHandoffPeriodItemsTest::testThePeriodItemsTravelAsTheirOwnMutations and PayrollHandoffPeriodItemsTest::testASentItemIsNotSentAgainButItsChangeIs
+@e2e exclude the comparison is server-side; covered by SalaryBureauExchangeServiceTest::testARaiseBecomesOneMutation, the period items by PayrollHandoffPeriodItemsTest::testThePeriodItemsTravelAsTheirOwnMutations and PayrollHandoffPeriodItemsTest::testASentItemIsNotSentAgainButItsChangeIs
 
 #### Scenario: A reverted edit is not sent
 - **GIVEN** an HR adviser who changed an employee's bank account and changed it back before
@@ -46,7 +46,7 @@ Rows: `pay-outsourced` (humaniq matrix).
 - **WHEN** the handoff is compiled
 - **THEN** it holds no bank-account mutation for that employee
 
-@e2e exclude the comparison is server-side; covered by PayrollHandoffServiceTest::testARevertedEditIsNotSentAndARecompileReplaces
+@e2e exclude the comparison is server-side; covered by SalaryBureauExchangeServiceTest::testARevertedEditIsNotSentAndARecompileReplaces
 
 ### Requirement: A handoff SHALL be reviewed by a second person and delivered through integriq (REQ-PXB-003)
 
@@ -88,11 +88,11 @@ Rows: `pay-outsourced` (humaniq matrix).
 - **WHEN** the employee opens "Mijn loonstroken"
 - **THEN** the payslip is listed with its gross, net and period
 
-@e2e exclude needs a payslip written back by integriq on a live instance; the account stamp that puts it on "Mijn loonstroken" is covered by PayrollHandoffServiceTest::testTheIntakeListsMissingAndUnknownEmployees
+@e2e exclude needs a payslip written back by integriq on a live instance; the account stamp that puts it on "Mijn loonstroken" is covered by SalaryBureauExchangeServiceTest::testTheIntakeListsMissingAndUnknownEmployees
 
 #### Scenario: A missing payslip blocks closing
 - **GIVEN** a handoff for three employees and returned payslips for two
 - **WHEN** an HR adviser runs the intake check and then tries to close the handoff
 - **THEN** the check lists the third employee as missing and closing is refused
 
-@e2e exclude needs returned payslips on a live instance; covered by PayrollHandoffServiceTest::testTheIntakeListsMissingAndUnknownEmployees, HandoffIntakeListenerTest::testReceivingRunsTheIntakeCheck and HandoffGuardsTest::testAMissingPayslipBlocksClosing
+@e2e exclude needs returned payslips on a live instance; covered by SalaryBureauExchangeServiceTest::testTheIntakeListsMissingAndUnknownEmployees, HandoffIntakeListenerTest::testReceivingRunsTheIntakeCheck and HandoffGuardsTest::testAMissingPayslipBlocksClosing

@@ -5,7 +5,7 @@
  *
  * integriq sets a PayrollHandoff from verzonden to ontvangen when the
  * bureau's payslips are written back (payroll-external-bureau-handoff D3).
- * On that edge PayrollHandoffService::checkIntake() lists missing and
+ * On that edge SalaryBureauExchangeService::checkIntake() lists missing and
  * unknown employees on the handoff and stamps the returned payslips (D4).
  * Registered for the payrollhandoff schema only; never breaks the save.
  *
@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\PayrollHandoffService;
+use OCA\Humaniq\Service\SalaryBureauExchangeService;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -51,13 +51,13 @@ class HandoffIntakeListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param PayrollHandoffService $handoffs The intake check.
+	 * @param SalaryBureauExchangeService $handoffs The intake check.
 	 * @param LoggerInterface       $logger   The logger.
 	 *
 	 * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-004
 	 */
 	public function __construct(
-		private readonly PayrollHandoffService $handoffs,
+		private readonly SalaryBureauExchangeService $handoffs,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
