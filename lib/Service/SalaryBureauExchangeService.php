@@ -1,8 +1,9 @@
 <?php
 
 /**
- * Payroll Handoff Service
+ * Salary Bureau Exchange Service
  *
+ * The exchange with an outside salary bureau.
  * Compiles one period's payroll mutations for an administration whose
  * payroll an outside bureau runs, as differences from what the previous
  * handoffs sent (payroll-external-bureau-handoff D2), and checks the
@@ -32,11 +33,12 @@ namespace OCA\Humaniq\Service;
 use Psr\Log\LoggerInterface;
 
 /**
- * Compiles bureau handoffs and checks their intake.
+ * Compiles what an outside salary bureau receives and checks what it
+ * sends back. The schemas keep their PayrollHandoff names (stored data).
  *
  * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-002
  */
-class PayrollHandoffService {
+class SalaryBureauExchangeService {
 
 	/**
 	 * The period items (D2).
@@ -312,7 +314,7 @@ class PayrollHandoffService {
 		try {
 			$this->gateway->save(payload: array_merge($payslip, $stamps), schema: 'Payslip', uuid: $id);
 		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollHandoffService: could not stamp payslip ' . $id . ': ' . $e->getMessage());
+			$this->logger->warning('SalaryBureauExchangeService: could not stamp payslip ' . $id . ': ' . $e->getMessage());
 		}
 	}//end stampPayslip()
 

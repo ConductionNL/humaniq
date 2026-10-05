@@ -25,7 +25,7 @@ namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\PayrollHandoffController;
 use OCA\Humaniq\Service\HumaniqRoles;
-use OCA\Humaniq\Service\PayrollHandoffService;
+use OCA\Humaniq\Service\SalaryBureauExchangeService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\IRequest;
 use OCP\IUser;
@@ -45,11 +45,11 @@ class PayrollHandoffControllerTest extends TestCase {
 	 *
 	 * @param bool                                              $hr       Whether the caller is HR.
 	 * @param array<string, list<array<string, mixed>>>         $readable Readable rows per schema.
-	 * @param PayrollHandoffService|null                        $service  The handoff service.
+	 * @param SalaryBureauExchangeService|null                        $service  The handoff service.
 	 *
 	 * @return PayrollHandoffController
 	 */
-	private function controller(bool $hr, array $readable, ?PayrollHandoffService $service = null): PayrollHandoffController {
+	private function controller(bool $hr, array $readable, ?SalaryBureauExchangeService $service = null): PayrollHandoffController {
 		$objects = new class($readable) {
 
 			/**
@@ -139,7 +139,7 @@ class PayrollHandoffControllerTest extends TestCase {
 			$this->createMock(IRequest::class),
 			$container,
 			$settings,
-			($service ?? $this->createMock(PayrollHandoffService::class)),
+			($service ?? $this->createMock(SalaryBureauExchangeService::class)),
 			$session,
 			$roles,
 			new NullLogger()
@@ -152,7 +152,7 @@ class PayrollHandoffControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnEmployeeIsRefused(): void {
-		$service = $this->createMock(PayrollHandoffService::class);
+		$service = $this->createMock(SalaryBureauExchangeService::class);
 		$service->expects($this->never())->method('compile');
 		$service->expects($this->never())->method('checkIntake');
 		$controller = $this->controller(false, ['hrAdministration' => [['administrationId' => 'ADM-006']]], $service);
@@ -181,7 +181,7 @@ class PayrollHandoffControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testHrCompilesAPeriod(): void {
-		$service = $this->createMock(PayrollHandoffService::class);
+		$service = $this->createMock(SalaryBureauExchangeService::class);
 		$service->expects($this->once())->method('compile')->with('ADM-006', '2026-05', 'hr-1')->willReturn(['status' => 'compiled', 'handoffId' => 'ho-1', 'mutationCount' => 3]);
 
 		$response = $this->controller(true, ['hrAdministration' => [['administrationId' => 'ADM-006']]], $service)->compile('ADM-006', '2026-05');
@@ -197,7 +197,7 @@ class PayrollHandoffControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testARefusedCompileIs409(): void {
-		$service = $this->createMock(PayrollHandoffService::class);
+		$service = $this->createMock(SalaryBureauExchangeService::class);
 		$service->method('compile')->willReturn(['status' => 'refused-engine', 'handoffId' => '', 'mutationCount' => 0, 'message' => 'Deze administratie wordt door humaniq verloond; er is geen overdracht.']);
 
 		$response = $this->controller(true, ['hrAdministration' => [['administrationId' => 'ADM-001']]], $service)->compile('ADM-001', '2026-05');
@@ -212,7 +212,7 @@ class PayrollHandoffControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheIntakeCheckResolvesTheHandoffFirst(): void {
-		$service = $this->createMock(PayrollHandoffService::class);
+		$service = $this->createMock(SalaryBureauExchangeService::class);
 		$service->expects($this->once())->method('checkIntake')->with('ho-1')->willReturn(['blocking' => 1, 'findings' => [['kind' => 'missing-payslip', 'employeeId' => 'emp-b']]]);
 		$controller = $this->controller(true, ['PayrollHandoff' => [['id' => 'ho-1', 'status' => 'ontvangen']]], $service);
 
