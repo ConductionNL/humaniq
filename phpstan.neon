@@ -19,13 +19,18 @@ parameters:
     # App-specific only.
     treatPhpDocTypesAsCertain: false
 
+    # OpenRegister's lifecycle guard contract, the same stub the tests load.
+    scanFiles:
+        - tests/stubs/OpenRegisterLifecycleStub.php
+
     excludePaths:
-        # These guards implement OCA\OpenRegister\Lifecycle\LifecycleGuardInterface,
-        # which only exists at runtime once OpenRegister is installed alongside
-        # humaniq. PHPStan cannot baseline "implements unknown interface" errors —
-        # exclusion is required, not preferred.
-        # Same rule, different interface: the payroll flow nodes implement
-        # OCA\OpenRegister\Service\Flow\IFlowNode (payroll-run-as-a-flow).
+        # These classes implement an OpenRegister interface that only exists at
+        # runtime once OpenRegister is installed alongside humaniq: the payroll
+        # flow nodes implement OCA\OpenRegister\Service\Flow\IFlowNode
+        # (payroll-run-as-a-flow), the resolvers OpenRegister's recipient
+        # resolver. PHPStan cannot baseline "implements unknown interface"
+        # errors, so they are excluded. The lifecycle guards are analysed
+        # against tests/stubs/OpenRegisterLifecycleStub.php (scanFiles above).
         - lib/Flow/PayrollFlowNodeBase.php
         - lib/Flow/PayrollCalculateNode.php
         - lib/Flow/PayrollApproveNode.php
@@ -34,24 +39,8 @@ parameters:
         - lib/Flow/RevokeAccessNode.php
         - lib/Flow/AnonymiseExitInterviewsNode.php
         - lib/Flow/TeamDigestNode.php
-        - lib/Lifecycle/ChangeApproverRoleGuard.php
-        - lib/Lifecycle/CompEffectiveDateGuard.php
         - lib/Notification/CaseManagerResolver.php
         - lib/Notification/ManagerOrDeputyRecipientResolver.php
-        - lib/Lifecycle/DecisionReasonGuard.php
-        - lib/Lifecycle/HandoffCloseGuard.php
-        - lib/Lifecycle/HandoffReleaseGuard.php
-        - lib/Lifecycle/LeaveBuySellApprovalGuard.php
-        - lib/Lifecycle/LeaveSettlementPeriodGuard.php
-        - lib/Lifecycle/LeaveTypeConditionGuard.php
-        - lib/Lifecycle/LoonaangifteMessageGuard.php
-        - lib/Lifecycle/NoSelfApprovalGuard.php
-        - lib/Lifecycle/PayrollRunApprovedGuard.php
-        - lib/Lifecycle/RightToWorkGuard.php
-        - lib/Lifecycle/RosterCompetenceGuard.php
-        - lib/Lifecycle/SurveyOpenGuard.php
-        - lib/Lifecycle/TimesheetNotEmptyGuard.php
-        - lib/Lifecycle/UbdReportReadyGuard.php
 
     ignoreErrors:
         # AuthorizedAdminSetting's constructor is typed
