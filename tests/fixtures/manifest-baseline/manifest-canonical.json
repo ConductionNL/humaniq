@@ -941,6 +941,12 @@
 					"route": "PayrollPaymentBatches"
 				},
 				{
+					"icon": "BankTransfer",
+					"id": "WageTaxRemittances",
+					"label": "Wage tax payments",
+					"route": "WageTaxRemittances"
+				},
+				{
 					"icon": "GiftOutline",
 					"id": "WkrDeclarations",
 					"label": "WKR declarations",
@@ -16833,6 +16839,123 @@
 			"id": "RelationsCaseDetail",
 			"route": "/relations-cases/:id",
 			"title": "Relations case",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"columns": [
+					"period",
+					"status",
+					"amount",
+					"dueDate",
+					"createdAt"
+				],
+				"description": "Each confirmed wage tax return, handed to bookkeeping as a draft payment to the Belastingdienst.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"status"
+				],
+				"register": "humaniq",
+				"schema": "WageTaxRemittance",
+				"sort": {
+					"field": "createdAt",
+					"order": "desc"
+				}
+			},
+			"id": "WageTaxRemittances",
+			"route": "/wage-tax-remittances",
+			"title": "Wage tax payments",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-wage-tax-remittance-shillinq: a WageTaxRemittance is humaniq's log of one hand-off of a confirmed return into shillinq's APTransaction register, never the payable itself. Same shape as PayrollPaymentBatchDetail. Copy says ready in bookkeeping, never paid: money moves only after shillinq issues and pays it. No lifecycle actions: WageTaxRemittanceService writes every status.",
+				"layout": [
+					{
+						"gridHeight": 3,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 3,
+						"id": 2,
+						"widgetId": "data-2"
+					},
+					{
+						"gridHeight": 11,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 3,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "WageTaxRemittance",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 4,
+							"include": [
+								"status",
+								"createdAt",
+								"errorMessage"
+							],
+							"overrides": {
+								"createdAt": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								}
+							},
+							"title": "Status"
+						},
+						"icon": "CheckCircleOutline",
+						"id": "data",
+						"title": "Status",
+						"type": "data"
+					},
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"payrollRunId",
+								"filingId"
+							],
+							"title": "Wage tax payment"
+						},
+						"icon": "BankTransfer",
+						"id": "data-2",
+						"title": "Wage tax payment",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "WageTaxRemittanceDetail",
+			"route": "/wage-tax-remittances/:id",
+			"title": "Wage tax payment",
 			"type": "detail"
 		},
 		{

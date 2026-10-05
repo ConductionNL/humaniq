@@ -656,6 +656,14 @@
 		"route": "/relations-cases/:id"
 	},
 	{
+		"id": "WageTaxRemittances",
+		"route": "/wage-tax-remittances"
+	},
+	{
+		"id": "WageTaxRemittanceDetail",
+		"route": "/wage-tax-remittances/:id"
+	},
+	{
 		"id": "PayrollAdjustments",
 		"route": "/payroll-adjustments"
 	},

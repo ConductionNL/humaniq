@@ -209,6 +209,19 @@ class SettingsService {
 	}//end getNetPayDebtorIban()
 
 	/**
+	 * The shillinq Payee (id or slug) that receives the wage tax remittance:
+	 * the Belastingdienst (payroll-wage-tax-remittance-shillinq D4), app config
+	 * key `wagetax_payee_id`. Empty means the hand-off fails closed.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
+	 */
+	public function getWageTaxPayeeId(): string {
+		return trim($this->appConfig->getValueString(Application::APP_ID, 'wagetax_payee_id', ''));
+	}//end getWageTaxPayeeId()
+
+	/**
 	 * The docudesk template UUID configured for one HR document type
 	 * (humaniq-docudesk-documents design.md D3 -- config-first template
 	 * selection), configurable via app config key
