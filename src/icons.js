@@ -78,6 +78,7 @@ import CloseCircleOutline from "vue-material-design-icons/CloseCircleOutline.vue
 import CogOutline from "vue-material-design-icons/CogOutline.vue";
 import CogPlayOutline from "vue-material-design-icons/CogPlayOutline.vue";
 import CommentAccountOutline from "vue-material-design-icons/CommentAccountOutline.vue";
+import CommentTextMultipleOutline from "vue-material-design-icons/CommentTextMultipleOutline.vue";
 import CreditCardOutline from "vue-material-design-icons/CreditCardOutline.vue";
 import CurrencyEur from "vue-material-design-icons/CurrencyEur.vue";
 import DatabaseExportOutline from "vue-material-design-icons/DatabaseExportOutline.vue";
@@ -261,5 +262,6 @@ export default {
 	ViewDashboardOutline,
 	ClipboardTextOutline,
 	EmailOutline,
+	CommentTextMultipleOutline,
 	SendOutline,
 };
