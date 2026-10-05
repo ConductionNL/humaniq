@@ -64,6 +64,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Humaniq\Standards\Checks\NlDossierRetentionChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlEngineChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlFleetChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlFlexContractChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlGlPostChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlHr21Checks
  * @uses \OCA\Humaniq\Standards\Checks\NlLeaveChecks
@@ -79,6 +80,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Humaniq\Standards\Checks\NlSignalChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlSinglePersonChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlStagiairChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlThirdPartyChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlTravelExpenseChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlUitzendChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlWageGarnishmentChecks
@@ -256,4 +258,30 @@ final class RuleEngineTest extends TestCase {
 			$this->assertContains($expected, $types, $expected . ' must be a supported object type.');
 		}
 	}//end testSupportedTypesCoverKnownObjectTypes()
+
+	/**
+	 * Every check class the engine discovers is named in this class's `@uses`.
+	 *
+	 * A new check class that is missing here only shows up in CI, as a risky
+	 * test under coverage (see the class docblock). This test makes the same
+	 * omission fail locally, without a coverage driver.
+	 *
+	 * @return void
+	 */
+	public function testEveryCheckClassIsListedUnderUses(): void {
+		$docblock = (string)(new \ReflectionClass(self::class))->getDocComment();
+		$missing = [];
+		foreach (glob(dirname(__DIR__, 3) . '/lib/Standards/Checks/*.php') ?: [] as $file) {
+			$class = 'OCA\\Humaniq\\Standards\\Checks\\' . basename($file, '.php');
+			if (class_exists($class) === false || (new \ReflectionClass($class))->isAbstract() === true) {
+				continue;
+			}
+
+			if (str_contains($docblock, '@uses \\' . $class . "\n") === false) {
+				$missing[] = $class;
+			}
+		}
+
+		$this->assertSame([], $missing, 'Add these to the @uses list of RuleEngineTest.');
+	}//end testEveryCheckClassIsListedUnderUses()
 }//end class

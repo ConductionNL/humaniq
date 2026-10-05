@@ -43,6 +43,7 @@ use Psr\Log\LoggerInterface;
  * a method with no per-object guard.
  *
  * @covers \OCA\Humaniq\Controller\EmployerCostRateController
+ * @uses   \OCA\Humaniq\Service\CostRateAccess
  */
 class EmployerCostRateControllerTest extends TestCase {
 
