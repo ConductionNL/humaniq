@@ -53,7 +53,7 @@ final class XsdFile {
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-001
 	 */
-	public static function validates(DOMDocument $doc, string $xsd): bool {
+	public function validates(DOMDocument $doc, string $xsd): bool {
 		$source = (is_file($xsd) === true ? file_get_contents($xsd) : false);
 		if ($source === false || $source === '') {
 			return false;
