@@ -15744,6 +15744,60 @@
         "leveringsId": "UBD20240110090000",
         "messageFileName": "UBD_000000000L03_UBD20240110090000.xml",
         "messageXml": "Voorbeeld Messagexml 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WageTaxRemittance",
+          "slug": "wagetaxremittance-wagetaxremittance-1-1"
+        },
+        "payrollRunId": "00000000-0000-4000-8000-000000000000",
+        "filingId": "00000000-0000-4000-8000-000000000000",
+        "period": "2026-04",
+        "status": "created",
+        "administrationId": "ADM-001",
+        "amount": 18342.17,
+        "paymentReference": "1234567890120401",
+        "dueDate": "2026-05-31",
+        "shillinqPayableRef": "00000000-0000-4000-8000-000000000010",
+        "errorMessage": null,
+        "createdAt": "2026-05-12T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WageTaxRemittance",
+          "slug": "wagetaxremittance-wagetaxremittance-2-2"
+        },
+        "payrollRunId": "00000000-0000-4000-8000-000000000001",
+        "filingId": "00000000-0000-4000-8000-000000000001",
+        "period": "2026-05",
+        "status": "nothing-to-pay",
+        "administrationId": "ADM-001",
+        "amount": 0.0,
+        "paymentReference": "1234567890120501",
+        "dueDate": "2026-06-30",
+        "shillinqPayableRef": null,
+        "errorMessage": null,
+        "createdAt": null
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WageTaxRemittance",
+          "slug": "wagetaxremittance-wagetaxremittance-3-3"
+        },
+        "payrollRunId": "00000000-0000-4000-8000-000000000002",
+        "filingId": "00000000-0000-4000-8000-000000000002",
+        "period": "2026-06",
+        "status": "skipped-no-shillinq",
+        "administrationId": "ADM-001",
+        "amount": 19015.4,
+        "paymentReference": "1234567890120601",
+        "dueDate": "2026-07-31",
+        "shillinqPayableRef": null,
+        "errorMessage": "The bookkeeping app is not installed, so no payable was written. Pay this return by hand.",
+        "createdAt": null
       }
     ]
   }
