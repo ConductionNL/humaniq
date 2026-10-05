@@ -49,6 +49,14 @@ insurance premiums and the Zvw contribution in the same return, so they are paid
 creditor in the same payment. There is no UWV payee. Shillinq's deleted
 `PayrollApArHandoffService` split them into a UWV payment, which was wrong.
 
+Source, checked on 5 Oct 2026 against the Handboek Loonheffingen 2026 (March 2026): section 1
+lists the loonheffingen as loonbelasting/premie volksverzekeringen, the premies
+werknemersverzekeringen and the inkomensafhankelijke bijdrage Zvw, and section 13.4.1 says to pay
+the end amount of the return (`te betalen loonheffingen`) to the Belastingdienst's account with
+the return's betalingskenmerk. The Belastingdienst moves to a new account (NL04 RABO 0200 1122 44)
+from 1 May 2026; the old one is accepted for every 2026 return. That account belongs on the payee
+in shillinq, not in humaniq.
+
 A `TotGen` of zero or less means nothing to pay (a negative one is a refund the Belastingdienst
 pays out). No payable is written; the hand-off is logged as `nothing-to-pay`.
 

@@ -41,27 +41,6 @@ use RuntimeException;
 class WageTaxRemittanceService {
 
 	/**
-	 * Shillinq's app id, probed duck-typed and never required (design D6).
-	 *
-	 * @var string
-	 */
-	private const SHILLINQ_APP_ID = 'shillinq';
-
-	/**
-	 * Shillinq's register slug.
-	 *
-	 * @var string
-	 */
-	private const SHILLINQ_REGISTER = 'shillinq';
-
-	/**
-	 * Shillinq's payable schema.
-	 *
-	 * @var string
-	 */
-	private const PAYABLE_SCHEMA = 'APTransaction';
-
-	/**
 	 * Humaniq's log of each hand-off.
 	 *
 	 * @var string
@@ -83,6 +62,13 @@ class WageTaxRemittanceService {
 	private const CONFIRMED_RETURN_STATUSES = ['bevestigd', 'verzonden'];
 
 	/**
+	 * The shillinq side of the hand-off.
+	 *
+	 * @var ShillinqPayables
+	 */
+	private readonly ShillinqPayables $payables;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container       For the lazy ObjectService.
@@ -92,10 +78,11 @@ class WageTaxRemittanceService {
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly IAppManager $appManager,
+		IAppManager $appManager,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
+		$this->payables = new ShillinqPayables(container: $container, appManager: $appManager, settingsService: $settingsService, logger: $logger);
 	}//end __construct()
 
 	/**
@@ -137,13 +124,13 @@ class WageTaxRemittanceService {
 	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-004
 	 */
 	public function processRun(array $run): array {
-		$runId = self::idOf(row: $run);
+		$runId = $this->payables->idOf(row: $run);
 		$filing = $this->confirmedReturnOf(runId: $runId);
 		if ($runId === '' || $filing === null) {
-			return self::outcome(runId: $runId, status: 'no-return', message: 'No confirmed or sent wage tax return was made from this run yet.');
+			return $this->outcome(runId: $runId, status: 'no-return', message: 'No confirmed or sent wage tax return was made from this run yet.');
 		}
 
-		$filingId = self::idOf(row: $filing);
+		$filingId = $this->payables->idOf(row: $filing);
 		$base = [
 			'payrollRunId' => $runId,
 			'filingId' => $filingId,
@@ -153,10 +140,10 @@ class WageTaxRemittanceService {
 
 		$created = $this->createdRecordFor(filingId: $filingId);
 		if ($created !== null) {
-			return self::outcome(runId: $runId, status: 'created', message: 'Already in shillinq.', record: $created);
+			return $this->outcome(runId: $runId, status: 'created', message: 'Already in shillinq.', record: $created);
 		}
 
-		if ($this->shillinqAvailable() === false) {
+		if ($this->payables->available() === false) {
 			return $this->finish(runId: $runId, fields: $base + ['status' => 'skipped-no-shillinq', 'errorMessage' => 'shillinq is not installed or its payables cannot be read. The next run tries again.']);
 		}
 
@@ -174,7 +161,7 @@ class WageTaxRemittanceService {
 
 		$payload = (new WageTaxPayable())->build(run: $run, filing: $filing, amount: $amount, payeeId: $this->settingsService->getWageTaxPayeeId(), account: $this->settingsService->getGlPostAccountWageTaxLiability());
 		try {
-			$payableId = $this->createOrAdopt(payload: $payload);
+			$payableId = $this->payables->createOrAdopt(payload: $payload);
 		} catch (\Throwable $e) {
 			return $this->finish(runId: $runId, fields: $base + ['status' => 'failed', 'errorMessage' => 'Writing the payable into shillinq failed: ' . $e->getMessage()]);
 		}
@@ -185,7 +172,6 @@ class WageTaxRemittanceService {
 			payableId: $payableId
 		);
 	}//end processRun()
-
 
 	/**
 	 * Why nothing may be written, or null (design D4, fail closed).
@@ -204,40 +190,12 @@ class WageTaxRemittanceService {
 			return 'No shillinq payee for the Belastingdienst is set. Set the app setting wagetax_payee_id.';
 		}
 
-		foreach ($this->shillinqRows(schema: 'Payee', filters: []) as $payee) {
-			if (self::idOf(row: $payee) === $payeeId || (string)($payee['@self']['slug'] ?? ($payee['slug'] ?? '')) === $payeeId) {
-				return null;
-			}
+		if ($this->payables->hasPayee(payeeId: $payeeId) === true) {
+			return null;
 		}
 
 		return 'shillinq has no payee ' . $payeeId . '. Check the app setting wagetax_payee_id.';
 	}//end problemWith()
-
-	/**
-	 * Adopt a payable written before a crash, or write a new one (design D5).
-	 *
-	 * @param array<string, mixed> $payload The draft APTransaction.
-	 *
-	 * @return string The shillinq APTransaction id.
-	 */
-	private function createOrAdopt(array $payload): string {
-		$filters = ['vendorId' => $payload['vendorId'], 'invoiceNumber' => $payload['invoiceNumber']];
-		foreach ($this->shillinqRows(schema: self::PAYABLE_SCHEMA, filters: $filters) as $existing) {
-			if ((string)($existing['vendorId'] ?? '') === $filters['vendorId'] && (string)($existing['invoiceNumber'] ?? '') === $filters['invoiceNumber']) {
-				return self::idOf(row: $existing);
-			}
-		}
-
-		$saved = $this->objectService()->saveObject(
-			object: $payload,
-			register: self::SHILLINQ_REGISTER,
-			schema: self::PAYABLE_SCHEMA,
-			_rbac: false,
-			_multitenancy: false
-		);
-
-		return self::idOf(row: self::toArray(row: $saved));
-	}//end createOrAdopt()
 
 	/**
 	 * The confirmed regular NL return made from a run (design D3).
@@ -297,27 +255,8 @@ class WageTaxRemittanceService {
 		$status = (string)$fields['status'];
 		$message = (string)($fields['errorMessage'] ?? ($status === 'created' ? 'Draft payable written to shillinq.' : 'Nothing to pay for this return.'));
 
-		return self::outcome(runId: $runId, status: $status, message: $message, record: self::toArray(row: $saved), payableId: $payableId);
+		return $this->outcome(runId: $runId, status: $status, message: $message, record: $this->payables->toArray(row: $saved), payableId: $payableId);
 	}//end finish()
-
-	/**
-	 * Duck-typed probe: shillinq installed and its payables readable (design D6).
-	 *
-	 * @return bool
-	 */
-	private function shillinqAvailable(): bool {
-		if ($this->appManager->isInstalled(self::SHILLINQ_APP_ID) === false) {
-			return false;
-		}
-
-		try {
-			$this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::PAYABLE_SCHEMA)->findAll(['limit' => 1]);
-		} catch (\Throwable $e) {
-			return false;
-		}
-
-		return true;
-	}//end shillinqAvailable()
 
 	/**
 	 * Rows of a humaniq schema.
@@ -334,27 +273,8 @@ class WageTaxRemittanceService {
 			return [];
 		}
 
-		return array_map(static fn (mixed $row): array => self::toArray(row: $row), array_values((array)$rows));
+		return array_map(fn (mixed $row): array => $this->payables->toArray(row: $row), array_values((array)$rows));
 	}//end rowsOf()
-
-	/**
-	 * Rows of a shillinq schema.
-	 *
-	 * @param string               $schema  The schema.
-	 * @param array<string, mixed> $filters Equality filters.
-	 *
-	 * @return list<array<string, mixed>>
-	 */
-	private function shillinqRows(string $schema, array $filters): array {
-		try {
-			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema($schema)->findAll(['filters' => $filters, 'limit' => 10000]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('WageTaxRemittanceService: could not read shillinq ' . $schema . ': ' . $e->getMessage());
-			return [];
-		}
-
-		return array_map(static fn (mixed $row): array => self::toArray(row: $row), array_values((array)$rows));
-	}//end shillinqRows()
 
 	/**
 	 * The ObjectService, after checking OpenRegister is there (ADR-083).
@@ -369,7 +289,6 @@ class WageTaxRemittanceService {
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 
-
 	/**
 	 * An outcome array.
 	 *
@@ -381,12 +300,12 @@ class WageTaxRemittanceService {
 	 *
 	 * @return array<string, mixed>
 	 */
-	private static function outcome(string $runId, string $status, string $message, ?array $record=null, ?string $payableId=null): array {
+	private function outcome(string $runId, string $status, string $message, ?array $record=null, ?string $payableId=null): array {
 		return [
 			'runId' => $runId,
 			'status' => $status,
 			'message' => $message,
-			'recordId' => ($record !== null ? self::idOf(row: $record) : null),
+			'recordId' => ($record !== null ? $this->payables->idOf(row: $record) : null),
 			'payableId' => ($payableId ?? ($record['shillinqPayableRef'] ?? null)),
 		];
 	}//end outcome()
@@ -407,38 +326,4 @@ class WageTaxRemittanceService {
 		return $text;
 	}//end nullable()
 
-	/**
-	 * A row as an array.
-	 *
-	 * @param mixed $row An entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private static function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && (method_exists($row, 'jsonSerialize') === true || method_exists($row, 'getObject') === true)) {
-			$data = (method_exists($row, 'jsonSerialize') === true ? (array)$row->jsonSerialize() : (array)$row->getObject());
-			if (isset($data['id']) === false && isset($data['@self']['id']) === false && method_exists($row, 'getUuid') === true) {
-				$data['id'] = (string)$row->getUuid();
-			}
-
-			return $data;
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
-	 * The id of a row.
-	 *
-	 * @param array<string, mixed> $row The row.
-	 *
-	 * @return string
-	 */
-	private static function idOf(array $row): string {
-		return (string)($row['id'] ?? ($row['@self']['id'] ?? ''));
-	}//end idOf()
 }//end class
