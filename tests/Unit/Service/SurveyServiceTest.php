@@ -48,6 +48,11 @@ class SurveyServiceTest extends TestCase {
 
 	private const TODAY = '2026-10-05';
 
+	/**
+	 * A uuid, because SurveyInvitation and SurveyResponse relate to the survey by uuid.
+	 */
+	private const SURVEY_ID = '5a1e0000-0000-4000-8000-000000000001';
+
 	private FakeObjectStore $store;
 
 	/**
@@ -76,7 +81,7 @@ class SurveyServiceTest extends TestCase {
 		$this->employee('emp-l2', 'l2', 'unit-legal', 'temporary');
 		$this->store->seed('Employee', 'emp-left', ['firstName' => 'Oud', 'lastName' => 'Collega', 'nextcloudUserId' => 'oud', 'administrationId' => 'ADM-001', 'startDate' => '2020-01-01', 'endDate' => '2026-01-31']);
 		$this->store->seed('OrgAssignment', 'asg-left', ['employeeId' => 'emp-left', 'orgUnitId' => 'unit-fin', 'startDate' => '2020-01-01']);
-		$this->store->seed('Survey', 'srv-1', $this->survey(['scope' => 'orgUnits', 'orgUnitIds' => ['unit-fin', 'unit-hr']]));
+		$this->store->seed('Survey', self::SURVEY_ID, $this->survey(['scope' => 'orgUnits', 'orgUnitIds' => ['unit-fin', 'unit-hr']]));
 	}//end setUp()
 
 	/**
@@ -86,7 +91,7 @@ class SurveyServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testASurveyGoesToTwoTeams(): void {
-		$outcome = $this->service()->open('srv-1', self::TODAY);
+		$outcome = $this->service()->open(self::SURVEY_ID, self::TODAY);
 
 		self::assertSame(['status' => 200, 'message' => null, 'invited' => 9, 'withoutAccount' => 1], $outcome);
 		$invitations = $this->rows('SurveyInvitation');
@@ -94,11 +99,13 @@ class SurveyServiceTest extends TestCase {
 		self::assertSame(['f1', 'f2', 'f3', 'f4', 'h1', 'h2', 'h3', 'h4', 'h5'], $this->sorted(array_column($invitations, 'userId')));
 		self::assertSame(['open'], array_values(array_unique(array_column($invitations, 'status'))));
 		self::assertSame('2026-10-20', $invitations[0]['closesOn']);
-		self::assertSame([], RegisterSchemaValidator::errors('SurveyInvitation', $invitations[0]));
+		// The fixture's employees have readable ids (emp-f1); on the instance they are uuids.
+		self::assertSame('emp-', substr((string)$invitations[0]['employeeId'], 0, 4));
+		self::assertSame([], RegisterSchemaValidator::errors('SurveyInvitation', ['employeeId' => '5a1e0000-0000-4000-8000-0000000000e1'] + $invitations[0]));
 
-		$survey = $this->row('Survey', 'srv-1');
+		$survey = $this->row('Survey', self::SURVEY_ID);
 		self::assertSame(['open', 9, 1], [$survey['status'], $survey['invitedCount'], $survey['withoutAccountCount']]);
-		self::assertSame(['surveyId' => 'srv-1', 'invited' => 9, 'answered' => 0, 'rate' => 0.0], array_intersect_key($this->service()->results('srv-1'), array_flip(['surveyId', 'invited', 'answered', 'rate'])));
+		self::assertSame(['surveyId' => self::SURVEY_ID, 'invited' => 9, 'answered' => 0, 'rate' => 0.0], array_intersect_key($this->service()->results(self::SURVEY_ID), array_flip(['surveyId', 'invited', 'answered', 'rate'])));
 	}//end testASurveyGoesToTwoTeams()
 
 	/**
@@ -130,9 +137,9 @@ class SurveyServiceTest extends TestCase {
 	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function testAnAnswerNamesNobody(): void {
-		$this->service()->open('srv-1', self::TODAY);
+		$this->service()->open(self::SURVEY_ID, self::TODAY);
 
-		$outcome = $this->service()->respond('srv-1', 'f4', ['werkplezier' => 4, 'aanbevelen' => '9', 'werkdruk' => 'te hoog', 'toelichting' => '  Meer overleg.  ', 'onbekend' => 'x'], self::TODAY);
+		$outcome = $this->service()->respond(self::SURVEY_ID, 'f4', ['werkplezier' => 4, 'aanbevelen' => '9', 'werkdruk' => 'te hoog', 'toelichting' => '  Meer overleg.  ', 'onbekend' => 'x'], self::TODAY);
 
 		self::assertSame(['status' => 201, 'message' => null], $outcome);
 		$responses = $this->rows('SurveyResponse');
@@ -163,18 +170,18 @@ class SurveyServiceTest extends TestCase {
 	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function testOneAnswerPerPerson(): void {
-		$this->service()->open('srv-1', self::TODAY);
+		$this->service()->open(self::SURVEY_ID, self::TODAY);
 		$answers = ['werkplezier' => 3, 'aanbevelen' => 7, 'werkdruk' => 'goed'];
-		self::assertSame(201, $this->service()->respond('srv-1', 'h1', $answers, self::TODAY)['status']);
+		self::assertSame(201, $this->service()->respond(self::SURVEY_ID, 'h1', $answers, self::TODAY)['status']);
 
-		self::assertSame(409, $this->service()->respond('srv-1', 'h1', $answers, self::TODAY)['status']);
-		self::assertSame(404, $this->service()->respond('srv-1', 'l1', $answers, self::TODAY)['status'], 'Legal was not invited.');
-		self::assertSame(404, $this->service()->respond('srv-1', 'nobody', $answers, self::TODAY)['status']);
+		self::assertSame(409, $this->service()->respond(self::SURVEY_ID, 'h1', $answers, self::TODAY)['status']);
+		self::assertSame(404, $this->service()->respond(self::SURVEY_ID, 'l1', $answers, self::TODAY)['status'], 'Legal was not invited.');
+		self::assertSame(404, $this->service()->respond(self::SURVEY_ID, 'nobody', $answers, self::TODAY)['status']);
 		self::assertSame(404, $this->service()->respond('srv-x', 'h2', $answers, self::TODAY)['status']);
-		$missing = $this->service()->respond('srv-1', 'h2', ['werkplezier' => 9, 'werkdruk' => 'goed'], self::TODAY);
+		$missing = $this->service()->respond(self::SURVEY_ID, 'h2', ['werkplezier' => 9, 'werkdruk' => 'goed'], self::TODAY);
 		self::assertSame(400, $missing['status']);
 		self::assertStringContainsString('werkplezier, aanbevelen', (string)$missing['message']);
-		self::assertSame(409, $this->service()->respond('srv-1', 'h2', $answers, '2026-10-21')['status'], 'After closesOn no answers are taken.');
+		self::assertSame(409, $this->service()->respond(self::SURVEY_ID, 'h2', $answers, '2026-10-21')['status'], 'After closesOn no answers are taken.');
 		self::assertCount(1, $this->rows('SurveyResponse'));
 	}//end testOneAnswerPerPerson()
 
