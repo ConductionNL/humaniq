@@ -66,7 +66,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
              is one of ( architecture, backend )" — the elements are both
              valid, only their order was not. -->
         <php min-version="8.3"/>
-        <nextcloud min-version="32" max-version="34"/>
+        <nextcloud min-version="32" max-version="35"/>
         <!-- App dependency (not expressible in app-info.xsd): OpenRegister.
              Humaniq owns no database tables — Employee / EmploymentContract /
              PayrollRun / Payslip / WageTaxFiling / Timesheet / Expense objects

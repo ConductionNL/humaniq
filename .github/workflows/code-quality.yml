@@ -73,7 +73,7 @@ jobs:
       php-version: "8.3"
       php-test-versions: '["8.3", "8.4"]'
       # nextcloud-test-refs is DELIBERATELY ABSENT. appinfo/info.xml declares
-      # <nextcloud min-version="32" max-version="34"/>, and with no explicit
+      # <nextcloud min-version="32" max-version="35"/>, and with no explicit
       # list the shared workflow derives the matrix from that same manifest —
       # so the versions advertised to the App Store and the versions actually
       # exercised cannot drift apart again.
