@@ -738,3 +738,13 @@ Nextcloud hands it (`OCP\IUserSession`) and does no identity work of its own.
   net-pay path sources the debtor IBAN from config, never from a self-service
   write). A future proposal must re-verify **both** conditions before citing this
   as a reason to build step-up.
+
+<!-- discovery:start -->
+## Standards & federation
+
+| Standard | Role | Access |
+|---|---|---|
+| [iCalendar (RFC 5545) subscription feeds](https://datatracker.ietf.org/doc/html/rfc5545) | Uses | — |
+
+Other servers can read this list without logging in, from the Nextcloud capabilities endpoint (published by OpenRegister). Details, federation and admin switches: [docs/standards-and-federation.md](docs/standards-and-federation.md).
+<!-- discovery:end -->

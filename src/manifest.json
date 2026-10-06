@@ -1654,5 +1654,16 @@
 			},
 			"_note": "ADR-018 / ADR-114 Decision 5. Rendered by the shared CnFeaturesAndRoadmapView, which reads the committed docs/features.json and OpenRegister's GitHub proxy. No per-app customisation of the view itself."
 		}
-	]
+	],
+	"discovery": {
+		"public": true,
+		"standards": [
+			{
+				"id": "icalendar",
+				"name": "iCalendar (RFC 5545) subscription feeds",
+				"role": "consumes",
+				"specUrl": "https://datatracker.ietf.org/doc/html/rfc5545"
+			}
+		]
+	}
 }

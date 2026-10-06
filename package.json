@@ -7,6 +7,8 @@
     "npm": "^11.0.0"
   },
   "scripts": {
+    "docs:standards": "node scripts/generate-standards-docs.cjs",
+    "check:standards-docs": "node scripts/generate-standards-docs.cjs --check",
     "build": "NODE_ENV=production webpack --config webpack.config.js --progress",
     "postbuild": "node -e \"require('fs').writeFileSync('js/.build-stamp', new Date().toISOString()+'\\n')\" && node scripts/write-build-info.js && node scripts/check-bundle-freshness.js --sidecar",
     "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
