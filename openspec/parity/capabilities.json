@@ -4307,7 +4307,7 @@
     "evidence": "lib/Standards/packs/nl-2026.pack.json:97 the taxable-wage step notes 'the TAXABLE wage after the 30%-ruling exemption. Every step below that used to read @binding.tvl as its tax/premium/vakantiegeld base now reads THIS instead'; PayrollCalculator.php header cites @spec dga-payroll-mode and 30-procent-regeling; reached through the same PayrollRun/Payslip path as pay-gross-to-net",
     "reachedOn": "PayrollRunDetail/PayslipDetail via occ humaniq:payroll:run or the Flow calculate step, and via ProformaPayslip for a live simulation; same reachability as pay-gross-to-net",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-14-payroll-core-engine"
+    "change": "2026-09-07-30-procent-regeling"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8478,6 +8478,25 @@
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://loket.nl/roadmap/"
+  },
+  {
+   "id": "ppl-civil-servant-status",
+   "area": "people",
+   "name": "Record which employees are civil servants and check their oath and side-activity disclosure.",
+   "humaniq": "yes",
+   "afas": "unchecked",
+   "visma-raet": "unchecked",
+   "hr2day": "unchecked",
+   "loket": "unchecked",
+   "personio": "unchecked",
+   "orangehrm": "unchecked",
+   "built": {
+    "state": "built",
+    "evidence": "openspec/specs/aor-ambtenarenrecht/spec.md REQ-AOR-001..004: the Employee schema records whether an employee is an ambtenaar and under which legal regime; two corpus rules require the ambtseed and the nevenwerkzaamheden disclosure for every ambtenaar, with seed data for both branches.",
+    "change": "2026-08-20-aor-ambtenarenrecht",
+    "owner": "ConductionNL/humaniq"
+   },
+   "source": "spec-round-2026-10-07"
   },
   {
    "id": "dm-week-53",
