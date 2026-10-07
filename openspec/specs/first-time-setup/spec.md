@@ -36,7 +36,7 @@ loading a dataset or by declining.
 Rows: `plt-setup-wizard` (humaniq matrix).
 
 #### Scenario: The wizard offers the example data step
-@e2e tests/e2e/spec-coverage/demo-data-setup-step.spec.ts
+@e2e exclude spec written after the fact and this round changes no test; the behaviour is exercised by tests/e2e/spec-coverage/demo-data-setup-step.spec.ts, which does not yet carry this scenario's tag
 - **GIVEN** a fresh install on which the example data question was never answered
 - **WHEN** an administrator reads `/api/setup/status`
 - **THEN** the response carries `completed: true`, the `demo-data` step reads not done, and
@@ -76,13 +76,13 @@ missing or malformed, only the None card SHALL be offered.
 Rows: `plt-demo-data` (humaniq matrix).
 
 #### Scenario: Example data is loaded and counted
-@e2e tests/e2e/spec-coverage/demo-data-setup-step.spec.ts
+@e2e exclude spec written after the fact and this round changes no test; the behaviour is exercised by tests/e2e/spec-coverage/demo-data-setup-step.spec.ts, which does not yet carry this scenario's tag
 - **GIVEN** the shipped dataset
 - **WHEN** an administrator loads it from the setup wizard
 - **THEN** the reply reads `success: true` and names the number of imported objects
 
 #### Scenario: Loading twice is safe
-@e2e tests/e2e/spec-coverage/demo-data-setup-step.spec.ts
+@e2e exclude spec written after the fact and this round changes no test; the behaviour is exercised by tests/e2e/spec-coverage/demo-data-setup-step.spec.ts, which does not yet carry this scenario's tag
 - **GIVEN** example data already loaded
 - **WHEN** the administrator loads it again
 - **THEN** the import succeeds again

@@ -42,7 +42,7 @@ records that point at them (contracts, timesheets, payslips, expenses and the la
 Rows: `ppl-employee-record` (humaniq matrix).
 
 #### Scenario: An HR adviser opens the employee list
-@e2e tests/e2e/spec-coverage/core-journeys.spec.ts
+@e2e exclude spec written after the fact and this round changes no test; the behaviour is exercised by tests/e2e/spec-coverage/core-journeys.spec.ts, which does not yet carry this scenario's tag
 - **GIVEN** an HR adviser
 - **WHEN** they open `/employees`
 - **THEN** the page shows the employee list, or its empty state, and an add button that opens
@@ -61,7 +61,7 @@ Rows: `ppl-employee-record` (humaniq matrix).
 - **THEN** OpenRegister refuses the object and nothing is stored
 
 #### Scenario: The detail page shows the person and their records
-@e2e tests/e2e/spec-coverage/core-journeys.spec.ts
+@e2e exclude spec written after the fact and this round changes no test; the behaviour is exercised by tests/e2e/spec-coverage/core-journeys.spec.ts, which does not yet carry this scenario's tag
 - **GIVEN** a seeded employee
 - **WHEN** an HR adviser opens `/employees/{id}`
 - **THEN** the page shows the seeded field values
