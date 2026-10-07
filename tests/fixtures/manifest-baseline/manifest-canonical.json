@@ -1146,7 +1146,7 @@
 			"label": "Reports",
 			"order": 95,
 			"route": "Reports",
-			"section": "footer"
+			"section": "settings"
 		},
 		{
 			"icon": "MapMarkerPath",
