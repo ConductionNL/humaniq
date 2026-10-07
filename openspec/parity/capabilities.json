@@ -465,7 +465,7 @@
     "evidence": "lib/Settings/register.d/hr-objects.json Employee schema (employeeNumber, bsn, firstName, lastName, dateOfBirth, startDate, endDate, grossMonthlySalary, iban and more); src/manifest.effective.json pages Employees (index) and EmployeeDetail (detail)",
     "reachedOn": "Employees /employees (menu Personeel), EmployeeDetail /employees/:id",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/employee-and-contract-records"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -497,7 +497,7 @@
     "evidence": "lib/Settings/register.d/hr-objects.json:46 Employee.iban carries pattern ^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$ (its own x-notes call this a shape check only, mod-97 checksum a non-goal); grep -rniF bsn lib/Settings/register.d/hr-objects.json shows Employee.bsn has no pattern or format keyword at all; Employee.dateOfBirth carries only format: date, no plausibility or age check",
     "reachedOn": "enforced by OpenRegister schema validation on every Employee create/edit, Employees /employees, EmployeeDetail /employees/:id",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/employee-and-contract-records"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -530,7 +530,7 @@
     "evidence": "lib/Settings/register.d/hr-objects.json EmploymentContract schema (employeeId $ref Employee, type enum permanent/temporary/agency/minijob/bbl, writtenContract, startDate, endDate, salary fields); src/manifest.effective.json pages EmploymentContracts (index) and EmploymentContractDetail (detail)",
     "reachedOn": "EmploymentContracts /contracts (menu Personeel), EmploymentContractDetail /contracts/:id",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/employee-and-contract-records"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6793,7 +6793,7 @@
     "evidence": "appinfo/routes.php:17-19 GET /api/setup/status, POST /api/setup/config, POST /api/setup/action/{actionId}; src/manifest.json:7-22 'setup' block (ADR-042 contract) with welcome/demo-data steps; lib/Controller/SetupController.php implements the endpoints and notes its version 'matches manifest.setup.version'",
     "reachedOn": "the platform's generic CnSetupWizard shell (nextcloud-vue), driven entirely by src/manifest.json's declarative setup block, shown on first admin visit, no humaniq-authored Vue component imports CnSetupWizard directly, which is expected for this shared ADR-042 mechanism",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/first-time-setup"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6857,7 +6857,7 @@
     "evidence": "lib/Service/DemoDataService.php:120 install() reads a shipped demo-dataset descriptor and imports records generated from the app's own schemas; lib/Controller/SetupController.php:87,95,142 wires DemoDataService into the setup wizard's status/action flow, matching src/manifest.json's 'demo-data' step",
     "reachedOn": "the setup wizard's 'Load example data' step, on first run",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/first-time-setup"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7589,18 +7589,19 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmCoreOAuthPlugin/config/routes.yaml:45 an OAuth2 client can pull data from the REST API on its own schedule; grep -riE '\\b(power ?bi|business intelligence)\\b' src/plugins src/client/src finds no match, so no built-in feed"
    },
    "built": {
-    "state": "specified",
-    "evidence": "openspec/specs/hris-api-public/spec.md: external access is Nextcloud app passwords over OpenRegister's generic object API, which a BI tool can poll on its own schedule; no OData or BI connector (grep -rniE 'odata|power ?bi' lib src: only DemoDataService name matches) Specified in ConductionNL/openregister openspec/changes/rapportage-bi-export (openregister lane, OpenSpec pass 2026-09-27).",
-    "reachedOn": "external client on /api/objects/{register}/{schema}, no humaniq page",
+    "state": "built",
+    "evidence": "Re-rated 2026-10-07 (spec round 2): the linked change shipped and is archived in ConductionNL/openregister openspec/changes/archive/2026-05-01-rapportage-bi-export (tasks.md: every requirement checked, OData v4 out of scope). On openregister origin/development 26ff809cfb: appinfo/routes.php:2021 POST /api/graphql (lib/Controller/GraphQLController.php, lib/Service/GraphQL/GraphQLService.php) serves every register, humaniq's included, to a BI tool that refreshes on its own schedule (Power BI through a GraphQL connector) under RBAC and multi-tenancy; appinfo/routes.php:1981-1986 /api/scheduled-reports and lib/BackgroundJob/ReportRenderJob.php (registered appinfo/info.xml:177) render a dashboard on a schedule to CSV, XLSX, ODS, HTML or PDF into a Files folder. No OData endpoint and no native Power BI connector; humaniq ships no report dashboard of its own.",
+    "reachedOn": "external BI client on openregister /api/graphql; scheduled renders on openregister /reports/{id}; no humaniq page",
     "owner": "ConductionNL/openregister",
-    "change": "openregister/rapportage-bi-export"
+    "change": "openregister/rapportage-bi-export",
+    "readOn": "2026-10-07"
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
-   "note": "Tender requirement: Delft Support E4 and E1 (koppeling met Power BI, real-time of geplande verversing); Sudwest-Fryslan W0.9."
+   "note": "Tender requirement: Delft Support E4 and E1 (koppeling met Power BI, real-time of geplande verversing); Sudwest-Fryslan W0.9. Spec round 2 (2026-10-07): verdict sibling-has. OpenRegister ships the scheduled feed (GraphQL plus scheduled report renders) and humaniq consumes it; humaniq stays partial because OData was put out of scope and a Power BI refresh needs a third-party GraphQL connector."
   },
   {
    "id": "td-dms-link",
@@ -8438,7 +8439,7 @@
     "evidence": "lib/Settings/register.d/hr-objects.json:19 Employee.bsn is an ordinary property; records are keyed by OpenRegister UUID and employeeNumber, and every other schema points at Employee by employeeId, so the BSN is never a key",
     "reachedOn": "Employee records throughout; no page needed",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/employee-and-contract-records"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8810,7 +8811,32 @@
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://support.personio.de/hc/en-us/articles/38314656674333-Personio-MCP-server-Beta-access-overview",
-   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-08-17-declared-actions-and-mcp-scope (a schema can declare a write action as an MCP tool); humaniq declaring the time-off action is humaniq's, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister). Corrections round 8 (2026-09-28): built.state specified to none, because no humaniq change specifies the missing half. The archived openspec/changes/archive/2026-09-07-humaniq-mcp-adoption only declares six read-only schemas, and its spec openspec/specs/humaniq-mcp-surface/spec.md:41-42 and :89-90 refuses every write verb and the leave cluster, so it does not cover starting a time-off request; the open change self-service-policy-assistant puts submitting leave from the chat out of scope (proposal.md:88). Corrections round 9 (2026-09-28): built.state none to decided-no. Starting a request such as time off from an AI tool is a recorded non-goal of humaniq's main spec openspec/specs/humaniq-mcp-surface/spec.md: :41-42 \"The create, update and delete verbs MUST NOT be enabled on any humaniq schema, and no humaniq service may carry #[McpTool]\", and :89-90 keeps LeaveRequest, LeaveBalance and SickLeaveCase off the tool surface because sick leave is health data. The read half stays declared (lib/Settings/register.d/hr-org.json:10)."
+   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-08-17-declared-actions-and-mcp-scope (a schema can declare a write action as an MCP tool); humaniq declaring the time-off action is humaniq's, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister). Corrections round 8 (2026-09-28): built.state specified to none, because no humaniq change specifies the missing half. The archived openspec/changes/archive/2026-09-07-humaniq-mcp-adoption only declares six read-only schemas, and its spec openspec/specs/humaniq-mcp-surface/spec.md:41-42 and :89-90 refuses every write verb and the leave cluster, so it does not cover starting a time-off request; the open change self-service-policy-assistant puts submitting leave from the chat out of scope (proposal.md:88). Corrections round 9 (2026-09-28): built.state none to decided-no. Starting a request such as time off from an AI tool is a recorded non-goal of humaniq's main spec openspec/specs/humaniq-mcp-surface/spec.md: :41-42 \"The create, update and delete verbs MUST NOT be enabled on any humaniq schema, and no humaniq service may carry #[McpTool]\", and :89-90 keeps LeaveRequest, LeaveBalance and SickLeaveCase off the tool surface because sick leave is health data. The read half stays declared (lib/Settings/register.d/hr-org.json:10). Spec round 2 (2026-10-07): the read-only half is its own row, dm-mcp-read-only (built); this row stays decided-no for write tools."
+  },
+  {
+   "id": "dm-mcp-read-only",
+   "area": "platform",
+   "name": "Connect an AI tool to the HR system through an MCP server that can search and read vacancies, org units, assets, timesheets and expenses, with no write tools.",
+   "humaniq": "partial",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "built": {
+    "state": "built",
+    "evidence": "openspec/specs/humaniq-mcp-surface/spec.md: x-openregister-mcp blocks at lib/Settings/register.d/hr-ats.json:18 (Vacancy), hr-org.json:32 (OrgUnit), hr-assets.json:19 and :195 (Asset, AssetAssignment), hr-timesheet.json:252 (Timesheet) and hr-expense.json:126 (Expense) enable search and get only, scope read, readOnlyHint true. OpenRegister validates the block (openregister lib/Db/SchemaMapper.php:2624) and derives one tool provider per app from it at boot (lib/AppInfo/Application.php:3959-4041, ai-mcp REQ-DERIVED-001), at openregister origin/development 26ff809cfb. Partial: employee, contract, pay, leave and sickness data are deliberately kept off the surface, and the derived tools were read from code, not driven from an MCP client.",
+    "spec": "openspec/specs/humaniq-mcp-surface",
+    "change": "2026-09-07-humaniq-mcp-adoption",
+    "owner": "ConductionNL/humaniq",
+    "readOn": "2026-10-07",
+    "reachedOn": "an external MCP client on OpenRegister's MCP endpoint, tools humaniq.{schema}.search and humaniq.{schema}.get; no humaniq page"
+   },
+   "provider": "openregister",
+   "providerHow": "read-from-code",
+   "source": "spec-round-2026-10-07",
+   "note": "Split from dm-mcp-server (spec round 2, 2026-10-07): that row stays decided-no for write tools such as starting a time-off request; this row is the read-only surface humaniq ships."
   },
   {
    "id": "dm-approvals-dashboard",
