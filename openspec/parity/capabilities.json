@@ -464,7 +464,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-objects.json Employee schema (employeeNumber, bsn, firstName, lastName, dateOfBirth, startDate, endDate, grossMonthlySalary, iban and more); src/manifest.effective.json pages Employees (index) and EmployeeDetail (detail)",
     "reachedOn": "Employees /employees (menu Personeel), EmployeeDetail /employees/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "spec": "none"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -495,7 +496,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-objects.json:46 Employee.iban carries pattern ^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$ (its own x-notes call this a shape check only, mod-97 checksum a non-goal); grep -rniF bsn lib/Settings/register.d/hr-objects.json shows Employee.bsn has no pattern or format keyword at all; Employee.dateOfBirth carries only format: date, no plausibility or age check",
     "reachedOn": "enforced by OpenRegister schema validation on every Employee create/edit, Employees /employees, EmployeeDetail /employees/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "spec": "none"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -527,7 +529,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-objects.json EmploymentContract schema (employeeId $ref Employee, type enum permanent/temporary/agency/minijob/bbl, writtenContract, startDate, endDate, salary fields); src/manifest.effective.json pages EmploymentContracts (index) and EmploymentContractDetail (detail)",
     "reachedOn": "EmploymentContracts /contracts (menu Personeel), EmploymentContractDetail /contracts/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "spec": "none"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -626,7 +629,8 @@
     "state": "built",
     "evidence": "lib/Standards/rules/labour.json nl-signaal-contract-verloopt (60-day window, advisory, no successor contract) and nl-aanzegtermijn-bewaking (BW 7:668 lid 1, mandatory, missed one-month notice on a >=6-month fixed term); lib/Standards/Checks/NlSignalChecks.php implements both; lib/Standards/Checks/NlOnboardingChecks.php:71 nl-onboarding-proeftijd-bewaking covers probation-ending separately; lib/Service/ObligationsService.php:73,191-218 folds EmploymentContract expiries into the merged obligations list; src/manifest.effective.json:~1660 Dashboard 'Open obligations' widget calls GET /api/analytics/obligations",
     "reachedOn": "Dashboard /dashboard, Open obligations widget (object-table) via GET /api/analytics/obligations, rowRoute EmploymentContractDetail",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-hr-signals"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -690,7 +694,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-org.json OrgUnit schema (name, type enum afdeling/team/kostenplaats, parentUnitId self-referencing $ref OrgUnit, costCenter, managerId $ref Employee, active); lib/Standards/Checks/NlOrgChecks.php:91 nl-org-unit-cycle keeps the parentUnitId chain acyclic; src/manifest.d/hr-org.json OrgUnits index (/org-units) and OrgUnitDetail (/org-units/:id) with Child units and Assignments object-lists",
     "reachedOn": "OrgUnits /org-units (menu Personeel), OrgUnitDetail /org-units/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-org-chart-basic"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -755,7 +760,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-org.json OrgAssignment schema (employeeId $ref Employee, orgUnitId $ref OrgUnit, role, startDate, endDate nullable = effective-dated placement); src/manifest.d/hr-org.json OrgAssignments index (/org-assignments) and OrgAssignmentDetail (/org-assignments/:id); EmployeeDetail and OrgUnitDetail each carry an Assignments object-list filtered by employeeId/orgUnitId, so multiple historical rows accumulate per employee rather than one field being overwritten",
     "reachedOn": "OrgAssignments /org-assignments (menu Personeel), OrgAssignmentDetail /org-assignments/:id; also surfaced on EmployeeDetail and OrgUnitDetail",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-org-chart-basic"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -853,7 +859,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-comp.json SalaryBand schema (bandId, title, grade, minSalary/referenceSalary/maxSalary in integer cents, currency, cao/caoSchaal, effectiveFrom, active); lib/Service/CompBandValidator.php:54-72 evaluate() refuses a comp proposal outside [minSalary,maxSalary] or when the band cannot be resolved; lib/Service/CompAdjustmentService.php:82,88,279,298 injects and calls CompBandValidator during compensation-adjustment effectuation",
     "reachedOn": "SalaryBands /salary-bands (menu Personeel, read-only reference), SalaryBandDetail /salary-bands/:id; enforced live from CompReviewCycles/CompAdjustmentDetail via CompAdjustmentService",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-comp-cycles"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -884,7 +891,8 @@
     "state": "built",
     "evidence": "lib/Standards/cao/*.json nine CAOs (cao-generiek verified anchor, cao-metaal-techniek, cao-horeca, cao-rijk, cao-gemeenten, cao-onderwijs-po, cao-onderwijs-vo, cao-ziekenhuizen, cao-zorg-vvt; most leaves placeholder:true except cao-generiek and cao-rijk's IKB/workingTime); lib/Standards/CaoRegistry.php loader (availableCaos/get/minMaandloonCents/minLeaveHours); lib/Standards/Checks/NlCaoChecks.php nl-cao-minimumloon-schaal and nl-cao-verlof-minimum audit EmploymentContract.cao/caoSchaal; src/manifest.d pages Caos (/caos) and CaoDetail (/caos/:id)",
     "reachedOn": "Caos /caos (menu Personeel), CaoDetail /caos/:id; enforced against every EmploymentContract.cao by occ humaniq:rules:audit",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-cao-library"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -949,7 +957,8 @@
     "state": "built",
     "evidence": "openspec/specs/document-dossier-avg/spec.md REQ-DOSS-001/002, status done; src/manifest.d/hr-objects.json EmployeeDetail object-list-10 (schema HrGeneratedDocument, filter employeeId=@objectId, sort generatedAt desc, rowRoute GeneratedDocumentDetail) plus a native Files sidebar tab; lib/Settings/register.d/hr-objects.json Employee.loonheffingenVerklaringRetainedUntil + lib/Standards/Checks/NlPayrollChecks.php nl-loonbelastingverklaring-bewaarplicht-5jaar retention check",
     "reachedOn": "EmployeeDetail /employees/:id, Documents object-list plus Files tab",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-07-document-dossier-avg"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -980,7 +989,8 @@
     "state": "built",
     "evidence": "lib/Controller/DocumentController.php POST /api/documents/generate dispatches on documentType; lib/Service/HrDocumentService.php:94 DOCUMENT_APP='filinq', resolved through lib/Support/FleetAppId.php (CANDIDATES['filinq']=['filinq','docudesk'], classCandidates 'filinq'=>['OCA\\\\Filinq','OCA\\\\DocuDesk'], both newest-first so a current filinq resolves correctly, falling back to a pre-rename docudesk); src/manifest.d/hr-objects.json header actions 'Genereer arbeidsovereenkomst' on EmploymentContractDetail and 'Genereer PDF'/generate-loonstrook on PayslipDetail both call this route; frontend-api-paths.txt shows 4 references to /api/documents/generate",
     "reachedOn": "EmploymentContractDetail /contracts/:id (Generate employment contract action), PayslipDetail /payslips/:id (Generate PDF action), both POST /api/documents/generate",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-hrmq-docudesk-documents"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1080,7 +1090,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-stagiair.json Intern/Stagiair schema (onderwijsinstelling, opleiding, niveau, stagetype, startDate, endDate, begeleiderId, stagevergoedingPerMaand, bpvOvereenkomstOndertekend, verzekeringGeverifieerd, status); description confirms deliberately NOT an Employee, NOT payroll-engine input, NOT CAO-scoped (stagiair-bbl-admin design D1); src/manifest.effective.json pages Stagiairs (/stagiairs) and StagiairDetail (/stagiairs/:id)",
     "reachedOn": "Stagiairs /stagiairs (menu Personeel), StagiairDetail /stagiairs/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-08-20-stagiair-bbl-admin"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1111,7 +1122,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-objects.json:92-94 EmploymentContract.uitzendFase (enum A/B/C), uitzendbedingVanToepassing (boolean), inlenersbeloningReferentie (string), all agency-contract-only; lib/Standards/Checks/NlUitzendChecks.php implements nl-uitzendbeding-alleen-fase-a and nl-inlenersbeloning-onderbouwing-vereist (lib/Standards/rules/labour.json:475,487); src/manifest.d/hr-objects.json EmploymentContractDetail's page-level exclude list is only [employeeId, normfunctieId], so the three uitzend fields render via the generic data widget even though the page note (last updated for functiehuis-hr21, 2026-07-18) predates and doesn't mention them",
     "reachedOn": "EmploymentContracts /contracts filtered to type=agency, EmploymentContractDetail /contracts/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-07-uitzend-flexpool"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1210,7 +1222,8 @@
     "state": "built",
     "evidence": "Employee is an OpenRegister schema (lib/Settings/register.d/hr-objects.json); OpenRegister ships its own Schemas admin UI (~/apps-extra/openregister/src/views/{schema,schemas,settings}) for adding properties to any register schema, including Employee. humaniq's own manifest/pages carry no custom-field builder of their own.",
     "reachedOn": "OpenRegister's own Schemas settings screens (outside humaniq's app), not a humaniq page",
-    "owner": "ConductionNL/openregister"
+    "owner": "ConductionNL/openregister",
+    "spec": "none"
    },
    "provider": "openregister",
    "providerHow": "inferred",
@@ -1276,7 +1289,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-ats.json Vacancy schema, description: 'a declarative concept -> gepubliceerd -> gesloten publish lifecycle'; src/manifest.effective.json pages Vacancies (/vacancies) and VacancyDetail (/vacancies/:id); Application.vacancyId references it",
     "reachedOn": "Vacancies /vacancies (menu Werving), VacancyDetail /vacancies/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-recruiting-ats-basic"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1375,7 +1389,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-ats.json job-application schema with x-openregister-lifecycle stages screenen/uitnodigen/aanbieden/aannemen/afwijzen (src/manifest.d/hr-ats.json:11 note); src/manifest.effective.json pages Applications (/applications) and ApplicationDetail (/applications/:id) with lifecycleActions exposing exactly those five edges",
     "reachedOn": "Applications /applications (menu Werving), ApplicationDetail /applications/:id, lifecycleActions",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-recruiting-ats-basic"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1406,7 +1421,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-ats.json Interview schema (applicationId, scheduledStart, scheduledEnd, interviewers, mode, location, status, calendarEventUid); lib/Service/InterviewSyncEngine.php + lib/Controller/InterviewController.php POST /api/interviews/sync (2 hits in frontend-api-paths.txt); src/manifest.d/hr-ats.json:362-372 InterviewDetail 'Sync naar agenda' header action calls that route",
     "reachedOn": "Interviews /interviews (menu Werving), InterviewDetail /interviews/:id, 'Sync naar agenda' action, POST /api/interviews/sync",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-15-interview-scheduling"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1471,7 +1487,8 @@
     "state": "built",
     "evidence": "lib/Service/OfferEsignService.php requestSignature() generates the aanbiedingsbrief PDF via filinq/docudesk (resolved through FleetAppId, correctly handling both names) and raises a signing request only from Application.status='aanbod'; lib/Controller/OfferController.php POST /api/offer/request-signature; src/manifest.d/hr-ats.json:204 ApplicationDetail 'request-offer-signature' header action",
     "reachedOn": "ApplicationDetail /applications/:id, request-offer-signature action, POST /api/offer/request-signature",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-15-offer-esign"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1570,7 +1587,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-onboarding.json Onboarding schema (employeeId, startDate, proeftijdEndDate, status, contractSigned, widCheckDone, widCheckDate, bsnValidated, ibanVerified, itProvisioned, pensioenAangemeld, notes) spans HR (contract/WID/BSN/IBAN checks), IT (itProvisioned) and benefits (pensioenAangemeld); src/manifest.d/hr-onboarding.json:11 OnboardingDetail 'Checklist' widget groups the six gate booleans, audit-enforced by lib/Standards/Checks/NlOnboardingChecks.php; lifecycleActions contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren",
     "reachedOn": "Onboardings /onboardings (menu Personeel), OnboardingDetail /onboardings/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-onboarding-wizard-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1635,7 +1653,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-onboarding.json Offboarding schema (employeeId, lastWorkingDay, reason, status, exitGesprekDone, assetsIngeleverd, toegangIngetrokken, verlofsaldoUitbetaald, vakantiegeldAfgerekend, transitievergoedingBedrag, getuigschriftVerstrekt, notes); src/manifest.d/hr-onboarding.json:175 OffboardingDetail groups Checklist (exitGesprekDone/assetsIngeleverd/toegangIngetrokken) and Eindafrekening widgets, audit-enforced by lib/Standards/Checks/NlOffboardingChecks.php; lifecycleActions afronding_plannen/eindafrekening_gereedmelden/afronden/annuleren",
     "reachedOn": "Offboardings /offboardings (menu Personeel), OffboardingDetail /offboardings/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-offboarding-wizard-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1734,7 +1753,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-leave.json:33 LeaveRequest.submit requires LeaveTypeConditionGuard (registered lib/AppInfo/Application.php:166); hr-leave.json:41,49 approve/reject require NoSelfApprovalGuard (registered Application.php:125); src/manifest.d/hr-leave.json:4 LeaveRequestDetail lifecycleActions submit/approve/reject; src/manifest.d/hr-leave.json:150 LeaveRequests index page",
     "reachedOn": "LeaveRequestDetail /leave-requests/:id (menu Leave & Absence > My leave / Leave requests / Leave approval), submit/approve/reject via lifecycle action buttons",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-12-leave-verzuim-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1765,7 +1785,8 @@
     "state": "built",
     "evidence": "lib/AppInfo/Application.php:125 registers NoSelfApprovalGuard; lib/Settings/register.d/hr-leave.json:41,49 LeaveRequest.approve/reject require it; hr-leave.json:317,325 LeaveTransaction.approve requires LeaveBuySellApprovalGuard (delegates to NoSelfApprovalGuard, registered Application.php:206), reject requires NoSelfApprovalGuard directly",
     "reachedOn": "LeaveRequestDetail and LeaveTransactionDetail approve/reject lifecycle actions; the same guard class also gates Timesheet and Expense approvals elsewhere in the app",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-06-22-hrmq-timesheet-approval"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1797,7 +1818,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-leave.json:181-198 LeaveBalance.remainingHours (x-openregister-calculations) = entitledHours+bovenwettelijkHours-usedHours; lib/Service/LeaveBalanceProjectionService.php recomputes usedHours from approved LeaveRequests on every change; lib/BackgroundJob/LeaveAccrualJob.php writes entitledHours/bovenwettelijkHours; src/manifest.d/hr-leave.json:179 LeaveBalances index shows all four columns",
     "reachedOn": "LeaveBalances /leave-balances (menu Leave & Absence > Leave balances)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-12-leave-verzuim-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1829,7 +1851,8 @@
     "state": "built",
     "evidence": "appinfo/info.xml:104 registers OCA\\Humaniq\\BackgroundJob\\LeaveAccrualJob under background-jobs; lib/BackgroundJob/LeaveAccrualJob.php grants the full statutory holiday entitlement on the year's first accrual and accrues bovenwettelijkHours 1/12 per month, idempotent per (employee,year,month) via lastAccruedPeriod",
     "reachedOn": "runs automatically as a registered TimedJob (fires ~daily, the per-balance lastAccruedPeriod marker enforces monthly cadence); output shown on LeaveBalances /leave-balances",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-leave-accrual-job"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1894,7 +1917,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-leave-types.json LeaveType schema (code/label/drawsFromBalance/requiresReason/requiresDocument/maxNoticeDays/active) with 6 seeded types; lib/Lifecycle/LeaveTypeConditionGuard.php enforces requiresReason/requiresDocument/maxNoticeDays on LeaveRequest.submit (registered Application.php:166); lib/Service/LeaveTypeResolver.php resolves by uuid then code so legacy enum values still work; src/manifest.d/hr-leave-types.json LeaveTypes /verlofsoorten index + LeaveTypeDetail",
     "reachedOn": "LeaveTypes /verlofsoorten (settings), enforced live when an employee submits a LeaveRequestDetail",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-12-leave-verzuim-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1959,7 +1983,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-leave.json:279-462 LeaveTransaction buy/sell lifecycle submit/approve/reject/settle, guarded by LeaveBuySellApprovalGuard and LeaveSettlementPeriodGuard (both registered Application.php:206,222); appinfo/routes.php:82 POST /api/leave/settle -> LeaveController::settle -> lib/Service/LeaveBuySellSettlementService.php writes bovenwettelijkHours and settledAmount; src/manifest.d/hr-leave.json:214-266 LeaveTransactionDetail headerActions 'verrekenen' calls that route Corrections round 8 (2026-09-28), humaniq#513: the settled amount is gross (lib/Service/LeaveBuySellSettlementService.php:159-160), but lib/Service/PayrollRunService.php:1369-1371 and :536 fold it straight into net after the engine input is built at :492, so sold leave is paid out with no wage tax withheld and bought leave comes off net after tax, at e08ffe0.",
     "reachedOn": "LeaveTransactionDetail /leave-transactions/:id 'Settle' button (also MijnVerlofKopenVerkopen /mijn/verlof-kopen-verkopen for the employee's own view)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-leave-buy-sell"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1991,7 +2016,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-leave-types.json LeaveSchedule pageInstance (templateRef indexScaffold over register humaniq schema LeaveRequest), sorted by startDate ascending, filter administrationId=@workspace.activeAdministrationId?; menu 05-menu.json:260 LeaveSchedule entry",
     "reachedOn": "LeaveSchedule /verlofrooster (menu Leave & Absence > Department leave schedule)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "leave-against-a-department-schedule"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2023,7 +2049,8 @@
     "state": "built",
     "evidence": "appinfo/routes.php:61 GET /api/leave/coverage -> lib/Controller/LeaveScheduleController.php::coverage, backed by lib/Service/LeaveCoverageService.php; the path /api/leave/coverage is absent from _lane/research/frontend-api-paths.txt and `grep -rn \"leave/coverage\" src/ --include=*.vue --include=*.js` has no hits; the LeaveSchedule manifest page (src/manifest.d/hr-leave-types.json) is a plain indexScaffold over LeaveRequest and does not call this endpoint",
     "reachedOn": "nothing reaches it: the route and LeaveCoverageService exist but no page, widget or occ command calls them",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "leave-against-a-department-schedule"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2055,7 +2082,8 @@
     "state": "built",
     "evidence": "lib/Command/CalendarSyncCommand.php:47,67 registers occ humaniq:calendar:sync (appinfo/info.xml:385); lib/Service/LeaveCalendarService.php one-way projects approved LeaveRequest/SickLeaveCase onto a configured shared Nextcloud calendar; appinfo/info.xml background-jobs block (lines 99-113) registers only LeaveAccrualJob and PollCalendarSubscriptionsJob, not this command, so it never runs unattended",
     "reachedOn": "occ humaniq:calendar:sync only, no page and no scheduled job",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-leave-calendar-nc"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2154,7 +2182,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-onboarding.json:170-291 Offboarding schema carries a verlofsaldoUitbetaald checklist boolean, checked cross-object against the employee's LeaveBalance rows by nl-offboarding-verlofsaldo-uitbetaling (lib/Standards/rules/labour.json:249, lib/Standards/Checks/NlOffboardingChecks.php:79); the field is a manual HR checkbox on the eindafrekening-ready transition, not a computed payout amount or a payslip line; the offboarding-wizard-mvp proposal explicitly lists 'no eindafrekening computation engine' as out of scope",
     "reachedOn": "OffboardingDetail page (src/manifest.d/hr-onboarding.json:168), checked by occ humaniq:rules:audit for nl-offboarding-verlofsaldo-uitbetaling",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-12-leave-verzuim-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2186,7 +2215,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-verzuim.json SickLeaveCase schema, x-openregister-lifecycle gemeld<->hersteld (herstellen/heropenen transitions, no guard required); src/manifest.d/hr-verzuim.json:4 SickLeaveCaseDetail lifecycleActions herstellen/heropenen; src/manifest.d/hr-verzuim.json:162 SickLeaveCases index",
     "reachedOn": "SickLeaveCaseDetail /sick-leave/:id and SickLeaveCases /sick-leave (menu Leave & Absence > Sick leave cases)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-12-leave-verzuim-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2217,7 +2247,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-verzuim.json probleemanalyseDue/planVanAanpakDue/uwv42WeekMeldingDue/eerstejaarsevaluatieDue stored, derived from firstSickDay (+6/8/42/52 weeks), checked by nl-wvp-milestone-derivation (lib/Standards/Checks/NlLeaveChecks.php referenced via lib/Standards/rules/labour.json); src/manifest.d/hr-verzuim.json:41-57 SickLeaveCaseDetail 'Poortwachter milestones' widget shows all eight Due/Done dates",
     "reachedOn": "SickLeaveCaseDetail /sick-leave/:id, 'Poortwachter milestones' widget",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-12-leave-verzuim-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2281,7 +2312,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-verzuim.json SickLeaveCase declares no diagnosis/symptom/cause/medical-note field of any kind (REQ-VWP-002, schema description and manifest _note both state this); src/manifest.d/hr-verzuim.json:11 files widget description restricts uploads to gespreksverslagen/plan-van-aanpak documents only; grep -n x-property-rbac lib/Settings/register.d/hr-verzuim.json and the whole register.d tree: no hits anywhere in the app, so nothing enforces that restriction beyond field omission and a text label",
     "reachedOn": "SickLeaveCaseDetail /sick-leave/:id, 'Case notes & action plan' files widget",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-12-leave-verzuim-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2313,7 +2345,8 @@
     "state": "built",
     "evidence": "lib/Payroll/SickPayCalculator.php pure loondoorbetaling-bij-ziekte calculator; lib/Service/PayrollRunService.php:226 injects SickPayCalculator, :949-960 sickPayInputFor() builds its input from the open SickLeaveCase + covering contract; lib/Settings/register.d/hr-verzuim.json loondoorbetalingPercentage (default 70, statutory minimum) and aangepastLoon feed it",
     "reachedOn": "PayrollRun generation (occ humaniq:payroll:run and the PayrollRuns page action), folded into the employee's Payslip",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-sick-pay-calc"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2375,7 +2408,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-verzuim.json:146-178 SickLeaveCase.absenceProgression array (effectiveFrom/absencePercentage steps) and currentAbsencePercentage stored projection; lib/Service/AbsenceProgression.php and AbsenceRateService.php read the array (never the projection) to compute FTE-weighted rates; src/manifest.d/hr-verzuim.json:70-83 'Work resumption' widget (data-3) on SickLeaveCaseDetail",
     "reachedOn": "SickLeaveCaseDetail /sick-leave/:id, 'Work resumption' widget",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-08-20-absence-rate-partial-recovery"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2440,7 +2474,8 @@
     "state": "built",
     "evidence": "src/manifest.json Dashboard /dashboard widget 'kpi-absence-rate' (type delta) bound via endpointSource to guarded /apps/humaniq/api/analytics/trends?metric=absence-rate (AnalyticsController::trends(), REQ-DSI-004); a matching chart widget on the same dashboard uses the local TrendChartWidget.vue bridge over the same endpoint per the manifest's own dashboard-steering-indicators note",
     "reachedOn": "Dashboard /dashboard (menu Dashboard)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-verzuim-analytics-widgets"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2505,7 +2540,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-timesheet.json page MijnUren (route /mijn/uren) includeFields startedAt/endedAt/breakMinutes/description/projectId/billable; lib/Listener/TimeEntryStampListener.php stamps userId/administrationId/costCenter server-side; hours derived from start/end/break by TimeEntryHoursDeriver.php",
     "reachedOn": "MijnUren /mijn/uren (menu My HR > My hours), self-service create form",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-time-entry-capture"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2536,7 +2572,8 @@
     "state": "built",
     "evidence": "webpack.config.js:56-58 dedicated 'leaves' entry building humaniq-leaves.js from src/leaves.js (registers both registerHoursLeaf and registerAgendaLeaf); src/integrations/CnHoursWidget.vue filters TimeEntry on domainObjectType/domainObjectRef and offers a booking dialog + timer; consumed at dossiq(procest)/src/manifest.json:1307 CaseDetail integration widget placing the humaniq-hours leaf with domainObjectType 'dossiq:case', with dossiq's own vitest coverage (tests/vitest/hoursLeafManifest.spec.js)",
     "reachedOn": "CaseDetail page in dossiq; the leaf mechanism is generic to any host app that declares it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-11-hours-leaf-for-any-object"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2568,7 +2605,8 @@
     "state": "built",
     "evidence": "appinfo/routes.php:140-143 timeEntry#estimate/timer/startTimer/stopTimer; lib/Service/RunningTimerService.php enforces one running timer per user; src/integrations/hoursApi.js calls /apps/humaniq/api/time-entries/timer(/start|/stop)",
     "reachedOn": "CnHoursWidget.vue (the hours leaf) start/stop timer control; confirmed called at /apps/humaniq/api/time-entries/timer/start and /stop in _lane/research/frontend-api-paths.txt",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-time-entry-capture"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2599,7 +2637,8 @@
     "state": "built",
     "evidence": "lib/Listener/TimesheetAggregateListener.php builds the Timesheet period aggregate from TimeEntry bookings server-side (hrmq-hours-process-redesign Decision 8); src/manifest.d/hr-timesheet.json TimesheetDetail 'stat' widget sums TimeEntry.hours filtered by timesheetId, Timesheets index page lists period/hours/entryCount/status",
     "reachedOn": "Timesheets /timesheets and TimesheetDetail /timesheets/:id (menu Time and scheduling)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-time-entry-capture"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2630,7 +2669,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-timesheet.json:193,201 Timesheet approve/reject requires OCA\\\\Humaniq\\\\Lifecycle\\\\NoSelfApprovalGuard, submit requires TimesheetNotEmptyGuard; both registered in lib/AppInfo/Application.php; src/manifest.d/hr-timesheet.json TeamUrengoedkeuring (managerUserId:@me, defaultFilters status:submitted) and TimesheetApproval pages, TimesheetDetail lifecycleActions submit/approve/reject/reopen",
     "reachedOn": "TeamUrengoedkeuring /timesheets/team-approval (menu Time and scheduling > Team timesheet approval), approve/reject buttons on TimesheetDetail",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-06-22-hrmq-timesheet-approval"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2662,7 +2702,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-timesheet.json:185 submit requires OCA\\\\Humaniq\\\\Lifecycle\\\\TimesheetNotEmptyGuard; lib/Lifecycle/TimesheetNotEmptyGuard.php; registered in lib/AppInfo/Application.php:152-163",
     "reachedOn": "TimesheetDetail /timesheets/:id, Submit lifecycle action",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-06-22-hrmq-timesheet-approval"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2693,7 +2734,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-timesheet.json TimesheetDetail lifecycleActions 'reopen' from approved to draft; lib/Listener/TimesheetProcessStampListener.php:312 'All four process fields cleared (the reopen edge)'; lib/Settings/register.d/hr-timesheet.json carries no requires guard on the approved->draft edge (only submit and approve/reject are guarded)",
     "reachedOn": "TimesheetDetail /timesheets/:id, Reopen lifecycle action (visible only when status is approved)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-06-22-hrmq-timesheet-approval"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2725,7 +2767,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-timesheet.json TimeEntry properties include projectId and billable (boolean); no 'rate' property anywhere on TimeEntry (grep '\\\"rate\\\"' hr-timesheet.json: no hits); MijnUren /mijn/uren includeFields ends with projectId, billable",
     "reachedOn": "MijnUren /mijn/uren booking form (project + billable flag only, no rate field)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-time-entry-capture"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2757,7 +2800,8 @@
     "state": "built",
     "evidence": "lib/Service/EmployeeCostRateService.php computes hourlyCost = wageCost + additions (override, or derived from EmploymentContract via ProformaPayslipService); lib/Controller/EmployerCostRateController.php exposes POST /api/employees/cost-rate; shillinq's lib/Service/HrmqCostRateAdapter.php resolves EmployeeCostRateService IN-PROCESS via class_exists (not over HTTP) and is tested in shillinq/tests/Unit/Service/HrmqCostRateAdapterTest.php",
     "reachedOn": "the HTTP route exists, but the real path is in-process: consumed by shillinq's HrmqCostRateAdapter for cost allocation (ADR-081)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-08-22-hrmq-hours-process-redesign"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2788,7 +2832,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-estimates.json TimeEstimates/TimeEstimateDetail pages over TimeEstimate (domainObjectType/domainObjectRef/role/estimatedHours/enforced); lib/Service/TimeEstimateService.php derives remaining = estimated - booked on read, never stored; appinfo/routes.php:140 timeEntry#estimate GET /api/time-entries/estimate, present in _lane/research/frontend-api-paths.txt as /apps/humaniq/api/time-entries/estimate",
     "reachedOn": "TimeEstimates /urenschattingen (administrator view); remaining is computed on read wherever a consuming app calls GET /api/time-entries/estimate",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "estimate-spent-and-remaining-on-an-hours-leaf"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2819,7 +2864,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-attendance.json AttendanceRecords /attendance and AttendanceRecordDetail /attendance/:id over AttendanceRecord (clockIn/clockOut/workedHours/status); lifecycleActions sluiten/heropenen (open<->gesloten)",
     "reachedOn": "AttendanceRecords /attendance (menu), AttendanceRecordDetail",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-time-attendance-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2850,7 +2896,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-attendance.json AttendanceRecords index page columns employeeId/date/clockIn/clockOut/workedHours/status, filters status+location; a plain list, no live present/absent/late summary widget",
     "reachedOn": "AttendanceRecords /attendance (menu Time and scheduling), filter by status",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-time-attendance-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2915,7 +2962,8 @@
     "state": "built",
     "evidence": "lib/Standards/Checks/NlAttendanceChecks.php implements nl-atw-dagelijkse-rust/nl-atw-max-werkdag/nl-atw-pauze over AttendanceRecord (logged hours); lib/Standards/Checks/NlRosterChecks.php + lib/Service/RosterCheckService.php check rostered hours. The AttendanceRecord CheckProvider is wired only into the compliance rule engine (occ humaniq:rules:audit / RuleAuditService); no page surfaces an ATW violation for logged hours. The rostered half additionally has a live headerAction 'Working hours check' on RosterDetail (POST /api/roster/check)",
     "reachedOn": "rostered hours: RosterDetail /rosters/:id headerAction 'Working hours check'; logged/clocked hours: occ humaniq:rules:audit only, no page",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-time-attendance-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2980,7 +3028,8 @@
     "state": "built",
     "evidence": "lib/Listener/TimesheetApprovalListener.php + lib/Service/TimeEntryEventService.php dispatch the nl.conduction.hrmq.timeentry.approved webhook CloudEvent and (per openspec/specs/humaniq-timesheet-approved-typed-event) a typed TimesheetApprovedEvent carrying the billable flag and cost-allocation references, on the Timesheet submitted->approved edge; grep -rniF 'TimesheetApproved|hrmq.timeentry.approved' across shillinq/lib and shillinq/openspec: no hits, no listener anywhere in the checked-out fleet",
     "reachedOn": "nothing reaches it: the event dispatches correctly but no sibling app (checked: shillinq) subscribes to it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-06-humaniq-timesheet-approved-typed-event"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3073,7 +3122,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-roster.json RosterDetail carries a real x-openregister-lifecycle (concept<->gepubliceerd via publiceren/intrekken), per its own note 'Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle'; Rosters /rosters index, RosterAssignments child object-list",
     "reachedOn": "Rosters /rosters, RosterDetail /rosters/:id (menu Time and scheduling), Publish/Withdraw lifecycle actions",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-rostering"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3104,7 +3154,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-roster.json Shifts /shifts and ShiftDetail /shifts/:id over the Shift schema (name/startTime/endTime/breakMinutes/active), reused by RosterAssignment.shiftId",
     "reachedOn": "Shifts /shifts (menu Time and scheduling)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-rostering"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3135,7 +3186,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-roster.json RosterDetail headerActions 'atw-controle' posts {rosterId:@objectId} to POST /api/roster/check, present in _lane/research/frontend-api-paths.txt; lib/Controller/RosterController.php::authorizeRoster() guards it; lib/Service/RosterCheckService.php runs NlRosterChecks + CompetenceCheckService over RosterAssignments",
     "reachedOn": "RosterDetail /rosters/:id, 'Working hours check' header button",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-rostering"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3167,7 +3219,8 @@
     "state": "built",
     "evidence": "lib/Service/CompetenceCheckService.php:11 'The roster has to refuse' a shift once a certificate expires; called from lib/Service/RosterCheckService.php:240 as part of the same working-time check act, producing competenceFindings; also called from lib/Service/AvailabilityService.php Corrections round 8 (2026-09-28), humaniq#512: nothing refuses an unqualified assignment, because lib/Service/RosterCheckService.php:234-258 only adds competence findings to the report, the Roster publiceren transition at lib/Settings/register.d/hr-roster.json:44-48 has no requires guard, and no RosterAssignment save guard reads the check, at e08ffe0.",
     "reachedOn": "RosterDetail /rosters/:id 'Working hours check' button surfaces competenceFindings alongside the ATW report; not a hard block on saving a RosterAssignment itself",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-rostering"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3199,7 +3252,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-working-calendar.json WorkingPatterns /werkpatronen, WorkingPatternDetail; lib/Listener/WorkingPatternOverlapListener.php refuses two overlapping patterns for one employee (OverlappingWorkingPatternException.php); lib/Service/WorkingHoursService.php resolves contracted hours from the pattern in force on a date",
     "reachedOn": "WorkingPatterns /werkpatronen (menu)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-leave-hours-from-the-working-pattern"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3230,7 +3284,8 @@
     "state": "built",
     "evidence": "openspec/changes/a-working-calendar-per-person/tasks.md: all tasks checked [x]; lib/Service/WorkingCalendarReader.php reads openregister's national-holiday calendar duck-typed, never owns it (decision D19); lib/Service/WorkingHoursService.php composes WorkingPattern + NonWorkingTime + the calendar into contractedHoursOn(employee,date); src/manifest.d/hr-working-calendar.json NonWorkingTimes /niet-werkdagen page; consumed by lib/Service/AbsenceRateService.php and lib/Controller/AgendaController.php (availability/capacity)",
     "reachedOn": "WorkingPatterns /werkpatronen and NonWorkingTimes /niet-werkdagen pages; contractedHoursOn() feeds the Dashboard absence-rate metric and the availability/capacity endpoints",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "a-working-calendar-per-person"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3261,7 +3316,8 @@
     "state": "built",
     "evidence": "lib/Controller/AgendaController.php GET /api/availability calls lib/Service/AvailabilityService.php, which composes AgendaComposer + CompetenceCheckService + WorkingHoursService to answer free hours per employee; the route is not present in _lane/research/frontend-api-paths.txt (only /apps/humaniq/api/agenda is), and no consuming app checked out in the workspace calls /api/availability",
     "reachedOn": "route GET /api/availability exists; nothing in this workspace's frontend or sibling apps reaches it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-agenda-rostering-and-resource-booking"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3293,7 +3349,8 @@
     "state": "built",
     "evidence": "src/integrations/agendaApi.js calls GET /apps/humaniq/api/agenda (present in _lane/research/frontend-api-paths.txt); src/integrations/CnAgendaWidget.vue + registerAgendaLeaf.js form the humaniq-agenda leaf, built into the same humaniq-leaves.js bundle as the confirmed-live hours leaf; lib/Controller/AgendaController.php composes roster, leave, sick leave, interviews, resource bookings and cached external calendar busy time; grep 'humaniq-agenda' across the checked-out workspace: only humaniq's own registration files, no host app places it",
     "reachedOn": "the leaf mechanism works (proven by the sibling hours leaf, which dossiq does place) but no host in this workspace currently places the humaniq-agenda leaf on a page",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-agenda-rostering-and-resource-booking"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3324,7 +3381,8 @@
     "state": "built",
     "evidence": "lib/Controller/AgendaController.php GET /api/capacity calls lib/Service/ForwardCapacityService.php (uses AvailabilityService + WorkingHoursService); route not in _lane/research/frontend-api-paths.txt and no consuming app found in the workspace",
     "reachedOn": "route GET /api/capacity exists; nothing reaches it in this workspace",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-agenda-rostering-and-resource-booking"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3355,7 +3413,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-agenda.json Resources /resources, ResourceBookings /reserveringen; lib/Service/ResourceBookingService.php + ResourceBookingOverlapListener refuses a booking that would exceed the resource's quantity over an overlapping period, in the WRITE path",
     "reachedOn": "Resources /resources and Resource bookings /reserveringen (menu)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-agenda-rostering-and-resource-booking"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3386,7 +3445,8 @@
     "state": "built",
     "evidence": "appinfo/info.xml:112 registers OCA\\\\Humaniq\\\\BackgroundJob\\\\PollCalendarSubscriptionsJob (one of only two registered background jobs); src/manifest.d/hr-agenda.json CalendarSubscriptions /kalenderabonnementen shows lastPolledAt/lastPollStatus; lib/Service/CalendarSubscriptionPoller.php + IcalBusyParser.php read external ICS feeds read-only",
     "reachedOn": "CalendarSubscriptions /kalenderabonnementen (menu); PollCalendarSubscriptionsJob runs it in the background",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-agenda-rostering-and-resource-booking"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3482,7 +3542,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-expense.json Expense schema, x-openregister-lifecycle draft->submitted->approved/rejected->reimbursed; approve/reject require NoSelfApprovalGuard (registered lib/AppInfo/Application.php:125); src/manifest.d/hr-expense.json:4 ExpenseDetail lifecycleActions submit/approve/reject/reimburse; src/manifest.d/hr-expense.json:220 Expenses index",
     "reachedOn": "ExpenseDetail /expenses/:id (menu Expenses > My expenses / Expense claims), submit/approve/reject/reimburse via lifecycle actions",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-06-22-hrmq-expenses"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3514,7 +3575,8 @@
     "state": "built",
     "evidence": "appinfo/routes.php:102 POST /api/expenses/extract-receipt -> ExpenseController::extractReceipt; lib/Service/ReceiptExtractionService.php:100-108 DOCUMENT_APP='filinq', docudeskAvailable() (lines 479-491) calls FleetAppId::isInstalled($appManager,'filinq') then FleetAppId::getService(...,'filinq','Service\\FinancialExtractionService') which tries OCA\\Filinq then OCA\\DocuDesk namespaces; verified against the live filinq checkout: appinfo/info.xml has <id>filinq</id>/<namespace>Filinq</namespace> and lib/Service/FinancialExtractionService.php declares namespace OCA\\Filinq\\Service, matching FleetAppId's first candidate; src/manifest.d/hr-expense.json:197 ExpenseDetail 'Extract receipt data' header action calls the route; also occ humaniq:expense:extract-receipt",
     "reachedOn": "ExpenseDetail /expenses/:id 'Extract receipt data' button",
-    "owner": "ConductionNL/filinq"
+    "owner": "ConductionNL/filinq",
+    "change": "2026-07-15-receipt-ocr"
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
@@ -3644,7 +3706,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-expense.json managerUserId denormalized field (x-notes: 'TeamDeclaratiegoedkeuring team page filters on it with the @me token'); src/manifest.d/05-menu.json:369 TeamDeclaratiegoedkeuring menu entry; approve/reject guarded by NoSelfApprovalGuard",
     "reachedOn": "TeamDeclaratiegoedkeuring (menu Expenses > Team expense approval), approve/reject lifecycle actions on each row's ExpenseDetail",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-06-22-hrmq-expenses"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3675,7 +3738,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-assets.json Asset (laptop/phone/vehicle/tool/accessPass/clothing/other) with a guarded custody lifecycle available->issued->checkedIn->available/writtenOff, and AssetAssignment (effective-dated employee custody, employeeContribution); src/manifest.d/hr-assets.json AssetDetail /assets/:id, Assets /assets, AssetAssignments /asset-assignments, AssetAssignmentDetail",
     "reachedOn": "Assets /assets and AssetAssignments /asset-assignments (menu)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-asset-management-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3706,7 +3770,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-assets.json:153-183 vehicle Asset carries listPrice/fuelType/companyCarTaxCategory, required when category=vehicle (enforced by nl-asset-voertuig-fiscale-velden-compleet); AssetAssignment.employeeContribution is the private-use monthly contribution; lib/Service/PayrollRunService.php:84-102,403,465-542 resolves the open vehicle AssetAssignment covering the period, computes monthlyBijtelling via bijtellingCentsFor() against the nl-{year}.json bijtellingPrivegebruikAuto rate/cap, and folds it into grossMonthlySalaryCents and Payslip.bijtelling",
     "reachedOn": "computed automatically during PayrollRun generation (occ humaniq:payroll:run / PayrollRuns page action), visible on the resulting Payslip",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-fleet-bijtelling"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3802,7 +3867,8 @@
     "state": "built",
     "evidence": "lib/Payroll/PayrollCalculator.php:60-66 is a facade delegating to Dsl/PackInterpreter over lib/Standards/packs/nl-2026.pack.json, a declarative NL gross-to-net chain (loonheffing, ZVW, AOW/WW/WIA, heffingskortingen); openspec/specs/jurisdiction-packs/spec.md says all 9 golden fixtures reproduce digit-for-digit through the pack path; lib/Service/PayrollRunService.php:530-570 calls it per employee per period",
     "reachedOn": "PayrollRunDetail /payroll-runs/:id and PayslipDetail /payslips/:id (menu Payroll) once a run exists via occ humaniq:payroll:run or the Flow step humaniq.payroll-calculate; also exercised live with nothing saved by ProformaPayslip /proforma (host-app SFC, POST /api/payroll/proforma)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-payroll-core-engine"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3836,7 +3902,8 @@
     "reachedOn": "PayrollRuns /payroll-runs (menu Payroll) creates a draft; PayrollRunDetail '(Re)calculate' produces the payslips; also occ humaniq:payroll:run and the Flow step humaniq.payroll-calculate",
     "owner": "ConductionNL/humaniq",
     "readerRating": "partial",
-    "readerEvidence": "lib/Service/PayrollRunService.php (runFor) creates the draft PayrollRun and Payslip rows; lib/Command/PayrollRunCommand.php runs it from occ; src/manifest.d/hr-objects.json:1750-1761 PayrollRuns index page has a working open-form action 'Create payroll run'; but the '(Re)calculate' headerAction that actually populates the payslips (hr-objects.json:1009-1002, url /api/payroll/calculate) sits on PayrollRunDetail, a detail page with body-slot widgets, so it never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
+    "readerEvidence": "lib/Service/PayrollRunService.php (runFor) creates the draft PayrollRun and Payslip rows; lib/Command/PayrollRunCommand.php runs it from occ; src/manifest.d/hr-objects.json:1750-1761 PayrollRuns index page has a working open-form action 'Create payroll run'; but the '(Re)calculate' headerAction that actually populates the payslips (hr-objects.json:1009-1002, url /api/payroll/calculate) sits on PayrollRunDetail, a detail page with body-slot widgets, so it never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row.",
+    "change": "2026-07-14-payroll-core-engine"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3868,7 +3935,8 @@
     "state": "built",
     "evidence": "lib/Flow/PayrollApproveNode.php implements humaniq.payroll-approve, flipping a draft PayrollRun to approved, registered by lib/Flow/HumaniqFlowNodeListener.php and wired in lib/AppInfo/Application.php:367-370 onto OpenRegister's RegisterFlowNodesEvent; PayrollRun.status is a plain enum with no x-openregister-lifecycle (hr-objects.json:832 note: 'driving lifecycleActions here would invent transition names the backend does not guard'), so there is no direct approve button anywhere on PayrollRunDetail",
     "reachedOn": "Flows /flows and FlowDetail (menu Flows, generic OpenRegister flow engine) with a flow step 'Approve payroll run' (humaniq.payroll-approve); no direct button on PayrollRunDetail",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "payroll-run-as-a-flow"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3935,7 +4003,8 @@
     "reachedOn": "MijnLoonstroken /mijn/loonstroken (menu My HR) to PayslipDetail /payslips/:id, with the Generate PDF button",
     "owner": "ConductionNL/humaniq",
     "readerRating": "partial",
-    "readerEvidence": "src/manifest.d/hr-objects.json:1571-1600 MijnLoonstroken is an @me-scoped, read-only Payslip index (filter userId:'@me'), per openspec/specs/mijn-hr-self-service/spec.md:144 REQ-MHS-004; PayslipDetail (hr-objects.json:680-830) shows the full breakdown; the page's own 'Generate PDF' headerAction (hr-objects.json:816) never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
+    "readerEvidence": "src/manifest.d/hr-objects.json:1571-1600 MijnLoonstroken is an @me-scoped, read-only Payslip index (filter userId:'@me'), per openspec/specs/mijn-hr-self-service/spec.md:144 REQ-MHS-004; PayslipDetail (hr-objects.json:680-830) shows the full breakdown; the page's own 'Generate PDF' headerAction (hr-objects.json:816) never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row.",
+    "change": "2026-07-12-mijn-hr-self-service"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3969,7 +4038,8 @@
     "reachedOn": "PayslipDetail /payslips/:id 'Generate PDF'; output under GeneratedDocuments /documents; also occ humaniq:documents:generate --type loonstrook",
     "owner": "ConductionNL/filinq",
     "readerRating": "partial",
-    "readerEvidence": "lib/Command/DocumentsGenerateCommand.php --type loonstrook and lib/Service/HrDocumentService.php generate a payslip PDF via filinq's (FleetAppId-resolved docudesk/filinq) template/render engine, per openspec/specs/payslip-pdf-docudesk; PayslipDetail's own 'Generate PDF' headerAction (hr-objects.json:806-820, POST /api/documents/generate) is a detail-page headerAction and never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
+    "readerEvidence": "lib/Command/DocumentsGenerateCommand.php --type loonstrook and lib/Service/HrDocumentService.php generate a payslip PDF via filinq's (FleetAppId-resolved docudesk/filinq) template/render engine, per openspec/specs/payslip-pdf-docudesk; PayslipDetail's own 'Generate PDF' headerAction (hr-objects.json:806-820, POST /api/documents/generate) is a detail-page headerAction and never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row.",
+    "change": "2026-07-14-payslip-pdf-docudesk"
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
@@ -4035,7 +4105,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/payroll-reservation-payouts on 2026-09-27 for the missing half: paying out the reserved holiday allowance and a thirteenth month; the reservation is built. Before: lib/Standards/packs/nl-2026.pack.json:259-315 computes an 8% vakantiegeldReservering per period as a reserve step ('neither cash to the employee this period nor an employer charge'); lib/Service/PayrollRunService.php:682-683 stores vakantiegeldReserved/vakantiegeldRate on the Payslip; grep -rniF 'dertiende|13e maand|thirteenth month' lib src: no hits, and grep -rniF 'uitbetal|payout' against the pack/PayrollRunService for vakantiegeld: no hits either",
     "reachedOn": "PayslipDetail /payslips/:id and PayrollRunDetail /payroll-runs/:id show the reserved amount as a field on every payslip; there is no separate payout run and no thirteenth-month component anywhere",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "payroll-reservation-payouts"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4067,7 +4138,8 @@
     "state": "built",
     "evidence": "src/views/ProformaPayslip.vue, registered kind:'page' in src/registry.js:117-121 as a host-app SFC ('persist-nothing interactive gross-to-net compute-form'), calling POST /api/payroll/proforma (routes.php:35), which runs the same PayrollCalculator chain and saves nothing per openspec/specs/proforma-payslip",
     "reachedOn": "ProformaPayslip page (route present in src/manifest.json, menu Payroll)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-proforma-payslip"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4100,7 +4172,8 @@
     "reachedOn": "PayrollRunDetail 'Book retro correction' and PayrollAdjustmentDetail /payroll-adjustments/:id 'Recompute' (menu Payroll > Retro corrections)",
     "owner": "ConductionNL/humaniq",
     "readerRating": "partial",
-    "readerEvidence": "lib/Command/PayrollAdjustCommand.php computes/settles a TWK correction as a delta, never mutating the sealed original; src/manifest.d/hr-retro.json PayrollAdjustmentDetail /payroll-adjustments/:id shows it with a stat KPI (deltaNet); its 'Recompute' headerAction (POST /api/payroll/adjust) and PayrollRunDetail's 'Book retro correction' headerAction (hr-objects.json:1040-1046, open-form) are both detail-page headerActions and never render. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
+    "readerEvidence": "lib/Command/PayrollAdjustCommand.php computes/settles a TWK correction as a delta, never mutating the sealed original; src/manifest.d/hr-retro.json PayrollAdjustmentDetail /payroll-adjustments/:id shows it with a stat KPI (deltaNet); its 'Recompute' headerAction (POST /api/payroll/adjust) and PayrollRunDetail's 'Book retro correction' headerAction (hr-objects.json:1040-1046, open-form) are both detail-page headerActions and never render. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row.",
+    "change": "2026-07-14-retro-adjustments"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4134,7 +4207,8 @@
     "reachedOn": "PayrollRunDetail 'Mutation report' to PayrollMutationReportDetail /payroll-mutations/:id (menu Payroll > Mutation reports)",
     "owner": "ConductionNL/humaniq",
     "readerRating": "partial",
-    "readerEvidence": "lib/Command/PayrollMutationsCommand.php: 'pure read over persisted payslips; never recomputes'; PayrollRunDetail's 'Mutation report' headerAction (hr-objects.json:1024-1035, POST /api/payroll/mutations, onSuccessRoute PayrollMutationReportDetail) is a detail-page headerAction and never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
+    "readerEvidence": "lib/Command/PayrollMutationsCommand.php: 'pure read over persisted payslips; never recomputes'; PayrollRunDetail's 'Mutation report' headerAction (hr-objects.json:1024-1035, POST /api/payroll/mutations, onSuccessRoute PayrollMutationReportDetail) is a detail-page headerAction and never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row.",
+    "change": "2026-07-14-payroll-mutation-reports"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4166,7 +4240,8 @@
     "state": "built",
     "evidence": "lib/Command/PayrollReproduceCommand.php: 'Recompute a sealed Payslip from its stored engineInputSnapshot ... and compare cents-exact against the archived figures; exits non-zero on any mismatch or missing snapshot' (appinfo/info.xml commands block); grep -rniF 'reproduce' src/manifest.d: no hits, no controller route, no page",
     "reachedOn": "occ humaniq:payroll:reproduce only, no page anywhere",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-17-audit-trail-payroll"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4231,7 +4306,8 @@
     "state": "built",
     "evidence": "lib/Standards/packs/nl-2026.pack.json:97 the taxable-wage step notes 'the TAXABLE wage after the 30%-ruling exemption. Every step below that used to read @binding.tvl as its tax/premium/vakantiegeld base now reads THIS instead'; PayrollCalculator.php header cites @spec dga-payroll-mode and 30-procent-regeling; reached through the same PayrollRun/Payslip path as pay-gross-to-net",
     "reachedOn": "PayrollRunDetail/PayslipDetail via occ humaniq:payroll:run or the Flow calculate step, and via ProformaPayslip for a live simulation; same reachability as pay-gross-to-net",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-07-30-procent-regeling"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4262,7 +4338,8 @@
     "state": "built",
     "evidence": "lib/Standards/packs/nl-2026.pack.json:468 'A DGA is not verzekeringsplichtig for the werknemersverzekeringen (Wfsv art. 6 lid 1 sub d), so the gate is a declared predicate', with a golden fixture tests/fixtures/payroll-2026/dga-anchor.json; the customary-wage (gebruikelijk loon) norm check runs via NlDgaChecks + RuleEngine and is surfaced live, per src/manifest.json:749-766, as a self-service warning banner bound to GET /apps/humaniq/api/payroll/dga-status (single-person-modes)",
     "reachedOn": "PayrollRun/Payslip carry the correct DGA insurance treatment automatically (same reachability as pay-gross-to-net); the customary-wage compliance banner is on the DGA self-service page gated by administrationMode:dga_single_person, plus occ humaniq:rules:audit",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-dga-payroll-mode"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4295,7 +4372,8 @@
     "reachedOn": "Loonbeslagen /loonbeslagen (menu Payroll > Wage garnishments) register, then LoonbeslagDetail activate, settle, withdraw",
     "owner": "ConductionNL/humaniq",
     "readerRating": "partial",
-    "readerEvidence": "lib/Service/PayrollRunService.php:402,530-570 deducts an actief Loonbeslag from net pay after settlement/leave-buy-sell, respecting the beslagvrije voet (loonbeslag design.md D2-D4); src/manifest.d/hr-loonbeslag.json:LoonbeslagDetail's own note: 'Loonbeslag.status carries no x-openregister-lifecycle ... all three transitions are guarded api-call actions against LoonbeslagController instead' (activate/settle/withdraw are all detail-page headerActions). src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row. A garnishment can be registered (index-page open-form action 'Register wage garnishment', hr-loonbeslag.json:206-224, which is NOT a detail-page headerAction and works), but nothing can move it out of draft into actief through the app."
+    "readerEvidence": "lib/Service/PayrollRunService.php:402,530-570 deducts an actief Loonbeslag from net pay after settlement/leave-buy-sell, respecting the beslagvrije voet (loonbeslag design.md D2-D4); src/manifest.d/hr-loonbeslag.json:LoonbeslagDetail's own note: 'Loonbeslag.status carries no x-openregister-lifecycle ... all three transitions are guarded api-call actions against LoonbeslagController instead' (activate/settle/withdraw are all detail-page headerActions). src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row. A garnishment can be registered (index-page open-form action 'Register wage garnishment', hr-loonbeslag.json:206-224, which is NOT a detail-page headerAction and works), but nothing can move it out of draft into actief through the app.",
+    "change": "2026-07-14-loonbeslag"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4358,7 +4436,8 @@
     "state": "built",
     "evidence": "lib/Service/PayrollNetPayService.php hands off each payable PayrollRun's payslips as a draft SEPA PaymentRun into shillinq's own PaymentRun register (isInstalled('shillinq') duck-type probe, SHILLINQ_APP_ID/SHILLINQ_REGISTER constants), idempotent by runNumber; lib/Flow/PayrollNetPayNode.php exposes the same as flow step humaniq.payroll-netpay; src/manifest.d/hr-paybatch.json PayrollPaymentBatchDetail note: 'a PayrollPaymentBatch is humaniq's log of ONE net-pay handoff attempt ... never the payment batch itself ... Copy says klaargezet in shillinq, NEVER betaald: created != paid, money only moves after shillinq's controller approves and exports'",
     "reachedOn": "occ humaniq:netpay:run or the Flow step humaniq.payroll-netpay create the draft handoff (this page declares no headerActions/lifecycleActions, so there is no dead-button issue here, it is occ/flow-driven by design); PaymentBatches /payment-batches and PayrollPaymentBatchDetail show the attempt read-only",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-payroll-sepa-netpay-shillinq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4390,7 +4469,8 @@
     "state": "built",
     "evidence": "lib/Command/GlPostRunCommand.php + a PayrollGLPostService post each approved PayrollRun as a balanced loonjournaalpost into shillinq's JournalEntry register via PayrollChartOfAccountsMapping (duck-typed no-op when shillinq is absent); lib/Flow/PayrollGlPostNode.php exposes the same as flow step humaniq.payroll-glpost; src/manifest.d/hr-glpost.json PayrollGLPostDetail note: 'a PayrollGLPost is humaniq's log of ONE handoff attempt into shillinq's JournalEntry register, never the journal itself' Corrections round 8 (2026-09-28), humaniq#514: retro pay and leave payouts folded into net at lib/Service/PayrollRunService.php:536 reach totals net at :570 but not totals gross at :566, so lib/Service/PayrollGLPostService.php:254-267 books no cost line for them and refuses the post with Inconsistente runtotalen once the folds exceed the remainder, at e08ffe0.",
     "reachedOn": "occ humaniq:glpost:run or the Flow step humaniq.payroll-glpost (this page declares no headerActions/lifecycleActions, occ/flow-driven by design); PayrollGLPosts /gl-posts and PayrollGLPostDetail show the attempt read-only",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-12-payroll-glpost-shillinq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4489,7 +4569,8 @@
     "state": "built",
     "evidence": "lib/Flow/HumaniqFlowNodeListener.php registers 4 payroll nodes (PayrollCalculateNode humaniq.payroll-calculate, PayrollApproveNode humaniq.payroll-approve, PayrollGlPostNode humaniq.payroll-glpost, PayrollNetPayNode humaniq.payroll-netpay) onto OpenRegister's RegisterFlowNodesEvent, wired in lib/AppInfo/Application.php:367-370 (class_exists-guarded); each node is a thin adapter over the real domain service (PayrollRunService/PayrollGLPostService/PayrollNetPayService) per lib/Flow/PayrollFlowNodeBase.php; the Flows/FlowDetail page types exist in src/manifest.json:797,807 with menu label 'Flows' at line 837-839",
     "reachedOn": "Flows /flows and FlowDetail (menu Flows), a user can drag the four payroll steps onto a canvas and chain calculate -> approve -> post -> pay; the canvas/list are OpenRegister's shared flow engine, the four steps are humaniq's own contribution",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "payroll-run-as-a-flow"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4690,7 +4771,8 @@
     "reachedOn": "PensionFilings /pension-filings and PensionFilingDetail (menu Payroll > Pension filings), transition buttons render",
     "owner": "ConductionNL/humaniq",
     "readerRating": "partial",
-    "readerEvidence": "lib/Settings/register.d/hr-pension.json PensionFiling x-openregister-lifecycle controleren/bevestigen/verzenden/heropenen, controleren guarded by lib/Lifecycle/PayrollRunApprovedGuard.php (registered lib/AppInfo/Application.php:137-139), which denies the transition unless the referenced PayrollRun is approved/posted/paid; src/manifest.d/hr-pension.json PensionFilingDetail exposes the transitions via config.lifecycleActions, confirmed present in manifest.effective.json with zero matching widgetKey wiring. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
+    "readerEvidence": "lib/Settings/register.d/hr-pension.json PensionFiling x-openregister-lifecycle controleren/bevestigen/verzenden/heropenen, controleren guarded by lib/Lifecycle/PayrollRunApprovedGuard.php (registered lib/AppInfo/Application.php:137-139), which denies the transition unless the referenced PayrollRun is approved/posted/paid; src/manifest.d/hr-pension.json PensionFilingDetail exposes the transitions via config.lifecycleActions, confirmed present in manifest.effective.json with zero matching widgetKey wiring. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row.",
+    "change": "filings-pension-upa-message"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4722,7 +4804,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/filings-pension-upa-message on 2026-09-27 for the missing half: an ABP-specific delivery in the UPA message; the obligation check is built. Before: lib/Standards/Checks/NlAbpChecks.php is a compliance-only check (nl-abp-fund-required) auditing whether an ABP-obligated administratie has its own filing for its own period, via RuleAuditService::buildRelatedContext() cross-object indexes; there is no ABP-specific schema, page, or connector, only the generic PensionFiling.fund field can hold 'ABP' as a value",
     "reachedOn": "PensionFilings/PensionFilingDetail (generic pension page, fund recorded manually) plus occ humaniq:rules:audit for the compliance check that flags a missing ABP filing; no dedicated ABP connection page",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "filings-pension-upa-message"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4756,7 +4839,8 @@
     "reachedOn": "WkrAssessments /wkr-assessments and WkrAssessmentDetail 'Assess' (menu Payroll > WKR assessments)",
     "owner": "ConductionNL/humaniq",
     "readerRating": "partial",
-    "readerEvidence": "lib/Command/WkrAssessCommand.php computes/persists the per-(administration, year) werkkostenregeling vrije-ruimte assessment; src/manifest.d/hr-objects.json:1374-1477 WkrAssessments/WkrAssessmentDetail show it with headline KPIs (fiscale loonsom, vrije ruimte, used, eindheffing due); the 'Assess' headerAction (hr-objects.json:1553-1567, POST /api/payroll/wkr-assess) is a detail-page headerAction and never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
+    "readerEvidence": "lib/Command/WkrAssessCommand.php computes/persists the per-(administration, year) werkkostenregeling vrije-ruimte assessment; src/manifest.d/hr-objects.json:1374-1477 WkrAssessments/WkrAssessmentDetail show it with headline KPIs (fiscale loonsom, vrije ruimte, used, eindheffing due); the 'Assess' headerAction (hr-objects.json:1553-1567, POST /api/payroll/wkr-assess) is a detail-page headerAction and never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row.",
+    "change": "2026-07-15-wkr-administration"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4790,7 +4874,8 @@
     "reachedOn": "WntDisclosures /wnt-disclosures and WntDisclosureDetail Publish (menu Payroll > WNT disclosures)",
     "owner": "ConductionNL/humaniq",
     "readerRating": "partial",
-    "readerEvidence": "lib/Settings/register.d/hr-objects.json WntDisclosure x-openregister-lifecycle 'publiceren' (concept->gepubliceerd, no guard); src/manifest.d/hr-wnt.json WntDisclosureDetail exposes it via config.lifecycleActions, confirmed present with no matching widgetKey wiring in manifest.effective.json. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
+    "readerEvidence": "lib/Settings/register.d/hr-objects.json WntDisclosure x-openregister-lifecycle 'publiceren' (concept->gepubliceerd, no guard); src/manifest.d/hr-wnt.json WntDisclosureDetail exposes it via config.lifecycleActions, confirmed present with no matching widgetKey wiring in manifest.effective.json. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row.",
+    "change": "2026-09-07-wnt-disclosure"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4919,7 +5004,8 @@
     "state": "specified",
     "evidence": "lib/Command/DocumentsGenerateCommand.php:59,92 lists 'werkgeversverklaring' as a supported --type, rendered through filinq's (FleetAppId-resolved docudesk/filinq) template engine per lib/Service/HrDocumentService.php; grep -n 'documentType' src/manifest.d/*.json shows page-level generate actions only for loonstrook (Payslip) and arbeidsovereenkomst (EmploymentContract), none for werkgeversverklaring. Specified in ConductionNL/filinq openspec/changes/templates-employer-statement (filinq lane, OpenSpec pass 2026-09-27).",
     "reachedOn": "occ humaniq:documents:generate --type werkgeversverklaring only, no page can trigger a new one; once generated it is viewable/downloadable via GeneratedDocuments /documents -> GeneratedDocumentDetail's Files tab",
-    "owner": "ConductionNL/filinq"
+    "owner": "ConductionNL/filinq",
+    "change": "documents-employer-statement-from-the-contract"
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
@@ -4951,7 +5037,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-performance.json:4 page ReviewCycleDetail; src/manifest.d/hr-performance.json:152 index ReviewCycles /review-cycles; lib/Settings/register.d/hr-performance.json:5 ReviewCycle x-openregister-lifecycle concept->open->gesloten",
     "reachedOn": "ReviewCycles /review-cycles and ReviewCycleDetail /review-cycles/:id, sub-page under the existing Personeel (EmployeesGroup) menu; openen/sluiten lifecycle buttons on ReviewCycleDetail",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-performance-reviews-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4982,7 +5069,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-performance.json:100 PerformanceReview schema (rating/sterktes/ontwikkelpunten/afspraken); src/manifest.d/hr-performance.json:186 page PerformanceReviewDetail, lifecycleActions indienen/bespreken/vaststellen/heropenen; lib/Lifecycle/NoSelfApprovalGuard.php:66 guards vaststellen server-side",
     "reachedOn": "PerformanceReviewDetail /reviews/:id, reached from the EmployeeDetail Beoordelingen row, the cycle's review list, or MijnBeoordelingen /mijn/beoordelingen self-service",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-performance-reviews-mvp"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5045,7 +5133,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-okr.json Objective and KeyResult schemas; src/manifest.d/hr-okr.json:4 page ObjectiveDetail with Key results object-list (KeyResult.objectiveId), lifecycleActions activeren/afsluiten",
     "reachedOn": "ObjectiveDetail /objectives/:id, reached from EmployeeDetail's Doelen & OKR's row and ReviewCycleDetail's OKR's-in-cyclus row",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-goals-okr"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5076,7 +5165,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-comp.json CompReviewCycle/CompAdjustment/SalaryBand schemas; src/manifest.d/hr-comp.json:4 CompReviewCycleDetail page lifecycleActions sluiten; CompAdjustmentDetail (line 204) lifecycleActions propose/approve/reject, approve/reject guarded by NoSelfApprovalGuard",
     "reachedOn": "CompReviewCycles /comp-review-cycles (sub-page under Personeel), CompReviewCycleDetail /comp-review-cycles/:id, CompAdjustmentDetail reached from EmployeeDetail's Beloningsvoorstellen row",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-comp-cycles"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5107,7 +5197,8 @@
     "state": "built",
     "evidence": "appinfo/routes.php:72 POST /api/comp/effectuate -> comp#effectuate; lib/Lifecycle/CompEffectiveDateGuard.php (read-only within-band/date check); lib/Service/CompAdjustmentService.php writes the Employee.grossMonthlySalary stamp; src/manifest.d/hr-comp.json:220 headerAction 'effectueren' on CompAdjustmentDetail, deliberately NOT a lifecycleActions button (design note at hr-comp.json:211) to avoid the orphaned-capability trap",
     "reachedOn": "CompAdjustmentDetail /comp-adjustments/:id, 'Effectuate' header button, POST /api/comp/effectuate, confirmed present in _lane/research/frontend-api-paths.txt",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-comp-cycles"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5138,7 +5229,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-agenda.json:5 EmployeeCompetence schema (competenceCode, issuedOn, validUntil, matched against Shift.requiredCompetences by CompetenceCheckService, hr-roster.json:24); src/manifest.d/hr-agenda.json:3 index EmployeeCompetences /bevoegdheden and EmployeeCompetenceDetail",
     "reachedOn": "EmployeeCompetences /bevoegdheden, menu group VerlofVerzuimGroup (src/manifest.d/05-menu.json:331)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-agenda-rostering-and-resource-booking"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5361,7 +5453,8 @@
     "state": "built",
     "evidence": "src/manifest.d/personal-dashboard.json MijnHr dashboard /mijn with stat/object-table widgets scoped userId:@me (My hours this month over TimeEntry, My open expenses over Expense, Timesheets to review, My timesheets, My leave balance, My recent payslips); openspec/specs/mijn-hr-self-service/spec.md REQ-MHS-001..007; sibling menu items MijnBeoordelingen (05-menu.json:52, performance reviews), MijnVerlofKopenVerkopen, MijnGebruikelijkLoon all filtered @me",
     "reachedOn": "MijnHr /mijn (menu Mijn HR), plus the sibling Mijn* pages (MijnBeoordelingen, MijnVerlofKopenVerkopen etc.) under the same menu group",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-12-mijn-hr-self-service"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5425,7 +5518,8 @@
     "state": "built",
     "evidence": "openspec/specs/mss-team-scope/spec.md REQ-MSS-001: denormalized managerUserId on Timesheet/Expense/LeaveRequest, three Team*goedkeuring pages pre-filtered managerUserId:@me, nl-mss-manager-consistency audit cross-checks against org-chart-basic; Timesheet.managerUserId is server-stamped on every write via OrgResolutionService (hrmq-hours-process-redesign), Expense/LeaveRequest remain HR-populated (not yet server-stamped)",
     "reachedOn": "TeamVerlofgoedkeuring, TeamDeclaratiegoedkeuring, TeamUrengoedkeuring (menu, each filtered to the caller's own team)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-13-mss-team-scope"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5457,7 +5551,8 @@
     "state": "built",
     "evidence": "src/manifest.d/personal-dashboard.json (hrmq-personal-dashboard) MijnHr /mijn: 'Timesheets to review' and 'My open expenses' stat widgets surface exactly the caller's own pending-attention items, each userId/managerUserId:@me scoped",
     "reachedOn": "MijnHr /mijn (menu Mijn HR, the group's own route per REQ-MHS-007)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-08-22-hrmq-personal-dashboard"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5489,7 +5584,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/self-service-mobile on 2026-09-27. Before: grep -rniF 'mobile app|pwa|progressive web|responsive' lib/ src/manifest.d src/manifest.json openspec/specs openspec/changes: no hits besides the hint's own 'mobile-app canonical' label, and no openspec/specs/mobile-app exists; humaniq ships only as a Nextcloud web app, rendered through Nextcloud's own generic mobile apps with no humaniq-specific mobile optimisation",
     "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "self-service-mobile"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5584,7 +5680,8 @@
     "state": "built",
     "evidence": "openspec/specs/irma-digid-auth/spec.md REQ-AUTH-001 (humaniq builds no auth/identity code of its own) and REQ-AUTH-002 (DigiD/Yivi/eHerkenning federation SHALL be delivered by the Nextcloud platform apps user_saml/user_oidc against a Logius/eIDAS or Yivi broker; once authenticated, humaniq requires zero additional configuration and consumes the resulting IUser exactly like a password login); the whole app's self-service scoping already runs on the authenticated NC user id (@me token used throughout Mijn* pages), so any NC-authenticated identity, DigiD/IRMA included, reaches it unmodified",
     "reachedOn": "any Nextcloud login screen once the instance admin configures user_saml/user_oidc; humaniq's own pages need no further change",
-    "owner": "nextcloud/server"
+    "owner": "nextcloud/server",
+    "change": "2026-08-20-irma-digid-auth"
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
@@ -5683,7 +5780,8 @@
     "state": "built",
     "evidence": "appinfo/routes.php:41 GET /api/payroll/dga-status -> PayrollController::dgaStatus, reusing NlDgaChecks' nl-gebruikelijkloon-norm predicate; src/manifest.json:743 MijnGebruikelijkLoon page, menu entry visibleIf-gated on administrationMode:dga_single_person, warning banner bound to the endpoint (visibleWhen met=false), fails closed (hidden) on 404 or fetch failure",
     "reachedOn": "MijnGebruikelijkLoon (menu, gated to single-person/DGA administrations)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-07-single-person-modes"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5715,7 +5813,8 @@
     "evidence": "openspec/specs/humaniq-dashboard-steering-indicators/spec.md; src/manifest.json 'Dashboard' page carries kpi-absence-rate/kpi-billable-ratio/kpi-payroll-cost tiles plus chart widgets (Billable ratio, Headcount & turnover, Absence rate, Payroll cost per period, Approval lead time) and an Obligations object-table; lib/Controller/AnalyticsController.php + lib/Service/AnalyticsService.php back the endpointSource widgets; The Billable ratio (src/manifest.json:484-506) and Headcount and turnover (:536-566) charts bind to /apps/humaniq/api/analytics/trends; AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId.",
     "reachedOn": "Dashboard (main landing page)",
     "owner": "ConductionNL/humaniq",
-    "readOn": "2026-09-26"
+    "readOn": "2026-09-26",
+    "change": "2026-08-20-hrmq-dashboard-steering-indicators"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5748,7 +5847,8 @@
     "evidence": "src/manifest.json:536-566 'Headcount and turnover' chart binds to the guarded /apps/humaniq/api/analytics/trends endpoint (metric headcount) with three series, Headcount, Starters and Leavers; lib/Service/AnalyticsService.php:172 and :303-321 return headcount at each period end plus starters and leavers within the period; AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId. The earlier unscoped, single-series reading came from the stale page-level _note at src/manifest.json:406.",
     "reachedOn": "Dashboard, chart widget (main landing page)",
     "owner": "ConductionNL/humaniq",
-    "readOn": "2026-09-26"
+    "readOn": "2026-09-26",
+    "change": "2026-08-20-hrmq-dashboard-steering-indicators"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5814,7 +5914,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/reporting-standard-reports-and-builder on 2026-09-27. Before: grep -rniF 'report.builder|custom-report' lib/ src/ openspec/specs openspec/changes: no hits outside archive",
     "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "reporting-standard-reports-and-builder"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5846,7 +5947,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/reporting-standard-reports-and-builder on 2026-09-27 for the missing half: payroll, wage-cost, turnover and leave-balance reports beside the three ready-made reports on the Reports page (matrix corrected from no and none: src/manifest.json:816, commit cc2d18ab). Before: Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:816 page Reports (type reports, commit cc2d18ab 2026-09-03) offers three ready-made reports, WorkforceReport /reports/workforce, AbsenceReport /reports/absence and PerformanceReport, as declarative dashboard pages over the register. Partial: no payroll, wage-cost or turnover report. Before: grep -rniF 'WorkforceReport|AbsenceReport|PerformanceReport' lib/ src/: no hits outside compiled manifest.json/manifest.effective.json (which contain no such schemas); no 'Reports' page anywhere in src/manifest.d",
     "reachedOn": "Reports /reports (footer menu, ReportsMenu)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "reporting-standard-reports-and-builder"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5877,7 +5979,8 @@
     "state": "specified",
     "evidence": "nextcloud-vue CnIndexPage.vue:1605 showMassExport defaults true (a mass action exporting only the fetched/selected rows as a blob download); its allowExport prop (native full-list CSV/Excel export via OpenRegister's export leaf, honouring the current filters) defaults false and additionally requires the schema flagged exportable:true; grep -rn 'allowExport|exportable' src/manifest.d lib/Settings/register.d src/manifest.json: no hits anywhere in humaniq. Specified in ConductionNL/nextcloud-vue openspec/changes/index-export-follows-the-page (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
     "reachedOn": "every index page (indexScaffold template), e.g. Timesheets /timesheets, mass-select rows then Export; the full filtered-list export is never enabled",
-    "owner": "ConductionNL/nextcloud-vue"
+    "owner": "ConductionNL/nextcloud-vue",
+    "change": "reporting-full-list-export"
    },
    "provider": "nextcloud-vue",
    "providerHow": "read-from-code",
@@ -5909,7 +6012,8 @@
     "state": "built",
     "evidence": "lib/Service/ObligationsService.php + lib/Controller/AnalyticsController.php::obligations() GET /api/analytics/obligations, present in _lane/research/frontend-api-paths.txt; src/manifest.json Dashboard Obligations object-table widget bound via endpointSource",
     "reachedOn": "Dashboard, Obligations list widget (main landing page)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-08-20-hrmq-dashboard-steering-indicators"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5942,7 +6046,8 @@
     "evidence": "src/manifest.json:484-506 'Billable ratio' chart and the kpi-billable-ratio tile both bind to the guarded /apps/humaniq/api/analytics/trends endpoint (lib/Service/AnalyticsService.php:171 and :274-300 billableRatioSeries()); AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId. The figure is one percentage per administration per period, not broken down per person or team as the row asks. The earlier unscoped reading came from the stale page-level _note at src/manifest.json:406.",
     "reachedOn": "Dashboard, Billable ratio widgets (main landing page)",
     "owner": "ConductionNL/humaniq",
-    "readOn": "2026-09-26"
+    "readOn": "2026-09-26",
+    "change": "2026-08-20-hrmq-dashboard-steering-indicators"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6005,7 +6110,8 @@
     "state": "built",
     "evidence": "lib/Standards/RuleEngine.php, lib/Standards/RuleCatalogue.php, lib/Standards/Violation.php implement the versioned rule corpus; lib/Command/RulesAuditCommand.php:59 command humaniq:rules:audit prints violations and coverage; no manifest page surfaces RuleEngine output or violation lists",
     "reachedOn": "occ humaniq:rules:audit only, no page",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-07-humaniq-rule-compliance-enforcement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6036,7 +6142,8 @@
     "state": "built",
     "evidence": "lib/Command/RulesAuditCommand.php:85 prints 'enforceable today: N (%.1f%% of machine-checkable)'; no dashboard widget or page surfaces this percentage anywhere in src/manifest.d/",
     "reachedOn": "occ humaniq:rules:audit only, no page",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-07-humaniq-rule-compliance-enforcement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6067,7 +6174,8 @@
     "state": "built",
     "evidence": "appinfo/routes.php:94 POST /api/dsr/export -> avgDsr#export; src/manifest.d/hr-dsr.json:47 headerAction dsr-export on DsrRequestDetail sends employeeId/right/dsrRequestId; lib/Controller/AvgDsrController.php admin-only guard (isAdmin via IGroupManager)",
     "reachedOn": "DsrRequestDetail /dsr-requests/:id, 'Export' header button, POST /api/dsr/export (present in _lane/research/frontend-api-paths.txt)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-15-avg-dsr"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6098,7 +6206,8 @@
     "state": "built",
     "evidence": "appinfo/routes.php:95-96 POST /api/dsr/erase-preview and /api/dsr/erase-confirm; src/manifest.d/hr-dsr.json:63,78 headerActions dsr-erase-preview/dsr-erase-confirm (confirm requires a prior preview on the same request, REQ-DSR-006); lib/Service/PayrollRetentionGuardService.php places a legal hold so OpenRegister's guarded erase refuses a still-retained object (e.g. a Payslip inside its AWR 7-year window), reported as 'retained (wettelijke bewaarplicht)'",
     "reachedOn": "DsrRequestDetail /dsr-requests/:id, 'Preview erasure' then 'Confirm erasure' header buttons, both present in _lane/research/frontend-api-paths.txt",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-15-avg-dsr"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6197,7 +6306,8 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-objects.json:14 sidebar.showMetadata:true on EmployeeDetail; the same 'Audit history is a sidebar tab' pattern is repeated in the design notes of essentially every detail page across src/manifest.d/*.json (OpenRegister's own audit-history sidebar feature)",
     "reachedOn": "every object detail page, 'Audit history' sidebar tab",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "spec": "none"
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
@@ -6390,7 +6500,8 @@
     "state": "built",
     "evidence": "appinfo/info.xml:68-69 declares <php min-version=\"8.3\"/> and <nextcloud min-version=\"32\" max-version=\"34\"/>; humaniq is a Nextcloud app by construction, deployed on a self-managed or self-hosted Nextcloud instance, never a SaaS product of its own",
     "reachedOn": "n/a, inherent to being a Nextcloud app, not a page or route",
-    "owner": "nextcloud/server"
+    "owner": "nextcloud/server",
+    "spec": "none"
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
@@ -6421,7 +6532,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-administratie.json:28 Administration membership schema (one row binds an NC user to an administratie with a role); appinfo/routes.php:76 POST /api/administration/active -> administration#setActive; src/views/AdministrationSwitcher.vue injects the active administration on first paint and on switch",
     "reachedOn": "AdministrationSwitcher.vue mounted app-wide in src/App.vue, POST /api/administration/active (present in _lane/research/frontend-api-paths.txt)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-14-multi-administratie"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6452,7 +6564,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-administratie.json:20 Administration.mode enum standard/dga_single_person/eenmanszaak_no_payroll, resolved by AdministrationService and stamped into manifest.runtime.user.administrationMode; nc-vue's visibleIf primitive gates multi-person surfaces (org-chart, team-approval, roster) and, for eenmanszaak_no_payroll, the whole payroll surface",
     "reachedOn": "Administration settings; mode-gated menu surfaces fleet-wide once a mode is set; reversible with no data loss",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-07-single-person-modes"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6483,7 +6596,8 @@
     "state": "built",
     "evidence": "openspec/specs/hris-api-public/spec.md: 'humaniq builds no parallel REST/GraphQL/webhook/SCIM stack; external access is Nextcloud app passwords over OpenRegister's own API'; lib/Settings/register.d/hr-integrations.json:5 IntegrationAccount is a catalog only, not the API itself; no dedicated OpenAPI/API-docs artifact found under docs/",
     "reachedOn": "external systems call OpenRegister's generic object API (GET/POST/PUT/PATCH/DELETE /api/objects/{register}/{schema}) directly, authenticated with a Nextcloud app password; humaniq's own contribution is the IntegrationAccounts audit page",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-07-hris-api-public"
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
@@ -6548,7 +6662,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/platform-integrations-catalogue on 2026-09-27 for the missing half: configuring a working connection through integriq; the catalogue of intent is built. Before: lib/Settings/register.d/hr-integrations.json:10 IntegrationAccount description: 'deliberately NOT an authorization mechanism ... The actual access grant lives entirely in OpenRegister's own RBAC configuration ... outside this schema and outside any humaniq file'; field grantedSchemas (line 23) 'does NOT grant or enforce access, it is purely a record of intent'; src/manifest.d/hr-integrations.json:8-9 index page IntegrationAccounts /configuratie/integraties",
     "reachedOn": "IntegrationAccounts /configuratie/integraties, IntegrationAccountDetail /configuratie/integraties/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "platform-integrations-catalogue"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6580,7 +6695,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/platform-hr-workflows on 2026-09-27 for the missing half: HR processes beyond payroll as shipped, adoptable flows; the Loonrun flow is built. Before: lib/Settings/register.d/hr-objects.json:193 x-openregister-flows declares the 'Loonrun' flow with real custom nodes: humaniq.payroll-calculate (lib/Flow/PayrollCalculateNode.php), an openregister.user-task review/approval gate, humaniq.payroll-approve (lib/Flow/PayrollApproveNode.php), then glpost/netpay; the description at line 197 states 'The flow arrives disabled per the engine's adoption contract: enable it deliberately'",
     "reachedOn": "OpenRegister's own Flow admin UI is where the Loonrun flow is enabled and configured; no humaniq page authors, lists, or edits workflows itself",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "platform-hr-workflows"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6644,7 +6760,8 @@
     "state": "built",
     "evidence": "Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:388 page Store (type store, commit bf32851c 2026-09-04) adopts OpenRegister's store plane, which installs configuration sets other organisations publish (a leave policy, a job framework, onboarding flows); with no registry configured it shows the app's own items and makes no network call. Partial: no published HR configuration set exists yet to install. Before: grep -rn 'Store'|'template.store' src/manifest.d/*.json: no hits; no page or schema exists for installing a published, ready-made configuration such as a leave policy",
     "reachedOn": "Store /store (footer menu, StoreMenu)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "spec": "none"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6675,7 +6792,8 @@
     "state": "built",
     "evidence": "appinfo/routes.php:17-19 GET /api/setup/status, POST /api/setup/config, POST /api/setup/action/{actionId}; src/manifest.json:7-22 'setup' block (ADR-042 contract) with welcome/demo-data steps; lib/Controller/SetupController.php implements the endpoints and notes its version 'matches manifest.setup.version'",
     "reachedOn": "the platform's generic CnSetupWizard shell (nextcloud-vue), driven entirely by src/manifest.json's declarative setup block, shown on first admin visit, no humaniq-authored Vue component imports CnSetupWizard directly, which is expected for this shared ADR-042 mechanism",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "spec": "none"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6706,7 +6824,8 @@
     "state": "built",
     "evidence": "l10n/en.json and l10n/nl.json, 2115 translation keys each",
     "reachedOn": "app-wide, via Nextcloud's own personal locale setting",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-08-22-hrmq-i18n-locale-completeness"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6737,7 +6856,8 @@
     "state": "built",
     "evidence": "lib/Service/DemoDataService.php:120 install() reads a shipped demo-dataset descriptor and imports records generated from the app's own schemas; lib/Controller/SetupController.php:87,95,142 wires DemoDataService into the setup wizard's status/action flow, matching src/manifest.json's 'demo-data' step",
     "reachedOn": "the setup wizard's 'Load example data' step, on first run",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "spec": "none"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6768,7 +6888,8 @@
     "state": "built",
     "evidence": "lib/Listener/RegisterHoursLeafListener.php registers the humaniq-hours leaf on OpenRegister's RegisterLeafProvidersEvent (ADR-066), a render-surface-only descriptor (no data-provider, since the widget reads time entries through OpenRegister's own object API client-side); lib/AppInfo/Application.php registers the listener; client half in src/integrations/registerHoursLeaf.js shares the same id",
     "reachedOn": "a render-surface leaf mounted by a consuming app (e.g. dossiq) on its own case page via ADR-066, not a humaniq page of its own",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-11-hours-leaf-for-any-object"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6799,7 +6920,8 @@
     "state": "built",
     "evidence": "lib/Listener/RegisterAgendaLeafListener.php registers the agenda leaf on OpenRegister's RegisterLeafProvidersEvent, the same ADR-066 render-surface pattern as the hours leaf; lib/AppInfo/Application.php registers the listener",
     "reachedOn": "a render-surface leaf mounted by a consuming app on its own page via ADR-066, not a humaniq page of its own",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-30-agenda-rostering-and-resource-booking"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6830,7 +6952,8 @@
     "state": "built",
     "evidence": "appinfo/info.xml:69 <nextcloud min-version=\"32\" max-version=\"34\"/>; grep -rniF 'saml|oidc' lib/: no hits, humaniq has no auth code of its own",
     "reachedOn": "Nextcloud's own login flow, platform-wide; humaniq adds nothing and blocks nothing, so any SSO app the instance runs (user_saml/user_oidc) covers humaniq transparently",
-    "owner": "nextcloud/server"
+    "owner": "nextcloud/server",
+    "spec": "none"
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
@@ -6861,7 +6984,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/platform-integrations-catalogue on 2026-09-27. Before: grep -rliF marketplace lib src openspec: hits only in the rostering proposal's shift-swap 'marketplace' concept (an explicitly named non-goal, unrelated to third-party integrations) and the parity output file itself; no third-party integration marketplace exists",
     "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "platform-integrations-catalogue"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7402,7 +7526,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/payroll-reservation-payouts on 2026-09-27 for the missing half: an individual choice budget that accrues and can be spent on several goals; leave buy and sell is built. Before: src/manifest.d/hr-leave.json:221 the IKB-style leave buy and sell request (LeaveTransaction, lifecycle guarded by LeaveBuySellApprovalGuard in lib/Settings/register.d/hr-leave.json:317) settles leave hours in pay; no individual choice budget that accrues a percentage and can be spent on several goals (grep -rniE 'keuzebudget|\\bikb\\b' finds only this note)",
     "reachedOn": "MijnVerlofKopenVerkopen /mijn/verlof-kopen-verkopen, LeaveTransactionDetail /leave-transactions/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "payroll-reservation-payouts"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7434,7 +7559,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/payroll-special-regimes on 2026-09-27. Before: grep -rniE 'wethouder|burgemeester|politiek|ambtsdrager|wachtgeld' lib src: no hits; Employee.publicSectorRegime (lib/Settings/register.d/hr-objects.json:52) covers civil servants, not political office holders",
     "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "payroll-special-regimes"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7466,7 +7592,8 @@
     "state": "specified",
     "evidence": "openspec/specs/hris-api-public/spec.md: external access is Nextcloud app passwords over OpenRegister's generic object API, which a BI tool can poll on its own schedule; no OData or BI connector (grep -rniE 'odata|power ?bi' lib src: only DemoDataService name matches) Specified in ConductionNL/openregister openspec/changes/rapportage-bi-export (openregister lane, OpenSpec pass 2026-09-27).",
     "reachedOn": "external client on /api/objects/{register}/{schema}, no humaniq page",
-    "owner": "ConductionNL/openregister"
+    "owner": "ConductionNL/openregister",
+    "change": "openregister/rapportage-bi-export"
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
@@ -7498,7 +7625,8 @@
     "state": "specified",
     "evidence": "src/manifest.d/hr-documents.json:25 generated HR documents are rendered and stored by docudesk (lib/Settings/register.d/hr-documents.json:232 records a docudesk handoff per document) into Nextcloud Files; no link to an external DMS over ZGW or STUF-ZDS (grep -rniE 'zgw|zds|drc' lib src: no hits) Specified in ConductionNL/filinq openspec/changes/generate-store-in-case-system (filinq lane, OpenSpec pass 2026-09-27).",
     "reachedOn": "GeneratedDocuments /documents, GeneratedDocumentDetail /documents/:id",
-    "owner": "ConductionNL/filinq"
+    "owner": "ConductionNL/filinq",
+    "change": "filinq/generate-store-in-case-system"
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
@@ -7631,7 +7759,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/leave-approval-steps-and-history on 2026-09-27. Before: lib/Settings/register.d/hr-leave.json:41 the LeaveRequest lifecycle has one approve transition by a manager (NoSelfApprovalGuard); grep -rniE 'secondApprov|hrApprov|approvalChain' lib: no hits",
     "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "leave-approval-steps-and-history"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7662,7 +7791,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/leave-approval-steps-and-history on 2026-09-27 for the missing half: stamping who approved or rejected a leave request and when on the request itself. Before: lib/Settings/register.d/hr-leave.json:126 LeaveRequest.approvedBy is a plain field that nothing stamps (lib/Listener/TimesheetProcessStampListener.php:301 stamps approvedBy for timesheets only); the OpenRegister audit history sidebar on LeaveRequestDetail records who changed the status and when",
     "reachedOn": "LeaveRequestDetail /leave-requests/:id, Audit history sidebar tab",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "leave-approval-steps-and-history"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7693,7 +7823,8 @@
     "state": "built",
     "evidence": "humaniq has no own login; sign-in is Nextcloud's, whose password_policy app (Administration settings, Security) sets length, character classes, history and expiry; humaniq adds nothing",
     "reachedOn": "Nextcloud admin settings, Security section",
-    "owner": "nextcloud/server"
+    "owner": "nextcloud/server",
+    "spec": "none"
    },
    "provider": "nextcloud",
    "providerHow": "read-from-code",
@@ -7724,7 +7855,8 @@
     "state": "built",
     "evidence": "humaniq has no own login; Nextcloud's brute force protection throttles failed attempts per IP and the password_policy app can disable an account after a set number of failures",
     "reachedOn": "Nextcloud sign-in, no humaniq page",
-    "owner": "nextcloud/server"
+    "owner": "nextcloud/server",
+    "spec": "none"
    },
    "provider": "nextcloud",
    "providerHow": "read-from-code",
@@ -7951,7 +8083,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/payroll-period-edge-cases on 2026-09-27. Traced for that change: each month is computed on its own and the annual statement and the WKR assessment sum only humaniq payslips; nothing carries over year-to-date figures from a previous package. Before: not settled: grep -rniE 'openingBalance|priorYtd|beginsaldo|cumulat' lib/Service lib/Payroll: no hits for carried-over year to date figures, but the payroll engine's cumulative handling was not traced end to end",
     "reachedOn": "not traced",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "payroll-period-edge-cases"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8016,7 +8149,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/payroll-special-regimes on 2026-09-27. Before: grep -rniE 'rvu|vervroegd' lib src: no hits",
     "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "payroll-special-regimes"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8047,7 +8181,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-expense.json:145 Expense.vatAmount, filled by hand or read off the receipt (:149, :270); shown on src/manifest.d/hr-expense.json:4 ExpenseDetail",
     "reachedOn": "ExpenseDetail /expenses/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-07-15-receipt-ocr"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8078,7 +8213,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/self-service-policy-assistant on 2026-09-27. Before: grep -rniE 'hermiq|assistant|chatbot' lib src: no hits (see pending row rep-ai-assistant: only a read-only MCP surface on six schemas, no employee-facing assistant)",
     "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "self-service-policy-assistant"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8301,7 +8437,8 @@
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-objects.json:19 Employee.bsn is an ordinary property; records are keyed by OpenRegister UUID and employeeNumber, and every other schema points at Employee by employeeId, so the BSN is never a key",
     "reachedOn": "Employee records throughout; no page needed",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "spec": "none"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8343,6 +8480,25 @@
    "originUrl": "https://loket.nl/roadmap/"
   },
   {
+   "id": "ppl-civil-servant-status",
+   "area": "people",
+   "name": "Record which employees are civil servants and check their oath and side-activity disclosure.",
+   "humaniq": "yes",
+   "afas": "unchecked",
+   "visma-raet": "unchecked",
+   "hr2day": "unchecked",
+   "loket": "unchecked",
+   "personio": "unchecked",
+   "orangehrm": "unchecked",
+   "built": {
+    "state": "built",
+    "evidence": "openspec/specs/aor-ambtenarenrecht/spec.md REQ-AOR-001..004: the Employee schema records whether an employee is an ambtenaar and under which legal regime; two corpus rules require the ambtseed and the nevenwerkzaamheden disclosure for every ambtenaar, with seed data for both branches.",
+    "change": "2026-08-20-aor-ambtenarenrecht",
+    "owner": "ConductionNL/humaniq"
+   },
+   "source": "spec-round-2026-10-07"
+  },
+  {
    "id": "dm-week-53",
    "area": "payroll",
    "name": "Handle the 53rd week in a year when paying weekly or four-weekly.",
@@ -8365,7 +8521,8 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/payroll-period-edge-cases on 2026-09-27. Traced for that change: lib/Service/PayrollRunService.php:255 accepts only YYYY-MM periods (as do the flow calculate node, the pro-forma and the retro service) and the pack divides by the monthly tijdvak factor, so humaniq pays monthly only and cannot pay a weekly or four-weekly week 53. Before: not settled: lib/Settings/register.d/hr-objects.json:114 Payslip.period allows four-weekly YYYY-Pnn, but whether a year with a 53rd week or a 14th period is handled was not traced in the payroll engine",
     "reachedOn": "not traced",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "payroll-period-edge-cases"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8427,13 +8584,74 @@
     "state": "specified",
     "evidence": "Specified in openspec/changes/payroll-mutation-lineage on 2026-09-27 for the missing half: tracing a payslip line back to the input mutation that produced it. Before: pay-reproduce: a sealed payslip is recomputed from its stored inputs (lib/Service/PayrollReproduceService.php) and pay-mutation-report compares runs; the OpenRegister audit history records who changed each input; no per-mutation lineage from origin to payslip line",
     "reachedOn": "PayslipDetail /payslips/:id, PayrollMutationReportDetail /payroll-mutations/:id",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "payroll-mutation-lineage"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://loket.nl/roadmap/"
+  },
+  {
+   "id": "pay-pension-premium",
+   "area": "payroll",
+   "name": "Withhold and charge pension premiums on each payslip per pension scheme.",
+   "humaniq": "no",
+   "afas": "unchecked",
+   "visma-raet": "unchecked",
+   "hr2day": "unchecked",
+   "loket": "unchecked",
+   "personio": "unchecked",
+   "orangehrm": "unchecked",
+   "built": {
+    "state": "specified",
+    "evidence": "lib/Service/PayrollRunService.php:1063 writes pensionContribution 0.0 on every payslip; no pack step computes a pension premium. Specified in openspec/changes/payroll-engine-port-from-shillinq (DECISIONS 65 b, comparison for-ruben/payroll-engine-move-comparison.md).",
+    "change": "payroll-engine-port-from-shillinq",
+    "owner": "ConductionNL/humaniq"
+   },
+   "source": "spec-round-2026-10-07",
+   "note": "Ported from shillinq's dormant payroll engine (decision 65 b), rebuilt with a franchise. Open: which schemes and where their parameters live (design O1)."
+  },
+  {
+   "id": "pay-partial-period",
+   "area": "payroll",
+   "name": "Pay a starter or leaver only for the part of the period they were employed.",
+   "humaniq": "no",
+   "afas": "unchecked",
+   "visma-raet": "unchecked",
+   "hr2day": "unchecked",
+   "loket": "unchecked",
+   "personio": "unchecked",
+   "orangehrm": "unchecked",
+   "built": {
+    "state": "specified",
+    "evidence": "lib/Service/PayrollRunService.php coversPeriod() includes or excludes a whole employee per period; nothing scales the gross for a partial month. Specified in openspec/changes/payroll-engine-port-from-shillinq.",
+    "change": "payroll-engine-port-from-shillinq",
+    "owner": "ConductionNL/humaniq"
+   },
+   "source": "spec-round-2026-10-07",
+   "note": "Ported from shillinq proRataBruto (decision 65 b). Open: calendar days or working days (design O2)."
+  },
+  {
+   "id": "pay-wage-tax-remittance",
+   "area": "payroll",
+   "name": "Hand the wage tax return's amount to accounting as a draft payment to the tax authority.",
+   "humaniq": "partial",
+   "afas": "unchecked",
+   "visma-raet": "unchecked",
+   "hr2day": "unchecked",
+   "loket": "unchecked",
+   "personio": "unchecked",
+   "orangehrm": "unchecked",
+   "built": {
+    "state": "building",
+    "evidence": "lib/Service/WageTaxRemittanceService.php and occ humaniq:wagetax:remit (PR #632, merged e74a8451) write a draft APTransaction into shillinq per confirmed return; tasks 3.2 (pages) and 3.4 (live check) of openspec/changes/payroll-wage-tax-remittance-shillinq are open.",
+    "change": "payroll-wage-tax-remittance-shillinq",
+    "owner": "ConductionNL/humaniq"
+   },
+   "source": "spec-round-2026-10-07",
+   "note": "DECISIONS 65 c. Sits next to the payroll journal (pay-gl-journal) and the net pay batch (pay-sepa)."
   },
   {
    "id": "dm-document-to-employee",
