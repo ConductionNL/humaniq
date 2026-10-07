@@ -8811,7 +8811,32 @@
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://support.personio.de/hc/en-us/articles/38314656674333-Personio-MCP-server-Beta-access-overview",
-   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-08-17-declared-actions-and-mcp-scope (a schema can declare a write action as an MCP tool); humaniq declaring the time-off action is humaniq's, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister). Corrections round 8 (2026-09-28): built.state specified to none, because no humaniq change specifies the missing half. The archived openspec/changes/archive/2026-09-07-humaniq-mcp-adoption only declares six read-only schemas, and its spec openspec/specs/humaniq-mcp-surface/spec.md:41-42 and :89-90 refuses every write verb and the leave cluster, so it does not cover starting a time-off request; the open change self-service-policy-assistant puts submitting leave from the chat out of scope (proposal.md:88). Corrections round 9 (2026-09-28): built.state none to decided-no. Starting a request such as time off from an AI tool is a recorded non-goal of humaniq's main spec openspec/specs/humaniq-mcp-surface/spec.md: :41-42 \"The create, update and delete verbs MUST NOT be enabled on any humaniq schema, and no humaniq service may carry #[McpTool]\", and :89-90 keeps LeaveRequest, LeaveBalance and SickLeaveCase off the tool surface because sick leave is health data. The read half stays declared (lib/Settings/register.d/hr-org.json:10)."
+   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-08-17-declared-actions-and-mcp-scope (a schema can declare a write action as an MCP tool); humaniq declaring the time-off action is humaniq's, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister). Corrections round 8 (2026-09-28): built.state specified to none, because no humaniq change specifies the missing half. The archived openspec/changes/archive/2026-09-07-humaniq-mcp-adoption only declares six read-only schemas, and its spec openspec/specs/humaniq-mcp-surface/spec.md:41-42 and :89-90 refuses every write verb and the leave cluster, so it does not cover starting a time-off request; the open change self-service-policy-assistant puts submitting leave from the chat out of scope (proposal.md:88). Corrections round 9 (2026-09-28): built.state none to decided-no. Starting a request such as time off from an AI tool is a recorded non-goal of humaniq's main spec openspec/specs/humaniq-mcp-surface/spec.md: :41-42 \"The create, update and delete verbs MUST NOT be enabled on any humaniq schema, and no humaniq service may carry #[McpTool]\", and :89-90 keeps LeaveRequest, LeaveBalance and SickLeaveCase off the tool surface because sick leave is health data. The read half stays declared (lib/Settings/register.d/hr-org.json:10). Spec round 2 (2026-10-07): the read-only half is its own row, dm-mcp-read-only (built); this row stays decided-no for write tools."
+  },
+  {
+   "id": "dm-mcp-read-only",
+   "area": "platform",
+   "name": "Connect an AI tool to the HR system through an MCP server that can search and read vacancies, org units, assets, timesheets and expenses, with no write tools.",
+   "humaniq": "partial",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "built": {
+    "state": "built",
+    "evidence": "openspec/specs/humaniq-mcp-surface/spec.md: x-openregister-mcp blocks at lib/Settings/register.d/hr-ats.json:18 (Vacancy), hr-org.json:32 (OrgUnit), hr-assets.json:19 and :195 (Asset, AssetAssignment), hr-timesheet.json:252 (Timesheet) and hr-expense.json:126 (Expense) enable search and get only, scope read, readOnlyHint true. OpenRegister validates the block (openregister lib/Db/SchemaMapper.php:2624) and derives one tool provider per app from it at boot (lib/AppInfo/Application.php:3959-4041, ai-mcp REQ-DERIVED-001), at openregister origin/development 26ff809cfb. Partial: employee, contract, pay, leave and sickness data are deliberately kept off the surface, and the derived tools were read from code, not driven from an MCP client.",
+    "spec": "openspec/specs/humaniq-mcp-surface",
+    "change": "2026-09-07-humaniq-mcp-adoption",
+    "owner": "ConductionNL/humaniq",
+    "readOn": "2026-10-07",
+    "reachedOn": "an external MCP client on OpenRegister's MCP endpoint, tools humaniq.{schema}.search and humaniq.{schema}.get; no humaniq page"
+   },
+   "provider": "openregister",
+   "providerHow": "read-from-code",
+   "source": "spec-round-2026-10-07",
+   "note": "Split from dm-mcp-server (spec round 2, 2026-10-07): that row stays decided-no for write tools such as starting a time-off request; this row is the read-only surface humaniq ships."
   },
   {
    "id": "dm-approvals-dashboard",
