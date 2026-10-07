@@ -18416,22 +18416,15 @@
 				"type": "info"
 			},
 			{
-				"body": "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Pick \"None\" on a production install.",
+				"body": "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Each card has its own Load button. Pick \"None\" on a production install.",
 				"configKey": "demo_dataset",
+				"loadAction": "load-demo-data",
 				"display": "cards",
 				"id": "demo-data",
 				"optionsSource": "datasets",
 				"required": false,
 				"title": "Load example data?",
 				"type": "choice"
-			},
-			{
-				"action": "load-demo-data",
-				"body": "Loads what you picked. The data is obviously sample data, it is safe to run more than once, and you can delete it afterwards.",
-				"id": "load-demo-data",
-				"required": false,
-				"title": "Load the example data",
-				"type": "run-action"
 			},
 			{
 				"body": "That's it. Open Employees to see your people, or reopen this setup anytime from the app's … menu.",

@@ -48,9 +48,10 @@ async function api(
 	page: Page,
 	method: string,
 	apiPath: string,
+	body?: unknown,
 ): Promise<{ status: number; json: any }> {
 	return await page.evaluate(
-		async ({ method, apiPath }) => {
+		async ({ method, apiPath, body }) => {
 			const res = await fetch(apiPath, {
 				method,
 				headers: {
@@ -59,6 +60,7 @@ async function api(
 					requesttoken: (window as any).OC?.requestToken || "",
 					"OCS-APIREQUEST": "true",
 				},
+				body: body === undefined ? undefined : JSON.stringify(body),
 			});
 			let json: any;
 			try {
@@ -68,7 +70,7 @@ async function api(
 			}
 			return { status: res.status, json };
 		},
-		{ method, apiPath },
+		{ method, apiPath, body },
 	);
 }
 
@@ -109,6 +111,27 @@ test.describe("ADR-111 demo data", () => {
 			Object.keys(res.json?.steps ?? {}),
 			"setup/status must report a demo-data step",
 		).toContain("demo-data");
+		// The cards load themselves (`loadAction`), so the separate load step is
+		// gone from the manifest and from the status document.
+		expect(
+			Object.keys(res.json?.steps ?? {}),
+			"the run-action load step is retired",
+		).not.toContain("load-demo-data");
+	});
+
+	test("a card that names an unknown dataset loads nothing", async ({
+		page,
+	}) => {
+		// The card's Load button posts `{ dataset }` to the step's loadAction.
+		const res = await api(
+			page,
+			"POST",
+			`${BASE}/api/setup/action/load-demo-data`,
+			{ dataset: "atlantis" },
+		);
+
+		expect(res.status).toBe(400);
+		expect(res.json?.success).toBe(false);
 	});
 
 	test("installing the demo data reports HOW MUCH landed, not just success", async ({
@@ -154,11 +177,13 @@ test.describe("ADR-111 demo data", () => {
 	}) => {
 		// The step body tells the operator it is "safe to run more than once".
 		// That sentence is a contract; this asserts the server keeps it rather
-		// than erroring or reporting failure on a second pass.
+		// than erroring or reporting failure on a second pass. Posted the way a
+		// dataset card's Load button posts it.
 		const again = await api(
 			page,
 			"POST",
-			`${BASE}/api/setup/action/install-demo-data`,
+			`${BASE}/api/setup/action/load-demo-data`,
+			{ dataset: "humaniq-demo" },
 		);
 
 		expect(again.status).toBe(200);
