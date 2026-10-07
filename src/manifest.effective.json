@@ -18418,9 +18418,9 @@
 			{
 				"body": "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Each card has its own Load button. Pick \"None\" on a production install.",
 				"configKey": "demo_dataset",
-				"loadAction": "load-demo-data",
 				"display": "cards",
 				"id": "demo-data",
+				"loadAction": "load-demo-data",
 				"optionsSource": "datasets",
 				"required": false,
 				"title": "Load example data?",
