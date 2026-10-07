@@ -371,7 +371,7 @@
 			"label": "Reports",
 			"icon": "ChartBoxOutline",
 			"route": "Reports",
-			"section": "footer",
+			"section": "settings",
 			"order": 95
 		},
 		{
