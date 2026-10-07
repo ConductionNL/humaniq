@@ -21,17 +21,10 @@
 				"display": "cards",
 				"optionsSource": "datasets",
 				"configKey": "demo_dataset",
+				"loadAction": "load-demo-data",
 				"required": false,
 				"title": "Load example data?",
-				"body": "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Pick \"None\" on a production install."
-			},
-			{
-				"id": "load-demo-data",
-				"type": "run-action",
-				"action": "load-demo-data",
-				"required": false,
-				"title": "Load the example data",
-				"body": "Loads what you picked. The data is obviously sample data, it is safe to run more than once, and you can delete it afterwards."
+				"body": "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Each card has its own Load button. Pick \"None\" on a production install."
 			},
 			{
 				"id": "done",
