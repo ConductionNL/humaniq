@@ -465,7 +465,7 @@
     "evidence": "lib/Settings/register.d/hr-objects.json Employee schema (employeeNumber, bsn, firstName, lastName, dateOfBirth, startDate, endDate, grossMonthlySalary, iban and more); src/manifest.effective.json pages Employees (index) and EmployeeDetail (detail)",
     "reachedOn": "Employees /employees (menu Personeel), EmployeeDetail /employees/:id",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/employee-and-contract-records"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -497,7 +497,7 @@
     "evidence": "lib/Settings/register.d/hr-objects.json:46 Employee.iban carries pattern ^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$ (its own x-notes call this a shape check only, mod-97 checksum a non-goal); grep -rniF bsn lib/Settings/register.d/hr-objects.json shows Employee.bsn has no pattern or format keyword at all; Employee.dateOfBirth carries only format: date, no plausibility or age check",
     "reachedOn": "enforced by OpenRegister schema validation on every Employee create/edit, Employees /employees, EmployeeDetail /employees/:id",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/employee-and-contract-records"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -530,7 +530,7 @@
     "evidence": "lib/Settings/register.d/hr-objects.json EmploymentContract schema (employeeId $ref Employee, type enum permanent/temporary/agency/minijob/bbl, writtenContract, startDate, endDate, salary fields); src/manifest.effective.json pages EmploymentContracts (index) and EmploymentContractDetail (detail)",
     "reachedOn": "EmploymentContracts /contracts (menu Personeel), EmploymentContractDetail /contracts/:id",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/employee-and-contract-records"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6793,7 +6793,7 @@
     "evidence": "appinfo/routes.php:17-19 GET /api/setup/status, POST /api/setup/config, POST /api/setup/action/{actionId}; src/manifest.json:7-22 'setup' block (ADR-042 contract) with welcome/demo-data steps; lib/Controller/SetupController.php implements the endpoints and notes its version 'matches manifest.setup.version'",
     "reachedOn": "the platform's generic CnSetupWizard shell (nextcloud-vue), driven entirely by src/manifest.json's declarative setup block, shown on first admin visit, no humaniq-authored Vue component imports CnSetupWizard directly, which is expected for this shared ADR-042 mechanism",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/first-time-setup"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6857,7 +6857,7 @@
     "evidence": "lib/Service/DemoDataService.php:120 install() reads a shipped demo-dataset descriptor and imports records generated from the app's own schemas; lib/Controller/SetupController.php:87,95,142 wires DemoDataService into the setup wizard's status/action flow, matching src/manifest.json's 'demo-data' step",
     "reachedOn": "the setup wizard's 'Load example data' step, on first run",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/first-time-setup"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8439,7 +8439,7 @@
     "evidence": "lib/Settings/register.d/hr-objects.json:19 Employee.bsn is an ordinary property; records are keyed by OpenRegister UUID and employeeNumber, and every other schema points at Employee by employeeId, so the BSN is never a key",
     "reachedOn": "Employee records throughout; no page needed",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/specs/employee-and-contract-records"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
