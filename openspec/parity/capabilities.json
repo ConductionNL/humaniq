@@ -394,7 +394,10 @@
     "employee-and-contract-records",
     "register-prefill",
     "aor-ambtenarenrecht",
-    "secondment-and-side-activities"
+    "secondment-and-side-activities",
+    "employee-change-approval",
+    "employee-history",
+    "humaniq-employee-relations"
    ]
   },
   {
@@ -418,7 +421,8 @@
    "specs": [
     "org-chart-basic",
     "org-chart-view",
-    "formation-positions"
+    "formation-positions",
+    "functiehuis-hr21"
    ]
   },
   {
@@ -439,7 +443,8 @@
    "overlay": null,
    "specs": [
     "cao-library",
-    "payroll-cao-components"
+    "payroll-cao-components",
+    "payroll-pack-and-table-updates"
    ]
   },
   {
@@ -452,7 +457,8 @@
     "document-dossier-avg",
     "humaniq-docudesk-documents",
     "dossier-completeness",
-    "documents-employer-statement-from-the-contract"
+    "documents-employer-statement-from-the-contract",
+    "hr-document-signing"
    ]
   },
   {
@@ -476,7 +482,11 @@
     "candidate-assessment",
     "hiring-cv-profile-extraction",
     "interview-scheduling",
-    "offer-esign"
+    "offer-esign",
+    "portal-contribution",
+    "recruiting-applications",
+    "recruiting-vacancies",
+    "vacancy-multiposting"
    ]
   },
   {
@@ -513,7 +523,8 @@
     "leave-accrual-job",
     "leave-expiry-and-carry-over",
     "leave-buy-sell",
-    "leave-approval-steps-and-history"
+    "leave-approval-steps-and-history",
+    "leave-hours-from-pattern"
    ]
   },
   {
@@ -534,7 +545,9 @@
    "overlay": null,
    "specs": [
     "absence-deadlines-and-signals",
-    "sick-pay-calc"
+    "sick-pay-calc",
+    "absence-rate",
+    "verzuim-wvp"
    ]
   },
   {
@@ -558,7 +571,9 @@
    "specs": [
     "time-entry-capture",
     "humaniq-timesheet-approved-typed-event",
-    "humaniq-dashboard-steering-indicators"
+    "humaniq-dashboard-steering-indicators",
+    "employer-hourly-cost-rate",
+    "hours-leaf"
    ]
   },
   {
@@ -588,7 +603,9 @@
    "title_nl": "Agenda, beschikbaarheid en reserveringen",
    "area": "planning",
    "overlay": null,
-   "specs": []
+   "specs": [
+    "working-hours-per-person"
+   ]
   },
   {
    "slug": "expenses",
@@ -612,7 +629,8 @@
     "expenses-travel-calculation",
     "fleet-bijtelling",
     "register-prefill",
-    "asset-management"
+    "asset-management",
+    "mileage-rules"
    ]
   },
   {
@@ -627,7 +645,9 @@
     "30-procent-regeling",
     "payroll-engine-port-from-shillinq",
     "payroll-period-edge-cases",
-    "proforma-payslip"
+    "proforma-payslip",
+    "jurisdiction-packs",
+    "payroll-core-schema"
    ]
   },
   {
@@ -667,7 +687,8 @@
     "dga-payroll-mode",
     "loonbeslag",
     "payroll-special-regimes",
-    "single-person-modes"
+    "single-person-modes",
+    "third-party-payments"
    ]
   },
   {
@@ -694,7 +715,11 @@
    "specs": [
     "filings-wage-tax-message",
     "filings-correction-message",
-    "filings-pension-upa-message"
+    "filings-pension-upa-message",
+    "abp-aansluiting",
+    "awf-premium-review",
+    "loonaangifte-filing-lifecycle",
+    "pension-filing-upa-mvp"
    ]
   },
   {
@@ -718,7 +743,8 @@
    "specs": [
     "performance-reviews",
     "goals-okr",
-    "talent-engagement-surveys"
+    "talent-engagement-surveys",
+    "performance-review-cycles"
    ]
   },
   {
@@ -739,7 +765,10 @@
    "title_nl": "Opleidingen, certificaten en vaardigheden",
    "area": "talent",
    "overlay": null,
-   "specs": []
+   "specs": [
+    "bhv-organisatie",
+    "training-and-lms-sync"
+   ]
   },
   {
    "slug": "mijn-hr-self-service",
@@ -753,7 +782,9 @@
     "hrmq-personal-dashboard",
     "mss-team-scope",
     "department-figures",
-    "humaniq-timesheet-approval"
+    "humaniq-timesheet-approval",
+    "announcements-and-digest",
+    "approvals-inbox"
    ]
   },
   {
@@ -806,7 +837,8 @@
    "area": "compliance",
    "overlay": null,
    "specs": [
-    "avg-dsr"
+    "avg-dsr",
+    "personnel-retention-expiry"
    ]
   },
   {
@@ -815,7 +847,9 @@
    "title_nl": "Rollen, veldrechten en audittrail",
    "area": "compliance",
    "overlay": null,
-   "specs": []
+   "specs": [
+    "humaniq-roles-and-field-access"
+   ]
   },
   {
    "slug": "secure-sign-in",
@@ -837,7 +871,8 @@
     "hris-api-public",
     "platform-integrations-catalogue",
     "hr-lifecycle-events",
-    "platform-hr-workflows"
+    "platform-hr-workflows",
+    "humaniq-notifications"
    ]
   },
   {
@@ -850,9 +885,17 @@
     "first-time-setup",
     "hrmq-i18n-locale-completeness",
     "multi-administratie",
-    "single-person-modes"
+    "single-person-modes",
+    "humaniq-i18n-form-surface"
    ]
   }
+ ],
+ "internalSpecs": [
+  "app-identity",
+  "humaniq-manifest-pipeline",
+  "humaniq-test-coverage-baseline",
+  "source-licensing",
+  "portal-schemas"
  ],
  "providers": [
   {
