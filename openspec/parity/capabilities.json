@@ -897,6 +897,173 @@
   "source-licensing",
   "portal-schemas"
  ],
+ "specScreens": {
+  "abp-aansluiting": {
+   "board": "HuAangiften"
+  },
+  "absence-rate": {
+   "board": "HuVerzuimdossier"
+  },
+  "announcements-and-digest": {
+   "board": "HuMijnHr"
+  },
+  "approvals-inbox": {
+   "board": "HuMijnGoedkeuringen"
+  },
+  "asset-management": {
+   "board": "HuBedrijfsmiddelen"
+  },
+  "awf-premium-review": {
+   "board": "HuAangiften"
+  },
+  "bhv-organisatie": {
+   "board": "HuOpleidingen"
+  },
+  "candidate-assessment": {
+   "board": "HuSollicitatie"
+  },
+  "department-figures": {
+   "board": "HuMijnAfdeling"
+  },
+  "dossier-completeness": {
+   "board": "HuMedewerkerDossier"
+  },
+  "employee-change-approval": {
+   "board": "HuMedewerker"
+  },
+  "employee-history": {
+   "board": "HuMedewerker"
+  },
+  "employee-relations-cases": {
+   "board": "HuRelatiezaak"
+  },
+  "employer-hourly-cost-rate": {
+   "board": "HuProjecturen"
+  },
+  "flex-contract-rules": {
+   "board": "HuMedewerker"
+  },
+  "formation-positions": {
+   "board": "HuFormatie"
+  },
+  "functiehuis-hr21": {
+   "board": "HuFormatie"
+  },
+  "hire-to-employee": {
+   "board": "HuSollicitatie"
+  },
+  "hours-leaf": {
+   "board": "HuProjecturen"
+  },
+  "hr-document-signing": {
+   "board": "HuMedewerkerDossier"
+  },
+  "hr-lifecycle-events": {
+   "board": "HuKoppelingen"
+  },
+  "humaniq-dashboard-steering-indicators": {
+   "board": "HuDashboard"
+  },
+  "humaniq-docudesk-documents": {
+   "board": "HuMedewerkerDossier"
+  },
+  "humaniq-employee-relations": {
+   "board": "HuMedewerker"
+  },
+  "humaniq-expenses": {
+   "board": "HuDeclaratie"
+  },
+  "humaniq-i18n-form-surface": {
+   "board": "HuInrichten"
+  },
+  "humaniq-notifications": {
+   "board": "HuInstellingen"
+  },
+  "humaniq-roles-and-field-access": {
+   "board": "HuInstellingen"
+  },
+  "humaniq-timesheet-approval": {
+   "board": "HuMijnGoedkeuringen"
+  },
+  "jurisdiction-packs": {
+   "board": "HuLoonpakketten"
+  },
+  "leave-hours-from-pattern": {
+   "board": "HuVerlofaanvraag"
+  },
+  "loonaangifte-filing-lifecycle": {
+   "board": "HuAangiften"
+  },
+  "mileage-rules": {
+   "board": "HuDeclaratie"
+  },
+  "offboarding-completion": {
+   "board": "HuUitdienst"
+  },
+  "offboarding-wizard": {
+   "board": "HuUitdienst"
+  },
+  "onboarding-wizard": {
+   "board": "HuInwerken"
+  },
+  "org-chart-view": {
+   "board": "HuOrganogram"
+  },
+  "pay-transparency": {
+   "board": "HuBeloningsronde"
+  },
+  "payroll-core-schema": {
+   "board": "HuSalarisrun"
+  },
+  "payroll-pack-and-table-updates": {
+   "board": "HuLoonpakketten"
+  },
+  "pension-filing-upa-mvp": {
+   "board": "HuAangiften"
+  },
+  "performance-review-cycles": {
+   "board": "HuGesprekscyclus"
+  },
+  "personnel-retention-expiry": {
+   "board": "HuAvgVerzoek"
+  },
+  "portal-audiences": {
+   "board": "HuWerkenBij"
+  },
+  "portal-contribution": {
+   "board": "HuWerkenBij"
+  },
+  "recruiting-applications": {
+   "board": "HuSollicitatie"
+  },
+  "recruiting-vacancies": {
+   "board": "HuVacature"
+  },
+  "register-prefill": {
+   "board": [
+    "HuBedrijfsmiddelen",
+    "HuMedewerker"
+   ]
+  },
+  "secondment-and-side-activities": {
+   "board": "HuMedewerker"
+  },
+  "third-party-payments": {
+   "board": "HuSalarisBetalen"
+  },
+  "training-and-lms-sync": {
+   "board": "HuOpleidingen"
+  },
+  "vacancy-multiposting": {
+   "board": "HuVacature"
+  },
+  "verzuim-wvp": {
+   "board": "HuVerzuimdossier"
+  },
+  "working-hours-per-person": {
+   "board": "HuAgenda"
+  }
+ },
  "providers": [
   {
    "key": "humaniq",
@@ -985,7 +1152,14 @@
    "providerHow": "read-from-code",
    "feature": "employee-records",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": [
+     "HuMedewerker",
+     "HuMedewerkers"
+    ]
+   }
   },
   {
    "id": "ppl-bsn-iban-validation",
@@ -1018,7 +1192,11 @@
    "feature": "employee-records",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Only IBAN gets a real check, and by the schema's own note it is a shape regex, not a mod-97 checksum. BSN has no elfproef or format check anywhere in lib/Standards or the schema. Date of birth gets only generic ISO date parsing."
+   "note": "Only IBAN gets a real check, and by the schema's own note it is a shape regex, not a mod-97 checksum. BSN has no elfproef or format check anywhere in lib/Standards or the schema. Date of birth gets only generic ISO date parsing.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerker"
+   }
   },
   {
    "id": "ppl-contracts",
@@ -1050,7 +1228,11 @@
    "providerHow": "read-from-code",
    "feature": "employee-records",
    "featureConfidence": "medium",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerker"
+   }
   },
   {
    "id": "ppl-chain-rule",
@@ -1084,7 +1266,11 @@
    "feature": "flex-and-fixed-term",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "hr-signals' design.md and proposal.md both name ketenregeling (Wab 3x3) chain counting as a deliberate non-goal/follow-up. The successor check that does exist (nl-signaal-contract-verloopt) only looks for one later contract, not a legal 3-contract/3-year chain, so it cannot substitute."
+   "note": "hr-signals' design.md and proposal.md both name ketenregeling (Wab 3x3) chain counting as a deliberate non-goal/follow-up. The successor check that does exist (nl-signaal-contract-verloopt) only looks for one later contract, not a legal 3-contract/3-year chain, so it cannot substitute.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerker"
+   }
   },
   {
    "id": "ppl-transition-payment",
@@ -1118,7 +1304,11 @@
    "feature": "offboarding",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "The row asks the system to calculate the statutory amount. The code only requires HR to type a number in manually before offboarding can close (BW 7:673 presence check); no formula exists anywhere in the codebase."
+   "note": "The row asks the system to calculate the statutory amount. The code only requires HR to type a number in manually before offboarding can close (BW 7:673 presence check); no formula exists anywhere in the codebase.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUitdienst"
+   }
   },
   {
    "id": "ppl-contract-expiry-signal",
@@ -1151,7 +1341,11 @@
    "feature": "hr-dashboard",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Probation-ending is a separate rule (nl-onboarding-proeftijd-bewaking), not part of the two signals named in this row's hint; both are wired and both feed the same Dashboard obligations list."
+   "note": "Probation-ending is a separate rule (nl-onboarding-proeftijd-bewaking), not part of the two signals named in this row's hint; both are wired and both feed the same Dashboard obligations list.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDashboard"
+   }
   },
   {
    "id": "ppl-jubilee-signal",
@@ -1215,7 +1409,11 @@
    "providerHow": "read-from-code",
    "feature": "org-structure",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuOrganogram"
+   }
   },
   {
    "id": "ppl-org-chart",
@@ -1249,7 +1447,11 @@
    "feature": "org-structure",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "You can walk the hierarchy one click at a time via parent/child links and see who manages a unit, but there is no visual org chart; the spec explicitly names the D3 tree visualization as a descoped follow-up, not something built."
+   "note": "You can walk the hierarchy one click at a time via parent/child links and see who manages a unit, but there is no visual org chart; the spec explicitly names the D3 tree visualization as a descoped follow-up, not something built.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuOrganogram"
+   }
   },
   {
    "id": "ppl-placements",
@@ -1281,7 +1483,11 @@
    "providerHow": "read-from-code",
    "feature": "org-structure",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuOrganogram"
+   }
   },
   {
    "id": "ppl-position-management",
@@ -1314,7 +1520,11 @@
    "providerHow": "read-from-code",
    "feature": "org-structure",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuOrganogram"
+   }
   },
   {
    "id": "ppl-job-framework",
@@ -1348,7 +1558,11 @@
    "feature": "org-structure",
    "featureConfidence": "high",
    "source": "own",
-   "note": "Works as a lookup and grading link, but the schema's own description says the seeded HR21 library is an illustrative subset, not claimed-complete, and allowCreate is false everywhere so nobody can add a missing normfunctie through the app."
+   "note": "Works as a lookup and grading link, but the schema's own description says the seeded HR21 library is an illustrative subset, not claimed-complete, and allowCreate is false everywhere so nobody can add a missing normfunctie through the app.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuFormatie"
+   }
   },
   {
    "id": "ppl-salary-bands",
@@ -1380,7 +1594,11 @@
    "providerHow": "read-from-code",
    "feature": "compensation-cycles",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuCao"
+   }
   },
   {
    "id": "ppl-cao-library",
@@ -1412,7 +1630,11 @@
    "providerHow": "read-from-code",
    "feature": "cao-library",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuCao"
+   }
   },
   {
    "id": "ppl-cao-updates",
@@ -1446,7 +1668,14 @@
    "feature": "cao-library",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Both paths to a legislation update need a manual, out-of-band step: an app upgrade for bundled data, or a raw API call with no UI for an uploaded pack. Neither is automatic and neither has a page."
+   "note": "Both paths to a legislation update need a manual, out-of-band step: an app upgrade for bundled data, or a raw API call with no UI for an uploaded pack. Neither is automatic and neither has a page.",
+   "screen": {
+    "canvas": "design-system",
+    "board": [
+     "HuCao",
+     "HuLoonpakketten"
+    ]
+   }
   },
   {
    "id": "ppl-personnel-dossier",
@@ -1478,7 +1707,11 @@
    "providerHow": "read-from-code",
    "feature": "personnel-dossier",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkerDossier"
+   }
   },
   {
    "id": "ppl-generate-documents",
@@ -1511,7 +1744,11 @@
    "feature": "personnel-dossier",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Correcting an earlier fact passed down for this row: the lookup is NOT a bare isInstalled('docudesk')/OCA\\\\DocuDesk class reference that would silently no-op against a renamed filinq. HrDocumentService and OfferEsignService both go through FleetAppId, whose candidate lists try the new name ('filinq', 'OCA\\\\Filinq') first and the old one second, so this resolves correctly against a current filinq install. Depends on filinq (or docudesk) actually being installed; with neither installed the command/action degrades to a logged no-op rather than an error."
+   "note": "Correcting an earlier fact passed down for this row: the lookup is NOT a bare isInstalled('docudesk')/OCA\\\\DocuDesk class reference that would silently no-op against a renamed filinq. HrDocumentService and OfferEsignService both go through FleetAppId, whose candidate lists try the new name ('filinq', 'OCA\\\\Filinq') first and the old one second, so this resolves correctly against a current filinq install. Depends on filinq (or docudesk) actually being installed; with neither installed the command/action degrades to a logged no-op rather than an error.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkerDossier"
+   }
   },
   {
    "id": "ppl-esign-documents",
@@ -1545,7 +1782,11 @@
    "feature": "personnel-dossier",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "The only e-signature path in the whole codebase is offer-esign, scoped to a recruiting Application at the aanbod stage. An HR document about an existing employee (contract, getuigschrift, werkgeversverklaring) can be GENERATED but never sent for e-signature; this row and hir-offer-letter are the same underlying capability."
+   "note": "The only e-signature path in the whole codebase is offer-esign, scoped to a recruiting Application at the aanbod stage. An HR document about an existing employee (contract, getuigschrift, werkgeversverklaring) can be GENERATED but never sent for e-signature; this row and hir-offer-letter are the same underlying capability.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkerDossier"
+   }
   },
   {
    "id": "ppl-employee-timeline",
@@ -1579,7 +1820,11 @@
    "feature": "employee-records",
    "featureConfidence": "high",
    "source": "own",
-   "note": "The hint's EmployeeTimeline service is a false lead: it exists, but it powers the Dashboard's fleet-wide headcount/turnover trend, not a per-employee history view. EmployeeDetail shows every related record type in its own separate panel; nothing merges them onto one timeline."
+   "note": "The hint's EmployeeTimeline service is a false lead: it exists, but it powers the Dashboard's fleet-wide headcount/turnover trend, not a per-employee history view. EmployeeDetail shows every related record type in its own separate panel; nothing merges them onto one timeline.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerker"
+   }
   },
   {
    "id": "ppl-interns",
@@ -1611,7 +1856,11 @@
    "providerHow": "read-from-code",
    "feature": "flex-and-fixed-term",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkers"
+   }
   },
   {
    "id": "ppl-flex-workers",
@@ -1644,7 +1893,11 @@
    "feature": "flex-and-fixed-term",
    "featureConfidence": "high",
    "source": "own",
-   "note": "humaniq models the uitzendkracht as the agency's OWN Employee (it serves the uitzendbureau, not a client 'inlener' tracking someone else's flex worker), openspec/specs/uitzend-flexpool/spec.md states this design choice explicitly."
+   "note": "humaniq models the uitzendkracht as the agency's OWN Employee (it serves the uitzendbureau, not a client 'inlener' tracking someone else's flex worker), openspec/specs/uitzend-flexpool/spec.md states this design choice explicitly.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkers"
+   }
   },
   {
    "id": "ppl-bulk-mutations",
@@ -1678,7 +1931,14 @@
    "feature": "compensation-cycles",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Per the occ-only rule: the only way to apply a raise to many employees in one action is occ humaniq:comp:effectuate, with no page. The UI path effectuates proposals one at a time."
+   "note": "Per the occ-only rule: the only way to apply a raise to many employees in one action is occ humaniq:comp:effectuate, with no page. The UI path effectuates proposals one at a time.",
+   "screen": {
+    "canvas": "design-system",
+    "board": [
+     "HuBeloningsronde",
+     "HuMedewerkers"
+    ]
+   }
   },
   {
    "id": "ppl-brp-lookup",
@@ -1711,7 +1971,11 @@
    "providerHow": "read-from-code",
    "feature": "employee-records",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerker"
+   }
   },
   {
    "id": "ppl-custom-fields",
@@ -1744,7 +2008,11 @@
    "feature": "employee-records",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "This is a platform capability inherited from OpenRegister's schema editor, not something humaniq built itself; an HR admin would leave the humaniq app to use it."
+   "note": "This is a platform capability inherited from OpenRegister's schema editor, not something humaniq built itself; an HR admin would leave the humaniq app to use it.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerker"
+   }
   },
   {
    "id": "ppl-employee-relations",
@@ -1778,7 +2046,11 @@
    "feature": "employee-relations",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "The spec name is misleading: it is about a schema $ref resolving correctly (an OpenRegister relations fix), not about recording grievances or disciplinary cases. No schema for that exists in the app at all."
+   "note": "The spec name is misleading: it is about a schema $ref resolving correctly (an OpenRegister relations fix), not about recording grievances or disciplinary cases. No schema for that exists in the app at all.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuRelatiezaak"
+   }
   },
   {
    "id": "hir-vacancies",
@@ -1810,7 +2082,11 @@
    "providerHow": "read-from-code",
    "feature": "recruiting",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVacature"
+   }
   },
   {
    "id": "hir-career-page",
@@ -1844,7 +2120,11 @@
    "feature": "recruiting",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "This is planned to live in portaliq per ADR-046, but the shipped PortalContributionProvider carries no candidate audience yet, there is no public page a candidate can reach today."
+   "note": "This is planned to live in portaliq per ADR-046, but the shipped PortalContributionProvider carries no candidate audience yet, there is no public page a candidate can reach today.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuWerkenBij"
+   }
   },
   {
    "id": "hir-multiposting",
@@ -1878,7 +2158,11 @@
    "feature": "recruiting",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Posting runs through integriq (one source and mapping per board); the flows ship disabled per the engine adoption contract."
+   "note": "Posting runs through integriq (one source and mapping per board); the flows ship disabled per the engine adoption contract.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVacature"
+   }
   },
   {
    "id": "hir-applicant-pipeline",
@@ -1910,7 +2194,11 @@
    "providerHow": "read-from-code",
    "feature": "recruiting",
    "featureConfidence": "medium",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVacature"
+   }
   },
   {
    "id": "hir-interview-scheduling",
@@ -1942,7 +2230,11 @@
    "providerHow": "read-from-code",
    "feature": "recruiting",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSollicitatie"
+   }
   },
   {
    "id": "hir-candidate-evaluation",
@@ -1976,7 +2268,11 @@
    "feature": "recruiting",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "The row's own hint ('Interview schema scorecard') is a false lead: the Interview schema has no scorecard field at all, only scheduling/status fields."
+   "note": "The row's own hint ('Interview schema scorecard') is a false lead: the Interview schema has no scorecard field at all, only scheduling/status fields.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSollicitatie"
+   }
   },
   {
    "id": "hir-offer-letter",
@@ -2009,7 +2305,11 @@
    "feature": "recruiting",
    "featureConfidence": "medium",
    "source": "own",
-   "note": "Candidate self-service signing completion, webhook-driven status updates and auto-hire on completion are explicitly out of scope per openspec/specs/offer-esign/spec.md purpose section, HR still runs OfferSyncSignatureCommand (occ) to poll status."
+   "note": "Candidate self-service signing completion, webhook-driven status updates and auto-hire on completion are explicitly out of scope per openspec/specs/offer-esign/spec.md purpose section, HR still runs OfferSyncSignatureCommand (occ) to poll status.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSollicitatie"
+   }
   },
   {
    "id": "hir-hire-to-employee",
@@ -2043,7 +2343,11 @@
    "feature": "onboarding",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "The row specifically asks for no retyping. The manifest's own note documents that retyping is exactly what happens today; the aannemen transition is a status flip, not a data hand-off."
+   "note": "The row specifically asks for no retyping. The manifest's own note documents that retyping is exactly what happens today; the aannemen transition is a status flip, not a data hand-off.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSollicitatie"
+   }
   },
   {
    "id": "hir-referrals",
@@ -2076,7 +2380,11 @@
    "providerHow": "read-from-code",
    "feature": "recruiting",
    "featureConfidence": "medium",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVacature"
+   }
   },
   {
    "id": "hir-onboarding-checklist",
@@ -2109,7 +2417,11 @@
    "feature": "onboarding",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "No distinct manager-owned task is modelled separately from the HR/IT gates, but the checklist genuinely spans HR and IT."
+   "note": "No distinct manager-owned task is modelled separately from the HR/IT gates, but the checklist genuinely spans HR and IT.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInwerken"
+   }
   },
   {
    "id": "hir-preboarding",
@@ -2142,7 +2454,11 @@
    "providerHow": "read-from-code",
    "feature": "onboarding",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInwerken"
+   }
   },
   {
    "id": "hir-offboarding",
@@ -2174,7 +2490,11 @@
    "providerHow": "read-from-code",
    "feature": "offboarding",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUitdienst"
+   }
   },
   {
    "id": "hir-exit-interview",
@@ -2208,7 +2528,11 @@
    "feature": "offboarding",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "exitGesprekDone is a plain checkbox that an exit interview happened, not a record of what was discussed; the reason for leaving IS captured as a real field. Anything about the interview's content would have to go in the generic freeform notes field."
+   "note": "exitGesprekDone is a plain checkbox that an exit interview happened, not a record of what was discussed; the reason for leaving IS captured as a real field. Anything about the interview's content would have to go in the generic freeform notes field.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUitdienst"
+   }
   },
   {
    "id": "hir-access-revocation",
@@ -2242,7 +2566,11 @@
    "feature": "offboarding",
    "featureConfidence": "high",
    "source": "own",
-   "note": "Nothing in humaniq actually revokes a Nextcloud account or any other access; HR manually ticks a box attesting it was done elsewhere. The field isn't even read by any audit rule."
+   "note": "Nothing in humaniq actually revokes a Nextcloud account or any other access; HR manually ticks a box attesting it was done elsewhere. The field isn't even read by any audit rule.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUitdienst"
+   }
   },
   {
    "id": "lve-request",
@@ -2274,7 +2602,11 @@
    "providerHow": "read-from-code",
    "feature": "leave-management",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofaanvraag"
+   }
   },
   {
    "id": "lve-no-self-approval",
@@ -2307,7 +2639,11 @@
    "feature": "mijn-hr-self-service",
    "featureConfidence": "high",
    "source": "own",
-   "note": "No competitor feature row names separation-of-duties as a distinct capability; it is presumably bundled inside their approval workflows."
+   "note": "No competitor feature row names separation-of-duties as a distinct capability; it is presumably bundled inside their approval workflows.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnGoedkeuringen"
+   }
   },
   {
    "id": "lve-balance",
@@ -2340,7 +2676,11 @@
    "feature": "leave-management",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "remainingHours is declarative but is fed by real write logic (LeaveBalanceProjectionService, LeaveAccrualJob), so this is not a pending rating."
+   "note": "remainingHours is declarative but is fed by real write logic (LeaveBalanceProjectionService, LeaveAccrualJob), so this is not a pending rating.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofsaldi"
+   }
   },
   {
    "id": "lve-accrual",
@@ -2372,7 +2712,11 @@
    "providerHow": "read-from-code",
    "feature": "leave-management",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofsaldi"
+   }
   },
   {
    "id": "lve-expiry",
@@ -2406,7 +2750,11 @@
    "feature": "leave-management",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "The expiry date is correctly computed and stored, but nothing acts on it: the balance does not shrink after 1 July and no one is warned beforehand."
+   "note": "The expiry date is correctly computed and stored, but nothing acts on it: the balance does not shrink after 1 July and no one is warned beforehand.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofsaldi"
+   }
   },
   {
    "id": "lve-types",
@@ -2438,7 +2786,11 @@
    "providerHow": "read-from-code",
    "feature": "leave-management",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofsaldi"
+   }
   },
   {
    "id": "lve-hours-from-pattern",
@@ -2472,7 +2824,11 @@
    "feature": "leave-management",
    "featureConfidence": "high",
    "source": "own",
-   "note": "The calculation is a flat contractHoursPerWeek/5 per working day, not the employee's actual working pattern, and ignores public holidays."
+   "note": "The calculation is a flat contractHoursPerWeek/5 per working day, not the employee's actual working pattern, and ignores public holidays.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofaanvraag"
+   }
   },
   {
    "id": "lve-buy-sell",
@@ -2505,7 +2861,11 @@
    "feature": "leave-management",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Own rating yes to partial (corrections round 8, 2026-09-28): leave is bought and sold through the approved lifecycle and settled, but pay folds the gross amount into net without wage tax, humaniq#513."
+   "note": "Own rating yes to partial (corrections round 8, 2026-09-28): leave is bought and sold through the approved lifecycle and settled, but pay folds the gross amount into net without wage tax, humaniq#513.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofsaldi"
+   }
   },
   {
    "id": "lve-team-calendar",
@@ -2538,7 +2898,11 @@
    "feature": "leave-team-calendar",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "It is a sortable list of requests, not a calendar grid. The page's own manifest note says the org-unit composition and RBAC redaction live in GET /api/leave/schedule and GET /api/leave/coverage, but the page is a plain indexScaffold and does not call either endpoint (see lve-department-coverage): what a user actually gets is an unfiltered-by-RBAC list of LeaveRequest rows for the active administration."
+   "note": "It is a sortable list of requests, not a calendar grid. The page's own manifest note says the org-unit composition and RBAC redaction live in GET /api/leave/schedule and GET /api/leave/coverage, but the page is a plain indexScaffold and does not call either endpoint (see lve-department-coverage): what a user actually gets is an unfiltered-by-RBAC list of LeaveRequest rows for the active administration.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofkalender"
+   }
   },
   {
    "id": "lve-department-coverage",
@@ -2571,7 +2935,11 @@
    "feature": "leave-team-calendar",
    "featureConfidence": "high",
    "source": "own",
-   "note": "Live-defect candidate: a real controller and service exist for this capability but have no caller anywhere in the app."
+   "note": "Live-defect candidate: a real controller and service exist for this capability but have no caller anywhere in the app.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofkalender"
+   }
   },
   {
    "id": "lve-nc-calendar-sync",
@@ -2604,7 +2972,11 @@
    "feature": "leave-team-calendar",
    "featureConfidence": "high",
    "source": "own",
-   "note": "A Nextcloud-shared-calendar sync has no equivalent in the competitor set, which are not built on Nextcloud."
+   "note": "A Nextcloud-shared-calendar sync has no equivalent in the competitor set, which are not built on Nextcloud.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofkalender"
+   }
   },
   {
    "id": "lve-year-end",
@@ -2637,7 +3009,11 @@
    "providerHow": "read-from-code",
    "feature": "leave-management",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofsaldi"
+   }
   },
   {
    "id": "lve-public-holidays",
@@ -2671,7 +3047,11 @@
    "feature": "leave-management",
    "featureConfidence": "high",
    "source": "own",
-   "note": "The hint's NonWorkingTime schema is a real page but is the wrong schema for this capability: it is individual per-employee non-working time, not a shared public-holiday list, and leave calculations explicitly do not subtract holidays."
+   "note": "The hint's NonWorkingTime schema is a real page but is the wrong schema for this capability: it is individual per-employee non-working time, not a shared public-holiday list, and leave calculations explicitly do not subtract holidays.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofaanvraag"
+   }
   },
   {
    "id": "lve-leave-in-pay",
@@ -2704,7 +3084,11 @@
    "feature": "leave-management",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "HR can tick that the leave balance was paid out and it is audited against the real balance, but nothing computes the payout amount or posts it to a payslip."
+   "note": "HR can tick that the leave balance was paid out and it is audited against the real balance, but nothing computes the payout amount or posts it to a payslip.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofsaldi"
+   }
   },
   {
    "id": "abs-sick-report",
@@ -2736,7 +3120,11 @@
    "providerHow": "read-from-code",
    "feature": "sickness-absence",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerzuimdossier"
+   }
   },
   {
    "id": "abs-gatekeeper",
@@ -2768,7 +3156,11 @@
    "providerHow": "read-from-code",
    "feature": "sickness-absence",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerzuimdossier"
+   }
   },
   {
    "id": "abs-gatekeeper-reminders",
@@ -2801,7 +3193,11 @@
    "providerHow": "read-from-code",
    "feature": "sickness-absence",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerzuimdossier"
+   }
   },
   {
    "id": "abs-medical-data-separation",
@@ -2834,7 +3230,11 @@
    "feature": "sickness-absence",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "There is no medical field to leak by design, which is real protection, but nothing stops an uploaded file from containing medical detail beyond a description label, and there is no role-based restriction on who can open the case."
+   "note": "There is no medical field to leak by design, which is real protection, but nothing stops an uploaded file from containing medical detail beyond a description label, and there is no role-based restriction on who can open the case.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerzuimdossier"
+   }
   },
   {
    "id": "abs-sick-pay",
@@ -2866,7 +3266,11 @@
    "providerHow": "read-from-code",
    "feature": "sickness-absence",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerzuimdossier"
+   }
   },
   {
    "id": "abs-occupational-health",
@@ -2929,7 +3333,11 @@
    "providerHow": "read-from-code",
    "feature": "sickness-absence",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerzuimdossier"
+   }
   },
   {
    "id": "abs-rate",
@@ -2963,7 +3371,11 @@
    "feature": "hr-dashboard",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "The overall rate over time is real; per-department breakdown and absence frequency are named non-goals in the service's own docblock."
+   "note": "The overall rate over time is real; per-department breakdown and absence frequency are named non-goals in the service's own docblock.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDashboard"
+   }
   },
   {
    "id": "abs-trend-widgets",
@@ -2995,7 +3407,11 @@
    "providerHow": "read-from-code",
    "feature": "hr-dashboard",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDashboard"
+   }
   },
   {
    "id": "abs-uwv-reporting",
@@ -3029,7 +3445,11 @@
    "feature": "sickness-absence",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Deadline tracking is real; the notification itself is filed outside humaniq and only the fact/date of filing is recorded by hand."
+   "note": "Deadline tracking is real; the notification itself is filed outside humaniq and only the fact/date of filing is recorded by hand.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerzuimdossier"
+   }
   },
   {
    "id": "tim-log-hours",
@@ -3061,7 +3481,11 @@
    "providerHow": "read-from-code",
    "feature": "time-registration",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUrenstaat"
+   }
   },
   {
    "id": "tim-log-against-object",
@@ -3094,7 +3518,11 @@
    "feature": "project-hours",
    "featureConfidence": "high",
    "source": "own",
-   "note": "openspec/changes/hours-leaf-loads-on-a-consuming-page documents this leaf as previously dark on every host page (no leaves webpack entry existed, so OpenRegister's LeafScriptListener silently skipped humaniq). The entry and src/leaves.js now exist and dossiq's CaseDetail already places and tests the leaf, even though that change's own tasks.md is still all unchecked: code and consumer are both confirmed live, the tasks file is just stale."
+   "note": "openspec/changes/hours-leaf-loads-on-a-consuming-page documents this leaf as previously dark on every host page (no leaves webpack entry existed, so OpenRegister's LeafScriptListener silently skipped humaniq). The entry and src/leaves.js now exist and dossiq's CaseDetail already places and tests the leaf, even though that change's own tasks.md is still all unchecked: code and consumer are both confirmed live, the tasks file is just stale.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUrenstaat"
+   }
   },
   {
    "id": "tim-timer",
@@ -3126,7 +3554,11 @@
    "providerHow": "read-from-code",
    "feature": "time-registration",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUrenstaat"
+   }
   },
   {
    "id": "tim-weekly-timesheet",
@@ -3158,7 +3590,11 @@
    "providerHow": "read-from-code",
    "feature": "time-registration",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUrenstaat"
+   }
   },
   {
    "id": "tim-timesheet-approval",
@@ -3191,7 +3627,11 @@
    "feature": "time-registration",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "shillinq's ppl-timesheet-approval row (decided-no there) moves this capability to humaniq per openspec/changes/hours-to-humaniq; humaniq's own implementation is a real working approval path."
+   "note": "shillinq's ppl-timesheet-approval row (decided-no there) moves this capability to humaniq per openspec/changes/hours-to-humaniq; humaniq's own implementation is a real working approval path.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnGoedkeuringen"
+   }
   },
   {
    "id": "tim-timesheet-not-empty",
@@ -3223,7 +3663,11 @@
    "providerHow": "read-from-code",
    "feature": "time-registration",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUrenstaat"
+   }
   },
   {
    "id": "tim-reopen",
@@ -3256,7 +3700,11 @@
    "feature": "time-registration",
    "featureConfidence": "high",
    "source": "own",
-   "note": "The reopen transition works and clears the approval stamps, but carries no requires guard at all, unlike submit/approve/reject. That is harmless today because approved hours never flow into payroll yet (see tim-hours-to-payroll), but the row's own 'before payroll uses it' framing has no enforcement if that changes."
+   "note": "The reopen transition works and clears the approval stamps, but carries no requires guard at all, unlike submit/approve/reject. That is harmless today because approved hours never flow into payroll yet (see tim-hours-to-payroll), but the row's own 'before payroll uses it' framing has no enforcement if that changes.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUrenstaat"
+   }
   },
   {
    "id": "tim-billable-rates",
@@ -3289,7 +3737,11 @@
    "feature": "project-hours",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "shillinq's ppl-time row moved here with provider humaniq (openspec/changes/hours-to-humaniq). An entry can be tagged to a project and flagged billable, but no rate lives on TimeEntry itself; EmployeeCostRateService gives an employer cost rate consumed by shillinq (see tim-cost-rate), not a client billing rate on the entry."
+   "note": "shillinq's ppl-time row moved here with provider humaniq (openspec/changes/hours-to-humaniq). An entry can be tagged to a project and flagged billable, but no rate lives on TimeEntry itself; EmployeeCostRateService gives an employer cost rate consumed by shillinq (see tim-cost-rate), not a client billing rate on the entry.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProjecturen"
+   }
   },
   {
    "id": "tim-cost-rate",
@@ -3321,7 +3773,11 @@
    "providerHow": "read-from-code",
    "feature": "project-hours",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProjecturen"
+   }
   },
   {
    "id": "tim-estimate-remaining",
@@ -3353,7 +3809,11 @@
    "providerHow": "read-from-code",
    "feature": "project-hours",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProjecturen"
+   }
   },
   {
    "id": "tim-clock-in",
@@ -3385,7 +3845,11 @@
    "providerHow": "read-from-code",
    "feature": "time-attendance",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAanwezigheid"
+   }
   },
   {
    "id": "tim-attendance-overview",
@@ -3418,7 +3882,11 @@
    "feature": "time-attendance",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "A user can filter the AttendanceRecord list by status/location to approximate today's picture, but there is no dedicated present/absent/late summary view."
+   "note": "A user can filter the AttendanceRecord list by status/location to approximate today's picture, but there is no dedicated present/absent/late summary view.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAanwezigheid"
+   }
   },
   {
    "id": "tim-overtime",
@@ -3451,7 +3919,11 @@
    "providerHow": "read-from-code",
    "feature": "time-attendance",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAanwezigheid"
+   }
   },
   {
    "id": "tim-atw-limits",
@@ -3484,7 +3956,11 @@
    "feature": "time-attendance",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Rostered-hours warnings are a real button; logged-hours ATW violations are visible only through the occ compliance audit, not on the screens where a user actually logs or clocks hours."
+   "note": "Rostered-hours warnings are a real button; logged-hours ATW violations are visible only through the occ compliance audit, not on the screens where a user actually logs or clocks hours.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAanwezigheid"
+   }
   },
   {
    "id": "tim-hours-to-payroll",
@@ -3517,7 +3993,11 @@
    "providerHow": "read-from-code",
    "feature": "time-registration",
    "featureConfidence": "medium",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUrenstaat"
+   }
   },
   {
    "id": "tim-hours-to-invoice",
@@ -3549,7 +4029,11 @@
    "providerHow": "read-from-code",
    "feature": "project-hours",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProjecturen"
+   }
   },
   {
    "id": "tim-mobile-hours",
@@ -3643,7 +4127,11 @@
    "providerHow": "read-from-code",
    "feature": "rostering",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuRooster"
+   }
   },
   {
    "id": "pln-shift-templates",
@@ -3675,7 +4163,11 @@
    "providerHow": "read-from-code",
    "feature": "rostering",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuRooster"
+   }
   },
   {
    "id": "pln-roster-atw-check",
@@ -3708,7 +4200,11 @@
    "feature": "rostering",
    "featureConfidence": "high",
    "source": "own",
-   "note": "A roster violation does not hard-block publishing (design.md documents this as a non-goal); the check is advisory."
+   "note": "A roster violation does not hard-block publishing (design.md documents this as a non-goal); the check is advisory.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuRooster"
+   }
   },
   {
    "id": "pln-competence-check",
@@ -3741,7 +4237,11 @@
    "feature": "rostering",
    "featureConfidence": "high",
    "source": "own",
-   "note": "Certificate/competence tracking with expiry exists in humaniq and in these competitors; none is confirmed to actually gate a roster assignment, only to track and alert on expiry, so all are rated partial rather than yes. Corrections round 8 (2026-09-28): REQ-ROST-C02 is titled as a refusal, but the check only reports and a roster with an unqualified person can still be published, humaniq#512; rating kept because partial already records a report without a block."
+   "note": "Certificate/competence tracking with expiry exists in humaniq and in these competitors; none is confirmed to actually gate a roster assignment, only to track and alert on expiry, so all are rated partial rather than yes. Corrections round 8 (2026-09-28): REQ-ROST-C02 is titled as a refusal, but the check only reports and a roster with an unqualified person can still be published, humaniq#512; rating kept because partial already records a report without a block.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuRooster"
+   }
   },
   {
    "id": "pln-working-patterns",
@@ -3773,7 +4273,11 @@
    "providerHow": "read-from-code",
    "feature": "agenda-and-resource-booking",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAgenda"
+   }
   },
   {
    "id": "pln-working-calendar",
@@ -3805,7 +4309,11 @@
    "providerHow": "read-from-code",
    "feature": "agenda-and-resource-booking",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAgenda"
+   }
   },
   {
    "id": "pln-availability",
@@ -3838,7 +4346,11 @@
    "feature": "agenda-and-resource-booking",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "AgendaController's own docblock frames availability as 'the one call a consuming app actually makes', but no app in this workspace calls it yet."
+   "note": "AgendaController's own docblock frames availability as 'the one call a consuming app actually makes', but no app in this workspace calls it yet.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAgenda"
+   }
   },
   {
    "id": "pln-agenda",
@@ -3870,7 +4382,11 @@
    "providerHow": "read-from-code",
    "feature": "agenda-and-resource-booking",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAgenda"
+   }
   },
   {
    "id": "pln-capacity",
@@ -3902,7 +4418,11 @@
    "providerHow": "read-from-code",
    "feature": "agenda-and-resource-booking",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAgenda"
+   }
   },
   {
    "id": "pln-resource-booking",
@@ -3934,7 +4454,11 @@
    "providerHow": "read-from-code",
    "feature": "agenda-and-resource-booking",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAgenda"
+   }
   },
   {
    "id": "pln-calendar-subscriptions",
@@ -3966,7 +4490,11 @@
    "providerHow": "read-from-code",
    "feature": "agenda-and-resource-booking",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAgenda"
+   }
   },
   {
    "id": "pln-shift-swap",
@@ -4031,7 +4559,11 @@
    "feature": "rostering",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "The input hint pointed at RosterAssignmentProjectionService, but that class only projects a Shift's start/end times onto an assignment; it has nothing to do with leave."
+   "note": "The input hint pointed at RosterAssignmentProjectionService, but that class only projects a Shift's start/end times onto an assignment; it has nothing to do with leave.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuRooster"
+   }
   },
   {
    "id": "exp-claim",
@@ -4064,7 +4596,11 @@
    "feature": "expenses",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "This is humaniq's own Expense schema (re-homed from pipelinq), distinct from shillinq's separate ExpenseClaimEntry, which sits unregistered/hard-failing in shillinq itself."
+   "note": "This is humaniq's own Expense schema (re-homed from pipelinq), distinct from shillinq's separate ExpenseClaimEntry, which sits unregistered/hard-failing in shillinq itself.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDeclaratie"
+   }
   },
   {
    "id": "exp-receipt-ocr",
@@ -4097,7 +4633,11 @@
    "feature": "expenses",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Owner is ConductionNL/docudesk (its GitHub repo has not been renamed to filinq even though its <id>/<namespace> already are); the humaniq call site correctly resolves the fleet rename via FleetAppId, so this is not a live defect."
+   "note": "Owner is ConductionNL/docudesk (its GitHub repo has not been renamed to filinq even though its <id>/<namespace> already are); the humaniq call site correctly resolves the fleet rename via FleetAppId, so this is not a live defect.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDeclaratie"
+   }
   },
   {
    "id": "exp-mileage",
@@ -4131,7 +4671,11 @@
    "feature": "travel-cars-and-equipment",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Distance and travel type are recorded but the payable amount is hand-entered, not computed at the tax-free rate; only an occ audit catches an over-the-rate claim after the fact."
+   "note": "Distance and travel type are recorded but the payable amount is hand-entered, not computed at the tax-free rate; only an occ audit catches an over-the-rate claim after the fact.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDeclaratie"
+   }
   },
   {
    "id": "exp-policy",
@@ -4195,7 +4739,11 @@
    "providerHow": "read-from-code",
    "feature": "expenses",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDeclaratie"
+   }
   },
   {
    "id": "exp-team-approval",
@@ -4227,7 +4775,11 @@
    "providerHow": "read-from-code",
    "feature": "expenses",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnGoedkeuringen"
+   }
   },
   {
    "id": "exp-assets",
@@ -4259,7 +4811,11 @@
    "providerHow": "read-from-code",
    "feature": "travel-cars-and-equipment",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuBedrijfsmiddelen"
+   }
   },
   {
    "id": "exp-lease-car",
@@ -4291,7 +4847,11 @@
    "providerHow": "read-from-code",
    "feature": "travel-cars-and-equipment",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuBedrijfsmiddelen"
+   }
   },
   {
    "id": "exp-fixed-allowances",
@@ -4325,7 +4885,11 @@
    "feature": "statutory-reporting",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Any allowance/benefit can be logged and is correctly categorised for the WKR free-margin budget, but each payment is a manual one-off ledger entry, not a recurring fixed monthly allowance line that pays itself."
+   "note": "Any allowance/benefit can be logged and is correctly categorised for the WKR free-margin budget, but each payment is a manual one-off ledger entry, not a recurring fixed monthly allowance line that pays itself.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuWkr"
+   }
   },
   {
    "id": "exp-card-feed",
@@ -4389,7 +4953,11 @@
    "feature": "payroll-engine",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "humaniq computes its own NL bruto-netto chain rather than integrating an external processor, closer to loket/afas/hr2day/visma-raet's own-engine shape than personio's integration shape."
+   "note": "humaniq computes its own NL bruto-netto chain rather than integrating an external processor, closer to loket/afas/hr2day/visma-raet's own-engine shape than personio's integration shape.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisrun"
+   }
   },
   {
    "id": "pay-run",
@@ -4424,7 +4992,11 @@
    "feature": "payroll-engine",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisrun"
+   }
   },
   {
    "id": "pay-run-approval",
@@ -4457,7 +5029,11 @@
    "feature": "payroll-run",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Approving a run only works if HR builds a flow containing this step first; there is no one-click approve on the run itself."
+   "note": "Approving a run only works if HR builds a flow containing this step first; there is no one-click approve on the run itself.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisrun"
+   }
   },
   {
    "id": "pay-run-check",
@@ -4490,7 +5066,11 @@
    "providerHow": "read-from-code",
    "feature": "payroll-run",
    "featureConfidence": "medium",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisrun"
+   }
   },
   {
    "id": "pay-payslip-view",
@@ -4525,7 +5105,11 @@
    "feature": "payslips",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnHr"
+   }
   },
   {
    "id": "pay-payslip-pdf",
@@ -4560,7 +5144,11 @@
    "feature": "payslips",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnHr"
+   }
   },
   {
    "id": "pay-annual-statement",
@@ -4594,7 +5182,11 @@
    "feature": "payslips",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "The annual statement can be viewed once it exists, but nothing in the UI can produce a new one; that is occ-only."
+   "note": "The annual statement can be viewed once it exists, but nothing in the UI can produce a new one; that is occ-only.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnHr"
+   }
   },
   {
    "id": "pay-holiday-allowance",
@@ -4627,7 +5219,11 @@
    "feature": "payroll-engine",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "Vakantiegeld is reserved and tracked per payslip, but never actually paid out as a lump sum, and there is no thirteenth-month component at all; afas and visma-raet explicitly do both."
+   "note": "Vakantiegeld is reserved and tracked per payslip, but never actually paid out as a lump sum, and there is no thirteenth-month component at all; afas and visma-raet explicitly do both.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProformaLoonstrook"
+   }
   },
   {
    "id": "pay-proforma",
@@ -4659,7 +5255,11 @@
    "providerHow": "read-from-code",
    "feature": "payroll-engine",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProformaLoonstrook"
+   }
   },
   {
    "id": "pay-retro",
@@ -4694,7 +5294,11 @@
    "feature": "payroll-run",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisrun"
+   }
   },
   {
    "id": "pay-mutation-report",
@@ -4729,7 +5333,11 @@
    "feature": "payroll-run",
    "featureConfidence": "high",
    "source": "own",
-   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisrun"
+   }
   },
   {
    "id": "pay-reproduce",
@@ -4762,7 +5370,11 @@
    "feature": "payroll-run",
    "featureConfidence": "high",
    "source": "own",
-   "note": "A genuine audit tool for accountants/auditors, CLI-only by design; there is no reason to expect a page for it."
+   "note": "A genuine audit tool for accountants/auditors, CLI-only by design; there is no reason to expect a page for it.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisrun"
+   }
   },
   {
    "id": "pay-cao-components",
@@ -4795,7 +5407,11 @@
    "providerHow": "read-from-code",
    "feature": "cao-library",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuCao"
+   }
   },
   {
    "id": "pay-30-percent",
@@ -4827,7 +5443,11 @@
    "providerHow": "read-from-code",
    "feature": "payroll-engine",
    "featureConfidence": "medium",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProformaLoonstrook"
+   }
   },
   {
    "id": "pay-dga",
@@ -4859,7 +5479,11 @@
    "providerHow": "read-from-code",
    "feature": "special-pay-regimes",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuGebruikelijkLoon"
+   }
   },
   {
    "id": "pay-garnishment",
@@ -4894,7 +5518,11 @@
    "feature": "special-pay-regimes",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkerSalaris"
+   }
   },
   {
    "id": "pay-loans",
@@ -4958,7 +5586,11 @@
    "feature": "payroll-to-accounting",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "humaniq computes and hands off the payment lines; the actual SEPA export and payment execution is shillinq's PaymentRun lifecycle, not humaniq's. This is a different, real path from shillinq's own matrix row ppl-payroll, whose PayrollService/berekenLoonStrook is separate, unreached code with no caller."
+   "note": "humaniq computes and hands off the payment lines; the actual SEPA export and payment execution is shillinq's PaymentRun lifecycle, not humaniq's. This is a different, real path from shillinq's own matrix row ppl-payroll, whose PayrollService/berekenLoonStrook is separate, unreached code with no caller.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisBetalen"
+   }
   },
   {
    "id": "pay-gl-journal",
@@ -4991,7 +5623,11 @@
    "feature": "payroll-to-accounting",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "humaniq computes the balanced journal entry, but the actual ledger it posts into is shillinq's JournalEntry register; shillinq's own matrix row ppl-payroll-journal describes a SEPARATE, unreached journal builder inside shillinq itself (bouwLoonjournaalpost, no caller), which this handoff bypasses entirely. Corrections round 8 (2026-09-28): a run that carries retro pay or a leave payout posts a journal that leaves that money out of wage costs, and a large enough fold stops the post, humaniq#514; rating kept at partial because a run without those folds still posts a balanced journal."
+   "note": "humaniq computes the balanced journal entry, but the actual ledger it posts into is shillinq's JournalEntry register; shillinq's own matrix row ppl-payroll-journal describes a SEPARATE, unreached journal builder inside shillinq itself (bouwLoonjournaalpost, no caller), which this handoff bypasses entirely. Corrections round 8 (2026-09-28): a run that carries retro pay or a leave payout posts a journal that leaves that money out of wage costs, and a large enough fold stops the post, humaniq#514; rating kept at partial because a run without those folds still posts a balanced journal.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisBetalen"
+   }
   },
   {
    "id": "pay-cost-allocation",
@@ -5024,7 +5660,11 @@
    "providerHow": "read-from-code",
    "feature": "payroll-to-accounting",
    "featureConfidence": "medium",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisBetalen"
+   }
   },
   {
    "id": "pay-year-transition",
@@ -5058,7 +5698,11 @@
    "feature": "payroll-engine",
    "featureConfidence": "medium",
    "source": "own",
-   "note": "The architecture genuinely makes a year transition config-only, which is the real claim behind this row, but it has only been proven for one year, and nothing automates authoring the next year's pack."
+   "note": "The architecture genuinely makes a year transition config-only, which is the real claim behind this row, but it has only been proven for one year, and nothing automates authoring the next year's pack.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisrun"
+   }
   },
   {
    "id": "pay-flow",
@@ -5091,7 +5735,11 @@
    "feature": "payroll-run",
    "featureConfidence": "high",
    "source": "own",
-   "note": "The flow engine itself belongs to OpenRegister, but the four payroll steps are real, humaniq-specific adapters over the same services occ uses, so building a flow genuinely orchestrates the payroll cycle end to end."
+   "note": "The flow engine itself belongs to OpenRegister, but the four payroll steps are real, humaniq-specific adapters over the same services occ uses, so building a flow genuinely orchestrates the payroll cycle end to end.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisrun"
+   }
   },
   {
    "id": "pay-multi-jurisdiction",
@@ -5157,7 +5805,11 @@
    "feature": "payroll-to-accounting",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "humaniq is built to be the alternative to outsourcing; payroll-external-bureau-handoff (2026-10-01) adds the handoff for an employer who keeps an outside bureau: humaniq compiles and checks, integriq carries."
+   "note": "humaniq is built to be the alternative to outsourcing; payroll-external-bureau-handoff (2026-10-01) adds the handoff for an employer who keeps an outside bureau: humaniq compiles and checks, integriq carries.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisBetalen"
+   }
   },
   {
    "id": "fil-wage-tax-return",
@@ -5192,7 +5844,11 @@
    "feature": "wage-tax-return",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAangiften"
+   }
   },
   {
    "id": "fil-digipoort",
@@ -5258,7 +5914,11 @@
    "feature": "wage-tax-return",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "The schema's own maintainer note calls this a placeholder, not a real correction message; rating no rather than pending because it is a declaration the maintainers themselves say is a stand-in, not a thin-but-real capability."
+   "note": "The schema's own maintainer note calls this a placeholder, not a real correction message; rating no rather than pending because it is a declaration the maintainers themselves say is a stand-in, not a thin-but-real capability.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAangiften"
+   }
   },
   {
    "id": "fil-pension",
@@ -5293,7 +5953,11 @@
    "feature": "wage-tax-return",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAangiften"
+   }
   },
   {
    "id": "fil-abp",
@@ -5326,7 +5990,11 @@
    "feature": "wage-tax-return",
    "featureConfidence": "high",
    "source": "own",
-   "note": "afas/hr2day only claim 'alle grote NL pensioenfondsen' without naming ABP, so left unknown rather than inferred yes; humaniq has no real ABP connection, only a generic filing record plus an audit check that something exists."
+   "note": "afas/hr2day only claim 'alle grote NL pensioenfondsen' without naming ABP, so left unknown rather than inferred yes; humaniq has no real ABP connection, only a generic filing record plus an audit check that something exists.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAangiften"
+   }
   },
   {
    "id": "fil-wkr",
@@ -5361,7 +6029,11 @@
    "feature": "statutory-reporting",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuWkr"
+   }
   },
   {
    "id": "fil-wnt",
@@ -5396,7 +6068,11 @@
    "feature": "statutory-reporting",
    "featureConfidence": "high",
    "source": "own",
-   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuWkr"
+   }
   },
   {
    "id": "fil-ib47",
@@ -5429,7 +6105,11 @@
    "providerHow": "read-from-code",
    "feature": "statutory-reporting",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuWkr"
+   }
   },
   {
    "id": "fil-cbs",
@@ -5493,7 +6173,11 @@
    "providerHow": "read-from-code",
    "feature": "wage-tax-return",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAangiften"
+   }
   },
   {
    "id": "fil-employer-statement",
@@ -5526,7 +6210,11 @@
    "feature": "personnel-dossier",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "The rendering itself is filinq's (docudesk's), humaniq only has an occ trigger and a viewer; no page can request one for a specific employee."
+   "note": "The rendering itself is filinq's (docudesk's), humaniq only has an occ trigger and a viewer; no page can request one for a specific employee.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkerDossier"
+   }
   },
   {
    "id": "tal-review-cycle",
@@ -5558,7 +6246,11 @@
    "providerHow": "read-from-code",
    "feature": "performance-reviews",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuGesprekscyclus"
+   }
   },
   {
    "id": "tal-review-forms",
@@ -5590,7 +6282,11 @@
    "providerHow": "read-from-code",
    "feature": "performance-reviews",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuGesprekscyclus"
+   }
   },
   {
    "id": "tal-360",
@@ -5654,7 +6350,11 @@
    "providerHow": "read-from-code",
    "feature": "performance-reviews",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuGesprekscyclus"
+   }
   },
   {
    "id": "tal-comp-cycle",
@@ -5686,7 +6386,11 @@
    "providerHow": "read-from-code",
    "feature": "compensation-cycles",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuBeloningsronde"
+   }
   },
   {
    "id": "tal-comp-effectuate",
@@ -5718,7 +6422,11 @@
    "providerHow": "read-from-code",
    "feature": "compensation-cycles",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuBeloningsronde"
+   }
   },
   {
    "id": "tal-competences",
@@ -5750,7 +6458,11 @@
    "providerHow": "read-from-code",
    "feature": "training-and-competences",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuOpleidingen"
+   }
   },
   {
    "id": "tal-bhv",
@@ -5816,7 +6528,11 @@
    "feature": "training-and-competences",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "learniq is a resolvable sibling id in FleetAppId but nothing in humaniq calls it; no training capability exists on either side of that integration today."
+   "note": "learniq is a resolvable sibling id in FleetAppId but nothing in humaniq calls it; no training capability exists on either side of that integration today.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuOpleidingen"
+   }
   },
   {
    "id": "tal-skills-matrix",
@@ -5911,7 +6627,11 @@
    "providerHow": "read-from-code",
    "feature": "performance-reviews",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuEnquete"
+   }
   },
   {
    "id": "tal-recognition",
@@ -5974,7 +6694,11 @@
    "providerHow": "read-from-code",
    "feature": "mijn-hr-self-service",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnHr"
+   }
   },
   {
    "id": "ess-edit-details",
@@ -6007,7 +6731,11 @@
    "providerHow": "read-from-code",
    "feature": "mijn-hr-self-service",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnHr"
+   }
   },
   {
    "id": "ess-manager-team",
@@ -6040,7 +6768,11 @@
    "feature": "mijn-hr-self-service",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Timesheet's manager stamp is tamper-proof (server-derived); Expense and LeaveRequest's manager stamp is HR-entered and only audited at recommended (non-blocking) severity, so it can drift from the real org chart."
+   "note": "Timesheet's manager stamp is tamper-proof (server-derived); Expense and LeaveRequest's manager stamp is HR-entered and only audited at recommended (non-blocking) severity, so it can drift from the real org chart.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnAfdeling"
+   }
   },
   {
    "id": "ess-personal-dashboard",
@@ -6073,7 +6805,11 @@
    "feature": "mijn-hr-self-service",
    "featureConfidence": "high",
    "source": "own",
-   "note": "No competitor feature row is specific enough to distinguish a personal to-do dashboard from a general self-service portal, so these are left unknown rather than inferred from the portal rows."
+   "note": "No competitor feature row is specific enough to distinguish a personal to-do dashboard from a general self-service portal, so these are left unknown rather than inferred from the portal rows.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnHr"
+   }
   },
   {
    "id": "ess-mobile",
@@ -6105,7 +6841,11 @@
    "providerHow": "read-from-code",
    "feature": "mijn-hr-self-service",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnHrMobiel"
+   }
   },
   {
    "id": "ess-notifications",
@@ -6138,7 +6878,11 @@
    "providerHow": "read-from-code",
    "feature": "mijn-hr-self-service",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnHr"
+   }
   },
   {
    "id": "ess-hr-inbox",
@@ -6202,7 +6946,11 @@
    "feature": "secure-sign-in",
    "featureConfidence": "high",
    "source": "own",
-   "note": "This covers employees with an NC account. The spec's own REQ-AUTH-003 records that applicants have no self-service surface at all yet, so DigiD/IRMA sign-in for an applicant specifically is not established."
+   "note": "This covers employees with an NC account. The spec's own REQ-AUTH-003 records that applicants have no self-service surface at all yet, so DigiD/IRMA sign-in for an applicant specifically is not established.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInstellingen"
+   }
   },
   {
    "id": "ess-external-portal",
@@ -6236,7 +6984,11 @@
    "feature": "recruiting",
    "featureConfidence": "high",
    "source": "own",
-   "note": "Real and working for active payroll externals and billing clients, but not for job applicants or former employees as the capability names them, and it is inert unless the separate portaliq app is installed."
+   "note": "Real and working for active payroll externals and billing clients, but not for job applicants or former employees as the capability names them, and it is inert unless the separate portaliq app is installed.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuWerkenBij"
+   }
   },
   {
    "id": "ess-announcements",
@@ -6269,7 +7021,11 @@
    "providerHow": "read-from-code",
    "feature": "mijn-hr-self-service",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnHr"
+   }
   },
   {
    "id": "ess-dga-customary-wage",
@@ -6301,7 +7057,11 @@
    "providerHow": "read-from-code",
    "feature": "special-pay-regimes",
    "featureConfidence": "medium",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuGebruikelijkLoon"
+   }
   },
   {
    "id": "rep-dashboard",
@@ -6335,7 +7095,11 @@
    "feature": "hr-dashboard",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "Corrected 2026-09-26: the unscoped claim came from the page-level _note at src/manifest.json:406, which is stale. The Billable ratio (src/manifest.json:484-506) and Headcount and turnover (:536-566) charts bind to /apps/humaniq/api/analytics/trends; AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId. No cross-administration leak."
+   "note": "Corrected 2026-09-26: the unscoped claim came from the page-level _note at src/manifest.json:406, which is stale. The Billable ratio (src/manifest.json:484-506) and Headcount and turnover (:536-566) charts bind to /apps/humaniq/api/analytics/trends; AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId. No cross-administration leak.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDashboard"
+   }
   },
   {
    "id": "rep-headcount-turnover",
@@ -6369,7 +7133,11 @@
    "feature": "hr-dashboard",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "Re-rated partial to yes on 2026-09-26: three series (headcount, starters, leavers), scoped per administration. The earlier partial rested only on the stale note."
+   "note": "Re-rated partial to yes on 2026-09-26: three series (headcount, starters, leavers), scoped per administration. The earlier partial rested only on the stale note.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDashboard"
+   }
   },
   {
    "id": "rep-wage-costs",
@@ -6403,7 +7171,11 @@
    "feature": "hr-dashboard",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "Total wage cost per period exists; a per-department breakdown does not."
+   "note": "Total wage cost per period exists; a per-department breakdown does not.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDashboard"
+   }
   },
   {
    "id": "rep-report-builder",
@@ -6436,7 +7208,11 @@
    "feature": "hr-reporting",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "afas/hr2day/orangehrm's dashboard/analytics rows name dashboards, not a report builder, so per the matrix's own rule (a dashboard row does not support a report-builder row) they are left unknown rather than inferred yes."
+   "note": "afas/hr2day/orangehrm's dashboard/analytics rows name dashboards, not a report builder, so per the matrix's own rule (a dashboard row does not support a report-builder row) they are left unknown rather than inferred yes.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuRapportages"
+   }
   },
   {
    "id": "rep-standard-reports",
@@ -6468,7 +7244,11 @@
    "providerHow": "read-from-code",
    "feature": "hr-reporting",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuRapportages"
+   }
   },
   {
    "id": "rep-export",
@@ -6501,7 +7281,11 @@
    "feature": "hr-reporting",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Only the fetched or selected rows can be exported as a blob; humaniq never opts into the library's full filtered-list export (allowExport + schema exportable:true), so 'export any list' is only partly true."
+   "note": "Only the fetched or selected rows can be exported as a blob; humaniq never opts into the library's full filtered-list export (allowExport + schema exportable:true), so 'export any list' is only partly true.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuRapportages"
+   }
   },
   {
    "id": "rep-obligations",
@@ -6534,7 +7318,11 @@
    "feature": "hr-dashboard",
    "featureConfidence": "medium",
    "source": "own",
-   "note": "Per its own manifest note, per-row click-through to the specific obligation's own detail page is not wired: CnWidgetObjectTable's rowRoute is one static route for the whole table."
+   "note": "Per its own manifest note, per-row click-through to the specific obligation's own detail page is not wired: CnWidgetObjectTable's rowRoute is one static route for the whole table.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDashboard"
+   }
   },
   {
    "id": "rep-billable-ratio",
@@ -6568,7 +7356,11 @@
    "feature": "project-hours",
    "featureConfidence": "medium",
    "source": "own",
-   "note": "Only one aggregate ratio for the whole administration is shown; there is no per-person or per-team breakdown. Corrected 2026-09-26: the chart is scoped per administration, no leak; the missing per-person or per-team breakdown is why the row stays partial."
+   "note": "Only one aggregate ratio for the whole administration is shown; there is no per-person or per-team breakdown. Corrected 2026-09-26: the chart is scoped per administration, no leak; the missing per-person or per-team breakdown is why the row stays partial.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProjecturen"
+   }
   },
   {
    "id": "rep-benchmark",
@@ -6631,7 +7423,11 @@
    "providerHow": "read-from-code",
    "feature": "hrm-rule-engine",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuToetsing"
+   }
   },
   {
    "id": "cmp-coverage",
@@ -6663,7 +7459,11 @@
    "providerHow": "read-from-code",
    "feature": "hrm-rule-engine",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuToetsing"
+   }
   },
   {
    "id": "cmp-dsr-export",
@@ -6695,7 +7495,11 @@
    "providerHow": "read-from-code",
    "feature": "avg-dsr",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAvgVerzoek"
+   }
   },
   {
    "id": "cmp-dsr-erase",
@@ -6727,7 +7531,11 @@
    "providerHow": "read-from-code",
    "feature": "avg-dsr",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAvgVerzoek"
+   }
   },
   {
    "id": "cmp-dsr-rectify",
@@ -6761,7 +7569,11 @@
    "feature": "avg-dsr",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Live-defect candidate: the wired Rectify button in the UI can never succeed since it never collects the changes payload the controller requires. The backend logic itself is sound (confirmed working via the occ command); only the manifest UI wiring is broken."
+   "note": "Live-defect candidate: the wired Rectify button in the UI can never succeed since it never collects the changes payload the controller requires. The backend logic itself is sound (confirmed working via the occ command); only the manifest UI wiring is broken.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAvgVerzoek"
+   }
   },
   {
    "id": "cmp-retention",
@@ -6795,7 +7607,11 @@
    "feature": "avg-dsr",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Built 2026-09-28 by compliance-retention-expiry. Deletion itself stays OpenRegister's, behind an archivist's approval of the destruction list; humaniq's part is off by default."
+   "note": "Built 2026-09-28 by compliance-retention-expiry. Deletion itself stays OpenRegister's, behind an archivist's approval of the destruction list; humaniq's part is off by default.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAvgVerzoek"
+   }
   },
   {
    "id": "cmp-audit-trail",
@@ -6828,7 +7644,11 @@
    "feature": "roles-and-access",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Covers who changed a record and when, on every object; did not verify from humaniq's own code whether OpenRegister's audit trail also logs read/view access, only writes, so rated partial against the row's 'viewed or changed' wording. Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-03-21-audit-trail-immutable; the missing half is humaniq's own work, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister)."
+   "note": "Covers who changed a record and when, on every object; did not verify from humaniq's own code whether OpenRegister's audit trail also logs read/view access, only writes, so rated partial against the row's 'viewed or changed' wording. Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-03-21-audit-trail-immutable; the missing half is humaniq's own work, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInstellingen"
+   }
   },
   {
    "id": "cmp-roles",
@@ -6862,7 +7682,11 @@
    "feature": "roles-and-access",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Only a coarse admin/non-admin split plus data-scoped manager and self-service views; no distinct 'HR' vs 'payroll' vs 'manager' Nextcloud groups exist (grep for isInGroup/dedicated group constants found none)."
+   "note": "Only a coarse admin/non-admin split plus data-scoped manager and self-service views; no distinct 'HR' vs 'payroll' vs 'manager' Nextcloud groups exist (grep for isInGroup/dedicated group constants found none).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInstellingen"
+   }
   },
   {
    "id": "cmp-field-rbac",
@@ -6895,7 +7719,11 @@
    "providerHow": "read-from-code",
    "feature": "roles-and-access",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInstellingen"
+   }
   },
   {
    "id": "cmp-works-council",
@@ -7021,7 +7849,11 @@
    "providerHow": "inferred",
    "feature": "setup-and-hosting",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "board": null,
+    "reason": "Zelf hosten gebeurt op de server van de organisatie; daar hoort geen scherm bij."
+   }
   },
   {
    "id": "plt-multi-administration",
@@ -7053,7 +7885,11 @@
    "providerHow": "read-from-code",
    "feature": "setup-and-hosting",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInrichten"
+   }
   },
   {
    "id": "plt-single-person-modes",
@@ -7085,7 +7921,11 @@
    "providerHow": "read-from-code",
    "feature": "setup-and-hosting",
    "featureConfidence": "medium",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInrichten"
+   }
   },
   {
    "id": "plt-public-api",
@@ -7118,7 +7958,11 @@
    "feature": "api-and-integrations",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-06-14-openapi-generation; the missing half is humaniq's own work, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister)."
+   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-06-14-openapi-generation; the missing half is humaniq's own work, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuKoppelingen"
+   }
   },
   {
    "id": "plt-accounting-link",
@@ -7151,7 +7995,11 @@
    "providerHow": "read-from-code",
    "feature": "payroll-to-accounting",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisBetalen"
+   }
   },
   {
    "id": "plt-integration-accounts",
@@ -7184,7 +8032,11 @@
    "feature": "api-and-integrations",
    "featureConfidence": "high",
    "source": "own",
-   "note": "The page only catalogues which external systems are said to have access; it configures no actual connection, credential, or data exchange with a pension fund or health service, unlike the competitor rows cited, which are real working connectors."
+   "note": "The page only catalogues which external systems are said to have access; it configures no actual connection, credential, or data exchange with a pension fund or health service, unlike the competitor rows cited, which are real working connectors.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuKoppelingen"
+   }
   },
   {
    "id": "plt-workflows",
@@ -7216,7 +8068,11 @@
    "providerHow": "read-from-code",
    "feature": "api-and-integrations",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuKoppelingen"
+   }
   },
   {
    "id": "plt-configurable-notifications",
@@ -7249,7 +8105,11 @@
    "providerHow": "read-from-code",
    "feature": "api-and-integrations",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInstellingen"
+   }
   },
   {
    "id": "plt-template-store",
@@ -7281,7 +8141,11 @@
    "providerHow": "read-from-code",
    "feature": "setup-and-hosting",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInrichten"
+   }
   },
   {
    "id": "plt-setup-wizard",
@@ -7313,7 +8177,11 @@
    "providerHow": "read-from-code",
    "feature": "setup-and-hosting",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInrichten"
+   }
   },
   {
    "id": "plt-multilingual",
@@ -7345,7 +8213,11 @@
    "providerHow": "read-from-code",
    "feature": "setup-and-hosting",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInrichten"
+   }
   },
   {
    "id": "plt-demo-data",
@@ -7377,7 +8249,11 @@
    "providerHow": "read-from-code",
    "feature": "setup-and-hosting",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInrichten"
+   }
   },
   {
    "id": "plt-hours-leaf",
@@ -7409,7 +8285,11 @@
    "providerHow": "read-from-code",
    "feature": "project-hours",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProjecturen"
+   }
   },
   {
    "id": "plt-agenda-leaf",
@@ -7441,7 +8321,11 @@
    "providerHow": "read-from-code",
    "feature": "agenda-and-resource-booking",
    "featureConfidence": "high",
-   "source": "own"
+   "source": "own",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuAgenda"
+   }
   },
   {
    "id": "plt-sso",
@@ -7473,7 +8357,11 @@
    "providerHow": "inferred",
    "feature": "secure-sign-in",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInstellingen"
+   }
   },
   {
    "id": "plt-marketplace",
@@ -7505,7 +8393,11 @@
    "providerHow": "read-from-code",
    "feature": "api-and-integrations",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuKoppelingen"
+   }
   },
   {
    "id": "td-mutation-approval",
@@ -7540,7 +8432,14 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
-   "note": "Tender requirement: Delft Support HRM/PSA eis 1.2 E9 (personeelsdossier: wijzigingen pas na goedkeuring, per type wijziging instelbaar)."
+   "note": "Tender requirement: Delft Support HRM/PSA eis 1.2 E9 (personeelsdossier: wijzigingen pas na goedkeuring, per type wijziging instelbaar).",
+   "screen": {
+    "canvas": "design-system",
+    "board": [
+     "HuMedewerker",
+     "HuMijnGoedkeuringen"
+    ]
+   }
   },
   {
    "id": "td-dossier-validation",
@@ -7575,7 +8474,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
-   "note": "Tender requirement: Delft Support eis 1.2 E14 (dossiervalidatie: identiteitsbewijs, arbeidsovereenkomst, VOG, SKJ, BIG)."
+   "note": "Tender requirement: Delft Support eis 1.2 E14 (dossiervalidatie: identiteitsbewijs, arbeidsovereenkomst, VOG, SKJ, BIG).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkerDossier"
+   }
   },
   {
    "id": "td-multiple-employments",
@@ -7610,7 +8513,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
-   "note": "Tender requirement: Sudwest-Fryslan E5.12 and E23.05 (meerdere gelijktijdige dienstverbanden) and W0.5 (een verlofoverzicht); Delft Support E16."
+   "note": "Tender requirement: Sudwest-Fryslan E5.12 and E23.05 (meerdere gelijktijdige dienstverbanden) and W0.5 (een verlofoverzicht); Delft Support E16.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerker"
+   }
   },
   {
    "id": "td-secondment",
@@ -7645,7 +8552,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
-   "note": "Tender requirement: Sudwest-Fryslan E6.10 (extern gedetacheerde medewerkers registreren)."
+   "note": "Tender requirement: Sudwest-Fryslan E6.10 (extern gedetacheerde medewerkers registreren).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerker"
+   }
   },
   {
    "id": "td-side-activities",
@@ -7680,7 +8591,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
-   "note": "Tender requirement: Sudwest-Fryslan E6.8 (nevenactiviteiten registreren bij instroom en gedurende loopbaan)."
+   "note": "Tender requirement: Sudwest-Fryslan E6.8 (nevenactiviteiten registreren bij instroom en gedurende loopbaan).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerker"
+   }
   },
   {
    "id": "td-personnel-budget",
@@ -7715,7 +8630,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
-   "note": "Tender requirement: Delft Support E12 (personeelsbegroting per medewerker, functie, team, kostenplaats); Sudwest-Fryslan E8.14."
+   "note": "Tender requirement: Delft Support E12 (personeelsbegroting per medewerker, functie, team, kostenplaats); Sudwest-Fryslan E8.14.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuFormatie"
+   }
   },
   {
    "id": "td-formation-scenarios",
@@ -7750,7 +8669,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
-   "note": "Tender requirement: Sudwest-Fryslan E12.10 (formatieplanningstool met scenario's)."
+   "note": "Tender requirement: Sudwest-Fryslan E12.10 (formatieplanningstool met scenario's).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuFormatie"
+   }
   },
   {
    "id": "td-net-fte",
@@ -7785,7 +8708,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
-   "note": "Tender requirement: Sudwest-Fryslan E12.9 and W0.14 (netto bezetting in FTE)."
+   "note": "Tender requirement: Sudwest-Fryslan E12.9 and W0.14 (netto bezetting in FTE).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuFormatie"
+   }
   },
   {
    "id": "td-manager-dashboard",
@@ -7820,7 +8747,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
-   "note": "Tender requirement: Sudwest-Fryslan E10.9 and E13.3 (managersdashboard, rolgebaseerde dashboards)."
+   "note": "Tender requirement: Sudwest-Fryslan E10.9 and E13.3 (managersdashboard, rolgebaseerde dashboards).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnAfdeling"
+   }
   },
   {
    "id": "td-frequent-absence",
@@ -7855,7 +8786,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
-   "note": "Tender requirement: Delft Support usability E14 (melding bij frequent verzuim, drempel instelbaar); Sudwest-Fryslan E8.12."
+   "note": "Tender requirement: Delft Support usability E14 (melding bij frequent verzuim, drempel instelbaar); Sudwest-Fryslan E8.12.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerzuimdossier"
+   }
   },
   {
    "id": "td-manager-deputy",
@@ -7890,7 +8825,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
-   "note": "Tender requirement: Delft Support MSS E2 (leidinggevenden kunnen elkaar tijdelijk vervangen)."
+   "note": "Tender requirement: Delft Support MSS E2 (leidinggevenden kunnen elkaar tijdelijk vervangen).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnGoedkeuringen"
+   }
   },
   {
    "id": "td-step-increase",
@@ -7925,7 +8864,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
-   "note": "Tender requirement: Delft Support E5 (periodieke stijgingen goed- en afkeuren met onderbouwing)."
+   "note": "Tender requirement: Delft Support E5 (periodieke stijgingen goed- en afkeuren met onderbouwing).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuCao"
+   }
   },
   {
    "id": "td-review-progress-private",
@@ -7960,7 +8903,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
-   "note": "Tender requirement: Delft Support E33 (voortgang beoordelingsgesprekken bewaken zonder de inhoud te zien)."
+   "note": "Tender requirement: Delft Support E33 (voortgang beoordelingsgesprekken bewaken zonder de inhoud te zien).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuGesprekscyclus"
+   }
   },
   {
    "id": "td-commute-allowance",
@@ -7995,7 +8942,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
-   "note": "Tender requirement: Delft Support E17 (fiscale rekenregels woon-werkverkeer) and E8 (reiskostenberekening via routeplanner of OV-API)."
+   "note": "Tender requirement: Delft Support E17 (fiscale rekenregels woon-werkverkeer) and E8 (reiskostenberekening via routeplanner of OV-API).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuBedrijfsmiddelen"
+   }
   },
   {
    "id": "td-wpm-co2",
@@ -8030,7 +8981,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
-   "note": "Tender requirement: Sudwest-Fryslan E10.5 (CO2-registratieplicht, vervoersmiddel en brandstof) and E10.3; Delft Support data E4 (WPM)."
+   "note": "Tender requirement: Sudwest-Fryslan E10.5 (CO2-registratieplicht, vervoersmiddel en brandstof) and E10.3; Delft Support data E4 (WPM).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuBedrijfsmiddelen"
+   }
   },
   {
    "id": "td-ikb",
@@ -8064,7 +9019,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
-   "note": "Tender requirement: Sudwest-Fryslan E5.38 (Individueel Keuzebudget volgens CAO Gemeenten)."
+   "note": "Tender requirement: Sudwest-Fryslan E5.38 (Individueel Keuzebudget volgens CAO Gemeenten).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkerSalaris"
+   }
   },
   {
    "id": "td-political-office-holders",
@@ -8098,7 +9057,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
-   "note": "Tender requirement: Sudwest-Fryslan E5.39 and W0.1 (politieke ambtsdragers, wachtgeld of pensioen)."
+   "note": "Tender requirement: Sudwest-Fryslan E5.39 and W0.1 (politieke ambtsdragers, wachtgeld of pensioen).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkers"
+   }
   },
   {
    "id": "td-bi-feed",
@@ -8133,7 +9096,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
-   "note": "Tender requirement: Delft Support E4 and E1 (koppeling met Power BI, real-time of geplande verversing); Sudwest-Fryslan W0.9. Spec round 2 (2026-10-07): verdict sibling-has. OpenRegister ships the scheduled feed (GraphQL plus scheduled report renders) and humaniq consumes it; humaniq stays partial because OData was put out of scope and a Power BI refresh needs a third-party GraphQL connector."
+   "note": "Tender requirement: Delft Support E4 and E1 (koppeling met Power BI, real-time of geplande verversing); Sudwest-Fryslan W0.9. Spec round 2 (2026-10-07): verdict sibling-has. OpenRegister ships the scheduled feed (GraphQL plus scheduled report renders) and humaniq consumes it; humaniq stays partial because OData was put out of scope and a Power BI refresh needs a third-party GraphQL connector.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuRapportages"
+   }
   },
   {
    "id": "td-dms-link",
@@ -8167,7 +9134,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
-   "note": "Tender requirement: Delft Support E4 and E22 (koppeling met het DMS, STUF-ZDS of NEN-ISO 16175)."
+   "note": "Tender requirement: Delft Support E4 and E22 (koppeling met het DMS, STUF-ZDS of NEN-ISO 16175).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkerDossier"
+   }
   },
   {
    "id": "td-event-webhooks",
@@ -8202,7 +9173,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
-   "note": "Tender requirement: Sudwest-Fryslan W0.21 (signalen via events of webhooks bij indienst, uitdienst, functiewijziging, verlof, verzuim)."
+   "note": "Tender requirement: Sudwest-Fryslan W0.21 (signalen via events of webhooks bij indienst, uitdienst, functiewijziging, verlof, verzuim).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuKoppelingen"
+   }
   },
   {
    "id": "td-lms-sync",
@@ -8237,7 +9212,11 @@
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
-   "note": "Tender requirement: Sudwest-Fryslan E17.1 and E17.2 (koppeling met LMS zoals Studytube, automatische synchronisatie)."
+   "note": "Tender requirement: Sudwest-Fryslan E17.1 and E17.2 (koppeling met LMS zoals Studytube, automatische synchronisatie).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuOpleidingen"
+   }
   },
   {
    "id": "dm-chat-channel-digest",
@@ -8271,7 +9250,11 @@
    "feature": "mijn-hr-self-service",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://github.com/orangehrm/orangehrm/releases/tag/v5.9"
+   "originUrl": "https://github.com/orangehrm/orangehrm/releases/tag/v5.9",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnHr"
+   }
   },
   {
    "id": "dm-leave-multi-step-approval",
@@ -8304,7 +9287,11 @@
    "feature": "leave-management",
    "source": "featureRequest",
    "origin": "featureRequest",
-   "originUrl": "https://github.com/orangehrm/orangehrm/issues/1676"
+   "originUrl": "https://github.com/orangehrm/orangehrm/issues/1676",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofaanvraag"
+   }
   },
   {
    "id": "dm-leave-approval-history",
@@ -8337,7 +9324,11 @@
    "feature": "leave-management",
    "source": "featureRequest",
    "origin": "featureRequest",
-   "originUrl": "https://github.com/orangehrm/orangehrm/issues/1770"
+   "originUrl": "https://github.com/orangehrm/orangehrm/issues/1770",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVerlofaanvraag"
+   }
   },
   {
    "id": "dm-password-policy",
@@ -8370,7 +9361,11 @@
    "feature": "secure-sign-in",
    "source": "featureRequest",
    "origin": "featureRequest",
-   "originUrl": "https://github.com/orangehrm/orangehrm/issues/1169"
+   "originUrl": "https://github.com/orangehrm/orangehrm/issues/1169",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInstellingen"
+   }
   },
   {
    "id": "dm-login-lockout",
@@ -8403,7 +9398,11 @@
    "feature": "secure-sign-in",
    "source": "featureRequest",
    "origin": "featureRequest",
-   "originUrl": "https://github.com/orangehrm/orangehrm/issues/453"
+   "originUrl": "https://github.com/orangehrm/orangehrm/issues/453",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInstellingen"
+   }
   },
   {
    "id": "dm-applicant-questions",
@@ -8437,7 +9436,11 @@
    "feature": "recruiting",
    "source": "featureRequest",
    "origin": "featureRequest",
-   "originUrl": "https://github.com/orangehrm/orangehrm/issues/484"
+   "originUrl": "https://github.com/orangehrm/orangehrm/issues/484",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuWerkenBij"
+   }
   },
   {
    "id": "dm-pay-transparency",
@@ -8472,7 +9475,11 @@
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://www.hr2day.com/nieuws/nieuwe-release-llama/",
-   "note": "Also named by AFAS (job categories for equal work, https://klant.afas.nl/update/profit-8/payroll) and by Visma Raet as work in progress (https://youforce.nl/richtlijn-loontransparantie-kenjijjeloonkloof)."
+   "note": "Also named by AFAS (job categories for equal work, https://klant.afas.nl/update/profit-8/payroll) and by Visma Raet as work in progress (https://youforce.nl/richtlijn-loontransparantie-kenjijjeloonkloof).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuBeloningsronde"
+   }
   },
   {
    "id": "dm-vacancy-matching",
@@ -8507,7 +9514,11 @@
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://klant.afas.nl/update/profit-8/hrm",
-   "note": "Personio ships a talent screening agent that ranks applications against the job requirements (https://support.personio.de/hc/en-us/articles/37951608749981-Set-up-the-Talent-Screening-Agent)."
+   "note": "Personio ships a talent screening agent that ranks applications against the job requirements (https://support.personio.de/hc/en-us/articles/37951608749981-Set-up-the-Talent-Screening-Agent).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuVacature"
+   }
   },
   {
    "id": "dm-right-to-work-check",
@@ -8541,7 +9552,11 @@
    "feature": "personnel-dossier",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://klant.afas.nl/update/profit-8/hrm"
+   "originUrl": "https://klant.afas.nl/update/profit-8/hrm",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkerDossier"
+   }
   },
   {
    "id": "dm-lock-leave-periods",
@@ -8638,7 +9653,11 @@
    "feature": "payroll-engine",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://klant.afas.nl/update/profit-7/hrm"
+   "originUrl": "https://klant.afas.nl/update/profit-7/hrm",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProformaLoonstrook"
+   }
   },
   {
    "id": "dm-plate-lookup",
@@ -8673,7 +9692,11 @@
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2",
-   "note": "AFAS lists the same on its Profit 9 roadmap (https://www.afas.nl/roadmap)."
+   "note": "AFAS lists the same on its Profit 9 roadmap (https://www.afas.nl/roadmap).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDeclaratie"
+   }
   },
   {
    "id": "dm-rvu",
@@ -8706,7 +9729,11 @@
    "feature": "special-pay-regimes",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/3"
+   "originUrl": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/3",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkerSalaris"
+   }
   },
   {
    "id": "dm-expense-vat",
@@ -8739,7 +9766,11 @@
    "feature": "expenses",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2"
+   "originUrl": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuDeclaratie"
+   }
   },
   {
    "id": "dm-ai-policy-assistant",
@@ -8773,7 +9804,11 @@
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://www.hr2day.com/nieuws/nieuwe-release-kiwi/",
-   "note": "Visma Raet ships the same in the Youforce app (https://apps.apple.com/nl/app/youforce/id1541134359) and Loket a voice-driven HR buddy that also acts (https://loket.nl/nieuws/loket-brengt-hr-van-morgen-dichterbij-met-spraakgestuurde-hr-buddy/); Personio answers from company knowledge sources (https://www.personio.com/whats-new-q2-26/). Differs from the pending rep-ai-assistant row, which asks questions about HR data."
+   "note": "Visma Raet ships the same in the Youforce app (https://apps.apple.com/nl/app/youforce/id1541134359) and Loket a voice-driven HR buddy that also acts (https://loket.nl/nieuws/loket-brengt-hr-van-morgen-dichterbij-met-spraakgestuurde-hr-buddy/); Personio answers from company knowledge sources (https://www.personio.com/whats-new-q2-26/). Differs from the pending rep-ai-assistant row, which asks questions about HR data.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnHr"
+   }
   },
   {
    "id": "dm-lkv",
@@ -8871,7 +9906,11 @@
    "feature": "payroll-run",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://data.maglr.com/1697/issues/68666/820322/index.html"
+   "originUrl": "https://data.maglr.com/1697/issues/68666/820322/index.html",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisrun"
+   }
   },
   {
    "id": "dm-rehire",
@@ -8905,7 +9944,11 @@
    "feature": "onboarding",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://data.maglr.com/1697/issues/66612/785293/index.html"
+   "originUrl": "https://data.maglr.com/1697/issues/66612/785293/index.html",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInwerken"
+   }
   },
   {
    "id": "dm-parental-leave-pay",
@@ -9003,7 +10046,11 @@
    "feature": "employee-records",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://data.maglr.com/1697/issues/66612/785296/index.html"
+   "originUrl": "https://data.maglr.com/1697/issues/66612/785296/index.html",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkers"
+   }
   },
   {
    "id": "dm-oncall-average-hours",
@@ -9037,7 +10084,11 @@
    "feature": "flex-and-fixed-term",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://loket.nl/roadmap/"
+   "originUrl": "https://loket.nl/roadmap/",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerker"
+   }
   },
   {
    "id": "ppl-civil-servant-status",
@@ -9057,7 +10108,11 @@
     "owner": "ConductionNL/humaniq"
    },
    "feature": "employee-records",
-   "source": "spec-round-2026-10-07"
+   "source": "spec-round-2026-10-07",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerker"
+   }
   },
   {
    "id": "dm-week-53",
@@ -9090,7 +10145,11 @@
    "feature": "payroll-engine",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://loket.nl/roadmap/"
+   "originUrl": "https://loket.nl/roadmap/",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProformaLoonstrook"
+   }
   },
   {
    "id": "dm-own-pension-rules",
@@ -9155,7 +10214,11 @@
    "feature": "payroll-run",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://loket.nl/roadmap/"
+   "originUrl": "https://loket.nl/roadmap/",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisrun"
+   }
   },
   {
    "id": "pay-pension-premium",
@@ -9176,7 +10239,11 @@
    },
    "feature": "payroll-engine",
    "source": "spec-round-2026-10-07",
-   "note": "Ported from shillinq's dormant payroll engine (decision 65 b), rebuilt with a franchise. Open: which schemes and where their parameters live (design O1)."
+   "note": "Ported from shillinq's dormant payroll engine (decision 65 b), rebuilt with a franchise. Open: which schemes and where their parameters live (design O1).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMedewerkerSalaris"
+   }
   },
   {
    "id": "pay-partial-period",
@@ -9197,7 +10264,11 @@
    },
    "feature": "payroll-engine",
    "source": "spec-round-2026-10-07",
-   "note": "Ported from shillinq proRataBruto (decision 65 b). Open: calendar days or working days (design O2)."
+   "note": "Ported from shillinq proRataBruto (decision 65 b). Open: calendar days or working days (design O2).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuProformaLoonstrook"
+   }
   },
   {
    "id": "pay-wage-tax-remittance",
@@ -9218,7 +10289,11 @@
    },
    "feature": "payroll-to-accounting",
    "source": "spec-round-2026-10-07",
-   "note": "DECISIONS 65 c. Sits next to the payroll journal (pay-gl-journal) and the net pay batch (pay-sepa)."
+   "note": "DECISIONS 65 c. Sits next to the payroll journal (pay-gl-journal) and the net pay batch (pay-sepa).",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuSalarisBetalen"
+   }
   },
   {
    "id": "dm-document-to-employee",
@@ -9252,7 +10327,11 @@
    "feature": "onboarding",
    "source": "roadmap",
    "origin": "roadmap",
-   "originUrl": "https://loket.nl/roadmap/"
+   "originUrl": "https://loket.nl/roadmap/",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuInwerken"
+   }
   },
   {
    "id": "dm-passkeys",
@@ -9408,7 +10487,11 @@
    "providerHow": "read-from-code",
    "feature": "ai-assistant",
    "source": "spec-round-2026-10-07",
-   "note": "Split from dm-mcp-server (spec round 2, 2026-10-07): that row stays decided-no for write tools such as starting a time-off request; this row is the read-only surface humaniq ships."
+   "note": "Split from dm-mcp-server (spec round 2, 2026-10-07): that row stays decided-no for write tools such as starting a time-off request; this row is the read-only surface humaniq ships.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuKoppelingen"
+   }
   },
   {
    "id": "dm-approvals-dashboard",
@@ -9442,7 +10525,11 @@
    "feature": "mijn-hr-self-service",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://support.personio.de/hc/en-us/articles/36278272594077-Approvals-dashboard-Beta-access-overview"
+   "originUrl": "https://support.personio.de/hc/en-us/articles/36278272594077-Approvals-dashboard-Beta-access-overview",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuMijnGoedkeuringen"
+   }
   },
   {
    "id": "dm-survey-benchmark",
