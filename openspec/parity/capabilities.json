@@ -383,6 +383,477 @@
    "name_nl": "Platform en koppelingen"
   }
  ],
+ "features": [
+  {
+   "slug": "employee-records",
+   "title": "Employee and contract records",
+   "title_nl": "Medewerker- en contractgegevens",
+   "area": "people",
+   "overlay": null,
+   "specs": [
+    "employee-and-contract-records",
+    "register-prefill",
+    "aor-ambtenarenrecht",
+    "secondment-and-side-activities"
+   ]
+  },
+  {
+   "slug": "flex-and-fixed-term",
+   "title": "Flex workers, interns and fixed-term contracts",
+   "title_nl": "Flexkrachten, stagiairs en tijdelijke contracten",
+   "area": "people",
+   "overlay": null,
+   "specs": [
+    "flex-contract-rules",
+    "stagiair-bbl-admin",
+    "uitzend-flexpool"
+   ]
+  },
+  {
+   "slug": "org-structure",
+   "title": "Organisation chart and positions",
+   "title_nl": "Organogram en functies",
+   "area": "people",
+   "overlay": null,
+   "specs": [
+    "org-chart-basic",
+    "org-chart-view",
+    "formation-positions"
+   ]
+  },
+  {
+   "slug": "personnel-budget",
+   "title": "Personnel budget and formation scenarios",
+   "title_nl": "Personeelsbegroting en formatiescenario's",
+   "area": "reporting",
+   "overlay": null,
+   "specs": [
+    "formation-positions"
+   ]
+  },
+  {
+   "slug": "cao-library",
+   "title": "Collective labour agreements",
+   "title_nl": "Cao's",
+   "area": "people",
+   "overlay": null,
+   "specs": [
+    "cao-library",
+    "payroll-cao-components"
+   ]
+  },
+  {
+   "slug": "personnel-dossier",
+   "title": "Digital personnel file and HR documents",
+   "title_nl": "Digitaal personeelsdossier en HR-documenten",
+   "area": "people",
+   "overlay": null,
+   "specs": [
+    "document-dossier-avg",
+    "humaniq-docudesk-documents",
+    "dossier-completeness",
+    "documents-employer-statement-from-the-contract"
+   ]
+  },
+  {
+   "slug": "employee-relations",
+   "title": "Employee relations, works council and whistleblowing",
+   "title_nl": "Arbeidsverhoudingen, OR en klokkenluiders",
+   "area": "compliance",
+   "overlay": null,
+   "specs": [
+    "employee-relations-cases"
+   ]
+  },
+  {
+   "slug": "recruiting",
+   "title": "Vacancies and applicants",
+   "title_nl": "Vacatures en sollicitanten",
+   "area": "hiring",
+   "overlay": null,
+   "specs": [
+    "portal-audiences",
+    "candidate-assessment",
+    "hiring-cv-profile-extraction",
+    "interview-scheduling",
+    "offer-esign"
+   ]
+  },
+  {
+   "slug": "onboarding",
+   "title": "Onboarding new hires",
+   "title_nl": "Nieuwe medewerkers inwerken",
+   "area": "hiring",
+   "overlay": null,
+   "specs": [
+    "hire-to-employee",
+    "onboarding-wizard",
+    "portal-audiences",
+    "hiring-document-to-employee"
+   ]
+  },
+  {
+   "slug": "offboarding",
+   "title": "Offboarding",
+   "title_nl": "Uitdiensttreding",
+   "area": "hiring",
+   "overlay": null,
+   "specs": [
+    "offboarding-wizard",
+    "offboarding-completion"
+   ]
+  },
+  {
+   "slug": "leave-management",
+   "title": "Leave requests and balances",
+   "title_nl": "Verlofaanvragen en saldi",
+   "area": "leave",
+   "overlay": null,
+   "specs": [
+    "leave-accrual-job",
+    "leave-expiry-and-carry-over",
+    "leave-buy-sell",
+    "leave-approval-steps-and-history"
+   ]
+  },
+  {
+   "slug": "leave-team-calendar",
+   "title": "Team leave calendar and coverage",
+   "title_nl": "Verlofkalender en bezetting van het team",
+   "area": "leave",
+   "overlay": null,
+   "specs": [
+    "leave-calendar-nc"
+   ]
+  },
+  {
+   "slug": "sickness-absence",
+   "title": "Sickness absence and the Gatekeeper Act",
+   "title_nl": "Verzuim en de Wet verbetering poortwachter",
+   "area": "absence",
+   "overlay": null,
+   "specs": [
+    "absence-deadlines-and-signals",
+    "sick-pay-calc"
+   ]
+  },
+  {
+   "slug": "time-registration",
+   "title": "Logging hours and timesheets",
+   "title_nl": "Uren schrijven en urenstaten",
+   "area": "time",
+   "overlay": null,
+   "specs": [
+    "time-entry-capture",
+    "humaniq-timesheet-approval",
+    "time-hours-and-overtime-to-payroll"
+   ]
+  },
+  {
+   "slug": "project-hours",
+   "title": "Hours on cases and projects",
+   "title_nl": "Uren op zaken en projecten",
+   "area": "time",
+   "overlay": null,
+   "specs": [
+    "time-entry-capture",
+    "humaniq-timesheet-approved-typed-event",
+    "humaniq-dashboard-steering-indicators"
+   ]
+  },
+  {
+   "slug": "time-attendance",
+   "title": "Attendance, overtime and working hours rules",
+   "title_nl": "Aanwezigheid, overwerk en arbeidstijden",
+   "area": "time",
+   "overlay": null,
+   "specs": [
+    "time-attendance",
+    "time-hours-and-overtime-to-payroll"
+   ]
+  },
+  {
+   "slug": "rostering",
+   "title": "Rostering",
+   "title_nl": "Roosteren",
+   "area": "planning",
+   "overlay": null,
+   "specs": [
+    "rostering"
+   ]
+  },
+  {
+   "slug": "agenda-and-resource-booking",
+   "title": "Agenda, availability and resource booking",
+   "title_nl": "Agenda, beschikbaarheid en reserveringen",
+   "area": "planning",
+   "overlay": null,
+   "specs": []
+  },
+  {
+   "slug": "expenses",
+   "title": "Expense claims",
+   "title_nl": "Declaraties",
+   "area": "expenses",
+   "overlay": null,
+   "specs": [
+    "humaniq-expenses",
+    "receipt-ocr",
+    "payroll-expenses-and-allowances"
+   ]
+  },
+  {
+   "slug": "travel-cars-and-equipment",
+   "title": "Travel, lease cars and equipment",
+   "title_nl": "Reiskosten, leaseauto's en bedrijfsmiddelen",
+   "area": "expenses",
+   "overlay": null,
+   "specs": [
+    "expenses-travel-calculation",
+    "fleet-bijtelling",
+    "register-prefill",
+    "asset-management"
+   ]
+  },
+  {
+   "slug": "payroll-engine",
+   "title": "Dutch payroll calculation",
+   "title_nl": "Nederlandse salarisberekening",
+   "area": "payroll",
+   "overlay": null,
+   "specs": [
+    "payroll-core-engine",
+    "payroll-reservation-payouts",
+    "30-procent-regeling",
+    "payroll-engine-port-from-shillinq",
+    "payroll-period-edge-cases",
+    "proforma-payslip"
+   ]
+  },
+  {
+   "slug": "payroll-run",
+   "title": "Payroll run checks and approval",
+   "title_nl": "Controle en goedkeuring van de salarisrun",
+   "area": "payroll",
+   "overlay": null,
+   "specs": [
+    "payroll-run-as-a-flow",
+    "payroll-run-checks",
+    "payroll-mutation-reports",
+    "audit-trail-payroll",
+    "payroll-mutation-lineage",
+    "retro-adjustments"
+   ]
+  },
+  {
+   "slug": "payslips",
+   "title": "Payslips and annual statements",
+   "title_nl": "Loonstroken en jaaropgaven",
+   "area": "payroll",
+   "overlay": null,
+   "specs": [
+    "mijn-hr-self-service",
+    "payslip-pdf-docudesk",
+    "payroll-annual-statement-action"
+   ]
+  },
+  {
+   "slug": "special-pay-regimes",
+   "title": "Special pay regimes",
+   "title_nl": "Bijzondere beloningsregelingen",
+   "area": "payroll",
+   "overlay": null,
+   "specs": [
+    "dga-payroll-mode",
+    "loonbeslag",
+    "payroll-special-regimes",
+    "single-person-modes"
+   ]
+  },
+  {
+   "slug": "payroll-to-accounting",
+   "title": "Paying salaries and posting to the ledger",
+   "title_nl": "Salarissen betalen en boeken",
+   "area": "payroll",
+   "overlay": null,
+   "specs": [
+    "payroll-sepa-netpay-shillinq",
+    "payroll-glpost-shillinq",
+    "payroll-cost-allocation",
+    "payroll-wage-tax-remittance-shillinq",
+    "payroll-expenses-and-allowances",
+    "payroll-external-bureau-handoff"
+   ]
+  },
+  {
+   "slug": "wage-tax-return",
+   "title": "Wage tax and pension filings",
+   "title_nl": "Loon- en pensioenaangifte",
+   "area": "filings",
+   "overlay": null,
+   "specs": [
+    "filings-wage-tax-message",
+    "filings-correction-message",
+    "filings-pension-upa-message"
+   ]
+  },
+  {
+   "slug": "statutory-reporting",
+   "title": "WKR, WNT and other statutory reports",
+   "title_nl": "WKR, WNT en andere wettelijke opgaven",
+   "area": "filings",
+   "overlay": null,
+   "specs": [
+    "wkr-administration",
+    "payroll-expenses-and-allowances",
+    "wnt-disclosure"
+   ]
+  },
+  {
+   "slug": "performance-reviews",
+   "title": "Performance reviews, goals and engagement",
+   "title_nl": "Gesprekscyclus, doelen en betrokkenheid",
+   "area": "talent",
+   "overlay": null,
+   "specs": [
+    "performance-reviews",
+    "goals-okr",
+    "talent-engagement-surveys"
+   ]
+  },
+  {
+   "slug": "compensation-cycles",
+   "title": "Compensation cycles and salary scales",
+   "title_nl": "Beloningsrondes en salarisschalen",
+   "area": "talent",
+   "overlay": null,
+   "specs": [
+    "comp-cycles",
+    "comp-collective-raise-and-step-increase",
+    "pay-transparency"
+   ]
+  },
+  {
+   "slug": "training-and-competences",
+   "title": "Training, certificates and skills",
+   "title_nl": "Opleidingen, certificaten en vaardigheden",
+   "area": "talent",
+   "overlay": null,
+   "specs": []
+  },
+  {
+   "slug": "mijn-hr-self-service",
+   "title": "Employee and manager self-service",
+   "title_nl": "Selfservice voor medewerkers en managers",
+   "area": "self-service",
+   "overlay": null,
+   "specs": [
+    "mijn-hr-self-service",
+    "self-service-mobile",
+    "hrmq-personal-dashboard",
+    "mss-team-scope",
+    "department-figures",
+    "humaniq-timesheet-approval"
+   ]
+  },
+  {
+   "slug": "hr-dashboard",
+   "title": "HR dashboard, signals and steering figures",
+   "title_nl": "HR-dashboard, signalen en stuurinformatie",
+   "area": "reporting",
+   "overlay": null,
+   "specs": [
+    "humaniq-dashboard-steering-indicators",
+    "department-figures",
+    "verzuim-analytics-widgets",
+    "hr-signals"
+   ]
+  },
+  {
+   "slug": "hr-reporting",
+   "title": "HR reports and exports",
+   "title_nl": "HR-rapportages en exports",
+   "area": "reporting",
+   "overlay": null,
+   "specs": [
+    "reporting-standard-reports-and-builder",
+    "reporting-full-list-export"
+   ]
+  },
+  {
+   "slug": "ai-assistant",
+   "title": "AI assistant for HR",
+   "title_nl": "AI-assistent voor HR",
+   "area": "platform",
+   "overlay": null,
+   "specs": [
+    "self-service-policy-assistant",
+    "humaniq-mcp-surface"
+   ]
+  },
+  {
+   "slug": "hrm-rule-engine",
+   "title": "Labour law rule checks",
+   "title_nl": "Toetsing aan arbeidsrecht",
+   "area": "compliance",
+   "overlay": null,
+   "specs": []
+  },
+  {
+   "slug": "avg-dsr",
+   "title": "Privacy requests and retention",
+   "title_nl": "AVG-verzoeken en bewaartermijnen",
+   "area": "compliance",
+   "overlay": null,
+   "specs": [
+    "avg-dsr"
+   ]
+  },
+  {
+   "slug": "roles-and-access",
+   "title": "Roles, field access and audit trail",
+   "title_nl": "Rollen, veldrechten en audittrail",
+   "area": "compliance",
+   "overlay": null,
+   "specs": []
+  },
+  {
+   "slug": "secure-sign-in",
+   "title": "Secure sign-in",
+   "title_nl": "Veilig inloggen",
+   "area": "platform",
+   "overlay": null,
+   "specs": [
+    "irma-digid-auth"
+   ]
+  },
+  {
+   "slug": "api-and-integrations",
+   "title": "API, integrations and workflows",
+   "title_nl": "API, koppelingen en workflows",
+   "area": "platform",
+   "overlay": null,
+   "specs": [
+    "hris-api-public",
+    "platform-integrations-catalogue",
+    "hr-lifecycle-events",
+    "platform-hr-workflows"
+   ]
+  },
+  {
+   "slug": "setup-and-hosting",
+   "title": "Setup, administrations and self-hosting",
+   "title_nl": "Inrichting, administraties en zelf hosten",
+   "area": "platform",
+   "overlay": null,
+   "specs": [
+    "first-time-setup",
+    "hrmq-i18n-locale-completeness",
+    "multi-administratie",
+    "single-person-modes"
+   ]
+  }
+ ],
  "providers": [
   {
    "key": "humaniq",
@@ -534,8 +1005,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "employment-contracts",
-   "featureConfidence": "high",
+   "feature": "employee-records",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
@@ -567,8 +1038,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "employment-contracts",
-   "featureConfidence": "high",
+   "feature": "flex-and-fixed-term",
+   "featureConfidence": "medium",
    "source": "competitor",
    "note": "hr-signals' design.md and proposal.md both name ketenregeling (Wab 3x3) chain counting as a deliberate non-goal/follow-up. The successor check that does exist (nl-signaal-contract-verloopt) only looks for one later contract, not a legal 3-contract/3-year chain, so it cannot substitute."
   },
@@ -601,7 +1072,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "offboarding-wizard",
+   "feature": "offboarding",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "The row asks the system to calculate the statutory amount. The code only requires HR to type a number in manually before offboarding can close (BW 7:673 presence check); no formula exists anywhere in the codebase."
@@ -634,7 +1105,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "hr-signals",
+   "feature": "hr-dashboard",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Probation-ending is a separate rule (nl-onboarding-proeftijd-bewaking), not part of the two signals named in this row's hint; both are wired and both feed the same Dashboard obligations list."
@@ -666,8 +1137,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "hr-signals",
-   "featureConfidence": "medium",
+   "feature": "hr-dashboard",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "openspec/changes/archive/2026-07-13-hr-signals/design.md explicitly names 'WIA/jubilea fuzzy signals' as a non-goal alongside ketenregeling. Decided no on 2026-09-27 in the openspec pass, see built.evidence for the source."
   },
@@ -699,7 +1170,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "org-chart-basic",
+   "feature": "org-structure",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -732,7 +1203,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "org-chart-basic",
+   "feature": "org-structure",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "You can walk the hierarchy one click at a time via parent/child links and see who manages a unit, but there is no visual org chart; the spec explicitly names the D3 tree visualization as a descoped follow-up, not something built."
@@ -765,7 +1236,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "org-chart-basic",
+   "feature": "org-structure",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -798,8 +1269,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "position-management",
-   "featureConfidence": "medium",
+   "feature": "org-structure",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -831,7 +1302,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "functiehuis-hr21",
+   "feature": "org-structure",
    "featureConfidence": "high",
    "source": "own",
    "note": "Works as a lookup and grading link, but the schema's own description says the seeded HR21 library is an illustrative subset, not claimed-complete, and allowCreate is false everywhere so nobody can add a missing normfunctie through the app."
@@ -864,7 +1335,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "comp-cycles",
+   "feature": "compensation-cycles",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -929,7 +1400,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "jurisdiction-packs",
+   "feature": "cao-library",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Both paths to a legislation update need a manual, out-of-band step: an app upgrade for bundled data, or a raw API call with no UI for an uploaded pack. Neither is automatic and neither has a page."
@@ -962,7 +1433,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "document-dossier-avg",
+   "feature": "personnel-dossier",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -994,7 +1465,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-docudesk-documents",
+   "feature": "personnel-dossier",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Correcting an earlier fact passed down for this row: the lookup is NOT a bare isInstalled('docudesk')/OCA\\\\DocuDesk class reference that would silently no-op against a renamed filinq. HrDocumentService and OfferEsignService both go through FleetAppId, whose candidate lists try the new name ('filinq', 'OCA\\\\Filinq') first and the old one second, so this resolves correctly against a current filinq install. Depends on filinq (or docudesk) actually being installed; with neither installed the command/action degrades to a logged no-op rather than an error."
@@ -1028,8 +1499,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "offer-esign",
-   "featureConfidence": "high",
+   "feature": "personnel-dossier",
+   "featureConfidence": "medium",
    "source": "competitor",
    "note": "The only e-signature path in the whole codebase is offer-esign, scoped to a recruiting Application at the aanbod stage. An HR document about an existing employee (contract, getuigschrift, werkgeversverklaring) can be GENERATED but never sent for e-signature; this row and hir-offer-letter are the same underlying capability."
   },
@@ -1095,7 +1566,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "stagiair-bbl-admin",
+   "feature": "flex-and-fixed-term",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -1127,7 +1598,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "uitzend-flexpool",
+   "feature": "flex-and-fixed-term",
    "featureConfidence": "high",
    "source": "own",
    "note": "humaniq models the uitzendkracht as the agency's OWN Employee (it serves the uitzendbureau, not a client 'inlener' tracking someone else's flex worker), openspec/specs/uitzend-flexpool/spec.md states this design choice explicitly."
@@ -1161,7 +1632,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "comp-cycles",
+   "feature": "compensation-cycles",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Per the occ-only rule: the only way to apply a raise to many employees in one action is occ humaniq:comp:effectuate, with no page. The UI path effectuates proposals one at a time."
@@ -1228,7 +1699,7 @@
    "provider": "openregister",
    "providerHow": "inferred",
    "feature": "employee-records",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "This is a platform capability inherited from OpenRegister's schema editor, not something humaniq built itself; an HR admin would leave the humaniq app to use it."
   },
@@ -1261,7 +1732,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-employee-relations",
+   "feature": "employee-relations",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "The spec name is misleading: it is about a schema $ref resolving correctly (an OpenRegister relations fix), not about recording grievances or disciplinary cases. No schema for that exists in the app at all."
@@ -1294,7 +1765,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "recruiting-vacancies",
+   "feature": "recruiting",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -1327,7 +1798,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "recruiting-vacancies",
+   "feature": "recruiting",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "This is planned to live in portaliq per ADR-046, but the shipped PortalContributionProvider carries no candidate audience yet, there is no public page a candidate can reach today."
@@ -1361,7 +1832,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "recruiting-vacancies",
+   "feature": "recruiting",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Posting runs through integriq (one source and mapping per board); the flows ship disabled per the engine adoption contract."
@@ -1394,8 +1865,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "recruiting-applications",
-   "featureConfidence": "high",
+   "feature": "recruiting",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
@@ -1426,7 +1897,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "interview-scheduling",
+   "feature": "recruiting",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -1459,7 +1930,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "interview-scheduling",
+   "feature": "recruiting",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "The row's own hint ('Interview schema scorecard') is a false lead: the Interview schema has no scorecard field at all, only scheduling/status fields."
@@ -1492,8 +1963,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "offer-esign",
-   "featureConfidence": "high",
+   "feature": "recruiting",
+   "featureConfidence": "medium",
    "source": "own",
    "note": "Candidate self-service signing completion, webhook-driven status updates and auto-hire on completion are explicitly out of scope per openspec/specs/offer-esign/spec.md purpose section, HR still runs OfferSyncSignatureCommand (occ) to poll status."
   },
@@ -1526,8 +1997,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "recruiting-applications",
-   "featureConfidence": "high",
+   "feature": "onboarding",
+   "featureConfidence": "medium",
    "source": "competitor",
    "note": "The row specifically asks for no retyping. The manifest's own note documents that retyping is exactly what happens today; the aannemen transition is a status flip, not a data hand-off."
   },
@@ -1560,8 +2031,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "recruiting-applications",
-   "featureConfidence": "high",
+   "feature": "recruiting",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
@@ -1592,7 +2063,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "onboarding-wizard",
+   "feature": "onboarding",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "No distinct manager-owned task is modelled separately from the HR/IT gates, but the checklist genuinely spans HR and IT."
@@ -1626,7 +2097,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "onboarding-wizard",
+   "feature": "onboarding",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -1658,7 +2129,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "offboarding-wizard",
+   "feature": "offboarding",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -1691,7 +2162,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "offboarding-wizard",
+   "feature": "offboarding",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "exitGesprekDone is a plain checkbox that an exit interview happened, not a record of what was discussed; the reason for leaving IS captured as a real field. Anything about the interview's content would have to go in the generic freeform notes field."
@@ -1725,7 +2196,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "offboarding-wizard",
+   "feature": "offboarding",
    "featureConfidence": "high",
    "source": "own",
    "note": "Nothing in humaniq actually revokes a Nextcloud account or any other access; HR manually ticks a box attesting it was done elsewhere. The field isn't even read by any audit rule."
@@ -1790,7 +2261,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "no-self-approval",
+   "feature": "mijn-hr-self-service",
    "featureConfidence": "high",
    "source": "own",
    "note": "No competitor feature row names separation-of-duties as a distinct capability; it is presumably bundled inside their approval workflows."
@@ -1856,7 +2327,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "leave-accrual-job",
+   "feature": "leave-management",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -1890,7 +2361,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "leave-management",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "The expiry date is correctly computed and stored, but nothing acts on it: the balance does not shrink after 1 July and no one is warned beforehand."
   },
@@ -1956,7 +2427,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "leave-management",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "own",
    "note": "The calculation is a flat contractHoursPerWeek/5 per working day, not the employee's actual working pattern, and ignores public holidays."
   },
@@ -1988,7 +2459,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "leave-buy-sell",
+   "feature": "leave-management",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Own rating yes to partial (corrections round 8, 2026-09-28): leave is bought and sold through the approved lifecycle and settled, but pay folds the gross amount into net without wage tax, humaniq#513."
@@ -2021,8 +2492,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "leave-against-a-department-schedule",
-   "featureConfidence": "medium",
+   "feature": "leave-team-calendar",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "It is a sortable list of requests, not a calendar grid. The page's own manifest note says the org-unit composition and RBAC redaction live in GET /api/leave/schedule and GET /api/leave/coverage, but the page is a plain indexScaffold and does not call either endpoint (see lve-department-coverage): what a user actually gets is an unfiltered-by-RBAC list of LeaveRequest rows for the active administration."
   },
@@ -2054,7 +2525,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "leave-against-a-department-schedule",
+   "feature": "leave-team-calendar",
    "featureConfidence": "high",
    "source": "own",
    "note": "Live-defect candidate: a real controller and service exist for this capability but have no caller anywhere in the app."
@@ -2087,7 +2558,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "leave-calendar-nc",
+   "feature": "leave-team-calendar",
    "featureConfidence": "high",
    "source": "own",
    "note": "A Nextcloud-shared-calendar sync has no equivalent in the competitor set, which are not built on Nextcloud."
@@ -2122,7 +2593,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "leave-management",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -2188,7 +2659,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "leave-management",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "HR can tick that the leave balance was paid out and it is audited against the real balance, but nothing computes the payout amount or posts it to a payslip."
   },
@@ -2220,7 +2691,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "verzuim-wvp",
+   "feature": "sickness-absence",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -2252,7 +2723,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "verzuim-wvp",
+   "feature": "sickness-absence",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -2285,7 +2756,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "verzuim-wvp",
+   "feature": "sickness-absence",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -2317,8 +2788,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "verzuim-wvp",
-   "featureConfidence": "medium",
+   "feature": "sickness-absence",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "There is no medical field to leak by design, which is real protection, but nothing stops an uploaded file from containing medical detail beyond a description label, and there is no role-based restriction on who can open the case."
   },
@@ -2350,7 +2821,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "sick-pay-calc",
+   "feature": "sickness-absence",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -2381,7 +2852,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "verzuim-wvp",
+   "feature": "sickness-absence",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -2413,7 +2884,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "verzuim-wvp",
+   "feature": "sickness-absence",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -2446,7 +2917,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "absence-rate",
+   "feature": "hr-dashboard",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "The overall rate over time is real; per-department breakdown and absence frequency are named non-goals in the service's own docblock."
@@ -2479,7 +2950,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "verzuim-analytics-widgets",
+   "feature": "hr-dashboard",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -2512,7 +2983,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "verzuim-wvp",
+   "feature": "sickness-absence",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Deadline tracking is real; the notification itself is filed outside humaniq and only the fact/date of filing is recorded by hand."
@@ -2545,7 +3016,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "time-entry-capture",
+   "feature": "time-registration",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -2577,7 +3048,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "hours-leaf",
+   "feature": "project-hours",
    "featureConfidence": "high",
    "source": "own",
    "note": "openspec/changes/hours-leaf-loads-on-a-consuming-page documents this leaf as previously dark on every host page (no leaves webpack entry existed, so OpenRegister's LeafScriptListener silently skipped humaniq). The entry and src/leaves.js now exist and dossiq's CaseDetail already places and tests the leaf, even though that change's own tasks.md is still all unchecked: code and consumer are both confirmed live, the tasks file is just stale."
@@ -2610,7 +3081,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "time-entry-capture",
+   "feature": "time-registration",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -2642,7 +3113,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "time-entry-capture",
+   "feature": "time-registration",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -2674,7 +3145,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-timesheet-approval",
+   "feature": "time-registration",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "shillinq's ppl-timesheet-approval row (decided-no there) moves this capability to humaniq per openspec/changes/hours-to-humaniq; humaniq's own implementation is a real working approval path."
@@ -2707,7 +3178,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-timesheet-approval",
+   "feature": "time-registration",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -2739,7 +3210,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-timesheet-approval",
+   "feature": "time-registration",
    "featureConfidence": "high",
    "source": "own",
    "note": "The reopen transition works and clears the approval stamps, but carries no requires guard at all, unlike submit/approve/reject. That is harmless today because approved hours never flow into payroll yet (see tim-hours-to-payroll), but the row's own 'before payroll uses it' framing has no enforcement if that changes."
@@ -2772,8 +3243,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "time-billing",
-   "featureConfidence": "medium",
+   "feature": "project-hours",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "shillinq's ppl-time row moved here with provider humaniq (openspec/changes/hours-to-humaniq). An entry can be tagged to a project and flagged billable, but no rate lives on TimeEntry itself; EmployeeCostRateService gives an employer cost rate consumed by shillinq (see tim-cost-rate), not a client billing rate on the entry."
   },
@@ -2805,7 +3276,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "employer-hourly-cost-rate",
+   "feature": "project-hours",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -2837,7 +3308,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "hours-leaf",
+   "feature": "project-hours",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -2902,7 +3373,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "time-attendance",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "A user can filter the AttendanceRecord list by status/location to approximate today's picture, but there is no dedicated present/absent/late summary view."
   },
@@ -2936,7 +3407,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "time-attendance",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -2967,8 +3438,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "atw-compliance",
-   "featureConfidence": "medium",
+   "feature": "time-attendance",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "Rostered-hours warnings are a real button; logged-hours ATW violations are visible only through the occ compliance audit, not on the screens where a user actually logs or clocks hours."
   },
@@ -3001,8 +3472,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-core-engine",
-   "featureConfidence": "high",
+   "feature": "time-registration",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
@@ -3033,8 +3504,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "time-billing",
-   "featureConfidence": "medium",
+   "feature": "project-hours",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -3064,8 +3535,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "time-entry-capture",
-   "featureConfidence": "medium",
+   "feature": "time-registration",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -3096,7 +3567,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "time-attendance",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -3225,7 +3696,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "rostering",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "own",
    "note": "Certificate/competence tracking with expiry exists in humaniq and in these competitors; none is confirmed to actually gate a roster assignment, only to track and alert on expiry, so all are rated partial rather than yes. Corrections round 8 (2026-09-28): REQ-ROST-C02 is titled as a refusal, but the check only reports and a roster with an unqualified person can still be published, humaniq#512; rating kept because partial already records a report without a block."
   },
@@ -3257,7 +3728,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "working-hours-per-person",
+   "feature": "agenda-and-resource-booking",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -3289,7 +3760,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "working-hours-per-person",
+   "feature": "agenda-and-resource-booking",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -3322,7 +3793,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "agenda-and-resource-booking",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "AgendaController's own docblock frames availability as 'the one call a consuming app actually makes', but no app in this workspace calls it yet."
   },
@@ -3355,7 +3826,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "agenda-and-resource-booking",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
@@ -3387,7 +3858,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "agenda-and-resource-booking",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -3515,7 +3986,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "rostering",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "The input hint pointed at RosterAssignmentProjectionService, but that class only projects a Shift's start/end times onto an assignment; it has nothing to do with leave."
   },
@@ -3547,7 +4018,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-expenses",
+   "feature": "expenses",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "This is humaniq's own Expense schema (re-homed from pipelinq), distinct from shillinq's separate ExpenseClaimEntry, which sits unregistered/hard-failing in shillinq itself."
@@ -3580,7 +4051,7 @@
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
-   "feature": "receipt-ocr",
+   "feature": "expenses",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Owner is ConductionNL/docudesk (its GitHub repo has not been renamed to filinq even though its <id>/<namespace> already are); the humaniq call site correctly resolves the fleet rename via FleetAppId, so this is not a live defect."
@@ -3614,7 +4085,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "mileage-rules",
+   "feature": "travel-cars-and-equipment",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Distance and travel type are recorded but the payable amount is hand-entered, not computed at the tax-free rate; only an occ audit catches an over-the-rate claim after the fact."
@@ -3646,7 +4117,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-expenses",
+   "feature": "expenses",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -3679,7 +4150,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-expenses",
+   "feature": "expenses",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -3711,7 +4182,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-expenses",
+   "feature": "expenses",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -3743,7 +4214,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "asset-management",
+   "feature": "travel-cars-and-equipment",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -3775,7 +4246,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "fleet-bijtelling",
+   "feature": "travel-cars-and-equipment",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -3808,8 +4279,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "wkr-administration",
-   "featureConfidence": "medium",
+   "feature": "statutory-reporting",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "Any allowance/benefit can be logged and is correctly categorised for the WKR free-margin budget, but each payment is a manual one-off ledger entry, not a recurring fixed monthly allowance line that pays itself."
   },
@@ -3840,7 +4311,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-expenses",
+   "feature": "expenses",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -3872,8 +4343,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-core-engine",
-   "featureConfidence": "high",
+   "feature": "payroll-engine",
+   "featureConfidence": "medium",
    "source": "competitor",
    "note": "humaniq computes its own NL bruto-netto chain rather than integrating an external processor, closer to loket/afas/hr2day/visma-raet's own-engine shape than personio's integration shape."
   },
@@ -3907,8 +4378,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-core-engine",
-   "featureConfidence": "high",
+   "feature": "payroll-engine",
+   "featureConfidence": "medium",
    "source": "competitor",
    "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
@@ -3940,7 +4411,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-run-as-a-flow",
+   "feature": "payroll-run",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Approving a run only works if HR builds a flow containing this step first; there is no one-click approve on the run itself."
@@ -3974,7 +4445,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-core-engine",
+   "feature": "payroll-run",
    "featureConfidence": "medium",
    "source": "competitor"
   },
@@ -4008,8 +4479,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "mijn-hr-self-service",
-   "featureConfidence": "high",
+   "feature": "payslips",
+   "featureConfidence": "medium",
    "source": "competitor",
    "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
@@ -4043,7 +4514,7 @@
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
-   "feature": "payslip-pdf-docudesk",
+   "feature": "payslips",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
@@ -4077,8 +4548,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payslip-pdf-docudesk",
-   "featureConfidence": "medium",
+   "feature": "payslips",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "The annual statement can be viewed once it exists, but nothing in the UI can produce a new one; that is occ-only."
   },
@@ -4110,7 +4581,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-core-engine",
+   "feature": "payroll-engine",
    "featureConfidence": "medium",
    "source": "competitor",
    "note": "Vakantiegeld is reserved and tracked per payslip, but never actually paid out as a lump sum, and there is no thirteenth-month component at all; afas and visma-raet explicitly do both."
@@ -4143,7 +4614,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "proforma-payslip",
+   "feature": "payroll-engine",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -4177,7 +4648,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "retro-adjustments",
+   "feature": "payroll-run",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
@@ -4212,7 +4683,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-mutation-reports",
+   "feature": "payroll-run",
    "featureConfidence": "high",
    "source": "own",
    "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
@@ -4245,7 +4716,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "audit-trail-payroll",
+   "feature": "payroll-run",
    "featureConfidence": "high",
    "source": "own",
    "note": "A genuine audit tool for accountants/auditors, CLI-only by design; there is no reason to expect a page for it."
@@ -4311,8 +4782,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-core-engine",
-   "featureConfidence": "high",
+   "feature": "payroll-engine",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
@@ -4343,7 +4814,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "dga-payroll-mode",
+   "feature": "special-pay-regimes",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -4377,7 +4848,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "loonbeslag",
+   "feature": "special-pay-regimes",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
@@ -4409,8 +4880,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-core-engine",
-   "featureConfidence": "high",
+   "feature": "payroll-engine",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
@@ -4441,7 +4912,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-sepa-netpay-shillinq",
+   "feature": "payroll-to-accounting",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "humaniq computes and hands off the payment lines; the actual SEPA export and payment execution is shillinq's PaymentRun lifecycle, not humaniq's. This is a different, real path from shillinq's own matrix row ppl-payroll, whose PayrollService/berekenLoonStrook is separate, unreached code with no caller."
@@ -4474,7 +4945,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-glpost-shillinq",
+   "feature": "payroll-to-accounting",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "humaniq computes the balanced journal entry, but the actual ledger it posts into is shillinq's JournalEntry register; shillinq's own matrix row ppl-payroll-journal describes a SEPARATE, unreached journal builder inside shillinq itself (bouwLoonjournaalpost, no caller), which this handoff bypasses entirely. Corrections round 8 (2026-09-28): a run that carries retro pay or a leave payout posts a journal that leaves that money out of wage costs, and a large enough fold stops the post, humaniq#514; rating kept at partial because a run without those folds still posts a balanced journal."
@@ -4508,8 +4979,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-core-engine",
-   "featureConfidence": "high",
+   "feature": "payroll-to-accounting",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
@@ -4541,7 +5012,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-core-engine",
+   "feature": "payroll-engine",
    "featureConfidence": "medium",
    "source": "own",
    "note": "The architecture genuinely makes a year transition config-only, which is the real claim behind this row, but it has only been proven for one year, and nothing automates authoring the next year's pack."
@@ -4574,7 +5045,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-run-as-a-flow",
+   "feature": "payroll-run",
    "featureConfidence": "high",
    "source": "own",
    "note": "The flow engine itself belongs to OpenRegister, but the four payroll steps are real, humaniq-specific adapters over the same services occ uses, so building a flow genuinely orchestrates the payroll cycle end to end."
@@ -4606,7 +5077,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-core-engine",
+   "feature": "payroll-engine",
    "featureConfidence": "medium",
    "source": "own",
    "note": "The pack architecture is real and would let a second country onboard as data, but nobody has shipped a second pack and there is no page to upload one."
@@ -4640,8 +5111,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "payroll-core-engine",
-   "featureConfidence": "high",
+   "feature": "payroll-to-accounting",
+   "featureConfidence": "medium",
    "source": "competitor",
    "note": "humaniq is built to be the alternative to outsourcing; payroll-external-bureau-handoff (2026-10-01) adds the handoff for an employer who keeps an outside bureau: humaniq compiles and checks, integriq carries."
   },
@@ -4675,7 +5146,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "loonaangifte-filing-lifecycle",
+   "feature": "wage-tax-return",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
@@ -4707,7 +5178,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "loonaangifte-filing-lifecycle",
+   "feature": "wage-tax-return",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Explicitly refused on the record for this change, not merely unbuilt."
@@ -4741,7 +5212,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "loonaangifte-filing-lifecycle",
+   "feature": "wage-tax-return",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "The schema's own maintainer note calls this a placeholder, not a real correction message; rating no rather than pending because it is a declaration the maintainers themselves say is a stand-in, not a thin-but-real capability."
@@ -4776,7 +5247,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "pension-filing-upa-mvp",
+   "feature": "wage-tax-return",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
@@ -4809,7 +5280,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "abp-aansluiting",
+   "feature": "wage-tax-return",
    "featureConfidence": "high",
    "source": "own",
    "note": "afas/hr2day only claim 'alle grote NL pensioenfondsen' without naming ABP, so left unknown rather than inferred yes; humaniq has no real ABP connection, only a generic filing record plus an audit check that something exists."
@@ -4844,7 +5315,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "wkr-administration",
+   "feature": "statutory-reporting",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
@@ -4879,7 +5350,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "wnt-disclosure",
+   "feature": "statutory-reporting",
    "featureConfidence": "high",
    "source": "own",
    "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
@@ -4913,7 +5384,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "ib47-reporting",
+   "feature": "statutory-reporting",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -4944,7 +5415,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "cbs-wage-statistics",
+   "feature": "statutory-reporting",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -4977,7 +5448,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "wab-premium-differentiation",
+   "feature": "wage-tax-return",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -5009,7 +5480,7 @@
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
-   "feature": "humaniq-docudesk-documents",
+   "feature": "personnel-dossier",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "The rendering itself is filinq's (docudesk's), humaniq only has an occ trigger and a viewer; no page can request one for a specific employee."
@@ -5105,8 +5576,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "peer-feedback-360",
-   "featureConfidence": "medium",
+   "feature": "performance-reviews",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "Explicitly named a non-goal in the performance-reviews-mvp design doc (a deliberate scope cut for that change), not merely absent by omission. No competitor evidence for peer/360 feedback was found either."
   },
@@ -5138,7 +5609,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "goals-okr",
+   "feature": "performance-reviews",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -5170,7 +5641,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "comp-cycles",
+   "feature": "compensation-cycles",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -5202,7 +5673,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "comp-cycles",
+   "feature": "compensation-cycles",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -5234,7 +5705,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "employee-competences",
+   "feature": "training-and-competences",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -5265,7 +5736,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "bhv-organisatie",
+   "feature": "training-and-competences",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Tracks per-employee certificates and their expiry (and signals on expiry); deliberately computes no numeric coverage ratio (enough BHV'ers for headcount), which the row also asks for. Decided no on 2026-09-27 in the openspec pass, see built.evidence for the source."
@@ -5299,8 +5770,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "training-admin",
-   "featureConfidence": "medium",
+   "feature": "training-and-competences",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "learniq is a resolvable sibling id in FleetAppId but nothing in humaniq calls it; no training capability exists on either side of that integration today."
   },
@@ -5331,8 +5802,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "skills-matrix",
-   "featureConfidence": "medium",
+   "feature": "training-and-competences",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -5362,8 +5833,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "career-frameworks",
-   "featureConfidence": "medium",
+   "feature": "training-and-competences",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -5395,8 +5866,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "engagement-surveys",
-   "featureConfidence": "medium",
+   "feature": "performance-reviews",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -5426,8 +5897,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "recognition-rewards",
-   "featureConfidence": "medium",
+   "feature": "performance-reviews",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -5523,7 +5994,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "mss-team-scope",
+   "feature": "mijn-hr-self-service",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Timesheet's manager stamp is tamper-proof (server-derived); Expense and LeaveRequest's manager stamp is HR-entered and only audited at recommended (non-blocking) severity, so it can drift from the real org chart."
@@ -5556,7 +6027,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "hrmq-personal-dashboard",
+   "feature": "mijn-hr-self-service",
    "featureConfidence": "high",
    "source": "own",
    "note": "No competitor feature row is specific enough to distinguish a personal to-do dashboard from a general self-service portal, so these are left unknown rather than inferred from the portal rows."
@@ -5685,8 +6156,8 @@
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
-   "feature": "irma-digid-auth",
-   "featureConfidence": "medium",
+   "feature": "secure-sign-in",
+   "featureConfidence": "high",
    "source": "own",
    "note": "This covers employees with an NC account. The spec's own REQ-AUTH-003 records that applicants have no self-service surface at all yet, so DigiD/IRMA sign-in for an applicant specifically is not established."
   },
@@ -5719,7 +6190,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "portal-contribution",
+   "feature": "recruiting",
    "featureConfidence": "high",
    "source": "own",
    "note": "Real and working for active payroll externals and billing clients, but not for job applicants or former employees as the capability names them, and it is inert unless the separate portaliq app is installed."
@@ -5785,8 +6256,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "single-person-modes",
-   "featureConfidence": "high",
+   "feature": "special-pay-regimes",
+   "featureConfidence": "medium",
    "source": "own"
   },
   {
@@ -5818,8 +6289,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-dashboard-steering-indicators",
-   "featureConfidence": "high",
+   "feature": "hr-dashboard",
+   "featureConfidence": "medium",
    "source": "competitor",
    "note": "Corrected 2026-09-26: the unscoped claim came from the page-level _note at src/manifest.json:406, which is stale. The Billable ratio (src/manifest.json:484-506) and Headcount and turnover (:536-566) charts bind to /apps/humaniq/api/analytics/trends; AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId. No cross-administration leak."
   },
@@ -5852,7 +6323,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-dashboard-steering-indicators",
+   "feature": "hr-dashboard",
    "featureConfidence": "medium",
    "source": "competitor",
    "note": "Re-rated partial to yes on 2026-09-26: three series (headcount, starters, leavers), scoped per administration. The earlier partial rested only on the stale note."
@@ -5886,8 +6357,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-dashboard-steering-indicators",
-   "featureConfidence": "high",
+   "feature": "hr-dashboard",
+   "featureConfidence": "medium",
    "source": "competitor",
    "note": "Total wage cost per period exists; a per-department breakdown does not."
   },
@@ -5920,7 +6391,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "hr-reporting",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "afas/hr2day/orangehrm's dashboard/analytics rows name dashboards, not a report builder, so per the matrix's own rule (a dashboard row does not support a report-builder row) they are left unknown rather than inferred yes."
   },
@@ -5953,7 +6424,7 @@
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "hr-reporting",
-   "featureConfidence": "medium",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -5984,7 +6455,7 @@
    },
    "provider": "nextcloud-vue",
    "providerHow": "read-from-code",
-   "feature": "index-export",
+   "feature": "hr-reporting",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Only the fetched or selected rows can be exported as a blob; humaniq never opts into the library's full filtered-list export (allowExport + schema exportable:true), so 'export any list' is only partly true."
@@ -6017,8 +6488,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-dashboard-steering-indicators",
-   "featureConfidence": "high",
+   "feature": "hr-dashboard",
+   "featureConfidence": "medium",
    "source": "own",
    "note": "Per its own manifest note, per-row click-through to the specific obligation's own detail page is not wired: CnWidgetObjectTable's rowRoute is one static route for the whole table."
   },
@@ -6051,7 +6522,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-dashboard-steering-indicators",
+   "feature": "project-hours",
    "featureConfidence": "medium",
    "source": "own",
    "note": "Only one aggregate ratio for the whole administration is shown; there is no per-person or per-team breakdown. Corrected 2026-09-26: the chart is scoped per administration, no leak; the missing per-person or per-team breakdown is why the row stays partial."
@@ -6278,7 +6749,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "data-retention-automation",
+   "feature": "avg-dsr",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Built 2026-09-28 by compliance-retention-expiry. Deletion itself stays OpenRegister's, behind an archivist's approval of the destruction list; humaniq's part is off by default."
@@ -6311,8 +6782,8 @@
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
-   "feature": "audit-trail",
-   "featureConfidence": "medium",
+   "feature": "roles-and-access",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "Covers who changed a record and when, on every object; did not verify from humaniq's own code whether OpenRegister's audit trail also logs read/view access, only writes, so rated partial against the row's 'viewed or changed' wording. Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-03-21-audit-trail-immutable; the missing half is humaniq's own work, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister)."
   },
@@ -6345,7 +6816,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "rbac-permissions",
+   "feature": "roles-and-access",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Only a coarse admin/non-admin split plus data-scoped manager and self-service views; no distinct 'HR' vs 'payroll' vs 'manager' Nextcloud groups exist (grep for isInGroup/dedicated group constants found none)."
@@ -6379,7 +6850,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "field-level-rbac",
+   "feature": "roles-and-access",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -6410,7 +6881,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "works-council-consent",
+   "feature": "employee-relations",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -6441,7 +6912,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "whistleblowing",
+   "feature": "employee-relations",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -6472,8 +6943,8 @@
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
-   "feature": "data-encryption",
-   "featureConfidence": "low",
+   "feature": "roles-and-access",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "Decided no on 2026-09-27: platform-provided by nextcloud/server."
   },
@@ -6505,8 +6976,8 @@
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
-   "feature": "self-hosting",
-   "featureConfidence": "medium",
+   "feature": "setup-and-hosting",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -6537,7 +7008,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "multi-administratie",
+   "feature": "setup-and-hosting",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -6569,8 +7040,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "single-person-modes",
-   "featureConfidence": "high",
+   "feature": "setup-and-hosting",
+   "featureConfidence": "medium",
    "source": "own"
   },
   {
@@ -6601,7 +7072,7 @@
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
-   "feature": "hris-api-public",
+   "feature": "api-and-integrations",
    "featureConfidence": "high",
    "source": "competitor",
    "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-06-14-openapi-generation; the missing half is humaniq's own work, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister)."
@@ -6635,7 +7106,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "accounting-integrations",
+   "feature": "payroll-to-accounting",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -6667,7 +7138,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "hris-api-public",
+   "feature": "api-and-integrations",
    "featureConfidence": "high",
    "source": "own",
    "note": "The page only catalogues which external systems are said to have access; it configures no actual connection, credential, or data exchange with a pension fund or health service, unlike the competitor rows cited, which are real working connectors."
@@ -6700,7 +7171,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "workflow-automation",
+   "feature": "api-and-integrations",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -6733,7 +7204,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "notification-preferences",
+   "feature": "api-and-integrations",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -6765,7 +7236,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "template-store",
+   "feature": "setup-and-hosting",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -6797,7 +7268,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "setup-wizard",
+   "feature": "setup-and-hosting",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -6829,7 +7300,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "i18n-multilang",
+   "feature": "setup-and-hosting",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -6861,7 +7332,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "demo-data",
+   "feature": "setup-and-hosting",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -6893,7 +7364,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "hours-leaf",
+   "feature": "project-hours",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -6925,7 +7396,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "agenda-leaf",
+   "feature": "agenda-and-resource-booking",
    "featureConfidence": "high",
    "source": "own"
   },
@@ -6957,8 +7428,8 @@
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
-   "feature": "sso-identity",
-   "featureConfidence": "medium",
+   "feature": "secure-sign-in",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -6989,7 +7460,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "marketplace",
+   "feature": "api-and-integrations",
    "featureConfidence": "high",
    "source": "competitor"
   },
@@ -7022,6 +7493,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "employee-records",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
@@ -7056,6 +7528,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "personnel-dossier",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
@@ -7090,6 +7563,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "employee-records",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
@@ -7124,6 +7598,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "employee-records",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
@@ -7158,6 +7633,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "employee-records",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
@@ -7192,6 +7668,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "personnel-budget",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
@@ -7226,6 +7703,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "personnel-budget",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
@@ -7260,6 +7738,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "personnel-budget",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
@@ -7294,6 +7773,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "mijn-hr-self-service",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
@@ -7328,6 +7808,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "sickness-absence",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
@@ -7362,6 +7843,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "mijn-hr-self-service",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
@@ -7396,6 +7878,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "compensation-cycles",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
@@ -7430,6 +7913,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "performance-reviews",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
@@ -7464,6 +7948,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "travel-cars-and-equipment",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
@@ -7498,6 +7983,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "travel-cars-and-equipment",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
@@ -7531,6 +8017,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "payroll-engine",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
@@ -7564,6 +8051,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "special-pay-regimes",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
@@ -7598,6 +8086,7 @@
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
+   "feature": "hr-reporting",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
@@ -7631,6 +8120,7 @@
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
+   "feature": "personnel-dossier",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415705",
@@ -7665,6 +8155,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "api-and-integrations",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
@@ -7699,6 +8190,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "training-and-competences",
    "source": "tender",
    "origin": "tender",
    "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/415227",
@@ -7733,6 +8225,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "mijn-hr-self-service",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://github.com/orangehrm/orangehrm/releases/tag/v5.9"
@@ -7765,6 +8258,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "leave-management",
    "source": "featureRequest",
    "origin": "featureRequest",
    "originUrl": "https://github.com/orangehrm/orangehrm/issues/1676"
@@ -7797,6 +8291,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "leave-management",
    "source": "featureRequest",
    "origin": "featureRequest",
    "originUrl": "https://github.com/orangehrm/orangehrm/issues/1770"
@@ -7829,6 +8324,7 @@
    },
    "provider": "nextcloud",
    "providerHow": "read-from-code",
+   "feature": "secure-sign-in",
    "source": "featureRequest",
    "origin": "featureRequest",
    "originUrl": "https://github.com/orangehrm/orangehrm/issues/1169"
@@ -7861,6 +8357,7 @@
    },
    "provider": "nextcloud",
    "providerHow": "read-from-code",
+   "feature": "secure-sign-in",
    "source": "featureRequest",
    "origin": "featureRequest",
    "originUrl": "https://github.com/orangehrm/orangehrm/issues/453"
@@ -7894,6 +8391,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "recruiting",
    "source": "featureRequest",
    "origin": "featureRequest",
    "originUrl": "https://github.com/orangehrm/orangehrm/issues/484"
@@ -7927,6 +8425,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "compensation-cycles",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://www.hr2day.com/nieuws/nieuwe-release-llama/",
@@ -7961,6 +8460,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "recruiting",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://klant.afas.nl/update/profit-8/hrm",
@@ -7995,6 +8495,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "personnel-dossier",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://klant.afas.nl/update/profit-8/hrm"
@@ -8026,6 +8527,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "leave-management",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://klant.afas.nl/update/profit-8/hrm"
@@ -8057,6 +8559,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "travel-cars-and-equipment",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://klant.afas.nl/update/profit-8/hrm"
@@ -8089,6 +8592,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "payroll-engine",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://klant.afas.nl/update/profit-7/hrm"
@@ -8122,6 +8626,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "travel-cars-and-equipment",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2",
@@ -8155,6 +8660,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "special-pay-regimes",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/3"
@@ -8187,6 +8693,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "expenses",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2"
@@ -8219,6 +8726,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "ai-assistant",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://www.hr2day.com/nieuws/nieuwe-release-kiwi/",
@@ -8251,6 +8759,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "wage-tax-return",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases"
@@ -8282,6 +8791,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "leave-management",
    "source": "roadmap",
    "origin": "roadmap",
    "originUrl": "https://youforce.nl/kennis/smart-triggers-maak-hr-effici%C3%ABnt-en-proactief-met-slimme-signalen"
@@ -8315,6 +8825,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "payroll-run",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://data.maglr.com/1697/issues/68666/820322/index.html"
@@ -8348,6 +8859,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "onboarding",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://data.maglr.com/1697/issues/66612/785293/index.html"
@@ -8379,6 +8891,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "leave-management",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://data.maglr.com/1697/issues/66612/785294/index.html",
@@ -8411,6 +8924,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "sickness-absence",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://data.maglr.com/1697/issues/68666/808496/index.html"
@@ -8443,6 +8957,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "employee-records",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://data.maglr.com/1697/issues/66612/785296/index.html"
@@ -8476,6 +8991,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "flex-and-fixed-term",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://loket.nl/roadmap/"
@@ -8497,6 +9013,7 @@
     "change": "2026-08-20-aor-ambtenarenrecht",
     "owner": "ConductionNL/humaniq"
    },
+   "feature": "employee-records",
    "source": "spec-round-2026-10-07"
   },
   {
@@ -8527,6 +9044,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "payroll-engine",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://loket.nl/roadmap/"
@@ -8558,6 +9076,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "payroll-engine",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://loket.nl/roadmap/"
@@ -8590,6 +9109,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "payroll-run",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://loket.nl/roadmap/"
@@ -8611,6 +9131,7 @@
     "change": "payroll-engine-port-from-shillinq",
     "owner": "ConductionNL/humaniq"
    },
+   "feature": "payroll-engine",
    "source": "spec-round-2026-10-07",
    "note": "Ported from shillinq's dormant payroll engine (decision 65 b), rebuilt with a franchise. Open: which schemes and where their parameters live (design O1)."
   },
@@ -8631,6 +9152,7 @@
     "change": "payroll-engine-port-from-shillinq",
     "owner": "ConductionNL/humaniq"
    },
+   "feature": "payroll-engine",
    "source": "spec-round-2026-10-07",
    "note": "Ported from shillinq proRataBruto (decision 65 b). Open: calendar days or working days (design O2)."
   },
@@ -8651,6 +9173,7 @@
     "change": "payroll-wage-tax-remittance-shillinq",
     "owner": "ConductionNL/humaniq"
    },
+   "feature": "payroll-to-accounting",
    "source": "spec-round-2026-10-07",
    "note": "DECISIONS 65 c. Sits next to the payroll journal (pay-gl-journal) and the net pay batch (pay-sepa)."
   },
@@ -8683,6 +9206,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "onboarding",
    "source": "roadmap",
    "origin": "roadmap",
    "originUrl": "https://loket.nl/roadmap/"
@@ -8714,6 +9238,7 @@
    },
    "provider": "nextcloud",
    "providerHow": "read-from-code",
+   "feature": "secure-sign-in",
    "source": "roadmap",
    "origin": "roadmap",
    "originUrl": "https://loket.nl/roadmap/",
@@ -8746,6 +9271,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "roles-and-access",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://www.personio.com/whats-new-q2-26/"
@@ -8777,6 +9303,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "performance-reviews",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://support.personio.de/hc/en-us/articles/30612613685789-Set-up-AI-summaries"
@@ -8808,6 +9335,7 @@
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
+   "feature": "ai-assistant",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://support.personio.de/hc/en-us/articles/38314656674333-Personio-MCP-server-Beta-access-overview",
@@ -8835,6 +9363,7 @@
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
+   "feature": "ai-assistant",
    "source": "spec-round-2026-10-07",
    "note": "Split from dm-mcp-server (spec round 2, 2026-10-07): that row stays decided-no for write tools such as starting a time-off request; this row is the read-only surface humaniq ships."
   },
@@ -8867,6 +9396,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "mijn-hr-self-service",
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://support.personio.de/hc/en-us/articles/36278272594077-Approvals-dashboard-Beta-access-overview"
@@ -8898,6 +9428,7 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
+   "feature": "performance-reviews",
    "source": "roadmap",
    "origin": "roadmap",
    "originUrl": "https://support.personio.de/hc/en-us/articles/38900337558685-Measure-your-organization-s-AI-fluency"
@@ -8925,8 +9456,8 @@
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
-   "feature": "humaniq-mcp-surface",
-   "featureConfidence": "medium",
+   "feature": "ai-assistant",
+   "featureConfidence": "high",
    "source": "competitor",
    "note": "hermiq is never referenced anywhere in humaniq. This is a read-only MCP tool surface for an external agent, not an in-app 'ask a question in plain language' assistant.",
    "pendingReason": "The only mechanism is the x-openregister-mcp declaration on six schemas; there is no in-product chat surface, only a tool contract for an external MCP-connected agent to call."
@@ -8952,7 +9483,7 @@
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
-   "feature": "humaniq-mcp-surface",
+   "feature": "ai-assistant",
    "featureConfidence": "high",
    "source": "own",
    "pendingReason": "Rests only on x-openregister-mcp declarations in 5 register schemas (hr-assets, hr-ats, hr-timesheet, hr-expense, hr-org); no humaniq PHP code implements or extends MCP tool behaviour beyond the declaration, execution is entirely OpenRegister's own MCP gateway."
