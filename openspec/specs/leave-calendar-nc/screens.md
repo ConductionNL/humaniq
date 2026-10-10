@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: Writes leave into the Nextcloud calendar; no screen of its own

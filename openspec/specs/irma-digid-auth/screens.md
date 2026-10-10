@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: Authentication method handled by the portal sign-in; no humaniq screen

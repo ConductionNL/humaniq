@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- HuDeclaratie https://identity.conduction.nl/screens/board?id=humaniq/HuDeclaratie

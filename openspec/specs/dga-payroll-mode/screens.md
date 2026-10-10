@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: Payroll engine mode for a director-owner; no screen of its own

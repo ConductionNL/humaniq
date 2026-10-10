@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: Allocation of wage costs to cost centres in the engine; no screen

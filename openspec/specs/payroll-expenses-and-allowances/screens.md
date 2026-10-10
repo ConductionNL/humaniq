@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: Expense claims and allowances paid through the payslip; no screen of its own

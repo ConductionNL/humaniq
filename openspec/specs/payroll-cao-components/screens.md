@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: CAO allowances and premiums calculated in the payroll run; no screen
