@@ -482,6 +482,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <command>OCA\Humaniq\Command\InterviewCalendarSyncCommand</command>
     </commands>
 
+    <!-- The admin page, /settings/admin/humaniq (board HuInstellingen). A plain
+         ISettings: the delegated HumaniqAdmin marker stays unregistered. -->
+    <settings>
+        <admin>OCA\Humaniq\Settings\HumaniqAdminSettings</admin>
+        <admin-section>OCA\Humaniq\Sections\HumaniqAdminSection</admin-section>
+    </settings>
+
     <navigations>
         <navigation>
             <id>humaniq</id>

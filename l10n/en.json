@@ -3682,7 +3682,26 @@
         "When the payable was written to the bookkeeping app.": "When the payable was written to the bookkeeping app.",
         "Wage tax payments": "Wage tax payments",
         "Wage tax payment": "Wage tax payment",
-        "Each confirmed wage tax return, handed to bookkeeping as a draft payment to the Belastingdienst.": "Each confirmed wage tax return, handed to bookkeeping as a draft payment to the Belastingdienst."
+        "Each confirmed wage tax return, handed to bookkeeping as a draft payment to the Belastingdienst.": "Each confirmed wage tax return, handed to bookkeeping as a draft payment to the Belastingdienst.",
+        "Humaniq": "Humaniq",
+        "Humaniq administration: settings": "Humaniq administration: settings",
+        "visible to Humaniq administrators": "visible to Humaniq administrators",
+        "Roles and rights": "Roles and rights",
+        "Each role hangs on a Nextcloud group. Whoever is in the group gets the role.": "Each role hangs on a Nextcloud group. Whoever is in the group gets the role.",
+        "Nextcloud group": "Nextcloud group",
+        "Allowed to": "Allowed to",
+        "Members": "Members",
+        "The groups are fixed: OpenRegister guards the sensitive fields by these group names. Add people to a group under Users and groups.": "The groups are fixed: OpenRegister guards the sensitive fields by these group names. Add people to a group under Users and groups.",
+        "Admin settings": "Admin settings",
+        "Settings": "Settings",
+        "Payroll administration": "Payroll administration",
+        "employees, contracts, leave, absence, GDPR requests": "employees, contracts, leave, absence, GDPR requests",
+        "calculate and approve payroll runs, tax returns, payments": "calculate and approve payroll runs, tax returns, payments",
+        "from the org chart": "from the org chart",
+        "own team: approve leave, hours and reviews": "own team: approve leave, hours and reviews",
+        "everyone": "everyone",
+        "own details, payslips, leave and expense claims": "own details, payslips, leave and expense claims",
+        "group missing": "group missing"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

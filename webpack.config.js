@@ -57,6 +57,12 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'leaves.js'),
 		filename: appId + '-leaves.js',
 	},
+	// The admin page, /settings/admin/humaniq. A bundle of its own because the
+	// admin page has no CnAppRoot and must not load the whole SPA.
+	settings: {
+		import: path.join(__dirname, 'src', 'settings.js'),
+		filename: appId + '-settings.js',
+	},
 }
 
 // Build against the DECLARED dependency unless a developer deliberately asks
