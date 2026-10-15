@@ -3683,7 +3683,26 @@ OC.L10N.register(
         "When the payable was written to the bookkeeping app.": "Wanneer de schuld in de boekhouding is gezet.",
         "Wage tax payments": "Afdrachten loonheffingen",
         "Wage tax payment": "Afdracht loonheffingen",
-        "Each confirmed wage tax return, handed to bookkeeping as a draft payment to the Belastingdienst.": "Elke bevestigde loonaangifte, als conceptbetaling aan de Belastingdienst doorgegeven aan de boekhouding."
+        "Each confirmed wage tax return, handed to bookkeeping as a draft payment to the Belastingdienst.": "Elke bevestigde loonaangifte, als conceptbetaling aan de Belastingdienst doorgegeven aan de boekhouding.",
+        "Humaniq": "Humaniq",
+        "Humaniq administration: settings": "Humaniq-beheer: instellingen",
+        "visible to Humaniq administrators": "zichtbaar voor beheerders van Humaniq",
+        "Roles and rights": "Rollen en rechten",
+        "Each role hangs on a Nextcloud group. Whoever is in the group gets the role.": "Elke rol hangt aan een Nextcloud-groep. Wie in de groep zit, krijgt de rol.",
+        "Nextcloud group": "Nextcloud-groep",
+        "Allowed to": "Mag",
+        "Members": "Leden",
+        "The groups are fixed: OpenRegister guards the sensitive fields by these group names. Add people to a group under Users and groups.": "De groepen liggen vast: OpenRegister bewaakt de gevoelige velden op deze groepsnamen. Voeg mensen toe aan een groep onder Gebruikers en groepen.",
+        "Admin settings": "Beheerinstellingen",
+        "Settings": "Instellingen",
+        "Payroll administration": "Salarisadministratie",
+        "employees, contracts, leave, absence, GDPR requests": "medewerkers, contracten, verlof, verzuim, AVG-verzoeken",
+        "calculate and approve payroll runs, tax returns, payments": "salarisruns berekenen en goedkeuren, aangiften, betalingen",
+        "from the org chart": "via het organogram",
+        "own team: approve leave, hours and reviews": "eigen team: verlof, uren en gesprekken goedkeuren",
+        "everyone": "iedereen",
+        "own details, payslips, leave and expense claims": "eigen gegevens, loonstroken, verlof en declaraties",
+        "group missing": "groep ontbreekt"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -2,9 +2,10 @@
 /**
  * Humaniq delegated-admin marker for attribute-scoped endpoints.
  *
- * 🔴 THIS EXISTS TO BE NAMED, NOT TO BE RENDERED. Humaniq ships no admin
- * settings panel — `appinfo/info.xml` declares no `<settings>` block — and this
- * class deliberately does not add one. It is not registered anywhere.
+ * 🔴 THIS EXISTS TO BE NAMED, NOT TO BE RENDERED. The admin page is
+ * HumaniqAdminSettings, a plain ISettings that `appinfo/info.xml` registers;
+ * this class deliberately stays out of that `<settings>` block. It is not
+ * registered anywhere.
  *
  * It exists because `#[AuthorizedAdminSetting(...)]` requires a
  * `class-string<OCP\Settings\IDelegatedSettings>`, and that attribute is the
