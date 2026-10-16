@@ -142,8 +142,9 @@ block any write — it SHALL surface only through the existing `occ humaniq:rule
 ### Requirement: A self-service endpoint SHALL surface the existing gebruikelijkloon compliance verdict for the caller's own DGA record (REQ-SPM-006)
 
 `PayrollController::dgaStatus()` (`#[NoAdminRequired]`, `GET /api/payroll/dga-status`) SHALL resolve the caller's
-own `Employee` via `nextcloudUserId`, respond **404** when no such `Employee` exists or the resolved `Employee`
-has `isDga` not `true`, and otherwise SHALL evaluate the existing `NlDgaChecks` `nl-gebruikelijkloon-norm`
+own `Employee` via `nextcloudUserId`, respond **200 `{isDga: false, met: null}`** when no such `Employee` exists
+or the resolved `Employee` has `isDga` not `true` (an answer, not an error: the page probes the endpoint for every
+visitor), and otherwise SHALL evaluate the existing `NlDgaChecks` `nl-gebruikelijkloon-norm`
 predicate against that one record — computed fresh on every call, persisting nothing — and return
 `{isDga: true, grossAnnualSalaryCents, jaarnormCents, met: bool, justification: string|null}`. `src/manifest.json`
 SHALL expose a `MijnGebruikelijkLoon` self-service page under `MijnHrGroup`, `visibleIf`-gated on
@@ -161,11 +162,12 @@ SHALL expose a `MijnGebruikelijkLoon` self-service page under `MijnHrGroup`, `vi
 - **WHEN** they call `GET /api/payroll/dga-status`
 - **THEN** `met` is `true` (the existing `NlDgaChecks` vacuous-when-justified rule applies unchanged)
 
-#### Scenario: A non-DGA caller and a caller with no Employee record both receive 404
+#### Scenario: A non-DGA caller and a caller with no Employee record get the same not-a-DGA answer
 - **GIVEN** two callers — one with no `Employee` record linked via `nextcloudUserId`, one with an `Employee`
   record where `isDga` is `false`
 - **WHEN** either calls `GET /api/payroll/dga-status`
-- **THEN** both receive HTTP 404 with no way to distinguish which case occurred from the response alone
+- **THEN** both receive HTTP 200 `{isDga: false, met: null}` with no way to distinguish which case occurred from the
+  response alone, and the `MijnGebruikelijkLoon` page's warning banner stays hidden
 
 #### Scenario: The status is computed fresh, never persisted
 - **GIVEN** a below-norm DGA caller

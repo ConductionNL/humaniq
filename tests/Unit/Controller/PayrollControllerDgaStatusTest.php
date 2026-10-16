@@ -6,8 +6,8 @@
  * Pins the self-service gebruikelijkloon-status endpoint contract
  * (single-person-modes design.md D5, spec.md REQ-SPM-006): the caller's own
  * `Employee` is resolved via `nextcloudUserId`; NO own Employee and an own
- * Employee that is NOT a DGA both collapse to the SAME 404 (existence/DGA-ness
- * is never leaked — D5.1); a resolved DGA gets `{isDga, grossAnnualSalaryCents,
+ * Employee that is NOT a DGA both collapse to the SAME 200 `{isDga: false,
+ * met: null}` body (existence/DGA-ness is never leaked — D5.1); a resolved DGA gets `{isDga, grossAnnualSalaryCents,
  * jaarnormCents, met, justification}` where `met` is the EXISTING
  * `NlDgaChecks::meetsGebruikelijkloonNorm()` verdict (below-norm/unjustified →
  * false, justified → true, above-norm → true) computed against the REAL
@@ -61,42 +61,43 @@ use Psr\Log\LoggerInterface;
 class PayrollControllerDgaStatusTest extends TestCase {
 
 	/**
-	 * REQ-SPM-006 "A non-DGA caller and a caller with no Employee record both
-	 * receive 404": a caller with NO linked Employee gets 404 with no
-	 * distinguishing detail.
+	 * REQ-SPM-006 "A non-DGA caller and a caller with no Employee record get
+	 * the same not-a-DGA answer": a caller with NO linked Employee gets 200
+	 * `{isDga: false, met: null}` with no distinguishing detail.
 	 *
 	 * @return void
 	 */
-	public function testNoEmployeeReturns404(): void {
+	public function testNoEmployeeReturnsNotDga(): void {
 		$controller = $this->buildController([], 'nobody');
 
 		$response = $controller->dgaStatus();
 
-		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
-		$this->assertArrayNotHasKey('isDga', $response->getData());
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['isDga' => false, 'met' => null], $response->getData());
 
-	}//end testNoEmployeeReturns404()
+	}//end testNoEmployeeReturnsNotDga()
 
 	/**
 	 * REQ-SPM-006: a caller whose own Employee is NOT a DGA receives the
-	 * IDENTICAL 404 — the response never distinguishes "no Employee" from
-	 * "Employee, not a DGA".
+	 * IDENTICAL not-a-DGA answer — the response never distinguishes "no
+	 * Employee" from "Employee, not a DGA".
 	 *
 	 * @return void
 	 */
-	public function testNonDgaEmployeeReturnsIdentical404(): void {
+	public function testNonDgaEmployeeReturnsIdenticalAnswer(): void {
 		$noEmployee = $this->buildController([], 'devries')->dgaStatus();
 		$notDga = $this->buildController(
 			[['nextcloudUserId' => 'devries', 'isDga' => false, 'grossMonthlySalary' => 3500.00]],
 			'devries'
 		)->dgaStatus();
 
-		$this->assertSame(Http::STATUS_NOT_FOUND, $noEmployee->getStatus());
-		$this->assertSame(Http::STATUS_NOT_FOUND, $notDga->getStatus());
+		$this->assertSame(Http::STATUS_OK, $noEmployee->getStatus());
+		$this->assertSame(Http::STATUS_OK, $notDga->getStatus());
+		$this->assertSame(['isDga' => false, 'met' => null], $notDga->getData());
 		// Indistinguishable from the response alone (same status, same body).
 		$this->assertSame($noEmployee->getData(), $notDga->getData());
 
-	}//end testNonDgaEmployeeReturnsIdentical404()
+	}//end testNonDgaEmployeeReturnsIdenticalAnswer()
 
 	/**
 	 * REQ-SPM-006 "A below-norm DGA sees a warning": isDga true,

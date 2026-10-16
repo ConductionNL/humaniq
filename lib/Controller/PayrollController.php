@@ -372,10 +372,11 @@ class PayrollController extends Controller {
 	 *
 	 * 1. Resolves the caller's own `Employee` via `nextcloudUserId` (the
 	 *    `mijn-hr-self-service` link). No `Employee` found, or the resolved
-	 *    `Employee` is not a DGA (`isDga` not `true`) → **404** — both cases
-	 *    collapse to the SAME status so the response never distinguishes
-	 *    "no Employee" from "Employee, not a DGA" (D5.1, the `proforma()`
-	 *    resolve-first-then-404 posture; existence/DGA-ness is never leaked).
+	 *    `Employee` is not a DGA (`isDga` not `true`) → 200 `{isDga: false,
+	 *    met: null}`. Both cases collapse to the SAME body so the response
+	 *    never distinguishes "no Employee" from "Employee, not a DGA" (D5.1).
+	 *    It is an answer, not an error: the page probes this endpoint for
+	 *    every visitor, and a 404 would log a failed request each time.
 	 * 2. REUSES `NlDgaChecks`'s existing `nl-gebruikelijkloon-norm` predicate
 	 *    for the `met` verdict — zero new tax logic; the norm comparison is
 	 *    never reimplemented here. The `grossAnnualSalaryCents`/`jaarnormCents`
@@ -384,7 +385,7 @@ class PayrollController extends Controller {
 	 *    `gebruikelijkloon().jaarnormCents` the predicate uses — read fresh on
 	 *    every call, no caching, no register write, EVER.
 	 *
-	 * @return JSONResponse `{isDga, grossAnnualSalaryCents, jaarnormCents, met, justification}` for the caller's own DGA record, or 404 when no own DGA Employee resolves.
+	 * @return JSONResponse `{isDga, grossAnnualSalaryCents, jaarnormCents, met, justification}` for the caller's own DGA record, or `{isDga: false, met: null}` when no own DGA Employee resolves.
 	 *
 	 * @spec openspec/specs/single-person-modes/spec.md#REQ-SPM-006
 	 */
@@ -392,14 +393,14 @@ class PayrollController extends Controller {
 	public function dgaStatus(): JSONResponse {
 		$userId = $this->userSession->getUser()?->getUID();
 		if ($userId === null || $userId === '') {
-			return new JSONResponse(['error' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
+			return new JSONResponse(['isDga' => false, 'met' => null]);
 		}
 
 		$employee = $this->resolveOwnEmployee($userId);
 		if ($employee === null || ($employee['isDga'] ?? false) !== true) {
 			// D5.1: "no Employee" and "Employee, not a DGA" collapse to the
-			// SAME 404 — the response never reveals which case occurred.
-			return new JSONResponse(['error' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
+			// SAME body; the response never reveals which case occurred.
+			return new JSONResponse(['isDga' => false, 'met' => null]);
 		}
 
 		// REUSE the shipped predicate for the verdict — never a reimplemented
