@@ -212,6 +212,8 @@ return [
         // time-entries-summary: the caller's own hours of one day, for a host
         // app's day overview (dossiq's Close out your day). Caller-scoped, no user parameter.
         ['name' => 'timeEntry#summary',    'url' => '/api/time-entries/summary',     'verb' => 'GET'],
+        // hours-per-person-week: the week's hours on one object, per person, as far as the caller may see them.
+        ['name' => 'objectHours#week',     'url' => '/api/time-entries/week',        'verb' => 'GET'],
         ['name' => 'timeEntry#timer',      'url' => '/api/time-entries/timer',       'verb' => 'GET'],
         ['name' => 'timeEntry#startTimer', 'url' => '/api/time-entries/timer/start', 'verb' => 'POST'],
         ['name' => 'timeEntry#stopTimer',  'url' => '/api/time-entries/timer/stop',  'verb' => 'POST'],

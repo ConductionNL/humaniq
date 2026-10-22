@@ -131,16 +131,22 @@ class HoursRegisterGateway {
 	 * Rows of a schema matching top-level equality filters. Pushed-down AND
 	 * re-checked in PHP — belt and braces against filter-grammar drift.
 	 *
+	 * With `$asCaller` OpenRegister applies the signed-in caller's access rules
+	 * and tenancy to the read, so only rows the caller may see come back;
+	 * without it the whole register is read.
+	 *
 	 * @param string $schema The schema slug.
 	 * @param array<string, mixed> $filters Top-level equality filters.
+	 * @param bool $asCaller Whether the read is limited to what the caller may see.
 	 *
 	 * @return array<int, array<string, mixed>> The matching rows.
 	 *
 	 * @spec openspec/specs/time-entry-capture/spec.md#Requirement:-humaniq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
+	 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 	 */
-	public function findFiltered(string $schema, array $filters): array {
+	public function findFiltered(string $schema, array $filters, bool $asCaller = false): array {
 		$matches = [];
-		foreach ($this->query($schema, $filters) as $row) {
+		foreach ($this->query($schema, $filters, $asCaller) as $row) {
 			if ($this->matchesFilters($row, $filters) === true) {
 				$matches[] = $row;
 			}
@@ -329,10 +335,11 @@ class HoursRegisterGateway {
 	 *
 	 * @param string $schema The schema slug.
 	 * @param array<string, mixed> $filters Optional pushed-down filters.
+	 * @param bool $asCaller Whether OpenRegister applies the caller's access and tenancy (false reads the whole register).
 	 *
 	 * @return array<int, array<string, mixed>> The rows, as arrays.
 	 */
-	private function query(string $schema, array $filters): array {
+	private function query(string $schema, array $filters, bool $asCaller = false): array {
 		$config = ['limit' => self::LOOKUP_LIMIT];
 		if ($filters !== []) {
 			$config['filters'] = $filters;
@@ -341,7 +348,7 @@ class HoursRegisterGateway {
 		$rows = $this->objects()
 			->setRegister($this->settingsService->getRegisterSlug())
 			->setSchema($schema)
-			->findAll($config, false, false);
+			->findAll($config, $asCaller, $asCaller);
 
 		$out = [];
 		foreach ((is_array($rows) === true ? $rows : []) as $row) {
