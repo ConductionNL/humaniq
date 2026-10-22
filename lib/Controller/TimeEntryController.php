@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Controller;
 
+use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Listener\HoursWriteRefusedException;
 use OCA\Humaniq\Service\HoursRegisterGateway;
@@ -229,6 +230,61 @@ class TimeEntryController extends Controller {
 
 		return new JSONResponse($result);
 	}//end stopTimer()
+
+	/**
+	 * `GET /api/time-entries/summary` — the caller's own hours of one day.
+	 *
+	 * Resolves from the CALLER only: there is no user parameter, and a row the
+	 * store hands back for anyone else is dropped before it is counted. An
+	 * entry without hours (a timer still running) adds nothing. A failed read
+	 * answers 500, never a zero that would read as "no hours today".
+	 *
+	 * @param string|null $date The day, `YYYY-MM-DD`; today when left out.
+	 *
+	 * @return JSONResponse `{date, hours, entries}`, 400 on a date that is not a day, 401 without a session.
+	 *
+	 * @spec openspec/changes/time-entries-summary/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 */
+	#[NoAdminRequired]
+	public function summary(?string $date = null): JSONResponse {
+		$uid = $this->callerUid();
+		if ($uid === '') {
+			return new JSONResponse(['error' => 'Log in om je uren te bekijken.'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$day = trim((string)$date);
+		if ($day === '') {
+			$day = (new DateTimeImmutable('now'))->format('Y-m-d');
+		}
+
+		$parts = [];
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $day, $parts) !== 1
+			|| checkdate((int)$parts[2], (int)$parts[3], (int)$parts[1]) === false
+		) {
+			return new JSONResponse(['error' => 'Geef de dag als JJJJ-MM-DD.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		try {
+			$rows = $this->gateway->findFiltered('TimeEntry', ['userId' => $uid, 'date' => $day]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('TimeEntryController: the hours of ' . $day . ' could not be read: ' . $e->getMessage());
+
+			return new JSONResponse(['error' => 'Je uren konden niet worden gelezen.'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		$hours   = 0.0;
+		$entries = 0;
+		foreach ($rows as $row) {
+			if (($row['userId'] ?? null) !== $uid || is_numeric($row['hours'] ?? null) === false) {
+				continue;
+			}
+
+			$hours += (float)$row['hours'];
+			$entries++;
+		}
+
+		return new JSONResponse(['date' => $day, 'hours' => round($hours, 2), 'entries' => $entries]);
+	}//end summary()
 
 	/**
 	 * The calling user's id, or '' when there is no session.

@@ -209,6 +209,9 @@ return [
         // derived figures behind the KPI tile. A read, and the remainder it
         // answers is computed here rather than stored anywhere.
         ['name' => 'timeEntry#estimate',   'url' => '/api/time-entries/estimate',    'verb' => 'GET'],
+        // time-entries-summary: the caller's own hours of one day, for a host
+        // app's day overview (dossiq's Close out your day). Caller-scoped, no user parameter.
+        ['name' => 'timeEntry#summary',    'url' => '/api/time-entries/summary',     'verb' => 'GET'],
         ['name' => 'timeEntry#timer',      'url' => '/api/time-entries/timer',       'verb' => 'GET'],
         ['name' => 'timeEntry#startTimer', 'url' => '/api/time-entries/timer/start', 'verb' => 'POST'],
         ['name' => 'timeEntry#stopTimer',  'url' => '/api/time-entries/timer/stop',  'verb' => 'POST'],
