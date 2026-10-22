@@ -27,11 +27,12 @@
 				     title either, and a KPI that is only a number does not say what
 				     was counted. -->
 				<h3 class="hq-hours__caption" data-testid="hq-hours-caption">
-					{{ t('humaniq', 'Hours booked') }}
+					{{ caption }}
 				</h3>
 			</div>
 
 			<div class="hq-hours__controls">
+				<span v-if="weekLine !== ''" class="hq-hours__week" data-testid="hq-hours-week">{{ weekLine }}</span>
 				<!-- The stopwatch is its own control, left of the actions, because
 				     it is the one-press shortcut for work happening right now.
 				     Putting it inside the menu would cost two presses for the
@@ -145,34 +146,70 @@
 			</p>
 		</div>
 
-		<!-- Idle: the object's total, over the caller's own share.
-		     The bookings behind the total are NOT listed here. A KPI answers one
-		     question, and the administration is one press away in the actions for
-		     the reader who wants the rows. -->
-		<div v-else class="hq-hours__figures">
-			<div class="hq-hours__headline">
-				<span class="hq-hours__value" data-testid="hq-hours-total">{{ displayTotal }}</span>
-				<span class="hq-hours__unit">{{ t('humaniq', 'hours') }}</span>
+		<!-- Idle: the week on this object, one row per person with a bar
+		     against the week's largest share, beside a form that books hours
+		     without opening a dialog (board DqZaakMeer, "Uren registreren"). -->
+		<div v-else class="hq-hours__week-body">
+			<div class="hq-hours__people-column">
+				<p v-if="weekUnread" class="hq-hours__sub" data-testid="hq-hours-week-unread">
+					{{ t('humaniq', 'The hours of this week are not known yet') }}
+				</p>
+				<ul v-else-if="people.length > 0" class="hq-hours__people" data-testid="hq-hours-people">
+					<li v-for="person in people" :key="person.userId" class="hq-hours__person" data-testid="hq-hours-person">
+						<span class="hq-hours__person-line">
+							<span class="hq-hours__person-name">
+								<strong>{{ person.displayName }}</strong>
+								<span v-if="person.team" class="hq-hours__team">{{ person.team }}</span>
+							</span>
+							<strong class="hq-hours__person-hours">{{ hoursLabel(person.hours) }}</strong>
+						</span>
+						<span class="hq-hours__bar" aria-hidden="true">
+							<span class="hq-hours__bar-fill" :style="{ width: barWidth(person.hours) }" />
+						</span>
+					</li>
+				</ul>
+				<p v-else class="hq-hours__sub" data-testid="hq-hours-week-empty">
+					{{ t('humaniq', 'No hours recorded on this item this week') }}
+				</p>
+				<!-- Estimated and remaining stand beside the week, never instead of
+				     it (REQ-HL-EST-003); an overrun is a negative remainder. -->
+				<p v-if="hasEstimate" class="hq-hours__sub" data-testid="hq-hours-estimate">
+					{{ estimateLine }}
+				</p>
+				<p v-if="running" class="hq-hours__sub" data-testid="hq-hours-running-elsewhere">
+					{{ t('humaniq', 'Timer running on another item') }}
+				</p>
 			</div>
-			<p class="hq-hours__sub" data-testid="hq-hours-own">
-				{{ ownLine }}
-			</p>
-			<!-- Estimated and remaining stand BESIDE spent, never instead of it
-			     (REQ-HL-EST-003). An overrun renders as a negative remainder,
-			     because a remainder clipped at zero makes "exactly used up" and
-			     "ten hours over" the same picture. -->
-			<p v-if="hasEstimate" class="hq-hours__sub" data-testid="hq-hours-estimate">
-				{{ estimateLine }}
-			</p>
-			<!-- No estimate is SAID. A remaining of zero means the estimate is
-			     used up, and an object nobody estimated has not used anything
-			     up, so no remaining figure is rendered at all. -->
-			<p v-else class="hq-hours__sub" data-testid="hq-hours-no-estimate">
-				{{ t('humaniq', 'No estimate is set for this item.') }}
-			</p>
-			<p v-if="running" class="hq-hours__sub" data-testid="hq-hours-running-elsewhere">
-				{{ t('humaniq', 'Timer running on another item') }}
-			</p>
+			<form class="hq-hours__form" data-testid="hq-hours-form" @submit.prevent="recordHours">
+				<div class="hq-hours__form-row">
+					<label class="hq-hours__field">
+						<span>{{ t('humaniq', 'Date') }}</span>
+						<input v-model="form.date" type="date" required data-testid="hq-hours-form-date">
+					</label>
+					<label class="hq-hours__field">
+						<span>{{ t('humaniq', 'Hours') }}</span>
+						<input
+							v-model="form.hours"
+							type="number"
+							min="0.25"
+							max="24"
+							step="0.25"
+							required
+							data-testid="hq-hours-form-hours">
+					</label>
+				</div>
+				<label class="hq-hours__field">
+					<span>{{ t('humaniq', 'Description') }}</span>
+					<input v-model="form.description" type="text" data-testid="hq-hours-form-description">
+				</label>
+				<button
+					type="submit"
+					class="hq-hours__submit"
+					:disabled="saving || !formComplete"
+					data-testid="hq-hours-form-submit">
+					{{ t('humaniq', 'Record hours') }}
+				</button>
+			</form>
 		</div>
 
 		<p v-if="error" class="hq-hours__error" role="alert">
@@ -218,13 +255,14 @@
  * object's uuid. Both are written by integrations rather than typed by an
  * employee, which is why neither appears in any `includeFields` allowlist.
  */
-import { translate as t } from '@nextcloud/l10n'
+import { getLanguage, translate as t } from '@nextcloud/l10n'
 import HoursBookingDialog from '../dialogs/HoursBookingDialog.vue'
 import {
 	administrationUrl,
-	fetchEntries,
+	bookHours,
 	fetchEstimate,
 	fetchRunningTimer,
+	fetchWeek,
 	startTimer,
 	stopTimer,
 } from './hoursApi.js'
@@ -268,18 +306,29 @@ export default {
 			default: 'detail-page',
 		},
 
+		/**
+		 * The card's title as the host names it ("Record hours" on a dossiq
+		 * case), translated by the host. "Hours booked" without one.
+		 */
+		title: {
+			type: String,
+			default: '',
+		},
+
 	},
 
 	data() {
 		return {
-			entries: [],
+			/** The week on this object (`GET /api/time-entries/week`), or null while unread. */
+			week: null,
+			/** The inline booking form. */
+			form: { date: new Date().toISOString().slice(0, 10), hours: '', description: '' },
+			saving: false,
 			loading: false,
 			busy: false,
 			error: '',
 			/** The caller's running entry, from the server, or null. */
 			running: null,
-			/** The current user's Nextcloud id, for the caller's own share. */
-			uid: '',
 			now: Date.now(),
 			tick: null,
 			showBooking: false,
@@ -295,21 +344,67 @@ export default {
 
 	computed: {
 		/**
-		 * The summed hours over every booking on this object, or a dash.
+		 * The card's title: the host's, else "Hours booked".
 		 *
-		 * A dash rather than 0 on failure, deliberately: a zero that means "could
-		 * not read" is the defect this whole leaf exists to remove.
+		 * @return {string} The title.
 		 *
-		 * @return {string} The total, or the dash.
+		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-takes-its-hosts-title
+		 */
+		caption() {
+			return this.title !== '' ? this.title : t('humaniq', 'Hours booked')
+		},
+
+		/**
+		 * Whether the week could not be read (yet). The rows and the header's
+		 * total then say nothing rather than a 0 that reads as no hours.
+		 *
+		 * @return {boolean} True while the week is unknown.
 		 *
 		 * @spec openspec/specs/hours-leaf/spec.md#requirement-an-unreadable-total-is-not-rendered-as-a-number
 		 */
-		displayTotal() {
-			if (this.error !== '' || (this.loading === true && this.entries.length === 0)) {
-				return '–'
-			}
+		weekUnread() {
+			return this.week === null || this.error !== ''
+		},
 
-			return this.formatHours(this.sumOf(this.entries))
+		/**
+		 * The week's people, most hours first, as the server sends them.
+		 *
+		 * @return {Array<object>} `{ userId, displayName, team, hours }` rows.
+		 *
+		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		people() {
+			return Array.isArray(this.week?.people) ? this.week.people : []
+		},
+
+		/**
+		 * "Week 41 · 5 Oct to 11 Oct · 11.5 h on this item", or '' while unread.
+		 *
+		 * @return {string} The line.
+		 *
+		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		weekLine() {
+			if (this.weekUnread === true) {
+				return ''
+			}
+			return t('humaniq', 'Week {week} · {from} to {to} · {hours} on this item', {
+				week: String(this.week.week),
+				from: this.dayLabel(this.week.weekStart),
+				to: this.dayLabel(this.week.weekEnd),
+				hours: this.hoursLabel(this.week.total),
+			})
+		},
+
+		/**
+		 * Whether the form holds a day and a positive number of hours.
+		 *
+		 * @return {boolean} True when it can be sent.
+		 *
+		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		formComplete() {
+			return this.form.date !== '' && Number(this.form.hours) > 0
 		},
 
 		/**
@@ -342,34 +437,6 @@ export default {
 			const remaining = this.formatHours(Number(this.estimate.remainingHours || 0))
 
 			return t('humaniq', '{estimated} estimated, {remaining} remaining', { estimated, remaining })
-		},
-
-		/**
-		 * The caller's own share of the object's hours, as a full line.
-		 *
-		 * Rendered even at zero. An absent sub-line and a zero one are not the
-		 * same claim: the first says nothing, the second says the reader has
-		 * booked nothing here.
-		 *
-		 * @return {string} The line.
-		 *
-		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-reads-as-a-kpi-tile
-		 */
-		ownLine() {
-			if (this.error !== '' || (this.loading === true && this.entries.length === 0)) {
-				return t('humaniq', 'Your share is not known yet')
-			}
-
-			if (this.uid === '') {
-				// No resolvable caller. Matching on '' would count every entry
-				// that carries no userId as the reader's own, which is a claim
-				// about them that nothing supports.
-				return t('humaniq', 'Your share is not known yet')
-			}
-
-			const mine = this.entries.filter((e) => String(e.userId || '') === this.uid)
-
-			return t('humaniq', '{hours} booked by you', { hours: this.formatHours(this.sumOf(mine)) })
 		},
 
 		/**
@@ -482,7 +549,6 @@ export default {
 	 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-reads-as-a-kpi-tile
 	 */
 	mounted() {
-		this.uid = String(window?.OC?.getCurrentUser?.()?.uid || '')
 		this.load()
 		this.loadRunning()
 		this.loadEstimate()
@@ -528,7 +594,7 @@ export default {
 			this.loading = true
 			this.error = ''
 			try {
-				this.entries = await fetchEntries(this.domainObjectType, this.objectId)
+				this.week = await fetchWeek(this.domainObjectType, this.objectId)
 			} catch {
 				// Say so rather than render 0. See the component docblock.
 				this.error = t('humaniq', 'The hours for this item could not be read.')
@@ -793,19 +859,77 @@ export default {
 		},
 
 		/**
-		 * The sum of an entry list's hours.
+		 * Book the form's hours on this object, then re-read the week and the
+		 * estimate the booking moved.
 		 *
-		 * Used for both figures, so the headline and the caller's share can never
-		 * be computed two different ways.
+		 * @return {Promise<void>}
 		 *
-		 * @param {object[]} entries The entries.
-		 *
-		 * @return {number} The total.
-		 *
-		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-reads-as-a-kpi-tile
+		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 		 */
-		sumOf(entries) {
-			return entries.reduce((sum, e) => sum + (Number(e.hours) || 0), 0)
+		async recordHours() {
+			if (this.formComplete === false || this.saving === true) {
+				return
+			}
+			this.saving = true
+			this.error = ''
+			try {
+				await bookHours({
+					domainObjectType: this.domainObjectType,
+					domainObjectRef: this.objectId,
+					date: this.form.date,
+					hours: Number(this.form.hours),
+					description: this.form.description,
+				})
+				this.form = { ...this.form, hours: '', description: '' }
+				await this.load()
+				await this.loadEstimate()
+			} catch (e) {
+				this.error = e?.response?.data?.message || e?.response?.data?.error || t('humaniq', 'The hours could not be recorded.')
+			} finally {
+				this.saving = false
+			}
+		},
+
+		/**
+		 * Hours as "6.5 h" in the user's language.
+		 *
+		 * @param {number} value The hours.
+		 *
+		 * @return {string} The label.
+		 *
+		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		hoursLabel(value) {
+			const hours = (Math.round((Number(value) || 0) * 100) / 100).toLocaleString(getLanguage())
+			return t('humaniq', '{hours} h', { hours })
+		},
+
+		/**
+		 * A day as "5 Oct" in the user's language.
+		 *
+		 * @param {string} day The day, `YYYY-MM-DD`.
+		 *
+		 * @return {string} The label.
+		 *
+		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		dayLabel(day) {
+			const date = new Date(`${day}T12:00:00`)
+			return Number.isNaN(date.getTime()) ? String(day || '') : date.toLocaleDateString(getLanguage(), { day: 'numeric', month: 'short' })
+		},
+
+		/**
+		 * A person's bar, as a share of the week's largest.
+		 *
+		 * @param {number} hours The person's hours.
+		 *
+		 * @return {string} The CSS width.
+		 *
+		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		barWidth(hours) {
+			const most = Math.max(0, ...this.people.map((person) => Number(person.hours) || 0))
+			return most > 0 ? `${Math.round(((Number(hours) || 0) / most) * 100)}%` : '0%'
 		},
 
 		/**
@@ -983,6 +1107,119 @@ export default {
 .hq-hours__error {
 	color: var(--color-error);
 	margin: 0;
+}
+
+/* The week (board DqZaakMeer, "Uren registreren"): the people with their bars
+   beside the booking form, the form under them where the card is narrow. */
+.hq-hours__week {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+	white-space: nowrap;
+}
+
+.hq-hours__week-body {
+	display: grid;
+	gap: 16px 24px;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.hq-hours__people {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.hq-hours__person {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.hq-hours__person-line {
+	align-items: baseline;
+	display: flex;
+	gap: 8px;
+	justify-content: space-between;
+}
+
+.hq-hours__team {
+	color: var(--color-text-maxcontrast);
+	margin-inline-start: 6px;
+}
+
+.hq-hours__person-hours {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.hq-hours__bar {
+	background: var(--color-background-dark);
+	border-radius: 2px;
+	display: block;
+	height: 4px;
+	overflow: hidden;
+}
+
+.hq-hours__bar-fill {
+	background: var(--color-primary-element);
+	display: block;
+	height: 100%;
+}
+
+.hq-hours__form {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.hq-hours__form-row {
+	display: grid;
+	gap: 10px;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.hq-hours__field {
+	display: flex;
+	flex-direction: column;
+	font-weight: 600;
+	gap: 4px;
+}
+
+.hq-hours__field input {
+	box-sizing: border-box;
+	margin: 0;
+	width: 100%;
+}
+
+.hq-hours__submit {
+	align-self: flex-start;
+	background: var(--color-primary-element);
+	border: none;
+	border-radius: var(--border-radius-element, 8px);
+	color: var(--color-primary-element-text);
+	cursor: pointer;
+	font: inherit;
+	font-weight: 600;
+	min-height: var(--default-clickable-area, 34px);
+	padding: 0 16px;
+}
+
+.hq-hours__submit:disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+
+@container hq-hours (max-width: 560px) {
+	.hq-hours__week-body {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.hq-hours__week {
+		white-space: normal;
+	}
 }
 
 /* The same shape as the named Actions trigger on every other card: a
