@@ -58,6 +58,14 @@ class HoursRegisterGateway {
 	private const LOOKUP_LIMIT = 500;
 
 	/**
+	 * The most pages a caller-scoped read follows (100,000 rows), so a store
+	 * that ignores `offset` cannot keep the loop going.
+	 *
+	 * @var int
+	 */
+	private const MAX_PAGES = 200;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OpenRegister lookups).
@@ -345,18 +353,27 @@ class HoursRegisterGateway {
 			$config['filters'] = $filters;
 		}
 
-		$rows = $this->objects()
-			->setRegister($this->settingsService->getRegisterSlug())
-			->setSchema($schema)
-			->findAll($config, $asCaller, $asCaller);
-
 		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$data = $this->toArray($row);
-			if ($data !== []) {
-				$out[] = $data;
+		$offset = 0;
+		do {
+			$config['offset'] = $offset;
+			$rows = $this->objects()
+				->setRegister($this->settingsService->getRegisterSlug())
+				->setSchema($schema)
+				->findAll($config, $asCaller, $asCaller);
+			$rows = (is_array($rows) === true ? $rows : []);
+			$pageSize = count($rows);
+			foreach ($rows as $row) {
+				$data = $this->toArray($row);
+				if ($data !== []) {
+					$out[] = $data;
+				}
 			}
-		}
+
+			$offset += self::LOOKUP_LIMIT;
+			// A read as the caller answers for a whole object (the week's hours on
+			// a case), so it pages to the end rather than stopping at one page.
+		} while ($asCaller === true && $pageSize === self::LOOKUP_LIMIT && $offset < self::LOOKUP_LIMIT * self::MAX_PAGES);
 
 		return $out;
 	}//end query()

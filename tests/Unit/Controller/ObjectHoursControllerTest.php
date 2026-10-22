@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\ObjectHoursController;
+use OCA\Humaniq\Service\HostObjectAccess;
 use OCA\Humaniq\Service\ObjectWeekHours;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
@@ -46,10 +47,11 @@ class ObjectHoursControllerTest extends TestCase {
 	 *
 	 * @param ObjectWeekHours&MockObject $weekHours The week reader.
 	 * @param string|null                $uid       The caller, or null for no session.
+	 * @param bool                       $readable  Whether the caller may read the host object.
 	 *
 	 * @return ObjectHoursController The subject.
 	 */
-	private function controller(ObjectWeekHours&MockObject $weekHours, ?string $uid = 'pieter'): ObjectHoursController {
+	private function controller(ObjectWeekHours&MockObject $weekHours, ?string $uid = 'pieter', bool $readable = true): ObjectHoursController {
 		$session = $this->createMock(IUserSession::class);
 		if ($uid === null) {
 			$session->method('getUser')->willReturn(null);
@@ -59,7 +61,12 @@ class ObjectHoursControllerTest extends TestCase {
 			$session->method('getUser')->willReturn($user);
 		}
 
-		return new ObjectHoursController($this->createMock(IRequest::class), $session, $weekHours, new NullLogger());
+		$hosts = $this->createMock(HostObjectAccess::class);
+		$hosts->method('canRead')->willReturnCallback(
+			static fn (string $type, string $ref): bool => $readable === true && $type === 'dossiq:case' && $ref === 'case-1'
+		);
+
+		return new ObjectHoursController($this->createMock(IRequest::class), $session, $weekHours, $hosts, new NullLogger());
 	}//end controller()
 
 	/**
@@ -92,6 +99,20 @@ class ObjectHoursControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller($weekHours)->week('', 'case-1')->getStatus());
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller($weekHours)->week('dossiq:case', 'case-1', '2026-13-40')->getStatus());
 	}//end testRefusalsReadNothing()
+
+	/**
+	 * A caller who may not read the object gets 404, as for an object that is
+	 * not there, and nothing about its hours is read.
+	 *
+	 * @return void
+	 */
+	public function testACallerWhoMayNotReadTheObjectGetsNotFound(): void {
+		$weekHours = $this->createMock(ObjectWeekHours::class);
+		$weekHours->expects($this->never())->method('forObject');
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $this->controller($weekHours, 'anouk', false)->week('dossiq:case', 'case-1')->getStatus());
+		$this->assertSame(Http::STATUS_NOT_FOUND, $this->controller($weekHours)->week('dossiq:case', 'case-other')->getStatus());
+	}//end testACallerWhoMayNotReadTheObjectGetsNotFound()
 
 	/**
 	 * A failed read answers 500 and no total.
