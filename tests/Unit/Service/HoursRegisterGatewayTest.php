@@ -108,6 +108,22 @@ class HoursRegisterGatewayTest extends TestCase {
 	}//end testFindFilteredAndSaveRoundTrip()
 
 	/**
+	 * A read as the caller pages through every row, so a busy object is not
+	 * cut off at the lookup limit of one page.
+	 *
+	 * @return void
+	 */
+	public function testACallerScopedReadPagesPastTheLookupLimit(): void {
+		for ($i = 0; $i < 1203; $i++) {
+			$this->store->seed('TimeEntry', 'te-'.$i, ['domainObjectRef' => 'case-1', 'hours' => 1]);
+		}
+
+		$this->store->seed('TimeEntry', 'te-other', ['domainObjectRef' => 'case-2', 'hours' => 1]);
+
+		$this->assertCount(1203, $this->gateway->findFiltered('TimeEntry', ['domainObjectRef' => 'case-1'], true));
+	}//end testACallerScopedReadPagesPastTheLookupLimit()
+
+	/**
 	 * delete() removes the object from the register.
 	 *
 	 * @return void

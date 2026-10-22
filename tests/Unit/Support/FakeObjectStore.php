@@ -120,7 +120,7 @@ class FakeObjectStore {
 
 	/**
 	 * Mirror of ObjectService::findAll() — rows of the context schema,
-	 * honouring `filters` on top-level equality.
+	 * honouring `filters` on top-level equality and `limit` / `offset`.
 	 *
 	 * @param array<string, mixed> $config The query config.
 	 * @param bool $_rbac RBAC flag (ignored).
@@ -131,24 +131,27 @@ class FakeObjectStore {
 	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 		$rows = array_values($this->state->objects[$this->contextSchema] ?? []);
 		$filters = ($config['filters'] ?? []);
-		if (is_array($filters) === false || $filters === []) {
-			return $rows;
+		if (is_array($filters) === true && $filters !== []) {
+			$rows = array_values(
+				array_filter(
+					$rows,
+					static function (array $row) use ($filters): bool {
+						foreach ($filters as $key => $value) {
+							if (($row[$key] ?? null) !== $value) {
+								return false;
+							}
+						}
+
+						return true;
+					}
+				)
+			);
 		}
 
-		return array_values(
-			array_filter(
-				$rows,
-				static function (array $row) use ($filters): bool {
-					foreach ($filters as $key => $value) {
-						if (($row[$key] ?? null) !== $value) {
-							return false;
-						}
-					}
+		// One page, as OpenRegister answers: `offset` rows skipped, at most `limit`.
+		$limit = (isset($config['limit']) === true) ? (int)$config['limit'] : null;
 
-					return true;
-				}
-			)
-		);
+		return array_slice($rows, (int)($config['offset'] ?? 0), $limit);
 	}//end findAll()
 
 	/**

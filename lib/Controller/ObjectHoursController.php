@@ -26,6 +26,7 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\HostObjectAccess;
 use OCA\Humaniq\Service\ObjectWeekHours;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -47,13 +48,15 @@ class ObjectHoursController extends Controller {
 	 *
 	 * @param IRequest        $request     The request object.
 	 * @param IUserSession    $userSession The calling user.
-	 * @param ObjectWeekHours $weekHours   The week's hours per person.
-	 * @param LoggerInterface $logger      Logger.
+	 * @param ObjectWeekHours  $weekHours   The week's hours per person.
+	 * @param HostObjectAccess $hosts       Whether the caller may read the object.
+	 * @param LoggerInterface  $logger      Logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly IUserSession $userSession,
 		private readonly ObjectWeekHours $weekHours,
+		private readonly HostObjectAccess $hosts,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -62,15 +65,16 @@ class ObjectHoursController extends Controller {
 	/**
 	 * `GET /api/time-entries/week` — the week holding `date` (today without one) on one object.
 	 *
-	 * The session is checked before anything is read, and the entries are read
-	 * as the caller, so a booking the caller may not see is not counted. A
-	 * failed read answers 500, never a zero.
+	 * The session is checked first, then whether the caller may read the object
+	 * itself; a caller who may not gets 404, the answer for an object that is
+	 * not there, and nothing about its hours is read. A failed read answers
+	 * 500, never a zero.
 	 *
 	 * @param string|null $domainObjectType The `<app>:<schema>` literal of the object.
 	 * @param string|null $domainObjectRef  The object's uuid.
 	 * @param string|null $date             Any day of the week, `YYYY-MM-DD`.
 	 *
-	 * @return JSONResponse The week, 400 on a missing object or a bad day, 401 without a session.
+	 * @return JSONResponse The week, 400 on a missing object or a bad day, 401 without a session, 404 when the caller may not read the object.
 	 *
 	 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 	 */
@@ -84,6 +88,10 @@ class ObjectHoursController extends Controller {
 		$domainObjectRef  = trim((string)$domainObjectRef);
 		if ($domainObjectType === '' || $domainObjectRef === '') {
 			return new JSONResponse(['error' => 'domainObjectType en domainObjectRef zijn verplicht.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($this->hosts->canRead($domainObjectType, $domainObjectRef) === false) {
+			return new JSONResponse(['error' => 'Dit item bestaat niet of u mag het niet zien.'], Http::STATUS_NOT_FOUND);
 		}
 
 		$day = $this->dayOf(date: $date);
