@@ -4,7 +4,10 @@
 -->
 
 <template>
-	<div class="hq-hours" :data-surface="surface" data-testid="hq-hours-widget">
+	<div class="hq-hours"
+		:class="{ 'hq-hours--compact': compactHeader }"
+		:data-surface="surface"
+		data-testid="hq-hours-widget">
 		<!-- CHROME. A host places a mount-mode leaf into a bare element and hands
 		     it no card, so the leaf draws its own or it reads as loose text
 		     sitting on the page between the cards that do have one. -->
@@ -16,7 +19,7 @@
 		     header has no rule. -->
 		<div class="hq-hours__header">
 			<div class="hq-hours__header-left">
-				<span class="hq-hours__icon" aria-hidden="true">
+				<span v-if="!compactHeader" class="hq-hours__icon" aria-hidden="true">
 					<svg width="24" height="24" viewBox="0 0 24 24" focusable="false">
 						<path
 							d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16m0-18a10 10 0 1 1 0 20 10 10 0 0 1 0-20m.5 5v5.25l4.5 2.67-.75 1.23L11 13V7z"
@@ -38,6 +41,7 @@
 				     Putting it inside the menu would cost two presses for the
 				     thing that has to be instant. -->
 				<button
+					v-if="!compactHeader"
 					type="button"
 					class="hq-hours__timer"
 					:class="{ 'hq-hours__timer--running': runningHere }"
@@ -113,6 +117,16 @@
 						:style="menuStyle"
 						role="menu">
 						<button
+							v-if="compactHeader"
+							type="button"
+							class="hq-hours__menu-item"
+							role="menuitem"
+							:disabled="busy || !canUseTimer"
+							data-testid="hq-hours-menu-timer"
+							@click="closeMenu(); toggleTimer()">
+							{{ timerTitle }}
+						</button>
+						<button
 							type="button"
 							class="hq-hours__menu-item"
 							role="menuitem"
@@ -144,6 +158,15 @@
 			<p class="hq-hours__sub">
 				{{ t('humaniq', 'Timer running on this item') }}
 			</p>
+			<button
+				v-if="compactHeader"
+				type="button"
+				class="hq-hours__timer-start"
+				:disabled="busy"
+				data-testid="hq-hours-stop-timer"
+				@click="toggleTimer">
+				{{ t('humaniq', 'Stop the timer') }}
+			</button>
 		</div>
 
 		<!-- Idle: the week on this object, one row per person with a bar
@@ -184,7 +207,11 @@
 				<div class="hq-hours__form-row">
 					<label class="hq-hours__field">
 						<span>{{ t('humaniq', 'Date') }}</span>
-						<input v-model="form.date" type="date" required data-testid="hq-hours-form-date">
+						<input v-model="form.date"
+							type="date"
+							:required="!compactHeader"
+							aria-required="true"
+							data-testid="hq-hours-form-date">
 					</label>
 					<label class="hq-hours__field">
 						<span>{{ t('humaniq', 'Hours') }}</span>
@@ -194,7 +221,8 @@
 							min="0.25"
 							max="24"
 							step="0.25"
-							required
+							:required="!compactHeader"
+							aria-required="true"
 							data-testid="hq-hours-form-hours">
 					</label>
 				</div>
@@ -209,11 +237,35 @@
 					data-testid="hq-hours-form-submit">
 					{{ t('humaniq', 'Record hours') }}
 				</button>
+				<!-- With the header's stopwatch in the menu, the timer is also a
+				     button of its own under the form (board DqZaakMeer). -->
+				<button
+					v-if="compactHeader"
+					type="button"
+					class="hq-hours__timer-start"
+					:disabled="busy || !canUseTimer"
+					:title="canUseTimer ? '' : timerTitle"
+					data-testid="hq-hours-form-timer"
+					@click="toggleTimer">
+					<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+						<path
+							d="M9 2h6M12 7a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM12 4.5V7M18.5 6l1.5-1.5M12 10.5V14h2.5"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-linecap="round"
+							stroke-linejoin="round" />
+					</svg>
+					{{ t('humaniq', 'Start timer') }}
+				</button>
 			</form>
 		</div>
 
 		<p v-if="error" class="hq-hours__error" role="alert">
 			{{ error }}
+		</p>
+		<p v-if="sourceNote" class="hq-hours__source-note" data-testid="hq-hours-source-note">
+			{{ t('humaniq', 'Hours are recorded through humaniq. Without humaniq this card is left out.') }}
 		</p>
 		</div>
 
@@ -315,6 +367,32 @@ export default {
 			default: '',
 		},
 
+		/**
+		 * What the host calls the object, in English, for the week line:
+		 * "this case" reads "11.5 h on this case". humaniq translates the
+		 * nouns it knows; another is shown as written. "this item" without one.
+		 */
+		objectNoun: {
+			type: String,
+			default: '',
+		},
+
+		/**
+		 * A header with only the title, the week and the Actions menu: the
+		 * stopwatch moves into the menu and under the form as "Start timer",
+		 * the clock icon is left out (board DqZaakMeer, "Uren registreren").
+		 */
+		compactHeader: {
+			type: Boolean,
+			default: false,
+		},
+
+		/** A note band saying the hours come from humaniq and the card goes without it. */
+		sourceNote: {
+			type: Boolean,
+			default: false,
+		},
+
 	},
 
 	data() {
@@ -388,12 +466,16 @@ export default {
 			if (this.weekUnread === true) {
 				return ''
 			}
-			return t('humaniq', 'Week {week} · {from} to {to} · {hours} on this item', {
+			const values = {
 				week: String(this.week.week),
 				from: this.dayLabel(this.week.weekStart),
 				to: this.dayLabel(this.week.weekEnd),
 				hours: this.hoursLabel(this.week.total),
-			})
+			}
+			if (this.objectNoun === '') {
+				return t('humaniq', 'Week {week} · {from} to {to} · {hours} on this item', values)
+			}
+			return t('humaniq', 'Week {week} · {from} to {to} · {hours} on {object}', { ...values, object: t('humaniq', this.objectNoun) })
 		},
 
 		/**
@@ -995,6 +1077,19 @@ export default {
 	width: 24px;
 }
 
+/* The compact header reads as the host's card header: no rule, the host's
+   title size and inset. The form's empty required fields are not drawn red
+   before anything was typed; Record hours stays disabled until they are filled. */
+.hq-hours--compact .hq-hours__header {
+	border-bottom: none;
+	padding: 20px 22px 0;
+}
+
+.hq-hours--compact .hq-hours__caption {
+	font-size: 17px;
+	font-weight: 700;
+}
+
 .hq-hours__caption {
 	font-size: 14px;
 	font-weight: 600;
@@ -1205,6 +1300,36 @@ export default {
 	font-weight: 600;
 	min-height: var(--default-clickable-area, 34px);
 	padding: 0 16px;
+}
+
+.hq-hours__timer-start {
+	align-items: center;
+	align-self: flex-start;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
+	border-radius: var(--border-radius-element, 8px);
+	color: var(--color-main-text);
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	font-weight: 600;
+	gap: 6px;
+	min-height: var(--default-clickable-area, 34px);
+	padding: 0 16px;
+}
+
+.hq-hours__timer-start:disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+
+.hq-hours__source-note {
+	background: var(--color-primary-element-light, var(--color-background-hover));
+	border-radius: var(--border-radius-element, 8px);
+	color: var(--color-main-text);
+	font-size: 13px;
+	margin: 16px 0 0;
+	padding: 10px 14px;
 }
 
 .hq-hours__submit:disabled {

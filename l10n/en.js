@@ -3708,7 +3708,12 @@ OC.L10N.register(
         "own team: approve leave, hours and reviews": "own team: approve leave, hours and reviews",
         "everyone": "everyone",
         "own details, payslips, leave and expense claims": "own details, payslips, leave and expense claims",
-        "group missing": "group missing"
+        "group missing": "group missing",
+        "this case": "this case",
+        "this item": "this item",
+        "Start timer": "Start timer",
+        "Week {week} · {from} to {to} · {hours} on {object}": "Week {week} · {from} to {to} · {hours} on {object}",
+        "Hours are recorded through humaniq. Without humaniq this card is left out.": "Hours are recorded through humaniq. Without humaniq this card is left out."
     },
     "nplurals=2; plural=(n != 1);"
 )
