@@ -18,5 +18,6 @@ Three props a host sets, all off by default so other hosts keep today's card:
   The stopwatch is not removed: it becomes a "Start timer"/"Stop the timer"
   item in the Actions menu and a "Start timer" button under the form, and the
   running view gets a "Stop the timer" button.
+- With `compactHeader` the header also reads as the host's card header (no rule, the host's title size and inset), and the empty required fields are not drawn red before anything is typed (they stay `aria-required`; Record hours stays disabled until they are filled).
 - `sourceNote`: a band under the card saying hours come through humaniq and the
   card is left out without it.

@@ -4,7 +4,10 @@
 -->
 
 <template>
-	<div class="hq-hours" :data-surface="surface" data-testid="hq-hours-widget">
+	<div class="hq-hours"
+		:class="{ 'hq-hours--compact': compactHeader }"
+		:data-surface="surface"
+		data-testid="hq-hours-widget">
 		<!-- CHROME. A host places a mount-mode leaf into a bare element and hands
 		     it no card, so the leaf draws its own or it reads as loose text
 		     sitting on the page between the cards that do have one. -->
@@ -204,7 +207,11 @@
 				<div class="hq-hours__form-row">
 					<label class="hq-hours__field">
 						<span>{{ t('humaniq', 'Date') }}</span>
-						<input v-model="form.date" type="date" required data-testid="hq-hours-form-date">
+						<input v-model="form.date"
+							type="date"
+							:required="!compactHeader"
+							aria-required="true"
+							data-testid="hq-hours-form-date">
 					</label>
 					<label class="hq-hours__field">
 						<span>{{ t('humaniq', 'Hours') }}</span>
@@ -214,7 +221,8 @@
 							min="0.25"
 							max="24"
 							step="0.25"
-							required
+							:required="!compactHeader"
+							aria-required="true"
 							data-testid="hq-hours-form-hours">
 					</label>
 				</div>
@@ -1067,6 +1075,19 @@ export default {
 	flex-shrink: 0;
 	height: 24px;
 	width: 24px;
+}
+
+/* The compact header reads as the host's card header: no rule, the host's
+   title size and inset. The form's empty required fields are not drawn red
+   before anything was typed; Record hours stays disabled until they are filled. */
+.hq-hours--compact .hq-hours__header {
+	border-bottom: none;
+	padding: 20px 22px 0;
+}
+
+.hq-hours--compact .hq-hours__caption {
+	font-size: 17px;
+	font-weight: 700;
 }
 
 .hq-hours__caption {
