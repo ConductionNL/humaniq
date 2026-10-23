@@ -3707,7 +3707,12 @@
         "own team: approve leave, hours and reviews": "eigen team: verlof, uren en gesprekken goedkeuren",
         "everyone": "iedereen",
         "own details, payslips, leave and expense claims": "eigen gegevens, loonstroken, verlof en declaraties",
-        "group missing": "groep ontbreekt"
+        "group missing": "groep ontbreekt",
+        "this case": "deze zaak",
+        "this item": "dit item",
+        "Start timer": "Timer starten",
+        "Week {week} · {from} to {to} · {hours} on {object}": "Week {week} · {from} tot en met {to} · {hours} op {object}",
+        "Hours are recorded through humaniq. Without humaniq this card is left out.": "Uren registreren werkt via humaniq. Zonder humaniq staat dit blok uit."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
