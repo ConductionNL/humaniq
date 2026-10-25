@@ -8,6 +8,23 @@
 		:class="{ 'hq-hours--compact': compactHeader }"
 		:data-surface="surface"
 		data-testid="hq-hours-widget">
+		<!-- ON A HOST'S ROW the leaf is one "Hours" field beside the host's note
+		     (dossiq "Close out your day"), not the card: a row has no room for a
+		     header, figures and menus. What is typed is booked when the host
+		     records that row's note, so one press records both. -->
+		<label v-if="isRow" class="hq-hours__row" data-testid="hq-hours-row">
+			<span class="hq-hours__row-label">{{ t('humaniq', 'Hours') }}</span>
+			<input
+				v-model="rowHours"
+				class="hq-hours__row-input"
+				type="text"
+				inputmode="decimal"
+				:disabled="saving"
+				:aria-invalid="String(rowHours !== '' && rowHoursValue === null)"
+				data-testid="hq-hours-row-input">
+			<span v-if="error" class="hq-hours__row-error" role="alert">{{ error }}</span>
+		</label>
+		<template v-else>
 		<!-- CHROME. A host places a mount-mode leaf into a bare element and hands
 		     it no card, so the leaf draws its own or it reads as loose text
 		     sitting on the page between the cards that do have one. -->
@@ -268,6 +285,7 @@
 			{{ t('humaniq', 'Hours are recorded through humaniq. Without humaniq this card is left out.') }}
 		</p>
 		</div>
+		</template>
 
 		<HoursBookingDialog
 			v-if="showBooking"
@@ -318,6 +336,7 @@ import {
 	startTimer,
 	stopTimer,
 } from './hoursApi.js'
+import { isForObject, parseHours, ROW_RECORDED_EVENT } from './rowHours.mjs'
 
 /** How often the running figure is redrawn, in milliseconds. */
 const TICK_MS = 1000
@@ -417,10 +436,34 @@ export default {
 			menuStyle: null,
 			/** Whether the document listeners behind the open menu are bound. */
 			menuListenersBound: false,
+			/** The hours typed in the row field (`surface: "row"`). */
+			rowHours: '',
 		}
 	},
 
 	computed: {
+		/**
+		 * Whether the leaf sits on a host's row: one "Hours" field, no card.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/changes/hours-row-surface/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+		 */
+		isRow() {
+			return this.surface === 'row'
+		},
+
+		/**
+		 * The row field's hours as a number, or null.
+		 *
+		 * @return {number|null}
+		 *
+		 * @spec openspec/changes/hours-row-surface/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+		 */
+		rowHoursValue() {
+			return parseHours(this.rowHours)
+		},
+
 		/**
 		 * The card's title: the host's, else "Hours booked".
 		 *
@@ -631,6 +674,11 @@ export default {
 	 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-reads-as-a-kpi-tile
 	 */
 	mounted() {
+		if (this.isRow) {
+			// A row reads nothing up front: it only books, when its row is recorded.
+			document.addEventListener(ROW_RECORDED_EVENT, this.onRowRecorded)
+			return
+		}
 		this.load()
 		this.loadRunning()
 		this.loadEstimate()
@@ -651,6 +699,7 @@ export default {
 	 * @spec openspec/specs/hours-leaf/spec.md#requirement-a-running-timer-survives-leaving-the-page
 	 */
 	beforeUnmount() {
+		document.removeEventListener(ROW_RECORDED_EVENT, this.onRowRecorded)
 		if (this.tick !== null) {
 			window.clearInterval(this.tick)
 			this.tick = null
@@ -660,6 +709,38 @@ export default {
 
 	methods: {
 		t,
+
+		/**
+		 * Book the row field's hours on this object today, with the row's note
+		 * as the description, when the host has recorded that row's note.
+		 *
+		 * @param {CustomEvent} event The host's recorded-note event.
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/hours-row-surface/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+		 */
+		async onRowRecorded(event) {
+			const hours = this.rowHoursValue
+			if (isForObject(event?.detail, this.objectId) === false || hours === null || this.saving === true) {
+				return
+			}
+			this.saving = true
+			this.error = ''
+			try {
+				await bookHours({
+					domainObjectType: this.domainObjectType,
+					domainObjectRef: this.objectId,
+					date: new Date().toISOString().slice(0, 10),
+					hours,
+					description: String(event.detail.note ?? ''),
+				})
+				this.rowHours = ''
+			} catch (e) {
+				this.error = e?.response?.data?.message || e?.response?.data?.error || t('humaniq', 'The hours could not be recorded.')
+			} finally {
+				this.saving = false
+			}
+		},
 
 		/**
 		 * Read this object's time entries from OpenRegister.
@@ -1032,6 +1113,47 @@ export default {
 </script>
 
 <style scoped>
+/* On a host's row: the label over a narrow field, as the host's own note
+   field beside it (dossiq DqDagAfsluiten "Uren"). */
+.hq-hours[data-surface='row'] {
+	display: block;
+	width: 104px;
+}
+
+.hq-hours__row {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.hq-hours__row-label {
+	color: var(--color-main-text);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.hq-hours__row-input {
+	box-sizing: border-box;
+	width: 100%;
+	height: 40px;
+	margin: 0;
+	padding: 0 12px;
+	border: 1px solid var(--color-border-maxcontrast);
+	border-radius: var(--border-radius-element, 8px);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font-size: 15px;
+}
+
+.hq-hours__row-input[aria-invalid='true'] {
+	border-color: var(--color-error);
+}
+
+.hq-hours__row-error {
+	color: var(--color-error-text, var(--color-error));
+	font-size: 13px;
+}
+
 /* The card the host does not draw. A mount-mode leaf is handed a bare element,
    so without this the tile is loose text between neighbours that have chrome. */
 .hq-hours {
