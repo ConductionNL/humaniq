@@ -1132,10 +1132,13 @@ export default {
 	font-weight: 600;
 }
 
+/* Nextcloud's own input rule (seven :not() parts) outweighs a class, and
+   would cap the field at its 34px clickable area; the host's fields beside
+   it are 40px. */
 .hq-hours__row-input {
 	box-sizing: border-box;
 	width: 100%;
-	height: 40px;
+	height: 40px !important;
 	margin: 0;
 	padding: 0 12px;
 	border: 1px solid var(--color-border-maxcontrast);
