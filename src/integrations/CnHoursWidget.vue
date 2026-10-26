@@ -1462,6 +1462,27 @@ export default {
 	opacity: 0.5;
 }
 
+/* On a host's board look (dossiq DqZaak and DqZaakMeer "Uren registreren")
+   the fields and the two buttons are the board's 40px controls: fields with a
+   1px edge on an 8px radius, the buttons 14px. Elsewhere they keep the
+   Nextcloud clickable area. */
+:global(.cn-look-board) .hq-hours--compact .hq-hours__field input {
+	border: 1px solid var(--color-border-maxcontrast);
+	border-radius: 8px;
+	font-size: 15px;
+	height: 40px;
+	min-height: 40px;
+	padding: 0 12px;
+}
+
+:global(.cn-look-board) .hq-hours--compact .hq-hours__submit,
+:global(.cn-look-board) .hq-hours--compact .hq-hours__timer-start {
+	font-size: 14px;
+	height: 40px;
+	min-height: 40px;
+	padding: 0 18px;
+}
+
 @container hq-hours (max-width: 560px) {
 	.hq-hours__week-body {
 		grid-template-columns: minmax(0, 1fr);
