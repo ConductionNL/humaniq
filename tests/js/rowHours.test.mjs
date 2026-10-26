@@ -30,3 +30,11 @@ test('books only for its own object, on the host\'s recorded-note event', () => 
 	assert.equal(isForObject({ objectId: 't1' }, ''), false)
 	assert.equal(isForObject(null, 't1'), false)
 })
+
+test('the row field is 40px, over Nextcloud\'s input rule, as the host\'s fields beside it', async () => {
+	const { readFileSync } = await import('node:fs')
+	const vue = readFileSync(new URL('../../src/integrations/CnHoursWidget.vue', import.meta.url), 'utf8')
+	const rule = vue.match(/\n\.hq-hours__row-input \{([^}]*)\}/)
+	assert.ok(rule)
+	assert.match(rule[1], /height: 40px !important/)
+})
