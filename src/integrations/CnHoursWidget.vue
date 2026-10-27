@@ -1465,8 +1465,9 @@ export default {
 /* On a host's board look (dossiq DqZaak and DqZaakMeer "Uren registreren")
    the fields and the two buttons are the board's 40px controls: fields with a
    1px edge on an 8px radius, the buttons 14px. Elsewhere they keep the
-   Nextcloud clickable area. */
-:global(.cn-look-board) .hq-hours--compact .hq-hours__field input {
+   Nextcloud clickable area. The whole selector sits in :global(): a scoped
+   `:global(.x) .y` compiles to `.x` alone, which styled the host's page. */
+:global(.cn-look-board .hq-hours--compact .hq-hours__field input) {
 	border: 1px solid var(--color-border-maxcontrast);
 	border-radius: 8px;
 	font-size: 15px;
@@ -1475,8 +1476,8 @@ export default {
 	padding: 0 12px;
 }
 
-:global(.cn-look-board) .hq-hours--compact .hq-hours__submit,
-:global(.cn-look-board) .hq-hours--compact .hq-hours__timer-start {
+:global(.cn-look-board .hq-hours--compact .hq-hours__submit),
+:global(.cn-look-board .hq-hours--compact .hq-hours__timer-start) {
 	font-size: 14px;
 	height: 40px;
 	min-height: 40px;
