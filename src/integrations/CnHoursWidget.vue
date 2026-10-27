@@ -1484,6 +1484,36 @@ export default {
 	padding: 0 18px;
 }
 
+/* On the board look the week's people are the board's ruled rows (DqZaak
+   "Uren registreren": "Pieter Jansen Woo en informatie 6,5 u"): 14px, the
+   name and hours at 600, 9px above and below with a hairline over each, the
+   bar 6px on a 3px radius; the Actions trigger at 600 like every other card's
+   (r33: rows 58 against 47, 500 against 600; Acties 700 against 600). */
+:global(.cn-look-board .hq-hours--compact .hq-hours__person) {
+	border-top: 1px solid var(--cn-board-hairline, var(--color-border));
+	gap: 5px;
+	padding: 9px 0;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__person-line) {
+	font-size: 14px;
+	line-height: normal;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__person-line strong) {
+	font-weight: 600;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__bar) {
+	border-radius: 3px;
+	height: 6px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__action) {
+	font-size: 14px;
+	font-weight: 600;
+}
+
 @container hq-hours (max-width: 560px) {
 	.hq-hours__week-body {
 		grid-template-columns: minmax(0, 1fr);
