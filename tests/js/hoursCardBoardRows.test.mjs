@@ -14,7 +14,13 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
 const sfc = readFileSync(new URL('../../src/integrations/CnHoursWidget.vue', import.meta.url), 'utf8')
-const rule = (selector) => {
+/**
+ * The declarations of the rule whose selector is exactly `selector`.
+ *
+ * @param {string} selector The selector text before the opening brace.
+ * @return {string} The rule body, or '' when the rule is missing.
+ */
+function rule(selector) {
 	const at = sfc.indexOf(selector + ' {')
 	return at < 0 ? '' : sfc.slice(at, sfc.indexOf('}', at))
 }
