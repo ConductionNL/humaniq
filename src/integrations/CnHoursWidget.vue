@@ -1481,7 +1481,33 @@ export default {
 	font-size: 14px;
 	height: 40px;
 	min-height: 40px;
+}
+
+/* The board's frame and buttons on a host's board look (DqZaak "Uren
+   registreren", r34): the title on the normal line (20.4 against 25.5), the
+   content 22px in and 20px above the foot (16 and 12), its first row 16px under
+   the title over the 40px header controls, "Record hours" primary also while it
+   waits for the form (a disabled button's grey ground arrives with
+   `!important`, so the primary ground carries it too), 18px in, and "Start
+   timer" 14px in. */
+:global(.cn-look-board .hq-hours--compact .hq-hours__caption) {
+	line-height: normal;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__body) {
+	padding: 2px 22px 20px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__submit),
+:global(.cn-look-board .hq-hours--compact .hq-hours__submit:disabled) {
+	background: var(--color-primary-element) !important;
+	border: 0;
+	color: var(--color-primary-element-text) !important;
 	padding: 0 18px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__timer-start) {
+	padding: 0 14px;
 }
 
 /* On the board look the week's people are the board's ruled rows (DqZaak
