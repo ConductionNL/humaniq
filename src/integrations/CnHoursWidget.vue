@@ -1114,10 +1114,16 @@ export default {
 
 <style scoped>
 /* On a host's row: the label over a narrow field, as the host's own note
-   field beside it (dossiq DqDagAfsluiten "Uren"). */
+   field beside it (dossiq DqDagAfsluiten "Uren"). The card chrome below is
+   for the leaf on its own; on a row only the field has an edge. */
 .hq-hours[data-surface='row'] {
 	display: block;
 	width: 104px;
+	height: auto;
+	overflow: visible;
+	border: 0;
+	border-radius: 0;
+	background-color: transparent;
 }
 
 .hq-hours__row {
