@@ -1,0 +1,109 @@
+{
+	"set": "zuiddrecht",
+	"$comment": "humaniq's part of the Zuiddrecht example set: the hours booked on Woo case 2026-0110 'Verlichting fietspad Lindelaan' (portaliq writes the case), as the case's Uren registreren card draws them for this week: Pieter Jansen 6,5 uur, Lars de Koning 3 uur and Marloes Bakker 2 uur. Hours on a case are humaniq time entries that name the case (domainObjectType dossiq:case, domainObjectRef the case uuid), so they live here and not in dossiq. The case is found by its title and its Mijn Zuiddrecht reference MZ-ZDR-2026-0412, because the set also holds a closed Woo request with the same title. The dates are relative to today; the card counts Monday to Sunday, so on a Monday Pieter's hours of the day before fall in last week and the card shows his 2 hours of today.",
+	"after": [
+		"portaliq"
+	],
+	"objects": [
+		{
+			"key": "uren-pieter-fietspad-lindelaan-gisteren",
+			"register": "humaniq",
+			"schema": "TimeEntry",
+			"lookups": {
+				"case": {
+					"register": "dossiq",
+					"schema": "case",
+					"where": {
+						"title": "Verlichting fietspad Lindelaan",
+						"externalReference": "MZ-ZDR-2026-0412"
+					}
+				}
+			},
+			"data": {
+				"userId": "{{cast:pieter.uid}}",
+				"date": "{{date:-1}}",
+				"hours": 4.5,
+				"description": "Documenten verzameld en de adviezen over de verlichting doorgenomen.",
+				"domainObjectType": "dossiq:case",
+				"domainObjectRef": "{{lookup:case}}",
+				"origin": "manual",
+				"billable": false
+			}
+		},
+		{
+			"key": "uren-pieter-fietspad-lindelaan-vandaag",
+			"register": "humaniq",
+			"schema": "TimeEntry",
+			"lookups": {
+				"case": {
+					"register": "dossiq",
+					"schema": "case",
+					"where": {
+						"title": "Verlichting fietspad Lindelaan",
+						"externalReference": "MZ-ZDR-2026-0412"
+					}
+				}
+			},
+			"data": {
+				"userId": "{{cast:pieter.uid}}",
+				"date": "{{date:0}}",
+				"hours": 2,
+				"description": "Drie documenten beoordeeld, offerte lantaarnpalen deels openbaar.",
+				"domainObjectType": "dossiq:case",
+				"domainObjectRef": "{{lookup:case}}",
+				"origin": "manual",
+				"billable": false
+			}
+		},
+		{
+			"key": "uren-lars-fietspad-lindelaan",
+			"register": "humaniq",
+			"schema": "TimeEntry",
+			"lookups": {
+				"case": {
+					"register": "dossiq",
+					"schema": "case",
+					"where": {
+						"title": "Verlichting fietspad Lindelaan",
+						"externalReference": "MZ-ZDR-2026-0412"
+					}
+				}
+			},
+			"data": {
+				"userId": "{{cast:lars.uid}}",
+				"date": "{{date:0}}",
+				"hours": 3,
+				"description": "Juridisch advies over de weigeringsgronden.",
+				"domainObjectType": "dossiq:case",
+				"domainObjectRef": "{{lookup:case}}",
+				"origin": "manual",
+				"billable": false
+			}
+		},
+		{
+			"key": "uren-marloes-fietspad-lindelaan",
+			"register": "humaniq",
+			"schema": "TimeEntry",
+			"lookups": {
+				"case": {
+					"register": "dossiq",
+					"schema": "case",
+					"where": {
+						"title": "Verlichting fietspad Lindelaan",
+						"externalReference": "MZ-ZDR-2026-0412"
+					}
+				}
+			},
+			"data": {
+				"userId": "{{cast:marloes.uid}}",
+				"date": "{{date:0}}",
+				"hours": 2,
+				"description": "Stukken van Mobiliteit en verkeer aangeleverd.",
+				"domainObjectType": "dossiq:case",
+				"domainObjectRef": "{{lookup:case}}",
+				"origin": "manual",
+				"billable": false
+			}
+		}
+	]
+}
