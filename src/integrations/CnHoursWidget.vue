@@ -282,7 +282,15 @@
 			{{ error }}
 		</p>
 		<p v-if="sourceNote" class="hq-hours__source-note" data-testid="hq-hours-source-note">
-			{{ t('humaniq', 'Hours are recorded through humaniq. Without humaniq this card is left out.') }}
+			<svg class="hq-hours__source-note-icon"
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				aria-hidden="true"
+				focusable="false">
+				<path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z" fill="currentColor" />
+			</svg>
+			<span>{{ t('humaniq', 'Hours are recorded through humaniq. Without humaniq this card is left out.') }}</span>
 		</p>
 		</div>
 		</template>
@@ -1455,12 +1463,19 @@ export default {
 }
 
 .hq-hours__source-note {
+	align-items: center;
 	background: var(--color-primary-element-light, var(--color-background-hover));
 	border-radius: var(--border-radius-element, 8px);
-	color: var(--color-main-text);
+	color: var(--color-primary-element-light-text, var(--color-main-text));
+	display: flex;
 	font-size: 13px;
+	gap: 10px;
 	margin: 16px 0 0;
 	padding: 10px 14px;
+}
+
+.hq-hours__source-note-icon {
+	flex: none;
 }
 
 .hq-hours__submit:disabled {
