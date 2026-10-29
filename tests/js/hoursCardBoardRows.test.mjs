@@ -38,6 +38,10 @@ test('the Actions trigger is 600', () => {
 	assert.match(rule(B + '.hq-hours__action)'), /font-weight: 600/)
 })
 
+test('the Actions label is 600 too, not the bold of its own rule', () => {
+	assert.match(rule(B + '.hq-hours__action-label)'), /font-weight: 600/)
+})
+
 test('no board rule is a scoped :global() prefix', () => {
 	assert.equal(/:global\(\.cn-look-board\)\s/.test(sfc), false)
 })

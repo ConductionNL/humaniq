@@ -1540,6 +1540,11 @@ export default {
 	font-weight: 600;
 }
 
+/* The label has its own bold rule, which the trigger's 600 does not reach. */
+:global(.cn-look-board .hq-hours--compact .hq-hours__action-label) {
+	font-weight: 600;
+}
+
 @container hq-hours (max-width: 560px) {
 	.hq-hours__week-body {
 		grid-template-columns: minmax(0, 1fr);
