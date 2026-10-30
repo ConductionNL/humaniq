@@ -5,7 +5,7 @@
  * The week line names the hours on the object in bold, as board DqZaak
  * "Uren registreren" draws "Week 41 · 5 tot en met 11 okt · **11,5 uur** op deze zaak".
  *
- * @spec openspec/changes/hours-week-line-hours-in-bold/specs/hours-leaf/spec.md#requirement-the-week-line-names-the-objects-hours-in-bold
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-week-line-names-the-objects-hours-in-bold
  */
 import assert from 'node:assert/strict'
 import { test } from 'node:test'

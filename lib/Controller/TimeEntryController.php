@@ -243,7 +243,7 @@ class TimeEntryController extends Controller {
 	 *
 	 * @return JSONResponse `{date, hours, entries}`, 400 on a date that is not a day, 401 without a session.
 	 *
-	 * @spec openspec/changes/time-entries-summary/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
 	 */
 	#[NoAdminRequired]
 	public function summary(?string $date = null): JSONResponse {

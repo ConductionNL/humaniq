@@ -6,7 +6,7 @@
  * DqZaak "Uren registreren": labels 14px at 600 on the normal line, 6px above
  * their field, 12px between the fields; the week line 14px.
  *
- * @spec openspec/changes/hours-week-line-hours-in-bold/specs/hours-leaf/spec.md#requirement-the-board-look-booking-form-reads-as-drawn
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-board-look-booking-form-reads-as-drawn
  */
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
