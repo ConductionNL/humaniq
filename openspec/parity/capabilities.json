@@ -8138,7 +8138,8 @@
     "evidence": "Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:388 page Store (type store, commit bf32851c 2026-09-04) adopts OpenRegister's store plane, which installs configuration sets other organisations publish (a leave policy, a job framework, onboarding flows); with no registry configured it shows the app's own items and makes no network call. Partial: no published HR configuration set exists yet to install. Before: grep -rn 'Store'|'template.store' src/manifest.d/*.json: no hits; no page or schema exists for installing a published, ready-made configuration such as a leave policy",
     "reachedOn": "Store /store (footer menu, StoreMenu)",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/changes/configuration-store",
+    "requirement": ["openspec/changes/configuration-store/specs/first-time-setup :: The Store page SHALL install published configuration sets through OpenRegister (REQ-FTS-006)", "openspec/changes/configuration-store/specs/first-time-setup :: The setup wizard SHALL offer a Sjablonen step that installs chosen sets (REQ-FTS-007)"]
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
