@@ -3115,7 +3115,9 @@
     "evidence": "lib/Settings/register.d/hr-verzuim.json SickLeaveCase schema, x-openregister-lifecycle gemeld<->hersteld (herstellen/heropenen transitions, no guard required); src/manifest.d/hr-verzuim.json:4 SickLeaveCaseDetail lifecycleActions herstellen/heropenen; src/manifest.d/hr-verzuim.json:162 SickLeaveCases index",
     "reachedOn": "SickLeaveCaseDetail /sick-leave/:id and SickLeaveCases /sick-leave (menu Leave & Absence > Sick leave cases)",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-12-leave-verzuim-mvp"
+    "change": "2026-07-12-leave-verzuim-mvp",
+    "spec": "openspec/specs/verzuim-wvp",
+    "requirement": "openspec/specs/verzuim-wvp :: A new `SickLeaveCase` schema SHALL model the administrative sickness case with a gemeld⇄hersteld lifecycle (REQ-VWP-001)"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3476,7 +3478,9 @@
     "evidence": "src/manifest.d/hr-timesheet.json page MijnUren (route /mijn/uren) includeFields startedAt/endedAt/breakMinutes/description/projectId/billable; lib/Listener/TimeEntryStampListener.php stamps userId/administrationId/costCenter server-side; hours derived from start/end/break by TimeEntryHoursDeriver.php",
     "reachedOn": "MijnUren /mijn/uren (menu My HR > My hours), self-service create form",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-14-time-entry-capture"
+    "change": "2026-07-14-time-entry-capture",
+    "spec": "openspec/specs/time-entry-capture",
+    "requirement": "openspec/specs/time-entry-capture :: humaniq captures time entries under a submit→approve lifecycle (REQ-TEC-001)"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4627,7 +4631,9 @@
     "evidence": "appinfo/routes.php:102 POST /api/expenses/extract-receipt -> ExpenseController::extractReceipt; lib/Service/ReceiptExtractionService.php:100-108 DOCUMENT_APP='filinq', docudeskAvailable() (lines 479-491) calls FleetAppId::isInstalled($appManager,'filinq') then FleetAppId::getService(...,'filinq','Service\\FinancialExtractionService') which tries OCA\\Filinq then OCA\\DocuDesk namespaces; verified against the live filinq checkout: appinfo/info.xml has <id>filinq</id>/<namespace>Filinq</namespace> and lib/Service/FinancialExtractionService.php declares namespace OCA\\Filinq\\Service, matching FleetAppId's first candidate; src/manifest.d/hr-expense.json:197 ExpenseDetail 'Extract receipt data' header action calls the route; also occ humaniq:expense:extract-receipt",
     "reachedOn": "ExpenseDetail /expenses/:id 'Extract receipt data' button",
     "owner": "ConductionNL/filinq",
-    "change": "2026-07-15-receipt-ocr"
+    "change": "2026-07-15-receipt-ocr",
+    "spec": "openspec/specs/receipt-ocr",
+    "requirement": "openspec/specs/receipt-ocr :: `ReceiptExtractionService` SHALL call docudesk's `FinancialExtractionService::extractFinancial()` and prefill only empty Expense fields, never overwriting a human-entered value (REQ-RCPT-002)"
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
@@ -9093,7 +9099,9 @@
     "reachedOn": "external BI client on openregister /api/graphql; scheduled renders on openregister /reports/{id}; no humaniq page",
     "owner": "ConductionNL/openregister",
     "change": "openregister/rapportage-bi-export",
-    "readOn": "2026-10-07"
+    "readOn": "2026-10-07",
+    "spec": "openregister/openspec/specs/rapportage-bi-export",
+    "requirement": ["openregister/openspec/specs/rapportage-bi-export :: The system MUST support API access for external BI tools via GraphQL + REST", "openregister/openspec/specs/rapportage-bi-export :: The system MUST support scheduled report generation"]
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
@@ -9131,7 +9139,8 @@
     "evidence": "src/manifest.d/hr-documents.json:25 generated HR documents are rendered and stored by docudesk (lib/Settings/register.d/hr-documents.json:232 records a docudesk handoff per document) into Nextcloud Files; no link to an external DMS over ZGW or STUF-ZDS (grep -rniE 'zgw|zds|drc' lib src: no hits) Specified in ConductionNL/filinq openspec/changes/generate-store-in-case-system (filinq lane, OpenSpec pass 2026-09-27).",
     "reachedOn": "GeneratedDocuments /documents, GeneratedDocumentDetail /documents/:id",
     "owner": "ConductionNL/filinq",
-    "change": "filinq/generate-store-in-case-system"
+    "change": "filinq/generate-store-in-case-system",
+    "requirement": ["filinq/openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: An admin declares where generated documents go in the case system (REQ-GSC-001)", "filinq/openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A stored document gets a delivery for its destination (REQ-GSC-002)", "filinq/openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A delivery's outcome is visible and a failure can be retried (REQ-GSC-003)"]
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
@@ -10569,6 +10578,167 @@
    "source": "roadmap",
    "origin": "roadmap",
    "originUrl": "https://support.personio.de/hc/en-us/articles/38900337558685-Measure-your-organization-s-AI-fluency"
+  },
+  {
+   "id": "tt-staff-deployment",
+   "area": "planning",
+   "name": "Plan each teacher's teaching load for the year against their contract hours.",
+   "humaniq": "no",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "visma-raet": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "hr2day": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "loket": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "personio": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "orangehrm": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it."
+   },
+   "built": {
+    "state": "specified",
+    "evidence": "Inbound from the planninq matrix (gap decision build, 2026-09-27). Not built: no deployment plan schema in lib/Settings/register.d; planned in the open change education-staff-deployment-and-count.",
+    "owner": "ConductionNL/humaniq",
+    "change": "education-staff-deployment-and-count",
+    "requirement": [
+     "openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment :: Each teacher SHALL have a yearly deployment plan against the norm for their contract (REQ-EDU-001)",
+     "openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment :: A school leader SHALL see every teacher's plan for their school (REQ-EDU-002)"
+    ]
+   },
+   "provider": "humaniq",
+   "providerHow": "inferred",
+   "feature": "rostering",
+   "source": "tender",
+   "origin": "tender",
+   "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/271977",
+   "note": "planninq matrix row tt-staff-deployment, also seen in https://www.tenderned.nl/aankondigingen/overzicht/414807. Drawn on the planninq board PlRoosterwensen.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "planninq/PlRoosterwensen"
+   }
+  },
+  {
+   "id": "tt-staff-count-export",
+   "area": "planning",
+   "name": "Export the timetable in the format the education ministry asks for its yearly staff count.",
+   "humaniq": "no",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "visma-raet": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "hr2day": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "loket": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "personio": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "orangehrm": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it."
+   },
+   "built": {
+    "state": "specified",
+    "evidence": "Inbound from the planninq matrix (gap decision build, 2026-09-27). Not built: no IPTO export in lib/; planned in the open change education-staff-deployment-and-count.",
+    "owner": "ConductionNL/humaniq",
+    "change": "education-staff-deployment-and-count",
+    "requirement": "openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment :: The IPTO staff count file SHALL be produced from the confirmed plans (REQ-EDU-003)"
+   },
+   "provider": "humaniq",
+   "providerHow": "inferred",
+   "feature": "rostering",
+   "source": "competitor-derived",
+   "origin": "competitor-derived",
+   "originUrl": "https://support.zermelo.nl/guides/applicatiebeheerder/ipto-exportbestand",
+   "note": "planninq matrix row tt-staff-count-export (Integrale Personeelstelling Onderwijs). Drawn on the planninq board PlRoosterwensen.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "planninq/PlRoosterwensen"
+   }
+  },
+  {
+   "id": "tim-non-project",
+   "area": "time",
+   "name": "Log time on non-project activities, such as training, leave and sickness, next to project work in the same timesheet.",
+   "humaniq": "no",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "visma-raet": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "hr2day": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "loket": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "personio": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "orangehrm": "not compared: an inbound row from the planninq matrix, owned by humaniq; humaniq competitors were not read for it."
+   },
+   "built": {
+    "state": "specified",
+    "evidence": "Inbound from the planninq matrix, handed to humaniq on 2026-09-27 (gap decision build). Not built: TimeEntry has a free project reference and no activity; planned in the open change time-non-project-activities.",
+    "owner": "ConductionNL/humaniq",
+    "change": "time-non-project-activities",
+    "requirement": [
+     "openspec/changes/time-non-project-activities/specs/time-activities :: Non-project work SHALL be bookable as an activity (REQ-TAC-001)",
+     "openspec/changes/time-non-project-activities/specs/time-activities :: Leave and sickness SHALL show on the weekly timesheet from their own records (REQ-TAC-002)"
+    ]
+   },
+   "provider": "humaniq",
+   "providerHow": "inferred",
+   "feature": "time-registration",
+   "source": "tender",
+   "origin": "tender",
+   "originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/365739",
+   "note": "planninq matrix row tim-non-project (TenderNed 365739, gemeente Sittard-Geleen). Drawn on the planninq board PlTijdregistratie.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "planninq/PlTijdregistratie"
+   }
+  },
+  {
+   "id": "sales-time-and-expense-billing",
+   "area": "time",
+   "name": "Each time entry carries its approval state, so approved billable hours can be invoiced per project and period.",
+   "humaniq": "no",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not compared: an inbound row from the shillinq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "visma-raet": "not compared: an inbound row from the shillinq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "hr2day": "not compared: an inbound row from the shillinq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "loket": "not compared: an inbound row from the shillinq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "personio": "not compared: an inbound row from the shillinq matrix, owned by humaniq; humaniq competitors were not read for it.",
+    "orangehrm": "not compared: an inbound row from the shillinq matrix, owned by humaniq; humaniq competitors were not read for it."
+   },
+   "built": {
+    "state": "specified",
+    "evidence": "Inbound from the shillinq matrix (gap decisions 2026-09-28). Existing half: TimeEntry.billable in lib/Settings/register.d/hr-timesheet.json, archived change 2026-08-22-hrmq-hours-process-redesign. Build half: the approval state on the entry and one query for approved billable hours, planned in the open change time-entry-approval-state.",
+    "owner": "ConductionNL/humaniq",
+    "change": "time-entry-approval-state",
+    "requirement": [
+     "openspec/changes/time-entry-approval-state/specs/time-entry-approval-state :: A time entry SHALL carry the approval state of its timesheet (REQ-TAS-001)",
+     "openspec/changes/time-entry-approval-state/specs/time-entry-approval-state :: Approved billable hours SHALL be readable per project and period in one query (REQ-TAS-002)"
+    ]
+   },
+   "provider": "humaniq",
+   "providerHow": "inferred",
+   "feature": "project-hours",
+   "source": "featureRequest",
+   "origin": "featureRequest",
+   "originUrl": "https://github.com/ConductionNL/shillinq/tree/development/openspec/changes/sales-time-and-expense-billing",
+   "note": "shillinq matrix row sales-time-and-expense-billing, build half only (humaniq side of shillinq's hours-to-humaniq). The entry's state is read by shillinq; on screen it is the timesheet state on HuUrenstaat.",
+   "screen": {
+    "canvas": "design-system",
+    "board": "HuUrenstaat"
+   }
   }
  ],
  "pending": [
