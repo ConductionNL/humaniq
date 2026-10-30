@@ -52,7 +52,11 @@
 			</div>
 
 			<div class="hq-hours__controls">
-				<span v-if="weekLine !== ''" class="hq-hours__week" data-testid="hq-hours-week">{{ weekLine }}</span>
+				<span v-if="weekLine !== ''" class="hq-hours__week" data-testid="hq-hours-week"><component
+					:is="part.strong ? 'strong' : 'span'"
+					v-for="(part, index) in weekParts"
+					:key="index"
+					:class="{ 'hq-hours__week-hours': part.strong }">{{ part.text }}</component></span>
 				<!-- The stopwatch is its own control, left of the actions, because
 				     it is the one-press shortcut for work happening right now.
 				     Putting it inside the menu would cost two presses for the
@@ -345,6 +349,7 @@ import {
 	stopTimer,
 } from './hoursApi.js'
 import { isForObject, parseHours, ROW_RECORDED_EVENT } from './rowHours.mjs'
+import { HOURS_MARK, weekLineParts } from './weekLineParts.mjs'
 
 /** How often the running figure is redrawn, in milliseconds. */
 const TICK_MS = 1000
@@ -507,7 +512,8 @@ export default {
 		},
 
 		/**
-		 * "Week 41 · 5 Oct to 11 Oct · 11.5 h on this item", or '' while unread.
+		 * "Week 41 · 5 Oct to 11 Oct · {hours} on this item" with HOURS_MARK for
+		 * the hours (drawn by `weekParts`), or '' while unread.
 		 *
 		 * @return {string} The line.
 		 *
@@ -521,12 +527,24 @@ export default {
 				week: String(this.week.week),
 				from: this.dayLabel(this.week.weekStart),
 				to: this.dayLabel(this.week.weekEnd),
-				hours: this.hoursLabel(this.week.total),
+				hours: HOURS_MARK,
 			}
 			if (this.objectNoun === '') {
 				return t('humaniq', 'Week {week} · {from} to {to} · {hours} on this item', values)
 			}
 			return t('humaniq', 'Week {week} · {from} to {to} · {hours} on {object}', { ...values, object: t('humaniq', this.objectNoun) })
+		},
+
+		/**
+		 * The week line in parts, the hours on the object strong (board DqZaak
+		 * "Uren registreren": "... · **11,5 uur** op deze zaak").
+		 *
+		 * @return {Array<{text: string, strong: boolean}>} The parts.
+		 *
+		 * @spec openspec/changes/hours-week-line-hours-in-bold/specs/hours-leaf/spec.md#requirement-the-week-line-names-the-objects-hours-in-bold
+		 */
+		weekParts() {
+			return weekLineParts(this.weekLine, this.weekUnread === true ? '' : this.hoursLabel(this.week.total))
 		},
 
 		/**
@@ -1351,6 +1369,10 @@ export default {
 	white-space: nowrap;
 }
 
+.hq-hours__week-hours {
+	color: var(--color-main-text);
+}
+
 .hq-hours__week-body {
 	display: grid;
 	gap: 16px 24px;
@@ -1488,6 +1510,32 @@ export default {
    1px edge on an 8px radius, the buttons 14px. Elsewhere they keep the
    Nextcloud clickable area. The whole selector sits in :global(): a scoped
    `:global(.x) .y` compiles to `.x` alone, which styled the host's page. */
+/* The booking form and the week line as board DqZaak "Uren registreren"
+   draws them (r39: the form's first row 13.5 under the title against 16, the
+   labels 15px at 700 on a 22.5 line): labels 14px at 600 on the normal line,
+   6px above their field, the fields 12px apart, the week line 14px. */
+:global(.cn-look-board .hq-hours--compact .hq-hours__field) {
+	font-size: 14px;
+	gap: 6px;
+	line-height: normal;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__field > span) {
+	font-weight: 600;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__form) {
+	gap: 12px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__form-row) {
+	gap: 12px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__week) {
+	font-size: 14px;
+}
+
 :global(.cn-look-board .hq-hours--compact .hq-hours__field input) {
 	border: 1px solid var(--color-border-maxcontrast);
 	border-radius: 8px;
