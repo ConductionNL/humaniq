@@ -43,7 +43,7 @@ class ZuiddrechtCaseHoursTest extends TestCase {
 
 		$hours = [];
 		foreach ($fragment['objects'] as $object) {
-			if ($object['schema'] !== 'TimeEntry') {
+			if ($object['schema'] !== 'TimeEntry' || ($object['lookups']['case']['where']['title'] ?? '') !== 'Verlichting fietspad Lindelaan') {
 				continue;
 			}
 
@@ -99,10 +99,44 @@ class ZuiddrechtCaseHoursTest extends TestCase {
 			$this->assertSame(expected: $object['data']['userId'], actual: $employees[$employeeId], message: $object['key']);
 		}
 
-		$this->assertSame(expected: 4, actual: $entries);
+		$this->assertSame(expected: 6, actual: $entries);
 		$this->assertSame(
 			expected: ['{{cast:pieter.uid}}', '{{cast:lars.uid}}', '{{cast:marloes.uid}}'],
 			actual: array_values(array_unique($employees))
 		);
 	}//end testEveryTimeEntryNamesTheEmployeeOfItsAccount()
+
+	/**
+	 * Pieter books 2,75 hours today, the Uren figure of DqDagAfsluiten: 2 on the Lindelaan case,
+	 * 0,5 on the hearing task of Bezwaar parkeerboete Havenstraat (booked on its case) and
+	 * 0,25 on Parkeervergunningen binnenstad, each with the note he recorded there.
+	 *
+	 * @return void
+	 */
+	public function testPieterBooksHisRecordedNotesToday(): void {
+		$file     = __DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json';
+		$fragment = json_decode((string)file_get_contents($file), true);
+		$this->assertContains(needle: 'dossiq', haystack: $fragment['after'], message: 'dossiq writes the cases first');
+
+		$today = [];
+		foreach ($fragment['objects'] as $object) {
+			$data = $object['data'];
+			if ($object['schema'] !== 'TimeEntry' || $data['userId'] !== '{{cast:pieter.uid}}' || $data['date'] !== '{{date:0}}') {
+				continue;
+			}
+
+			$this->assertSame(expected: 'dossiq:case', actual: $data['domainObjectType'], message: $object['key']);
+			$this->assertSame(expected: '{{lookup:case}}', actual: $data['domainObjectRef'], message: $object['key']);
+			$today[$object['lookups']['case']['where']['title']] = [$data['hours'], $data['description']];
+		}
+
+		$this->assertSame(
+			expected: [
+				'Verlichting fietspad Lindelaan'   => [2, 'Drie documenten beoordeeld, offerte lantaarnpalen deels openbaar.'],
+				'Bezwaar parkeerboete Havenstraat' => [0.5, 'Zaal en commissie vastgelegd voor 21 oktober.'],
+				'Parkeervergunningen binnenstad'   => [0.25, 'Verzoeker herinnerd aan de ontbrekende machtiging.'],
+			],
+			actual: $today
+		);
+	}//end testPieterBooksHisRecordedNotesToday()
 }//end class
