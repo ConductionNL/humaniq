@@ -2001,7 +2001,8 @@
     "evidence": "Employee is an OpenRegister schema (lib/Settings/register.d/hr-objects.json); OpenRegister ships its own Schemas admin UI (~/apps-extra/openregister/src/views/{schema,schemas,settings}) for adding properties to any register schema, including Employee. humaniq's own manifest/pages carry no custom-field builder of their own.",
     "reachedOn": "OpenRegister's own Schemas settings screens (outside humaniq's app), not a humaniq page",
     "owner": "ConductionNL/openregister",
-    "spec": "none"
+    "spec": "openspec/changes/employee-custom-fields-through-the-register",
+    "requirement": "openspec/changes/employee-custom-fields-through-the-register/specs/employee-and-contract-records :: A field an administrator adds to the Employee schema SHALL show and save on the employee page (REQ-ECR-005)"
    },
    "provider": "openregister",
    "providerHow": "inferred",
