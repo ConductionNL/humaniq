@@ -43,6 +43,10 @@ class ZuiddrechtCaseHoursTest extends TestCase {
 
 		$hours = [];
 		foreach ($fragment['objects'] as $object) {
+			if ($object['schema'] !== 'TimeEntry') {
+				continue;
+			}
+
 			$this->assertSame(expected: 'humaniq', actual: $object['register'], message: $object['key']);
 			$this->assertSame(expected: 'TimeEntry', actual: $object['schema'], message: $object['key']);
 			$this->assertSame(
@@ -63,4 +67,42 @@ class ZuiddrechtCaseHoursTest extends TestCase {
 			actual: $hours
 		);
 	}//end testTheLindelaanCaseHasItsHoursThisWeek()
+
+	/**
+	 * Every time entry names an employee the fragment declares before it, linked to the entry's account.
+	 *
+	 * Without an explicit employee the stamp listener looks up the acting user's employee, and the
+	 * installer has none, so the entry is refused.
+	 *
+	 * @return void
+	 */
+	public function testEveryTimeEntryNamesTheEmployeeOfItsAccount(): void {
+		$file     = __DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json';
+		$fragment = json_decode((string)file_get_contents($file), true);
+
+		$employees = [];
+		$entries   = 0;
+		foreach ($fragment['objects'] as $object) {
+			$this->assertSame(expected: 'humaniq', actual: $object['register'], message: $object['key']);
+			if ($object['schema'] === 'Employee') {
+				$data = $object['data'];
+				$this->assertNotEmpty(actual: $data['lastName'] ?? null, message: $object['key']);
+				$this->assertNotEmpty(actual: $data['startDate'] ?? null, message: $object['key']);
+				$employees['{{object:'.$object['key'].'.id}}'] = $data['nextcloudUserId'];
+				continue;
+			}
+
+			$this->assertSame(expected: 'TimeEntry', actual: $object['schema'], message: $object['key']);
+			$entries++;
+			$employeeId = ($object['data']['employeeId'] ?? null);
+			$this->assertArrayHasKey(key: (string)$employeeId, array: $employees, message: $object['key'].' names an employee declared before it');
+			$this->assertSame(expected: $object['data']['userId'], actual: $employees[$employeeId], message: $object['key']);
+		}
+
+		$this->assertSame(expected: 4, actual: $entries);
+		$this->assertSame(
+			expected: ['{{cast:pieter.uid}}', '{{cast:lars.uid}}', '{{cast:marloes.uid}}'],
+			actual: array_values(array_unique($employees))
+		);
+	}//end testEveryTimeEntryNamesTheEmployeeOfItsAccount()
 }//end class

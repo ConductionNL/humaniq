@@ -1,10 +1,46 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "humaniq's part of the Zuiddrecht example set: the hours booked on Woo case 2026-0110 'Verlichting fietspad Lindelaan' (portaliq writes the case), as the case's Uren registreren card draws them for this week: Pieter Jansen 6,5 uur, Lars de Koning 3 uur and Marloes Bakker 2 uur. Hours on a case are humaniq time entries that name the case (domainObjectType dossiq:case, domainObjectRef the case uuid), so they live here and not in dossiq. The case is found by its title and its Mijn Zuiddrecht reference MZ-ZDR-2026-0412, because the set also holds a closed Woo request with the same title. The dates are relative to today; the card counts Monday to Sunday, so on a Monday Pieter's hours of the day before fall in last week and the card shows his 2 hours of today.",
+	"$comment": "humaniq's part of the Zuiddrecht example set: the hours booked on Woo case 2026-0110 'Verlichting fietspad Lindelaan' (portaliq writes the case), as the case's Uren registreren card draws them for this week: Pieter Jansen 6,5 uur, Lars de Koning 3 uur and Marloes Bakker 2 uur. Hours on a case are humaniq time entries that name the case (domainObjectType dossiq:case, domainObjectRef the case uuid), so they live here and not in dossiq. The case is found by its title and its Mijn Zuiddrecht reference MZ-ZDR-2026-0412, because the set also holds a closed Woo request with the same title. Each entry names the humaniq employee of its account, declared first in this fragment: humaniq refuses an entry that names no employee when the writing account has no employee profile of its own, and the installer has none. The dates are relative to today; the card counts Monday to Sunday, so on a Monday Pieter's hours of the day before fall in last week and the card shows his 2 hours of today.",
 	"after": [
 		"portaliq"
 	],
 	"objects": [
+		{
+			"key": "medewerker-pieter",
+			"register": "humaniq",
+			"schema": "Employee",
+			"data": {
+				"employeeNumber": "ZDR-0410",
+				"firstName": "Pieter",
+				"lastName": "Jansen",
+				"startDate": "2019-03-01",
+				"nextcloudUserId": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "medewerker-lars",
+			"register": "humaniq",
+			"schema": "Employee",
+			"data": {
+				"employeeNumber": "ZDR-0522",
+				"firstName": "Lars",
+				"lastName": "de Koning",
+				"startDate": "2021-09-01",
+				"nextcloudUserId": "{{cast:lars.uid}}"
+			}
+		},
+		{
+			"key": "medewerker-marloes",
+			"register": "humaniq",
+			"schema": "Employee",
+			"data": {
+				"employeeNumber": "ZDR-0317",
+				"firstName": "Marloes",
+				"lastName": "Bakker",
+				"startDate": "2018-02-01",
+				"nextcloudUserId": "{{cast:marloes.uid}}"
+			}
+		},
 		{
 			"key": "uren-pieter-fietspad-lindelaan-gisteren",
 			"register": "humaniq",
@@ -21,6 +57,7 @@
 			},
 			"data": {
 				"userId": "{{cast:pieter.uid}}",
+				"employeeId": "{{object:medewerker-pieter.id}}",
 				"date": "{{date:-1}}",
 				"hours": 4.5,
 				"description": "Documenten verzameld en de adviezen over de verlichting doorgenomen.",
@@ -46,6 +83,7 @@
 			},
 			"data": {
 				"userId": "{{cast:pieter.uid}}",
+				"employeeId": "{{object:medewerker-pieter.id}}",
 				"date": "{{date:0}}",
 				"hours": 2,
 				"description": "Drie documenten beoordeeld, offerte lantaarnpalen deels openbaar.",
@@ -71,6 +109,7 @@
 			},
 			"data": {
 				"userId": "{{cast:lars.uid}}",
+				"employeeId": "{{object:medewerker-lars.id}}",
 				"date": "{{date:0}}",
 				"hours": 3,
 				"description": "Juridisch advies over de weigeringsgronden.",
@@ -96,6 +135,7 @@
 			},
 			"data": {
 				"userId": "{{cast:marloes.uid}}",
+				"employeeId": "{{object:medewerker-marloes.id}}",
 				"date": "{{date:0}}",
 				"hours": 2,
 				"description": "Stukken van Mobiliteit en verkeer aangeleverd.",
