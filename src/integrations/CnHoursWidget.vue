@@ -1554,8 +1554,7 @@ export default {
 
 /* The board's frame and buttons on a host's board look (DqZaak "Uren
    registreren", r34): the title on the normal line (20.4 against 25.5), the
-   content 22px in and 20px above the foot (16 and 12), its first row 16px under
-   the title over the 40px header controls, "Record hours" primary also while it
+   content 22px in and 20px above the foot (16 and 12), "Record hours" primary also while it
    waits for the form (a disabled button's grey ground arrives with
    `!important`, so the primary ground carries it too), 18px in, and "Start
    timer" 14px in. */
@@ -1563,8 +1562,19 @@ export default {
 	line-height: normal;
 }
 
+/* The board's header row: title, week line and a 34px Actions button on one
+   baseline (the button's icon foot), the body 14px under it, so the form's
+   first row stands 16px under the title. */
+:global(.cn-look-board .hq-hours--compact .hq-hours__header) {
+	align-items: baseline;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__controls) {
+	align-items: baseline;
+}
+
 :global(.cn-look-board .hq-hours--compact .hq-hours__body) {
-	padding: 2px 22px 20px;
+	padding: 14px 22px 20px;
 }
 
 :global(.cn-look-board .hq-hours--compact .hq-hours__submit),
@@ -1607,6 +1617,8 @@ export default {
 :global(.cn-look-board .hq-hours--compact .hq-hours__action) {
 	font-size: 14px;
 	font-weight: 600;
+	height: 34px;
+	min-height: 34px;
 }
 
 /* The label has its own bold rule, which the trigger's 600 does not reach. */
