@@ -428,3 +428,68 @@ NOT query the `hrmq` register to read one.
 - **WHEN** a booking is attempted from the leaf and from the consuming app's own
   screen
 - **THEN** both receive humaniq's refusal, naming the same ceiling
+
+### Requirement: The hours surface shows the week per person
+
+`GET /api/time-entries/week` SHALL answer, for a signed-in caller, the ISO week holding `date` (`YYYY-MM-DD`, today when left out) on the object named by `domainObjectType` and `domainObjectRef`: `week`, `weekStart`, `weekEnd`, `total` and `people`, each person with `userId`, `displayName`, `team` and `hours`, most hours first. It SHALL count only the time entries OpenRegister lets the caller read, only those dated in the week and only those with numeric hours. Without a session it SHALL answer 401, without the object or with a date that is not a day 400, both before anything is read, and on a failed read 500, never a zero. The hours surface SHALL draw the week header, one row per person with a bar, and an inline booking form.
+
+#### Scenario: a week on a case
+- **GIVEN** time entries on case-1 in week 41 of 2026: Pieter 4 and 2.5 hours, Lars 3, Marloes 2, and entries outside the week or without hours
+- **WHEN** a signed-in caller who may read them asks for the week of 8 October
+- **THEN** the answer is week 41, 5 to 11 October, 11.5 hours, Pieter 6.5, Lars 3, Marloes 2, each with a name and the team of their active placement
+
+#### Scenario: refused before reading
+- **WHEN** a request has no session, names no object, or names a day that is not a day
+- **THEN** it is refused and no entry is read
+
+### Requirement: The hours surface takes its host's title
+
+`CnHoursWidget` SHALL title its card with the `title` its host passes and SHALL fall back to "Hours booked" without one.
+
+#### Scenario: dossiq titles the card
+- **GIVEN** dossiq places the leaf with the title "Record hours"
+- **THEN** the card reads "Uren registreren" in Dutch, not "Geboekte uren"
+
+### Requirement: The week is answered only to a reader of the object
+
+`GET /api/time-entries/week` SHALL answer 404 to a signed-in caller who may not read the host object named by `domainObjectType` and `domainObjectRef`, as OpenRegister decides with the caller's access rules and tenancy, and SHALL read no time entry for that caller. A type that is not `<register>:<schema>`, or an OpenRegister that cannot answer, SHALL be treated as not readable. For a reader it SHALL count every time entry on the object in the week, however many the object holds.
+
+#### Scenario: a user who cannot open the case
+- **GIVEN** a case the caller may not read
+- **WHEN** they ask for the week's hours on it
+- **THEN** the answer is 404 and no entry is read
+
+#### Scenario: a busy object
+- **GIVEN** 1,203 time entries on one object
+- **WHEN** a reader's week is read
+- **THEN** every entry is read, not the first 500
+
+### Requirement: The hours leaf on a row is one hours field booked with the row's note
+
+With `surface: "row"` the hours leaf SHALL render one labelled "Hours" field and no card, and SHALL read no hours,
+timer or estimate up front. When the host dispatches the document event `cn-record-notes:recorded` whose
+`detail.objectId` is the leaf's object, and the field holds a positive number of hours of at most 24 (a decimal
+comma read as a point), the leaf SHALL book those hours on the object for today with `detail.note` as the
+description, and clear the field. An event for another object, or an empty or invalid field, SHALL book nothing.
+
+#### Scenario: DqDagAfsluiten Uren
+
+- **GIVEN** the "Advies boomdeskundige beoordelen" row with "1" in Uren and a note
+- **WHEN** the reader presses Vastleggen
+- **THEN** the note is recorded and 1 hour is booked on that task, described by the note
+
+### Requirement: The week line names the object's hours in bold
+
+The hours card's week line SHALL draw the hours booked on the object in bold, in the place the translated sentence puts them.
+
+#### Scenario: DqZaak "Uren registreren"
+- GIVEN 11,5 hours are booked on the case in week 41
+- THEN the week line reads "Week 41 · 5 okt tot en met 11 okt · 11,5 uur op deze zaak" with "11,5 uur" in bold
+
+### Requirement: The board look booking form reads as drawn
+
+On a host's board look the week line SHALL be 14px, and the booking form's labels 14px at 600 on the normal line, 6px above their field, with 12px between the fields.
+
+#### Scenario: DqZaakMeer "Uren registreren"
+- GIVEN dossiq shows the hours card on its board look
+- THEN the label "Datum" is 14px at 600 and the form's first row sits 16px under the card's title

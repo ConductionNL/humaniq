@@ -6,7 +6,7 @@
  * registreren" draws it (r36): an information icon before the text, in the
  * light primary ink of the card's other light-filled controls.
  *
- * @spec openspec/changes/hours-row-surface/specs/hours-leaf/spec.md
+ * @spec openspec/specs/hours-leaf/spec.md
  */
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'

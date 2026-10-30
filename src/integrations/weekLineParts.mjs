@@ -5,7 +5,7 @@
  * The week line in parts, so the hours on the object can be drawn in bold
  * inside a translated sentence whose word order the language decides.
  *
- * @spec openspec/changes/hours-week-line-hours-in-bold/specs/hours-leaf/spec.md#requirement-the-week-line-names-the-objects-hours-in-bold
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-week-line-names-the-objects-hours-in-bold
  */
 
 /** What the line is translated with in place of the hours, then split on. */

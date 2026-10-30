@@ -16,7 +16,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hours-week-host-access/specs/hours-leaf/spec.md#requirement-the-week-is-answered-only-to-a-reader-of-the-object
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-week-is-answered-only-to-a-reader-of-the-object
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use Psr\Container\ContainerInterface;
  * Anything that cannot be decided (a malformed type, OpenRegister absent or
  * failing) answers no.
  *
- * @spec openspec/changes/hours-week-host-access/specs/hours-leaf/spec.md#requirement-the-week-is-answered-only-to-a-reader-of-the-object
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-week-is-answered-only-to-a-reader-of-the-object
  */
 class HostObjectAccess {
 
@@ -58,7 +58,7 @@ class HostObjectAccess {
 	 *
 	 * @return bool True only when OpenRegister hands the object to the caller.
 	 *
-	 * @spec openspec/changes/hours-week-host-access/specs/hours-leaf/spec.md#requirement-the-week-is-answered-only-to-a-reader-of-the-object
+	 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-week-is-answered-only-to-a-reader-of-the-object
 	 */
 	public function canRead(string $domainObjectType, string $domainObjectRef): bool {
 		$parts = explode(':', $domainObjectType);

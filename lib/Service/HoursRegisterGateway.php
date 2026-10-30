@@ -150,7 +150,7 @@ class HoursRegisterGateway {
 	 * @return array<int, array<string, mixed>> The matching rows.
 	 *
 	 * @spec openspec/specs/time-entry-capture/spec.md#Requirement:-humaniq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
-	 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+	 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 	 */
 	public function findFiltered(string $schema, array $filters, bool $asCaller = false): array {
 		$matches = [];

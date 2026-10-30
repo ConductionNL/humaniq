@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hours-week-host-access/specs/hours-leaf/spec.md#requirement-the-week-is-answered-only-to-a-reader-of-the-object
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-week-is-answered-only-to-a-reader-of-the-object
  */
 
 declare(strict_types=1);

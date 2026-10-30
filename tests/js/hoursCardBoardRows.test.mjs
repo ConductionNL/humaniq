@@ -7,7 +7,7 @@
  * Actions trigger is 600 (dossiq DqZaak "Uren registreren", r33). Every rule
  * sits wholly in :global(), so none compiles to the host's bare look class.
  *
- * @spec openspec/changes/hours-row-surface/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
  */
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'

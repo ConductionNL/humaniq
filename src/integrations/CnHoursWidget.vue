@@ -460,7 +460,7 @@ export default {
 		 *
 		 * @return {boolean}
 		 *
-		 * @spec openspec/changes/hours-row-surface/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
 		 */
 		isRow() {
 			return this.surface === 'row'
@@ -471,7 +471,7 @@ export default {
 		 *
 		 * @return {number|null}
 		 *
-		 * @spec openspec/changes/hours-row-surface/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
 		 */
 		rowHoursValue() {
 			return parseHours(this.rowHours)
@@ -482,7 +482,7 @@ export default {
 		 *
 		 * @return {string} The title.
 		 *
-		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-takes-its-hosts-title
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-takes-its-hosts-title
 		 */
 		caption() {
 			return this.title !== '' ? this.title : t('humaniq', 'Hours booked')
@@ -505,7 +505,7 @@ export default {
 		 *
 		 * @return {Array<object>} `{ userId, displayName, team, hours }` rows.
 		 *
-		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 		 */
 		people() {
 			return Array.isArray(this.week?.people) ? this.week.people : []
@@ -517,7 +517,7 @@ export default {
 		 *
 		 * @return {string} The line.
 		 *
-		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 		 */
 		weekLine() {
 			if (this.weekUnread === true) {
@@ -541,7 +541,7 @@ export default {
 		 *
 		 * @return {Array<{text: string, strong: boolean}>} The parts.
 		 *
-		 * @spec openspec/changes/hours-week-line-hours-in-bold/specs/hours-leaf/spec.md#requirement-the-week-line-names-the-objects-hours-in-bold
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-week-line-names-the-objects-hours-in-bold
 		 */
 		weekParts() {
 			return weekLineParts(this.weekLine, this.weekUnread === true ? '' : this.hoursLabel(this.week.total))
@@ -552,7 +552,7 @@ export default {
 		 *
 		 * @return {boolean} True when it can be sent.
 		 *
-		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 		 */
 		formComplete() {
 			return this.form.date !== '' && Number(this.form.hours) > 0
@@ -743,7 +743,7 @@ export default {
 		 * @param {CustomEvent} event The host's recorded-note event.
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/hours-row-surface/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
 		 */
 		async onRowRecorded(event) {
 			const hours = this.rowHoursValue
@@ -1053,7 +1053,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 		 */
 		async recordHours() {
 			if (this.formComplete === false || this.saving === true) {
@@ -1086,7 +1086,7 @@ export default {
 		 *
 		 * @return {string} The label.
 		 *
-		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 		 */
 		hoursLabel(value) {
 			const hours = (Math.round((Number(value) || 0) * 100) / 100).toLocaleString(getLanguage())
@@ -1100,7 +1100,7 @@ export default {
 		 *
 		 * @return {string} The label.
 		 *
-		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 		 */
 		dayLabel(day) {
 			const date = new Date(`${day}T12:00:00`)
@@ -1114,7 +1114,7 @@ export default {
 		 *
 		 * @return {string} The CSS width.
 		 *
-		 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 		 */
 		barWidth(hours) {
 			const most = Math.max(0, ...this.people.map((person) => Number(person.hours) || 0))
