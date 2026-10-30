@@ -7843,7 +7843,8 @@
     "evidence": "appinfo/info.xml:68-69 declares <php min-version=\"8.3\"/> and <nextcloud min-version=\"32\" max-version=\"34\"/>; humaniq is a Nextcloud app by construction, deployed on a self-managed or self-hosted Nextcloud instance, never a SaaS product of its own",
     "reachedOn": "n/a, inherent to being a Nextcloud app, not a page or route",
     "owner": "nextcloud/server",
-    "spec": "none"
+    "spec": "openspec/changes/sign-in-and-hosting-are-the-platforms",
+    "requirement": "openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth :: humaniq SHALL run on any self-managed Nextcloud in its supported range (REQ-AUTH-007)"
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
@@ -8351,7 +8352,8 @@
     "evidence": "appinfo/info.xml:69 <nextcloud min-version=\"32\" max-version=\"34\"/>; grep -rniF 'saml|oidc' lib/: no hits, humaniq has no auth code of its own",
     "reachedOn": "Nextcloud's own login flow, platform-wide; humaniq adds nothing and blocks nothing, so any SSO app the instance runs (user_saml/user_oidc) covers humaniq transparently",
     "owner": "nextcloud/server",
-    "spec": "none"
+    "spec": "openspec/changes/sign-in-and-hosting-are-the-platforms",
+    "requirement": "openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth :: Single sign-on SHALL come from Nextcloud's sign-in apps (REQ-AUTH-004)"
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
@@ -9354,7 +9356,8 @@
     "evidence": "humaniq has no own login; sign-in is Nextcloud's, whose password_policy app (Administration settings, Security) sets length, character classes, history and expiry; humaniq adds nothing",
     "reachedOn": "Nextcloud admin settings, Security section",
     "owner": "nextcloud/server",
-    "spec": "none"
+    "spec": "openspec/changes/sign-in-and-hosting-are-the-platforms",
+    "requirement": "openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth :: The password policy SHALL be Nextcloud's, set from the Inloggen section (REQ-AUTH-005)"
    },
    "provider": "nextcloud",
    "providerHow": "read-from-code",
@@ -9391,7 +9394,8 @@
     "evidence": "humaniq has no own login; Nextcloud's brute force protection throttles failed attempts per IP and the password_policy app can disable an account after a set number of failures",
     "reachedOn": "Nextcloud sign-in, no humaniq page",
     "owner": "nextcloud/server",
-    "spec": "none"
+    "spec": "openspec/changes/sign-in-and-hosting-are-the-platforms",
+    "requirement": "openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth :: Failed sign-in attempts SHALL be slowed down and can lock the account through Nextcloud (REQ-AUTH-006)"
    },
    "provider": "nextcloud",
    "providerHow": "read-from-code",
