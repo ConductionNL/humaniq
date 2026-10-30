@@ -260,7 +260,7 @@ class TimeEntryControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-entries-summary/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
 	 */
 	public function testSummarySumsTheCallersOwnEntriesOfTheDay(): void {
 		$this->gateway->expects($this->once())
@@ -284,7 +284,7 @@ class TimeEntryControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-entries-summary/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
 	 */
 	public function testSummaryNeverCountsAnotherUsersEntry(): void {
 		$this->gateway->method('findFiltered')->willReturn([
@@ -303,7 +303,7 @@ class TimeEntryControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-entries-summary/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
 	 */
 	public function testSummaryDefaultsToToday(): void {
 		$today = (new \DateTimeImmutable('now'))->format('Y-m-d');
@@ -322,7 +322,7 @@ class TimeEntryControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-entries-summary/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
 	 */
 	public function testSummaryRefusesWithoutASessionAndOnABadDate(): void {
 		$this->gateway->expects($this->never())->method('findFiltered');
@@ -337,7 +337,7 @@ class TimeEntryControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-entries-summary/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
 	 */
 	public function testSummaryFailsClosed(): void {
 		$this->gateway->method('findFiltered')->willThrowException(new \RuntimeException('register down'));

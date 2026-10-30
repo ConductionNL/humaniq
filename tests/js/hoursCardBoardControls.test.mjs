@@ -6,7 +6,7 @@
  * 40px controls (dossiq DqZaak "Uren registreren", r32: 34px fields with a
  * 2px edge, 15px buttons).
  *
- * @spec openspec/changes/hours-row-surface/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
  */
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'

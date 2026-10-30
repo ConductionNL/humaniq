@@ -17,7 +17,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use OCP\IUserManager;
  * caller may not read does not appear. An entry outside the week, or one
  * without hours (a timer still running), adds nothing.
  *
- * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
  */
 class ObjectWeekHours {
 
@@ -69,7 +69,7 @@ class ObjectWeekHours {
 	 *
 	 * @return array<string, mixed> `week`, `weekStart`, `weekEnd`, `total` and `people` (most hours first).
 	 *
-	 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+	 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 	 */
 	public function forObject(string $domainObjectType, string $domainObjectRef, DateTimeImmutable $day): array {
 		$monday = $day->setTime(0, 0)->modify('monday this week');

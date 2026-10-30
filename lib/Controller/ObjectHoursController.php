@@ -17,7 +17,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Answers a signed-in caller the week's hours on an object, per person.
  *
- * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
  */
 class ObjectHoursController extends Controller {
 
@@ -76,7 +76,7 @@ class ObjectHoursController extends Controller {
 	 *
 	 * @return JSONResponse The week, 400 on a missing object or a bad day, 401 without a session, 404 when the caller may not read the object.
 	 *
-	 * @spec openspec/changes/hours-per-person-week/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+	 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 	 */
 	#[NoAdminRequired]
 	public function week(?string $domainObjectType = null, ?string $domainObjectRef = null, ?string $date = null): JSONResponse {

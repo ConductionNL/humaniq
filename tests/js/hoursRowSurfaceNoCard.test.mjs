@@ -7,7 +7,7 @@
  * hairline edge, a 12px corner, its own ground, clipping) does not apply
  * there: it drew a box around the label and the field.
  *
- * @spec openspec/changes/hours-row-surface/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
  */
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
