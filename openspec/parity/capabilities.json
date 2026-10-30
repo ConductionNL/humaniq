@@ -8171,7 +8171,8 @@
     "evidence": "appinfo/routes.php:17-19 GET /api/setup/status, POST /api/setup/config, POST /api/setup/action/{actionId}; src/manifest.json:7-22 'setup' block (ADR-042 contract) with welcome/demo-data steps; lib/Controller/SetupController.php implements the endpoints and notes its version 'matches manifest.setup.version'",
     "reachedOn": "the platform's generic CnSetupWizard shell (nextcloud-vue), driven entirely by src/manifest.json's declarative setup block, shown on first admin visit, no humaniq-authored Vue component imports CnSetupWizard directly, which is expected for this shared ADR-042 mechanism",
     "owner": "ConductionNL/humaniq",
-    "spec": "openspec/specs/first-time-setup"
+    "spec": "openspec/specs/first-time-setup",
+    "requirement": "REQ-FTS-001"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
