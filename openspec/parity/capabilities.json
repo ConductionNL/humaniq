@@ -7637,7 +7637,8 @@
     "evidence": "src/manifest.d/hr-objects.json:14 sidebar.showMetadata:true on EmployeeDetail; the same 'Audit history is a sidebar tab' pattern is repeated in the design notes of essentially every detail page across src/manifest.d/*.json (OpenRegister's own audit-history sidebar feature)",
     "reachedOn": "every object detail page, 'Audit history' sidebar tab",
     "owner": "ConductionNL/humaniq",
-    "spec": "none"
+    "spec": "openspec/changes/record-history-on-every-detail-page",
+    "requirement": ["openspec/changes/record-history-on-every-detail-page/specs/record-audit-history :: Every read and every change of a humaniq record SHALL be recorded in OpenRegister's audit trail (REQ-RAH-001)", "openspec/changes/record-history-on-every-detail-page/specs/record-audit-history :: Every humaniq detail page SHALL show the record's history (REQ-RAH-002)", "openspec/changes/record-history-on-every-detail-page/specs/record-audit-history :: The admin settings SHALL show an Audittrail section across the humaniq register (REQ-RAH-003)"]
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
