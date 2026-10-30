@@ -1,8 +1,9 @@
 {
 	"set": "zuiddrecht",
-	"$comment": "humaniq's part of the Zuiddrecht example set: the hours booked on Woo case 2026-0110 'Verlichting fietspad Lindelaan' (portaliq writes the case), as the case's Uren registreren card draws them for this week: Pieter Jansen 6,5 uur, Lars de Koning 3 uur and Marloes Bakker 2 uur. Hours on a case are humaniq time entries that name the case (domainObjectType dossiq:case, domainObjectRef the case uuid), so they live here and not in dossiq. The case is found by its title and its Mijn Zuiddrecht reference MZ-ZDR-2026-0412, because the set also holds a closed Woo request with the same title. Each entry names the humaniq employee of its account, declared first in this fragment: humaniq refuses an entry that names no employee when the writing account has no employee profile of its own, and the installer has none. The dates are relative to today; the card counts Monday to Sunday, so on a Monday Pieter's hours of the day before fall in last week and the card shows his 2 hours of today.",
+	"$comment": "humaniq's part of the Zuiddrecht example set: the hours booked on Woo case 2026-0110 'Verlichting fietspad Lindelaan' (portaliq writes the case), as the case's Uren registreren card draws them for this week: Pieter Jansen 6,5 uur, Lars de Koning 3 uur and Marloes Bakker 2 uur. Hours on a case are humaniq time entries that name the case (domainObjectType dossiq:case, domainObjectRef the case uuid), so they live here and not in dossiq. The case is found by its title and its Mijn Zuiddrecht reference MZ-ZDR-2026-0412, because the set also holds a closed Woo request with the same title. Each entry names the humaniq employee of its account, declared first in this fragment: humaniq refuses an entry that names no employee when the writing account has no employee profile of its own, and the installer has none. The dates are relative to today; the card counts Monday to Sunday, so on a Monday Pieter's hours of the day before fall in last week and the card shows his 2 hours of today. Pieter also books today the hours of the two other notes he recorded, so DqDagAfsluiten reads Uren 2,75: 0,5 on Bezwaar parkeerboete Havenstraat for its hearing task (a fragment cannot name another app's task, so the hours sit on the task's case) and 0,25 on Parkeervergunningen binnenstad.",
 	"after": [
-		"portaliq"
+		"portaliq",
+		"dossiq"
 	],
 	"objects": [
 		{
@@ -139,6 +140,56 @@
 				"date": "{{date:0}}",
 				"hours": 2,
 				"description": "Stukken van Mobiliteit en verkeer aangeleverd.",
+				"domainObjectType": "dossiq:case",
+				"domainObjectRef": "{{lookup:case}}",
+				"origin": "manual",
+				"billable": false
+			}
+		},
+		{
+			"key": "uren-pieter-hoorzitting-bezwaar-parkeerboete",
+			"register": "humaniq",
+			"schema": "TimeEntry",
+			"lookups": {
+				"case": {
+					"register": "dossiq",
+					"schema": "case",
+					"where": {
+						"title": "Bezwaar parkeerboete Havenstraat"
+					}
+				}
+			},
+			"data": {
+				"userId": "{{cast:pieter.uid}}",
+				"employeeId": "{{object:medewerker-pieter.id}}",
+				"date": "{{date:0}}",
+				"hours": 0.5,
+				"description": "Zaal en commissie vastgelegd voor 21 oktober.",
+				"domainObjectType": "dossiq:case",
+				"domainObjectRef": "{{lookup:case}}",
+				"origin": "manual",
+				"billable": false
+			}
+		},
+		{
+			"key": "uren-pieter-parkeervergunningen-binnenstad",
+			"register": "humaniq",
+			"schema": "TimeEntry",
+			"lookups": {
+				"case": {
+					"register": "dossiq",
+					"schema": "case",
+					"where": {
+						"title": "Parkeervergunningen binnenstad"
+					}
+				}
+			},
+			"data": {
+				"userId": "{{cast:pieter.uid}}",
+				"employeeId": "{{object:medewerker-pieter.id}}",
+				"date": "{{date:0}}",
+				"hours": 0.25,
+				"description": "Verzoeker herinnerd aan de ontbrekende machtiging.",
 				"domainObjectType": "dossiq:case",
 				"domainObjectRef": "{{lookup:case}}",
 				"origin": "manual",
