@@ -34,7 +34,7 @@ test('the title reads on the normal line', () => {
 })
 
 test('the content is 22px in and 20px above the foot', () => {
-	assert.match(rule(B + '.hq-hours__body)'), /padding: 2px 22px 20px/)
+	assert.match(rule(B + '.hq-hours__body)'), /padding: 14px 22px 20px/)
 })
 
 test('Record hours is primary, also while disabled', () => {
