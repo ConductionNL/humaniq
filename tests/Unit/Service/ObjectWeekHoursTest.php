@@ -35,6 +35,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \OCA\Humaniq\Service\ObjectWeekHours
+ * @uses   \OCA\Humaniq\Service\OrgResolutionService
  */
 class ObjectWeekHoursTest extends TestCase {
 
