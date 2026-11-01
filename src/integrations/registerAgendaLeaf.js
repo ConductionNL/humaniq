@@ -13,8 +13,8 @@
  * a missing humaniq cannot look the same (REQ-AGD-006).
  */
 import { translate as t } from '@nextcloud/l10n'
-import { createApp } from 'vue'
 import CnAgendaWidget from './CnAgendaWidget.vue'
+import { leafMounting, openRegisterIntegrations } from './integrationLeaf.js'
 
 /**
  * The integration id a consuming app references to place this leaf.
@@ -26,17 +26,6 @@ import CnAgendaWidget from './CnAgendaWidget.vue'
  * @type {string}
  */
 export const AGENDA_INTEGRATION_ID = 'humaniq-agenda'
-
-/**
- * Vue 3 app instances this leaf has mounted, keyed by the host-owned element.
- *
- * Keyed by ELEMENT, not by leaf id: the same leaf may be mounted several times
- * on one page — a sidebar tab and a detail-page widget at once — and each needs
- * its own instance to unmount independently (openregister#2127).
- *
- * @type {Map<Element, import('vue').App>}
- */
-const mountedApps = new Map()
 
 /**
  * Every render surface this leaf targets, written out rather than left to the
@@ -51,45 +40,9 @@ const mountedApps = new Map()
 const SURFACES = ['user-dashboard', 'app-dashboard', 'detail-page', 'single-entity']
 
 /**
- * Root a humaniq-owned Vue 3 app at a host-owned element.
- *
- * humaniq is Vue 3 and a consuming host may be Vue 2.7. A Vue-3 SFC handed to
- * such a host is interpreted under the host's incompatible runtime and renders
- * blank, so the host hands over a bare DOM element instead and each side runs
- * its own framework across that neutral boundary. Idempotent per element.
- *
- * @param {Element} el    Host-owned container element.
- * @param {object}  props Forwarded context: { register, schema, objectId, surface, … }.
- *
- * @return {void}
+ * Roots the widget at a host-owned element, one Vue 3 app per element.
  */
-function mount(el, props) {
-	if (el === undefined || el === null || mountedApps.has(el) === true) {
-		return
-	}
-	const app = createApp(CnAgendaWidget, { ...(props || {}) })
-	// The SFC calls `this.t(...)`; main.js installs these for the app bundle,
-	// and this leaf mounts its own instance, so install them here too (ADR-066).
-	app.config.globalProperties.t = t
-	app.mount(el)
-	mountedApps.set(el, app)
-}
-
-/**
- * Destroy the app rooted at `el` and release the map entry.
- *
- * @param {Element} el The element previously passed to `mount`.
- *
- * @return {void}
- */
-function unmount(el) {
-	const app = mountedApps.get(el)
-	if (app === undefined) {
-		return
-	}
-	mountedApps.delete(el)
-	app.unmount()
-}
+const { mount, unmount } = leafMounting(CnAgendaWidget)
 
 /**
  * The integration descriptor for the hours leaf.
@@ -127,19 +80,8 @@ export const agendaLeafDescriptor = {
  * @return {void}
  */
 export function registerAgendaLeaf(globalRef) {
-	const target = globalRef || (typeof window !== 'undefined' ? window : null)
-	if (target === null) {
-		return
+	const integrations = openRegisterIntegrations(globalRef)
+	if (integrations !== null) {
+		integrations.register(agendaLeafDescriptor)
 	}
-
-	target.OCA = target.OCA || {}
-	target.OCA.OpenRegister = target.OCA.OpenRegister || {}
-	target.OCA.OpenRegister.integrations = target.OCA.OpenRegister.integrations || {
-		_queue: [],
-		register(entry) {
-			this._queue.push(entry)
-		},
-	}
-
-	target.OCA.OpenRegister.integrations.register(agendaLeafDescriptor)
 }

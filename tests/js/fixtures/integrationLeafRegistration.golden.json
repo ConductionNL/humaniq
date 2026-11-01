@@ -1,0 +1,872 @@
+{
+	"hours: empty global gets the queue stub": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-hours>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"hours: existing OCA keeps its keys": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"Files": {
+					"a": 1
+				},
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-hours>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"hours: existing OpenRegister keeps its keys": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"OpenRegister": {
+					"version": 3,
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-hours>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"hours: installed registry is used, not replaced": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"calls": [
+							{
+								"entry": "<descriptor humaniq-hours>",
+								"thisIsRegistry": true
+							}
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"hours: existing queue stub is reused": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"earlier",
+							"<descriptor humaniq-hours>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"hours: twice on the stub queues twice": {
+		"returns": [
+			"<undefined>",
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-hours>",
+							"<descriptor humaniq-hours>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"hours: no ref and no window does nothing": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": "<undefined>",
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"hours: no ref falls back to window": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": "<undefined>",
+		"window": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-hours>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"windowDefined": true
+	},
+	"hours: null ref falls back to window": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": null,
+		"window": {
+			"OCA": {
+				"kept": true,
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-hours>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"windowDefined": true
+	},
+	"hours: falsy ref falls back to window": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": 0,
+		"window": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-hours>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"windowDefined": true
+	},
+	"hours: empty string ref with no window does nothing": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": "",
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"agenda: empty global gets the queue stub": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-agenda>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"agenda: existing OCA keeps its keys": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"Files": {
+					"a": 1
+				},
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-agenda>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"agenda: existing OpenRegister keeps its keys": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"OpenRegister": {
+					"version": 3,
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-agenda>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"agenda: installed registry is used, not replaced": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"calls": [
+							{
+								"entry": "<descriptor humaniq-agenda>",
+								"thisIsRegistry": true
+							}
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"agenda: existing queue stub is reused": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"earlier",
+							"<descriptor humaniq-agenda>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"agenda: twice on the stub queues twice": {
+		"returns": [
+			"<undefined>",
+			"<undefined>"
+		],
+		"ref": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-agenda>",
+							"<descriptor humaniq-agenda>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"agenda: no ref and no window does nothing": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": "<undefined>",
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"agenda: no ref falls back to window": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": "<undefined>",
+		"window": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-agenda>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"windowDefined": true
+	},
+	"agenda: null ref falls back to window": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": null,
+		"window": {
+			"OCA": {
+				"kept": true,
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-agenda>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"windowDefined": true
+	},
+	"agenda: falsy ref falls back to window": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": 0,
+		"window": {
+			"OCA": {
+				"OpenRegister": {
+					"integrations": {
+						"_queue": [
+							"<descriptor humaniq-agenda>"
+						],
+						"register": "<function register>"
+					}
+				}
+			}
+		},
+		"windowDefined": true
+	},
+	"agenda: empty string ref with no window does nothing": {
+		"returns": [
+			"<undefined>"
+		],
+		"ref": "",
+		"window": "<undefined>",
+		"windowDefined": false
+	},
+	"hours: descriptor": {
+		"id": "humaniq-hours",
+		"label": "Hours",
+		"icon": "ClockOutline",
+		"requiredApp": "humaniq",
+		"order": 40,
+		"group": "workflow",
+		"surfaces": [
+			"user-dashboard",
+			"app-dashboard",
+			"detail-page",
+			"single-entity"
+		],
+		"referenceType": "hours",
+		"renderMode": "mount",
+		"mount": "<function mount>",
+		"unmount": "<function unmount>",
+		"defaultSize": {
+			"w": 4,
+			"h": 2
+		}
+	},
+	"hours: mount and unmount": {
+		"steps": [
+			{
+				"label": "mount null",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "mount undefined",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "mount el1",
+				"threw": null,
+				"events": [
+					{
+						"event": "createApp",
+						"app": 0,
+						"component": "CnHoursWidget",
+						"props": {
+							"register": "r",
+							"schema": "s",
+							"objectId": "o1",
+							"surface": "detail-page"
+						}
+					},
+					{
+						"event": "mount",
+						"app": 0,
+						"el": "el1",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "mount el1 again",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "mount el2 without props",
+				"threw": null,
+				"events": [
+					{
+						"event": "createApp",
+						"app": 1,
+						"component": "CnHoursWidget",
+						"props": {}
+					},
+					{
+						"event": "mount",
+						"app": 1,
+						"el": "el2",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "mount el3 with null props",
+				"threw": null,
+				"events": [
+					{
+						"event": "createApp",
+						"app": 2,
+						"component": "CnHoursWidget",
+						"props": {}
+					},
+					{
+						"event": "mount",
+						"app": 2,
+						"el": "el3",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "unmount unknown",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "unmount el1",
+				"threw": null,
+				"events": [
+					{
+						"event": "unmount",
+						"app": 0
+					}
+				]
+			},
+			{
+				"label": "unmount el1 again",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "mount el1 after unmount",
+				"threw": null,
+				"events": [
+					{
+						"event": "createApp",
+						"app": 3,
+						"component": "CnHoursWidget",
+						"props": {
+							"objectId": "o2"
+						}
+					},
+					{
+						"event": "mount",
+						"app": 3,
+						"el": "el1",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "mount failing",
+				"threw": "mount failed",
+				"events": [
+					{
+						"event": "createApp",
+						"app": 4,
+						"component": "CnHoursWidget",
+						"props": {
+							"register": "r",
+							"schema": "s",
+							"objectId": "o1",
+							"surface": "detail-page"
+						}
+					},
+					{
+						"event": "mount",
+						"app": 4,
+						"el": "fail",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "mount failing again",
+				"threw": "mount failed",
+				"events": [
+					{
+						"event": "createApp",
+						"app": 5,
+						"component": "CnHoursWidget",
+						"props": {
+							"register": "r",
+							"schema": "s",
+							"objectId": "o1",
+							"surface": "detail-page"
+						}
+					},
+					{
+						"event": "mount",
+						"app": 5,
+						"el": "fail",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "unmount failing",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "unmount el2",
+				"threw": null,
+				"events": [
+					{
+						"event": "unmount",
+						"app": 1
+					}
+				]
+			},
+			{
+				"label": "unmount el3",
+				"threw": null,
+				"events": [
+					{
+						"event": "unmount",
+						"app": 2
+					}
+				]
+			},
+			{
+				"label": "unmount el1 last",
+				"threw": null,
+				"events": [
+					{
+						"event": "unmount",
+						"app": 3
+					}
+				]
+			}
+		],
+		"propsAreCopies": [
+			true,
+			true,
+			true,
+			true,
+			true,
+			true
+		],
+		"tIsTranslate": [
+			true,
+			true,
+			true,
+			true,
+			true,
+			true
+		]
+	},
+	"agenda: descriptor": {
+		"id": "humaniq-agenda",
+		"label": "Agenda",
+		"icon": "CalendarMonthOutline",
+		"requiredApp": "humaniq",
+		"order": 45,
+		"group": "workflow",
+		"surfaces": [
+			"user-dashboard",
+			"app-dashboard",
+			"detail-page",
+			"single-entity"
+		],
+		"referenceType": "agenda",
+		"renderMode": "mount",
+		"mount": "<function mount>",
+		"unmount": "<function unmount>",
+		"defaultSize": {
+			"w": 4,
+			"h": 2
+		}
+	},
+	"agenda: mount and unmount": {
+		"steps": [
+			{
+				"label": "mount null",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "mount undefined",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "mount el1",
+				"threw": null,
+				"events": [
+					{
+						"event": "createApp",
+						"app": 0,
+						"component": "CnAgendaWidget",
+						"props": {
+							"register": "r",
+							"schema": "s",
+							"objectId": "o1",
+							"surface": "detail-page"
+						}
+					},
+					{
+						"event": "mount",
+						"app": 0,
+						"el": "el1",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "mount el1 again",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "mount el2 without props",
+				"threw": null,
+				"events": [
+					{
+						"event": "createApp",
+						"app": 1,
+						"component": "CnAgendaWidget",
+						"props": {}
+					},
+					{
+						"event": "mount",
+						"app": 1,
+						"el": "el2",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "mount el3 with null props",
+				"threw": null,
+				"events": [
+					{
+						"event": "createApp",
+						"app": 2,
+						"component": "CnAgendaWidget",
+						"props": {}
+					},
+					{
+						"event": "mount",
+						"app": 2,
+						"el": "el3",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "unmount unknown",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "unmount el1",
+				"threw": null,
+				"events": [
+					{
+						"event": "unmount",
+						"app": 0
+					}
+				]
+			},
+			{
+				"label": "unmount el1 again",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "mount el1 after unmount",
+				"threw": null,
+				"events": [
+					{
+						"event": "createApp",
+						"app": 3,
+						"component": "CnAgendaWidget",
+						"props": {
+							"objectId": "o2"
+						}
+					},
+					{
+						"event": "mount",
+						"app": 3,
+						"el": "el1",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "mount failing",
+				"threw": "mount failed",
+				"events": [
+					{
+						"event": "createApp",
+						"app": 4,
+						"component": "CnAgendaWidget",
+						"props": {
+							"register": "r",
+							"schema": "s",
+							"objectId": "o1",
+							"surface": "detail-page"
+						}
+					},
+					{
+						"event": "mount",
+						"app": 4,
+						"el": "fail",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "mount failing again",
+				"threw": "mount failed",
+				"events": [
+					{
+						"event": "createApp",
+						"app": 5,
+						"component": "CnAgendaWidget",
+						"props": {
+							"register": "r",
+							"schema": "s",
+							"objectId": "o1",
+							"surface": "detail-page"
+						}
+					},
+					{
+						"event": "mount",
+						"app": 5,
+						"el": "fail",
+						"globalT": "function"
+					}
+				]
+			},
+			{
+				"label": "unmount failing",
+				"threw": null,
+				"events": []
+			},
+			{
+				"label": "unmount el2",
+				"threw": null,
+				"events": [
+					{
+						"event": "unmount",
+						"app": 1
+					}
+				]
+			},
+			{
+				"label": "unmount el3",
+				"threw": null,
+				"events": [
+					{
+						"event": "unmount",
+						"app": 2
+					}
+				]
+			},
+			{
+				"label": "unmount el1 last",
+				"threw": null,
+				"events": [
+					{
+						"event": "unmount",
+						"app": 3
+					}
+				]
+			}
+		],
+		"propsAreCopies": [
+			true,
+			true,
+			true,
+			true,
+			true,
+			true
+		],
+		"tIsTranslate": [
+			true,
+			true,
+			true,
+			true,
+			true,
+			true
+		]
+	}
+}
