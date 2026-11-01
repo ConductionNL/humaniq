@@ -67,6 +67,7 @@ class LearningPeopleFeed {
 			$assignmentsByEmployeeId[trim((string)($assignment['employeeId'] ?? ''))][] = $assignment;
 		}
 
+		$indexes = new PeopleFeedIndexes(employeesById: $employeesById, unitsById: $unitsById, assignmentsByEmployeeId: $assignmentsByEmployeeId, today: $today);
 		$since = $this->timestamp($modifiedSince);
 		$rows = [];
 		foreach ($employeesById as $employeeId => $employee) {
@@ -76,12 +77,13 @@ class LearningPeopleFeed {
 
 			$placement = $this->currentPlacement(($assignmentsByEmployeeId[$employeeId] ?? []), $today);
 			$unit = $placement === null ? null : ($unitsById[trim((string)($placement['orgUnitId'] ?? ''))] ?? null);
-			$modified = $this->latest([$employee, $placement, $unit]);
+			$subject = new PeopleFeedSubject(employeeId: $employeeId, employee: $employee, placement: $placement, unit: $unit);
+			$modified = $this->latest($subject->records());
 			if ($since !== null && $modified !== null && ($this->timestamp($modified) ?? 0) <= $since) {
 				continue;
 			}
 
-			$rows[] = $this->row($employeeId, $employee, $placement, $unit, $modified, $assignmentsByEmployeeId, $unitsById, $employeesById, $today);
+			$rows[] = $this->row(subject: $subject, indexes: $indexes);
 		}
 
 		return $rows;
@@ -90,38 +92,31 @@ class LearningPeopleFeed {
 	/**
 	 * One feed row.
 	 *
-	 * @param string                                          $employeeId              The employee.
-	 * @param array<string, mixed>                            $employee                The employee record.
-	 * @param array<string, mixed>|null                       $placement               The current placement.
-	 * @param array<string, mixed>|null                       $unit                    The placement's unit.
-	 * @param string|null                                     $modified                When any of the three last changed.
-	 * @param array<string, list<array<string, mixed>>>       $assignmentsByEmployeeId Placements per employee.
-	 * @param array<string, array<string, mixed>>             $unitsById               Units.
-	 * @param array<string, array<string, mixed>>             $employeesById           Employees.
-	 * @param string                                          $today                   The day.
+	 * @param PeopleFeedSubject $subject The employee, the current placement and its unit.
+	 * @param PeopleFeedIndexes $indexes The indexed rows and the day, for the managers.
 	 *
 	 * @return array<string, mixed>
-	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) The row is a projection over the three indexes people() already built; passing them avoids reloading them per employee.
 	 */
-	private function row(string $employeeId, array $employee, ?array $placement, ?array $unit, ?string $modified, array $assignmentsByEmployeeId, array $unitsById, array $employeesById, string $today): array {
+	private function row(PeopleFeedSubject $subject, PeopleFeedIndexes $indexes): array {
+		$employee = $subject->employee;
+
 		return [
-			'id' => $employeeId,
+			'id' => $subject->employeeId,
 			'firstName' => $this->textOrNull($employee['firstName'] ?? null),
 			'lastName' => $this->textOrNull($employee['lastName'] ?? null),
 			'nextcloudUserId' => $this->textOrNull($employee['nextcloudUserId'] ?? null),
-			'orgUnit' => $unit === null ? null : ['id' => (string)$unit['id'], 'name' => $this->textOrNull($unit['name'] ?? null)],
-			'role' => $placement === null ? null : $this->textOrNull($placement['role'] ?? null),
+			'orgUnit' => $subject->unit === null ? null : ['id' => (string)$subject->unit['id'], 'name' => $this->textOrNull($subject->unit['name'] ?? null)],
+			'role' => $subject->placement === null ? null : $this->textOrNull($subject->placement['role'] ?? null),
 			'managerUserIds' => $this->orgResolution->resolveManagerUserIds(
-				employeeId: $employeeId,
-				assignmentsByEmployeeId: $assignmentsByEmployeeId,
-				unitsById: $unitsById,
-				employeesById: $employeesById,
-				onDate: $today
+				employeeId: $subject->employeeId,
+				assignmentsByEmployeeId: $indexes->assignmentsByEmployeeId,
+				unitsById: $indexes->unitsById,
+				employeesById: $indexes->employeesById,
+				onDate: $indexes->today
 			),
 			'startDate' => $this->textOrNull($employee['startDate'] ?? null),
 			'endDate' => $this->textOrNull($employee['endDate'] ?? null),
-			'modified' => $modified,
+			'modified' => $this->latest($subject->records()),
 		];
 	}//end row()
 
