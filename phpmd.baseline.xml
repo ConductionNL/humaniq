@@ -117,9 +117,6 @@
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/RuleAuditService.php"/>
   <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/RuleAuditService.php" method="audit"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/RuleAuditService.php"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/RuleAuditService.php" method="buildRelatedContext"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/RuleAuditService.php" method="buildRelatedContext"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/RuleAuditService.php" method="buildRelatedContext"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/RuleAuditService.php" method="auditPayrollRunScope"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/RuleAuditService.php" method="auditPayrollRunScope"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/RuleAuditService.php" method="buildWkrContext"/>
