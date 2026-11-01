@@ -705,6 +705,25 @@ class LeaveCalendarServiceTest extends TestCase {
 	/**
 	 * @return void
 	 */
+	public function testUnreadableEmployeesLeaveEveryEventAsItIs(): void {
+		$moved = $this->approvedLeave(['id' => 'leave-2', 'startDate' => '2026-09-01', 'endDate' => '2026-09-02']);
+		[$service, $backend] = $this->service(['LeaveRequest' => [$this->approvedLeave(), $moved], 'Employee' => null]);
+		$stored = "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:hrmq-leave-leave-2\r\nDTSTART;VALUE=DATE:20260803\r\nDTEND;VALUE=DATE:20260804\r\nSUMMARY:Verlof — Sam Jansen\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+		$backend->seedObject('hrmq-leave-leave-2.ics', 'hrmq-leave-leave-2', $stored);
+
+		$results = $service->sync();
+
+		$this->assertSame([], $backend->created);
+		$this->assertSame([], $backend->updated);
+		$this->assertSame($stored, $backend->calendarData('hrmq-leave-leave-2.ics'));
+		$this->assertSame('skipped', $this->findOutcome($results, 'leave', 'leave-1')['status']);
+		$this->assertSame('skipped', $this->findOutcome($results, 'leave', 'leave-2')['status']);
+
+	}//end testUnreadableEmployeesLeaveEveryEventAsItIs()
+
+	/**
+	 * @return void
+	 */
 	public function testOrphanReconciliationNeverTouchesNonHumaniqEvents(): void {
 		[$service, $backend] = $this->service([]);
 		$backend->seedObject('someone-elses-event.ics', 'random-uid', "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");

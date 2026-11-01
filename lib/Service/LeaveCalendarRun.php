@@ -42,12 +42,12 @@ final class LeaveCalendarRun {
 
 	/**
 	 * @param CalendarTarget $target The resolved calendar target.
-	 * @param array<string, array<string, string>> $employeesById Employee name index.
+	 * @param array<string, array<string, string>>|null $employeesById Employee name index, or null when the Employee register could not be read.
 	 * @param string|null $from Optional bound (Y-m-d).
 	 */
 	public function __construct(
 		public readonly CalendarTarget $target,
-		public readonly array $employeesById,
+		public readonly ?array $employeesById,
 		public readonly ?string $from,
 	) {
 
