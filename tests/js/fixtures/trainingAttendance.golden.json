@@ -1,0 +1,684 @@
+{
+	"registerTrainingAttendance custom action: no scope": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttendance custom action: null scope": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttendance custom action: no selectedIds": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttendance custom action: selectedIds not an array": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttendance custom action: empty selection": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttendance custom action: one record": {
+		"returned": {
+			"done": 1,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/t1/transition",
+				"body": {
+					"action": "custom"
+				}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 1."
+			}
+		]
+	},
+	"registerTrainingAttendance custom action: numbers and duplicates": {
+		"returned": {
+			"done": 3,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/7/transition",
+				"body": {
+					"action": "custom"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/7/transition",
+				"body": {
+					"action": "custom"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/x%2Fy/transition",
+				"body": {
+					"action": "custom"
+				}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 3."
+			}
+		]
+	},
+	"registerTrainingAttendance custom action: all fail": {
+		"returned": {
+			"done": 0,
+			"failed": 2
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f1/transition",
+				"body": {
+					"action": "custom"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f2/transition",
+				"body": {
+					"action": "custom"
+				}
+			},
+			{
+				"call": "showError",
+				"text": "Trainings not registered, because they already have this status or could not be changed: 2."
+			}
+		]
+	},
+	"registerTrainingAttendance custom action: some fail": {
+		"returned": {
+			"done": 2,
+			"failed": 1
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/a/transition",
+				"body": {
+					"action": "custom"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f1/transition",
+				"body": {
+					"action": "custom"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/b/transition",
+				"body": {
+					"action": "custom"
+				}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 2."
+			},
+			{
+				"call": "showError",
+				"text": "Trainings not registered, because they already have this status or could not be changed: 1."
+			}
+		]
+	},
+	"registerTrainingAttendance no action: no scope": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttendance no action: null scope": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttendance no action: no selectedIds": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttendance no action: selectedIds not an array": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttendance no action: empty selection": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttendance no action: one record": {
+		"returned": {
+			"done": 1,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/t1/transition",
+				"body": {}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 1."
+			}
+		]
+	},
+	"registerTrainingAttendance no action: numbers and duplicates": {
+		"returned": {
+			"done": 3,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/7/transition",
+				"body": {}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/7/transition",
+				"body": {}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/x%2Fy/transition",
+				"body": {}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 3."
+			}
+		]
+	},
+	"registerTrainingAttendance no action: all fail": {
+		"returned": {
+			"done": 0,
+			"failed": 2
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f1/transition",
+				"body": {}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f2/transition",
+				"body": {}
+			},
+			{
+				"call": "showError",
+				"text": "Trainings not registered, because they already have this status or could not be changed: 2."
+			}
+		]
+	},
+	"registerTrainingAttendance no action: some fail": {
+		"returned": {
+			"done": 2,
+			"failed": 1
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/a/transition",
+				"body": {}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f1/transition",
+				"body": {}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/b/transition",
+				"body": {}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 2."
+			},
+			{
+				"call": "showError",
+				"text": "Trainings not registered, because they already have this status or could not be changed: 1."
+			}
+		]
+	},
+	"registerTrainingAttended: no scope": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttended: null scope": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttended: no selectedIds": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttended: selectedIds not an array": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttended: empty selection": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingAttended: one record": {
+		"returned": {
+			"done": 1,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/t1/transition",
+				"body": {
+					"action": "registreren-gevolgd"
+				}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 1."
+			}
+		]
+	},
+	"registerTrainingAttended: numbers and duplicates": {
+		"returned": {
+			"done": 3,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/7/transition",
+				"body": {
+					"action": "registreren-gevolgd"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/7/transition",
+				"body": {
+					"action": "registreren-gevolgd"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/x%2Fy/transition",
+				"body": {
+					"action": "registreren-gevolgd"
+				}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 3."
+			}
+		]
+	},
+	"registerTrainingAttended: all fail": {
+		"returned": {
+			"done": 0,
+			"failed": 2
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f1/transition",
+				"body": {
+					"action": "registreren-gevolgd"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f2/transition",
+				"body": {
+					"action": "registreren-gevolgd"
+				}
+			},
+			{
+				"call": "showError",
+				"text": "Trainings not registered, because they already have this status or could not be changed: 2."
+			}
+		]
+	},
+	"registerTrainingAttended: some fail": {
+		"returned": {
+			"done": 2,
+			"failed": 1
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/a/transition",
+				"body": {
+					"action": "registreren-gevolgd"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f1/transition",
+				"body": {
+					"action": "registreren-gevolgd"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/b/transition",
+				"body": {
+					"action": "registreren-gevolgd"
+				}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 2."
+			},
+			{
+				"call": "showError",
+				"text": "Trainings not registered, because they already have this status or could not be changed: 1."
+			}
+		]
+	},
+	"registerTrainingNotAttended: no scope": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingNotAttended: null scope": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingNotAttended: no selectedIds": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingNotAttended: selectedIds not an array": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingNotAttended: empty selection": {
+		"returned": {
+			"done": 0,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "showError",
+				"text": "Select the trainings to register first."
+			}
+		]
+	},
+	"registerTrainingNotAttended: one record": {
+		"returned": {
+			"done": 1,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/t1/transition",
+				"body": {
+					"action": "registreren-niet-gevolgd"
+				}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 1."
+			}
+		]
+	},
+	"registerTrainingNotAttended: numbers and duplicates": {
+		"returned": {
+			"done": 3,
+			"failed": 0
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/7/transition",
+				"body": {
+					"action": "registreren-niet-gevolgd"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/7/transition",
+				"body": {
+					"action": "registreren-niet-gevolgd"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/x%2Fy/transition",
+				"body": {
+					"action": "registreren-niet-gevolgd"
+				}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 3."
+			}
+		]
+	},
+	"registerTrainingNotAttended: all fail": {
+		"returned": {
+			"done": 0,
+			"failed": 2
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f1/transition",
+				"body": {
+					"action": "registreren-niet-gevolgd"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f2/transition",
+				"body": {
+					"action": "registreren-niet-gevolgd"
+				}
+			},
+			{
+				"call": "showError",
+				"text": "Trainings not registered, because they already have this status or could not be changed: 2."
+			}
+		]
+	},
+	"registerTrainingNotAttended: some fail": {
+		"returned": {
+			"done": 2,
+			"failed": 1
+		},
+		"events": [
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/a/transition",
+				"body": {
+					"action": "registreren-niet-gevolgd"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/f1/transition",
+				"body": {
+					"action": "registreren-niet-gevolgd"
+				}
+			},
+			{
+				"call": "post",
+				"url": "/index.php/apps/openregister/api/objects/b/transition",
+				"body": {
+					"action": "registreren-niet-gevolgd"
+				}
+			},
+			{
+				"call": "showSuccess",
+				"text": "Trainings registered: 2."
+			},
+			{
+				"call": "showError",
+				"text": "Trainings not registered, because they already have this status or could not be changed: 1."
+			}
+		]
+	}
+}
