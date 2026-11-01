@@ -129,6 +129,25 @@ function localeNames() {
 }
 
 /**
+ * Parse l10n/<locale>.json; exits 1 when it does not parse.
+ *
+ * @param {string} locale - the locale name
+ * @return {object} the parsed JSON
+ */
+function parseCatalogue(locale) {
+	let doc;
+	try {
+		doc = JSON.parse(
+			fs.readFileSync(path.join(L10N_DIR, `${locale}.json`), "utf8"),
+		);
+	} catch (error) {
+		console.error(`l10n/${locale}.json does not parse: ${error.message}`);
+		process.exit(1);
+	}
+	return doc;
+}
+
+/**
  * Parse l10n/<locale>.json; exits 1 when it does not parse or has no
  * `translations`.
  *
@@ -136,22 +155,22 @@ function localeNames() {
  * @return {object} the parsed catalogue
  */
 function readCatalogue(locale) {
-	let doc;
-	try {
-		doc = JSON.parse(
-			fs.readFileSync(path.join(L10N_DIR, `${locale}.json`), "utf8"),
-		);
-	} catch (error) {
-		console.error(
-			`l10n/${locale}.json does not parse: ${error.message}`,
-		);
-		process.exit(1);
-	}
+	const doc = parseCatalogue(locale);
 	if (doc.translations === undefined) {
 		console.error(`l10n/${locale}.json is missing "translations"`);
 		process.exit(1);
 	}
 	return doc;
+}
+
+/**
+ * A file's text, or null when it does not exist.
+ *
+ * @param {string} file - absolute path
+ * @return {string|null} the contents
+ */
+function readIfPresent(file) {
+	return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
 }
 
 /**
@@ -164,37 +183,24 @@ function readCatalogue(locale) {
 function syncLocale(locale, run) {
 	const doc = readCatalogue(locale);
 	const jsFile = path.join(L10N_DIR, `${locale}.js`);
-
 	const rendered = renderJs(run.id, doc);
-	const current = fs.existsSync(jsFile)
-		? fs.readFileSync(jsFile, "utf8")
-		: null;
+	const keys = Object.keys(doc.translations).length;
 
-	if (current === rendered) {
-		console.log(
-			`  ✓ l10n/${locale}.js up to date (${Object.keys(doc.translations).length} keys)`,
-		);
-		return;
-	}
-	if (run.check) {
+	if (readIfPresent(jsFile) === rendered) {
+		console.log(`  ✓ l10n/${locale}.js up to date (${keys} keys)`);
+	} else if (run.check) {
 		run.stale.push(`l10n/${locale}.js`);
-		return;
+	} else {
+		fs.writeFileSync(jsFile, rendered);
+		console.log(`  ✎ l10n/${locale}.js written (${keys} keys)`);
 	}
-	fs.writeFileSync(jsFile, rendered);
-	console.log(
-		`  ✎ l10n/${locale}.js written (${Object.keys(doc.translations).length} keys)`,
-	);
 }
 
 /**
  *
  */
 function main() {
-	const run = {
-		check: process.argv.includes("--check"),
-		id: appId(),
-		stale: [],
-	};
+	const run = { check: process.argv.includes("--check"), id: appId(), stale: [] };
 
 	for (const locale of localeNames()) {
 		syncLocale(locale, run);

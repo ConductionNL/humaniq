@@ -137,10 +137,6 @@ function collectSchema(node, remember) {
  * @param {function(unknown, string): void} remember - records (value, what)
  */
 function collect(node, remember) {
-	if (Array.isArray(node)) {
-		for (const item of node) collect(item, remember);
-		return;
-	}
 	if (!isObject(node)) return;
 
 	if (isObject(node.properties) && !Array.isArray(node.properties)) {

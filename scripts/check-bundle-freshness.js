@@ -64,9 +64,7 @@ const BUILD_INFO = path.join(REPO_ROOT, "js", "build-info.json");
 function checkSidecar() {
 	const recorded = readBuildInfo();
 	const current = computeSourceHash(REPO_ROOT);
-	console.log(`[check-bundle-freshness] recorded sourceHash: ${String(recorded.sourceHash).slice(0, 16)}…`);
-	console.log(`[check-bundle-freshness] current  sourceHash: ${current.sourceHash.slice(0, 16)}… (${current.fileCount} file(s) via ${current.listedBy})`);
-	console.log(`[check-bundle-freshness] built at ${recorded.builtAt} for appVersion ${recorded.appVersion}`);
+	reportHashes(recorded, current);
 
 	if (recorded.sourceHash === current.sourceHash) {
 		reportLibrarySource(recorded);
@@ -74,6 +72,33 @@ function checkSidecar() {
 		process.exit(0);
 	}
 
+	failOnOtherListing(recorded, current);
+
+	console.error("[check-bundle-freshness] FAIL -- src/ has changed since this bundle was built.");
+	console.error("  What ships is not what the source says. Run `npm run build`.");
+	process.exit(1);
+}
+
+/**
+ * Print the recorded and the current source hash.
+ *
+ * @param {object} recorded - the recorded build info
+ * @param {{sourceHash: string, fileCount: number, listedBy: string}} current - the hash of src/ now
+ */
+function reportHashes(recorded, current) {
+	console.log(`[check-bundle-freshness] recorded sourceHash: ${String(recorded.sourceHash).slice(0, 16)}…`);
+	console.log(`[check-bundle-freshness] current  sourceHash: ${current.sourceHash.slice(0, 16)}… (${current.fileCount} file(s) via ${current.listedBy})`);
+	console.log(`[check-bundle-freshness] built at ${recorded.builtAt} for appVersion ${recorded.appVersion}`);
+}
+
+/**
+ * Exit 1 when the hashes were computed over file lists from different
+ * sources.
+ *
+ * @param {object} recorded - the recorded build info
+ * @param {{listedBy: string}} current - the hash of src/ now
+ */
+function failOnOtherListing(recorded, current) {
 	// A file set listed two different ways is a different question from a file
 	// set that changed, and saying so beats reporting a stale bundle that is
 	// current.
@@ -84,10 +109,6 @@ function checkSidecar() {
 		console.error("  Re-run where the same listing is available before trusting this verdict.");
 		process.exit(1);
 	}
-
-	console.error("[check-bundle-freshness] FAIL -- src/ has changed since this bundle was built.");
-	console.error("  What ships is not what the source says. Run `npm run build`.");
-	process.exit(1);
 }
 
 /**
