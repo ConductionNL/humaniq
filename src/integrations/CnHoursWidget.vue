@@ -1621,6 +1621,24 @@ export default {
 	min-height: 34px;
 }
 
+/* Nextcloud's global button margin (3px) put the header row 3px and the form
+   6px lower than board DqZaak "Uren registreren" draws them; the week rows
+   touch, one hairline between them; the source note stands 14px under the
+   last row (the body's 8px gap and 6px). */
+:global(.cn-look-board .hq-hours--compact .hq-hours__action),
+:global(.cn-look-board .hq-hours--compact .hq-hours__submit),
+:global(.cn-look-board .hq-hours--compact .hq-hours__timer-start) {
+	margin: 0;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__people) {
+	gap: 0;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__source-note) {
+	margin-top: 6px;
+}
+
 /* The label has its own bold rule, which the trigger's 600 does not reach. */
 :global(.cn-look-board .hq-hours--compact .hq-hours__action-label) {
 	font-weight: 600;
