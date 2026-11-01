@@ -1,0 +1,242 @@
+{
+    "context": {
+        "PayrollRun": {
+            "byId": {
+                "run-1": {
+                    "id": "run-1",
+                    "period": "2026-01",
+                    "status": "approved",
+                    "administrationId": "ADM-1"
+                },
+                "run-2": {
+                    "id": "run-2",
+                    "period": "2026-02",
+                    "status": "posted",
+                    "administrationId": ""
+                },
+                "run-4": {
+                    "id": "run-4",
+                    "period": "2026-04",
+                    "status": "draft",
+                    "administrationId": ""
+                },
+                "run-5": {
+                    "id": "run-5",
+                    "period": "",
+                    "status": "approved",
+                    "administrationId": ""
+                },
+                "6": {
+                    "id": "6",
+                    "period": "2026-01",
+                    "status": "paid",
+                    "administrationId": ""
+                }
+            },
+            "approvedPeriods": [
+                "2026-01",
+                "2026-02",
+                "2026-03"
+            ]
+        },
+        "PensionFiling": {
+            "filedPeriods": [
+                "2026-01",
+                "2026-02",
+                "2026-03",
+                "2026-04"
+            ],
+            "abpFiledPeriodsByAdministrationId": {
+                "ADM-1": {
+                    "2026-01": true
+                },
+                "ADM-2": {
+                    "2026-04": true
+                }
+            }
+        },
+        "Administration": {
+            "abpPlichtigByAdministrationId": {
+                "ADM-1": true,
+                "ADM-2": false,
+                "ADM-3": false
+            }
+        },
+        "Employee": {
+            "byId": {
+                "emp-1": {
+                    "id": "emp-1",
+                    "loonheffingenVerklaringOnFile": true,
+                    "startDate": "2026-01-01",
+                    "endDate": "2026-12-31",
+                    "nextcloudUserId": "alice",
+                    "administrationId": "ADM-1",
+                    "wntTopfunctionaris": true,
+                    "wntUitzonderingReden": "overgangsrecht"
+                },
+                "emp-2": {
+                    "id": "emp-2",
+                    "loonheffingenVerklaringOnFile": false,
+                    "startDate": "",
+                    "endDate": "",
+                    "nextcloudUserId": "",
+                    "administrationId": "",
+                    "wntTopfunctionaris": false,
+                    "wntUitzonderingReden": "7"
+                },
+                "emp-3": {
+                    "id": "emp-3",
+                    "loonheffingenVerklaringOnFile": false,
+                    "startDate": "",
+                    "endDate": "",
+                    "nextcloudUserId": "",
+                    "administrationId": "",
+                    "wntTopfunctionaris": false,
+                    "wntUitzonderingReden": null
+                }
+            }
+        },
+        "EmploymentContract": {
+            "byEmployeeId": {
+                "emp-1": {
+                    "type": "open",
+                    "startDate": "2026-07-01",
+                    "endDate": ""
+                },
+                "emp-2": {
+                    "type": "",
+                    "startDate": "",
+                    "endDate": ""
+                }
+            }
+        },
+        "OrgUnit": {
+            "byId": {
+                "unit-1": {
+                    "id": "unit-1",
+                    "parentUnitId": "unit-0",
+                    "active": false,
+                    "managerId": "emp-1"
+                },
+                "unit-2": {
+                    "id": "unit-2",
+                    "parentUnitId": "",
+                    "active": true,
+                    "managerId": ""
+                }
+            }
+        },
+        "OrgAssignment": {
+            "byEmployeeId": {
+                "emp-1": [
+                    {
+                        "orgUnitId": "unit-1",
+                        "endDate": "2026-12-31"
+                    },
+                    {
+                        "orgUnitId": "unit-2",
+                        "endDate": ""
+                    }
+                ],
+                "emp-2": [
+                    {
+                        "orgUnitId": "",
+                        "endDate": ""
+                    }
+                ]
+            }
+        },
+        "LeaveBalance": {
+            "byEmployeeId": {
+                "emp-1": [
+                    {
+                        "leaveType": "wettelijk",
+                        "year": 2026,
+                        "entitledHours": 160.0,
+                        "bovenwettelijkHours": 40.0,
+                        "usedHours": 12.5
+                    },
+                    {
+                        "leaveType": "bovenwettelijk",
+                        "year": 0,
+                        "entitledHours": 0.0,
+                        "bovenwettelijkHours": 0.0,
+                        "usedHours": 0.0
+                    }
+                ]
+            }
+        },
+        "Asset": {
+            "byId": {
+                "asset-1": {
+                    "id": "asset-1",
+                    "status": "issued",
+                    "active": false,
+                    "category": "vehicle",
+                    "listPrice": 42000,
+                    "fuelType": "electric",
+                    "companyCarTaxCategory": "B"
+                },
+                "asset-2": {
+                    "id": "asset-2",
+                    "status": "",
+                    "active": true,
+                    "category": "",
+                    "listPrice": null,
+                    "fuelType": null,
+                    "companyCarTaxCategory": null
+                }
+            }
+        },
+        "AssetAssignment": {
+            "byId": {
+                "aa-1": {
+                    "id": "aa-1",
+                    "assetId": "asset-1",
+                    "employeeId": "emp-1",
+                    "issuedOn": "2026-01-01",
+                    "returnedOn": "2026-06-01",
+                    "employeeContribution": 25.5
+                },
+                "aa-2": {
+                    "id": "aa-2",
+                    "assetId": "asset-2",
+                    "employeeId": "",
+                    "issuedOn": "",
+                    "returnedOn": null,
+                    "employeeContribution": 0
+                }
+            }
+        },
+        "Offboarding": {
+            "plannedCompletionByEmployeeId": {
+                "emp-1": "2026-05-31",
+                "emp-2": "2026-02-28"
+            }
+        }
+    },
+    "reads": [
+        "register:humaniq",
+        "PayrollRun:{\"limit\":10000}:false",
+        "register:humaniq",
+        "PensionFiling:{\"limit\":10000}:false",
+        "register:humaniq",
+        "hrAdministration:{\"limit\":10000}:false",
+        "register:humaniq",
+        "Employee:{\"limit\":10000}:false",
+        "register:humaniq",
+        "EmploymentContract:{\"limit\":10000}:false",
+        "register:humaniq",
+        "OrgUnit:{\"limit\":10000}:false",
+        "register:humaniq",
+        "OrgAssignment:{\"limit\":10000}:false",
+        "register:humaniq",
+        "LeaveBalance:{\"limit\":10000}:false",
+        "register:humaniq",
+        "Asset:{\"limit\":10000}:false",
+        "register:humaniq",
+        "AssetAssignment:{\"limit\":10000}:false",
+        "register:humaniq",
+        "Offboarding:{\"limit\":10000}:false"
+    ]
+}
