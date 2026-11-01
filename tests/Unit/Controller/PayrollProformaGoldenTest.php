@@ -259,8 +259,18 @@ class PayrollProformaGoldenTest extends TestCase {
 		$this->events[] = ['container' => $id];
 		return new class($this, $register) {
 
+			/**
+			 * The register slug of the probe.
+			 *
+			 * @var string
+			 */
 			private string $registerSlug = '';
 
+			/**
+			 * The schema slug of the probe.
+			 *
+			 * @var string
+			 */
 			private string $schema = '';
 
 			/**

@@ -93,10 +93,12 @@ use OCA\Humaniq\Service\RetroAdjustmentService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WkrService;
 use OCA\Humaniq\Standards\Checks\NlDgaChecks;
+use OCA\Humaniq\Support\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -106,8 +108,12 @@ use RuntimeException;
 /**
  * Guarded endpoint that (re)calculates one draft payroll run, and the
  * persist-nothing pro-forma simulation endpoint.
+ *
+ * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-008
+ * @spec openspec/specs/proforma-payslip/spec.md#REQ-PRO-004
  */
 class PayrollController extends Controller {
+	use ReadsTypedRequestParameters;
 
 	/**
 	 * Max Employee rows loaded when resolving the caller's own record for
@@ -118,6 +124,23 @@ class PayrollController extends Controller {
 	 * @var int
 	 */
 	private const EMPLOYEE_LOOKUP_LIMIT = 10000;
+
+	/**
+	 * The request parameters of `proforma()`, as name => [type, default].
+	 *
+	 * @var array<string, array{0: string, 1: mixed}>
+	 */
+	private const PROFORMA_PARAMETERS = [
+		'gross'               => ['mixed', null],
+		'table'               => ['?string', null],
+		'loonheffingskorting' => ['mixed', null],
+		'dateOfBirth'         => ['?string', null],
+		'period'              => ['?string', null],
+		'parttime'            => ['mixed', null],
+		'bijzonder'           => ['mixed', null],
+		'aof'                 => ['?string', null],
+		'whk'                 => ['mixed', null],
+	];
 
 	/**
 	 * @param IRequest $request The request object.
@@ -284,33 +307,27 @@ class PayrollController extends Controller {
 	 * delegated to `ProformaPayslipService::simulate()`. No object is ever
 	 * read for its data or written.
 	 *
-	 * @param mixed $gross Bruto maandsalaris (euro), required, numeric.
-	 * @param string|null $table Loonheffingstabel `wit`/`groen` (default `wit`).
-	 * @param mixed $loonheffingskorting Whether the loonheffingskorting applies (default true).
-	 * @param string|null $dateOfBirth ISO-8601 date of birth, or null (below-AOW).
-	 * @param string|null $period Wage period `YYYY-MM` (default the current month).
-	 * @param mixed $parttime Part-time factor (default 1.0).
-	 * @param mixed $bijzonder One-off bijzondere beloning, euro (default 0).
-	 * @param string|null $aof Aof-tariefklasse override `laag`/`hoog`.
-	 * @param mixed $whk Whk-percentage override.
+	 * Request parameters: `gross` (bruto maandsalaris in euro, required,
+	 * numeric), `table` (loonheffingstabel `wit`/`groen`, default `wit`),
+	 * `loonheffingskorting` (default true), `dateOfBirth` (ISO-8601, or null
+	 * for below-AOW), `period` (`YYYY-MM`, default the current month),
+	 * `parttime` (default 1.0), `bijzonder` (one-off bijzondere beloning in
+	 * euro, default 0), `aof` (`laag`/`hoog` override) and `whk` (percentage
+	 * override). A non-string `table`, `dateOfBirth`, `period` or `aof` is a
+	 * bare 400 before anything else, as the dispatcher answers it.
 	 *
-	 * @return JSONResponse The full breakdown, 400 on malformed input, 404 when the caller cannot resolve the payroll register.
+	 * @return Response The full breakdown, a bare 400 on a non-string string parameter, 400 on malformed input, 404 when the caller cannot resolve the payroll register.
 	 *
 	 * @spec openspec/specs/proforma-payslip/spec.md#REQ-PRO-002
 	 * @spec openspec/specs/proforma-payslip/spec.md#REQ-PRO-004
 	 */
 	#[NoAdminRequired]
-	public function proforma(
-		mixed $gross = null,
-		?string $table = null,
-		mixed $loonheffingskorting = null,
-		?string $dateOfBirth = null,
-		?string $period = null,
-		mixed $parttime = null,
-		mixed $bijzonder = null,
-		?string $aof = null,
-		mixed $whk = null,
-	): JSONResponse {
+	public function proforma(): Response {
+		$input = $this->typedRequestParameters(self::PROFORMA_PARAMETERS);
+		if ($input === null) {
+			return new Response(Http::STATUS_BAD_REQUEST);
+		}
+
 		// No-admin-idor guard applied to a capability rather than a row
 		// (design.md D4): unresolvable/unauthorized register access never
 		// reaches the engine, and both collapse to the same 404.
@@ -319,19 +336,7 @@ class PayrollController extends Controller {
 		}
 
 		try {
-			$breakdown = $this->proformaPayslipService->simulate(
-				[
-					'gross' => $gross,
-					'table' => $table,
-					'loonheffingskorting' => $loonheffingskorting,
-					'dateOfBirth' => $dateOfBirth,
-					'period' => $period,
-					'parttime' => $parttime,
-					'bijzonder' => $bijzonder,
-					'aof' => $aof,
-					'whk' => $whk,
-				]
-			);
+			$breakdown = $this->proformaPayslipService->simulate($input);
 		} catch (\InvalidArgumentException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		}
