@@ -315,6 +315,7 @@ class RetroAdjustmentGoldenTest extends TestCase {
 			'gross required' => ['calls' => [['adjust', ['2026-02', 'e1', 'new']], ['adjust', ['2026-02', 'e1', 'new', 0.0]], ['adjust', ['2026-02', 'e1', 'new', -10.0]], ['adjust', ['2026-02', 'e1', 't2']]]],
 			'computed back-payment' => ['calls' => [['adjust', ['2026-02', ' e1 ', ' new ', 3800.0, 'backdated-raise', '2026-05']]]],
 			'computed recovery' => ['calls' => [['adjust', ['2026-02', 'e1', 'new', 3000.0, null, '2026-04']]]],
+			'zero net delta' => ['rows' => ['Payslip' => [['id' => 'ps-1', 'payrollRunId' => 'run-feb', 'employeeId' => 'e1', 'period' => '2026-02', 'grossPay' => 3800.00, 'loonheffing' => 620.00, 'nettoPay' => 3081.17, 'werknemersverzekeringen' => 386.00, 'zvw' => 213.50, 'volksverzekeringen' => 400.00, 'vakantiegeldReserved' => 280.00]]], 'calls' => [['adjust', ['2026-02', 'e1', 'z', 3800.0, null, '2026-04']]]],
 			'auto settlement period' => ['calls' => [['adjust', ['2026-02', 'e1', 'new', 3800.0]], ['adjust', ['2026-02', 'e1', 'other', 3800.0, null, ' ']]]],
 			'no draft to settle into' => ['rows' => ['PayrollRun' => [['id' => 'run-feb', 'period' => '2026-02', 'administrationId' => 'ADM-1', 'status' => 'approved']]], 'calls' => [['adjust', ['2026-02', 'e1', 'new', 3800.0]]]],
 			'applied' => ['calls' => [['adjust', ['2026-02', 'e1', 'new', 3800.0, null, '2026-04', true]], ['adjust', ['2026-02', 'e1', 'other', 3800.0, null, '2026-07', true]]]],
