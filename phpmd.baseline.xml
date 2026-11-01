@@ -57,10 +57,6 @@
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/HrDocumentService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/HrDocumentService.php" method="generateBacklog"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/HrDocumentService.php" method="generateBacklog"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/HrDocumentService.php" method="generateInternal"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/HrDocumentService.php" method="generateInternal"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/HrDocumentService.php" method="generateInternal"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/HrDocumentService.php" method="activeDocumentFor"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/HrDocumentService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/JurisdictionPackService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/LeaveBuySellSettlementService.php" method="settle"/>
