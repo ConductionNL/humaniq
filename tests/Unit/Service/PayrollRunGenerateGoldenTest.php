@@ -422,10 +422,12 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 			'Timesheet' => [
 				['id' => 'ts-1', 'employeeId' => 'emp-hourly', 'period' => '2026-02', 'hours' => 128, 'status' => 'approved'],
 				['id' => 'ts-2', 'employeeId' => 'emp-plain', 'period' => '2026-02', 'hours' => 160, 'overtimeHours' => 4, 'status' => 'approved'],
+				['id' => 'ts-3', 'employeeId' => 'emp-sick', 'period' => '2026-02', 'hours' => 100, 'status' => 'approved'],
 			],
 			'TimeEntry' => [
 				['id' => 'te-1', 'timesheetId' => 'ts-1', 'employeeId' => 'emp-hourly', 'date' => '2026-02-10', 'hours' => 3, 'overtime' => true, 'overtimeCompensation' => 'pay'],
 				['id' => 'te-2', 'timesheetId' => 'ts-1', 'employeeId' => 'emp-hourly', 'date' => '2026-02-11', 'hours' => 2, 'overtime' => false],
+				['id' => 'te-3', 'timesheetId' => 'ts-3', 'employeeId' => 'emp-sick', 'date' => '2026-02-05', 'hours' => 2, 'overtime' => true, 'overtimeCompensation' => 'pay'],
 			],
 			'SickLeaveCase' => [
 				['id' => 'case-1', 'employeeId' => 'emp-sick', 'firstSickDay' => '2026-02-10', 'status' => 'gemeld', 'wachtdag' => false, 'loondoorbetalingPercentage' => 70],
