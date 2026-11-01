@@ -320,6 +320,8 @@ class PayrollController extends Controller {
 	 *
 	 * @spec openspec/specs/proforma-payslip/spec.md#REQ-PRO-002
 	 * @spec openspec/specs/proforma-payslip/spec.md#REQ-PRO-004
+	 *
+	 * @contract tests/Unit/Controller/PayrollControllerProformaTest.php
 	 */
 	#[NoAdminRequired]
 	public function proforma(): Response {
