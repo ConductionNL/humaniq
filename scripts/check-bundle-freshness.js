@@ -62,6 +62,40 @@ const BUILD_INFO = path.join(REPO_ROOT, "js", "build-info.json");
  * @return {never}
  */
 function checkSidecar() {
+	const recorded = readBuildInfo();
+	const current = computeSourceHash(REPO_ROOT);
+	console.log(`[check-bundle-freshness] recorded sourceHash: ${String(recorded.sourceHash).slice(0, 16)}…`);
+	console.log(`[check-bundle-freshness] current  sourceHash: ${current.sourceHash.slice(0, 16)}… (${current.fileCount} file(s) via ${current.listedBy})`);
+	console.log(`[check-bundle-freshness] built at ${recorded.builtAt} for appVersion ${recorded.appVersion}`);
+
+	if (recorded.sourceHash === current.sourceHash) {
+		reportLibrarySource(recorded);
+		console.log("[check-bundle-freshness] PASS -- the bundle was built from this exact src/.");
+		process.exit(0);
+	}
+
+	// A file set listed two different ways is a different question from a file
+	// set that changed, and saying so beats reporting a stale bundle that is
+	// current.
+	if (recorded.listedBy !== undefined && recorded.listedBy !== current.listedBy) {
+		console.error(
+			`[check-bundle-freshness] FAIL -- hashes differ AND the file list came from a different source (recorded ${recorded.listedBy}, now ${current.listedBy}).`,
+		);
+		console.error("  Re-run where the same listing is available before trusting this verdict.");
+		process.exit(1);
+	}
+
+	console.error("[check-bundle-freshness] FAIL -- src/ has changed since this bundle was built.");
+	console.error("  What ships is not what the source says. Run `npm run build`.");
+	process.exit(1);
+}
+
+/**
+ * The sidecar the build wrote; exits 1 when it is missing or does not parse.
+ *
+ * @return {object} the recorded build info
+ */
+function readBuildInfo() {
 	if (fs.existsSync(BUILD_INFO) === false) {
 		console.error("[check-bundle-freshness] FAIL -- js/build-info.json is missing.");
 		console.error("  Nothing records what this bundle was built from, so nothing can");
@@ -77,54 +111,39 @@ function checkSidecar() {
 		console.error(`[check-bundle-freshness] FAIL -- js/build-info.json is unreadable: ${error.message}`);
 		process.exit(1);
 	}
+	return recorded;
+}
 
-	const { sourceHash, fileCount, listedBy } = computeSourceHash(REPO_ROOT);
-	console.log(`[check-bundle-freshness] recorded sourceHash: ${String(recorded.sourceHash).slice(0, 16)}…`);
-	console.log(`[check-bundle-freshness] current  sourceHash: ${sourceHash.slice(0, 16)}… (${fileCount} file(s) via ${listedBy})`);
-	console.log(`[check-bundle-freshness] built at ${recorded.builtAt} for appVersion ${recorded.appVersion}`);
+/**
+ * Say which @conduction/nextcloud-vue the bundle was built against; exits 1
+ * in CI when that was a sibling checkout.
+ *
+ * @param {object} recorded - the recorded build info
+ */
+function reportLibrarySource(recorded) {
+	console.log(
+		`[check-bundle-freshness] built against @conduction/nextcloud-vue ${recorded.libVersion ?? "unknown"} (${recorded.libSource ?? "unrecorded"})`,
+	);
 
-	if (recorded.sourceHash === sourceHash) {
-		console.log(
-			`[check-bundle-freshness] built against @conduction/nextcloud-vue ${recorded.libVersion ?? "unknown"} (${recorded.libSource ?? "unrecorded"})`,
-		);
-
-		// A bundle built from a sibling ../nextcloud-vue checkout must never
-		// ship: on 2026-08-19 that alias was opt-OUT, so dev boxes and CI were
-		// compiling different code by default and nothing said so. Locally the
-		// flag is a deliberate choice and this is information; in CI it is a
-		// defect, so only CI fails on it.
-		if (recorded.libSource === "local") {
-			if (process.env.CI) {
-				console.error(
-					"[check-bundle-freshness] FAIL -- this bundle was built from a sibling ../nextcloud-vue checkout, not the declared dependency.",
-				);
-				console.error("  That artefact is not shippable. Rebuild without USE_LOCAL_LIB=true.");
-				process.exit(1);
-			}
-
-			console.warn(
-				"[check-bundle-freshness] NOTE -- built from ../nextcloud-vue, not the declared dependency. Fine locally, never shippable.",
-			);
-		}
-
-		console.log("[check-bundle-freshness] PASS -- the bundle was built from this exact src/.");
-		process.exit(0);
+	// A bundle built from a sibling ../nextcloud-vue checkout must never
+	// ship: on 2026-08-19 that alias was opt-OUT, so dev boxes and CI were
+	// compiling different code by default and nothing said so. Locally the
+	// flag is a deliberate choice and this is information; in CI it is a
+	// defect, so only CI fails on it.
+	if (recorded.libSource !== "local") {
+		return;
 	}
-
-	// A file set listed two different ways is a different question from a file
-	// set that changed, and saying so beats reporting a stale bundle that is
-	// current.
-	if (recorded.listedBy !== undefined && recorded.listedBy !== listedBy) {
+	if (process.env.CI) {
 		console.error(
-			`[check-bundle-freshness] FAIL -- hashes differ AND the file list came from a different source (recorded ${recorded.listedBy}, now ${listedBy}).`,
+			"[check-bundle-freshness] FAIL -- this bundle was built from a sibling ../nextcloud-vue checkout, not the declared dependency.",
 		);
-		console.error("  Re-run where the same listing is available before trusting this verdict.");
+		console.error("  That artefact is not shippable. Rebuild without USE_LOCAL_LIB=true.");
 		process.exit(1);
 	}
 
-	console.error("[check-bundle-freshness] FAIL -- src/ has changed since this bundle was built.");
-	console.error("  What ships is not what the source says. Run `npm run build`.");
-	process.exit(1);
+	console.warn(
+		"[check-bundle-freshness] NOTE -- built from ../nextcloud-vue, not the declared dependency. Fine locally, never shippable.",
+	);
 }
 
 if (process.argv.includes("--sidecar")) {

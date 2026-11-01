@@ -1,0 +1,370 @@
+{
+	"schema-l10n: at the baseline": {
+		"status": 0,
+		"stdout": "10 schema string(s); 7 uncovered, baseline 10\n3 fewer than the baseline — lower it with:\n  npm run check:schema-l10n -- --update\n",
+		"stderr": "",
+		"files": {
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 10\n}",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Employee\": \"Employee\",\n    \"Name\": \"Name\",\n    \"Tag A\": \"Tag A\"\n  }\n}",
+			"lib/Settings/humaniq_register.json": "{\n  \"components\": {\n    \"schemas\": {\n      \"Employee\": {\n        \"title\": \"Employee\",\n        \"properties\": {\n          \"name\": {\n            \"title\": \"Name\",\n            \"description\": \"Full name\"\n          },\n          \"status\": {\n            \"title\": \"Status\",\n            \"description\": \"Full name\",\n            \"x-enum-labels\": {\n              \"active\": \"Active\",\n              \"left\": \"Left\"\n            }\n          },\n          \"tags\": {\n            \"items\": {\n              \"x-enum-labels\": {\n                \"a\": \"Tag A\",\n                \"b\": \" \"\n              }\n            }\n          },\n          \"broken\": null,\n          \"count\": 3,\n          \"blank\": {\n            \"title\": \"\",\n            \"description\": 42\n          }\n        }\n      },\n      \"List\": [\n        {\n          \"properties\": {\n            \"item\": {\n              \"title\": \"Item title\"\n            }\n          }\n        },\n        \"text\"\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/bad.json": "{ broken",
+			"lib/Settings/register.d/leave.json": "{\n  \"title\": \"Leave\",\n  \"properties\": {\n    \"days\": {\n      \"title\": \"Days\",\n      \"description\": \"Name\"\n    }\n  },\n  \"nested\": {\n    \"properties\": \"not an object\",\n    \"other\": {\n      \"properties\": []\n    },\n    \"listed\": {\n      \"title\": \"Array props\",\n      \"properties\": [\n        {\n          \"title\": \"Array item\"\n        }\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/notes.txt": "not json"
+		}
+	},
+	"schema-l10n: --list": {
+		"status": 0,
+		"stdout": "lib/Settings/humaniq_register.json:status.x-enum-labels\n  Active\nlib/Settings/register.d/leave.json:days.title\n  Days\nlib/Settings/humaniq_register.json:name.description\n  Full name\nlib/Settings/humaniq_register.json:item.title\n  Item title\nlib/Settings/register.d/leave.json:schema title\n  Leave\nlib/Settings/humaniq_register.json:status.x-enum-labels\n  Left\nlib/Settings/humaniq_register.json:status.title\n  Status\n10 schema string(s); 7 uncovered, baseline 10\n3 fewer than the baseline — lower it with:\n  npm run check:schema-l10n -- --update\n",
+		"stderr": "",
+		"files": {
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 10\n}",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Employee\": \"Employee\",\n    \"Name\": \"Name\",\n    \"Tag A\": \"Tag A\"\n  }\n}",
+			"lib/Settings/humaniq_register.json": "{\n  \"components\": {\n    \"schemas\": {\n      \"Employee\": {\n        \"title\": \"Employee\",\n        \"properties\": {\n          \"name\": {\n            \"title\": \"Name\",\n            \"description\": \"Full name\"\n          },\n          \"status\": {\n            \"title\": \"Status\",\n            \"description\": \"Full name\",\n            \"x-enum-labels\": {\n              \"active\": \"Active\",\n              \"left\": \"Left\"\n            }\n          },\n          \"tags\": {\n            \"items\": {\n              \"x-enum-labels\": {\n                \"a\": \"Tag A\",\n                \"b\": \" \"\n              }\n            }\n          },\n          \"broken\": null,\n          \"count\": 3,\n          \"blank\": {\n            \"title\": \"\",\n            \"description\": 42\n          }\n        }\n      },\n      \"List\": [\n        {\n          \"properties\": {\n            \"item\": {\n              \"title\": \"Item title\"\n            }\n          }\n        },\n        \"text\"\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/bad.json": "{ broken",
+			"lib/Settings/register.d/leave.json": "{\n  \"title\": \"Leave\",\n  \"properties\": {\n    \"days\": {\n      \"title\": \"Days\",\n      \"description\": \"Name\"\n    }\n  },\n  \"nested\": {\n    \"properties\": \"not an object\",\n    \"other\": {\n      \"properties\": []\n    },\n    \"listed\": {\n      \"title\": \"Array props\",\n      \"properties\": [\n        {\n          \"title\": \"Array item\"\n        }\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/notes.txt": "not json"
+		}
+	},
+	"schema-l10n: --update": {
+		"status": 0,
+		"stdout": "baseline written: 7 uncovered schema string(s)\n",
+		"stderr": "",
+		"files": {
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 7\n}\n",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Employee\": \"Employee\",\n    \"Name\": \"Name\",\n    \"Tag A\": \"Tag A\"\n  }\n}",
+			"lib/Settings/humaniq_register.json": "{\n  \"components\": {\n    \"schemas\": {\n      \"Employee\": {\n        \"title\": \"Employee\",\n        \"properties\": {\n          \"name\": {\n            \"title\": \"Name\",\n            \"description\": \"Full name\"\n          },\n          \"status\": {\n            \"title\": \"Status\",\n            \"description\": \"Full name\",\n            \"x-enum-labels\": {\n              \"active\": \"Active\",\n              \"left\": \"Left\"\n            }\n          },\n          \"tags\": {\n            \"items\": {\n              \"x-enum-labels\": {\n                \"a\": \"Tag A\",\n                \"b\": \" \"\n              }\n            }\n          },\n          \"broken\": null,\n          \"count\": 3,\n          \"blank\": {\n            \"title\": \"\",\n            \"description\": 42\n          }\n        }\n      },\n      \"List\": [\n        {\n          \"properties\": {\n            \"item\": {\n              \"title\": \"Item title\"\n            }\n          }\n        },\n        \"text\"\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/bad.json": "{ broken",
+			"lib/Settings/register.d/leave.json": "{\n  \"title\": \"Leave\",\n  \"properties\": {\n    \"days\": {\n      \"title\": \"Days\",\n      \"description\": \"Name\"\n    }\n  },\n  \"nested\": {\n    \"properties\": \"not an object\",\n    \"other\": {\n      \"properties\": []\n    },\n    \"listed\": {\n      \"title\": \"Array props\",\n      \"properties\": [\n        {\n          \"title\": \"Array item\"\n        }\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/notes.txt": "not json"
+		}
+	},
+	"schema-l10n: --update and --list": {
+		"status": 0,
+		"stdout": "lib/Settings/humaniq_register.json:status.x-enum-labels\n  Active\nlib/Settings/register.d/leave.json:days.title\n  Days\nlib/Settings/humaniq_register.json:name.description\n  Full name\nlib/Settings/humaniq_register.json:item.title\n  Item title\nlib/Settings/register.d/leave.json:schema title\n  Leave\nlib/Settings/humaniq_register.json:status.x-enum-labels\n  Left\nlib/Settings/humaniq_register.json:status.title\n  Status\nbaseline written: 7 uncovered schema string(s)\n",
+		"stderr": "",
+		"files": {
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 7\n}\n",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Employee\": \"Employee\",\n    \"Name\": \"Name\",\n    \"Tag A\": \"Tag A\"\n  }\n}",
+			"lib/Settings/humaniq_register.json": "{\n  \"components\": {\n    \"schemas\": {\n      \"Employee\": {\n        \"title\": \"Employee\",\n        \"properties\": {\n          \"name\": {\n            \"title\": \"Name\",\n            \"description\": \"Full name\"\n          },\n          \"status\": {\n            \"title\": \"Status\",\n            \"description\": \"Full name\",\n            \"x-enum-labels\": {\n              \"active\": \"Active\",\n              \"left\": \"Left\"\n            }\n          },\n          \"tags\": {\n            \"items\": {\n              \"x-enum-labels\": {\n                \"a\": \"Tag A\",\n                \"b\": \" \"\n              }\n            }\n          },\n          \"broken\": null,\n          \"count\": 3,\n          \"blank\": {\n            \"title\": \"\",\n            \"description\": 42\n          }\n        }\n      },\n      \"List\": [\n        {\n          \"properties\": {\n            \"item\": {\n              \"title\": \"Item title\"\n            }\n          }\n        },\n        \"text\"\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/bad.json": "{ broken",
+			"lib/Settings/register.d/leave.json": "{\n  \"title\": \"Leave\",\n  \"properties\": {\n    \"days\": {\n      \"title\": \"Days\",\n      \"description\": \"Name\"\n    }\n  },\n  \"nested\": {\n    \"properties\": \"not an object\",\n    \"other\": {\n      \"properties\": []\n    },\n    \"listed\": {\n      \"title\": \"Array props\",\n      \"properties\": [\n        {\n          \"title\": \"Array item\"\n        }\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/notes.txt": "not json"
+		}
+	},
+	"schema-l10n: no baseline": {
+		"status": 1,
+		"stdout": "",
+		"stderr": "No baseline. Run `npm run check:schema-l10n -- --update` and commit it.\n",
+		"files": {
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Employee\": \"Employee\",\n    \"Name\": \"Name\",\n    \"Tag A\": \"Tag A\"\n  }\n}",
+			"lib/Settings/humaniq_register.json": "{\n  \"components\": {\n    \"schemas\": {\n      \"Employee\": {\n        \"title\": \"Employee\",\n        \"properties\": {\n          \"name\": {\n            \"title\": \"Name\",\n            \"description\": \"Full name\"\n          },\n          \"status\": {\n            \"title\": \"Status\",\n            \"description\": \"Full name\",\n            \"x-enum-labels\": {\n              \"active\": \"Active\",\n              \"left\": \"Left\"\n            }\n          },\n          \"tags\": {\n            \"items\": {\n              \"x-enum-labels\": {\n                \"a\": \"Tag A\",\n                \"b\": \" \"\n              }\n            }\n          },\n          \"broken\": null,\n          \"count\": 3,\n          \"blank\": {\n            \"title\": \"\",\n            \"description\": 42\n          }\n        }\n      },\n      \"List\": [\n        {\n          \"properties\": {\n            \"item\": {\n              \"title\": \"Item title\"\n            }\n          }\n        },\n        \"text\"\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/bad.json": "{ broken",
+			"lib/Settings/register.d/leave.json": "{\n  \"title\": \"Leave\",\n  \"properties\": {\n    \"days\": {\n      \"title\": \"Days\",\n      \"description\": \"Name\"\n    }\n  },\n  \"nested\": {\n    \"properties\": \"not an object\",\n    \"other\": {\n      \"properties\": []\n    },\n    \"listed\": {\n      \"title\": \"Array props\",\n      \"properties\": [\n        {\n          \"title\": \"Array item\"\n        }\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/notes.txt": "not json"
+		}
+	},
+	"schema-l10n: grew past the baseline": {
+		"status": 1,
+		"stdout": "10 schema string(s); 7 uncovered, baseline 5\n",
+		"stderr": "\n2 schema string(s) added with no catalogue key — they will render\nin English inside an otherwise translated form.\n\nAdd them to l10n/en.json (identity) and l10n/nl.json (translated), then\nrun `npm run l10n:build`. See what is uncovered with:\n  node scripts/check-schema-l10n.js --list\n",
+		"files": {
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 5\n}",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Employee\": \"Employee\",\n    \"Name\": \"Name\",\n    \"Tag A\": \"Tag A\"\n  }\n}",
+			"lib/Settings/humaniq_register.json": "{\n  \"components\": {\n    \"schemas\": {\n      \"Employee\": {\n        \"title\": \"Employee\",\n        \"properties\": {\n          \"name\": {\n            \"title\": \"Name\",\n            \"description\": \"Full name\"\n          },\n          \"status\": {\n            \"title\": \"Status\",\n            \"description\": \"Full name\",\n            \"x-enum-labels\": {\n              \"active\": \"Active\",\n              \"left\": \"Left\"\n            }\n          },\n          \"tags\": {\n            \"items\": {\n              \"x-enum-labels\": {\n                \"a\": \"Tag A\",\n                \"b\": \" \"\n              }\n            }\n          },\n          \"broken\": null,\n          \"count\": 3,\n          \"blank\": {\n            \"title\": \"\",\n            \"description\": 42\n          }\n        }\n      },\n      \"List\": [\n        {\n          \"properties\": {\n            \"item\": {\n              \"title\": \"Item title\"\n            }\n          }\n        },\n        \"text\"\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/bad.json": "{ broken",
+			"lib/Settings/register.d/leave.json": "{\n  \"title\": \"Leave\",\n  \"properties\": {\n    \"days\": {\n      \"title\": \"Days\",\n      \"description\": \"Name\"\n    }\n  },\n  \"nested\": {\n    \"properties\": \"not an object\",\n    \"other\": {\n      \"properties\": []\n    },\n    \"listed\": {\n      \"title\": \"Array props\",\n      \"properties\": [\n        {\n          \"title\": \"Array item\"\n        }\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/notes.txt": "not json"
+		}
+	},
+	"schema-l10n: fell below the baseline": {
+		"status": 0,
+		"stdout": "10 schema string(s); 7 uncovered, baseline 12\n5 fewer than the baseline — lower it with:\n  npm run check:schema-l10n -- --update\n",
+		"stderr": "",
+		"files": {
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 12\n}",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Employee\": \"Employee\",\n    \"Name\": \"Name\",\n    \"Tag A\": \"Tag A\"\n  }\n}",
+			"lib/Settings/humaniq_register.json": "{\n  \"components\": {\n    \"schemas\": {\n      \"Employee\": {\n        \"title\": \"Employee\",\n        \"properties\": {\n          \"name\": {\n            \"title\": \"Name\",\n            \"description\": \"Full name\"\n          },\n          \"status\": {\n            \"title\": \"Status\",\n            \"description\": \"Full name\",\n            \"x-enum-labels\": {\n              \"active\": \"Active\",\n              \"left\": \"Left\"\n            }\n          },\n          \"tags\": {\n            \"items\": {\n              \"x-enum-labels\": {\n                \"a\": \"Tag A\",\n                \"b\": \" \"\n              }\n            }\n          },\n          \"broken\": null,\n          \"count\": 3,\n          \"blank\": {\n            \"title\": \"\",\n            \"description\": 42\n          }\n        }\n      },\n      \"List\": [\n        {\n          \"properties\": {\n            \"item\": {\n              \"title\": \"Item title\"\n            }\n          }\n        },\n        \"text\"\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/bad.json": "{ broken",
+			"lib/Settings/register.d/leave.json": "{\n  \"title\": \"Leave\",\n  \"properties\": {\n    \"days\": {\n      \"title\": \"Days\",\n      \"description\": \"Name\"\n    }\n  },\n  \"nested\": {\n    \"properties\": \"not an object\",\n    \"other\": {\n      \"properties\": []\n    },\n    \"listed\": {\n      \"title\": \"Array props\",\n      \"properties\": [\n        {\n          \"title\": \"Array item\"\n        }\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/notes.txt": "not json"
+		}
+	},
+	"schema-l10n: no catalogue": {
+		"status": 0,
+		"stdout": "10 schema string(s); 10 uncovered, baseline 13\n3 fewer than the baseline — lower it with:\n  npm run check:schema-l10n -- --update\n",
+		"stderr": "",
+		"files": {
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 13\n}",
+			"lib/Settings/humaniq_register.json": "{\n  \"components\": {\n    \"schemas\": {\n      \"Employee\": {\n        \"title\": \"Employee\",\n        \"properties\": {\n          \"name\": {\n            \"title\": \"Name\",\n            \"description\": \"Full name\"\n          },\n          \"status\": {\n            \"title\": \"Status\",\n            \"description\": \"Full name\",\n            \"x-enum-labels\": {\n              \"active\": \"Active\",\n              \"left\": \"Left\"\n            }\n          },\n          \"tags\": {\n            \"items\": {\n              \"x-enum-labels\": {\n                \"a\": \"Tag A\",\n                \"b\": \" \"\n              }\n            }\n          },\n          \"broken\": null,\n          \"count\": 3,\n          \"blank\": {\n            \"title\": \"\",\n            \"description\": 42\n          }\n        }\n      },\n      \"List\": [\n        {\n          \"properties\": {\n            \"item\": {\n              \"title\": \"Item title\"\n            }\n          }\n        },\n        \"text\"\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/bad.json": "{ broken",
+			"lib/Settings/register.d/leave.json": "{\n  \"title\": \"Leave\",\n  \"properties\": {\n    \"days\": {\n      \"title\": \"Days\",\n      \"description\": \"Name\"\n    }\n  },\n  \"nested\": {\n    \"properties\": \"not an object\",\n    \"other\": {\n      \"properties\": []\n    },\n    \"listed\": {\n      \"title\": \"Array props\",\n      \"properties\": [\n        {\n          \"title\": \"Array item\"\n        }\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/notes.txt": "not json"
+		}
+	},
+	"schema-l10n: catalogue without translations": {
+		"status": 0,
+		"stdout": "10 schema string(s); 10 uncovered, baseline 13\n3 fewer than the baseline — lower it with:\n  npm run check:schema-l10n -- --update\n",
+		"stderr": "",
+		"files": {
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 13\n}",
+			"l10n/en.json": "{}",
+			"lib/Settings/humaniq_register.json": "{\n  \"components\": {\n    \"schemas\": {\n      \"Employee\": {\n        \"title\": \"Employee\",\n        \"properties\": {\n          \"name\": {\n            \"title\": \"Name\",\n            \"description\": \"Full name\"\n          },\n          \"status\": {\n            \"title\": \"Status\",\n            \"description\": \"Full name\",\n            \"x-enum-labels\": {\n              \"active\": \"Active\",\n              \"left\": \"Left\"\n            }\n          },\n          \"tags\": {\n            \"items\": {\n              \"x-enum-labels\": {\n                \"a\": \"Tag A\",\n                \"b\": \" \"\n              }\n            }\n          },\n          \"broken\": null,\n          \"count\": 3,\n          \"blank\": {\n            \"title\": \"\",\n            \"description\": 42\n          }\n        }\n      },\n      \"List\": [\n        {\n          \"properties\": {\n            \"item\": {\n              \"title\": \"Item title\"\n            }\n          }\n        },\n        \"text\"\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/bad.json": "{ broken",
+			"lib/Settings/register.d/leave.json": "{\n  \"title\": \"Leave\",\n  \"properties\": {\n    \"days\": {\n      \"title\": \"Days\",\n      \"description\": \"Name\"\n    }\n  },\n  \"nested\": {\n    \"properties\": \"not an object\",\n    \"other\": {\n      \"properties\": []\n    },\n    \"listed\": {\n      \"title\": \"Array props\",\n      \"properties\": [\n        {\n          \"title\": \"Array item\"\n        }\n      ]\n    }\n  }\n}",
+			"lib/Settings/register.d/notes.txt": "not json"
+		}
+	},
+	"schema-l10n: no lib/Settings": {
+		"status": 0,
+		"stdout": "0 schema string(s); 0 uncovered, baseline 0\n",
+		"stderr": "",
+		"files": {
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 0\n}"
+		}
+	},
+	"l10n-js: writes every catalogue": {
+		"status": 0,
+		"stdout": "  ✎ l10n/en.js written (2 keys)\n  ✎ l10n/nl.js written (1 keys)\n",
+		"stderr": "",
+		"files": {
+			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
+			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hello\",\n        \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
+			"l10n/nl.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hallo\"\n    },\n    \"nplurals=2; plural=(n > 1);\"\n)\n",
+			"l10n/nl.json": "{\n  \"translations\": {\n    \"Hello\": \"Hallo\"\n  },\n  \"pluralForm\": \"nplurals=2; plural=(n > 1);\"\n}",
+			"l10n/README.md": "not a catalogue"
+		}
+	},
+	"l10n-js: --check when current": {
+		"status": 0,
+		"stdout": "  ✓ l10n/en.js up to date (2 keys)\n  ✓ l10n/nl.js up to date (1 keys)\n",
+		"stderr": "",
+		"files": {
+			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
+			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hello\",\n        \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
+			"l10n/nl.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hallo\"\n    },\n    \"nplurals=2; plural=(n > 1);\"\n)\n",
+			"l10n/nl.json": "{\n  \"translations\": {\n    \"Hello\": \"Hallo\"\n  },\n  \"pluralForm\": \"nplurals=2; plural=(n > 1);\"\n}",
+			"l10n/README.md": "not a catalogue"
+		}
+	},
+	"l10n-js: --check when stale": {
+		"status": 1,
+		"stdout": "",
+		"stderr": "\nStale browser catalogue: l10n/en.js, l10n/nl.js\nRun `npm run l10n:build` and commit the result.\n",
+		"files": {
+			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
+			"l10n/en.js": "old\n",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
+			"l10n/nl.json": "{\n  \"translations\": {\n    \"Hello\": \"Hallo\"\n  },\n  \"pluralForm\": \"nplurals=2; plural=(n > 1);\"\n}",
+			"l10n/README.md": "not a catalogue"
+		}
+	},
+	"l10n-js: rewrites only the stale one": {
+		"status": 0,
+		"stdout": "  ✎ l10n/en.js written (2 keys)\n  ✓ l10n/nl.js up to date (1 keys)\n",
+		"stderr": "",
+		"files": {
+			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
+			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hello\",\n        \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
+			"l10n/nl.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hallo\"\n    },\n    \"nplurals=2; plural=(n > 1);\"\n)\n",
+			"l10n/nl.json": "{\n  \"translations\": {\n    \"Hello\": \"Hallo\"\n  },\n  \"pluralForm\": \"nplurals=2; plural=(n > 1);\"\n}",
+			"l10n/README.md": "not a catalogue"
+		}
+	},
+	"l10n-js: --check with one stale": {
+		"status": 1,
+		"stdout": "  ✓ l10n/nl.js up to date (1 keys)\n",
+		"stderr": "\nStale browser catalogue: l10n/en.js\nRun `npm run l10n:build` and commit the result.\n",
+		"files": {
+			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
+			"l10n/en.js": "old\n",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
+			"l10n/nl.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hallo\"\n    },\n    \"nplurals=2; plural=(n > 1);\"\n)\n",
+			"l10n/nl.json": "{\n  \"translations\": {\n    \"Hello\": \"Hallo\"\n  },\n  \"pluralForm\": \"nplurals=2; plural=(n > 1);\"\n}",
+			"l10n/README.md": "not a catalogue"
+		}
+	},
+	"l10n-js: empty translations": {
+		"status": 0,
+		"stdout": "  ✎ l10n/de.js written (0 keys)\n",
+		"stderr": "",
+		"files": {
+			"appinfo/info.xml": "<id>humaniq</id>",
+			"l10n/de.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/de.json": "{\n  \"translations\": {}\n}"
+		}
+	},
+	"l10n-js: no catalogue": {
+		"status": 1,
+		"stdout": "",
+		"stderr": "l10n/ holds no <locale>.json catalogue to generate from\n",
+		"files": {
+			"appinfo/info.xml": "<id>humaniq</id>",
+			"l10n/.schema-l10n-baseline.json": "{}"
+		}
+	},
+	"l10n-js: catalogue does not parse": {
+		"status": 1,
+		"stdout": "  ✎ l10n/en.js written (2 keys)\n",
+		"stderr": "l10n/nl.json does not parse: <message>\n",
+		"files": {
+			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
+			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hello\",\n        \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
+			"l10n/nl.json": "{ nope",
+			"l10n/README.md": "not a catalogue"
+		}
+	},
+	"l10n-js: catalogue without translations": {
+		"status": 1,
+		"stdout": "  ✎ l10n/en.js written (2 keys)\n",
+		"stderr": "l10n/nl.json is missing \"translations\"\n",
+		"files": {
+			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
+			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hello\",\n        \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
+			"l10n/nl.json": "{\n  \"pluralForm\": \"x\"\n}",
+			"l10n/README.md": "not a catalogue"
+		}
+	},
+	"l10n-js: info.xml without an id": {
+		"status": 1,
+		"stdout": "",
+		"stderr": "appinfo/info.xml declares no <id>\n",
+		"files": {
+			"appinfo/info.xml": "<info></info>",
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
+			"l10n/nl.json": "{\n  \"translations\": {\n    \"Hello\": \"Hallo\"\n  },\n  \"pluralForm\": \"nplurals=2; plural=(n > 1);\"\n}",
+			"l10n/README.md": "not a catalogue"
+		}
+	},
+	"bundle sidecar: missing": {
+		"status": 1,
+		"stdout": "",
+		"stderr": "[check-bundle-freshness] FAIL -- js/build-info.json is missing.\n  Nothing records what this bundle was built from, so nothing can\n  confirm it matches. Build with `npm run build`, whose postbuild\n  step writes it.\n",
+		"files": {
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	},
+	"bundle sidecar: unreadable": {
+		"status": 1,
+		"stdout": "",
+		"stderr": "[check-bundle-freshness] FAIL -- js/build-info.json is unreadable: <message>\n",
+		"files": {
+			"js/build-info.json": "{ nope",
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	},
+	"bundle sidecar: changed source": {
+		"status": 1,
+		"stdout": "[check-bundle-freshness] recorded sourceHash: cdf62f3c03fbe8c3…\n[check-bundle-freshness] current  sourceHash: 35a40b8cd2a18c6c… (2 file(s) via walk)\n[check-bundle-freshness] built at B for appVersion 1.0\n",
+		"stderr": "[check-bundle-freshness] FAIL -- src/ has changed since this bundle was built.\n  What ships is not what the source says. Run `npm run build`.\n",
+		"files": {
+			"js/build-info.json": "{\n  \"sourceHash\": \"cdf62f3c03fbe8c3d1f8e8f1ebc1d8b5f3a3c0e0b6c79b1d4cbf3a0a2c4a1a01\",\n  \"builtAt\": \"B\",\n  \"appVersion\": \"1.0\"\n}",
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	},
+	"bundle sidecar: changed source, same listing": {
+		"status": 1,
+		"stdout": "[check-bundle-freshness] recorded sourceHash: cdf62f3c03fbe8c3…\n[check-bundle-freshness] current  sourceHash: 35a40b8cd2a18c6c… (2 file(s) via walk)\n[check-bundle-freshness] built at B for appVersion 1.0\n",
+		"stderr": "[check-bundle-freshness] FAIL -- src/ has changed since this bundle was built.\n  What ships is not what the source says. Run `npm run build`.\n",
+		"files": {
+			"js/build-info.json": "{\n  \"sourceHash\": \"cdf62f3c03fbe8c3d1f8e8f1ebc1d8b5f3a3c0e0b6c79b1d4cbf3a0a2c4a1a01\",\n  \"listedBy\": \"walk\",\n  \"builtAt\": \"B\",\n  \"appVersion\": \"1.0\"\n}",
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	},
+	"bundle sidecar: changed source, other listing": {
+		"status": 1,
+		"stdout": "[check-bundle-freshness] recorded sourceHash: cdf62f3c03fbe8c3…\n[check-bundle-freshness] current  sourceHash: 35a40b8cd2a18c6c… (2 file(s) via walk)\n[check-bundle-freshness] built at B for appVersion 1.0\n",
+		"stderr": "[check-bundle-freshness] FAIL -- hashes differ AND the file list came from a different source (recorded git, now walk).\n  Re-run where the same listing is available before trusting this verdict.\n",
+		"files": {
+			"js/build-info.json": "{\n  \"sourceHash\": \"cdf62f3c03fbe8c3d1f8e8f1ebc1d8b5f3a3c0e0b6c79b1d4cbf3a0a2c4a1a01\",\n  \"listedBy\": \"git\",\n  \"builtAt\": \"B\",\n  \"appVersion\": \"1.0\"\n}",
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	},
+	"bundle sidecar: non-string hash": {
+		"status": 1,
+		"stdout": "[check-bundle-freshness] recorded sourceHash: 1234567890123456…\n[check-bundle-freshness] current  sourceHash: 35a40b8cd2a18c6c… (2 file(s) via walk)\n[check-bundle-freshness] built at B for appVersion undefined\n",
+		"stderr": "[check-bundle-freshness] FAIL -- src/ has changed since this bundle was built.\n  What ships is not what the source says. Run `npm run build`.\n",
+		"files": {
+			"js/build-info.json": "{\n  \"sourceHash\": 1234567890123456,\n  \"builtAt\": \"B\"\n}",
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	},
+	"bundle sidecar: matches": {
+		"status": 0,
+		"stdout": "[check-bundle-freshness] recorded sourceHash: 35a40b8cd2a18c6c…\n[check-bundle-freshness] current  sourceHash: 35a40b8cd2a18c6c… (2 file(s) via walk)\n[check-bundle-freshness] built at 2026-11-01T00:00:00Z for appVersion 1.2.3\n[check-bundle-freshness] built against @conduction/nextcloud-vue 2.1.0 (npm)\n[check-bundle-freshness] PASS -- the bundle was built from this exact src/.\n",
+		"stderr": "",
+		"files": {
+			"js/build-info.json": "{\n  \"sourceHash\": \"35a40b8cd2a18c6ce1c42bdb34d334ffcd812b863db43419ee726e1ac4f1fc4c\",\n  \"listedBy\": \"walk\",\n  \"builtAt\": \"2026-11-01T00:00:00Z\",\n  \"appVersion\": \"1.2.3\",\n  \"libVersion\": \"2.1.0\",\n  \"libSource\": \"npm\"\n}",
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	},
+	"bundle sidecar: matches, nothing about the library": {
+		"status": 0,
+		"stdout": "[check-bundle-freshness] recorded sourceHash: 35a40b8cd2a18c6c…\n[check-bundle-freshness] current  sourceHash: 35a40b8cd2a18c6c… (2 file(s) via walk)\n[check-bundle-freshness] built at 2026-11-01T00:00:00Z for appVersion 1.2.3\n[check-bundle-freshness] built against @conduction/nextcloud-vue unknown (unrecorded)\n[check-bundle-freshness] PASS -- the bundle was built from this exact src/.\n",
+		"stderr": "",
+		"files": {
+			"js/build-info.json": "{\n  \"sourceHash\": \"35a40b8cd2a18c6ce1c42bdb34d334ffcd812b863db43419ee726e1ac4f1fc4c\",\n  \"listedBy\": \"walk\",\n  \"builtAt\": \"2026-11-01T00:00:00Z\",\n  \"appVersion\": \"1.2.3\"\n}",
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	},
+	"bundle sidecar: local library outside CI": {
+		"status": 0,
+		"stdout": "[check-bundle-freshness] recorded sourceHash: 35a40b8cd2a18c6c…\n[check-bundle-freshness] current  sourceHash: 35a40b8cd2a18c6c… (2 file(s) via walk)\n[check-bundle-freshness] built at 2026-11-01T00:00:00Z for appVersion 1.2.3\n[check-bundle-freshness] built against @conduction/nextcloud-vue unknown (local)\n[check-bundle-freshness] PASS -- the bundle was built from this exact src/.\n",
+		"stderr": "[check-bundle-freshness] NOTE -- built from ../nextcloud-vue, not the declared dependency. Fine locally, never shippable.\n",
+		"files": {
+			"js/build-info.json": "{\n  \"sourceHash\": \"35a40b8cd2a18c6ce1c42bdb34d334ffcd812b863db43419ee726e1ac4f1fc4c\",\n  \"listedBy\": \"walk\",\n  \"builtAt\": \"2026-11-01T00:00:00Z\",\n  \"appVersion\": \"1.2.3\",\n  \"libSource\": \"local\"\n}",
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	},
+	"bundle sidecar: local library in CI": {
+		"status": 1,
+		"stdout": "[check-bundle-freshness] recorded sourceHash: 35a40b8cd2a18c6c…\n[check-bundle-freshness] current  sourceHash: 35a40b8cd2a18c6c… (2 file(s) via walk)\n[check-bundle-freshness] built at 2026-11-01T00:00:00Z for appVersion 1.2.3\n[check-bundle-freshness] built against @conduction/nextcloud-vue unknown (local)\n",
+		"stderr": "[check-bundle-freshness] FAIL -- this bundle was built from a sibling ../nextcloud-vue checkout, not the declared dependency.\n  That artefact is not shippable. Rebuild without USE_LOCAL_LIB=true.\n",
+		"files": {
+			"js/build-info.json": "{\n  \"sourceHash\": \"35a40b8cd2a18c6ce1c42bdb34d334ffcd812b863db43419ee726e1ac4f1fc4c\",\n  \"listedBy\": \"walk\",\n  \"builtAt\": \"2026-11-01T00:00:00Z\",\n  \"appVersion\": \"1.2.3\",\n  \"libSource\": \"local\"\n}",
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	},
+	"bundle sidecar: npm library in CI": {
+		"status": 0,
+		"stdout": "[check-bundle-freshness] recorded sourceHash: 35a40b8cd2a18c6c…\n[check-bundle-freshness] current  sourceHash: 35a40b8cd2a18c6c… (2 file(s) via walk)\n[check-bundle-freshness] built at 2026-11-01T00:00:00Z for appVersion 1.2.3\n[check-bundle-freshness] built against @conduction/nextcloud-vue unknown (npm)\n[check-bundle-freshness] PASS -- the bundle was built from this exact src/.\n",
+		"stderr": "",
+		"files": {
+			"js/build-info.json": "{\n  \"sourceHash\": \"35a40b8cd2a18c6ce1c42bdb34d334ffcd812b863db43419ee726e1ac4f1fc4c\",\n  \"listedBy\": \"walk\",\n  \"builtAt\": \"2026-11-01T00:00:00Z\",\n  \"appVersion\": \"1.2.3\",\n  \"libSource\": \"npm\"\n}",
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	},
+	"bundle sidecar: matches with another listing": {
+		"status": 0,
+		"stdout": "[check-bundle-freshness] recorded sourceHash: 35a40b8cd2a18c6c…\n[check-bundle-freshness] current  sourceHash: 35a40b8cd2a18c6c… (2 file(s) via walk)\n[check-bundle-freshness] built at 2026-11-01T00:00:00Z for appVersion 1.2.3\n[check-bundle-freshness] built against @conduction/nextcloud-vue unknown (unrecorded)\n[check-bundle-freshness] PASS -- the bundle was built from this exact src/.\n",
+		"stderr": "",
+		"files": {
+			"js/build-info.json": "{\n  \"sourceHash\": \"35a40b8cd2a18c6ce1c42bdb34d334ffcd812b863db43419ee726e1ac4f1fc4c\",\n  \"listedBy\": \"git\",\n  \"builtAt\": \"2026-11-01T00:00:00Z\",\n  \"appVersion\": \"1.2.3\"\n}",
+			"src/main.js": "console.log(1)\n",
+			"src/views/Page.vue": "<template><div /></template>\n"
+		}
+	}
+}
