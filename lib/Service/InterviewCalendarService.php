@@ -62,6 +62,8 @@ use Throwable;
 
 /**
  * Upserts/removes scheduled-interview VEVENTs on the configured shared calendar.
+ *
+ * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-003
  */
 class InterviewCalendarService {
 
@@ -134,10 +136,12 @@ class InterviewCalendarService {
 			return [$this->skipOutcome($target)];
 		}
 
-		$applicationsById = $this->repository->loadApplicationIndex();
-		$vacanciesById = $this->repository->loadVacancyTitleIndex();
-
-		$results = [];
+		$run = new InterviewSyncRun(
+			target: $target,
+			applicationsById: $this->repository->loadApplicationIndex(),
+			vacanciesById: $this->repository->loadVacancyTitleIndex(),
+			from: $from
+		);
 		$liveIds = [];
 
 		foreach ($this->repository->loadAllInterviews() as $interview) {
@@ -147,12 +151,12 @@ class InterviewCalendarService {
 			}
 
 			$liveIds[] = $id;
-			$this->engine->syncInterview($target, $interview, $id, $applicationsById, $vacanciesById, $from, $results);
+			$this->engine->syncInterview($run, $interview, $id);
 		}
 
-		$this->orphanReconciler->reconcile($target, $liveIds, $results);
+		$this->orphanReconciler->reconcile($target, $liveIds, $run->results);
 
-		return $results;
+		return $run->results;
 	}//end sync()
 
 	/**
@@ -177,13 +181,14 @@ class InterviewCalendarService {
 			return $this->outcome($interviewId, 'failed', 'Interview ' . $interviewId . ' kon niet worden geladen.');
 		}
 
-		$applicationsById = $this->repository->loadApplicationIndex();
-		$vacanciesById = $this->repository->loadVacancyTitleIndex();
+		$run = new InterviewSyncRun(
+			target: $target,
+			applicationsById: $this->repository->loadApplicationIndex(),
+			vacanciesById: $this->repository->loadVacancyTitleIndex()
+		);
+		$this->engine->syncInterview($run, $interview, $interviewId);
 
-		$results = [];
-		$this->engine->syncInterview($target, $interview, $interviewId, $applicationsById, $vacanciesById, null, $results);
-
-		return $results[0] ?? $this->outcome($interviewId, 'unchanged', 'Geen wijziging.');
+		return $run->results[0] ?? $this->outcome($interviewId, 'unchanged', 'Geen wijziging.');
 	}//end syncOne()
 
 	/**
