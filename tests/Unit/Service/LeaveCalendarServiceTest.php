@@ -302,7 +302,7 @@ class LeaveCalendarServiceTest extends TestCase {
 	 * for the current schema (the PayrollGLPostServiceTest idiom, read-only
 	 * here since LeaveCalendarService never writes back to the register).
 	 *
-	 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
+	 * @param array<string, array<int, array<string, mixed>>|null> $rowsBySchema Seed rows keyed by schema; null makes findAll() throw.
 	 *
 	 * @return object The fake ObjectService.
 	 */
@@ -347,6 +347,10 @@ class LeaveCalendarServiceTest extends TestCase {
 			 * @return array<int, array<string, mixed>>
 			 */
 			public function findAll(array $options = []): array {
+				if (array_key_exists($this->schema, $this->rowsBySchema) === true && $this->rowsBySchema[$this->schema] === null) {
+					throw new \RuntimeException('register unreadable');
+				}
+
 				return $this->rowsBySchema[$this->schema] ?? [];
 			}//end findAll()
 
@@ -666,6 +670,37 @@ class LeaveCalendarServiceTest extends TestCase {
 		$this->assertFalse($backend->hasObject('hrmq-leave-gone-1.ics'));
 
 	}//end testDeletedSourceIsReconciled()
+
+	/**
+	 * A register that cannot be read gives no live id set, so no event is
+	 * treated as an orphan.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function unreadableSchemas(): array {
+		return ['leave requests' => ['LeaveRequest'], 'sickness cases' => ['SickLeaveCase']];
+	}//end unreadableSchemas()
+
+	/**
+	 * @param string $schema The schema whose load fails.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider unreadableSchemas
+	 */
+	public function testUnreadableRegisterKeepsEveryCalendarEvent(string $schema): void {
+		[$service, $backend] = $this->service([$schema => null]);
+		$backend->seedObject('hrmq-leave-kept-1.ics', 'hrmq-leave-kept-1', "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
+		$backend->seedObject('hrmq-sick-kept-2.ics', 'hrmq-sick-kept-2', "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
+
+		$results = $service->sync();
+
+		$this->assertSame([], $backend->deleted);
+		$this->assertTrue($backend->hasObject('hrmq-leave-kept-1.ics'));
+		$this->assertTrue($backend->hasObject('hrmq-sick-kept-2.ics'));
+		$this->assertSame([], $results);
+
+	}//end testUnreadableRegisterKeepsEveryCalendarEvent()
 
 	/**
 	 * @return void
