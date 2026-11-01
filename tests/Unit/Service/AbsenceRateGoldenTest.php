@@ -182,6 +182,8 @@ class AbsenceRateGoldenTest extends TestCase {
 			]),
 			'pattern without contract' => ($jan + ['cases' => [$open], 'contracts' => [self::contract('e2')], 'patterns' => [$pattern, ['employeeId' => '', 'validFrom' => '2025-01-01', 'hoursMonday' => 8]]]),
 			'two patterns, one contracted' => ($jan + ['cases' => [$open], 'contracts' => [self::contract('e1', 24), self::contract(' ', 40)], 'patterns' => [$pattern, ['employeeId' => 'e9', 'validFrom' => '2025-01-01', 'hoursFriday' => 8]], 'dates' => []]),
+			'pattern calendar day off' => ($jan + ['cases' => [$open], 'contracts' => [self::contract('e1', 24)], 'patterns' => [$pattern], 'dates' => ['2026-01-05', '2026-01-13']]),
+			'case on an ended contract' => ($jan + ['cases' => [['employeeId' => 'e2', 'firstSickDay' => '2025-12-20', 'status' => 'gemeld']], 'contracts' => [self::contract('e1'), self::contract('e2', 40, '2024-01-01', '2025-12-31')]]),
 			'single day period' => ['from' => '2026-01-12', 'to' => '2026-01-12', 'cases' => [$open], 'contracts' => [self::contract('e1', 20)], 'patterns' => [$pattern], 'dates' => []],
 		];
 
