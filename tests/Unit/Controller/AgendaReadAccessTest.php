@@ -95,6 +95,8 @@ class AgendaReadAccessTest extends TestCase {
 			],
 			'OrgUnit' => [
 				['id' => 'unit-org', 'managerId' => 'emp-olga'],
+				['id' => 'unit-loop-a', 'managerId' => 'emp-eva', 'parentUnitId' => 'unit-loop-b'],
+				['id' => 'unit-loop-b', 'managerId' => 'emp-eva', 'parentUnitId' => 'unit-loop-a'],
 				['id' => 'unit-zorg', 'managerId' => 'emp-mila', 'parentUnitId' => 'unit-org'],
 				['id' => 'unit-fac', 'managerId' => 'emp-hanna'],
 			],
@@ -883,5 +885,16 @@ class AgendaReadAccessTest extends TestCase {
 		$this->loaded = [];
 		$this->assertHoursRefused($this->hours(null, $endpoint, ''));
 	}//end testWithoutAUnitSomeoneWhoMaySeeNobodyIsRefused()
+
+	/**
+	 * A unit tree that loops back on itself ends the walk and refuses.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testALoopInTheUnitTreeEndsTheWalk(): void {
+		$this->assertRefused($this->read('carl', 'orgUnit', 'unit-loop-a'));
+	}//end testALoopInTheUnitTreeEndsTheWalk()
 
 }//end class
