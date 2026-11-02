@@ -41,7 +41,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl.
     ]]></description>
-    <version>0.2.13-unstable.20260929100000</version>
+    <version>0.2.13-unstable.20261103000000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Humaniq</namespace>
@@ -242,6 +242,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  create nothing); one summary line per run; fails soft when
                  OpenRegister is not installed. -->
             <step>OCA\Humaniq\Repair\MigrateHoursProcess</step>
+            <!-- mss-team-scope (REQ-MSS-007): rewrite an outdated managerUserId
+                 stamp on open records after the manager resolution changed.
+                 Runs AFTER MigrateHoursProcess. Idempotent: only a stamp that
+                 differs from the shared resolution is written. -->
+            <step>OCA\Humaniq\Repair\RestampOpenManagerRecords</step>
             <!-- payroll-run-as-a-flow (design.md D8): the v1 Loonrun gate read
                  review.outcome where the engine writes json.review.outcome, so
                  every approval took the rejected exit. The schema re-import
@@ -340,6 +345,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  never migrate them. Runs AFTER InitializeRegister; on fresh
                  installs it finds the seed rows and behaves identically. -->
             <step>OCA\Humaniq\Repair\MigrateHoursProcess</step>
+            <!-- mss-team-scope (REQ-MSS-007): rewrite an outdated managerUserId
+                 stamp on open records after the manager resolution changed.
+                 Runs AFTER MigrateHoursProcess. Idempotent: only a stamp that
+                 differs from the shared resolution is written. -->
+            <step>OCA\Humaniq\Repair\RestampOpenManagerRecords</step>
             <!-- payroll-run-as-a-flow (design.md D8): on a fresh install the
                  flow imports already corrected and freshly published, so this
                  reports a no-op — it exists here for the rename path, where
@@ -369,6 +379,9 @@ Vrij en open source onder de EUPL-1.2-licentie.
              Idempotent; prints per-schema inspected/rewritten/alreadyCurrent/
              skipped counts and every skip reason. -->
         <command>OCA\Humaniq\Command\AssetsMigrateDialectCommand</command>
+        <!-- mss-team-scope (REQ-MSS-007): the same restamp pass as the
+             RestampOpenManagerRecords repair step, with dry-run. -->
+        <command>OCA\Humaniq\Command\ManagerRestampCommand</command>
         <!-- Post each approved PayrollRun as a balanced loonjournaalpost into
              shillinq's JournalEntry register (payroll-glpost-shillinq MVP
              trigger). Duck-typed no-op when shillinq is absent. -->

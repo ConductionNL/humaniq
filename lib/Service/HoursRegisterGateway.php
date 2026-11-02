@@ -50,7 +50,7 @@ use RuntimeException;
 class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 
 	/**
-	 * Upper bound for lookup queries (dev-stage volumes; the
+	 * Rows per page of a lookup query (the
 	 * AdministrationService findAll-then-filter precedent).
 	 *
 	 * @var int
@@ -58,12 +58,20 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 	private const LOOKUP_LIMIT = 500;
 
 	/**
-	 * The most pages a caller-scoped read follows (100,000 rows), so a store
-	 * that ignores `offset` cannot keep the loop going.
+	 * The most pages a read follows (100,000 rows), so a store that ignores
+	 * `offset` cannot keep the loop going.
 	 *
 	 * @var int
 	 */
 	private const MAX_PAGES = 200;
+
+	/**
+	 * The most rows one read returns. A read that returns this many may
+	 * have stopped before the end.
+	 *
+	 * @var int
+	 */
+	public const MAX_ROWS = (self::LOOKUP_LIMIT * self::MAX_PAGES);
 
 	/**
 	 * Constructor.
@@ -122,8 +130,8 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 	}//end findObjectData()
 
 	/**
-	 * Every row of a schema, as arrays (the AssetDialectMigrationService
-	 * loadAll precedent).
+	 * Every row of a schema, as arrays, page by page up to MAX_ROWS (the
+	 * AssetDialectMigrationService loadAll precedent).
 	 *
 	 * @param string $schema The schema slug.
 	 *
@@ -371,9 +379,7 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 			}
 
 			$offset += self::LOOKUP_LIMIT;
-			// A read as the caller answers for a whole object (the week's hours on
-			// a case), so it pages to the end rather than stopping at one page.
-		} while ($asCaller === true && $pageSize === self::LOOKUP_LIMIT && $offset < self::LOOKUP_LIMIT * self::MAX_PAGES);
+		} while ($pageSize === self::LOOKUP_LIMIT && $offset < self::MAX_ROWS);
 
 		return $out;
 	}//end query()

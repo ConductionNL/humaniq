@@ -124,6 +124,25 @@ class HoursRegisterGatewayTest extends TestCase {
 	}//end testACallerScopedReadPagesPastTheLookupLimit()
 
 	/**
+	 * A whole-register read pages through every row too, and stops at
+	 * MAX_ROWS.
+	 *
+	 * @return void
+	 */
+	public function testAWholeRegisterReadPagesPastTheLookupLimit(): void {
+		for ($i = 0; $i < 1203; $i++) {
+			$this->store->seed('OrgAssignment', 'as-'.$i, ['employeeId' => 'emp-'.$i]);
+		}
+
+		$rows = $this->gateway->loadAll('OrgAssignment');
+
+		$this->assertCount(1203, $rows);
+		$this->assertSame('as-1202', $rows[1202]['id']);
+		$this->assertCount(1203, $this->gateway->findFiltered('OrgAssignment', []));
+		$this->assertSame(100000, HoursRegisterGateway::MAX_ROWS);
+	}//end testAWholeRegisterReadPagesPastTheLookupLimit()
+
+	/**
 	 * delete() removes the object from the register.
 	 *
 	 * @return void
