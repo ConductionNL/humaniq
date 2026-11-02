@@ -148,19 +148,16 @@ class AgendaReadAccess {
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
 	 */
 	public function members(string $orgUnitId, DateTimeImmutable $onDate): array {
+		$day = $onDate->format('Y-m-d');
 		$members = [];
 		foreach ($this->store->findFiltered('OrgAssignment', ['orgUnitId' => $orgUnitId]) as $assignment) {
-			if ($this->orgResolution->isActiveOn($assignment, $onDate->format('Y-m-d')) === false) {
-				continue;
-			}
-
 			$employeeId = trim((string)($assignment['employeeId'] ?? ''));
-			if ($employeeId !== '') {
-				$members[$employeeId] = true;
+			if ($employeeId !== '' && $this->orgResolution->isActiveOn($assignment, $day) === true) {
+				$members[$employeeId] = $employeeId;
 			}
 		}
 
-		return array_keys($members);
+		return array_values($members);
 	}//end members()
 
 	/**
