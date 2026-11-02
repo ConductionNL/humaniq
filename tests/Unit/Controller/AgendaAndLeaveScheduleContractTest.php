@@ -34,6 +34,7 @@ namespace OCA\Humaniq\Tests\Unit\Controller;
 use OCA\Humaniq\Controller\AgendaController;
 use OCA\Humaniq\Controller\LeaveScheduleController;
 use OCA\Humaniq\Service\AgendaComposer;
+use OCA\Humaniq\Service\AgendaReadAccess;
 use OCA\Humaniq\Service\AvailabilityService;
 use OCA\Humaniq\Service\DepartmentLeaveScheduleService;
 use OCA\Humaniq\Service\ForwardCapacityService;
@@ -77,13 +78,17 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 			]
 		);
 
+		$access = $this->createMock(AgendaReadAccess::class);
+		$access->method('grant')->willReturn(['all' => true, 'full' => []]);
+		$access->method('visibleEntries')->willReturnArgument(0);
+
 		return new AgendaController(
 			$this->createMock(IRequest::class),
 			$gateway,
 			$composer,
 			$this->createMock(AvailabilityService::class),
 			$this->createMock(ForwardCapacityService::class),
-			$this->createMock(OrgResolutionService::class),
+			$access,
 			$calendar
 		);
 	}//end agendaController()
