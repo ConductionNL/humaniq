@@ -157,38 +157,17 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.on-call-averages {
-	padding: 20px;
+@use '../css/admin-widget.scss';
 
-	&__intro {
-		color: var(--color-text-maxcontrast);
-		margin-bottom: 16px;
-		max-width: 720px;
-	}
+.on-call-averages {
+	@include admin-widget.panel;
 
 	&__form {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: flex-end;
-		gap: 12px;
-		margin-bottom: 24px;
+		@include admin-widget.form-row;
 	}
 
 	&__table {
-		border-collapse: collapse;
-		width: 100%;
-
-		th,
-		td {
-			border-bottom: 1px solid var(--color-border);
-			padding: 8px;
-			text-align: start;
-		}
-
-		th {
-			color: var(--color-text-maxcontrast);
-			font-weight: normal;
-		}
+		@include admin-widget.data-table;
 	}
 }
 </style>

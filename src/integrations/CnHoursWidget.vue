@@ -750,17 +750,36 @@ export default {
 			if (isForObject(event?.detail, this.objectId) === false || hours === null || this.saving === true) {
 				return
 			}
+			await this.bookOnObject({
+				date: new Date().toISOString().slice(0, 10),
+				hours,
+				description: String(event.detail.note ?? ''),
+			}, async () => {
+				this.rowHours = ''
+			})
+		},
+
+		/**
+		 * Book hours on this object and run what follows the booking, with
+		 * the form saving meanwhile; a failure of either shows the server's
+		 * message.
+		 *
+		 * @param {{date: string, hours: number, description: string}} entry The booking.
+		 * @param {() => Promise<void>} afterBooked Runs once the booking is stored.
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+		 */
+		async bookOnObject(entry, afterBooked) {
 			this.saving = true
 			this.error = ''
 			try {
 				await bookHours({
 					domainObjectType: this.domainObjectType,
 					domainObjectRef: this.objectId,
-					date: new Date().toISOString().slice(0, 10),
-					hours,
-					description: String(event.detail.note ?? ''),
+					...entry,
 				})
-				this.rowHours = ''
+				await afterBooked()
 			} catch (e) {
 				this.error = e?.response?.data?.message || e?.response?.data?.error || t('humaniq', 'The hours could not be recorded.')
 			} finally {
@@ -1059,24 +1078,15 @@ export default {
 			if (this.formComplete === false || this.saving === true) {
 				return
 			}
-			this.saving = true
-			this.error = ''
-			try {
-				await bookHours({
-					domainObjectType: this.domainObjectType,
-					domainObjectRef: this.objectId,
-					date: this.form.date,
-					hours: Number(this.form.hours),
-					description: this.form.description,
-				})
+			await this.bookOnObject({
+				date: this.form.date,
+				hours: Number(this.form.hours),
+				description: this.form.description,
+			}, async () => {
 				this.form = { ...this.form, hours: '', description: '' }
 				await this.load()
 				await this.loadEstimate()
-			} catch (e) {
-				this.error = e?.response?.data?.message || e?.response?.data?.error || t('humaniq', 'The hours could not be recorded.')
-			} finally {
-				this.saving = false
-			}
+			})
 		},
 
 		/**
@@ -1654,9 +1664,9 @@ export default {
 	}
 }
 
-/* The same shape as the named Actions trigger on every other card: a
-   clickable-area-high pill, no border, icon then label, filled on hover. */
-.hq-hours__action {
+/* The light-filled pill the Actions trigger and the timer button share. */
+.hq-hours__action,
+.hq-hours__timer {
 	align-items: center;
 	background: var(--color-primary-element-light, var(--color-background-dark));
 	border: none;
@@ -1664,6 +1674,11 @@ export default {
 	color: var(--color-primary-element-light-text, var(--color-main-text));
 	cursor: pointer;
 	display: flex;
+}
+
+/* The same shape as the named Actions trigger on every other card: a
+   clickable-area-high pill, no border, icon then label, filled on hover. */
+.hq-hours__action {
 	font: inherit;
 	gap: 4px;
 	height: var(--default-clickable-area, 34px);
@@ -1680,13 +1695,6 @@ export default {
 /* The same pill as the Actions trigger beside it, icon only. It was the one
    round, outlined button in a header row of light-filled pills. */
 .hq-hours__timer {
-	align-items: center;
-	background: var(--color-primary-element-light, var(--color-background-dark));
-	border: none;
-	border-radius: var(--border-radius-element, var(--border-radius-pill, 17px));
-	color: var(--color-primary-element-light-text, var(--color-main-text));
-	cursor: pointer;
-	display: flex;
 	flex: 0 0 auto;
 	height: var(--default-clickable-area, 34px);
 	justify-content: center;

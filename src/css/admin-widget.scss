@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: EUPL-1.2
+// Shared looks of the admin and HR widgets: the intro line, the form row,
+// the data table and the label/value list.
+
+// The padded widget body with its intro line under `&__intro`.
+@mixin panel {
+	padding: 20px;
+
+	&__intro {
+		color: var(--color-text-maxcontrast);
+		margin-bottom: 16px;
+		max-width: 720px;
+	}
+}
+
+@mixin form-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 12px;
+	margin-bottom: 24px;
+}
+
+@mixin data-table {
+	border-collapse: collapse;
+	width: 100%;
+
+	th,
+	td {
+		border-bottom: 1px solid var(--color-border);
+		padding: 8px;
+		text-align: start;
+	}
+
+	th {
+		color: var(--color-text-maxcontrast);
+		font-weight: normal;
+	}
+}
+
+@mixin label-list {
+	display: grid;
+	gap: 8px 24px;
+
+	dt {
+		color: var(--color-text-maxcontrast);
+	}
+
+	dd {
+		margin: 0;
+	}
+}
