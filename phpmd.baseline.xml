@@ -92,9 +92,6 @@
   <violation rule="PHPMD\Rule\Design\TooManyMethods" file="lib/Service/PayrollRunService.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/PayrollRunService.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Service/PayrollRunService.php"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/PayrollRunService.php" method="generate"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/PayrollRunService.php" method="generate"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/PayrollRunService.php" method="generate"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/PayrollRunService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/PayrollRunService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/PayrollRunService.php"/>
