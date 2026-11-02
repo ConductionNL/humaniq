@@ -109,10 +109,12 @@ export default {
 
 				const window = defaultWindow()
 				this.entries = await readAgenda(this.subjectType, this.subjectId, window.from, window.to)
-			} catch {
+			} catch (error) {
 				// Said, not swallowed: an empty agenda and a failed read must not
-				// render as the same thing.
-				this.error = this.t('humaniq', 'The agenda could not be read.')
+				// render as the same thing, and a refusal is not a failure.
+				this.error = error?.status === 403
+					? this.t('humaniq', 'You cannot see this agenda.')
+					: this.t('humaniq', 'The agenda could not be read.')
 				this.entries = []
 			} finally {
 				this.loading = false
