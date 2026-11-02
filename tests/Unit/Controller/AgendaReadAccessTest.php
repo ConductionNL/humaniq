@@ -9,8 +9,9 @@
  * that ran for somebody else, or for a name taken from the request, fails here.
  *
  * The organisation: Anna and Bram work in unit Zorg, managed by Mila. Carl
- * works in unit Facilitair. Hanna is HR. Eva left Zorg in 2021. `admin` is a
- * Nextcloud administrator.
+ * works in unit Facilitair. Hanna is HR. Eva left Zorg in 2021, and a shift of
+ * hers was left on the roster. Dora works in Zorg without a Nextcloud account.
+ * `admin` is a Nextcloud administrator.
  *
  * @category Test
  * @package  OCA\Humaniq\Tests\Unit\Controller
@@ -78,6 +79,7 @@ class AgendaReadAccessTest extends TestCase {
 				['id' => 'emp-carl', 'nextcloudUserId' => 'carl'],
 				['id' => 'emp-hanna', 'nextcloudUserId' => 'hanna'],
 				['id' => 'emp-eva', 'nextcloudUserId' => 'eva'],
+				['id' => 'emp-dora', 'nextcloudUserId' => ''],
 			],
 			'OrgUnit' => [
 				['id' => 'unit-zorg', 'managerId' => 'emp-mila'],
@@ -89,10 +91,12 @@ class AgendaReadAccessTest extends TestCase {
 				['id' => 'oa-3', 'employeeId' => 'emp-carl', 'orgUnitId' => 'unit-fac'] + $placed,
 				['id' => 'oa-4', 'employeeId' => 'emp-hanna', 'orgUnitId' => 'unit-fac'] + $placed,
 				['id' => 'oa-5', 'employeeId' => 'emp-eva', 'orgUnitId' => 'unit-zorg', 'startDate' => '2019-01-01', 'endDate' => '2021-01-01'],
+				['id' => 'oa-6', 'employeeId' => 'emp-dora', 'orgUnitId' => 'unit-zorg'] + $placed,
 			],
 			'RosterAssignment' => [
 				['id' => 'ra-anna', 'employeeId' => 'emp-anna', 'date' => '2026-09-01', 'shiftId' => 'shift-1'],
 				['id' => 'ra-bram', 'employeeId' => 'emp-bram', 'date' => '2026-09-02', 'shiftId' => 'shift-1'],
+				['id' => 'ra-eva', 'employeeId' => 'emp-eva', 'date' => '2026-09-03', 'shiftId' => 'shift-1'],
 			],
 			'Shift' => [['id' => 'shift-1', 'name' => 'Vroeg']],
 			'SickLeaveCase' => [
