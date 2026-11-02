@@ -31,7 +31,8 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\AbsenceRateService;
+use OCA\Humaniq\Service\AbsencePeriod;
+use OCA\Humaniq\Service\FormationAbsenceSources;
 use OCA\Humaniq\Service\FormationOccupancyService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\RbacObjectReader;
@@ -44,6 +45,8 @@ use OCP\IRequest;
 
 /**
  * Reads formation occupancy for a unit or a place.
+ *
+ * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-002
  */
 class FormationController extends Controller {
 
@@ -97,13 +100,13 @@ class FormationController extends Controller {
 		$result = $this->occupancy->occupancy(
 			places: $places,
 			contracts: $this->gateway->loadAll('EmploymentContract'),
-			leaveRequests: $this->gateway->loadAll('LeaveRequest'),
-			sickCases: $this->gateway->loadAll('SickLeaveCase'),
-			from: $window[0],
-			to: $window[1],
-			netLeaveTypes: $this->settings->getFormationNetFteLeaveTypes(),
-			longTermSickWeeks: $weeks,
-			fullTimeHoursWeek: AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK
+			absences: new FormationAbsenceSources(
+				leaveRequests: $this->gateway->loadAll('LeaveRequest'),
+				sickCases: $this->gateway->loadAll('SickLeaveCase'),
+				netLeaveTypes: $this->settings->getFormationNetFteLeaveTypes(),
+				longTermSickWeeks: $weeks
+			),
+			period: new AbsencePeriod(start: $window[0], end: $window[1])
 		);
 
 		return new JSONResponse(

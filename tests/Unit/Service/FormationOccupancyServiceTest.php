@@ -29,7 +29,9 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use OCA\Humaniq\Controller\FormationController;
+use OCA\Humaniq\Service\AbsencePeriod;
 use OCA\Humaniq\Service\AbsenceProgression;
+use OCA\Humaniq\Service\FormationAbsenceSources;
 use OCA\Humaniq\Service\FormationOccupancyService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\RbacObjectReader;
@@ -271,13 +273,8 @@ class FormationOccupancyServiceTest extends TestCase {
 		return (new FormationOccupancyService(new AbsenceProgression()))->occupancy(
 			places: $places,
 			contracts: $contracts,
-			leaveRequests: $leave,
-			sickCases: $sick,
-			from: new DateTimeImmutable(self::MONDAY),
-			to: new DateTimeImmutable(self::FRIDAY),
-			netLeaveTypes: ['parental', 'zwangerschap'],
-			longTermSickWeeks: 6,
-			fullTimeHoursWeek: 40.0
+			absences: new FormationAbsenceSources(leaveRequests: $leave, sickCases: $sick, netLeaveTypes: ['parental', 'zwangerschap'], longTermSickWeeks: 6),
+			period: new AbsencePeriod(new DateTimeImmutable(self::MONDAY), new DateTimeImmutable(self::FRIDAY), 40.0)
 		);
 
 	}//end tally()
