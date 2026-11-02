@@ -30,6 +30,8 @@ approved.
   and a new claim always starts without `approvedBy`, `approvedAt`, `payrollRunId` and
   `paidInPeriod`, whatever the create sends. OpenRegister does not run the lifecycle on a
   create, so without this a claim could be created as approved and be paid.
+- humaniq's own register and demo imports count as humaniq's own writes here: they run as a
+  shipped import, so the example claims shipped as approved or reimbursed still import.
 - The expense category setting is hardened:
   - a save without the list of categories, or with something that is not a list of names,
     is refused with a 400 response and changes nothing;

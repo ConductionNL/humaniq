@@ -22,7 +22,8 @@ closed: a route that was wrong is not corrected by an edit.
 A claim created by any write other than humaniq's own SHALL start with status `draft` or
 `submitted`; a create with any other status SHALL be refused with a message. Such a create
 SHALL save `approvedBy`, `approvedAt`, `payrollRunId` and `paidInPeriod` empty, whatever it
-sends.
+sends. humaniq's own register and demo imports are humaniq's own writes for this rule,
+so the example claims it ships in a decided status still import.
 
 #### Scenario: An edit of an approved claim cannot change what is paid
 
