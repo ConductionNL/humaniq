@@ -44,12 +44,12 @@ class VacancyMatchService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Reads the register.
+	 * @param RecordStoreInterface $gateway Reads the register.
 	 *
 	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 	) {
 	}//end __construct()
 

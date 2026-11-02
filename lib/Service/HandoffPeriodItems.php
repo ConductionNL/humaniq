@@ -53,10 +53,10 @@ class HandoffPeriodItems {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway The register plumbing.
+	 * @param RecordStoreInterface $gateway The register plumbing.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 	) {
 
 	}//end __construct()

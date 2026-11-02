@@ -49,11 +49,11 @@ class TrainingCompetenceWriter {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Reads and writes humaniq's register.
+	 * @param RecordStoreInterface $gateway Reads and writes humaniq's register.
 	 * @param ITimeFactory         $time    Today, when no date was given.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly ITimeFactory $time,
 	) {
 

@@ -45,7 +45,7 @@ namespace OCA\Humaniq\Controller;
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\DepartmentLeaveScheduleService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\LeaveCoverageService;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\RbacObjectReader;
@@ -65,7 +65,7 @@ class LeaveScheduleController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param HoursRegisterGateway $gateway The shared register plumbing.
+	 * @param RecordStoreInterface $gateway The shared register plumbing.
 	 * @param DepartmentLeaveScheduleService $schedule Composes the schedule on read.
 	 * @param LeaveCoverageService $coverage Computes the coverage warning.
 	 * @param OrgResolutionService $orgResolution The shared org-chain rules (assignment validity).
@@ -73,7 +73,7 @@ class LeaveScheduleController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly DepartmentLeaveScheduleService $schedule,
 		private readonly LeaveCoverageService $coverage,
 		private readonly OrgResolutionService $orgResolution,

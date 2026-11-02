@@ -33,7 +33,7 @@ use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\AbsenceRateService;
 use OCA\Humaniq\Service\EmployeeHistoryService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -48,13 +48,13 @@ class EmployeeHistoryController extends Controller {
 
 	/**
 	 * @param IRequest               $request The request.
-	 * @param HoursRegisterGateway   $gateway Loads the employee's rows per schema.
+	 * @param RecordStoreInterface   $gateway Loads the employee's rows per schema.
 	 * @param EmployeeHistoryService $history Maps and orders the rows.
 	 * @param RbacObjectReader       $rbac    Reads under the caller's own RBAC.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly EmployeeHistoryService $history,
 		private readonly RbacObjectReader $rbac,
 	) {

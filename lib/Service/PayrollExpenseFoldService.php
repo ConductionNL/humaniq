@@ -56,14 +56,14 @@ class PayrollExpenseFoldService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway  Reads the rows and writes the stamps.
+	 * @param RecordStoreInterface $gateway  Reads the rows and writes the stamps.
 	 * @param InternalWriteMarker  $marker   Marks the stamps as humaniq's own writes.
 	 * @param AllowanceSplitter    $splitter The taxed and untaxed split.
 	 *
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly InternalWriteMarker $marker,
 		private readonly AllowanceSplitter $splitter = new AllowanceSplitter(),
 	) {

@@ -63,13 +63,13 @@ class AwfReviewService {
 	public const CORRECTION_TYPE = 'awf-herziening';
 
 	/**
-	 * @param HoursRegisterGateway $gateway    The register plumbing.
+	 * @param RecordStoreInterface $gateway    The register plumbing.
 	 * @param PayrollCalculator    $calculator The engine that recomputes a payslip.
 	 * @param LoggerInterface      $logger     The logger.
 	 * @param PackRepository       $packs      The jurisdiction-pack resolver.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly PayrollCalculator $calculator,
 		private readonly LoggerInterface $logger,
 		private readonly PackRepository $packs=new PackRepository(),

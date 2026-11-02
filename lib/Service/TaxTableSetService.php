@@ -48,10 +48,10 @@ class TaxTableSetService implements TaxTableSourceInterface {
 	public const SCHEMA = 'TaxTableSet';
 
 	/**
-	 * @param HoursRegisterGateway $gateway The humaniq register gateway.
+	 * @param RecordStoreInterface $gateway The humaniq register gateway.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 	) {
 
 	}//end __construct()

@@ -50,13 +50,13 @@ class ThirdPartyStatementService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway   The register plumbing.
+	 * @param RecordStoreInterface $gateway   The register plumbing.
 	 * @param ContainerInterface   $container Resolves filinq and OpenRegister's FileService.
 	 * @param SettingsService      $settings  The register slug.
 	 * @param LoggerInterface      $logger    The logger.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settings,
 		private readonly LoggerInterface $logger,

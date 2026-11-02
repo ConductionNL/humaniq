@@ -48,13 +48,13 @@ class CompCycleApprover {
 	private const TRANSITION_ENGINE = 'OCA\OpenRegister\Service\Lifecycle\TransitionEngine';
 
 	/**
-	 * @param HoursRegisterGateway $gateway Reads the cycle's adjustments.
+	 * @param RecordStoreInterface $gateway Reads the cycle's adjustments.
 	 * @param ContainerInterface $container Resolves OpenRegister's TransitionEngine.
 	 * @param SettingsService $settingsService OpenRegister availability.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,

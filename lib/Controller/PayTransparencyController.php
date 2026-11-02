@@ -33,7 +33,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\AnalyticsAccess;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\PayTransparencyService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
@@ -57,7 +57,7 @@ class PayTransparencyController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest               $request  The request.
-	 * @param HoursRegisterGateway   $gateway  Reads the register's rows.
+	 * @param RecordStoreInterface   $gateway  Reads the register's rows.
 	 * @param PayTransparencyService $service  Computes the indicators.
 	 * @param AnalyticsAccess        $access   HR and accountants of the active administration.
 	 * @param SettingsService        $settings The group threshold.
@@ -67,7 +67,7 @@ class PayTransparencyController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly PayTransparencyService $service,
 		private readonly AnalyticsAccess $access,
 		private readonly SettingsService $settings,
