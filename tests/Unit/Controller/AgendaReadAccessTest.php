@@ -11,7 +11,11 @@
  * The organisation: Anna and Bram work in unit Zorg, managed by Mila. Carl
  * works in unit Facilitair. Hanna is HR. Eva left Zorg in 2021, and a shift of
  * hers was left on the roster. Dora works in Zorg without a Nextcloud account.
- * `admin` is a Nextcloud administrator.
+ * `admin` is a Nextcloud administrator. Zorg sits under unit Organisatie,
+ * managed by Olga. Dirk stands in for Mila today; Evert's stand-in ended last
+ * year. Gina and Anna also have a placement in a unit nobody registered.
+ * Ursula's and Vince's Zorg placements carry a date nobody can read. A
+ * placement in Zorg names an employee who does not exist.
  *
  * @category Test
  * @package  OCA\Humaniq\Tests\Unit\Controller
@@ -39,7 +43,9 @@ use OCA\Humaniq\Service\AvailabilityService;
 use OCA\Humaniq\Service\ForwardCapacityService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\ManagerDeputies;
 use OCA\Humaniq\Service\OrgResolutionService;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\WorkingCalendarReader;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -80,9 +86,16 @@ class AgendaReadAccessTest extends TestCase {
 				['id' => 'emp-hanna', 'nextcloudUserId' => 'hanna'],
 				['id' => 'emp-eva', 'nextcloudUserId' => 'eva'],
 				['id' => 'emp-dora', 'nextcloudUserId' => ''],
+				['id' => 'emp-olga', 'nextcloudUserId' => 'olga'],
+				['id' => 'emp-dirk', 'nextcloudUserId' => 'dirk'],
+				['id' => 'emp-evert', 'nextcloudUserId' => 'evert'],
+				['id' => 'emp-gina', 'nextcloudUserId' => 'gina'],
+				['id' => 'emp-ursula', 'nextcloudUserId' => 'ursula'],
+				['id' => 'emp-vince', 'nextcloudUserId' => 'vince'],
 			],
 			'OrgUnit' => [
-				['id' => 'unit-zorg', 'managerId' => 'emp-mila'],
+				['id' => 'unit-org', 'managerId' => 'emp-olga'],
+				['id' => 'unit-zorg', 'managerId' => 'emp-mila', 'parentUnitId' => 'unit-org'],
 				['id' => 'unit-fac', 'managerId' => 'emp-hanna'],
 			],
 			'OrgAssignment' => [
@@ -92,6 +105,18 @@ class AgendaReadAccessTest extends TestCase {
 				['id' => 'oa-4', 'employeeId' => 'emp-hanna', 'orgUnitId' => 'unit-fac'] + $placed,
 				['id' => 'oa-5', 'employeeId' => 'emp-eva', 'orgUnitId' => 'unit-zorg', 'startDate' => '2019-01-01', 'endDate' => '2021-01-01'],
 				['id' => 'oa-6', 'employeeId' => 'emp-dora', 'orgUnitId' => 'unit-zorg'] + $placed,
+				['id' => 'oa-7', 'employeeId' => 'emp-olga', 'orgUnitId' => 'unit-org'] + $placed,
+				['id' => 'oa-8', 'employeeId' => 'emp-dirk', 'orgUnitId' => 'unit-fac'] + $placed,
+				['id' => 'oa-9', 'employeeId' => 'emp-evert', 'orgUnitId' => 'unit-fac'] + $placed,
+				['id' => 'oa-10', 'employeeId' => 'emp-gina', 'orgUnitId' => 'unit-ghost'] + $placed,
+				['id' => 'oa-11', 'employeeId' => 'emp-anna', 'orgUnitId' => 'unit-ghost'] + $placed,
+				['id' => 'oa-12', 'employeeId' => 'emp-ursula', 'orgUnitId' => 'unit-zorg', 'startDate' => 'sinds kort'],
+				['id' => 'oa-13', 'employeeId' => 'emp-vince', 'orgUnitId' => 'unit-zorg', 'startDate' => '2020-01-01', 'endDate' => 'tot nader order'],
+				['id' => 'oa-14', 'employeeId' => 'emp-nobody', 'orgUnitId' => 'unit-zorg'] + $placed,
+			],
+			'ManagerDeputy' => [
+				['id' => 'dep-1', 'managerUserId' => 'mila', 'deputyUserId' => 'dirk', 'from' => date('Y-m-d', strtotime('-1 day')), 'until' => date('Y-m-d', strtotime('+1 day'))],
+				['id' => 'dep-2', 'managerUserId' => 'mila', 'deputyUserId' => 'evert', 'from' => date('Y-m-d', strtotime('-400 days')), 'until' => date('Y-m-d', strtotime('-300 days'))],
 			],
 			'RosterAssignment' => [
 				['id' => 'ra-anna', 'employeeId' => 'emp-anna', 'date' => '2026-09-01', 'shiftId' => 'shift-1'],
@@ -162,32 +187,51 @@ class AgendaReadAccessTest extends TestCase {
 		$calendar = $this->createMock(WorkingCalendarReader::class);
 		$calendar->method('nonWorkingDates')->willReturn(['dates' => null, 'resolved' => false, 'reason' => 'none']);
 
+		$availability = $this->createMock(AvailabilityService::class);
+		$availability->method('availability')->willReturnCallback(
+			static fn (array $employeeIds): array => array_map(static fn (string $id): array => ['employeeId' => $id], $employeeIds)
+		);
+		$capacity = $this->createMock(ForwardCapacityService::class);
+		$capacity->method('capacity')->willReturnCallback(static fn (array $employeeIds): array => ['employeeIds' => $employeeIds]);
+
+		$roles = new HumaniqRoles($this->groupManager());
 		$factories = [
 			IRequest::class => static fn (): IRequest => $request,
+			IUserSession::class => fn (): IUserSession => $this->session($uid),
 			HoursRegisterGateway::class => static fn (): HoursRegisterGateway => $gateway,
+			RecordStoreInterface::class => static fn (): HoursRegisterGateway => $gateway,
 			AgendaComposer::class => static fn (): AgendaComposer => new AgendaComposer(),
-			AvailabilityService::class => fn (): AvailabilityService => $this->createMock(AvailabilityService::class),
-			ForwardCapacityService::class => fn (): ForwardCapacityService => $this->createMock(ForwardCapacityService::class),
+			AvailabilityService::class => static fn (): AvailabilityService => $availability,
+			ForwardCapacityService::class => static fn (): ForwardCapacityService => $capacity,
 			OrgResolutionService::class => static fn (): OrgResolutionService => new OrgResolutionService(),
 			WorkingCalendarReader::class => static fn (): WorkingCalendarReader => $calendar,
-			AgendaReadAccess::class => fn (): object => new AgendaReadAccess(
-				$this->session($uid),
-				$gateway,
-				new OrgResolutionService(),
-				new HumaniqRoles($this->groupManager())
-			),
+			HumaniqRoles::class => static fn (): HumaniqRoles => $roles,
+			ManagerDeputies::class => static fn (): ManagerDeputies => new ManagerDeputies($gateway, $roles),
 		];
+		$factories[AgendaReadAccess::class] = fn (): object => $this->build(AgendaReadAccess::class, $factories);
 
+		return $this->build(AgendaController::class, $factories);
+	}//end controller()
+
+	/**
+	 * Construct a class with a double per constructor parameter type.
+	 *
+	 * @param class-string                    $class     The class.
+	 * @param array<string, callable():mixed> $factories A double per type.
+	 *
+	 * @return object
+	 */
+	private function build(string $class, array $factories): object {
 		$arguments = [];
-		foreach ((new ReflectionClass(AgendaController::class))->getConstructor()->getParameters() as $parameter) {
+		foreach ((new ReflectionClass($class))->getConstructor()->getParameters() as $parameter) {
 			$type = $parameter->getType();
 			$this->assertInstanceOf(ReflectionNamedType::class, $type);
 			$this->assertArrayHasKey($type->getName(), $factories, 'no double for ' . $type->getName());
 			$arguments[] = $factories[$type->getName()]();
 		}
 
-		return new AgendaController(...$arguments);
-	}//end controller()
+		return new $class(...$arguments);
+	}//end build()
 
 	/**
 	 * A session holding one user, or nobody.
@@ -570,5 +614,274 @@ class AgendaReadAccessTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}//end testABadRequestIsStillABadRequest()
+
+	/**
+	 * Read availability or capacity for the first week of September 2026.
+	 *
+	 * @param string|null $viewer    The acting user.
+	 * @param string      $endpoint  `availability` or `capacity`.
+	 * @param string      $orgUnitId The unit, or '' for no unit.
+	 *
+	 * @return JSONResponse
+	 */
+	private function hours(?string $viewer, string $endpoint, string $orgUnitId): JSONResponse {
+		return $this->controller($viewer, ['userId' => 'hanna', 'role' => 'hr'])->{$endpoint}(
+			from: '2026-09-01',
+			to: '2026-09-07',
+			orgUnitId: $orgUnitId
+		);
+	}//end hours()
+
+	/**
+	 * The employee ids an availability or capacity answer covers, sorted.
+	 *
+	 * @param JSONResponse $response The answer.
+	 *
+	 * @return list<string>
+	 */
+	private function covered(JSONResponse $response): array {
+		$data = $response->getData();
+		$ids = ($data['employeeIds'] ?? array_column(($data['employees'] ?? []), 'employeeId'));
+		sort($ids);
+
+		return $ids;
+	}//end covered()
+
+	/**
+	 * Assert a refused hours read, and that no planned item was read for it.
+	 *
+	 * @param JSONResponse $response The answer.
+	 *
+	 * @return void
+	 */
+	private function assertHoursRefused(JSONResponse $response): void {
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertSame(['error'], array_keys($response->getData()));
+		$this->assertStringStartsWith('Je kunt deze uren niet opvragen.', $response->getData()['error']);
+		foreach (['Interview', 'Secondment', 'SickLeaveCase', 'RosterAssignment', 'ResourceBooking'] as $schema) {
+			$this->assertNotContains($schema, $this->loaded, $schema . ' was read for a refused hours read');
+		}
+	}//end assertHoursRefused()
+
+	/**
+	 * Data provider: who may open the Zorg agenda and its hours besides its
+	 * members and HR: the manager, the manager of the unit above it, and the
+	 * manager's deputy of today.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function unitManagersAndDeputies(): array {
+		return [
+			'the unit manager' => ['mila'],
+			'the manager of the unit above' => ['olga'],
+			'the manager\'s deputy today' => ['dirk'],
+		];
+	}//end unitManagersAndDeputies()
+
+	/**
+	 * A parent-unit manager and a deputy see the whole unit agenda.
+	 *
+	 * @param string $viewer The acting user.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider unitManagersAndDeputies
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testParentManagersAndDeputiesSeeTheWholeUnitAgenda(string $viewer): void {
+		$response = $this->read($viewer, 'orgUnit', 'unit-zorg');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertContains('interview:emp-anna', $this->kinds($response));
+		$this->assertSame(['emp-anna' => 16.0, 'emp-bram' => 8.0], $this->secondmentHours($response));
+	}//end testParentManagersAndDeputiesSeeTheWholeUnitAgenda()
+
+	/**
+	 * A deputy whose stand-in has ended is refused the unit agenda.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAnEndedDeputyIsRefusedTheUnitAgenda(): void {
+		$this->assertRefused($this->read('evert', 'orgUnit', 'unit-zorg'));
+	}//end testAnEndedDeputyIsRefusedTheUnitAgenda()
+
+	/**
+	 * A parent-unit manager and a deputy open the unit, not a person: an
+	 * employee's agenda stays with the employee's own managers.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testParentManagersAndDeputiesDoNotOpenAnEmployeeAgenda(): void {
+		$this->assertRefused($this->read('olga', 'employee', 'emp-anna'));
+		$this->assertRefused($this->read('dirk', 'employee', 'emp-anna'));
+	}//end testParentManagersAndDeputiesDoNotOpenAnEmployeeAgenda()
+
+	/**
+	 * A subject without an Employee record is refused, even when a placement
+	 * puts it in the viewer's unit.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testASubjectWithoutAnEmployeeRecordIsRefused(): void {
+		$this->assertRefused($this->read('bram', 'employee', 'emp-nobody'));
+	}//end testASubjectWithoutAnEmployeeRecordIsRefused()
+
+	/**
+	 * A placement in a unit nobody registered makes nobody a colleague, and
+	 * that unit's agenda opens for nobody but HR.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAPlacementInAnUnregisteredUnitOpensNothing(): void {
+		$this->assertRefused($this->read('gina', 'employee', 'emp-anna'));
+		$this->assertRefused($this->read('gina', 'orgUnit', 'unit-ghost'));
+		$this->assertRefused($this->read('anna', 'orgUnit', 'unit-ghost'));
+	}//end testAPlacementInAnUnregisteredUnitOpensNothing()
+
+	/**
+	 * A placement whose start or end date cannot be read does not count.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAPlacementWithAnUnreadableDateDoesNotCount(): void {
+		$this->assertRefused($this->read('ursula', 'employee', 'emp-anna'));
+		$this->assertRefused($this->read('vince', 'employee', 'emp-anna'));
+		$this->assertRefused($this->read('ursula', 'orgUnit', 'unit-zorg'));
+		$this->assertRefused($this->read('bram', 'employee', 'emp-vince'));
+	}//end testAPlacementWithAnUnreadableDateDoesNotCount()
+
+	/**
+	 * A refused resource agenda says why, like the other refusals.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testARefusedResourceAgendaSaysWhy(): void {
+		$this->assertRefused($this->read(null, 'resource', 'room-1'));
+	}//end testARefusedResourceAgendaSaysWhy()
+
+	/**
+	 * Data provider: the endpoints that answer hours.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function hourEndpoints(): array {
+		return [
+			'availability' => ['availability'],
+			'capacity' => ['capacity'],
+		];
+	}//end hourEndpoints()
+
+	/**
+	 * A unit's hours open for its members, its managers, the managers above it,
+	 * a deputy and HR, and cover the unit's members.
+	 *
+	 * @param string $endpoint The endpoint.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider hourEndpoints
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAUnitsHoursOpenForWhoMayReadItsAgenda(string $endpoint): void {
+		foreach (['bram', 'mila', 'olga', 'dirk', 'hanna', 'admin'] as $viewer) {
+			$response = $this->hours($viewer, $endpoint, 'unit-zorg');
+
+			$this->assertSame(Http::STATUS_OK, $response->getStatus(), $viewer);
+			$this->assertContains('emp-anna', $this->covered($response), $viewer);
+			$this->assertContains('emp-bram', $this->covered($response), $viewer);
+		}
+	}//end testAUnitsHoursOpenForWhoMayReadItsAgenda()
+
+	/**
+	 * Anyone else is refused a unit's hours before anything is read, whatever
+	 * the request claims.
+	 *
+	 * @param string $endpoint The endpoint.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider hourEndpoints
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAnyoneElseIsRefusedAUnitsHours(string $endpoint): void {
+		foreach (['carl', 'eva', 'evert', 'gina', 'ursula', 'stranger', null] as $viewer) {
+			$this->loaded = [];
+			$this->assertHoursRefused($this->hours($viewer, $endpoint, 'unit-zorg'));
+		}
+
+		$this->loaded = [];
+		$this->assertHoursRefused($this->hours('gina', $endpoint, 'unit-ghost'));
+	}//end testAnyoneElseIsRefusedAUnitsHours()
+
+	/**
+	 * Without a unit, HR gets every employee.
+	 *
+	 * @param string $endpoint The endpoint.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider hourEndpoints
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testWithoutAUnitHrGetsEveryEmployee(string $endpoint): void {
+		$response = $this->hours('hanna', $endpoint, '');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(
+			['emp-anna', 'emp-bram', 'emp-carl', 'emp-dirk', 'emp-dora', 'emp-eva', 'emp-evert', 'emp-gina', 'emp-hanna', 'emp-mila', 'emp-olga', 'emp-ursula', 'emp-vince'],
+			$this->covered($response)
+		);
+	}//end testWithoutAUnitHrGetsEveryEmployee()
+
+	/**
+	 * Without a unit, anyone else gets only the people whose agenda they may
+	 * read: themself, the people they manage and their colleagues.
+	 *
+	 * @param string $endpoint The endpoint.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider hourEndpoints
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testWithoutAUnitOthersGetOnlyWhoTheyMaySee(string $endpoint): void {
+		$this->assertSame(['emp-anna', 'emp-bram', 'emp-dora'], $this->covered($this->hours('bram', $endpoint, '')));
+		$this->assertSame(['emp-carl', 'emp-dirk', 'emp-evert', 'emp-hanna'], $this->covered($this->hours('carl', $endpoint, '')));
+		$this->assertSame(['emp-gina'], $this->covered($this->hours('gina', $endpoint, '')));
+	}//end testWithoutAUnitOthersGetOnlyWhoTheyMaySee()
+
+	/**
+	 * Without a unit, a user who may read nobody's agenda is refused.
+	 *
+	 * @param string $endpoint The endpoint.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider hourEndpoints
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testWithoutAUnitSomeoneWhoMaySeeNobodyIsRefused(string $endpoint): void {
+		$this->assertHoursRefused($this->hours('stranger', $endpoint, ''));
+		$this->loaded = [];
+		$this->assertHoursRefused($this->hours(null, $endpoint, ''));
+	}//end testWithoutAUnitSomeoneWhoMaySeeNobodyIsRefused()
 
 }//end class
