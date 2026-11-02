@@ -315,12 +315,13 @@
                 "currency": "EUR",
                 "category": "travel",
                 "expenseDate": "2026-05-20",
-                "status": "approved",
+                "status": "reimbursed",
                 "submittedAt": "2026-05-20T18:00:00Z",
                 "approvedBy": "manager-pietersen",
                 "approvedAt": "2026-05-21T09:15:00Z",
                 "administrationId": "ADM-001",
-                "reimbursementRoute": "payroll"
+                "reimbursementRoute": "direct",
+                "reimbursedAt": "2026-05-26T10:00:00Z"
             },
             {
                 "@self": {

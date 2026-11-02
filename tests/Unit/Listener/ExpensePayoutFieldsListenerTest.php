@@ -355,4 +355,26 @@ class ExpensePayoutFieldsListenerTest extends TestCase {
 		self::assertFalse($this->reopenRefused($paid, array_merge($paid, ['status' => 'submitted'])));
 	}//end testAReopenThatTheGuardShouldHaveRefusedIsStopped()
 
+	/**
+	 * A shipped import only lifts the create check: an update during it
+	 * still keeps the stored payout fields of a decided claim.
+	 *
+	 * @return void
+	 */
+	public function testAnUpdateDuringAShippedImportKeepsWhatIsPaid(): void {
+		$stored = array_merge(self::APPROVED, ['payrollRunId' => 'run-1', 'paidInPeriod' => '2026-10']);
+		$event = new ObjectUpdatingEvent($this->entity('Expense', array_merge($stored, self::FORGED)), $this->entity('Expense', $stored));
+		$this->marker->runShippedImport(fn () => $this->listener()->handle($event));
+
+		self::assertFalse($event->isPropagationStopped());
+		self::assertSame(
+			[
+				'payrollRunId' => 'run-1', 'paidInPeriod' => '2026-10',
+				'amount' => 34.5, 'taxFreeAmount' => 34.5, 'taxableAmount' => 0.0, 'currency' => 'EUR',
+				'approvedBy' => 'sanne', 'approvedAt' => '2026-10-01T09:00:00Z', 'reimbursementRoute' => 'payroll',
+			],
+			$event->getModifiedData()
+		);
+	}//end testAnUpdateDuringAShippedImportKeepsWhatIsPaid()
+
 }//end class
