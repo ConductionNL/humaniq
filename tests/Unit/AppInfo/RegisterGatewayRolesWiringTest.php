@@ -23,11 +23,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\AppInfo;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Command\RulesAuditCommand;
+use OCA\Humaniq\Command\RulesSeedTestDataCommand;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionMethod;
 
@@ -57,6 +60,29 @@ class RegisterGatewayRolesWiringTest extends TestCase {
 		self::assertSame(HoursRegisterGateway::class, ($aliases[RecordStoreInterface::class] ?? null));
 		self::assertSame(HoursRegisterGateway::class, ($aliases[OrgLookupInterface::class] ?? null));
 	}//end testBothRolesAreAliasesOfTheGateway()
+
+	/**
+	 * The two rules commands are built from their services.
+	 *
+	 * @return void
+	 */
+	public function testTheRulesCommandsAreBuiltFromTheirServices(): void {
+		$factories = [];
+		$context = $this->createMock(IRegistrationContext::class);
+		$context->method('registerService')->willReturnCallback(
+			static function (string $name, callable $factory) use (&$factories): void {
+				$factories[$name] = $factory;
+			}
+		);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnCallback(fn (string $id): object => $this->createMock($id));
+
+		$app = (new ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+		$app->register($context);
+
+		self::assertInstanceOf(RulesAuditCommand::class, $factories[RulesAuditCommand::class]($container));
+		self::assertInstanceOf(RulesSeedTestDataCommand::class, $factories[RulesSeedTestDataCommand::class]($container));
+	}//end testTheRulesCommandsAreBuiltFromTheirServices()
 
 	/**
 	 * Every public method of the gateway belongs to exactly one role.
