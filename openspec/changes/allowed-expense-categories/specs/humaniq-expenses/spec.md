@@ -16,9 +16,13 @@ that is off, and when it is submitted. It SHALL NOT refuse the approve, reject o
 a claim that was already submitted, or any other edit of an existing claim that keeps its
 category. humaniq's own writes SHALL NOT be refused.
 
+A category SHALL count as allowed only when it is one of the seven names, compared without case
+or surrounding spaces, and is on. A claim without a category is not refused by this setting.
+
 `GET /api/expense-categories` SHALL list every category and whether it is on, for any signed-in
 user. `PUT /api/expense-categories` SHALL save the list of categories that are on. Only an admin
-may save, and an unknown category SHALL be refused with a 400 response.
+may save. A save without the list, with something that is not a list of names, with an unknown
+category, or with no category on SHALL be refused with a 400 response and SHALL change nothing.
 
 #### Scenario: Every category is on by default
 
@@ -48,3 +52,9 @@ may save, and an unknown category SHALL be refused with a 400 response.
 - **WHEN** an admin saves meals and training as off
 - **THEN** reading the categories shows meals and training off and the rest on
 - **AND** saving an unknown category is refused with a 400 response
+
+#### Scenario: A save that would switch everything off is refused
+
+@e2e exclude Endpoint validation; covered by ExpenseCategoryControllerTest::testASaveWithoutAListIsRefused and ExpenseCategoryPolicyTest::testAtLeastOneCategoryStaysOn
+- **WHEN** an admin saves without the list of categories, or with an empty list
+- **THEN** the save is refused with a 400 response and every category keeps its switch

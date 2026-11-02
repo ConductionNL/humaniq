@@ -80,8 +80,8 @@ class ExpenseCategoryPolicy {
 	}//end categories()
 
 	/**
-	 * Whether a claim in this category may be made. Only a category an admin
-	 * switched off is refused; an empty or unknown one is the schema's to judge.
+	 * Whether a claim in this category may be made: one of the seven names,
+	 * compared without case or surrounding spaces, and switched on.
 	 *
 	 * @param string $category The claim's category.
 	 *
@@ -90,27 +90,35 @@ class ExpenseCategoryPolicy {
 	 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
 	 */
 	public function isAllowed(string $category): bool {
-		return in_array(trim($category), $this->disabled(), true) === false;
+		$name = self::normalise(name: $category);
+
+		return in_array($name, self::CATEGORIES, true) === true && in_array($name, $this->disabled(), true) === false;
 	}//end isAllowed()
 
 	/**
 	 * Save which categories are on; every other category is switched off.
+	 * At least one must stay on.
 	 *
 	 * @param list<string> $allowed The categories that are on.
 	 *
 	 * @return void
 	 *
-	 * @throws InvalidArgumentException When a category is unknown.
+	 * @throws InvalidArgumentException When a category is unknown, or none is on.
 	 *
 	 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
 	 */
 	public function saveAllowed(array $allowed): void {
-		$unknown = array_diff($allowed, self::CATEGORIES);
+		$names = array_map(static fn (string $name): string => self::normalise(name: $name), $allowed);
+		$unknown = array_diff($names, self::CATEGORIES);
 		if ($unknown !== []) {
 			throw new InvalidArgumentException('Unknown expense category: ' . implode(', ', $unknown) . '.');
 		}
 
-		$disabled = array_values(array_diff(self::CATEGORIES, $allowed));
+		if ($names === []) {
+			throw new InvalidArgumentException('Keep at least one expense category on.');
+		}
+
+		$disabled = array_values(array_diff(self::CATEGORIES, $names));
 		$this->appConfig->setValueString(Application::APP_ID, self::DISABLED_KEY, (string)json_encode($disabled));
 	}//end saveAllowed()
 
@@ -125,7 +133,18 @@ class ExpenseCategoryPolicy {
 			return [];
 		}
 
-		return array_values(array_filter($decoded, 'is_string'));
+		return array_map(static fn (string $name): string => self::normalise(name: $name), array_values(array_filter($decoded, 'is_string')));
 	}//end disabled()
+
+	/**
+	 * A category name without case or surrounding spaces.
+	 *
+	 * @param string $name The name.
+	 *
+	 * @return string
+	 */
+	private static function normalise(string $name): string {
+		return strtolower(trim($name));
+	}//end normalise()
 
 }//end class

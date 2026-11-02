@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Listener;
 
 use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
+use OCA\Humaniq\Listener\ExpensePayoutFieldsListener;
 use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\TravelAmountListener;
 use OCA\Humaniq\Service\HoursRegisterGateway;
@@ -53,6 +54,7 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Humaniq\Listener\TravelAmountListener
  * @covers \OCA\Humaniq\Listener\ApprovalDecisionStampListener
  * @covers \OCA\Humaniq\Listener\ExpenseRouteListener
+ * @covers \OCA\Humaniq\Listener\ExpensePayoutFieldsListener
  * @uses   \OCA\Humaniq\Service\HoursRegisterGateway
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\OrgResolutionService
@@ -72,7 +74,7 @@ class ExpensePreSaveChainTest extends TestCase {
 	private const CLAIM = ['employeeId' => self::EMPLOYEE, 'title' => 'Klantbezoek', 'category' => 'travel', 'travelType' => 'business', 'distanceKm' => 150, 'transportMode' => 'car', 'fuelType' => 'gasoline'];
 
 	/**
-	 * The three listeners in the order boot() subscribes them.
+	 * The listeners in the order boot() subscribes them.
 	 *
 	 * @return list<object>
 	 */
@@ -101,6 +103,7 @@ class ExpensePreSaveChainTest extends TestCase {
 			new TravelAmountListener(gateway: $gateway, calculator: new TravelAllowanceCalculator(), settings: $settings, marker: $marker, logger: new NullLogger()),
 			new ApprovalDecisionStampListener($session),
 			new ExpenseRouteListener(settings: $settings, marker: $marker),
+			new ExpensePayoutFieldsListener(gateway: $gateway, marker: $marker),
 		];
 	}//end chain()
 
@@ -176,5 +179,21 @@ class ExpensePreSaveChainTest extends TestCase {
 		self::assertSame('pjansen', $event->getModifiedData()['userId'] ?? null);
 		self::assertSame(34.5, $event->getModifiedData()['amount'] ?? null);
 	}//end testACreateKeepsEarlierStamps()
+
+	/**
+	 * An edit of an approved claim through the chain keeps what is paid and
+	 * when it was approved.
+	 *
+	 * @return void
+	 */
+	public function testAnEditOfAnApprovedClaimKeepsWhatIsPaid(): void {
+		$approved = array_merge(self::CLAIM, ['status' => 'approved', 'amount' => 34.5, 'taxFreeAmount' => 34.5, 'taxableAmount' => 0.0, 'currency' => 'EUR', 'approvedBy' => 'dirk', 'approvedAt' => '2026-10-01T09:00:00Z', 'reimbursementRoute' => 'payroll']);
+		$stamped = $this->update($approved, array_merge($approved, ['amount' => 3450.0, 'approvedAt' => '2026-11-30T09:00:00Z', 'payrollRunId' => 'run-x']));
+
+		self::assertSame(34.5, $stamped['amount'] ?? null);
+		self::assertSame('2026-10-01T09:00:00Z', $stamped['approvedAt'] ?? null);
+		self::assertArrayHasKey('payrollRunId', $stamped);
+		self::assertNull($stamped['payrollRunId']);
+	}//end testAnEditOfAnApprovedClaimKeepsWhatIsPaid()
 
 }//end class

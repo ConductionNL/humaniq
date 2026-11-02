@@ -74,20 +74,22 @@ class ExpenseCategoryController extends Controller {
 	/**
 	 * `PUT /api/expense-categories`: save which categories are on.
 	 *
-	 * @param array<int, mixed> $allowed The categories that are on.
+	 * @param mixed $allowed The categories that are on, as a list of names.
 	 *
-	 * @return JSONResponse The saved switches, or 400 for an unknown category.
+	 * @return JSONResponse The saved switches, or 400 when the list is missing,
+	 *                      not a list of names, names an unknown category or
+	 *                      switches every category off.
 	 *
 	 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
-	public function update(array $allowed = []): JSONResponse {
-		if (array_filter($allowed, 'is_string') !== $allowed) {
-			return new JSONResponse(data: ['message' => 'Send the categories as a list of names.'], statusCode: Http::STATUS_BAD_REQUEST);
+	public function update(mixed $allowed = null): JSONResponse {
+		if (is_array($allowed) === false || array_is_list($allowed) === false || array_filter($allowed, 'is_string') !== $allowed) {
+			return new JSONResponse(data: ['message' => 'Send the categories that are on as a list of names.'], statusCode: Http::STATUS_BAD_REQUEST);
 		}
 
 		try {
-			$this->policy->saveAllowed(array_values($allowed));
+			$this->policy->saveAllowed($allowed);
 		} catch (InvalidArgumentException $e) {
 			return new JSONResponse(data: ['message' => $e->getMessage()], statusCode: Http::STATUS_BAD_REQUEST);
 		}
