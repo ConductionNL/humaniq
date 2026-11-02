@@ -54,12 +54,14 @@ class SettingsService {
 	 * @param IAppManager $appManager The app manager.
 	 * @param ContainerInterface $container The DI container.
 	 * @param LoggerInterface $logger The logger.
+	 * @param InternalWriteMarker $marker Marks the register import as a shipped import.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly InternalWriteMarker $marker = new InternalWriteMarker(),
 	) {
 
 	}//end __construct()
@@ -685,11 +687,13 @@ class SettingsService {
 	 */
 	private function importRegister(array $configLoad, bool $force): array {
 		$configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
-		$result = $configurationService->importFromApp(
-			appId: Application::APP_ID,
-			data: $configLoad['data'],
-			version: $configLoad['version'],
-			force: $force
+		$result = $this->marker->runShippedImport(
+			static fn (): mixed => $configurationService->importFromApp(
+				appId: Application::APP_ID,
+				data: $configLoad['data'],
+				version: $configLoad['version'],
+				force: $force
+			)
 		);
 
 		if (empty($result) === false) {

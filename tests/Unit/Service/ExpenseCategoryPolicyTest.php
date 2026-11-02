@@ -124,23 +124,52 @@ class ExpenseCategoryPolicyTest extends TestCase {
 	}//end testAnUnknownCategoryIsRefused()
 
 	/**
-	 * A claim without a category, an unknown category and an unreadable
-	 * stored value are not refused by the setting.
+	 * Only the seven known names, without case or spaces, that are on are
+	 * allowed; an unreadable stored value switches nothing off.
 	 *
 	 * @return void
 	 */
 	public function testOnlyACategorySwitchedOffIsRefused(): void {
 		$this->config['expense_categories_disabled'] = '["meals"]';
 		$policy = $this->policy();
-		self::assertTrue($policy->isAllowed(''));
-		self::assertTrue($policy->isAllowed('yachts'));
+		self::assertFalse($policy->isAllowed(''));
+		self::assertFalse($policy->isAllowed('yachts'));
 		self::assertFalse($policy->isAllowed('meals'));
+		self::assertFalse($policy->isAllowed(' MEALS '));
+		self::assertTrue($policy->isAllowed(' Travel '));
 
 		$this->config['expense_categories_disabled'] = 'not json';
 		self::assertTrue($this->policy()->isAllowed('meals'));
 
 		$this->config['expense_categories_disabled'] = '{"a":"meals"}';
 		self::assertFalse($this->policy()->isAllowed('meals'));
+
+		$this->config['expense_categories_disabled'] = '[" Meals "]';
+		self::assertFalse($this->policy()->isAllowed('meals'));
+		self::assertSame(['id' => 'meals', 'allowed' => false], $this->policy()->categories()[2]);
 	}//end testOnlyACategorySwitchedOffIsRefused()
+
+	/**
+	 * At least one category stays on; a list of only unknown or empty names
+	 * stores nothing.
+	 *
+	 * @return void
+	 */
+	public function testAtLeastOneCategoryStaysOn(): void {
+		$policy = $this->policy();
+
+		foreach ([[], ['travel', 'yachts'], [' ']] as $allowed) {
+			try {
+				$policy->saveAllowed($allowed);
+				self::fail('A save that switches every category off was accepted.');
+			} catch (InvalidArgumentException $e) {
+				self::assertNotSame('', $e->getMessage());
+			}
+		}
+
+		self::assertSame([], $this->config);
+		$policy->saveAllowed([' Meals ']);
+		self::assertSame('["travel","accommodation","supplies","software","training","other"]', $this->config['expense_categories_disabled']);
+	}//end testAtLeastOneCategoryStaysOn()
 
 }//end class
