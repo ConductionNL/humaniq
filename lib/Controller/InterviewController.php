@@ -34,7 +34,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\InterviewCalendarService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
@@ -42,9 +42,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Guarded endpoint that triggers a single Interview-to-calendar sync attempt.
@@ -53,21 +50,15 @@ class InterviewController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param InterviewCalendarService $interviewCalendarService The interview-calendar-sync service.
 	 * @param SettingsService $settingsService The register-slug source.
-	 * @param IUserSession $userSession The current user session (admin/HR check).
-	 * @param HumaniqRoles $roles Whether the caller is HR, payroll or an administrator.
-	 * @param LoggerInterface $logger Logger.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly InterviewCalendarService $interviewCalendarService,
 		private readonly SettingsService $settingsService,
-		private readonly IUserSession $userSession,
-		private readonly HumaniqRoles $roles,
-		private readonly LoggerInterface $logger,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -119,12 +110,12 @@ class InterviewController extends Controller {
 	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
 	 */
 	private function isAdminOrHr(): bool {
-		$uid = $this->userSession->getUser()?->getUID();
+		$uid = $this->caller->userSession->getUser()?->getUID();
 		if ($uid === null || $uid === '') {
 			return false;
 		}
 
-		return $this->roles->isHr($uid);
+		return $this->caller->roles->isHr($uid);
 	}//end isAdminOrHr()
 
 	/**
@@ -149,7 +140,7 @@ class InterviewController extends Controller {
 		// endpoint cannot install anything, and "cannot be resolved" is exactly
 		// the outcome the catch below already collapses to.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			$this->logger->info('InterviewController: OpenRegister is niet beschikbaar; interview ' . $interviewId . ' kan niet worden opgehaald.');
+			$this->caller->logger->info('InterviewController: OpenRegister is niet beschikbaar; interview ' . $interviewId . ' kan niet worden opgehaald.');
 			return null;
 		}
 
@@ -160,7 +151,7 @@ class InterviewController extends Controller {
 				schema: 'Interview'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('InterviewController: interview ' . $interviewId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->info('InterviewController: interview ' . $interviewId . ' kon niet worden opgehaald: ' . $e->getMessage());
 			return null;
 		}
 
@@ -177,7 +168,7 @@ class InterviewController extends Controller {
 	private function objectService(): mixed {
 		// Availability is established by the sole caller, authorizeInterview(),
 		// before it reaches here (ADR-083).
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 
 	/**
