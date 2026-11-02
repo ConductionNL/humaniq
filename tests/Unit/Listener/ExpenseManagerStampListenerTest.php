@@ -223,24 +223,115 @@ class ExpenseManagerStampListenerTest extends TestCase {
 	}//end testAnUpdateFallsBackToTheStoredEmployee()
 
 	/**
-	 * Approved and reimbursed claims keep the stamp they were decided under.
+	 * An update from a stored claim to the saved one; returns the modified data.
+	 *
+	 * @param array<string, mixed> $stored The stored claim.
+	 * @param array<string, mixed> $saved The claim as the client sends it.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function updated(array $stored, array $saved): array {
+		$event = new ObjectUpdatingEvent($this->entity('Expense', $saved), $this->entity('Expense', $stored));
+		$this->listener()->handle($event);
+
+		return $event->getModifiedData();
+	}//end updated()
+
+	/**
+	 * A create is always derived from the Employee, whatever status and
+	 * identity the client sends.
 	 *
 	 * @return void
 	 */
-	public function testDecidedClaimsKeepTheirStamp(): void {
+	public function testACreateIsDerivedWhateverStatusTheClientSends(): void {
 		foreach (['approved', 'reimbursed', ' approved '] as $status) {
-			$stored = ['employeeId' => 'emp-tim', 'status' => 'submitted', 'managerUserId' => 'kees'];
-			$event = new ObjectUpdatingEvent($this->entity('Expense', array_merge($stored, ['status' => $status])), $this->entity('Expense', $stored));
+			$stamped = $this->created(['employeeId' => 'emp-tim', 'status' => $status, 'userId' => 'pieter', 'managerUserId' => 'tim', 'administrationId' => 'ADM-9']);
 
-			$this->listener()->handle($event);
-
-			self::assertSame([], $event->getModifiedData(), $status);
+			self::assertSame(['userId' => 'tim', 'managerUserId' => 'sanne', 'administrationId' => 'ADM-1'], $stamped, $status);
 		}
-	}//end testDecidedClaimsKeepTheirStamp()
+	}//end testACreateIsDerivedWhateverStatusTheClientSends()
 
 	/**
-	 * humaniq's own writes, other schemas and claims without an employee
-	 * pass untouched.
+	 * The approve write keeps the identity the claim was submitted with; a
+	 * forged account in that write is ignored.
+	 *
+	 * @return void
+	 */
+	public function testTheApproveWriteKeepsTheStoredIdentity(): void {
+		$stored = ['employeeId' => 'emp-tim', 'status' => 'submitted', 'userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => 'ADM-1'];
+
+		self::assertSame(
+			['userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => 'ADM-1'],
+			$this->updated($stored, array_merge($stored, ['status' => 'approved', 'userId' => 'pieter', 'managerUserId' => 'pieter', 'administrationId' => 'ADM-9']))
+		);
+	}//end testTheApproveWriteKeepsTheStoredIdentity()
+
+	/**
+	 * A claim stored as approved or reimbursed keeps its stored identity on
+	 * any later write, whatever the client sends; a missing stored value
+	 * stays empty.
+	 *
+	 * @return void
+	 */
+	public function testADecidedClaimKeepsItsStoredIdentity(): void {
+		foreach (['approved', 'reimbursed', ' approved '] as $status) {
+			$stored = ['employeeId' => 'emp-tim', 'status' => $status, 'userId' => 'tim', 'managerUserId' => 'kees'];
+
+			self::assertSame(
+				['userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => null],
+				$this->updated($stored, array_merge($stored, ['status' => trim($status), 'title' => 'Edited', 'userId' => 'pieter', 'managerUserId' => 'pieter', 'administrationId' => 'ADM-9'])),
+				$status
+			);
+		}
+	}//end testADecidedClaimKeepsItsStoredIdentity()
+
+	/**
+	 * A reject write and a submit write are derived again, so a forged
+	 * account there is ignored too.
+	 *
+	 * @return void
+	 */
+	public function testRejectAndSubmitWritesAreDerived(): void {
+		$stored = ['employeeId' => 'emp-tim', 'status' => 'submitted', 'userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => 'ADM-1'];
+		$derived = ['userId' => 'tim', 'managerUserId' => 'sanne', 'administrationId' => 'ADM-1'];
+
+		self::assertSame($derived, $this->updated($stored, array_merge($stored, ['status' => 'rejected', 'userId' => 'pieter'])));
+		self::assertSame($derived, $this->updated(array_merge($stored, ['status' => 'rejected']), array_merge($stored, ['status' => 'submitted', 'userId' => 'pieter'])));
+		self::assertSame($derived, $this->updated(array_merge($stored, ['status' => 'draft']), array_merge($stored, ['status' => 'approved', 'userId' => 'pieter'])));
+	}//end testRejectAndSubmitWritesAreDerived()
+
+	/**
+	 * When the org lookup throws, the stored values stay, never the client's.
+	 *
+	 * @return void
+	 */
+	public function testAFailingLookupKeepsTheStoredValues(): void {
+		$this->store = new class extends FakeObjectStore {
+			/**
+			 * Fail every list read.
+			 *
+			 * @param array<string, mixed> $config Ignored.
+			 * @param bool $_rbac Ignored.
+			 * @param bool $_multitenancy Ignored.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				throw new \RuntimeException('store down');
+			}//end findAll()
+		};
+		$this->store->seed('Employee', 'emp-tim', ['nextcloudUserId' => 'tim', 'administrationId' => 'ADM-1']);
+		$stored = ['employeeId' => 'emp-tim', 'status' => 'draft', 'userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => 'ADM-1'];
+
+		self::assertSame(
+			['userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => 'ADM-1'],
+			$this->updated($stored, array_merge($stored, ['status' => 'submitted', 'managerUserId' => 'pieter']))
+		);
+	}//end testAFailingLookupKeepsTheStoredValues()
+
+	/**
+	 * humaniq's own writes and other schemas pass untouched; a claim without
+	 * an employee gets no client identity either.
 	 *
 	 * @return void
 	 */
@@ -254,7 +345,7 @@ class ExpenseManagerStampListenerTest extends TestCase {
 		$this->listener()->handle($other);
 		self::assertSame([], $other->getModifiedData());
 
-		self::assertSame([], $this->created(['employeeId' => ' ', 'status' => 'draft', 'managerUserId' => 'x']));
+		self::assertSame(['userId' => null, 'managerUserId' => null, 'administrationId' => null], $this->created(['employeeId' => ' ', 'status' => 'draft', 'managerUserId' => 'x']));
 	}//end testOwnWritesOtherSchemasAndClaimsWithoutAnEmployeePass()
 
 	/**

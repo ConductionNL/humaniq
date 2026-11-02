@@ -12,8 +12,8 @@
  * themself. Closed and decided records keep their stamp.
  *
  * Every page of every schema is read, and the org lookups are read once
- * per run. When a lookup read was cut off, a stamp is never cleared to
- * null. A record that fails is logged and counted, and the pass carries on.
+ * per run. When a lookup read was cut off, no stamp is rewritten: every
+ * record that would change counts as failed. A record that fails is logged and counted, and the pass carries on.
  *
  * Idempotent: a second run finds nothing to change. Used by the
  * RestampOpenManagerRecords repair step and the
@@ -165,8 +165,8 @@ class ManagerStampRepair {
 			}
 
 			$change['schema'] = $schema;
-			if ($change['new'] === null && $this->lookups['complete'] === false) {
-				$this->logger->error('humaniq: manager stamp not cleared, a lookup read was cut off', ['schema' => $schema, 'id' => $change['id']]);
+			if ($this->lookups['complete'] === false) {
+				$this->logger->error('humaniq: manager stamp not restamped, a lookup read was cut off', ['schema' => $schema, 'id' => $change['id']]);
 				return 'failed';
 			}
 

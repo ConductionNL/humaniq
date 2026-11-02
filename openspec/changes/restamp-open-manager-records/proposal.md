@@ -42,7 +42,8 @@ employee can claim other costs too, when the employer allows them.
 - It writes the resolved manager, or null when none resolves, only when the stamp differs. A
   record without a stamp is left alone.
 - It reads every page of every schema, and reads the org lookups once per run. When a lookup
-  read was cut off, it never clears a stamp to null.
+  read was cut off, it rewrites no stamp at all, and counts each record it would change as
+  failed.
 - A record that fails is logged with its schema, id and error, and counted as failed. The
   pass carries on with the next record.
 - Each change is logged with the record id, the old stamp and the new one. A dry run logs

@@ -12,10 +12,14 @@
  * `administrationId` are copied from the Employee. Client input to the three
  * is inert.
  *
- * The stamp is renewed on every write of an open claim, so a submit or a
- * resubmit after a rejection is routed to today's manager. Approved and
- * reimbursed claims keep the stamp they were decided under, and humaniq's own
- * writes (the payroll run, the restamp repair) pass untouched.
+ * The three are derived again on every write, whatever status the client
+ * sends, so a submit or a resubmit after a rejection is routed to today's
+ * manager. Two writes keep the stored values instead: the approve write
+ * (stored `submitted`, saved `approved`) and any write of a claim stored as
+ * approved or reimbursed, so a decided claim keeps the identity it was
+ * decided under. Which case applies is read from the STORED status, never
+ * from the client's. humaniq's own writes (the payroll run, the restamp
+ * repair) pass untouched.
  *
  * @category Listener
  * @package  OCA\Humaniq\Listener
@@ -62,7 +66,7 @@ class ExpenseManagerStampListener implements IEventListener {
 	public const SLUG = 'expense';
 
 	/**
-	 * Claim states whose stamp records who decided, and is kept.
+	 * Stored claim states whose identity records who decided, and is kept.
 	 *
 	 * @var list<string>
 	 */
@@ -108,14 +112,13 @@ class ExpenseManagerStampListener implements IEventListener {
 
 		$stored = ($event instanceof ObjectUpdatingEvent) ? ($event->getOldObject()?->getObject() ?? []) : [];
 		$stamps = $this->stampsFor(claim: ($entity->getObject() ?? []), stored: $stored);
-		if ($stamps !== []) {
-			$event->setModifiedData(array_merge($event->getModifiedData(), $stamps));
-		}
+		$event->setModifiedData(array_merge($event->getModifiedData(), $stamps));
 	}//end handle()
 
 	/**
-	 * The identity stamps for a claim; [] for a decided claim or a claim
-	 * without an employee.
+	 * The identity stamps for a claim: derived from the Employee, or the
+	 * stored values for a decided claim, the approve write, and an Employee
+	 * that cannot be read (a claim without an employee has none).
 	 *
 	 * @param array<string, mixed> $claim The claim as it will be saved.
 	 * @param array<string, mixed> $stored The claim as stored, [] on create.
@@ -123,16 +126,17 @@ class ExpenseManagerStampListener implements IEventListener {
 	 * @return array<string, string|null>
 	 */
 	private function stampsFor(array $claim, array $stored): array {
-		$employeeId = trim((string)($claim['employeeId'] ?? ($stored['employeeId'] ?? '')));
-		if ($employeeId === '' || in_array(trim((string)($claim['status'] ?? '')), self::DECIDED_STATES, true) === true) {
-			return [];
-		}
-
 		$kept = [
 			'userId' => ($stored['userId'] ?? null),
 			'managerUserId' => ($stored['managerUserId'] ?? null),
 			'administrationId' => ($stored['administrationId'] ?? null),
 		];
+
+		if ($this->keepsStoredIdentity(claim: $claim, stored: $stored) === true) {
+			return $kept;
+		}
+
+		$employeeId = trim((string)($claim['employeeId'] ?? ($stored['employeeId'] ?? '')));
 
 		try {
 			$employee = $this->gateway->findObjectData($employeeId, 'Employee');
@@ -151,6 +155,25 @@ class ExpenseManagerStampListener implements IEventListener {
 			return $kept;
 		}
 	}//end stampsFor()
+
+	/**
+	 * Whether the write keeps the stored identity: the claim is stored as
+	 * decided, or this is the approve write. Read from the stored status, so
+	 * a client cannot choose it.
+	 *
+	 * @param array<string, mixed> $claim The claim as it will be saved.
+	 * @param array<string, mixed> $stored The claim as stored, [] on create.
+	 *
+	 * @return bool
+	 */
+	private function keepsStoredIdentity(array $claim, array $stored): bool {
+		$from = trim((string)($stored['status'] ?? ''));
+		if (in_array($from, self::DECIDED_STATES, true) === true) {
+			return true;
+		}
+
+		return $from === 'submitted' && trim((string)($claim['status'] ?? '')) === 'approved';
+	}//end keepsStoredIdentity()
 
 	/**
 	 * The date the approver is resolved for: the claim's `expenseDate`, else

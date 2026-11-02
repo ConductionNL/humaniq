@@ -520,13 +520,13 @@ class ManagerStampRepairTest extends TestCase {
 	}//end testMoreThan500RowsAreAllRead()
 
 	/**
-	 * When a lookup read is cut off, a stamp is never cleared to null: the
-	 * record is counted as failed and keeps its stamp. A manager that does
-	 * resolve is still written.
+	 * When a lookup read is cut off, no stamp is rewritten: every record
+	 * that would change keeps its stamp and counts as failed, whether the
+	 * new value would be null or a manager.
 	 *
 	 * @return void
 	 */
-	public function testAStampIsNotClearedWhenALookupWasCutOff(): void {
+	public function testNoStampIsRewrittenWhenALookupWasCutOff(): void {
 		for ($i = 0; $i < 500; $i++) {
 			$this->store->seed('OrgAssignment', sprintf('as-other-%03d', $i), ['employeeId' => 'emp-other-' . $i, 'orgUnitId' => 'unit-support']);
 		}
@@ -543,9 +543,10 @@ class ManagerStampRepairTest extends TestCase {
 		$report = $this->repair->run(false);
 
 		self::assertSame('kees', $this->stampOf('EmployeeChangeRequest', 'cr-tim'));
-		self::assertSame('pieter', $this->stampOf('EmployeeChangeRequest', 'cr-sanne'));
-		self::assertSame(['inspected' => 2, 'open' => 2, 'changed' => 1, 'failed' => 1], $report['EmployeeChangeRequest']);
-	}//end testAStampIsNotClearedWhenALookupWasCutOff()
+		self::assertSame('sanne', $this->stampOf('EmployeeChangeRequest', 'cr-sanne'));
+		self::assertSame([], $this->store->state->saves);
+		self::assertSame(['inspected' => 2, 'open' => 2, 'changed' => 0, 'failed' => 2], $report['EmployeeChangeRequest']);
+	}//end testNoStampIsRewrittenWhenALookupWasCutOff()
 
 	/**
 	 * A schema read that stopped before the end counts as failed.

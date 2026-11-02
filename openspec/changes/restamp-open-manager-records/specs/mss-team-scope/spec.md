@@ -23,8 +23,8 @@ saying it was restamped.
 
 The pass SHALL read every page of every schema it restamps and of the org lookups, and read
 the org lookups once per run. When a read stopped before the end, it SHALL count that schema
-as failed. When an org lookup read stopped before the end, it SHALL NOT clear a stamp to null:
-that record keeps its stamp and counts as failed.
+as failed. When an org lookup read stopped before the end, it SHALL NOT rewrite any stamp:
+every record whose stamp would change keeps it and counts as failed.
 
 A record that cannot be resolved or saved SHALL be logged with its schema, id and error, and
 counted as failed. The pass SHALL carry on with the next record.
@@ -102,13 +102,13 @@ record failed.
 - **WHEN** the repair pass runs
 - **THEN** the submitted claim carries `managerUserId: "pieter"`
 
-#### Scenario: A stamp is not cleared when a lookup read was cut off
+#### Scenario: No stamp is rewritten when a lookup read was cut off
 
-@e2e exclude A repair step with no screen of its own; covered by ManagerStampRepairTest::testAStampIsNotClearedWhenALookupWasCutOff
+@e2e exclude A repair step with no screen of its own; covered by ManagerStampRepairTest::testNoStampIsRewrittenWhenALookupWasCutOff
 - **GIVEN** the assignment read stops before Tim's placement
-- **AND** Tim's open change request carries `managerUserId: "kees"`
+- **AND** Tim's open change request carries `managerUserId: "kees"`, and Sanne's carries her own account
 - **WHEN** the repair pass runs
-- **THEN** the request keeps `managerUserId: "kees"`, and counts as failed
+- **THEN** both requests keep their stamp, and both count as failed
 
 #### Scenario: The repair step runs once
 

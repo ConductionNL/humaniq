@@ -4,7 +4,7 @@
 - [x] 1.2 `RestampOpenManagerRecords` runs it after `MigrateHoursProcess` in `appinfo/info.xml`, post-migration and install. Verify: RestampOpenManagerRecordsTest and AppInfoTest.
 - [x] 1.3 `occ humaniq:manager:restamp [--dry-run]` prints counts per schema. Verify: ManagerRestampCommandTest.
 - [x] 1.4 A failing record is logged and counted, and the pass carries on; the command exits 1 when a record failed. Verify: ManagerStampRepairTest::testAFailingRecordIsCountedAndThePassCarriesOn, ManagerRestampCommandTest::testAFailedRecordExitsOne.
-- [x] 1.5 Every page is read (`HoursRegisterGateway::loadAll` pages to the end, up to `MAX_ROWS`), the org lookups once per run, and no stamp is cleared when a lookup read was cut off. Verify: ManagerStampRepairTest::testMoreThan500RowsAreAllRead, testAStampIsNotClearedWhenALookupWasCutOff.
+- [x] 1.5 Every page is read (`HoursRegisterGateway::loadAll` pages to the end, up to `MAX_ROWS`), the org lookups once per run, and no stamp is rewritten when a lookup read was cut off. Verify: ManagerStampRepairTest::testMoreThan500RowsAreAllRead, testNoStampIsRewrittenWhenALookupWasCutOff; HoursRegisterGatewayTest pins the paging.
 - [x] 1.6 The repair step stores `manager_restamp_done` after a pass without failures and then skips. Verify: RestampOpenManagerRecordsTest.
 - [x] 1.7 Expense claims of every category are in the pass. Verify: ManagerStampRepairTest::testOpenClaimsOfEveryCategoryAreRestamped.
 
