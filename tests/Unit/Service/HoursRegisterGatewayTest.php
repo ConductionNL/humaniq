@@ -290,4 +290,73 @@ class HoursRegisterGatewayTest extends TestCase {
 		$this->assertSame(['ts-1', 'ts-3'], $ids, 'e2 is dropped by the PHP re-check; the object row is unwrapped; the garbage row is dropped.');
 	}//end testFindFilteredReChecksInPhpAndUnwrapsObjectRows()
 
+	/**
+	 * A unit manager placed in their own unit is stamped with the manager
+	 * of the unit above, never with their own account.
+	 *
+	 * @return void
+	 */
+	public function testTheStampOfAUnitManagerNamesTheManagerAboveThem(): void {
+		$this->store->seed('Employee', 'emp-sanne', ['nextcloudUserId' => 'sanne']);
+		$this->store->seed('Employee', 'emp-pieter', ['nextcloudUserId' => 'pieter']);
+		$this->store->seed('OrgUnit', 'unit-consultancy', ['managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie']);
+		$this->store->seed('OrgUnit', 'unit-directie', ['managerId' => 'emp-pieter']);
+		$this->store->seed('OrgAssignment', 'as-sanne', ['employeeId' => 'emp-sanne', 'orgUnitId' => 'unit-consultancy', 'endDate' => '']);
+
+		$this->assertSame('pieter', $this->gateway->uniqueManagerUserIdFor('emp-sanne', '2026-11-02'));
+	}//end testTheStampOfAUnitManagerNamesTheManagerAboveThem()
+
+	/**
+	 * The stamp never names a manager from another administration: the
+	 * climb stops at the placement unit's administration.
+	 *
+	 * @return void
+	 */
+	public function testTheStampDoesNotClimbIntoAnotherAdministration(): void {
+		$this->store->seed('Employee', 'emp-sanne', ['nextcloudUserId' => 'sanne']);
+		$this->store->seed('Employee', 'emp-pieter', ['nextcloudUserId' => 'pieter']);
+		$this->store->seed('OrgUnit', 'unit-consultancy', ['managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie', 'administrationId' => 'ADM-1']);
+		$this->store->seed('OrgUnit', 'unit-directie', ['managerId' => 'emp-pieter', 'administrationId' => 'ADM-2']);
+		$this->store->seed('OrgAssignment', 'as-sanne', ['employeeId' => 'emp-sanne', 'orgUnitId' => 'unit-consultancy', 'endDate' => '']);
+
+		$this->assertNull($this->gateway->uniqueManagerUserIdFor('emp-sanne', '2026-11-02'));
+	}//end testTheStampDoesNotClimbIntoAnotherAdministration()
+
+	/**
+	 * A placement unit without an administration takes the employee's own
+	 * administration as the boundary, so the stamp stays empty.
+	 *
+	 * @return void
+	 */
+	public function testTheStampUsesTheEmployeeAdministrationWhenTheUnitHasNone(): void {
+		$this->store->seed('Employee', 'emp-sanne', ['nextcloudUserId' => 'sanne', 'administrationId' => 'ADM-1']);
+		$this->store->seed('Employee', 'emp-pieter', ['nextcloudUserId' => 'pieter', 'administrationId' => 'ADM-2']);
+		$this->store->seed('OrgUnit', 'unit-consultancy', ['managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie']);
+		$this->store->seed('OrgUnit', 'unit-directie', ['managerId' => 'emp-pieter', 'administrationId' => 'ADM-2']);
+		$this->store->seed('OrgAssignment', 'as-sanne', ['employeeId' => 'emp-sanne', 'orgUnitId' => 'unit-consultancy', 'endDate' => '']);
+
+		$this->assertNull($this->gateway->uniqueManagerUserIdFor('emp-sanne', '2026-11-02'));
+	}//end testTheStampUsesTheEmployeeAdministrationWhenTheUnitHasNone()
+
+	/**
+	 * The stamp names only a manager whose own Employee record is in the
+	 * employee's administration, and no manager from a unit of another
+	 * administration.
+	 *
+	 * @return void
+	 */
+	public function testTheStampNamesOnlyAManagerInTheEmployeeAdministration(): void {
+		$this->store->seed('Employee', 'emp-sanne', ['nextcloudUserId' => 'sanne', 'administrationId' => 'ADM-1']);
+		$this->store->seed('Employee', 'emp-pieter', ['nextcloudUserId' => 'pieter', 'administrationId' => 'ADM-2']);
+		$this->store->seed('OrgUnit', 'unit-consultancy', ['managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie', 'administrationId' => 'ADM-1']);
+		$this->store->seed('OrgUnit', 'unit-directie', ['managerId' => 'emp-pieter', 'administrationId' => 'ADM-1']);
+		$this->store->seed('OrgUnit', 'unit-extern', ['managerId' => 'emp-pieter', 'administrationId' => 'ADM-2']);
+		$this->store->seed('OrgAssignment', 'as-sanne', ['employeeId' => 'emp-sanne', 'orgUnitId' => 'unit-consultancy', 'endDate' => '']);
+		$this->store->seed('OrgAssignment', 'as-tim', ['employeeId' => 'emp-tim', 'orgUnitId' => 'unit-extern', 'endDate' => '']);
+		$this->store->seed('Employee', 'emp-tim', ['nextcloudUserId' => 'tim', 'administrationId' => 'ADM-1']);
+
+		$this->assertNull($this->gateway->uniqueManagerUserIdFor('emp-sanne', '2026-11-03'));
+		$this->assertNull($this->gateway->uniqueManagerUserIdFor('emp-tim', '2026-11-03'));
+	}//end testTheStampNamesOnlyAManagerInTheEmployeeAdministration()
+
 }//end class
