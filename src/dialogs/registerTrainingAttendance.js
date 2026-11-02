@@ -26,9 +26,23 @@ import { generateUrl } from '@nextcloud/router'
  */
 export async function registerTrainingAttendance(scope, action) {
 	const selectedIds = Array.isArray(scope?.selectedIds) ? scope.selectedIds.map(String) : []
+	const counts = await transitionEach(selectedIds, action)
+	reportAttendance(counts)
+
+	return counts
+}
+
+/**
+ * Post `action` to the transition endpoint for each record, one at a time.
+ *
+ * @param {Array<string>} ids The record ids.
+ * @param {string} action The lifecycle action.
+ * @return {Promise<{done: number, failed: number}>} How many records moved.
+ */
+async function transitionEach(ids, action) {
 	let done = 0
 	let failed = 0
-	for (const id of selectedIds) {
+	for (const id of ids) {
 		try {
 			await axios.post(generateUrl('/apps/openregister/api/objects/{id}/transition', { id }), { action })
 			done++
@@ -37,6 +51,17 @@ export async function registerTrainingAttendance(scope, action) {
 		}
 	}
 
+	return { done, failed }
+}
+
+/**
+ * Tell the user how many records moved, how many did not, or that nothing
+ * was selected.
+ *
+ * @param {{done: number, failed: number}} counts How many records moved.
+ * @return {void}
+ */
+function reportAttendance({ done, failed }) {
 	if (done > 0) {
 		showSuccess(t('humaniq', 'Trainings registered: {count}.', { count: done }))
 	}
@@ -46,8 +71,6 @@ export async function registerTrainingAttendance(scope, action) {
 	if (done === 0 && failed === 0) {
 		showError(t('humaniq', 'Select the trainings to register first.'))
 	}
-
-	return { done, failed }
 }
 
 /**
