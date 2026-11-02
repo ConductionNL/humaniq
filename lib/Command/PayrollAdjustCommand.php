@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Command;
 
 use OCA\Humaniq\Service\RetroAdjustmentService;
+use OCA\Humaniq\Service\RetroCorrection;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -38,6 +39,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * occ command that computes/settles a TWK retro-adjustment.
+ *
+ * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-001
  */
 class PayrollAdjustCommand extends Command {
 
@@ -105,7 +108,12 @@ class PayrollAdjustCommand extends Command {
 		$settlementPeriodOption = $input->getOption('settlement-period');
 		$settlementPeriod = (is_string($settlementPeriodOption) === true && trim($settlementPeriodOption) !== '') ? trim($settlementPeriodOption) : null;
 
-		$result = $this->service->adjustFor($originalPeriod, $employeeId, $correctionRef, $gross, $correctionType, $settlementPeriod, (bool)$input->getOption('apply'));
+		$result = $this->service->adjustFor(
+			new RetroCorrection($originalPeriod, $employeeId, $correctionRef, $gross),
+			$correctionType,
+			$settlementPeriod,
+			(bool)$input->getOption('apply')
+		);
 
 		$output->writeln('<info>Humaniq TWK-correctie</info>');
 		$output->writeln(sprintf('  originele periode : %s', (string)$result['originalPeriod']));

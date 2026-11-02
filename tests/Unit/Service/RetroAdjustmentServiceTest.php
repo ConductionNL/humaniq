@@ -42,6 +42,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Service\RetroAdjustmentService;
+use OCA\Humaniq\Service\RetroCorrection;
 use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -358,7 +359,7 @@ class RetroAdjustmentServiceTest extends TestCase {
 	public function testComputesDeltaAgainstOriginalTaxYearAndNeverTouchesSealedOriginal(): void {
 		[$service, $fake] = $this->service($this->sealedRows());
 
-		$result = $service->adjustFor('2026-02', 'emp-1', 't1', 3800.00, 'backdated-raise', '2026-04');
+		$result = $service->adjustFor(new RetroCorrection('2026-02', 'emp-1', 't1', 3800.00), 'backdated-raise', '2026-04');
 
 		$this->assertSame('computed', $result['status'], $result['message']);
 		$this->assertSame('nl-2026', $result['engineVersion'], 'The recompute uses the ORIGINAL period (2026-02) tax year.');
@@ -418,7 +419,7 @@ class RetroAdjustmentServiceTest extends TestCase {
 		[$service, $fake] = $this->service($rows);
 
 		// Re-run WITHOUT --gross: the stored corrected gross is reused.
-		$result = $service->adjustFor('2026-02', 'emp-1', 't1');
+		$result = $service->adjustFor(new RetroCorrection('2026-02', 'emp-1', 't1'));
 
 		$this->assertSame('computed', $result['status'], $result['message']);
 		$this->assertTrue($result['idempotent'], 'The existing adjustment is matched, not duplicated.');
@@ -454,7 +455,7 @@ class RetroAdjustmentServiceTest extends TestCase {
 
 		[$service, $fake] = $this->service($rows);
 
-		$result = $service->adjustFor('2025-11', 'emp-1', 't1', 3800.00, null, '2026-04');
+		$result = $service->adjustFor(new RetroCorrection('2025-11', 'emp-1', 't1', 3800.00), null, '2026-04');
 
 		$this->assertSame('historical-tables-missing', $result['status']);
 		$this->assertStringContainsString('nl-2025.json', $result['message']);
@@ -472,7 +473,7 @@ class RetroAdjustmentServiceTest extends TestCase {
 	public function testDraftOriginalRunRefusesAdjustment(): void {
 		[$service, $fake] = $this->service($this->sealedRows('draft'));
 
-		$result = $service->adjustFor('2026-02', 'emp-1', 't1', 3800.00, null, '2026-04');
+		$result = $service->adjustFor(new RetroCorrection('2026-02', 'emp-1', 't1', 3800.00), null, '2026-04');
 
 		$this->assertSame('refused-original-draft', $result['status']);
 		$this->assertSame([], $this->savedFor($fake, 'PayrollAdjustment'), 'No adjustment is written against a draft original.');
@@ -489,7 +490,7 @@ class RetroAdjustmentServiceTest extends TestCase {
 	public function testApplyStampsSettlementRunAndFlipsStatus(): void {
 		[$service, $fake] = $this->service($this->sealedRows());
 
-		$result = $service->adjustFor('2026-02', 'emp-1', 't1', 3800.00, null, '2026-04', true);
+		$result = $service->adjustFor(new RetroCorrection('2026-02', 'emp-1', 't1', 3800.00), null, '2026-04', true);
 
 		$this->assertSame('applied', $result['status'], $result['message']);
 
@@ -517,13 +518,13 @@ class RetroAdjustmentServiceTest extends TestCase {
 		$rows = $this->sealedRows();
 		$rows['EmploymentContract'] = [$this->contract(['type' => 'bbl', 'writtenContract' => true, 'bpvOvereenkomstOndertekend' => true, 'awfTariff' => null])];
 		[$service, $fake] = $this->service($rows);
-		$service->adjustFor('2026-02', 'emp-1', 't1', 3800.00, 'backdated-raise', '2026-04');
+		$service->adjustFor(new RetroCorrection('2026-02', 'emp-1', 't1', 3800.00), 'backdated-raise', '2026-04');
 		$this->assertSame(33.14, $this->savedFor($fake, 'PayrollAdjustment')[0]['deltaWerknemersverzekeringen']);
 
 		$rows = $this->sealedRows();
 		$rows['Payslip'] = [$this->storedPayslip(['awfTariff' => 'high', 'awfTariffBasis' => 'early-end'])];
 		[$service, $fake] = $this->service($rows);
-		$service->adjustFor('2026-02', 'emp-1', 't1', 3800.00, 'backdated-raise', '2026-04');
+		$service->adjustFor(new RetroCorrection('2026-02', 'emp-1', 't1', 3800.00), 'backdated-raise', '2026-04');
 		$this->assertSame(223.14, $this->savedFor($fake, 'PayrollAdjustment')[0]['deltaWerknemersverzekeringen']);
 
 	}//end testTheRecalculationUsesTheSharedAwfResolution()
