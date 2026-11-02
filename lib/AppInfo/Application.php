@@ -161,7 +161,7 @@ class Application extends App implements IBootstrap {
 		$context->registerService(NoSelfApprovalGuard::class, static fn ($c): NoSelfApprovalGuard => new NoSelfApprovalGuard());
 
 		// hr-reopens-an-approved-claim: only HR outside the claim reopens an approved Expense.
-		$context->registerService(HrReopenGuard::class, static fn ($c): HrReopenGuard => new HrReopenGuard($c->get(\OCA\Humaniq\Service\HumaniqRoles::class)));
+		$context->registerService(HrReopenGuard::class, static fn ($c): HrReopenGuard => new HrReopenGuard($c->get(\OCA\Humaniq\Service\HumaniqRoles::class), $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
 
 		// OpenRegister lifecycle guard for the PensionFiling `controleren` transition
 		// (pension-filing-upa-mvp) — denies review unless the referenced PayrollRun is

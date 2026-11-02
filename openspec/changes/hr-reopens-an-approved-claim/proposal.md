@@ -16,7 +16,10 @@ that HR may reopen such a claim, so it goes through approval again.
 - The Expense lifecycle gets a `reopen` transition from `approved` to `submitted`.
 - `HrReopenGuard` allows it only for a member of the HR group who is neither the claimant nor
   the person who approved the claim, and only while no payroll run holds the claim (no
-  `payrollRunId`). A reimbursed claim cannot be reopened: the transition starts at
+  `payrollRunId`). OpenRegister hands guards the incoming payload, so the guard reads the
+  stored claim by its id and judges that; it refuses when the claim cannot be read.
+- As a second check, the save of any approved-to-submitted write is refused when the stored
+  claim has a payroll run, or the acting account is unknown, the claimant or the approver. A reimbursed claim cannot be reopened: the transition starts at
   `approved` only.
 - The reopen write keeps the approved amounts and currency, clears `approvedBy`,
   `approvedAt` and `reimbursementRoute`, and stamps a new `submittedAt`. The route is chosen

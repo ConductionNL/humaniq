@@ -21,6 +21,7 @@ namespace OCA\Humaniq\Tests\Unit\Lifecycle;
 
 use OCA\Humaniq\Lifecycle\HrReopenGuard;
 use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
 
@@ -37,7 +38,14 @@ class HrReopenGuardTest extends TestCase {
 	 *
 	 * @var array<string, mixed>
 	 */
-	private const CLAIM = ['employeeId' => 'emp-tim', 'userId' => 'tim', 'status' => 'approved', 'approvedBy' => 'sanne', 'amount' => 34.5];
+	private const CLAIM = ['id' => 'ex-1', 'employeeId' => 'emp-tim', 'userId' => 'tim', 'status' => 'approved', 'approvedBy' => 'sanne', 'amount' => 34.5];
+
+	/**
+	 * The stored claims, by id; the guard judges these, not the payload.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private array $stored = ['ex-1' => self::CLAIM];
 
 	/**
 	 * The guard, with ilse and sanne in HR.
@@ -50,7 +58,12 @@ class HrReopenGuardTest extends TestCase {
 			static fn (string $uid, string $group): bool => $group === HumaniqRoles::HR_GROUP && in_array($uid, ['ilse', 'sanne', 'tim-hr'], true)
 		);
 
-		return new HrReopenGuard(new HumaniqRoles($groups));
+		$store = $this->createMock(RecordStoreInterface::class);
+		$store->method('findObjectData')->willReturnCallback(
+			fn (string $uuid, string $schema): ?array => ($schema === 'Expense' ? ($this->stored[$uuid] ?? null) : null)
+		);
+
+		return new HrReopenGuard(new HumaniqRoles($groups), $store);
 	}//end guard()
 
 	/**
@@ -60,7 +73,8 @@ class HrReopenGuardTest extends TestCase {
 	 */
 	public function testHrMayReopen(): void {
 		self::assertTrue($this->guard()->check(self::CLAIM, 'reopen', 'ilse')->isAllowed());
-		self::assertTrue($this->guard()->check(array_merge(self::CLAIM, ['payrollRunId' => ' ']), 'reopen', 'ilse')->isAllowed());
+		$this->stored['ex-1'] = array_merge(self::CLAIM, ['payrollRunId' => ' ']);
+		self::assertTrue($this->guard()->check(self::CLAIM, 'reopen', 'ilse')->isAllowed());
 	}//end testHrMayReopen()
 
 	/**
@@ -77,8 +91,12 @@ class HrReopenGuardTest extends TestCase {
 		}
 
 		self::assertFalse($this->guard()->check(self::CLAIM, 'reopen', 'sanne')->isAllowed());
-		self::assertFalse($this->guard()->check(array_merge(self::CLAIM, ['userId' => ' tim-hr ']), 'reopen', 'tim-hr')->isAllowed());
-		self::assertFalse($this->guard()->check(array_merge(self::CLAIM, ['approvedBy' => ' ilse ']), 'reopen', 'ilse')->isAllowed());
+
+		$this->stored['ex-1'] = array_merge(self::CLAIM, ['userId' => ' tim-hr ']);
+		self::assertFalse($this->guard()->check(self::CLAIM, 'reopen', 'tim-hr')->isAllowed());
+
+		$this->stored['ex-1'] = array_merge(self::CLAIM, ['approvedBy' => ' ilse ']);
+		self::assertFalse($this->guard()->check(self::CLAIM, 'reopen', 'ilse')->isAllowed());
 	}//end testOnlyHrOtherThanClaimantAndApproverMayReopen()
 
 	/**
@@ -87,10 +105,47 @@ class HrReopenGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testAClaimInAPayrollRunCannotBeReopened(): void {
-		$result = $this->guard()->check(array_merge(self::CLAIM, ['payrollRunId' => 'run-1']), 'reopen', 'ilse');
+		$this->stored['ex-1'] = array_merge(self::CLAIM, ['payrollRunId' => 'run-1']);
+		$result = $this->guard()->check(self::CLAIM, 'reopen', 'ilse');
 
 		self::assertFalse($result->isAllowed());
 		self::assertStringContainsString('salarisrun', (string)$result->getMessage());
 	}//end testAClaimInAPayrollRunCannotBeReopened()
+
+	/**
+	 * RW32's probe: an HR member who is the claimant forges the payload
+	 * (another userId, no approver, no run) while a run holds the claim. The
+	 * guard judges the stored claim, so it refuses.
+	 *
+	 * @return void
+	 */
+	public function testAForgedPayloadIsJudgedByTheStoredClaim(): void {
+		$this->stored['ex-1'] = array_merge(self::CLAIM, ['userId' => 'tim-hr', 'approvedBy' => 'dirk', 'payrollRunId' => 'run-1']);
+		$forged = array_merge(self::CLAIM, ['userId' => 'someone', 'approvedBy' => '', 'payrollRunId' => '']);
+
+		self::assertFalse($this->guard()->check($forged, 'reopen', 'tim-hr')->isAllowed());
+
+		$this->stored['ex-1'] = array_merge(self::CLAIM, ['payrollRunId' => 'run-1']);
+		self::assertFalse($this->guard()->check($forged, 'reopen', 'ilse')->isAllowed());
+	}//end testAForgedPayloadIsJudgedByTheStoredClaim()
+
+	/**
+	 * A claim that cannot be read, or a payload without an id, is refused;
+	 * the id may come from `@self` or `uuid`, and the stored claim must
+	 * still be approved.
+	 *
+	 * @return void
+	 */
+	public function testTheStoredClaimMustBeReadable(): void {
+		self::assertFalse($this->guard()->check(array_merge(self::CLAIM, ['id' => 'ex-gone']), 'reopen', 'ilse')->isAllowed());
+		self::assertFalse($this->guard()->check(array_diff_key(self::CLAIM, ['id' => true]), 'reopen', 'ilse')->isAllowed());
+
+		$withoutId = array_diff_key(self::CLAIM, ['id' => true]);
+		self::assertTrue($this->guard()->check($withoutId + ['@self' => ['id' => 'ex-1']], 'reopen', 'ilse')->isAllowed());
+		self::assertTrue($this->guard()->check($withoutId + ['uuid' => 'ex-1'], 'reopen', 'ilse')->isAllowed());
+
+		$this->stored['ex-1'] = array_merge(self::CLAIM, ['status' => 'reimbursed']);
+		self::assertFalse($this->guard()->check(self::CLAIM, 'reopen', 'ilse')->isAllowed());
+	}//end testTheStoredClaimMustBeReadable()
 
 }//end class

@@ -1,7 +1,8 @@
 ## 1. Transition
 
 - [x] 1.1 `reopen` (approved to submitted) on the Expense lifecycle, requiring `HrReopenGuard`. Verify: ExpenseReopenLifecycleTest.
-- [x] 1.2 `HrReopenGuard` allows HR only, not the claimant, not the approver, and not with a payroll run. Verify: HrReopenGuardTest.
+- [x] 1.2 `HrReopenGuard` judges the stored claim: HR only, not the claimant, not the approver, not with a payroll run, refused when unreadable. Verify: HrReopenGuardTest.
+- [x] 1.3 `ExpensePayoutFieldsListener` refuses an approved-to-submitted write the guard should have refused. Verify: ExpensePayoutFieldsListenerTest::testAReopenThatTheGuardShouldHaveRefusedIsStopped, ExpensePreSaveChainTest::testAForgedReopenOfAClaimInARunIsRefused.
 
 ## 2. The reopen write
 

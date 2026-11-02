@@ -50,6 +50,7 @@ use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use OCP\IUserSession;
 
 /**
  * Keeps the fields payroll pays from as they were decided.
@@ -114,10 +115,12 @@ class ExpensePayoutFieldsListener implements IEventListener {
 	 *
 	 * @param HoursRegisterGateway $gateway Resolves the schema slug.
 	 * @param InternalWriteMarker $marker Marks humaniq's own writes.
+	 * @param IUserSession $userSession The account making a reopen.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly InternalWriteMarker $marker,
+		private readonly IUserSession $userSession,
 	) {
 
 	}//end __construct()
@@ -150,8 +153,26 @@ class ExpensePayoutFieldsListener implements IEventListener {
 			return;
 		}
 
+		$this->onUpdate(event: $event, claim: ($entity->getObject() ?? []));
+	}//end handle()
+
+	/**
+	 * An update: refuse a reopen the guard should have refused, else keep the
+	 * payout fields this write may not change.
+	 *
+	 * @param ObjectUpdatingEvent $event The update.
+	 * @param array<string, mixed> $claim The claim as it will be saved.
+	 *
+	 * @return void
+	 */
+	private function onUpdate(ObjectUpdatingEvent $event, array $claim): void {
 		$stored = ($event->getOldObject()?->getObject() ?? []);
-		$claim = ($entity->getObject() ?? []);
+		if ($this->refusesReopen(claim: $claim, stored: $stored) === true) {
+			$event->setErrors(['message' => 'Deze declaratie kan niet worden heropend.']);
+			$event->stopPropagation();
+			return;
+		}
+
 		$fields = array_merge(self::RUN_FIELDS, $this->keptFields(claim: $claim, stored: $stored));
 		$kept = [];
 		foreach ($fields as $field) {
@@ -163,7 +184,7 @@ class ExpensePayoutFieldsListener implements IEventListener {
 		}
 
 		$event->setModifiedData(array_merge($event->getModifiedData(), $kept));
-	}//end handle()
+	}//end onUpdate()
 
 	/**
 	 * A create: refuse any state but draft or submitted, else blank the
@@ -187,6 +208,29 @@ class ExpensePayoutFieldsListener implements IEventListener {
 
 		$event->setModifiedData(array_merge($event->getModifiedData(), array_fill_keys(self::BLANK_ON_CREATE, null)));
 	}//end onCreate()
+
+	/**
+	 * Whether an approved-to-submitted write must be refused, judged on the
+	 * stored claim: a payroll run holds it, or the acting account is unknown,
+	 * the claimant or the approver. HrReopenGuard decides first; this is the
+	 * second check on the same rule.
+	 *
+	 * @param array<string, mixed> $claim The claim as it will be saved.
+	 * @param array<string, mixed> $stored The claim as stored.
+	 *
+	 * @return bool
+	 */
+	private function refusesReopen(array $claim, array $stored): bool {
+		if (trim((string)($stored['status'] ?? '')) !== 'approved' || trim((string)($claim['status'] ?? '')) !== 'submitted') {
+			return false;
+		}
+
+		$actor = trim((string)$this->userSession->getUser()?->getUID());
+
+		return trim((string)($stored['payrollRunId'] ?? '')) !== ''
+			|| $actor === ''
+			|| in_array($actor, [trim((string)($stored['userId'] ?? '')), trim((string)($stored['approvedBy'] ?? ''))], true) === true;
+	}//end refusesReopen()
 
 	/**
 	 * Whether this write is HR's reopen: an approved claim no payroll run
