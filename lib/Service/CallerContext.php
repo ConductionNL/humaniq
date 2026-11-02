@@ -27,7 +27,6 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -40,13 +39,13 @@ final class CallerContext {
 	/**
 	 * @param IUserSession $userSession The signed-in caller.
 	 * @param HumaniqRoles $roles The caller's HR and payroll roles.
-	 * @param ContainerInterface $container Resolves the OpenRegister ObjectService.
+	 * @param \Psr\Container\ContainerInterface $container Resolves the OpenRegister ObjectService.
 	 * @param LoggerInterface $logger Records each decision.
 	 */
 	public function __construct(
 		public readonly IUserSession $userSession,
 		public readonly HumaniqRoles $roles,
-		public readonly ContainerInterface $container,
+		public readonly \Psr\Container\ContainerInterface $container,
 		public readonly LoggerInterface $logger,
 	) {
 
