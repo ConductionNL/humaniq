@@ -24,7 +24,8 @@ A claim created by any write other than humaniq's own SHALL start with status `d
 SHALL save `approvedBy`, `approvedAt`, `payrollRunId` and `paidInPeriod` empty, whatever it
 sends. humaniq's own register and demo imports are humaniq's own writes for this rule,
 so the example claims it ships in a decided status still import. No expense claim humaniq ships, in
-the register seed or the mock register, SHALL be payable by a payroll run in any period: a
+the assembled register (`humaniq_register.json` and every `register.d` fragment) or the mock
+register, SHALL be payable by a payroll run in any period: a
 shipped claim that shows a paid example is `reimbursed`. An update during a shipped import
 SHALL keep the stored payout fields as any other update does.
 
@@ -68,7 +69,8 @@ SHALL keep the stored payout fields as any other update does.
 #### Scenario: No shipped claim is paid
 
 @e2e exclude Shipped data checked against the payroll fold; covered by ShippedClaimsAreNotPayableTest::testNoShippedClaimIsPayable
-- **GIVEN** every Expense in `hr-seed.json` and `humaniq_mock_register.json`
+- **GIVEN** every Expense in the register as RegisterConfigReader assembles it, and in
+  `humaniq_mock_register.json`
 - **WHEN** payroll folds each one for every month from 2024 to 2030
 - **THEN** none of them is paid
 

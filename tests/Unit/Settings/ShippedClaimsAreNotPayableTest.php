@@ -3,9 +3,10 @@
 /**
  * Shipped expense claims are not payable
  *
- * Every Expense humaniq ships (the register seed and the mock register) is
- * imported on every tenant, so none of them may be paid by a payroll run, in
- * any period.
+ * Every Expense humaniq ships is imported on every tenant: the register as
+ * RegisterConfigReader assembles it from humaniq_register.json and every
+ * register.d fragment, and the mock register. None of them may be paid by a
+ * payroll run, in any period.
  *
  * @category Test
  * @package  OCA\Humaniq\Tests\Unit\Settings
@@ -29,40 +30,53 @@ namespace OCA\Humaniq\Tests\Unit\Settings;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\PayrollExpenseFoldService;
 use OCA\Humaniq\Service\RecordStoreInterface;
+use OCA\Humaniq\Service\RegisterConfigReader;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 
 /**
  * No shipped claim is payable.
  *
  * @coversNothing
+ * @uses \OCA\Humaniq\Service\RegisterConfigReader
  */
 class ShippedClaimsAreNotPayableTest extends TestCase {
 
 	/**
-	 * The files that ship Expense objects.
-	 *
-	 * @var list<string>
-	 */
-	private const FILES = ['register.d/hr-seed.json', 'humaniq_mock_register.json'];
-
-	/**
-	 * Every shipped Expense, keyed by file and slug.
+	 * Every shipped Expense, keyed by where it ships and its slug: the
+	 * assembled register and the mock register.
 	 *
 	 * @return array<string, array<string, mixed>>
 	 */
 	private static function shippedClaims(): array {
+		$read = (new RegisterConfigReader(new NullLogger()))->read();
+		$sources = [
+			'register' => ($read['data'] ?? []),
+			'humaniq_mock_register.json' => json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/humaniq_mock_register.json'), true),
+		];
+
 		$claims = [];
-		foreach (self::FILES as $file) {
-			$data = json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/' . $file), true);
+		foreach ($sources as $source => $data) {
 			foreach (($data['components']['objects'] ?? []) as $index => $object) {
 				if (strtolower((string)($object['@self']['schema'] ?? '')) === 'expense') {
-					$claims[$file . '#' . ($object['@self']['slug'] ?? $index)] = $object;
+					$claims[$source . '#' . ($object['@self']['slug'] ?? $index)] = $object;
 				}
 			}
 		}
 
 		return $claims;
 	}//end shippedClaims()
+
+	/**
+	 * The assembled register carries the Expense of every fragment, the
+	 * lunch receipt of hr-expense.json among them.
+	 *
+	 * @return void
+	 */
+	public function testEveryFragmentIsRead(): void {
+		self::assertArrayHasKey('register#expense-devries-lunch-receipt', self::shippedClaims());
+		self::assertArrayHasKey('register#expense-devries-train', self::shippedClaims());
+	}//end testEveryFragmentIsRead()
 
 	/**
 	 * No shipped claim is paid by a payroll run in any month from 2024 to
@@ -72,7 +86,7 @@ class ShippedClaimsAreNotPayableTest extends TestCase {
 	 */
 	public function testNoShippedClaimIsPayable(): void {
 		$claims = self::shippedClaims();
-		self::assertGreaterThanOrEqual(7, count($claims));
+		self::assertGreaterThanOrEqual(8, count($claims));
 
 		$fold = new PayrollExpenseFoldService($this->createMock(RecordStoreInterface::class), new InternalWriteMarker());
 		foreach ($claims as $key => $claim) {
