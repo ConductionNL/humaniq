@@ -3713,7 +3713,11 @@ OC.L10N.register(
         "this item": "dit item",
         "Start timer": "Timer starten",
         "Week {week} · {from} to {to} · {hours} on {object}": "Week {week} · {from} tot en met {to} · {hours} op {object}",
-        "Hours are recorded through humaniq. Without humaniq this card is left out.": "Uren registreren werkt via humaniq. Zonder humaniq staat dit blok uit."
+        "Hours are recorded through humaniq. Without humaniq this card is left out.": "Uren registreren werkt via humaniq. Zonder humaniq staat dit blok uit.",
+        "Expense categories": "Declaratiecategorieën",
+        "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
+        "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
+        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen."
     },
     "nplurals=2; plural=(n != 1);"
 )
