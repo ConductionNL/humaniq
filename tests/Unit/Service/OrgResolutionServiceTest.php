@@ -248,4 +248,123 @@ class OrgResolutionServiceTest extends TestCase {
 		), 'A placement without an orgUnitId contributes no hop.');
 	}//end testMalformedIndexShapesResolveNothing()
 
+	/**
+	 * Sanne manages Consultancy and sits in it; Directie above is managed
+	 * by Pieter. Her manager is Pieter, never herself.
+	 *
+	 * @return void
+	 */
+	public function testASelfManagedPlacementClimbsToTheParentUnitManager(): void {
+		$assignments = ['emp-sanne' => [['orgUnitId' => 'unit-consultancy', 'endDate' => '']]];
+		$units = [
+			'unit-consultancy' => ['id' => 'unit-consultancy', 'managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie'],
+			'unit-directie' => ['id' => 'unit-directie', 'managerId' => 'emp-pieter', 'parentUnitId' => ''],
+		];
+		$employees = [
+			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne'],
+			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter'],
+		];
+
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+
+		// The same Employee record is self even without an account.
+		$employees['emp-sanne']['nextcloudUserId'] = '';
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+		$employees['emp-sanne']['nextcloudUserId'] = 'sanne';
+
+		// A team member of Consultancy still gets Sanne: only self climbs.
+		$assignments['emp-tim'] = [['orgUnitId' => 'unit-consultancy', 'endDate' => '']];
+		$this->assertSame(['sanne'], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-02'));
+
+		// An unmanaged unit does not climb.
+		$units['unit-consultancy']['managerId'] = '';
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-02'));
+	}//end testASelfManagedPlacementClimbsToTheParentUnitManager()
+
+	/**
+	 * The climb repeats while each unit above is also self-managed.
+	 *
+	 * @return void
+	 */
+	public function testTheClimbRepeatsOverSeveralLevels(): void {
+		$assignments = ['emp-sanne' => [['orgUnitId' => 'unit-noord', 'endDate' => '']]];
+		$units = [
+			'unit-noord' => ['id' => 'unit-noord', 'managerId' => 'emp-sanne', 'parentUnitId' => 'unit-consultancy'],
+			'unit-consultancy' => ['id' => 'unit-consultancy', 'managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie'],
+			'unit-directie' => ['id' => 'unit-directie', 'managerId' => 'emp-pieter', 'parentUnitId' => ''],
+		];
+		$employees = [
+			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne'],
+			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter'],
+		];
+
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+	}//end testTheClimbRepeatsOverSeveralLevels()
+
+	/**
+	 * Another Employee record with the employee's own account is the
+	 * employee themself, so the walk climbs past it too.
+	 *
+	 * @return void
+	 */
+	public function testTheSameAccountOnAnotherEmployeeRecordCountsAsSelf(): void {
+		$assignments = ['emp-sanne' => [['orgUnitId' => 'unit-consultancy', 'endDate' => '']]];
+		$units = [
+			'unit-consultancy' => ['id' => 'unit-consultancy', 'managerId' => 'emp-sanne-2', 'parentUnitId' => 'unit-directie'],
+			'unit-directie' => ['id' => 'unit-directie', 'managerId' => 'emp-pieter', 'parentUnitId' => ''],
+		];
+		$employees = [
+			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne'],
+			'emp-sanne-2' => ['id' => 'emp-sanne-2', 'nextcloudUserId' => 'sanne'],
+			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter'],
+		];
+
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+
+		// Two people without an account are not the same person.
+		$employees['emp-sanne']['nextcloudUserId'] = '';
+		$employees['emp-sanne-2']['nextcloudUserId'] = '';
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+	}//end testTheSameAccountOnAnotherEmployeeRecordCountsAsSelf()
+
+	/**
+	 * Self-managed up to a root, or up to a dangling parent: no manager.
+	 *
+	 * @return void
+	 */
+	public function testNoOtherManagerUpToTheRootResolvesNothing(): void {
+		$assignments = ['emp-sanne' => [['orgUnitId' => 'unit-consultancy', 'endDate' => '']]];
+		$units = [
+			'unit-consultancy' => ['id' => 'unit-consultancy', 'managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie'],
+			'unit-directie' => ['id' => 'unit-directie', 'managerId' => 'emp-sanne', 'parentUnitId' => ''],
+		];
+		$employees = ['emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne']];
+
+		$managers = $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02');
+		$this->assertSame([], $managers);
+		$this->assertNull($this->service->uniqueOrNull($managers));
+
+		$units['unit-directie']['parentUnitId'] = 'unit-gone';
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+	}//end testNoOtherManagerUpToTheRootResolvesNothing()
+
+	/**
+	 * A loop in the unit tree is walked once and resolves no manager.
+	 *
+	 * @return void
+	 */
+	public function testALoopInTheUnitTreeEndsTheClimb(): void {
+		$assignments = ['emp-sanne' => [['orgUnitId' => 'unit-consultancy', 'endDate' => '']]];
+		$units = [
+			'unit-consultancy' => ['id' => 'unit-consultancy', 'managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie'],
+			'unit-directie' => ['id' => 'unit-directie', 'managerId' => 'emp-sanne', 'parentUnitId' => 'unit-consultancy'],
+		];
+		$employees = ['emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne']];
+
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+
+		$units['unit-consultancy']['parentUnitId'] = 'unit-consultancy';
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+	}//end testALoopInTheUnitTreeEndsTheClimb()
+
 }//end class

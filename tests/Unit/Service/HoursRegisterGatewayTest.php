@@ -290,4 +290,20 @@ class HoursRegisterGatewayTest extends TestCase {
 		$this->assertSame(['ts-1', 'ts-3'], $ids, 'e2 is dropped by the PHP re-check; the object row is unwrapped; the garbage row is dropped.');
 	}//end testFindFilteredReChecksInPhpAndUnwrapsObjectRows()
 
+	/**
+	 * A unit manager placed in their own unit is stamped with the manager
+	 * of the unit above, never with their own account.
+	 *
+	 * @return void
+	 */
+	public function testTheStampOfAUnitManagerNamesTheManagerAboveThem(): void {
+		$this->store->seed('Employee', 'emp-sanne', ['nextcloudUserId' => 'sanne']);
+		$this->store->seed('Employee', 'emp-pieter', ['nextcloudUserId' => 'pieter']);
+		$this->store->seed('OrgUnit', 'unit-consultancy', ['managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie']);
+		$this->store->seed('OrgUnit', 'unit-directie', ['managerId' => 'emp-pieter']);
+		$this->store->seed('OrgAssignment', 'as-sanne', ['employeeId' => 'emp-sanne', 'orgUnitId' => 'unit-consultancy', 'endDate' => '']);
+
+		$this->assertSame('pieter', $this->gateway->uniqueManagerUserIdFor('emp-sanne', '2026-11-02'));
+	}//end testTheStampOfAUnitManagerNamesTheManagerAboveThem()
+
 }//end class

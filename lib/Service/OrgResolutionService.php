@@ -93,6 +93,10 @@ class OrgResolutionService {
 	 * order. The nl-mss-manager-consistency audit consumes this list with its
 	 * any-match posture; a stamp reduces it via {@see uniqueOrNull()}.
 	 *
+	 * A placement in a unit the employee manages themself resolves the
+	 * manager of the nearest unit above it managed by someone else
+	 * ({@see managerUserIdFrom()}), so nobody is their own manager.
+	 *
 	 * A hop that dead-ends (no unit, unmanaged unit, unresolvable manager
 	 * Employee, manager without a Nextcloud account) contributes nothing —
 	 * an empty result means "the chain does not resolve", never an error.
@@ -114,26 +118,68 @@ class OrgResolutionService {
 		array $employeesById,
 		string $onDate,
 	): array {
+		$employeeId = trim($employeeId);
+		$chain = [
+			'employeeId'    => $employeeId,
+			'ownUserId'     => trim((string)($employeesById[$employeeId]['nextcloudUserId'] ?? '')),
+			'unitsById'     => $unitsById,
+			'employeesById' => $employeesById,
+		];
+
 		$resolved = [];
-		foreach ($this->activeUnits($employeeId, $assignmentsByEmployeeId, $unitsById, $onDate) as $unit) {
-			$unitManagerId = trim((string)($unit['managerId'] ?? ''));
-			if ($unitManagerId === '') {
-				continue;
-			}
-
-			$manager = ($employeesById[$unitManagerId] ?? null);
-			if (is_array($manager) === false) {
-				continue;
-			}
-
-			$managerUserId = trim((string)($manager['nextcloudUserId'] ?? ''));
-			if ($managerUserId !== '' && in_array($managerUserId, $resolved, true) === false) {
+		foreach (array_keys($this->activeUnits($employeeId, $assignmentsByEmployeeId, $unitsById, $onDate)) as $unitId) {
+			$managerUserId = $this->managerUserIdFrom(unitId: (string)$unitId, chain: $chain);
+			if ($managerUserId !== null && in_array($managerUserId, $resolved, true) === false) {
 				$resolved[] = $managerUserId;
 			}
 		}
 
 		return $resolved;
 	}//end resolveManagerUserIds()
+
+	/**
+	 * The manager's Nextcloud user id for one placement unit, climbing to
+	 * the parent unit while the unit is managed by the employee themself
+	 * (the same Employee record, or one with the same account).
+	 *
+	 * Null when the walk dead-ends: an unmanaged unit, an unresolvable
+	 * manager Employee, a manager without an account, a root or dangling
+	 * parent, or a unit already visited (a loop in the tree).
+	 *
+	 * @param string $unitId The placement's unit.
+	 * @param array{employeeId: string, ownUserId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 *
+	 * @return string|null The manager's Nextcloud user id, or null.
+	 *
+	 * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	private function managerUserIdFrom(string $unitId, array $chain): ?string {
+		$visited = [];
+		while ($unitId !== '' && isset($visited[$unitId]) === false) {
+			$visited[$unitId] = true;
+			$unit = ($chain['unitsById'][$unitId] ?? null);
+			if (is_array($unit) === false) {
+				return null;
+			}
+
+			$managerId = trim((string)($unit['managerId'] ?? ''));
+			$manager = ($chain['employeesById'][$managerId] ?? null);
+			if ($managerId === '' || is_array($manager) === false) {
+				return null;
+			}
+
+			$managerUserId = trim((string)($manager['nextcloudUserId'] ?? ''));
+			$isSelf = ($managerId === $chain['employeeId'])
+				|| ($managerUserId !== '' && $managerUserId === $chain['ownUserId']);
+			if ($isSelf === false) {
+				return $managerUserId === '' ? null : $managerUserId;
+			}
+
+			$unitId = trim((string)($unit['parentUnitId'] ?? ''));
+		}
+
+		return null;
+	}//end managerUserIdFrom()
 
 	/**
 	 * Resolve the cost centres reachable through the employee's active
@@ -191,15 +237,16 @@ class OrgResolutionService {
 	}//end uniqueOrNull()
 
 	/**
-	 * The OrgUnit rows of the employee's active placements, in placement
-	 * order. Dead-end hops (empty/dangling `orgUnitId`) are skipped.
+	 * The OrgUnit rows of the employee's active placements, keyed by unit
+	 * id, in placement order. Dead-end hops (empty/dangling `orgUnitId`)
+	 * are skipped.
 	 *
 	 * @param string $employeeId The employee.
 	 * @param array<string, array<int, array<string, mixed>>> $assignmentsByEmployeeId OrgAssignment index keyed by employeeId.
 	 * @param array<string, array<string, mixed>> $unitsById OrgUnit index keyed by id.
 	 * @param string $onDate The reference date, `YYYY-MM-DD`.
 	 *
-	 * @return array<int, array<string, mixed>> The active placements' units.
+	 * @return array<string, array<string, mixed>> The active placements' units by id.
 	 */
 	private function activeUnits(
 		string $employeeId,
@@ -230,7 +277,7 @@ class OrgResolutionService {
 
 			$unit = ($unitsById[$orgUnitId] ?? null);
 			if (is_array($unit) === true) {
-				$units[] = $unit;
+				$units[$orgUnitId] = $unit;
 			}
 		}
 

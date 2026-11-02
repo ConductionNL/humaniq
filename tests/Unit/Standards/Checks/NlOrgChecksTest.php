@@ -401,8 +401,8 @@ class NlOrgChecksTest extends TestCase {
 		$record = $this->managerScopedRecord(['managerUserId' => 'admin']);
 		$context = $this->managerContext(
 			['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '']]],
-			['orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-jansen']],
-			['employee-jansen' => ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin']]
+			['orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-degroot']],
+			['employee-degroot' => ['id' => 'employee-degroot', 'nextcloudUserId' => 'admin']]
 		);
 
 		$this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $context));
@@ -533,11 +533,11 @@ class NlOrgChecksTest extends TestCase {
 			],
 			[
 				'orgunit-backoffice' => ['id' => 'orgunit-backoffice', 'managerId' => 'employee-devries'],
-				'orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-jansen'],
+				'orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-degroot'],
 			],
 			[
 				'employee-devries' => ['id' => 'employee-devries', 'nextcloudUserId' => 'someone-else'],
-				'employee-jansen' => ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin'],
+				'employee-degroot' => ['id' => 'employee-degroot', 'nextcloudUserId' => 'admin'],
 			]
 		);
 
@@ -585,13 +585,64 @@ class NlOrgChecksTest extends TestCase {
 		$record = $this->managerScopedRecord(['managerUserId' => 'admin']);
 		$context = $this->managerContext(
 			['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '']]],
-			['orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-jansen']],
-			['employee-jansen' => ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin']]
+			['orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-degroot']],
+			['employee-degroot' => ['id' => 'employee-degroot', 'nextcloudUserId' => 'admin']]
 		);
 
 		$this->assertTrue(($checks['Expense']['nl-mss-manager-consistency'])($record, $context));
 		$this->assertTrue(($checks['LeaveRequest']['nl-mss-manager-consistency'])($record, $context));
 
 	}//end testManagerConsistencySharedAcrossExpenseAndLeaveRequest()
+
+	/**
+	 * A stamp naming the employee's own account is a mismatch once a
+	 * manager above their self-managed unit resolves.
+	 *
+	 * @return void
+	 */
+	public function testASelfStampIsFlaggedWhenAParentManagerExists(): void {
+		$record = $this->managerScopedRecord(['managerUserId' => 'admin']);
+		$context = $this->managerContext(
+			['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '']]],
+			[
+				'orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-jansen', 'parentUnitId' => 'orgunit-directie'],
+				'orgunit-directie' => ['id' => 'orgunit-directie', 'managerId' => 'employee-degroot', 'parentUnitId' => ''],
+			],
+			[
+				'employee-jansen' => ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin'],
+				'employee-degroot' => ['id' => 'employee-degroot', 'nextcloudUserId' => 'pieter'],
+			]
+		);
+
+		$checks = NlOrgChecks::checks();
+		$this->assertFalse(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $context));
+		$this->assertFalse(($checks['Expense']['nl-mss-manager-consistency'])($record, $context));
+		$this->assertTrue(
+			($checks['Expense']['nl-mss-manager-consistency'])($this->managerScopedRecord(['managerUserId' => 'pieter']), $context),
+			'The manager above the self-managed unit is the consistent stamp.'
+		);
+
+	}//end testASelfStampIsFlaggedWhenAParentManagerExists()
+
+	/**
+	 * A self-managed chain with nobody else up to the root resolves no
+	 * manager, so the stamp passes vacuously.
+	 *
+	 * @return void
+	 */
+	public function testASelfManagedChainUpToTheRootIsVacuous(): void {
+		$record = $this->managerScopedRecord(['managerUserId' => 'someone-else']);
+		$context = $this->managerContext(
+			['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '']]],
+			[
+				'orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-jansen', 'parentUnitId' => 'orgunit-directie'],
+				'orgunit-directie' => ['id' => 'orgunit-directie', 'managerId' => 'employee-jansen', 'parentUnitId' => ''],
+			],
+			['employee-jansen' => ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin']]
+		);
+
+		$this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $context));
+
+	}//end testASelfManagedChainUpToTheRootIsVacuous()
 
 }//end class
