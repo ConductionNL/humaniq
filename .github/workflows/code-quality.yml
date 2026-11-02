@@ -51,6 +51,9 @@ on:
 permissions:
   contents: write
   actions: write
+  # The shared workflow's sig-floor-raise job opens a pull request with the
+  # raised SIG score floor after a push to development (gate 123).
+  pull-requests: write
 
 jobs:
   quality:
