@@ -261,7 +261,7 @@ class ExpenseManagerStampListenerTest extends TestCase {
 		$stored = ['employeeId' => 'emp-tim', 'status' => 'submitted', 'userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => 'ADM-1'];
 
 		self::assertSame(
-			['userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => 'ADM-1'],
+			['userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => 'ADM-1', 'employeeId' => 'emp-tim'],
 			$this->updated($stored, array_merge($stored, ['status' => 'approved', 'userId' => 'pieter', 'managerUserId' => 'pieter', 'administrationId' => 'ADM-9']))
 		);
 	}//end testTheApproveWriteKeepsTheStoredIdentity()
@@ -278,12 +278,49 @@ class ExpenseManagerStampListenerTest extends TestCase {
 			$stored = ['employeeId' => 'emp-tim', 'status' => $status, 'userId' => 'tim', 'managerUserId' => 'kees'];
 
 			self::assertSame(
-				['userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => null],
+				['userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => null, 'employeeId' => 'emp-tim'],
 				$this->updated($stored, array_merge($stored, ['status' => trim($status), 'title' => 'Edited', 'userId' => 'pieter', 'managerUserId' => 'pieter', 'administrationId' => 'ADM-9'])),
 				$status
 			);
 		}
 	}//end testADecidedClaimKeepsItsStoredIdentity()
+
+	/**
+	 * An approved claim keeps its employee: the approve write and any later
+	 * write of a decided claim cannot move the claim to another employee.
+	 *
+	 * @return void
+	 */
+	public function testAnApprovedClaimKeepsItsEmployee(): void {
+		$submitted = ['employeeId' => 'emp-tim', 'status' => 'submitted', 'userId' => 'tim', 'managerUserId' => 'kees', 'administrationId' => 'ADM-1'];
+		$approve = $this->updated($submitted, array_merge($submitted, ['status' => 'approved', 'employeeId' => 'emp-pieter']));
+		self::assertSame('emp-tim', $approve['employeeId'] ?? null);
+
+		foreach (['approved', 'reimbursed'] as $status) {
+			$stored = array_merge($submitted, ['status' => $status]);
+			$edit = $this->updated($stored, array_merge($stored, ['employeeId' => 'emp-pieter', 'title' => 'Edited']));
+			self::assertSame('emp-tim', $edit['employeeId'] ?? null, $status);
+			self::assertSame('tim', $edit['userId'], $status);
+		}
+
+		$moved = $this->updated(array_merge($submitted, ['status' => 'approved']), array_merge($submitted, ['status' => 'approved']));
+		self::assertSame('emp-tim', $moved['employeeId'] ?? null);
+	}//end testAnApprovedClaimKeepsItsEmployee()
+
+	/**
+	 * An open claim may still change its employee; the identity follows the
+	 * new employee and the employee field is left as sent.
+	 *
+	 * @return void
+	 */
+	public function testAnOpenClaimMayChangeItsEmployee(): void {
+		$draft = ['employeeId' => 'emp-tim', 'status' => 'draft', 'userId' => 'tim', 'managerUserId' => 'sanne', 'administrationId' => 'ADM-1'];
+		$edit = $this->updated($draft, array_merge($draft, ['employeeId' => 'emp-sanne']));
+
+		self::assertArrayNotHasKey('employeeId', $edit);
+		self::assertSame('sanne', $edit['userId']);
+		self::assertSame('pieter', $edit['managerUserId']);
+	}//end testAnOpenClaimMayChangeItsEmployee()
 
 	/**
 	 * A reject write and a submit write are derived again, so a forged

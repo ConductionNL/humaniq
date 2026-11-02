@@ -1,0 +1,358 @@
+{
+	"VacancyQuestionsWidget.vue loads": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1"
+			]
+		]
+	},
+	"VacancyQuestionsWidget.vue no-question-list": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1"
+			]
+		]
+	},
+	"VacancyQuestionsWidget.vue empty-answer": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1"
+			]
+		]
+	},
+	"VacancyQuestionsWidget.vue read-fails": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"NcNoteCard\" data-type=\"error\">The questions of this vacancy could not be read.</div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1"
+			]
+		]
+	},
+	"VacancyQuestionsWidget.vue no-longer-draft": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1"
+			]
+		]
+	},
+	"VacancyQuestionsWidget.vue host-context": {
+		"mounted": "<div content=\"[object Object]\" register=\"humaniq\" schema=\"page-schema\" objectdata=\"[object Object]\" objecttype=\"page-type\"><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div content=\"[object Object]\" register=\"humaniq\" schema=\"page-schema\" objectdata=\"[object Object]\" objecttype=\"page-type\"><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1"
+			]
+		]
+	},
+	"VacancyQuestionsWidget.vue numeric-id": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Vacancy/7"
+			]
+		]
+	},
+	"VacancyQuestionsWidget.vue saves": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"step0.saving": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;a&quot;,&quot;type&quot;:&quot;string&quot;},{&quot;key&quot;:&quot;  &quot;,&quot;type&quot;:&quot;string&quot;},{&quot;key&quot;:&quot;&quot;,&quot;type&quot;:&quot;number&quot;},{&quot;key&quot;:0,&quot;type&quot;:&quot;boolean&quot;},{&quot;type&quot;:&quot;enum&quot;},{&quot;key&quot;:&quot; b &quot;,&quot;type&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;x&quot;]}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\" disabled=\"\"><span data-stub=\"NcLoadingIcon\"></span> Save questions</button><!--v-if--></div></div>",
+		"step0": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;a&quot;,&quot;type&quot;:&quot;string&quot;},{&quot;key&quot;:&quot; b &quot;,&quot;type&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;x&quot;]}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><span role=\"status\">Saved</span></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1"
+			],
+			[
+				"patch",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1",
+				{
+					"questions": [
+						{
+							"key": "a",
+							"type": "string"
+						},
+						{
+							"key": " b ",
+							"type": "enum",
+							"options": [
+								"x"
+							]
+						}
+					]
+				}
+			]
+		]
+	},
+	"VacancyQuestionsWidget.vue save-fails": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"step0.saving": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\" disabled=\"\"><span data-stub=\"NcLoadingIcon\"></span> Save questions</button><!--v-if--></div></div>",
+		"step0": "<div><div data-stub=\"NcNoteCard\" data-type=\"error\">The questions could not be saved.</div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1"
+			],
+			[
+				"patch",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1",
+				{
+					"questions": [
+						{
+							"key": "motivation",
+							"type": "textarea",
+							"label": "Why?"
+						},
+						{
+							"key": "start",
+							"type": "string"
+						}
+					]
+				}
+			]
+		]
+	},
+	"VacancyQuestionsWidget.vue save-then-fail": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"step0.saving": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\" disabled=\"\"><span data-stub=\"NcLoadingIcon\"></span> Save questions</button><!--v-if--></div></div>",
+		"step0": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><span role=\"status\">Saved</span></div></div>",
+		"step1.saving": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Short answer&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Long answer&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;boolean&quot;,&quot;label&quot;:&quot;Yes or no&quot;},{&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Number&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Candidates answer these on the application form of this vacancy.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\" disabled=\"\"><span data-stub=\"NcLoadingIcon\"></span> Save questions</button><!--v-if--></div></div>",
+		"step1": "<div><div data-stub=\"NcNoteCard\" data-type=\"error\">The questions could not be saved.</div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1"
+			],
+			[
+				"patch",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1",
+				{
+					"questions": [
+						{
+							"key": "motivation",
+							"type": "textarea",
+							"label": "Why?"
+						},
+						{
+							"key": "start",
+							"type": "string"
+						}
+					]
+				}
+			],
+			[
+				"patch",
+				"/apps/openregister/api/objects/humaniq/Vacancy/v-1",
+				{
+					"questions": [
+						{
+							"key": "motivation",
+							"type": "textarea",
+							"label": "Why?"
+						},
+						{
+							"key": "start",
+							"type": "string"
+						}
+					]
+				}
+			]
+		]
+	},
+	"SurveyQuestionsWidget.vue loads": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1"
+			]
+		]
+	},
+	"SurveyQuestionsWidget.vue no-question-list": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1"
+			]
+		]
+	},
+	"SurveyQuestionsWidget.vue empty-answer": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1"
+			]
+		]
+	},
+	"SurveyQuestionsWidget.vue read-fails": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"NcNoteCard\" data-type=\"error\">The questions of this survey could not be read.</div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1"
+			]
+		]
+	},
+	"SurveyQuestionsWidget.vue no-longer-draft": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"NcNoteCard\" data-type=\"info\">The questions of an open or closed survey cannot change, so every answer belongs to the same questions.</div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1"
+			]
+		]
+	},
+	"SurveyQuestionsWidget.vue host-context": {
+		"mounted": "<div content=\"[object Object]\" register=\"humaniq\" schema=\"page-schema\" objectdata=\"[object Object]\" objecttype=\"page-type\"><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div content=\"[object Object]\" register=\"humaniq\" schema=\"page-schema\" objectdata=\"[object Object]\" objecttype=\"page-type\"><div data-stub=\"NcNoteCard\" data-type=\"info\">The questions of an open or closed survey cannot change, so every answer belongs to the same questions.</div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1"
+			]
+		]
+	},
+	"SurveyQuestionsWidget.vue numeric-id": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Survey/7"
+			]
+		]
+	},
+	"SurveyQuestionsWidget.vue saves": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"step0.saving": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;a&quot;,&quot;type&quot;:&quot;string&quot;},{&quot;key&quot;:&quot;  &quot;,&quot;type&quot;:&quot;string&quot;},{&quot;key&quot;:&quot;&quot;,&quot;type&quot;:&quot;number&quot;},{&quot;key&quot;:0,&quot;type&quot;:&quot;boolean&quot;},{&quot;type&quot;:&quot;enum&quot;},{&quot;key&quot;:&quot; b &quot;,&quot;type&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;x&quot;]}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\" disabled=\"\"><span data-stub=\"NcLoadingIcon\"></span> Save questions</button><!--v-if--></div></div>",
+		"step0": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;a&quot;,&quot;type&quot;:&quot;string&quot;},{&quot;key&quot;:&quot; b &quot;,&quot;type&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;x&quot;]}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><span role=\"status\">Saved</span></div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1"
+			],
+			[
+				"patch",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1",
+				{
+					"questions": [
+						{
+							"key": "a",
+							"type": "string"
+						},
+						{
+							"key": " b ",
+							"type": "enum",
+							"options": [
+								"x"
+							]
+						}
+					]
+				}
+			]
+		]
+	},
+	"SurveyQuestionsWidget.vue save-fails": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"step0.saving": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\" disabled=\"\"><span data-stub=\"NcLoadingIcon\"></span> Save questions</button><!--v-if--></div></div>",
+		"step0": "<div><div data-stub=\"NcNoteCard\" data-type=\"error\">The questions could not be saved.</div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1"
+			],
+			[
+				"patch",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1",
+				{
+					"questions": [
+						{
+							"key": "motivation",
+							"type": "textarea",
+							"label": "Why?"
+						},
+						{
+							"key": "start",
+							"type": "string"
+						}
+					]
+				}
+			]
+		]
+	},
+	"SurveyQuestionsWidget.vue save-then-fail": {
+		"mounted": "<div><span data-stub=\"NcLoadingIcon\"></span></div>",
+		"loaded": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><!--v-if--></div></div>",
+		"step0.saving": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\" disabled=\"\"><span data-stub=\"NcLoadingIcon\"></span> Save questions</button><!--v-if--></div></div>",
+		"step0": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\"><!--v-if--> Save questions</button><span role=\"status\">Saved</span></div></div>",
+		"step1.saving": "<div><div data-stub=\"CnFormBuilder\" data-attrs=\"{&quot;availableTypes&quot;:[{&quot;type&quot;:&quot;scale&quot;,&quot;label&quot;:&quot;Scale from 1 to 5&quot;},{&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;Choice&quot;},{&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Free text&quot;},{&quot;type&quot;:&quot;recommend&quot;,&quot;label&quot;:&quot;Recommend (0 to 10)&quot;}],&quot;deleteLabel&quot;:&quot;Delete&quot;,&quot;description&quot;:&quot;Employees answer these anonymously. A recommend question (0 to 10) gives the eNPS.&quot;,&quot;editorTitle&quot;:&quot;Question&quot;,&quot;emptyLabel&quot;:&quot;No questions yet. Pick an answer type to add one.&quot;,&quot;fieldsTitle&quot;:&quot;Questions&quot;,&quot;hidePreview&quot;:&quot;&quot;,&quot;keyLabel&quot;:&quot;Key&quot;,&quot;labelLabel&quot;:&quot;Question&quot;,&quot;modelValue&quot;:[{&quot;key&quot;:&quot;motivation&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;label&quot;:&quot;Why?&quot;},{&quot;key&quot;:&quot;start&quot;,&quot;type&quot;:&quot;string&quot;}],&quot;moveDownLabel&quot;:&quot;Move down&quot;,&quot;moveUpLabel&quot;:&quot;Move up&quot;,&quot;noSelectionLabel&quot;:&quot;Select a question to edit it.&quot;,&quot;optionsLabel&quot;:&quot;Choices, one per line&quot;,&quot;paletteTitle&quot;:&quot;Answer types&quot;,&quot;placeholderLabel&quot;:&quot;Example answer&quot;,&quot;requiredLabel&quot;:&quot;Required&quot;,&quot;typeLabel&quot;:&quot;Answer type&quot;,&quot;untitledKey&quot;:&quot;(no key)&quot;}\"></div><div><button data-variant=\"primary\" disabled=\"\"><span data-stub=\"NcLoadingIcon\"></span> Save questions</button><!--v-if--></div></div>",
+		"step1": "<div><div data-stub=\"NcNoteCard\" data-type=\"error\">The questions could not be saved.</div></div>",
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1"
+			],
+			[
+				"patch",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1",
+				{
+					"questions": [
+						{
+							"key": "motivation",
+							"type": "textarea",
+							"label": "Why?"
+						},
+						{
+							"key": "start",
+							"type": "string"
+						}
+					]
+				}
+			],
+			[
+				"patch",
+				"/apps/openregister/api/objects/humaniq/Survey/v-1",
+				{
+					"questions": [
+						{
+							"key": "motivation",
+							"type": "textarea",
+							"label": "Why?"
+						},
+						{
+							"key": "start",
+							"type": "string"
+						}
+					]
+				}
+			]
+		]
+	}
+}

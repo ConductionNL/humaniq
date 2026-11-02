@@ -54,6 +54,14 @@ class InternalWriteMarker {
 	private int $depth = 0;
 
 	/**
+	 * Nesting depth of a shipped import: the register or demo data humaniq
+	 * hands to OpenRegister's importer.
+	 *
+	 * @var int
+	 */
+	private int $importDepth = 0;
+
+	/**
 	 * Whether the current call stack is inside an internal humaniq write.
 	 *
 	 * @return bool True inside {@see runInternal()}.
@@ -82,5 +90,37 @@ class InternalWriteMarker {
 			--$this->depth;
 		}
 	}//end runInternal()
+
+	/**
+	 * Whether the current call stack is inside a shipped import. Unlike an
+	 * internal write, the other listeners still run on it; a listener that
+	 * refuses what a user may not send can let shipped example data through.
+	 *
+	 * @return bool True inside {@see runShippedImport()}.
+	 *
+	 * @spec openspec/changes/approved-claim-keeps-its-amounts/specs/humaniq-expenses/spec.md#Requirement:-An-approved-expense-claim-SHALL-keep-the-amounts-it-was-approved-for
+	 */
+	public function isShippedImport(): bool {
+		return $this->importDepth > 0;
+	}//end isShippedImport()
+
+	/**
+	 * Run a shipped import with the marker set, resetting it afterwards, even
+	 * when the import throws.
+	 *
+	 * @param callable $import The import.
+	 *
+	 * @return mixed The import's return value.
+	 *
+	 * @spec openspec/changes/approved-claim-keeps-its-amounts/specs/humaniq-expenses/spec.md#Requirement:-An-approved-expense-claim-SHALL-keep-the-amounts-it-was-approved-for
+	 */
+	public function runShippedImport(callable $import): mixed {
+		++$this->importDepth;
+		try {
+			return $import();
+		} finally {
+			--$this->importDepth;
+		}
+	}//end runShippedImport()
 
 }//end class
