@@ -68,18 +68,14 @@ class DepartmentFiguresService {
 	/**
 	 * @param AnalyticsService   $analytics   Loads the administration's rows and resolves period windows.
 	 * @param UnitMembership     $membership  Unit trees and placements.
-	 * @param DepartmentFigures  $figures     Frequency and wage cost.
-	 * @param AbsenceRateService $absenceRate The FTE-weighted absence rate.
 	 * @param SettingsService    $settings    The small-unit threshold.
-	 * @param TrendPeriods       $periods     The trailing month windows.
+	 * @param DepartmentFigureCalculators $calculators Frequency and wage cost, the absence rate and the month windows.
 	 */
 	public function __construct(
 		private readonly AnalyticsService $analytics,
 		private readonly UnitMembership $membership,
-		private readonly DepartmentFigures $figures,
-		private readonly AbsenceRateService $absenceRate,
 		private readonly SettingsService $settings,
-		private readonly TrendPeriods $periods = new TrendPeriods(),
+		private readonly DepartmentFigureCalculators $calculators,
 	) {
 	}//end __construct()
 
@@ -143,7 +139,7 @@ class DepartmentFiguresService {
 			}
 		}
 
-		$total = $this->sumMonths($window['months'], fn (string $month): ?float => $this->figures->wageCost($data['PayrollRun'], $data['Payslip'], null, $month));
+		$total = $this->sumMonths($window['months'], fn (string $month): ?float => $this->calculators->figures->wageCost($data['PayrollRun'], $data['Payslip'], null, $month));
 		$costs = $this->comparedWageCosts($data, $rows, $window['months']);
 		foreach (array_keys($rows) as $index) {
 			$rows[$index]['wageCost'] = $costs[$index];
@@ -264,14 +260,14 @@ class DepartmentFiguresService {
 		}
 
 		$own = $this->membership->restrict(['SickLeaveCase' => $data['SickLeaveCase'], 'EmploymentContract' => $data['EmploymentContract']], $shares);
-		$rate = $this->absenceRate->absenceRate($own['SickLeaveCase'], $own['EmploymentContract'], new AbsencePeriod($window['from'], $window['to']));
+		$rate = $this->calculators->absenceRate->absenceRate($own['SickLeaveCase'], $own['EmploymentContract'], new AbsencePeriod($window['from'], $window['to']));
 
 		return ($row + [
 			'absenceRate' => $rate['percentage'],
-			'absenceFrequency' => $this->figures->frequency($data['SickLeaveCase'], $shares, $window['from'], $window['to']),
+			'absenceFrequency' => $this->calculators->figures->frequency($data['SickLeaveCase'], $shares, $window['from'], $window['to']),
 			'wageCost' => $this->sumMonths(
 				$window['months'],
-				fn (string $month): ?float => $this->figures->wageCost(
+				fn (string $month): ?float => $this->calculators->figures->wageCost(
 					$data['PayrollRun'],
 					$data['Payslip'],
 					$this->monthShares($subtree, $data['OrgAssignment'], $month),
@@ -310,7 +306,7 @@ class DepartmentFiguresService {
 					$weights[$employeeId] = ($share / max(1.0, $placed[$employeeId]));
 				}
 
-				$cost = $this->figures->wageCost($data['PayrollRun'], $data['Payslip'], $weights, $month);
+				$cost = $this->calculators->figures->wageCost($data['PayrollRun'], $data['Payslip'], $weights, $month);
 				if ($cost !== null) {
 					$costs[$index] = round((($costs[$index] ?? 0.0) + $cost), 2);
 				}
@@ -411,7 +407,7 @@ class DepartmentFiguresService {
 	 * @throws \InvalidArgumentException When the period is not recognised.
 	 */
 	private function window(string $period): array {
-		$months = (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period) === 1) ? [$period] : array_values($this->periods->keys($period));
+		$months = (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period) === 1) ? [$period] : array_values($this->calculators->periods->keys($period));
 		if ($months === []) {
 			throw new InvalidArgumentException('Unknown period: '.$period);
 		}

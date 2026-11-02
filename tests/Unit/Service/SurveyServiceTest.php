@@ -33,6 +33,7 @@ use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\SurveyAnswers;
 use OCA\Humaniq\Service\SurveyResults;
+use OCA\Humaniq\Service\SurveyRules;
 use OCA\Humaniq\Service\SurveyService;
 use OCA\Humaniq\Service\UnitMembership;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
@@ -107,6 +108,23 @@ class SurveyServiceTest extends TestCase {
 		self::assertSame(['open', 9, 1], [$survey['status'], $survey['invitedCount'], $survey['withoutAccountCount']]);
 		self::assertSame(['surveyId' => self::SURVEY_ID, 'invited' => 9, 'answered' => 0, 'rate' => 0.0], array_intersect_key($this->service()->results(self::SURVEY_ID), array_flip(['surveyId', 'invited', 'answered', 'rate'])));
 	}//end testASurveyGoesToTwoTeams()
+
+	/**
+	 * A placement that ended does not put an employee in a team: someone who
+	 * moved from Finance to Legal is not invited to a Finance survey.
+	 *
+	 * @return void
+	 */
+	public function testAnEndedPlacementDoesNotInvite(): void {
+		$this->store->seed('Employee', 'emp-moved', ['firstName' => 'Ver', 'lastName' => 'Huisd', 'nextcloudUserId' => 'moved', 'administrationId' => 'ADM-001', 'startDate' => '2020-01-01']);
+		$this->store->seed('OrgAssignment', 'asg-moved-old', ['employeeId' => 'emp-moved', 'orgUnitId' => 'unit-fin', 'startDate' => '2020-01-01', 'endDate' => '2025-12-31']);
+		$this->store->seed('OrgAssignment', 'asg-moved-new', ['employeeId' => 'emp-moved', 'orgUnitId' => 'unit-legal', 'startDate' => '2026-01-01']);
+
+		$outcome = $this->service()->open(self::SURVEY_ID, self::TODAY);
+
+		self::assertSame(9, $outcome['invited']);
+		self::assertNotContains('moved', array_column($this->rows('SurveyInvitation'), 'userId'));
+	}//end testAnEndedPlacementDoesNotInvite()
 
 	/**
 	 * A survey opens once, needs a question, and can go to everyone or to
@@ -332,10 +350,8 @@ class SurveyServiceTest extends TestCase {
 		return new SurveyService(
 			gateway: $gateway,
 			membership: new UnitMembership(),
-			orgResolution: new OrgResolutionService(),
 			marker: new InternalWriteMarker(),
-			results: new SurveyResults(new SurveyAnswers()),
-			answers: new SurveyAnswers()
+			rules: new SurveyRules(orgResolution: new OrgResolutionService(), results: new SurveyResults(new SurveyAnswers()), answers: new SurveyAnswers())
 		);
 	}//end service()
 

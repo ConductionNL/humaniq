@@ -39,6 +39,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
@@ -46,9 +47,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -58,19 +56,15 @@ class DocumentController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param HrDocumentService $hrDocumentService The document-generation service.
 	 * @param SettingsService $settingsService The register-slug source.
-	 * @param IUserSession $userSession The current user session (acting userId).
-	 * @param LoggerInterface $logger Logger.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly HrDocumentService $hrDocumentService,
 		private readonly SettingsService $settingsService,
-		private readonly IUserSession $userSession,
-		private readonly LoggerInterface $logger,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -108,7 +102,7 @@ class DocumentController extends Controller {
 		?string $jaaropgaafId = null,
 	): JSONResponse {
 		$documentType = trim($documentType);
-		$userId = $this->userSession->getUser()?->getUID();
+		$userId = $this->caller->userSession->getUser()?->getUID();
 
 		if ($documentType === 'jaaropgaaf') {
 			return $this->generateStatement(jaaropgaafId: trim((string)$jaaropgaafId), userId: $userId);
@@ -202,7 +196,7 @@ class DocumentController extends Controller {
 				schema: $schema
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('DocumentController: ' . $schema . ' ' . $id . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->info('DocumentController: ' . $schema . ' ' . $id . ' kon niet worden opgehaald: ' . $e->getMessage());
 			return null;
 		}
 
@@ -234,7 +228,7 @@ class DocumentController extends Controller {
 				schema: 'EmploymentContract'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('DocumentController: contract ' . $contractId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->info('DocumentController: contract ' . $contractId . ' kon niet worden opgehaald: ' . $e->getMessage());
 			return null;
 		}
 
@@ -267,7 +261,7 @@ class DocumentController extends Controller {
 				schema: 'Payslip'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('DocumentController: payslip ' . $payslipId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->info('DocumentController: payslip ' . $payslipId . ' kon niet worden opgehaald: ' . $e->getMessage());
 			return null;
 		}
 
@@ -293,7 +287,7 @@ class DocumentController extends Controller {
 			);
 		}
 
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 
 	/**
