@@ -41,6 +41,15 @@ use Psr\Log\LoggerInterface;
 class SettingsService {
 
 	/**
+	 * The answer when OpenRegister skipped the import because the version did not change.
+	 */
+	private const UNCHANGED_IMPORT = [
+		'success' => true,
+		'skipped' => true,
+		'message' => 'Configuration already up-to-date (version-unchanged skip).',
+	];
+
+	/**
 	 * @param IAppConfig $appConfig The app config interface.
 	 * @param IAppManager $appManager The app manager.
 	 * @param ContainerInterface $container The DI container.
@@ -640,131 +649,6 @@ class SettingsService {
 	}//end loadConfigurationForced()
 
 	/**
-	 * Load and parse humaniq_register.json, deep-merging register.d/*.json fragments.
-	 *
-	 * @return array<string, mixed> Either ['data' => array, 'version' => string]
-	 *                              or ['success' => false, 'message' => string].
-	 */
-	private function loadRegisterConfigData(): array {
-		$configPath = __DIR__ . '/../Settings/humaniq_register.json';
-		if (file_exists($configPath) === false) {
-			$this->logger->error('Humaniq: humaniq_register.json not found at ' . $configPath);
-			return [
-				'success' => false,
-				'message' => 'Configuration file humaniq_register.json not found.',
-			];
-		}
-
-		$configContent = file_get_contents($configPath);
-		if ($configContent === false) {
-			$this->logger->error('Humaniq: failed to read humaniq_register.json');
-			return [
-				'success' => false,
-				'message' => 'Failed to read configuration file.',
-			];
-		}
-
-		$configData = json_decode($configContent, true);
-		if (json_last_error() !== JSON_ERROR_NONE) {
-			$this->logger->error('Humaniq: failed to parse humaniq_register.json: ' . json_last_error_msg());
-			return [
-				'success' => false,
-				'message' => 'Failed to parse configuration file: ' . json_last_error_msg(),
-			];
-		}
-
-		// ADR-037: merge modular register fragments from Settings/register.d/*.json.
-		// Each domain CheckProvider drops its own schema fragment here instead of
-		// editing the monolith, so concurrent builds touch disjoint files. OpenAPI
-		// `components.schemas` is a keyed object, so disjoint fragments union by key.
-		$fragmentDir = __DIR__ . '/../Settings/register.d';
-		$fragmentSig = '';
-		if (is_dir($fragmentDir) === true) {
-			$fragmentFiles = (glob($fragmentDir . '/*.json') ?: []);
-			sort($fragmentFiles);
-			foreach ($fragmentFiles as $fragmentFile) {
-				$fragmentContent = file_get_contents($fragmentFile);
-				if ($fragmentContent === false) {
-					continue;
-				}
-
-				$fragmentData = json_decode($fragmentContent, true);
-				if (json_last_error() !== JSON_ERROR_NONE) {
-					$this->logger->warning(
-						'Humaniq: skipping malformed register fragment ' . basename($fragmentFile)
-						. ': ' . json_last_error_msg()
-					);
-					continue;
-				}
-
-				$configData = self::deepMergeConfig(base: $configData, overlay: $fragmentData);
-				$fragmentSig .= basename($fragmentFile) . ':' . md5($fragmentContent) . ';';
-			}
-		}//end if
-
-		// Fold the fragment signature into the version so OpenRegister's
-		// version-gated importFromApp re-imports whenever fragments change.
-		$version = ($configData['info']['version'] ?? '0.0.0');
-		if ($fragmentSig !== '') {
-			$version .= '+frag.' . substr(md5($fragmentSig), 0, 8);
-		}
-
-		return [
-			'data' => $configData,
-			'version' => $version,
-		];
-
-	}//end loadRegisterConfigData()
-
-	/**
-	 * Deep-merge a register fragment onto the base config (ADR-037).
-	 *
-	 * Associative arrays (OpenAPI objects like `components.schemas`) are merged by
-	 * key union (recursing on shared keys); list arrays are concatenated; scalars
-	 * in the fragment overwrite the base. Disjoint fragments never collide.
-	 *
-	 * @param array<mixed> $base The accumulated config.
-	 * @param array<mixed> $overlay The fragment to merge in.
-	 *
-	 * @return array<mixed> The merged config.
-	 */
-	private static function deepMergeConfig(array $base, array $overlay): array {
-		foreach ($overlay as $key => $value) {
-			$base[$key] = self::mergeConfigValue(($base[$key] ?? null), $value);
-		}
-
-		return $base;
-	}//end deepMergeConfig()
-
-	/**
-	 * Merge a single overlay value onto its base counterpart (ADR-037).
-	 *
-	 * Extracted from {@see self::deepMergeConfig()} so the per-key decision
-	 * reads as a sequence of guards rather than nested if/else branches. The
-	 * behaviour is unchanged: only when BOTH sides are arrays does anything
-	 * other than a plain overwrite happen. `is_array($baseValue)` subsumes the
-	 * former `isset($base[$key])` test — a null base can never be an array.
-	 *
-	 * @param mixed $baseValue The current value in the base config, or null when absent.
-	 * @param mixed $value The overlay value to merge in.
-	 *
-	 * @return mixed The merged value for this key.
-	 */
-	private static function mergeConfigValue(mixed $baseValue, mixed $value): mixed {
-		if (is_array($value) === false || is_array($baseValue) === false) {
-			return $value;
-		}
-
-		$baseIsList = ($baseValue === [] || array_keys($baseValue) === range(0, (count($baseValue) - 1)));
-		$overlayIsList = ($value === [] || array_keys($value) === range(0, (count($value) - 1)));
-		if ($baseIsList === true && $overlayIsList === true) {
-			return array_merge($baseValue, $value);
-		}
-
-		return self::deepMergeConfig(base: $baseValue, overlay: $value);
-	}//end mergeConfigValue()
-
-	/**
 	 * Internal implementation for loadConfiguration / loadConfigurationForced.
 	 *
 	 * @param bool $force Force re-import even if already configured.
@@ -774,74 +658,112 @@ class SettingsService {
 	private function runLoadConfiguration(bool $force): array {
 		if ($this->isOpenRegisterAvailable() === false) {
 			$this->logger->warning('Humaniq: OpenRegister not available, skipping register initialization');
-			return [
-				'success' => false,
-				'message' => 'OpenRegister is not installed or enabled.',
-			];
+			return self::failedImport('OpenRegister is not installed or enabled.');
 		}
 
 		try {
-			$configLoad = $this->loadRegisterConfigData();
+			$configLoad = (new RegisterConfigReader($this->logger))->read();
 			if (isset($configLoad['success']) === true && $configLoad['success'] === false) {
 				return $configLoad;
 			}
 
-			$configData = $configLoad['data'];
-			$configVersion = $configLoad['version'];
-
-			$configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
-			$result = $configurationService->importFromApp(
-				appId: Application::APP_ID,
-				data: $configData,
-				version: $configVersion,
-				force: $force
-			);
-
-			if (empty($result) === false) {
-				$errors = ($result['errors'] ?? []);
-				$warnings = ($result['warnings'] ?? []);
-
-				if (empty($errors) === false) {
-					$this->logger->error('Humaniq: register configuration imported with errors', ['errors' => $errors]);
-					return [
-						'success' => false,
-						'message' => 'Configuration import completed with errors.',
-						'errors' => $errors,
-						'warnings' => $warnings,
-						'version' => ($result['version'] ?? 'unknown'),
-					];
-				}
-
-				if (empty($warnings) === false) {
-					$this->logger->warning('Humaniq: register configuration imported with warnings', ['warnings' => $warnings]);
-				}
-
-				$this->logger->info('Humaniq: register configuration imported successfully');
-				return [
-					'success' => true,
-					'message' => 'Configuration imported successfully.',
-					'warnings' => $warnings,
-					'version' => ($result['version'] ?? 'unknown'),
-				];
-			}//end if
-
-			// OR's importFromApp returns an all-empty result on the version-unchanged
-			// idempotent-skip path (force=false, same version). That is success, not
-			// failure — the register is already up-to-date.
-			$this->logger->info('Humaniq: register configuration already up-to-date (version-unchanged skip)');
-			return [
-				'success' => true,
-				'skipped' => true,
-				'message' => 'Configuration already up-to-date (version-unchanged skip).',
-			];
+			return $this->importRegister(configLoad: $configLoad, force: $force);
 		} catch (\Throwable $e) {
 			$this->logger->error('Humaniq: configuration import failed', ['exception' => $e->getMessage()]);
-			return [
-				'success' => false,
-				'message' => $e->getMessage(),
-			];
+			return self::failedImport($e->getMessage());
 		}//end try
 
 	}//end runLoadConfiguration()
+
+	/**
+	 * Hand the register configuration to OpenRegister's importFromApp.
+	 *
+	 * @param array<string, mixed> $configLoad The config and its version, from RegisterConfigReader::read().
+	 * @param bool $force Force re-import even if already configured.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function importRegister(array $configLoad, bool $force): array {
+		$configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
+		$result = $configurationService->importFromApp(
+			appId: Application::APP_ID,
+			data: $configLoad['data'],
+			version: $configLoad['version'],
+			force: $force
+		);
+
+		if (empty($result) === false) {
+			return $this->importOutcome($result);
+		}
+
+		// OR's importFromApp returns an all-empty result on the version-unchanged
+		// idempotent-skip path (force=false, same version). That is success, not
+		// failure — the register is already up-to-date.
+		$this->logger->info('Humaniq: register configuration already up-to-date (version-unchanged skip)');
+		return self::UNCHANGED_IMPORT;
+
+	}//end importRegister()
+
+	/**
+	 * The answer for an import that returned a result: failure on errors,
+	 * success (with any warnings logged) otherwise.
+	 *
+	 * @param array<string, mixed> $result What importFromApp returned.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function importOutcome(array $result): array {
+		if (empty($result['errors'] ?? []) === false) {
+			return $this->importErrors($result);
+		}
+
+		$warnings = ($result['warnings'] ?? []);
+		if (empty($warnings) === false) {
+			$this->logger->warning('Humaniq: register configuration imported with warnings', ['warnings' => $warnings]);
+		}
+
+		$this->logger->info('Humaniq: register configuration imported successfully');
+		return [
+			'success' => true,
+			'message' => 'Configuration imported successfully.',
+			'warnings' => $warnings,
+			'version' => ($result['version'] ?? 'unknown'),
+		];
+
+	}//end importOutcome()
+
+	/**
+	 * The answer for an import that reported errors.
+	 *
+	 * @param array<string, mixed> $result What importFromApp returned, with errors.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function importErrors(array $result): array {
+		$this->logger->error('Humaniq: register configuration imported with errors', ['errors' => $result['errors']]);
+		return [
+			'success' => false,
+			'message' => 'Configuration import completed with errors.',
+			'errors' => $result['errors'],
+			'warnings' => ($result['warnings'] ?? []),
+			'version' => ($result['version'] ?? 'unknown'),
+		];
+
+	}//end importErrors()
+
+	/**
+	 * The answer for an import that could not run.
+	 *
+	 * @param string $message Why it could not run.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function failedImport(string $message): array {
+		return [
+			'success' => false,
+			'message' => $message,
+		];
+
+	}//end failedImport()
 
 }//end class
