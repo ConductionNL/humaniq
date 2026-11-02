@@ -264,7 +264,7 @@ class DepartmentFiguresService {
 		}
 
 		$own = $this->membership->restrict(['SickLeaveCase' => $data['SickLeaveCase'], 'EmploymentContract' => $data['EmploymentContract']], $shares);
-		$rate = $this->absenceRate->absenceRate($own['SickLeaveCase'], $own['EmploymentContract'], $window['from'], $window['to']);
+		$rate = $this->absenceRate->absenceRate($own['SickLeaveCase'], $own['EmploymentContract'], new AbsencePeriod($window['from'], $window['to']));
 
 		return ($row + [
 			'absenceRate' => $rate['percentage'],
