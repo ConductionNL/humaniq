@@ -49,6 +49,7 @@ use RuntimeException;
  * @covers \OCA\Humaniq\Service\InterviewSyncEngine
  * @uses   \OCA\Humaniq\Service\InterviewSyncRun
  * @uses   \OCA\Humaniq\Service\InterviewCalendarTarget
+ * @uses   \OCA\Humaniq\Service\CalendarTarget
  * @uses   \OCA\Humaniq\Service\InterviewIcsRenderer
  * @uses   \OCA\Humaniq\Service\InterviewOrphanReconciler
  * @uses   \OCA\Humaniq\Service\InterviewRepository
