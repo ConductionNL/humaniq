@@ -91,6 +91,8 @@ export default {
 		 * Resolve the subject and read its week.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
 		 */
 		async load() {
 			this.loading = true
