@@ -65,6 +65,7 @@
     "OCA\\Humaniq\\Service\\LoonaangifteCorrectionService::$gateway",
     "OCA\\Humaniq\\Service\\LoonaangifteMessageService::$gateway",
     "OCA\\Humaniq\\Service\\ManagerDeputies::$gateway",
+    "OCA\\Humaniq\\Service\\ManagerStampRepair::$gateway",
     "OCA\\Humaniq\\Service\\ObjectWeekHours::$gateway",
     "OCA\\Humaniq\\Service\\OvertimeCreditService::$gateway",
     "OCA\\Humaniq\\Service\\PayrollExpenseFoldService::$gateway",
