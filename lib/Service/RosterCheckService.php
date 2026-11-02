@@ -70,15 +70,13 @@ class RosterCheckService {
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppConfig $appConfig App config for the register slug.
 	 * @param LoggerInterface $logger Logger.
-	 * @param CompetenceCheckService $competences The competence cross-check (design D3).
-	 * @param LeaveConflictCheckService $leave The leave cross-check (design D10).
+	 * @param RosterCrossChecks $crossChecks The competence (design D3) and leave (design D10) cross-checks.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
-		private readonly CompetenceCheckService $competences = new CompetenceCheckService(),
-		private readonly LeaveConflictCheckService $leave = new LeaveConflictCheckService(),
+		private readonly RosterCrossChecks $crossChecks = new RosterCrossChecks(),
 	) {
 
 	}//end __construct()
@@ -228,7 +226,7 @@ class RosterCheckService {
 		// It keeps the never-throw posture: a competence list that cannot be
 		// read costs its own findings and nothing else.
 		try {
-			$competenceFindings = $this->competences->findings(
+			$competenceFindings = $this->crossChecks->competences->findings(
 				assignments: $projected,
 				shiftsById: $shiftsById,
 				competences: $this->loadAll('EmployeeCompetence', $register)
@@ -330,7 +328,7 @@ class RosterCheckService {
 	 */
 	private function leaveFindings(array $assignments, string $register): array {
 		try {
-			return $this->leave->findings(
+			return $this->crossChecks->leave->findings(
 				assignments: $assignments,
 				leaveRequests: $this->loadAll('LeaveRequest', $register),
 				sickLeaveCases: $this->loadAll('SickLeaveCase', $register)

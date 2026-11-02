@@ -197,10 +197,12 @@ class AvailabilityService {
 	private function spansOf(EmployeeWindow $window): array {
 		$entries = $this->agenda->compose(
 			sources: $window->sources,
-			subjectType: 'employee',
-			subjectId: $window->employeeId,
-			from: $window->from->format('Y-m-d'),
-			to: $window->to->format('Y-m-d')
+			query: [
+				'subjectType' => 'employee',
+				'subjectId' => $window->employeeId,
+				'from' => $window->from->format('Y-m-d'),
+				'to' => $window->to->format('Y-m-d'),
+			]
 		);
 
 		$spans = [];

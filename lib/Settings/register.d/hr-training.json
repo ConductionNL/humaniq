@@ -5,7 +5,7 @@
             "TrainingRecord": {
                 "slug": "TrainingRecord",
                 "icon": "SchoolOutline",
-                "version": "0.1.0",
+                "version": "0.1.1",
                 "title": "Training record",
                 "description": "One training one employee is planned for or followed, as the personnel file shows it: whether they attended, until when the certificate counts, what it cost and any study-cost agreement. The course itself lives in the learning app; this is the HR fact (talent-training-and-lms D1).",
                 "type": "object",
@@ -16,6 +16,7 @@
                 "x-openregister-lifecycle": {
                     "field": "status",
                     "initial": "gepland",
+                    "createStates": ["gevolgd"],
                     "terminal": [
                         "gevolgd"
                     ],

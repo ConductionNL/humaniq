@@ -142,11 +142,13 @@ class AgendaController extends Controller {
 
 		$entries = $this->agenda->compose(
 			sources: $this->sources(from: $window[0], to: $window[1]),
-			subjectType: $subjectType,
-			subjectId: $subjectId,
-			from: $window[0]->format('Y-m-d'),
-			to: $window[1]->format('Y-m-d'),
-			memberEmployeeIds: $members
+			query: [
+				'subjectType' => $subjectType,
+				'subjectId' => $subjectId,
+				'from' => $window[0]->format('Y-m-d'),
+				'to' => $window[1]->format('Y-m-d'),
+				'memberEmployeeIds' => $members,
+			]
 		);
 
 		return new JSONResponse([

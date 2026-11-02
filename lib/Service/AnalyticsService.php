@@ -125,24 +125,16 @@ class AnalyticsService {
 	/**
 	 * @param ContainerInterface $container DI container for the ObjectService resolve.
 	 * @param SettingsService $settingsService The register-slug source.
-	 * @param AbsenceRateService $absenceRateService The FTE-weighted verzuimpercentage calculator (absence-rate, landed on this branch).
-	 * @param Percentile $percentile The median/p90 calculator (injected, never called statically — the phpmd StaticAccess fix).
 	 * @param LoggerInterface $logger Logger.
-	 * @param EmployeeTimeline $timeline Places employees on a timeline and counts them per period (the AbsenceProgression split precedent — see that class for why).
-	 * @param UnitTrends $unitTrends department-figures: a metric for one org unit's people, and the absence frequency.
-	 * @param TrendPeriods $periods The trailing month windows and date parsing (split out for phpmd's class-complexity ceiling).
+	 * @param AnalyticsCalculators $calculators The absence rate, percentile, per-unit series, month windows and employee timeline.
 	 *
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
-		private readonly AbsenceRateService $absenceRateService,
-		private readonly Percentile $percentile,
 		private readonly LoggerInterface $logger,
-		private readonly EmployeeTimeline $timeline = new EmployeeTimeline(),
-		private readonly UnitTrends $unitTrends = new UnitTrends(),
-		private readonly TrendPeriods $periods = new TrendPeriods(),
+		private readonly AnalyticsCalculators $calculators,
 	) {
 
 	}//end __construct()
@@ -154,8 +146,7 @@ class AnalyticsService {
 	 * @param string $metric One of ALLOWED_TREND_METRICS.
 	 * @param string $period One of TrendPeriods::PERIOD_MONTHS' keys.
 	 * @param string $administrationId The caller's ALREADY-AUTHORIZED active administration (REQ-DSI-005) — never resolved here.
-	 * @param string|null $orgUnitId department-figures: restrict to the people placed in this unit and its children.
-	 * @param int $minimumMembers department-figures: withhold a period with fewer people than this (0 for none).
+	 * @param array{id: string, minimumMembers: int}|null $unit department-figures: restrict to the people placed in this unit and its children, and withhold a period with fewer people than minimumMembers (0 for none); null or an empty id for the whole administration.
 	 *
 	 * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
 	 *
@@ -170,29 +161,30 @@ class AnalyticsService {
 		string $metric,
 		string $period,
 		string $administrationId,
-		?string $orgUnitId=null,
-		int $minimumMembers=0,
+		?array $unit=null,
 	): array {
 		if (in_array($metric, self::ALLOWED_TREND_METRICS, true) === false) {
 			throw new InvalidArgumentException('Unsupported metric');
 		}
 
-		$periodKeys = $this->periods->keys($period);
+		$periodKeys = $this->calculators->periods->keys($period);
 		$rows = [];
 		foreach (self::METRIC_SCHEMAS[$metric] as $schema) {
 			$rows[$schema] = $this->loadFiltered($schema, $administrationId);
 		}
 
-		if ($orgUnitId === null || $orgUnitId === '') {
+		if ($unit === null || $unit['id'] === '') {
 			return ['metric' => $metric, 'period' => $period, 'series' => $this->seriesFor($metric, $periodKeys, $rows, null)];
 		}
 
-		$series = $this->unitTrends->series(
-			unit: ['id' => $orgUnitId, 'minimumMembers' => $minimumMembers, 'metric' => $metric],
-			periodKeys: $periodKeys,
-			rows: $rows,
-			load: fn (string $schema): array => $this->loadFiltered($schema, $administrationId),
-			seriesFor: fn (array $keys, array $unitRows, array $shares): array => $this->seriesFor($metric, $keys, $unitRows, $shares)
+		$series = $this->calculators->unitTrends->series(
+			unit: ['id' => $unit['id'], 'minimumMembers' => $unit['minimumMembers'], 'metric' => $metric],
+			sources: new UnitTrendSources(
+				periodKeys: $periodKeys,
+				rows: $rows,
+				load: fn (string $schema): array => $this->loadFiltered($schema, $administrationId),
+				seriesFor: fn (array $keys, array $unitRows, array $shares): array => $this->seriesFor($metric, $keys, $unitRows, $shares)
+			)
 		);
 
 		return ['metric' => $metric, 'period' => $period, 'series' => $series];
@@ -229,7 +221,7 @@ class AnalyticsService {
 	private function seriesFor(string $metric, array $periodKeys, array $rows, ?array $shares): array {
 		return match ($metric) {
 			'absence-rate' => $this->absenceRateSeries($periodKeys, $rows['SickLeaveCase'], $rows['EmploymentContract']),
-			'absence-frequency' => $this->unitTrends->frequencySeries($periodKeys, $rows['SickLeaveCase'], $rows['EmploymentContract'], $shares),
+			'absence-frequency' => $this->calculators->unitTrends->frequencySeries($periodKeys, $rows['SickLeaveCase'], $rows['EmploymentContract'], $shares),
 			'payroll-cost' => $this->payrollCostSeries($periodKeys, $rows['PayrollRun']),
 			'approval-lead-time' => $this->approvalLeadTimeSeries($periodKeys, $rows),
 			'billable-ratio' => $this->billableRatioSeries($periodKeys, $rows['Timesheet']),
@@ -254,7 +246,7 @@ class AnalyticsService {
 
 		$series = [];
 		foreach ($periodKeys as $period) {
-			$result = $this->absenceRateService->absenceRate($cases, $contracts, $this->periods->absencePeriod($period));
+			$result = $this->calculators->absenceRate->absenceRate($cases, $contracts, $this->calculators->periods->absencePeriod($period));
 			$series[] = ['date' => $period, 'value' => $result['percentage']];
 		}
 
@@ -383,7 +375,7 @@ class AnalyticsService {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
 	 */
 	private function headcountSeries(array $periodKeys, array $employees): array {
-		$timeline = $this->timeline->place($employees);
+		$timeline = $this->calculators->timeline->place($employees);
 
 		if ($timeline['excluded'] > 0) {
 			$this->logger->warning(
@@ -393,8 +385,8 @@ class AnalyticsService {
 
 		$series = [];
 		foreach ($periodKeys as $period) {
-			[$start, $end] = $this->periods->bounds($period);
-			$series[] = (['date' => $period] + $this->timeline->countOver($timeline['placed'], $start, $end));
+			[$start, $end] = $this->calculators->periods->bounds($period);
+			$series[] = (['date' => $period] + $this->calculators->timeline->countOver($timeline['placed'], $start, $end));
 		}
 
 		return $series;
@@ -430,8 +422,8 @@ class AnalyticsService {
 			sort($durations);
 			$series[] = [
 				'date' => $period,
-				'median' => $this->percentile->value($durations, 50.0),
-				'p90' => $this->percentile->value($durations, 90.0),
+				'median' => $this->calculators->percentile->value($durations, 50.0),
+				'p90' => $this->calculators->percentile->value($durations, 90.0),
 			];
 		}
 
@@ -453,8 +445,8 @@ class AnalyticsService {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function collectApprovalDuration(array $record, array &$durationsByPeriod): void {
-		$approvedAt = $this->periods->parseDate($record['approvedAt'] ?? null);
-		$submittedAt = $this->periods->parseDate($record['submittedAt'] ?? null);
+		$approvedAt = $this->calculators->periods->parseDate($record['approvedAt'] ?? null);
+		$submittedAt = $this->calculators->periods->parseDate($record['submittedAt'] ?? null);
 		if ($approvedAt === null || $submittedAt === null) {
 			return;
 		}
