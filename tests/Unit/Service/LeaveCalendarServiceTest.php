@@ -717,6 +717,53 @@ class LeaveCalendarServiceTest extends TestCase {
 	}//end testOrphanReconciliationNeverTouchesNonHumaniqEvents()
 
 	/**
+	 * Dates that only parse by rolling over into another day.
+	 *
+	 * @return array<string, array{0: array<string, mixed>, 1: string}>
+	 */
+	public static function rolledOverDates(): array {
+		return [
+			'leave start on 31 February' => [['LeaveRequest' => [['id' => 'leave-1', 'status' => 'approved', 'startDate' => '2026-02-31', 'endDate' => '2026-03-02']]], 'leave'],
+			'leave end in month 13' => [['LeaveRequest' => [['id' => 'leave-1', 'status' => 'approved', 'startDate' => '2026-03-02', 'endDate' => '2026-13-40']]], 'leave'],
+			'first sick day on 30 February' => [['SickLeaveCase' => [['id' => 'leave-1', 'status' => 'gemeld', 'firstSickDay' => '2026-02-30']]], 'sick'],
+			'recovery in month 13' => [['SickLeaveCase' => [['id' => 'leave-1', 'status' => 'hersteld', 'firstSickDay' => '2026-03-02', 'recoveredDate' => '2026-13-01']]], 'sick'],
+		];
+	}//end rolledOverDates()
+
+	/**
+	 * @param array<string, array<int, array<string, mixed>>> $rows The register rows.
+	 * @param string $type The source type.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider rolledOverDates
+	 */
+	public function testRolledOverDatesFailInsteadOfSyncing(array $rows, string $type): void {
+		[$service, $backend] = $this->service($rows);
+
+		$results = $service->sync();
+
+		$outcome = $this->findOutcome($results, $type, 'leave-1');
+		$this->assertSame('failed', $outcome['status']);
+		$this->assertStringContainsString('geen geldige datum', $outcome['message']);
+		$this->assertSame([], $backend->created);
+
+	}//end testRolledOverDatesFailInsteadOfSyncing()
+
+	/**
+	 * @return void
+	 */
+	public function testARolledOverEndDateIsNotSkippedAsOutOfTheBound(): void {
+		$leave = ['id' => 'leave-1', 'status' => 'approved', 'startDate' => '2026-02-20', 'endDate' => '2026-02-31'];
+		[$service, ] = $this->service(['LeaveRequest' => [$leave]]);
+
+		$results = $service->sync('2026-03-05');
+
+		$this->assertSame('failed', $this->findOutcome($results, 'leave', 'leave-1')['status']);
+
+	}//end testARolledOverEndDateIsNotSkippedAsOutOfTheBound()
+
+	/**
 	 * @return void
 	 */
 	public function testOpenSickCaseRollsForward(): void {

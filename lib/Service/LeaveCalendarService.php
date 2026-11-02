@@ -735,6 +735,23 @@ class LeaveCalendarService {
 	}//end unescapeText()
 
 	/**
+	 * Parse a `Y-m-d` date strictly: a value that only parses by rolling
+	 * over (`2026-02-31`, `2026-13-40`) is not a date.
+	 *
+	 * @param string $date The ISO date (Y-m-d).
+	 *
+	 * @return \DateTimeImmutable|null
+	 */
+	private function parseDate(string $date): ?\DateTimeImmutable {
+		$parsed = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+		if ($parsed === false || $parsed->format('Y-m-d') !== $date) {
+			return null;
+		}
+
+		return $parsed;
+	}//end parseDate()
+
+	/**
 	 * An `Y-m-d` date, compacted to the RFC 5545 all-day DATE form
 	 * (`YYYYMMDD`), or null when unparseable.
 	 *
@@ -743,8 +760,8 @@ class LeaveCalendarService {
 	 * @return string|null
 	 */
 	private function compactDate(string $date): ?string {
-		$parsed = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
-		if ($parsed === false) {
+		$parsed = $this->parseDate($date);
+		if ($parsed === null) {
 			return null;
 		}
 
@@ -761,8 +778,8 @@ class LeaveCalendarService {
 	 * @return string
 	 */
 	private function addDays(string $date, int $days): string {
-		$parsed = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
-		if ($parsed === false) {
+		$parsed = $this->parseDate($date);
+		if ($parsed === null) {
 			return $date;
 		}
 
@@ -780,9 +797,9 @@ class LeaveCalendarService {
 	 * @return bool
 	 */
 	private function dateOnOrAfter(string $date, string $bound): bool {
-		$parsedDate = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
-		$parsedBound = \DateTimeImmutable::createFromFormat('!Y-m-d', $bound);
-		if ($parsedDate === false || $parsedBound === false) {
+		$parsedDate = $this->parseDate($date);
+		$parsedBound = $this->parseDate($bound);
+		if ($parsedDate === null || $parsedBound === null) {
 			return true;
 		}
 
