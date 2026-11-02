@@ -139,8 +139,7 @@ class OrgResolutionService {
 
 	/**
 	 * The manager's Nextcloud user id for one placement unit, climbing to
-	 * the parent unit while the unit is managed by the employee themself
-	 * (the same Employee record, or one with the same account).
+	 * the parent unit while the unit is managed by the employee themself.
 	 *
 	 * Null when the walk dead-ends: an unmanaged unit, an unresolvable
 	 * manager Employee, a manager without an account, a root or dangling
@@ -163,16 +162,8 @@ class OrgResolutionService {
 			}
 
 			$managerId = trim((string)($unit['managerId'] ?? ''));
-			$manager = ($chain['employeesById'][$managerId] ?? null);
-			if ($managerId === '' || is_array($manager) === false) {
-				return null;
-			}
-
-			$managerUserId = trim((string)($manager['nextcloudUserId'] ?? ''));
-			$isSelf = ($managerId === $chain['employeeId'])
-				|| ($managerUserId !== '' && $managerUserId === $chain['ownUserId']);
-			if ($isSelf === false) {
-				return $managerUserId === '' ? null : $managerUserId;
+			if ($this->isSelf(managerId: $managerId, chain: $chain) === false) {
+				return $this->accountOf(employeeId: $managerId, chain: $chain);
 			}
 
 			$unitId = trim((string)($unit['parentUnitId'] ?? ''));
@@ -180,6 +171,49 @@ class OrgResolutionService {
 
 		return null;
 	}//end managerUserIdFrom()
+
+	/**
+	 * Whether a unit manager is the employee themself: the same Employee
+	 * record, or another one with the same Nextcloud account.
+	 *
+	 * @param string $managerId The unit's manager Employee id.
+	 * @param array{employeeId: string, ownUserId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	private function isSelf(string $managerId, array $chain): bool {
+		if ($managerId === $chain['employeeId']) {
+			return true;
+		}
+
+		$account = $this->accountOf(employeeId: $managerId, chain: $chain);
+
+		return $account !== null && $account === $chain['ownUserId'];
+	}//end isSelf()
+
+	/**
+	 * The Nextcloud account of an Employee in the index, or null when the
+	 * Employee does not resolve or has no account.
+	 *
+	 * @param string $employeeId The Employee id.
+	 * @param array{employeeId: string, ownUserId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	private function accountOf(string $employeeId, array $chain): ?string {
+		$employee = ($chain['employeesById'][$employeeId] ?? null);
+		if (is_array($employee) === false) {
+			return null;
+		}
+
+		$account = trim((string)($employee['nextcloudUserId'] ?? ''));
+
+		return $account === '' ? null : $account;
+	}//end accountOf()
 
 	/**
 	 * Resolve the cost centres reachable through the employee's active
