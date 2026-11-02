@@ -64,6 +64,7 @@ class ExpensePayoutFieldsListenerTest extends TestCase {
 	private const FORGED = [
 		'amount' => 3450.0, 'taxFreeAmount' => 3450.0, 'taxableAmount' => 0.0, 'currency' => 'USD',
 		'approvedBy' => 'tim', 'approvedAt' => '2026-11-30T09:00:00Z', 'payrollRunId' => 'run-x', 'paidInPeriod' => '2026-11',
+		'reimbursementRoute' => 'direct',
 	];
 
 	/**
@@ -150,7 +151,7 @@ class ExpensePayoutFieldsListenerTest extends TestCase {
 				[
 					'earlier' => 'kept', 'payrollRunId' => 'run-1', 'paidInPeriod' => '2026-10',
 					'amount' => 34.5, 'taxFreeAmount' => 34.5, 'taxableAmount' => 0.0, 'currency' => 'EUR',
-					'approvedBy' => 'sanne', 'approvedAt' => '2026-10-01T09:00:00Z',
+					'approvedBy' => 'sanne', 'approvedAt' => '2026-10-01T09:00:00Z', 'reimbursementRoute' => 'payroll',
 				],
 				$this->updated($stored, $saved),
 				$status
@@ -171,6 +172,7 @@ class ExpensePayoutFieldsListenerTest extends TestCase {
 		self::assertNull($stamped['taxableAmount']);
 		self::assertNull($stamped['approvedAt']);
 		self::assertNull($stamped['payrollRunId']);
+		self::assertNull($stamped['reimbursementRoute']);
 	}//end testAMissingStoredValueStaysEmpty()
 
 	/**
@@ -216,9 +218,18 @@ class ExpensePayoutFieldsListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testOnlyHumaniqSetsTheRunFields(): void {
-		$create = new ObjectCreatingEvent($this->entity('Expense', ['status' => 'draft', 'payrollRunId' => 'run-x', 'paidInPeriod' => '2026-11']));
-		$this->listener()->handle($create);
-		self::assertSame(['payrollRunId' => null, 'paidInPeriod' => null], $create->getModifiedData());
+		foreach (['draft', ' submitted ', ''] as $status) {
+			$create = new ObjectCreatingEvent($this->entity('Expense', array_merge(self::FORGED, ['status' => $status])));
+			$create->setModifiedData(['amountSource' => 'entered']);
+			$this->listener()->handle($create);
+			self::assertFalse($create->isPropagationStopped(), $status);
+			self::assertSame(['amountSource' => 'entered', 'payrollRunId' => null, 'paidInPeriod' => null, 'approvedBy' => null, 'approvedAt' => null], $create->getModifiedData(), $status);
+		}
+
+		$internalCreate = new ObjectCreatingEvent($this->entity('Expense', self::APPROVED));
+		$this->marker->runInternal(fn () => $this->listener()->handle($internalCreate));
+		self::assertFalse($internalCreate->isPropagationStopped());
+		self::assertSame([], $internalCreate->getModifiedData());
 
 		$internal = new ObjectUpdatingEvent($this->entity('Expense', array_merge(self::APPROVED, self::FORGED)), $this->entity('Expense', self::APPROVED));
 		$this->marker->runInternal(fn () => $this->listener()->handle($internal));
@@ -228,5 +239,34 @@ class ExpensePayoutFieldsListenerTest extends TestCase {
 		$this->listener()->handle($other);
 		self::assertSame([], $other->getModifiedData());
 	}//end testOnlyHumaniqSetsTheRunFields()
+
+	/**
+	 * A create in any status other than draft or submitted is refused.
+	 *
+	 * @return void
+	 */
+	public function testACreateInADecidedStatusIsRefused(): void {
+		foreach (['approved', 'reimbursed', 'rejected', 'paid'] as $status) {
+			$create = new ObjectCreatingEvent($this->entity('Expense', array_merge(self::APPROVED, ['status' => $status])));
+			$this->listener()->handle($create);
+
+			self::assertTrue($create->isPropagationStopped(), $status);
+			self::assertSame(['message' => 'Een nieuwe declaratie begint als concept of als ingediend.'], $create->getErrors(), $status);
+		}
+	}//end testACreateInADecidedStatusIsRefused()
+
+	/**
+	 * The register import of shipped example claims is not refused and keeps
+	 * its values.
+	 *
+	 * @return void
+	 */
+	public function testAShippedImportMayCreateADecidedClaim(): void {
+		$create = new ObjectCreatingEvent($this->entity('Expense', self::APPROVED));
+		$this->marker->runShippedImport(fn () => $this->listener()->handle($create));
+
+		self::assertFalse($create->isPropagationStopped());
+		self::assertSame([], $create->getModifiedData());
+	}//end testAShippedImportMayCreateADecidedClaim()
 
 }//end class

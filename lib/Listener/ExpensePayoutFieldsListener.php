@@ -9,14 +9,18 @@
  * keeps the status `approved` never reaches OpenRegister's lifecycle check.
  * So this listener keeps those fields as they were decided:
  *
- * - a claim stored as approved or reimbursed keeps its amounts, its currency
- *   and who approved it when;
+ * - a new claim starts as a draft or as submitted, without who approved it
+ *   when and without run fields, because OpenRegister runs no lifecycle on a
+ *   create; a create in any other status is refused;
+ * - a claim stored as approved or reimbursed keeps its amounts, its currency,
+ *   who approved it when, and its reimbursement route;
  * - the approve write (stored `submitted`, saved `approved`) keeps the
  *   amounts and currency it was submitted with;
  * - `payrollRunId` and `paidInPeriod` change only through humaniq's own writes
- *   (the payroll run); a new claim starts without them.
+ *   (the payroll run).
  *
- * Which case applies is read from the STORED status. humaniq's own writes pass.
+ * Which case applies is read from the STORED status. humaniq's own writes
+ * pass, and so does the import of the example claims humaniq ships.
  *
  * @category Listener
  * @package  OCA\Humaniq\Listener
@@ -75,11 +79,25 @@ class ExpensePayoutFieldsListener implements IEventListener {
 	private const AMOUNT_FIELDS = ['amount', 'taxFreeAmount', 'taxableAmount', 'currency'];
 
 	/**
-	 * The decision on a claim.
+	 * The decision on a claim, and the route it is paid by.
 	 *
 	 * @var list<string>
 	 */
-	private const DECISION_FIELDS = ['approvedBy', 'approvedAt'];
+	private const DECISION_FIELDS = ['approvedBy', 'approvedAt', 'reimbursementRoute'];
+
+	/**
+	 * Fields a new claim always starts without.
+	 *
+	 * @var list<string>
+	 */
+	private const BLANK_ON_CREATE = ['payrollRunId', 'paidInPeriod', 'approvedBy', 'approvedAt'];
+
+	/**
+	 * The states a new claim may start in; empty takes the lifecycle's initial state.
+	 *
+	 * @var list<string>
+	 */
+	private const CREATE_STATES = ['', 'draft', 'submitted'];
 
 	/**
 	 * Stored states of a decided claim.
@@ -124,7 +142,12 @@ class ExpensePayoutFieldsListener implements IEventListener {
 			return;
 		}
 
-		$stored = ($event instanceof ObjectUpdatingEvent) ? ($event->getOldObject()?->getObject() ?? []) : [];
+		if ($event instanceof ObjectCreatingEvent) {
+			$this->onCreate(event: $event, claim: ($entity->getObject() ?? []));
+			return;
+		}
+
+		$stored = ($event->getOldObject()?->getObject() ?? []);
 		$fields = array_merge(self::RUN_FIELDS, $this->keptFields(claim: ($entity->getObject() ?? []), stored: $stored));
 		$kept = [];
 		foreach ($fields as $field) {
@@ -133,6 +156,29 @@ class ExpensePayoutFieldsListener implements IEventListener {
 
 		$event->setModifiedData(array_merge($event->getModifiedData(), $kept));
 	}//end handle()
+
+	/**
+	 * A create: refuse any state but draft or submitted, else blank the
+	 * decision and run fields.
+	 *
+	 * @param ObjectCreatingEvent $event The create.
+	 * @param array<string, mixed> $claim The claim as it will be saved.
+	 *
+	 * @return void
+	 */
+	private function onCreate(ObjectCreatingEvent $event, array $claim): void {
+		if ($this->marker->isShippedImport() === true) {
+			return;
+		}
+
+		if (in_array(trim((string)($claim['status'] ?? '')), self::CREATE_STATES, true) === false) {
+			$event->setErrors(['message' => 'Een nieuwe declaratie begint als concept of als ingediend.']);
+			$event->stopPropagation();
+			return;
+		}
+
+		$event->setModifiedData(array_merge($event->getModifiedData(), array_fill_keys(self::BLANK_ON_CREATE, null)));
+	}//end onCreate()
 
 	/**
 	 * Which amount and decision fields this write keeps from the stored claim.

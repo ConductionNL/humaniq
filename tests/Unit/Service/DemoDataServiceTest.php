@@ -5,6 +5,7 @@ namespace Unit\Service;
 use OCA\Humaniq\Service\DemoDataService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
+use OCA\Humaniq\Service\InternalWriteMarker;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -21,6 +22,13 @@ class DemoDataServiceTest extends TestCase {
 	private IAppManager $appManager;
 	private ContainerInterface $container;
 
+	/**
+	 * The write marker the service uses.
+	 *
+	 * @var InternalWriteMarker
+	 */
+	private InternalWriteMarker $marker;
+
 	protected function setUp(): void {
 		$this->appPath = sys_get_temp_dir() . '/or-demo-' . uniqid();
 		mkdir($this->appPath . '/lib/Settings', 0777, true);
@@ -31,6 +39,7 @@ class DemoDataServiceTest extends TestCase {
 		$this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
 		$this->container = $this->createMock(ContainerInterface::class);
+		$this->marker = new InternalWriteMarker();
 	}
 
 	protected function tearDown(): void {
@@ -52,7 +61,8 @@ class DemoDataServiceTest extends TestCase {
 		return new DemoDataService(
 			$this->appManager,
 			$this->container,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->marker
 		);
 	}
 
@@ -181,11 +191,15 @@ class DemoDataServiceTest extends TestCase {
 		// 🔴 THE PARAMETER NAMES ARE THE CONTRACT. install() calls this with
 		// named arguments, so a fake whose parameters are named differently
 		// fails at the call site rather than validating anything.
-		$importer = new class {
+		$marker = $this->marker;
+		$importer = new class($marker) {
 			public array $seen = [];
 
+			public function __construct(private InternalWriteMarker $marker) {
+			}
+
 			public function importFromApp(string $appId, array $data, string $version, bool $force): array {
-				$this->seen = ['appId' => $appId, 'version' => $version, 'force' => $force];
+				$this->seen = ['appId' => $appId, 'version' => $version, 'force' => $force, 'shippedImport' => $this->marker->isShippedImport()];
 
 				// Deliberately reports FEWER than the file holds: an object whose
 				// schema does not resolve is skipped, and the operator is told
@@ -205,5 +219,7 @@ class DemoDataServiceTest extends TestCase {
 		// masked by — a pending real configuration update.
 		$this->assertSame('humaniq.demo', $importer->seen['appId']);
 		$this->assertTrue($importer->seen['force']);
+		$this->assertTrue($importer->seen['shippedImport']);
+		$this->assertFalse($this->marker->isShippedImport());
 	}
 }

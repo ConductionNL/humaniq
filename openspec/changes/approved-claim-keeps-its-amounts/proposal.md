@@ -11,7 +11,8 @@ employee in `employeeId`, when `taxableAmount` is zero, `approvedAt` falls on or
 period's last day, and `payrollRunId` is empty or the current run. An edit that keeps the
 status `approved` never reaches OpenRegister's lifecycle check, so nothing kept those fields
 as they were when the claim was approved. Such an edit could change what is paid, when, or by
-which run.
+which run. A create runs no lifecycle check at all, so a claim could also be created as
+approved.
 
 ## What changes
 
@@ -21,7 +22,14 @@ which run.
   `taxFreeAmount`, `taxableAmount` and `currency` it was submitted with. `approvedBy` and
   `approvedAt` are stamped by that write, as before.
 - `payrollRunId` and `paidInPeriod` change only through humaniq's own writes (the payroll
-  run). Any other write keeps their stored values, and a new claim starts without them.
+  run). Any other write keeps their stored values.
+- A claim stored as `approved` or `reimbursed` also keeps its `reimbursementRoute`, so an edit
+  cannot move a claim paid directly onto the payroll route and pay it twice. Only humaniq's own
+  writes may change it. This fails closed: a wrong route is not corrected by an edit.
+- A new claim starts as a draft or as submitted. A create with any other status is refused,
+  and a new claim always starts without `approvedBy`, `approvedAt`, `payrollRunId` and
+  `paidInPeriod`, whatever the create sends. OpenRegister does not run the lifecycle on a
+  create, so without this a claim could be created as approved and be paid.
 - The expense category setting is hardened:
   - a save without the list of categories, or with something that is not a list of names,
     is refused with a 400 response and changes nothing;

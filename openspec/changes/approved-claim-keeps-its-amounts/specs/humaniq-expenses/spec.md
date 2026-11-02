@@ -13,8 +13,16 @@ server SHALL save the stored `amount`, `taxFreeAmount`, `taxableAmount`, `curren
 status the write sends.
 
 `payrollRunId` and `paidInPeriod` SHALL change only through humaniq's own writes. Any other
-write SHALL keep their stored values, and a claim created by any other write SHALL start
-without them.
+write SHALL keep their stored values.
+
+On any write of a claim whose stored status is `approved` or `reimbursed`, the server SHALL also
+save the stored `reimbursementRoute`. Only humaniq's own writes MAY change it. This fails
+closed: a route that was wrong is not corrected by an edit.
+
+A claim created by any write other than humaniq's own SHALL start with status `draft` or
+`submitted`; a create with any other status SHALL be refused with a message. Such a create
+SHALL save `approvedBy`, `approvedAt`, `payrollRunId` and `paidInPeriod` empty, whatever it
+sends.
 
 #### Scenario: An edit of an approved claim cannot change what is paid
 
@@ -37,3 +45,19 @@ without them.
 - **WHEN** an edit sends a `payrollRunId` and a `paidInPeriod`
 - **THEN** the claim is still held by no run
 - **AND** when the payroll run itself writes them, they are saved
+
+#### Scenario: A claim cannot be created as approved
+
+@e2e exclude Pre-save behaviour with no screen of its own; covered by ExpensePreSaveChainTest::testAClaimCannotBeCreatedAsApproved
+- **WHEN** a create sends status approved, an approval date, an approver, the payroll route and
+  9,999 EUR
+- **THEN** the claim is not saved, the writer reads that a new claim starts as a draft or as
+  submitted, and payroll pays nothing
+
+#### Scenario: An approved claim keeps its route
+
+@e2e exclude Pre-save behaviour; covered by ExpensePreSaveChainTest::testAnApprovedClaimKeepsItsRoute
+- **GIVEN** Tim's approved claim on the direct route
+- **WHEN** an edit sends the payroll route
+- **THEN** the claim stays on the direct route, and payroll does not pay it
+

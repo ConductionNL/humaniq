@@ -1,6 +1,7 @@
 ## 1. Payout fields
 
 - [x] 1.1 `ExpensePayoutFieldsListener` keeps the paid amounts and the decision of a decided claim, the submitted amounts on the approve write, and the run fields on every non-internal write. Verify: ExpensePayoutFieldsListenerTest.
+- [x] 1.3 A create starts as draft or submitted, without decision or run fields; a decided claim keeps its route. Verify: ExpensePayoutFieldsListenerTest, ExpensePreSaveChainTest::testAClaimCannotBeCreatedAsApproved, testAnApprovedClaimKeepsItsRoute.
 - [x] 1.2 It is subscribed for both pre-save events, after the other Expense listeners. Verify: TravelListenerWiringTest.
 
 ## 2. Category setting
