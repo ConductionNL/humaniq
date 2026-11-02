@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Flow;
 
 use OCA\Humaniq\Flow\PayrollApproveNode;
+use OCA\Humaniq\Flow\PayrollFlowNodeServices;
 use RuntimeException;
 
 /**
@@ -42,10 +43,7 @@ class PayrollApproveNodeTest extends FlowNodeTestCase {
 	 */
 	private function node(object $objectService): PayrollApproveNode {
 		return new PayrollApproveNode(
-			$this->l10n(),
-			$this->urls(),
-			$this->container($objectService),
-			$this->settings(),
+			new PayrollFlowNodeServices($this->l10n(), $this->urls(), $this->container($objectService), $this->settings()),
 			$this->logger()
 		);
 	}//end node()

@@ -37,10 +37,6 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Flow;
 
 use OCA\Humaniq\Service\PayrollRunService;
-use OCA\Humaniq\Service\SettingsService;
-use OCP\IL10N;
-use OCP\IURLGenerator;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use UnexpectedValueException;
@@ -66,24 +62,18 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	public const OUTCOME_KEY = 'payroll';
 
 	/**
-	 * @param IL10N $l10n Localisation.
-	 * @param IURLGenerator $urls URL generator.
-	 * @param ContainerInterface $container DI container.
-	 * @param SettingsService $settingsService Settings bridge.
+	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
 	 * @param LoggerInterface $logger Logger.
 	 * @param PayrollRunService $payrollRunService The existing draft-run generator, reused as-is.
 	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	public function __construct(
-		IL10N $l10n,
-		IURLGenerator $urls,
-		ContainerInterface $container,
-		SettingsService $settingsService,
+		PayrollFlowNodeServices $services,
 		LoggerInterface $logger,
 		private readonly PayrollRunService $payrollRunService,
 	) {
-		parent::__construct($l10n, $urls, $container, $settingsService, $logger);
+		parent::__construct($services, $logger);
 
 	}//end __construct()
 

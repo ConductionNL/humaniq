@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Flow;
 
 use OCA\Humaniq\Flow\PayrollCalculateNode;
+use OCA\Humaniq\Flow\PayrollFlowNodeServices;
 use OCA\Humaniq\Service\PayrollRunService;
 use RuntimeException;
 use UnexpectedValueException;
@@ -44,10 +45,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 	 */
 	private function node(PayrollRunService $service): PayrollCalculateNode {
 		return new PayrollCalculateNode(
-			$this->l10n(),
-			$this->urls(),
-			$this->container(),
-			$this->settings(),
+			new PayrollFlowNodeServices($this->l10n(), $this->urls(), $this->container(), $this->settings()),
 			$this->logger(),
 			$service
 		);
