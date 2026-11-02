@@ -338,4 +338,25 @@ class HoursRegisterGatewayTest extends TestCase {
 		$this->assertNull($this->gateway->uniqueManagerUserIdFor('emp-sanne', '2026-11-02'));
 	}//end testTheStampUsesTheEmployeeAdministrationWhenTheUnitHasNone()
 
+	/**
+	 * The stamp names only a manager whose own Employee record is in the
+	 * employee's administration, and no manager from a unit of another
+	 * administration.
+	 *
+	 * @return void
+	 */
+	public function testTheStampNamesOnlyAManagerInTheEmployeeAdministration(): void {
+		$this->store->seed('Employee', 'emp-sanne', ['nextcloudUserId' => 'sanne', 'administrationId' => 'ADM-1']);
+		$this->store->seed('Employee', 'emp-pieter', ['nextcloudUserId' => 'pieter', 'administrationId' => 'ADM-2']);
+		$this->store->seed('OrgUnit', 'unit-consultancy', ['managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie', 'administrationId' => 'ADM-1']);
+		$this->store->seed('OrgUnit', 'unit-directie', ['managerId' => 'emp-pieter', 'administrationId' => 'ADM-1']);
+		$this->store->seed('OrgUnit', 'unit-extern', ['managerId' => 'emp-pieter', 'administrationId' => 'ADM-2']);
+		$this->store->seed('OrgAssignment', 'as-sanne', ['employeeId' => 'emp-sanne', 'orgUnitId' => 'unit-consultancy', 'endDate' => '']);
+		$this->store->seed('OrgAssignment', 'as-tim', ['employeeId' => 'emp-tim', 'orgUnitId' => 'unit-extern', 'endDate' => '']);
+		$this->store->seed('Employee', 'emp-tim', ['nextcloudUserId' => 'tim', 'administrationId' => 'ADM-1']);
+
+		$this->assertNull($this->gateway->uniqueManagerUserIdFor('emp-sanne', '2026-11-03'));
+		$this->assertNull($this->gateway->uniqueManagerUserIdFor('emp-tim', '2026-11-03'));
+	}//end testTheStampNamesOnlyAManagerInTheEmployeeAdministration()
+
 }//end class

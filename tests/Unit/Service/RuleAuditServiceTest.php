@@ -1704,4 +1704,29 @@ class RuleAuditServiceTest extends TestCase {
 
 	}//end testAContractOnARetiredFunctionIsFlaggedThroughTheAudit()
 
+	/**
+	 * The audit pre-pass carries each employee's administration, so the
+	 * audit applies the manager's own administration as the stamp does.
+	 *
+	 * @return void
+	 */
+	public function testTheAuditChecksTheManagersOwnAdministration(): void {
+		$rows = $this->seededMssRows();
+		$rows['Employee'][0]['administrationId'] = 'ADM-1';
+		$rows['Employee'][1]['nextcloudUserId'] = 'devries';
+		$rows['Employee'][1]['administrationId'] = 'ADM-2';
+		$rows['OrgUnit'][0]['managerId'] = 'employee-devries';
+		$rows['OrgUnit'][0]['administrationId'] = 'ADM-1';
+		$rows['OrgUnit'][1]['administrationId'] = 'ADM-1';
+		$rows['Timesheet'][0]['managerUserId'] = 'someone-else';
+
+		$report = $this->serviceWithRows($rows)->audit(['jurisdiction' => 'NL']);
+		$this->assertNotContains('nl-mss-manager-consistency', array_column($report['topViolatedRules'], 'ruleId'));
+
+		$rows['Employee'][1]['administrationId'] = 'ADM-1';
+		$report = $this->serviceWithRows($rows)->audit(['jurisdiction' => 'NL']);
+		$this->assertContains('nl-mss-manager-consistency', array_column($report['topViolatedRules'], 'ruleId'));
+
+	}//end testTheAuditChecksTheManagersOwnAdministration()
+
 }//end class

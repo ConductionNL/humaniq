@@ -675,4 +675,35 @@ class NlOrgChecksTest extends TestCase {
 
 	}//end testAParentManagerInAnotherAdministrationResolvesNoManager()
 
+	/**
+	 * The audit reads the manager's own administration from the Employee
+	 * index: a manager above in another administration confirms nothing,
+	 * and neither does a unit of another administration than the
+	 * employee's.
+	 *
+	 * @return void
+	 */
+	public function testAManagerOutsideTheEmployeeAdministrationResolvesNoManager(): void {
+		$context = $this->managerContext(
+			['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '']]],
+			[
+				'orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-jansen', 'parentUnitId' => 'orgunit-directie', 'administrationId' => 'ADM-1'],
+				'orgunit-directie' => ['id' => 'orgunit-directie', 'managerId' => 'employee-degroot', 'parentUnitId' => '', 'administrationId' => 'ADM-1'],
+			],
+			[
+				'employee-jansen' => ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin', 'administrationId' => 'ADM-1'],
+				'employee-degroot' => ['id' => 'employee-degroot', 'nextcloudUserId' => 'pieter', 'administrationId' => 'ADM-2'],
+			]
+		);
+
+		$this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($this->managerScopedRecord(['managerUserId' => 'admin']), $context));
+
+		$context['related']['Employee']['byId']['employee-degroot']['administrationId'] = 'ADM-1';
+		$this->assertFalse(($this->timesheetChecks['nl-mss-manager-consistency'])($this->managerScopedRecord(['managerUserId' => 'admin']), $context));
+
+		$context['related']['Employee']['byId']['employee-jansen']['administrationId'] = 'ADM-2';
+		$this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($this->managerScopedRecord(['managerUserId' => 'admin']), $context));
+
+	}//end testAManagerOutsideTheEmployeeAdministrationResolvesNoManager()
+
 }//end class

@@ -474,4 +474,102 @@ class OrgResolutionServiceTest extends TestCase {
 		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
 	}//end testTheAdministrationBoundaryHoldsOverSeveralLevels()
 
+	/**
+	 * After a climb, a manager whose own Employee record lies outside the
+	 * boundary administration is not the employee's approver: the walk
+	 * ends with no manager, as at a unit in another administration.
+	 *
+	 * @return void
+	 */
+	public function testAManagerAboveInAnotherAdministrationGivesNoManager(): void {
+		$assignments = ['emp-sanne' => [['orgUnitId' => 'unit-consultancy', 'endDate' => '']]];
+		$units = [
+			'unit-consultancy' => ['id' => 'unit-consultancy', 'managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie', 'administrationId' => 'ADM-1'],
+			'unit-directie' => ['id' => 'unit-directie', 'managerId' => 'emp-pieter', 'parentUnitId' => '', 'administrationId' => 'ADM-1'],
+		];
+		$employees = [
+			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne', 'administrationId' => 'ADM-1'],
+			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter', 'administrationId' => 'ADM-2'],
+		];
+
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-03'));
+
+		$employees['emp-pieter']['administrationId'] = '';
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-03'));
+
+		unset($employees['emp-pieter']['administrationId']);
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-03'));
+
+		$employees['emp-pieter']['administrationId'] = ' ADM-1 ';
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-03'));
+
+		// Units without an administration: the employee's own is the boundary.
+		$units['unit-consultancy']['administrationId'] = '';
+		$units['unit-directie']['administrationId'] = '';
+		$employees['emp-pieter']['administrationId'] = 'ADM-2';
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-03'));
+
+		// No boundary at all: the manager's administration is not checked.
+		$employees['emp-sanne']['administrationId'] = '';
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-03'));
+	}//end testAManagerAboveInAnotherAdministrationGivesNoManager()
+
+	/**
+	 * The unit's own manager is an approver only when their Employee record
+	 * is in the boundary administration too.
+	 *
+	 * @return void
+	 */
+	public function testADirectManagerInAnotherAdministrationGivesNoManager(): void {
+		$assignments = ['emp-tim' => [['orgUnitId' => 'unit-consultancy', 'endDate' => '']]];
+		$units = [
+			'unit-consultancy' => ['id' => 'unit-consultancy', 'managerId' => 'emp-sanne', 'parentUnitId' => '', 'administrationId' => 'ADM-1'],
+		];
+		$employees = [
+			'emp-tim' => ['id' => 'emp-tim', 'nextcloudUserId' => 'tim', 'administrationId' => 'ADM-1'],
+			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne', 'administrationId' => 'ADM-2'],
+		];
+
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-03'));
+
+		$employees['emp-sanne']['administrationId'] = 'ADM-1';
+		$this->assertSame(['sanne'], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-03'));
+	}//end testADirectManagerInAnotherAdministrationGivesNoManager()
+
+	/**
+	 * A placement in a unit of another administration than the employee's
+	 * own gives no manager from that unit. Another placement inside the
+	 * employee's administration still resolves its manager.
+	 *
+	 * @return void
+	 */
+	public function testAPlacementInAnotherAdministrationsUnitGivesNoManager(): void {
+		$assignments = ['emp-tim' => [['orgUnitId' => 'unit-extern', 'endDate' => '']]];
+		$units = [
+			'unit-extern' => ['id' => 'unit-extern', 'managerId' => 'emp-pieter', 'parentUnitId' => '', 'administrationId' => 'ADM-2'],
+			'unit-consultancy' => ['id' => 'unit-consultancy', 'managerId' => 'emp-sanne', 'parentUnitId' => '', 'administrationId' => 'ADM-1'],
+		];
+		$employees = [
+			'emp-tim' => ['id' => 'emp-tim', 'nextcloudUserId' => 'tim', 'administrationId' => 'ADM-1'],
+			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne', 'administrationId' => 'ADM-1'],
+			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter', 'administrationId' => 'ADM-2'],
+		];
+
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-03'));
+
+		$assignments['emp-tim'][] = ['orgUnitId' => 'unit-consultancy', 'endDate' => ''];
+		$managers = $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-03');
+		$this->assertSame(['sanne'], $managers);
+		$this->assertSame('sanne', $this->service->uniqueOrNull($managers));
+
+		// The same administration, written with spaces, is no conflict.
+		$assignments['emp-tim'] = [['orgUnitId' => 'unit-extern', 'endDate' => '']];
+		$employees['emp-tim']['administrationId'] = ' ADM-2 ';
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-03'));
+
+		// An employee without an administration takes the unit's.
+		$employees['emp-tim']['administrationId'] = '';
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-03'));
+	}//end testAPlacementInAnotherAdministrationsUnitGivesNoManager()
+
 }//end class
