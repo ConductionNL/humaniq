@@ -12,6 +12,7 @@
     "OCA\\Humaniq\\Controller\\RegisterPrefillController::$gateway",
     "OCA\\Humaniq\\Controller\\TimeEntryController::$gateway",
     "OCA\\Humaniq\\Controller\\TravelController::$gateway",
+    "OCA\\Humaniq\\Lifecycle\\HrReopenGuard::$store",
     "OCA\\Humaniq\\Lifecycle\\LeaveTypeConditionGuard::$gateway",
     "OCA\\Humaniq\\Lifecycle\\RightToWorkGuard::$gateway",
     "OCA\\Humaniq\\Listener\\CandidateEvaluationStampListener::$gateway",

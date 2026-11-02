@@ -33,6 +33,8 @@ use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -75,6 +77,13 @@ class ExpensePayoutFieldsListenerTest extends TestCase {
 	private InternalWriteMarker $marker;
 
 	/**
+	 * The account making the write; null for no session.
+	 *
+	 * @var string|null
+	 */
+	private ?string $actingUser = 'ilse';
+
+	/**
 	 * Set up the marker.
 	 *
 	 * @return void
@@ -101,7 +110,14 @@ class ExpensePayoutFieldsListenerTest extends TestCase {
 			orgResolution: new OrgResolutionService()
 		);
 
-		return new ExpensePayoutFieldsListener(gateway: $gateway, marker: $this->marker);
+		$session = $this->createMock(IUserSession::class);
+		if ($this->actingUser !== null) {
+			$user = $this->createMock(IUser::class);
+			$user->method('getUID')->willReturn($this->actingUser);
+			$session->method('getUser')->willReturn($user);
+		}
+
+		return new ExpensePayoutFieldsListener(gateway: $gateway, marker: $this->marker, userSession: $session);
 	}//end listener()
 
 	/**
@@ -268,6 +284,76 @@ class ExpensePayoutFieldsListenerTest extends TestCase {
 		self::assertFalse($create->isPropagationStopped());
 		self::assertSame([], $create->getModifiedData());
 	}//end testAShippedImportMayCreateADecidedClaim()
+
+	/**
+	 * The reopen write keeps the approved amounts and clears the approval
+	 * and the route; a claim a run holds is not reopened this way.
+	 *
+	 * @return void
+	 */
+	public function testTheReopenWriteClearsTheApprovalAndTheRoute(): void {
+		$stamped = $this->updated(self::APPROVED, array_merge(self::APPROVED, self::FORGED, ['status' => 'submitted']));
+
+		self::assertSame(
+			[
+				'earlier' => 'kept', 'payrollRunId' => null, 'paidInPeriod' => null,
+				'amount' => 34.5, 'taxFreeAmount' => 34.5, 'taxableAmount' => 0.0, 'currency' => 'EUR',
+				'approvedBy' => null, 'approvedAt' => null, 'reimbursementRoute' => null,
+			],
+			$stamped
+		);
+
+		self::assertNull($this->updated(self::APPROVED, array_merge(self::APPROVED, ['status' => ' submitted ']))['approvedBy']);
+
+		$paid = array_merge(self::APPROVED, ['status' => 'reimbursed']);
+		self::assertSame('sanne', $this->updated($paid, array_merge($paid, ['status' => 'submitted']))['approvedBy']);
+	}//end testTheReopenWriteClearsTheApprovalAndTheRoute()
+
+	/**
+	 * Whether an approved-to-submitted write from a stored claim is refused.
+	 *
+	 * @param array<string, mixed> $stored The stored claim.
+	 * @param array<string, mixed> $saved The saved claim.
+	 *
+	 * @return bool
+	 */
+	private function reopenRefused(array $stored, array $saved): bool {
+		$event = new ObjectUpdatingEvent($this->entity('Expense', $saved), $this->entity('Expense', $stored));
+		$this->listener()->handle($event);
+		if ($event->isPropagationStopped() === true) {
+			self::assertSame(['message' => 'Deze declaratie kan niet worden heropend.'], $event->getErrors());
+		}
+
+		return $event->isPropagationStopped();
+	}//end reopenRefused()
+
+	/**
+	 * RW32's probe: a reopen of a claim a payroll run holds is refused, also
+	 * when the write sends no run; so is a reopen by the claimant, by the
+	 * approver, or without an acting account. HR outside the claim passes.
+	 *
+	 * @return void
+	 */
+	public function testAReopenThatTheGuardShouldHaveRefusedIsStopped(): void {
+		$held = array_merge(self::APPROVED, ['payrollRunId' => 'run-1', 'userId' => 'tim-hr']);
+		self::assertTrue($this->reopenRefused($held, array_merge($held, ['status' => 'submitted', 'payrollRunId' => '', 'userId' => 'someone', 'approvedBy' => ''])));
+
+		$own = array_merge(self::APPROVED, ['userId' => ' ilse ']);
+		self::assertTrue($this->reopenRefused($own, array_merge($own, ['status' => 'submitted', 'userId' => 'someone'])));
+
+		$approvedByIlse = array_merge(self::APPROVED, ['approvedBy' => 'ilse ']);
+		self::assertTrue($this->reopenRefused($approvedByIlse, array_merge($approvedByIlse, ['status' => 'submitted', 'approvedBy' => ''])));
+
+		$this->actingUser = null;
+		$tims = array_merge(self::APPROVED, ['userId' => 'tim']);
+		self::assertTrue($this->reopenRefused($tims, array_merge($tims, ['status' => 'submitted'])));
+
+		$this->actingUser = 'ilse';
+		self::assertFalse($this->reopenRefused(self::APPROVED, array_merge(self::APPROVED, ['status' => ' submitted '])));
+		self::assertFalse($this->reopenRefused(self::APPROVED, array_merge(self::APPROVED, ['title' => 'Edited'])));
+		$paid = array_merge(self::APPROVED, ['status' => 'reimbursed', 'payrollRunId' => 'run-1']);
+		self::assertFalse($this->reopenRefused($paid, array_merge($paid, ['status' => 'submitted'])));
+	}//end testAReopenThatTheGuardShouldHaveRefusedIsStopped()
 
 	/**
 	 * A shipped import only lifts the create check: an update during it

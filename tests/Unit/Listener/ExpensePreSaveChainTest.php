@@ -106,7 +106,7 @@ class ExpensePreSaveChainTest extends TestCase {
 			new TravelAmountListener(gateway: $gateway, calculator: new TravelAllowanceCalculator(), settings: $settings, marker: $marker, logger: new NullLogger()),
 			new ApprovalDecisionStampListener($session),
 			new ExpenseRouteListener(settings: $settings, marker: $marker),
-			new ExpensePayoutFieldsListener(gateway: $gateway, marker: $marker),
+			new ExpensePayoutFieldsListener(gateway: $gateway, marker: $marker, userSession: $session),
 		];
 	}//end chain()
 
@@ -260,5 +260,46 @@ class ExpensePreSaveChainTest extends TestCase {
 		self::assertSame(0, $this->paidCents(array_merge($edit, $stamped)));
 		self::assertSame(1000, $this->paidCents($edit));
 	}//end testAnApprovedClaimKeepsItsRoute()
+
+	/**
+	 * HR reopens an approved claim through the chain: it is submitted again
+	 * with its amounts, without approval or route, and payroll does not pay
+	 * it until it is approved again.
+	 *
+	 * @return void
+	 */
+	public function testHrReopensAnApprovedClaim(): void {
+		$approved = array_merge(self::CLAIM, ['status' => 'approved', 'amount' => 34.5, 'taxFreeAmount' => 34.5, 'taxableAmount' => 0.0, 'currency' => 'EUR', 'approvedBy' => 'sanne', 'approvedAt' => '2026-10-01T09:00:00Z', 'reimbursementRoute' => 'payroll', 'submittedAt' => '2026-09-30T09:00:00Z']);
+		self::assertSame(3450, $this->paidCents($approved));
+
+		$reopen = array_merge($approved, ['status' => 'submitted']);
+		$stamped = $this->update($approved, $reopen);
+		$saved = array_merge($reopen, $stamped);
+
+		self::assertSame(34.5, $saved['amount']);
+		self::assertNull($saved['approvedBy']);
+		self::assertNull($saved['approvedAt']);
+		self::assertNull($saved['reimbursementRoute']);
+		self::assertNotSame('2026-09-30T09:00:00Z', $saved['submittedAt']);
+		self::assertSame(0, $this->paidCents($saved));
+	}//end testHrReopensAnApprovedClaim()
+
+	/**
+	 * RW32's probe through the chain: a forged reopen of a claim a payroll
+	 * run holds is refused, and the claim is not saved as submitted.
+	 *
+	 * @return void
+	 */
+	public function testAForgedReopenOfAClaimInARunIsRefused(): void {
+		$held = array_merge(self::CLAIM, ['status' => 'approved', 'amount' => 10.0, 'currency' => 'EUR', 'userId' => 'hr-anna', 'approvedBy' => 'sanne', 'approvedAt' => '2026-10-02T10:00:00Z', 'reimbursementRoute' => 'payroll', 'payrollRunId' => 'run-1']);
+		$event = new ObjectUpdatingEvent($this->entity(data: array_merge($held, ['status' => 'submitted', 'userId' => 'someone', 'approvedBy' => '', 'payrollRunId' => ''])), $this->entity(data: $held));
+		foreach ($this->chain() as $listener) {
+			if ($event->isPropagationStopped() === false) {
+				$listener->handle($event);
+			}
+		}
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAForgedReopenOfAClaimInARunIsRefused()
 
 }//end class

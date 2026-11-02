@@ -8,7 +8,7 @@
  * employer switched off (ExpenseCategoryPolicy): on a create, on a change of
  * the category, and on a submit. The approve, reject and reimburse of a claim
  * that was already submitted pass, so switching a category off never strands
- * a claim halfway. A category that is not one of the seven names is refused
+ * a claim halfway, and neither does HR's reopen of an approved claim. A category that is not one of the seven names is refused
  * too; a claim without a category is not. humaniq's own writes pass.
  *
  * @category Listener
@@ -137,7 +137,7 @@ class ExpenseCategoryGuardListener implements IEventListener {
 			return true;
 		}
 
-		return trim((string)($claim['status'] ?? '')) === 'submitted' && trim((string)($stored['status'] ?? '')) !== 'submitted';
+		return trim((string)($claim['status'] ?? '')) === 'submitted' && in_array(trim((string)($stored['status'] ?? '')), ['', 'draft', 'rejected'], true) === true;
 	}//end checks()
 
 }//end class
