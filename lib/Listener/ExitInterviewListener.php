@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\ExitInterviewService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCP\EventDispatcher\Event;
@@ -53,14 +53,14 @@ class ExitInterviewListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param ExitInterviewService $interviews The exit interview rules.
-	 * @param HoursRegisterGateway $gateway    Resolves the schema slug.
+	 * @param OrgLookupInterface   $gateway    Resolves the schema slug.
 	 * @param LoggerInterface      $logger     The logger.
 	 *
 	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-001
 	 */
 	public function __construct(
 		private readonly ExitInterviewService $interviews,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly OrgLookupInterface $gateway,
 		private readonly LoggerInterface $logger,
 	) {
 

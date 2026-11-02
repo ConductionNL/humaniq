@@ -72,13 +72,13 @@ class LoonaangifteCorrectionService {
 	/**
 	 * The service.
 	 *
-	 * @param HoursRegisterGateway       $gateway  Register reads and writes.
+	 * @param RecordStoreInterface       $gateway  Register reads and writes.
 	 * @param LoonaangifteMessageService $messages The period's lines and the message header.
 	 * @param LoggerInterface            $logger   Logger.
 	 * @param DateTimeImmutable|null     $today    The day, for the route (defaults to now).
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly LoonaangifteMessageService $messages,
 		private readonly LoggerInterface $logger,
 		?DateTimeImmutable $today=null,

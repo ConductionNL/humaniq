@@ -56,11 +56,11 @@ class HandoffEmployeeView {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway The register plumbing.
+	 * @param RecordStoreInterface $gateway The register plumbing.
 	 * @param HandoffPeriodItems   $items   Supplies the value normalisation.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly HandoffPeriodItems $items,
 	) {
 

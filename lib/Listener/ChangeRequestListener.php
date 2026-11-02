@@ -30,7 +30,7 @@ namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\ChangeRequestApplier;
 use OCA\Humaniq\Service\ChangeRequestService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -58,13 +58,13 @@ class ChangeRequestListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Resolves slugs.
+	 * @param OrgLookupInterface   $gateway Resolves slugs.
 	 * @param ChangeRequestService $service Places and decides a request.
 	 * @param ChangeRequestApplier $applier Applies an approved request.
 	 * @param LoggerInterface      $logger  Logger.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly OrgLookupInterface $gateway,
 		private readonly ChangeRequestService $service,
 		private readonly ChangeRequestApplier $applier,
 		private readonly LoggerInterface $logger,

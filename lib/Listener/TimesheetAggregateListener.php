@@ -43,7 +43,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\TimesheetAggregationService;
 use OCP\EventDispatcher\Event;
@@ -71,13 +71,13 @@ class TimesheetAggregateListener implements IEventListener {
 	 *
 	 * @param TimesheetAggregationService $aggregationService The shared recompute.
 	 * @param InternalWriteMarker $marker The request-scoped internal-writer marker.
-	 * @param HoursRegisterGateway $gateway The shared register plumbing (schema-slug resolution).
+	 * @param OrgLookupInterface   $gateway The shared register plumbing (schema-slug resolution).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly TimesheetAggregationService $aggregationService,
 		private readonly InternalWriteMarker $marker,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly OrgLookupInterface $gateway,
 		private readonly LoggerInterface $logger,
 	) {
 

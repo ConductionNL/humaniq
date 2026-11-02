@@ -41,13 +41,13 @@ class TeamDigestComposer {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway    Register reads, unscoped.
+	 * @param RecordStoreInterface $gateway    Register reads, unscoped.
 	 * @param UnitMembership       $membership Unit trees.
 	 * @param OrgResolutionService $orgResolution Whether an assignment is active on a day.
 	 * @param IL10N                $l10n       Translations.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly UnitMembership $membership,
 		private readonly OrgResolutionService $orgResolution,
 		private readonly IL10N $l10n,

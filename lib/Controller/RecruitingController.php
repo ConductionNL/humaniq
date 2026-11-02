@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCA\Humaniq\Service\VacancyMatchService;
@@ -52,7 +52,7 @@ class RecruitingController extends Controller {
 	 * @param RbacObjectReader     $rbac        Reads as the caller.
 	 * @param HumaniqRoles         $roles       HR membership.
 	 * @param VacancyMatchService  $matcher     The match score.
-	 * @param HoursRegisterGateway $gateway     Reads the evaluations.
+	 * @param RecordStoreInterface $gateway     Reads the evaluations.
 	 * @param IUserSession         $userSession The caller.
 	 *
 	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
@@ -62,7 +62,7 @@ class RecruitingController extends Controller {
 		private readonly RbacObjectReader $rbac,
 		private readonly HumaniqRoles $roles,
 		private readonly VacancyMatchService $matcher,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);

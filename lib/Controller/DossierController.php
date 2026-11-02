@@ -33,7 +33,7 @@ namespace OCA\Humaniq\Controller;
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\DossierCompletenessService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -58,14 +58,14 @@ class DossierController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param HoursRegisterGateway $gateway Register reads.
+	 * @param RecordStoreInterface $gateway Register reads.
 	 * @param DossierCompletenessService $completeness The completeness rule.
 	 * @param RbacObjectReader $rbac What the caller may read.
 	 * @param IL10N $l10n Translations for the status labels.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly DossierCompletenessService $completeness,
 		private readonly RbacObjectReader $rbac,
 		private readonly IL10N $l10n,

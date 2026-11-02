@@ -30,7 +30,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\AnalyticsAccess;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\PersonnelBudgetService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -64,14 +64,14 @@ class FormationBudgetController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param HoursRegisterGateway $gateway Register reads, past RBAC: the budget needs every salary.
+	 * @param RecordStoreInterface $gateway Register reads, past RBAC: the budget needs every salary.
 	 * @param PersonnelBudgetService $budget The budget arithmetic.
 	 * @param AnalyticsAccess $access Whether the caller is HR or an accountant, and where.
 	 * @param IUserSession $userSession The caller.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly PersonnelBudgetService $budget,
 		private readonly AnalyticsAccess $access,
 		private readonly IUserSession $userSession,

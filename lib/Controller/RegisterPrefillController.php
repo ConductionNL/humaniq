@@ -34,7 +34,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\AdministrationService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCA\Humaniq\Service\RegisterPrefillService;
@@ -58,7 +58,7 @@ class RegisterPrefillController extends Controller {
 	 *
 	 * @param IRequest               $request     The request.
 	 * @param RegisterPrefillService $prefill     Looks the record up.
-	 * @param HoursRegisterGateway   $gateway     Saves the filled fields, reads the administration.
+	 * @param RecordStoreInterface   $gateway     Saves the filled fields, reads the administration.
 	 * @param RbacObjectReader       $rbac        Reads under the caller's own rights.
 	 * @param HumaniqRoles           $roles       The HR check.
 	 * @param IUserSession           $userSession The caller.
@@ -67,7 +67,7 @@ class RegisterPrefillController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private readonly RegisterPrefillService $prefill,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly RbacObjectReader $rbac,
 		private readonly HumaniqRoles $roles,
 		private readonly IUserSession $userSession,

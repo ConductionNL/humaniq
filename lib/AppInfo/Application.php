@@ -157,6 +157,8 @@ class Application extends App implements IBootstrap {
 				return new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class));
 			}
 		);
+		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
+		$context->registerServiceAlias(\OCA\Humaniq\Service\OrgLookupInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 
 		// OpenRegister lifecycle guard for the Timesheet/Expense approve+reject
 		// transitions (separation of duties — no self-approval). Registered keyed

@@ -29,7 +29,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\AdministrationService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\OrgChartService;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
@@ -50,7 +50,7 @@ class OrgChartController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest              $request         The request.
-	 * @param HoursRegisterGateway  $gateway         Register reads.
+	 * @param RecordStoreInterface  $gateway         Register reads.
 	 * @param RbacObjectReader      $rbac            Which employees the caller may read.
 	 * @param OrgChartService       $charts          The chart composition.
 	 * @param AdministrationService $administrations The caller's active administration.
@@ -58,7 +58,7 @@ class OrgChartController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly RbacObjectReader $rbac,
 		private readonly OrgChartService $charts,
 		private readonly AdministrationService $administrations,

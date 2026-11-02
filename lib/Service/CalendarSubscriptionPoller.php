@@ -64,13 +64,13 @@ class CalendarSubscriptionPoller {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway The shared register plumbing.
+	 * @param RecordStoreInterface $gateway The shared register plumbing.
 	 * @param IClientService $clientService Nextcloud's HTTP client factory.
 	 * @param IcalBusyParser $parser Reads periods, and only periods, out of a feed.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly IClientService $clientService,
 		private readonly IcalBusyParser $parser,
 		private readonly LoggerInterface $logger,

@@ -46,13 +46,13 @@ class HireService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Reads and writes the register.
+	 * @param RecordStoreInterface $gateway Reads and writes the register.
 	 * @param HireMatchService     $matcher The duplicate check.
 	 *
 	 * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-001
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly HireMatchService $matcher,
 	) {
 	}//end __construct()

@@ -28,7 +28,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\ContractChainService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\OnCallAverageService;
 use OCA\Humaniq\Service\RbacObjectReader;
@@ -52,7 +52,7 @@ class FlexContractController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest             $request  The request.
-	 * @param HoursRegisterGateway $gateway  Register reads.
+	 * @param RecordStoreInterface $gateway  Register reads.
 	 * @param RbacObjectReader     $rbac     What the caller may read.
 	 * @param ContractChainService $chains   The chain model.
 	 * @param OnCallAverageService $averages The on-call averages.
@@ -62,7 +62,7 @@ class FlexContractController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly RbacObjectReader $rbac,
 		private readonly ContractChainService $chains,
 		private readonly OnCallAverageService $averages,

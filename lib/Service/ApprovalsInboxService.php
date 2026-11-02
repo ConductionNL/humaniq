@@ -68,12 +68,12 @@ class ApprovalsInboxService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Reads the requests and employees.
+	 * @param RecordStoreInterface $gateway Reads the requests and employees.
 	 * @param ManagerDeputies $deputies Managers and their deputies.
 	 * @param RbacObjectReader $rbac What the caller may read.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly ManagerDeputies $deputies,
 		private readonly RbacObjectReader $rbac,
 	) {

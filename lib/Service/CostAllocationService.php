@@ -49,13 +49,13 @@ class CostAllocationService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway       The register plumbing.
+	 * @param RecordStoreInterface $gateway       The register plumbing.
 	 * @param OrgResolutionService $orgResolution The placement date rule.
 	 * @param LoggerInterface      $logger        The logger.
 	 * @param CostAllocationShares $shares        The share arithmetic.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly OrgResolutionService $orgResolution,
 		private readonly LoggerInterface $logger,
 		private readonly CostAllocationShares $shares = new CostAllocationShares(),

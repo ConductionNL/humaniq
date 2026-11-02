@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\Humaniq\Service\HrLifecycleEventService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -50,12 +50,12 @@ class HrLifecycleEventListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param HrLifecycleEventService $events The moments and their sending.
-	 * @param HoursRegisterGateway $gateway Resolves the schema slug.
+	 * @param OrgLookupInterface   $gateway Resolves the schema slug.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly HrLifecycleEventService $events,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly OrgLookupInterface $gateway,
 		private readonly LoggerInterface $logger,
 	) {
 

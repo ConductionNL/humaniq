@@ -55,7 +55,7 @@ class AccessRevocationService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway The register read and write.
+	 * @param RecordStoreInterface $gateway The register read and write.
 	 * @param IUserManager         $users   Nextcloud's user manager.
 	 * @param IGroupManager        $groups  Whether an account is an administrator.
 	 * @param LoggerInterface      $logger  The logger.
@@ -63,7 +63,7 @@ class AccessRevocationService {
 	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly IUserManager $users,
 		private readonly IGroupManager $groups,
 		private readonly LoggerInterface $logger,
