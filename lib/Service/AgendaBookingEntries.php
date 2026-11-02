@@ -43,24 +43,14 @@ class AgendaBookingEntries {
 	 * itself.
 	 *
 	 * @param array<string, mixed> $sources The source rows.
-	 * @param array<int, string> $employees The subject's employees.
-	 * @param string $subjectType The subject kind.
-	 * @param string $subjectId The subject's id.
-	 * @param string $from First day (ISO date).
-	 * @param string $to Last day (ISO date).
+	 * @param AgendaWindow $window The subject, its employees and the first and last day.
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-003
 	 */
-	public function bookingEntries(
-		array $sources,
-		array $employees,
-		string $subjectType,
-		string $subjectId,
-		string $from,
-		string $to,
-	): array {
+	public function bookingEntries(array $sources, AgendaWindow $window): array {
+		$subjectType = $window->subject->type;
 		$entries = [];
 		foreach (($sources['bookings'] ?? []) as $booking) {
 			$start = $this->stringOrNull(($booking['start'] ?? null));
@@ -69,22 +59,14 @@ class AgendaBookingEntries {
 				continue;
 			}
 
-			if (substr($start, 0, 10) > $to || substr($end, 0, 10) < $from) {
+			if (substr($start, 0, 10) > $window->to || substr($end, 0, 10) < $window->from) {
 				continue;
 			}
 
 			$employeeId = trim((string)($booking['employeeId'] ?? ''));
 			$resourceId = trim((string)($booking['resourceId'] ?? ''));
 
-			$holdsSubject = $this->holdsSubject(
-				employeeId: $employeeId,
-				resourceId: $resourceId,
-				employees: $employees,
-				subjectType: $subjectType,
-				subjectId: $subjectId
-			);
-
-			if ($holdsSubject === false) {
+			if ($this->holdsSubject(holder: ['employeeId' => $employeeId, 'resourceId' => $resourceId], window: $window) === false) {
 				continue;
 			}
 
@@ -113,19 +95,17 @@ class AgendaBookingEntries {
 	 * caches periods only.
 	 *
 	 * @param array<string, mixed> $sources The source rows.
-	 * @param array<int, string> $employees The subject's employees.
-	 * @param string $from First day (ISO date).
-	 * @param string $to Last day (ISO date).
+	 * @param AgendaWindow $window The subject's employees and the first and last day.
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-005
 	 */
-	public function busyEntries(array $sources, array $employees, string $from, string $to): array {
+	public function busyEntries(array $sources, AgendaWindow $window): array {
 		$entries = [];
 		foreach (($sources['subscriptions'] ?? []) as $subscription) {
 			$employeeId = trim((string)($subscription['employeeId'] ?? ''));
-			if (in_array($employeeId, $employees, true) === false) {
+			if (in_array($employeeId, $window->employees, true) === false) {
 				continue;
 			}
 
@@ -137,11 +117,8 @@ class AgendaBookingEntries {
 			$entries = array_merge(
 				$entries,
 				$this->busyPeriodEntries(
-					periods: $periods,
-					employeeId: $employeeId,
-					subscriptionId: trim((string)($subscription['id'] ?? '')),
-					from: $from,
-					to: $to
+					subscription: ['periods' => $periods, 'employeeId' => $employeeId, 'id' => trim((string)($subscription['id'] ?? ''))],
+					window: $window
 				)
 			);
 		}
@@ -155,52 +132,34 @@ class AgendaBookingEntries {
 	 * A resource agenda holds the bookings OF that resource; any other agenda
 	 * holds the bookings made BY one of its employees.
 	 *
-	 * @param string $employeeId The booking's employee, empty when it has none.
-	 * @param string $resourceId The booking's resource.
-	 * @param array<int, string> $employees The subject's employees.
-	 * @param string $subjectType The subject kind.
-	 * @param string $subjectId The subject's id.
+	 * @param array{employeeId: string, resourceId: string} $holder The booking's employee (empty when it has none) and resource.
+	 * @param AgendaWindow $window The subject and its employees.
 	 *
 	 * @return bool True when the booking belongs on the agenda.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-003
 	 */
-	private function holdsSubject(
-		string $employeeId,
-		string $resourceId,
-		array $employees,
-		string $subjectType,
-		string $subjectId
-	): bool {
-		if ($subjectType === 'resource') {
-			return ($resourceId === $subjectId);
+	private function holdsSubject(array $holder, AgendaWindow $window): bool {
+		if ($window->subject->type === 'resource') {
+			return ($holder['resourceId'] === $window->subject->id);
 		}
 
-		return ($employeeId !== '' && in_array($employeeId, $employees, true) === true);
+		return ($holder['employeeId'] !== '' && in_array($holder['employeeId'], $window->employees, true) === true);
 	}//end holdsSubject()
 
 	/**
 	 * One subscription's cached periods as busy entries.
 	 *
-	 * @param array<int|string, mixed> $periods The cached busy periods.
-	 * @param string $employeeId The employee the subscription belongs to.
-	 * @param string $subscriptionId The subscription's id.
-	 * @param string $from First day (ISO date).
-	 * @param string $to Last day (ISO date).
+	 * @param array{periods: array<int|string, mixed>, employeeId: string, id: string} $subscription The cached busy periods, the employee they belong to and the subscription's id.
+	 * @param AgendaWindow $window The first and last day.
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-005
 	 */
-	private function busyPeriodEntries(
-		array $periods,
-		string $employeeId,
-		string $subscriptionId,
-		string $from,
-		string $to
-	): array {
+	private function busyPeriodEntries(array $subscription, AgendaWindow $window): array {
 		$entries = [];
-		foreach ($periods as $period) {
+		foreach ($subscription['periods'] as $period) {
 			if (is_array($period) === false) {
 				continue;
 			}
@@ -211,19 +170,19 @@ class AgendaBookingEntries {
 				continue;
 			}
 
-			if (substr($start, 0, 10) > $to || substr($end, 0, 10) < $from) {
+			if (substr($start, 0, 10) > $window->to || substr($end, 0, 10) < $window->from) {
 				continue;
 			}
 
 			$entries[] = [
 				'kind' => 'busy',
 				'subjectType' => 'employee',
-				'subjectId' => $employeeId,
+				'subjectId' => $subscription['employeeId'],
 				'start' => $start,
 				'end' => $end,
 				'label' => 'Bezet',
 				'sourceType' => 'CalendarSubscription',
-				'sourceId' => $subscriptionId,
+				'sourceId' => $subscription['id'],
 			];
 		}
 

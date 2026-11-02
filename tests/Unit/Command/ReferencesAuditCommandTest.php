@@ -36,6 +36,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * test below pins one refusal.
  *
  * @covers \OCA\Humaniq\Command\ReferencesAuditCommand
+ * @uses   \OCA\Humaniq\Command\ReferenceAuditRun
  */
 class ReferencesAuditCommandTest extends TestCase {
 	/**
