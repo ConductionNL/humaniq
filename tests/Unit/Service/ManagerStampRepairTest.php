@@ -104,12 +104,6 @@ class ManagerStampRepairTest extends TestCase {
 		$saved = &$this->savedInternally;
 		$this->store = new class($marker, $saved) extends FakeObjectStore {
 			/**
-			 * Records whether a save runs inside the marker.
-			 *
-			 * @param InternalWriteMarker $marker The marker.
-			 * @param list<bool> $saved Collects one flag per save.
-			 */
-			/**
 			 * The record id whose save throws, if any.
 			 *
 			 * @var string|null
@@ -143,6 +137,12 @@ class ManagerStampRepairTest extends TestCase {
 				return parent::setSchema($schema);
 			}//end setSchema()
 
+			/**
+			 * Records whether a save runs inside the marker.
+			 *
+			 * @param InternalWriteMarker $marker The marker.
+			 * @param list<bool> $saved Collects one flag per save.
+			 */
 			public function __construct(private InternalWriteMarker $marker, private array &$saved) {
 				parent::__construct();
 			}//end __construct()
