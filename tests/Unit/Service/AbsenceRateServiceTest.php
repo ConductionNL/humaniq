@@ -562,4 +562,64 @@ class AbsenceRateServiceTest extends TestCase {
 		$this->assertSame(0, $result['employeesMeasuredOnPattern']);
 		$this->assertSame(18.6, $result['availableDayEquivalents']);
 	}//end testAnEmployeeWithoutAPatternKeepsTheContractDenominator()
+
+	/**
+	 * A patterned employee sick for the whole period is 100% absent, never
+	 * more, even when non-working time and a calendar day off shrink the
+	 * contracted hours: absence and availability count the same pattern hours.
+	 *
+	 * @return void
+	 */
+	public function testAPatternedEmployeeSickAllPeriodIsExactlyOneHundredPercent(): void {
+		[$start, $end] = $this->january();
+
+		$result = $this->service->absenceRate(
+			cases: [['employeeId' => 'emp-1', 'firstSickDay' => '2025-12-01', 'status' => 'gemeld']],
+			contracts: [$this->contract('emp-1', 24.0)],
+			period: new AbsencePeriod($start, $end, 38.0),
+			workingTime: new WorkingTimeSources(
+				workingPatterns: [$this->mondayToWednesday()],
+				nonWorkingTimes: [['employeeId' => 'emp-1', 'startDate' => '2026-01-19', 'endDate' => '2026-01-21', 'hoursNotWorked' => 8]],
+				nonWorkingDates: ['2026-01-05']
+			)
+		);
+
+		$this->assertSame(1, $result['employeesMeasuredOnPattern']);
+		$this->assertSame($result['availableDayEquivalents'], $result['absentDayEquivalents']);
+		$this->assertSame(100.0, $result['percentage']);
+	}//end testAPatternedEmployeeSickAllPeriodIsExactlyOneHundredPercent()
+
+	/**
+	 * A patterned employee's absence counts the pattern hours it covers: sick
+	 * on the Monday only of a Monday-to-Wednesday week is 8 of 24 hours, and
+	 * the weekend days of the sickness count on neither side.
+	 *
+	 * @return void
+	 */
+	public function testAPatternedAbsenceCountsTheContractedHoursItCovers(): void {
+		$result = $this->service->absenceRate(
+			cases: [['employeeId' => 'emp-1', 'firstSickDay' => '2026-01-10', 'recoveredDate' => '2026-01-12', 'status' => 'hersteld']],
+			contracts: [$this->contract('emp-1', 24.0)],
+			period: new AbsencePeriod(new DateTimeImmutable('2026-01-10'), new DateTimeImmutable('2026-01-16')),
+			workingTime: new WorkingTimeSources(workingPatterns: [$this->mondayToWednesday()], nonWorkingDates: [])
+		);
+
+		$this->assertSame(33.33, $result['percentage']);
+	}//end testAPatternedAbsenceCountsTheContractedHoursItCovers()
+
+	/**
+	 * A working pattern of eight hours on Monday to Wednesday.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function mondayToWednesday(): array {
+		return [
+			'employeeId' => 'emp-1',
+			'validFrom' => '2025-01-01',
+			'validUntil' => null,
+			'hoursMonday' => 8,
+			'hoursTuesday' => 8,
+			'hoursWednesday' => 8,
+		];
+	}//end mondayToWednesday()
 }//end class
