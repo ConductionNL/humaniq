@@ -95,10 +95,10 @@
 <script>
 import { CnAdminSettingsShell, CnSettingsSection } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
-import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import { defineComponent } from 'vue'
 import { allowedAfterToggle, loadCategories, saveCategories } from './expenseCategories.js'
 
@@ -119,20 +119,6 @@ export default defineComponent({
 			expenseCategories: [],
 			savingCategories: false,
 			categoryError: '',
-		}
-	},
-
-	/**
-	 * Read the expense category switches.
-	 *
-	 * @return {Promise<void>}
-	 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
-	 */
-	async mounted() {
-		try {
-			this.expenseCategories = await loadCategories(axios, CATEGORIES_URL)
-		} catch (e) {
-			this.categoryError = t('humaniq', 'The expense categories could not be loaded.')
 		}
 	},
 
@@ -194,6 +180,20 @@ export default defineComponent({
 		},
 	},
 
+	/**
+	 * Read the expense category switches.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
+	 */
+	async mounted() {
+		try {
+			this.expenseCategories = await loadCategories(axios, CATEGORIES_URL)
+		} catch {
+			this.categoryError = t('humaniq', 'The expense categories could not be loaded.')
+		}
+	},
+
 	methods: {
 		t,
 
@@ -230,7 +230,7 @@ export default defineComponent({
 			this.categoryError = ''
 			try {
 				this.expenseCategories = await saveCategories(axios, CATEGORIES_URL, allowedAfterToggle(this.expenseCategories, id, on))
-			} catch (e) {
+			} catch {
 				this.categoryError = t('humaniq', 'The expense categories could not be saved.')
 			} finally {
 				this.savingCategories = false

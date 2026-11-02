@@ -26,7 +26,7 @@ export function allowedAfterToggle(categories, id, on) {
 /**
  * Read the switches.
  *
- * @param {{get: Function}} http An axios-like client.
+ * @param {{get: (url: string) => Promise<{data: object}>}} http An axios-like client.
  * @param {string} url The API url.
  * @return {Promise<Array<{id: string, allowed: boolean}>>}
  * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
@@ -39,7 +39,7 @@ export async function loadCategories(http, url) {
 /**
  * Save the categories that are on; returns the switches as stored.
  *
- * @param {{put: Function}} http An axios-like client.
+ * @param {{put: (url: string, body: object) => Promise<{data: object}>}} http An axios-like client.
  * @param {string} url The API url.
  * @param {Array<string>} allowed The categories that are on.
  * @return {Promise<Array<{id: string, allowed: boolean}>>}
