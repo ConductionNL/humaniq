@@ -136,6 +136,18 @@ class ExpenseCategoryGuardListenerTest extends TestCase {
 		self::assertFalse($allowed->isPropagationStopped());
 		self::assertSame([], $allowed->getErrors());
 
+		$shouted = new ObjectCreatingEvent($this->entity('Expense', ['category' => 'MEALS', 'status' => 'draft']));
+		$this->listener()->handle($shouted);
+		self::assertTrue($shouted->isPropagationStopped());
+
+		$unknown = new ObjectCreatingEvent($this->entity('Expense', ['category' => 'yachts', 'status' => 'draft']));
+		$this->listener()->handle($unknown);
+		self::assertTrue($unknown->isPropagationStopped());
+
+		$none = new ObjectCreatingEvent($this->entity('Expense', ['category' => ' ', 'status' => 'draft']));
+		$this->listener()->handle($none);
+		self::assertFalse($none->isPropagationStopped());
+
 		$approved = new ObjectCreatingEvent($this->entity('Expense', ['category' => 'meals', 'status' => 'approved']));
 		$this->listener()->handle($approved);
 		self::assertTrue($approved->isPropagationStopped());

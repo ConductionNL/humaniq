@@ -114,4 +114,20 @@ class ExpenseCategoryControllerTest extends TestCase {
 		self::assertCount(1, $index->getAttributes(NoAdminRequired::class));
 	}//end testOnlyAnAdminMaySave()
 
+	/**
+	 * A save without the list, or with something that is not a list of
+	 * names, is refused and switches nothing off.
+	 *
+	 * @return void
+	 */
+	public function testASaveWithoutAListIsRefused(): void {
+		foreach ([null, 'travel', ['a' => 'travel'], [], [1, 2]] as $allowed) {
+			$response = $this->controller()->update($allowed);
+			self::assertSame(400, $response->getStatus(), var_export($allowed, true));
+		}
+
+		self::assertSame([], $this->config);
+		self::assertSame(200, $this->controller()->update(['travel'])->getStatus());
+	}//end testASaveWithoutAListIsRefused()
+
 }//end class

@@ -8,7 +8,8 @@
  * employer switched off (ExpenseCategoryPolicy): on a create, on a change of
  * the category, and on a submit. The approve, reject and reimburse of a claim
  * that was already submitted pass, so switching a category off never strands
- * a claim halfway. humaniq's own writes pass.
+ * a claim halfway. A category that is not one of the seven names is refused
+ * too; a claim without a category is not. humaniq's own writes pass.
  *
  * @category Listener
  * @package  OCA\Humaniq\Listener
@@ -93,13 +94,30 @@ class ExpenseCategoryGuardListener implements IEventListener {
 
 		$claim = ($entity->getObject() ?? []);
 		$stored = ($event instanceof ObjectUpdatingEvent) ? ($event->getOldObject()?->getObject() ?? []) : null;
-		if ($this->checks(claim: $claim, stored: $stored) === false || $this->policy->isAllowed((string)($claim['category'] ?? '')) === true) {
+		if ($this->refuses(claim: $claim, stored: $stored) === false) {
 			return;
 		}
 
 		$event->setErrors(['message' => 'Declaraties in deze categorie zijn uitgeschakeld. Kies een andere categorie.']);
 		$event->stopPropagation();
 	}//end handle()
+
+	/**
+	 * Whether this write puts a claim in a category that may not be claimed.
+	 *
+	 * @param array<string, mixed> $claim The claim as it will be saved.
+	 * @param array<string, mixed>|null $stored The stored claim, null on create.
+	 *
+	 * @return bool
+	 */
+	private function refuses(array $claim, ?array $stored): bool {
+		$category = trim((string)($claim['category'] ?? ''));
+		if ($category === '' || $this->checks(claim: $claim, stored: $stored) === false) {
+			return false;
+		}
+
+		return $this->policy->isAllowed($category) === false;
+	}//end refuses()
 
 	/**
 	 * Whether this write is one the category setting judges: a create, a
