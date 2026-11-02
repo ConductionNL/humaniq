@@ -86,18 +86,14 @@ class LeaveCalendarService {
 	 *
 	 * @var string
 	 */
-	// FROZEN at the old app id: already-synced CalDAV events carry this URI
-	// prefix. Renaming it would double-create every leave event and orphan the
-	// existing ones beyond the reconciler's reach.
-	private const LEAVE_URI_PREFIX = 'hrmq-leave-';
+	private const LEAVE_URI_PREFIX = LeaveCalendarEventRef::LEAVE_URI_PREFIX;
 
 	/**
 	 * Object-URI/UID prefix for SickLeaveCase-derived events (design.md D2).
 	 *
 	 * @var string
 	 */
-	// FROZEN at the old app id — same reason as LEAVE_URI_PREFIX above.
-	private const SICK_URI_PREFIX = 'hrmq-sick-';
+	private const SICK_URI_PREFIX = LeaveCalendarEventRef::SICK_URI_PREFIX;
 
 	/**
 	 * ObjectService findAll() page cap, mirroring RuleAuditService::LIMIT.
@@ -160,87 +156,77 @@ class LeaveCalendarService {
 			return [$this->skipOutcome(sprintf('Kalender "%s" niet gevonden voor principal "%s".', $uri, $principal))];
 		}
 
-		$calendarId = $calendar['id'];
+		$target = new CalendarTarget(backend: $backend, calendarId: $calendar['id'], principal: $principal, calendarUri: $uri);
+		$run = new LeaveCalendarRun(target: $target, employeesById: $this->buildEmployeeIndex(), from: $from);
 
-		$employeesById = $this->buildEmployeeIndex();
-
-		$results = [];
-		$liveLeaveIds = [];
-		$liveSickIds = [];
+		$liveIds = ['leave' => [], 'sick' => []];
 
 		foreach ($this->loadAll(self::LEAVE_SCHEMA) as $leave) {
-			$id = (string)($leave['id'] ?? $leave['@self']['id'] ?? '');
+			$id = $this->sourceId($leave);
 			if ($id === '') {
 				continue;
 			}
 
-			$liveLeaveIds[] = $id;
-			$this->syncLeave($backend, $calendarId, $principal, $uri, $leave, $id, $employeesById, $from, $results);
+			$liveIds['leave'][] = $id;
+			$this->syncLeave($run, $leave);
 		}
 
 		foreach ($this->loadAll(self::SICK_SCHEMA) as $sick) {
-			$id = (string)($sick['id'] ?? $sick['@self']['id'] ?? '');
+			$id = $this->sourceId($sick);
 			if ($id === '') {
 				continue;
 			}
 
-			$liveSickIds[] = $id;
-			$this->syncSick($backend, $calendarId, $principal, $uri, $sick, $id, $employeesById, $from, $results);
+			$liveIds['sick'][] = $id;
+			$this->syncSick($run, $sick);
 		}
 
-		$this->reconcileOrphans($backend, $calendarId, $liveLeaveIds, $liveSickIds, $results);
+		$this->reconcileOrphans($run, $liveIds);
 
-		return $results;
+		return $run->results();
 	}//end sync()
 
 	/**
-	 * Upsert or remove the event for one LeaveRequest (design.md D2/D5,
-	 * REQ-LC-002/REQ-LC-005): `approved` upserts (bounded by `$from` on
-	 * endDate), any other status removes the event if it exists.
+	 * The id of a LeaveRequest or SickLeaveCase row, or '' when it has none.
 	 *
-	 * @param mixed $backend The duck-typed CalDavBackend.
-	 * @param mixed $calendarId The resolved calendar's id.
-	 * @param string $principal The configured CalDAV principal.
-	 * @param string $calendarUri The configured calendar URI.
+	 * @param array<string, mixed> $row The source object.
+	 *
+	 * @return string
+	 */
+	private function sourceId(array $row): string {
+		return (string)($row['id'] ?? $row['@self']['id'] ?? '');
+	}//end sourceId()
+
+	/**
+	 * Upsert or remove the event for one LeaveRequest (design.md D2/D5,
+	 * REQ-LC-002/REQ-LC-005): `approved` upserts (bounded by the run's
+	 * `from` on endDate), any other status removes the event if it exists.
+	 *
+	 * @param LeaveCalendarRun $run The sync run.
 	 * @param array<string, mixed> $leave The LeaveRequest object.
-	 * @param string $id The LeaveRequest id.
-	 * @param array<string, array<string, string>> $employeesById Employee name index.
-	 * @param string|null $from Optional bound (Y-m-d).
-	 * @param array<int, array<string, mixed>> &$results Outcome accumulator.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-002
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-005
 	 */
-	private function syncLeave(
-		mixed $backend,
-		mixed $calendarId,
-		string $principal,
-		string $calendarUri,
-		array $leave,
-		string $id,
-		array $employeesById,
-		?string $from,
-		array &$results,
-	): void {
-		$uid = self::LEAVE_URI_PREFIX . $id;
-		$objectUri = $uid . '.ics';
+	private function syncLeave(LeaveCalendarRun $run, array $leave): void {
+		$ref = new LeaveCalendarEventRef(type: 'leave', sourceId: $this->sourceId($leave));
 		$status = (string)($leave['status'] ?? '');
 
 		if ($status !== 'approved') {
-			$this->removeEvent($backend, $calendarId, $principal, $calendarUri, $uid, $objectUri, 'leave', $id, $results);
+			$this->removeEvent($run, $ref);
 			return;
 		}
 
 		$startDate = trim((string)($leave['startDate'] ?? ''));
 		$endDate = trim((string)($leave['endDate'] ?? ''));
 		if ($startDate === '' || $endDate === '') {
-			$results[] = $this->outcome('leave', $id, 'failed', 'LeaveRequest mist startDate/endDate; kan niet gesynchroniseerd worden.');
+			$run->record($this->outcome('leave', $ref->sourceId, 'failed', 'LeaveRequest mist startDate/endDate; kan niet gesynchroniseerd worden.'));
 			return;
 		}
 
-		if ($from !== null && $this->dateOnOrAfter($endDate, $from) === false) {
+		if ($run->from !== null && $this->dateOnOrAfter($endDate, $run->from) === false) {
 			// Out of the --from bound; an already-synced event stays untouched.
 			return;
 		}
@@ -248,14 +234,14 @@ class LeaveCalendarService {
 		$dtstart = $this->compactDate($startDate);
 		$dtendExclusive = $this->compactDate($this->addDays($endDate, 1));
 		if ($dtstart === null || $dtendExclusive === null) {
-			$results[] = $this->outcome('leave', $id, 'failed', 'LeaveRequest startDate/endDate is geen geldige datum.');
+			$run->record($this->outcome('leave', $ref->sourceId, 'failed', 'LeaveRequest startDate/endDate is geen geldige datum.'));
 			return;
 		}
 
 		$employeeId = (string)($leave['employeeId'] ?? '');
-		$summary = 'Verlof — ' . $this->employeeName($employeesById, $employeeId);
+		$summary = 'Verlof — ' . $this->employeeName($run->employeesById, $employeeId);
 
-		$this->upsertEvent($backend, $calendarId, $principal, $calendarUri, $uid, $objectUri, $dtstart, $dtendExclusive, $summary, 'leave', $id, $results);
+		$this->upsertEvent($run, new LeaveCalendarEvent(ref: $ref, dtstart: $dtstart, dtendExclusive: $dtendExclusive, summary: $summary));
 
 	}//end syncLeave()
 
@@ -268,75 +254,74 @@ class LeaveCalendarService {
 	 * removal only ever happens via orphan reconciliation on hard delete
 	 * (design.md D4).
 	 *
-	 * @param mixed $backend The duck-typed CalDavBackend.
-	 * @param mixed $calendarId The resolved calendar's id.
-	 * @param string $principal The configured CalDAV principal.
-	 * @param string $calendarUri The configured calendar URI.
+	 * @param LeaveCalendarRun $run The sync run; its `from` bound applies to hersteld cases only.
 	 * @param array<string, mixed> $sick The SickLeaveCase object.
-	 * @param string $id The SickLeaveCase id.
-	 * @param array<string, array<string, string>> $employeesById Employee name index.
-	 * @param string|null $from Optional bound (Y-m-d), applied to hersteld cases only.
-	 * @param array<int, array<string, mixed>> &$results Outcome accumulator.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-003
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-004
 	 */
-	private function syncSick(
-		mixed $backend,
-		mixed $calendarId,
-		string $principal,
-		string $calendarUri,
-		array $sick,
-		string $id,
-		array $employeesById,
-		?string $from,
-		array &$results,
-	): void {
-		$uid = self::SICK_URI_PREFIX . $id;
-		$objectUri = $uid . '.ics';
-		$status = (string)($sick['status'] ?? '');
+	private function syncSick(LeaveCalendarRun $run, array $sick): void {
+		$ref = new LeaveCalendarEventRef(type: 'sick', sourceId: $this->sourceId($sick));
 
 		$firstSickDay = trim((string)($sick['firstSickDay'] ?? ''));
 		if ($firstSickDay === '') {
-			$results[] = $this->outcome('sick', $id, 'failed', 'SickLeaveCase mist firstSickDay; kan niet gesynchroniseerd worden.');
+			$run->record($this->outcome('sick', $ref->sourceId, 'failed', 'SickLeaveCase mist firstSickDay; kan niet gesynchroniseerd worden.'));
 			return;
 		}
 
-		// Default (gemeld / open): rolling bar through today, re-extended every
-		// sync, never bounded by --from (design.md D4/Risks). A recovered case
-		// overrides this below; addDays() is pure, so computing it up front is
-		// equivalent to the former if/else.
-		$dtendExclusiveSource = $this->addDays(gmdate('Y-m-d'), 1);
-
-		if ($status === 'hersteld') {
-			$recoveredDate = trim((string)($sick['recoveredDate'] ?? ''));
-			if ($recoveredDate === '') {
-				$results[] = $this->outcome('sick', $id, 'skipped', 'SickLeaveCase is hersteld maar recoveredDate ontbreekt; overgeslagen (geen gok).');
-				return;
-			}
-
-			if ($from !== null && $this->dateOnOrAfter($recoveredDate, $from) === false) {
-				return;
-			}
-
-			$dtendExclusiveSource = $this->addDays($recoveredDate, 1);
+		$dtendExclusiveSource = $this->sickEndExclusive($run, $sick);
+		if ($dtendExclusiveSource === null) {
+			return;
 		}
 
 		$dtstart = $this->compactDate($firstSickDay);
-		$dtendExclusive = $this->compactDate((string)$dtendExclusiveSource);
+		$dtendExclusive = $this->compactDate($dtendExclusiveSource);
 		if ($dtstart === null || $dtendExclusive === null) {
-			$results[] = $this->outcome('sick', $id, 'failed', 'SickLeaveCase firstSickDay/recoveredDate is geen geldige datum.');
+			$run->record($this->outcome('sick', $ref->sourceId, 'failed', 'SickLeaveCase firstSickDay/recoveredDate is geen geldige datum.'));
 			return;
 		}
 
 		$employeeId = (string)($sick['employeeId'] ?? '');
-		$summary = 'Afwezig — ' . $this->employeeName($employeesById, $employeeId);
+		$summary = 'Afwezig — ' . $this->employeeName($run->employeesById, $employeeId);
 
-		$this->upsertEvent($backend, $calendarId, $principal, $calendarUri, $uid, $objectUri, $dtstart, $dtendExclusive, $summary, 'sick', $id, $results);
+		$this->upsertEvent($run, new LeaveCalendarEvent(ref: $ref, dtstart: $dtstart, dtendExclusive: $dtendExclusive, summary: $summary));
 
 	}//end syncSick()
+
+	/**
+	 * The exclusive end date (Y-m-d) of a SickLeaveCase event (design.md D4),
+	 * or null when the case is not synced: an open (gemeld) case is a
+	 * rolling bar through today, never bounded by --from; a hersteld case
+	 * ends the day after recoveredDate, is skipped with an outcome row when
+	 * recoveredDate is missing, and is left alone when it recovered before
+	 * the run's `from` bound.
+	 *
+	 * @param LeaveCalendarRun $run The sync run.
+	 * @param array<string, mixed> $sick The SickLeaveCase object.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-004
+	 */
+	private function sickEndExclusive(LeaveCalendarRun $run, array $sick): ?string {
+		if ((string)($sick['status'] ?? '') !== 'hersteld') {
+			return $this->addDays(gmdate('Y-m-d'), 1);
+		}
+
+		$recoveredDate = trim((string)($sick['recoveredDate'] ?? ''));
+		if ($recoveredDate === '') {
+			$run->record($this->outcome('sick', $this->sourceId($sick), 'skipped', 'SickLeaveCase is hersteld maar recoveredDate ontbreekt; overgeslagen (geen gok).'));
+			return null;
+		}
+
+		if ($run->from !== null && $this->dateOnOrAfter($recoveredDate, $run->from) === false) {
+			return null;
+		}
+
+		return $this->addDays($recoveredDate, 1);
+	}//end sickEndExclusive()
 
 	/**
 	 * Create or update one VEVENT (design.md D2): probe
@@ -345,142 +330,158 @@ class LeaveCalendarService {
 	 * stored event and update only when they differ (avoids etag churn on a
 	 * no-op sync — the idempotency invariant tasks.md/spec require).
 	 *
-	 * @param mixed $backend The duck-typed CalDavBackend.
-	 * @param mixed $calendarId The resolved calendar's id.
-	 * @param string $principal The configured CalDAV principal.
-	 * @param string $calendarUri The configured calendar URI.
-	 * @param string $uid The deterministic VEVENT UID.
-	 * @param string $objectUri The deterministic object URI (`{uid}.ics`).
-	 * @param string $dtstart Compact DATE value (YYYYMMDD).
-	 * @param string $dtendExclusive Compact DATE value (YYYYMMDD), exclusive.
-	 * @param string $summary The AVG-safe SUMMARY text (unescaped).
-	 * @param string $type `leave` or `sick`, for the outcome row.
-	 * @param string $sourceId The source object id, for the outcome row.
-	 * @param array<int, array<string, mixed>> &$results Outcome accumulator.
+	 * @param LeaveCalendarRun $run The sync run.
+	 * @param LeaveCalendarEvent $event The desired event.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-002
 	 */
-	private function upsertEvent(
-		mixed $backend,
-		mixed $calendarId,
-		string $principal,
-		string $calendarUri,
-		string $uid,
-		string $objectUri,
-		string $dtstart,
-		string $dtendExclusive,
-		string $summary,
-		string $type,
-		string $sourceId,
-		array &$results,
-	): void {
+	private function upsertEvent(LeaveCalendarRun $run, LeaveCalendarEvent $event): void {
+		$ref = $event->ref;
+		$lookup = $this->lookupEvent($run->target, $ref);
+		if ($lookup['error'] !== null) {
+			$run->record($this->outcome($ref->type, $ref->sourceId, 'failed', 'Kon bestaand kalenderobject niet opzoeken: ' . $lookup['error']));
+			return;
+		}
+
+		if ($lookup['path'] === null) {
+			$run->record($this->createEvent($run->target, $event));
+			return;
+		}
+
+		$existingIcs = $this->fetchCalendarData($run->target, $ref->objectUri());
+		if ($existingIcs !== null && $this->veventUnchanged($existingIcs, $event) === true) {
+			$run->record($this->outcome($ref->type, $ref->sourceId, 'unchanged', 'Geen wijziging.'));
+			return;
+		}
+
+		$run->record($this->updateEvent($run->target, $event));
+
+	}//end upsertEvent()
+
+	/**
+	 * Look up an event's stored path by UID, scoped to the configured
+	 * calendar (design.md D1).
+	 *
+	 * @param CalendarTarget $target The calendar target.
+	 * @param LeaveCalendarEventRef $ref The event.
+	 *
+	 * @return array{path: mixed, error: string|null} The stored path (null when absent), or the lookup's error message.
+	 */
+	private function lookupEvent(CalendarTarget $target, LeaveCalendarEventRef $ref): array {
+		$backend = $target->backend;
 		try {
-			$existingPath = (method_exists($backend, 'getCalendarObjectByUID') === true)
-				? $backend->getCalendarObjectByUID($principal, $uid, $calendarUri)
+			$path = (method_exists($backend, 'getCalendarObjectByUID') === true)
+				? $backend->getCalendarObjectByUID($target->principal, $ref->uid(), $target->calendarUri)
 				: null;
 		} catch (\Throwable $e) {
-			$results[] = $this->outcome($type, $sourceId, 'failed', 'Kon bestaand kalenderobject niet opzoeken: ' . $e->getMessage());
-			return;
+			return ['path' => null, 'error' => $e->getMessage()];
 		}
 
-		$ics = $this->renderIcs($uid, $dtstart, $dtendExclusive, $summary);
+		return ['path' => $path, 'error' => null];
+	}//end lookupEvent()
 
-		if ($existingPath === null) {
-			try {
-				if (method_exists($backend, 'createCalendarObject') === false) {
-					throw new RuntimeException('CalDavBackend::createCalendarObject is not available.');
-				}
-
-				$backend->createCalendarObject($calendarId, $objectUri, $ics);
-			} catch (\Throwable $e) {
-				$results[] = $this->outcome($type, $sourceId, 'failed', 'Aanmaken kalenderafspraak mislukt: ' . $e->getMessage());
-				return;
+	/**
+	 * Create the calendar object of a new event.
+	 *
+	 * @param CalendarTarget $target The calendar target.
+	 * @param LeaveCalendarEvent $event The desired event.
+	 *
+	 * @return array<string, mixed> The outcome row.
+	 */
+	private function createEvent(CalendarTarget $target, LeaveCalendarEvent $event): array {
+		$ref = $event->ref;
+		try {
+			if (method_exists($target->backend, 'createCalendarObject') === false) {
+				throw new RuntimeException('CalDavBackend::createCalendarObject is not available.');
 			}
 
-			$results[] = $this->outcome($type, $sourceId, 'created', 'Kalenderafspraak aangemaakt.');
-			return;
-		}//end if
-
-		$existingIcs = $this->fetchCalendarData($backend, $calendarId, $objectUri);
-		if ($existingIcs !== null && $this->veventUnchanged($existingIcs, $dtstart, $dtendExclusive, $summary) === true) {
-			$results[] = $this->outcome($type, $sourceId, 'unchanged', 'Geen wijziging.');
-			return;
+			$target->backend->createCalendarObject($target->calendarId, $ref->objectUri(), $this->renderIcs($event));
+		} catch (\Throwable $e) {
+			return $this->outcome($ref->type, $ref->sourceId, 'failed', 'Aanmaken kalenderafspraak mislukt: ' . $e->getMessage());
 		}
 
+		return $this->outcome($ref->type, $ref->sourceId, 'created', 'Kalenderafspraak aangemaakt.');
+	}//end createEvent()
+
+	/**
+	 * Overwrite the calendar object of a changed event.
+	 *
+	 * @param CalendarTarget $target The calendar target.
+	 * @param LeaveCalendarEvent $event The desired event.
+	 *
+	 * @return array<string, mixed> The outcome row.
+	 */
+	private function updateEvent(CalendarTarget $target, LeaveCalendarEvent $event): array {
+		$ref = $event->ref;
 		try {
-			if (method_exists($backend, 'updateCalendarObject') === false) {
+			if (method_exists($target->backend, 'updateCalendarObject') === false) {
 				throw new RuntimeException('CalDavBackend::updateCalendarObject is not available.');
 			}
 
-			$backend->updateCalendarObject($calendarId, $objectUri, $ics);
+			$target->backend->updateCalendarObject($target->calendarId, $ref->objectUri(), $this->renderIcs($event));
 		} catch (\Throwable $e) {
-			$results[] = $this->outcome($type, $sourceId, 'failed', 'Bijwerken kalenderafspraak mislukt: ' . $e->getMessage());
-			return;
+			return $this->outcome($ref->type, $ref->sourceId, 'failed', 'Bijwerken kalenderafspraak mislukt: ' . $e->getMessage());
 		}
 
-		$results[] = $this->outcome($type, $sourceId, 'updated', 'Kalenderafspraak bijgewerkt.');
-
-	}//end upsertEvent()
+		return $this->outcome($ref->type, $ref->sourceId, 'updated', 'Kalenderafspraak bijgewerkt.');
+	}//end updateEvent()
 
 	/**
 	 * Delete the event of a source that left scope (design.md D2,
 	 * REQ-LC-005) — a no-op (`unchanged`) when no event exists.
 	 *
-	 * @param mixed $backend The duck-typed CalDavBackend.
-	 * @param mixed $calendarId The resolved calendar's id.
-	 * @param string $principal The configured CalDAV principal.
-	 * @param string $calendarUri The configured calendar URI.
-	 * @param string $uid The deterministic VEVENT UID.
-	 * @param string $objectUri The deterministic object URI (`{uid}.ics`).
-	 * @param string $type `leave` or `sick`, for the outcome row.
-	 * @param string $sourceId The source object id, for the outcome row.
-	 * @param array<int, array<string, mixed>> &$results Outcome accumulator.
+	 * @param LeaveCalendarRun $run The sync run.
+	 * @param LeaveCalendarEventRef $ref The event.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-005
 	 */
-	private function removeEvent(
-		mixed $backend,
-		mixed $calendarId,
-		string $principal,
-		string $calendarUri,
-		string $uid,
-		string $objectUri,
-		string $type,
-		string $sourceId,
-		array &$results,
-	): void {
-		try {
-			$existingPath = (method_exists($backend, 'getCalendarObjectByUID') === true)
-				? $backend->getCalendarObjectByUID($principal, $uid, $calendarUri)
-				: null;
-		} catch (\Throwable $e) {
-			$results[] = $this->outcome($type, $sourceId, 'failed', 'Kon kalenderobject niet opzoeken voor verwijdering: ' . $e->getMessage());
+	private function removeEvent(LeaveCalendarRun $run, LeaveCalendarEventRef $ref): void {
+		$lookup = $this->lookupEvent($run->target, $ref);
+		if ($lookup['error'] !== null) {
+			$run->record($this->outcome($ref->type, $ref->sourceId, 'failed', 'Kon kalenderobject niet opzoeken voor verwijdering: ' . $lookup['error']));
 			return;
 		}
 
-		if ($existingPath === null) {
-			$results[] = $this->outcome($type, $sourceId, 'unchanged', 'Geen kalenderafspraak om te verwijderen.');
+		if ($lookup['path'] === null) {
+			$run->record($this->outcome($ref->type, $ref->sourceId, 'unchanged', 'Geen kalenderafspraak om te verwijderen.'));
 			return;
 		}
 
+		$error = $this->deleteObject($run->target, $ref->objectUri());
+		if ($error !== null) {
+			$run->record($this->outcome($ref->type, $ref->sourceId, 'failed', 'Verwijderen kalenderafspraak mislukt: ' . $error));
+			return;
+		}
+
+		$run->record($this->outcome($ref->type, $ref->sourceId, 'removed', 'Kalenderafspraak verwijderd.'));
+
+	}//end removeEvent()
+
+	/**
+	 * Delete one calendar object.
+	 *
+	 * @param CalendarTarget $target The calendar target.
+	 * @param string $objectUri The object URI.
+	 *
+	 * @return string|null The error message, or null once deleted.
+	 */
+	private function deleteObject(CalendarTarget $target, string $objectUri): ?string {
 		try {
-			if (method_exists($backend, 'deleteCalendarObject') === false) {
+			if (method_exists($target->backend, 'deleteCalendarObject') === false) {
 				throw new RuntimeException('CalDavBackend::deleteCalendarObject is not available.');
 			}
 
-			$backend->deleteCalendarObject($calendarId, $objectUri);
+			$target->backend->deleteCalendarObject($target->calendarId, $objectUri);
 		} catch (\Throwable $e) {
-			$results[] = $this->outcome($type, $sourceId, 'failed', 'Verwijderen kalenderafspraak mislukt: ' . $e->getMessage());
-			return;
+			return $e->getMessage();
 		}
 
-		$results[] = $this->outcome($type, $sourceId, 'removed', 'Kalenderafspraak verwijderd.');
-
-	}//end removeEvent()
+		return null;
+	}//end deleteObject()
 
 	/**
 	 * Orphan reconciliation (design.md D2, REQ-LC-005): list the configured
@@ -489,19 +490,17 @@ class LeaveCalendarService {
 	 * id sets. Objects without the `humaniq-` prefix (manually created by users)
 	 * are never touched.
 	 *
-	 * @param mixed $backend The duck-typed CalDavBackend.
-	 * @param mixed $calendarId The resolved calendar's id.
-	 * @param array<int, string> $liveLeaveIds All currently-existing LeaveRequest ids.
-	 * @param array<int, string> $liveSickIds All currently-existing SickLeaveCase ids.
-	 * @param array<int, array<string, mixed>> &$results Outcome accumulator.
+	 * @param LeaveCalendarRun $run The sync run.
+	 * @param array{leave: array<int, string>, sick: array<int, string>} $liveIds All currently-existing LeaveRequest and SickLeaveCase ids.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-005
 	 */
-	private function reconcileOrphans(mixed $backend, mixed $calendarId, array $liveLeaveIds, array $liveSickIds, array &$results): void {
+	private function reconcileOrphans(LeaveCalendarRun $run, array $liveIds): void {
+		$backend = $run->target->backend;
 		try {
-			$objects = (method_exists($backend, 'getCalendarObjects') === true) ? $backend->getCalendarObjects($calendarId) : [];
+			$objects = (method_exists($backend, 'getCalendarObjects') === true) ? $backend->getCalendarObjects($run->target->calendarId) : [];
 		} catch (\Throwable $e) {
 			$this->logger->warning('LeaveCalendarService: kon kalenderobjecten niet ophalen voor reconciliatie: ' . $e->getMessage());
 			return;
@@ -515,26 +514,33 @@ class LeaveCalendarService {
 				continue;
 			}
 
-			$liveIds = ($type === 'leave') ? $liveLeaveIds : $liveSickIds;
-			if (in_array($sourceId, $liveIds, true) === true) {
+			if (in_array($sourceId, $liveIds[$type], true) === true) {
 				continue;
 			}
 
-			try {
-				if (method_exists($backend, 'deleteCalendarObject') === false) {
-					throw new RuntimeException('CalDavBackend::deleteCalendarObject is not available.');
-				}
-
-				$backend->deleteCalendarObject($calendarId, $objectUri);
-			} catch (\Throwable $e) {
-				$results[] = $this->outcome($type, $sourceId, 'failed', 'Verwijderen weeskalenderobject mislukt: ' . $e->getMessage());
-				continue;
-			}
-
-			$results[] = $this->outcome($type, $sourceId, 'removed', 'Weeskalenderobject verwijderd (bron niet meer aanwezig in het register).');
+			$this->deleteOrphan($run, new LeaveCalendarEventRef(type: $type, sourceId: $sourceId));
 		}//end foreach
 
 	}//end reconcileOrphans()
+
+	/**
+	 * Delete the event of a source that is no longer in the register.
+	 *
+	 * @param LeaveCalendarRun $run The sync run.
+	 * @param LeaveCalendarEventRef $ref The orphaned event.
+	 *
+	 * @return void
+	 */
+	private function deleteOrphan(LeaveCalendarRun $run, LeaveCalendarEventRef $ref): void {
+		$error = $this->deleteObject($run->target, $ref->objectUri());
+		if ($error !== null) {
+			$run->record($this->outcome($ref->type, $ref->sourceId, 'failed', 'Verwijderen weeskalenderobject mislukt: ' . $error));
+			return;
+		}
+
+		$run->record($this->outcome($ref->type, $ref->sourceId, 'removed', 'Weeskalenderobject verwijderd (bron niet meer aanwezig in het register).'));
+
+	}//end deleteOrphan()
 
 	/**
 	 * Parse an humaniq-managed object URI (`humaniq-leave-{uuid}.ics` /
@@ -563,19 +569,18 @@ class LeaveCalendarService {
 	 * Fetch a calendar object's raw ICS text, or null on any resolution
 	 * failure (design.md D2 diffing input).
 	 *
-	 * @param mixed $backend The duck-typed CalDavBackend.
-	 * @param mixed $calendarId The resolved calendar's id.
+	 * @param CalendarTarget $target The calendar target.
 	 * @param string $objectUri The deterministic object URI.
 	 *
 	 * @return string|null
 	 */
-	private function fetchCalendarData(mixed $backend, mixed $calendarId, string $objectUri): ?string {
+	private function fetchCalendarData(CalendarTarget $target, string $objectUri): ?string {
 		try {
-			if (method_exists($backend, 'getCalendarObject') === false) {
+			if (method_exists($target->backend, 'getCalendarObject') === false) {
 				return null;
 			}
 
-			$object = $backend->getCalendarObject($calendarId, $objectUri);
+			$object = $target->backend->getCalendarObject($target->calendarId, $objectUri);
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -595,13 +600,11 @@ class LeaveCalendarService {
 	 * DTSTAMP is regenerated on every render.
 	 *
 	 * @param string $ics The stored calendar object's raw ICS text.
-	 * @param string $dtstart Desired compact DATE value (YYYYMMDD).
-	 * @param string $dtendExclusive Desired compact DATE value (YYYYMMDD), exclusive.
-	 * @param string $summary Desired SUMMARY text (unescaped).
+	 * @param LeaveCalendarEvent $event The desired event.
 	 *
 	 * @return bool
 	 */
-	private function veventUnchanged(string $ics, string $dtstart, string $dtendExclusive, string $summary): bool {
+	private function veventUnchanged(string $ics, LeaveCalendarEvent $event): bool {
 		$existingDtstart = $this->extractIcsValue($ics, 'DTSTART');
 		$existingDtend = $this->extractIcsValue($ics, 'DTEND');
 		$existingSummary = $this->extractIcsValue($ics, 'SUMMARY');
@@ -610,9 +613,9 @@ class LeaveCalendarService {
 			return false;
 		}
 
-		return $existingDtstart === $dtstart
-			&& $existingDtend === $dtendExclusive
-			&& $this->unescapeText($existingSummary) === $summary;
+		return $existingDtstart === $event->dtstart
+			&& $existingDtend === $event->dtendExclusive
+			&& $this->unescapeText($existingSummary) === $event->summary;
 
 	}//end veventUnchanged()
 
@@ -651,17 +654,14 @@ class LeaveCalendarService {
 	 * UTC time), `SEQUENCE:0`, `TRANSP:TRANSPARENT`, no ATTENDEE/ORGANIZER/
 	 * DESCRIPTION. `SUMMARY` is escaped per RFC 5545 §3.3.11.
 	 *
-	 * @param string $uid The deterministic VEVENT UID.
-	 * @param string $dtstart Compact DATE value (YYYYMMDD).
-	 * @param string $dtendExclusive Compact DATE value (YYYYMMDD), exclusive.
-	 * @param string $summary The AVG-safe SUMMARY text (unescaped).
+	 * @param LeaveCalendarEvent $event The desired event.
 	 *
 	 * @return string
 	 *
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-002
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-004
 	 */
-	private function renderIcs(string $uid, string $dtstart, string $dtendExclusive, string $summary): string {
+	private function renderIcs(LeaveCalendarEvent $event): string {
 		$dtstamp = gmdate('Ymd\THis\Z');
 
 		$lines = [
@@ -670,11 +670,11 @@ class LeaveCalendarService {
 			'PRODID:-//Conduction//humaniq leave-calendar-nc//EN',
 			'CALSCALE:GREGORIAN',
 			'BEGIN:VEVENT',
-			'UID:' . $uid,
+			'UID:' . $event->ref->uid(),
 			'DTSTAMP:' . $dtstamp,
-			'DTSTART;VALUE=DATE:' . $dtstart,
-			'DTEND;VALUE=DATE:' . $dtendExclusive,
-			'SUMMARY:' . $this->escapeText($summary),
+			'DTSTART;VALUE=DATE:' . $event->dtstart,
+			'DTEND;VALUE=DATE:' . $event->dtendExclusive,
+			'SUMMARY:' . $this->escapeText($event->summary),
 			'TRANSP:TRANSPARENT',
 			'SEQUENCE:0',
 			'END:VEVENT',

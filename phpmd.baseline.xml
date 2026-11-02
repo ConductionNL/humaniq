@@ -69,11 +69,7 @@
   <violation rule="PHPMD\Rule\Design\TooManyMethods" file="lib/Service/LeaveCalendarService.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/LeaveCalendarService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/LeaveCalendarService.php"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/LeaveCalendarService.php" method="upsertEvent"/>
-  <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Service/LeaveCalendarService.php" method="upsertEvent"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/LeaveCalendarService.php"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/LeaveCalendarService.php" method="reconcileOrphans"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/LeaveCalendarService.php" method="reconcileOrphans"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/LeaveCalendarService.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/PayrollGLPostService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/PayrollGLPostService.php" method="postRun"/>
