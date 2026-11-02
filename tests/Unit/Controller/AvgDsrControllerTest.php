@@ -44,6 +44,9 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use OCA\Humaniq\Service\CallerContext;
+use OCA\Humaniq\Service\HumaniqRoles;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for AvgDsrController.
@@ -301,9 +304,11 @@ class AvgDsrControllerTest extends TestCase {
 		$userSession->method('getUser')->willReturn($user);
 
 		$groupManager = $this->createMock(IGroupManager::class);
-		$groupManager->method('isAdmin')->willReturn($isAdmin);
+		// Only the session user can be the administrator, so a check for any
+		// other user (a request value, a fixed name) answers false.
+		$groupManager->method('isAdmin')->willReturnCallback(static fn (string $uid): bool => $isAdmin === true && $uid === 'hr-admin');
 
-		$controller = new AvgDsrController($request, $container, $avgDsrService, $settings, $userSession, $groupManager);
+		$controller = new AvgDsrController($request, $avgDsrService, $settings, new CallerContext($userSession, new HumaniqRoles($groupManager), $container, $this->createMock(LoggerInterface::class)));
 
 		return [$controller, $fake, $avgDsrService];
 	}//end buildController()
