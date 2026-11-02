@@ -110,7 +110,7 @@ class ExpenseRouteListener implements IEventListener {
 			return;
 		}
 
-		$event->setModifiedData(['reimbursementRoute' => (self::isTaxable(claim: $claim) === true ? 'direct' : $this->settings->getExpenseReimbursementRoute())]);
+		$event->setModifiedData(array_merge($event->getModifiedData(), ['reimbursementRoute' => (self::isTaxable(claim: $claim) === true ? 'direct' : $this->settings->getExpenseReimbursementRoute())]));
 	}//end judge()
 
 	/**
