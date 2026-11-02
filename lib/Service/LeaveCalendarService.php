@@ -349,7 +349,9 @@ class LeaveCalendarService {
 	 * `getCalendarObjectByUID` scoped to the configured calendar; absent ⇒
 	 * create; present ⇒ diff the rendered DTSTART/DTEND/SUMMARY against the
 	 * stored event and update only when they differ (avoids etag churn on a
-	 * no-op sync — the idempotency invariant tasks.md/spec require).
+	 * no-op sync — the idempotency invariant tasks.md/spec require). Without
+	 * the Employee index nothing is written, so a failed name lookup never
+	 * replaces names on the calendar with the role word.
 	 *
 	 * @param LeaveCalendarRun $run The sync run.
 	 * @param LeaveCalendarEvent $event The desired event.
@@ -360,6 +362,11 @@ class LeaveCalendarService {
 	 */
 	private function upsertEvent(LeaveCalendarRun $run, LeaveCalendarEvent $event): void {
 		$ref = $event->ref;
+		if ($run->employeesById === null) {
+			$run->record($this->outcome($ref->type, $ref->sourceId, 'skipped', 'Medewerkersnamen konden niet worden geladen; afspraak niet aangemaakt of bijgewerkt.'));
+			return;
+		}
+
 		$lookup = $this->lookupEvent($run->target, $ref);
 		if ($lookup['error'] !== null) {
 			$run->record($this->outcome($ref->type, $ref->sourceId, 'failed', 'Kon bestaand kalenderobject niet opzoeken: ' . $lookup['error']));
@@ -811,11 +818,17 @@ class LeaveCalendarService {
 	 * idiom), consumed by `employeeName()` for the AVG-safe SUMMARY
 	 * (design.md D5).
 	 *
-	 * @return array<string, array<string, string>>
+	 * @return array<string, array<string, string>>|null Null when the Employee register could not be read.
 	 */
-	private function buildEmployeeIndex(): array {
+	private function buildEmployeeIndex(): ?array {
+		$employees = $this->tryLoadAll(self::EMPLOYEE_SCHEMA);
+		if ($employees === null) {
+			$this->logger->warning('LeaveCalendarService: medewerkersnamen niet beschikbaar; kalenderafspraken worden niet aangemaakt of bijgewerkt tot de volgende sync.');
+			return null;
+		}
+
 		$byId = [];
-		foreach ($this->loadAll(self::EMPLOYEE_SCHEMA) as $employee) {
+		foreach ($employees as $employee) {
 			$id = (string)($employee['id'] ?? $employee['@self']['id'] ?? '');
 			if ($id === '') {
 				continue;
@@ -835,12 +848,12 @@ class LeaveCalendarService {
 	 * the role word `medewerker` rather than leaking a raw id/slug on the
 	 * shared calendar (design.md D5).
 	 *
-	 * @param array<string, array<string, string>> $employeesById The Employee index.
+	 * @param array<string, array<string, string>>|null $employeesById The Employee index, or null when unavailable.
 	 * @param string $employeeId The LeaveRequest/SickLeaveCase employeeId.
 	 *
 	 * @return string
 	 */
-	private function employeeName(array $employeesById, string $employeeId): string {
+	private function employeeName(?array $employeesById, string $employeeId): string {
 		$employee = ($employeesById[$employeeId] ?? null);
 		if ($employee === null) {
 			return 'medewerker';
@@ -944,20 +957,8 @@ class LeaveCalendarService {
 
 	/**
 	 * Load and normalise every object of a schema via OpenRegister's
-	 * ObjectService (the `RuleAuditService::loadAll()` idiom), degrading to
-	 * an empty list on any resolution failure.
-	 *
-	 * @param string $schema The schema name.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function loadAll(string $schema): array {
-		return ($this->tryLoadAll($schema) ?? []);
-	}//end loadAll()
-
-	/**
-	 * Load and normalise every object of a schema, or null (logged) when the
-	 * register cannot be read.
+	 * ObjectService (the `RuleAuditService::loadAll()` idiom), or null
+	 * (logged) when the register cannot be read.
 	 *
 	 * @param string $schema The schema name.
 	 *
