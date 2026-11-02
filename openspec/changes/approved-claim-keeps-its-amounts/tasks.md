@@ -4,6 +4,8 @@
 - [x] 1.3 A create starts as draft or submitted, without decision or run fields; a decided claim keeps its route. Verify: ExpensePayoutFieldsListenerTest, ExpensePreSaveChainTest::testAClaimCannotBeCreatedAsApproved, testAnApprovedClaimKeepsItsRoute.
 - [x] 1.2 It is subscribed for both pre-save events, after the other Expense listeners. Verify: TravelListenerWiringTest.
 
+- [x] 1.4 No shipped claim is payable: the seed's paid example is reimbursed directly; an update during a shipped import keeps the payout fields. Verify: ShippedClaimsAreNotPayableTest, ExpensePayoutFieldsListenerTest::testAnUpdateDuringAShippedImportKeepsWhatIsPaid.
+
 ## 2. Category setting
 
 - [x] 2.1 A save without a list of names is refused; at least one category stays on. Verify: ExpenseCategoryControllerTest, ExpenseCategoryPolicyTest.
