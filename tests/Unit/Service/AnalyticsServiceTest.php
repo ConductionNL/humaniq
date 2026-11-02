@@ -40,6 +40,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use OCA\Humaniq\Service\AbsenceRateService;
+use OCA\Humaniq\Service\AnalyticsCalculators;
 use OCA\Humaniq\Service\AnalyticsService;
 use OCA\Humaniq\Service\Percentile;
 use OCA\Humaniq\Service\SettingsService;
@@ -320,8 +321,8 @@ class AnalyticsServiceTest extends TestCase {
 			],
 		]);
 
-		$team = $this->bucketFor($service->getTrends('absence-rate', 'quarter', 'ADM-001', 'team')['series'], $thisMonth);
-		$other = $this->bucketFor($service->getTrends('absence-rate', 'quarter', 'ADM-001', 'other')['series'], $thisMonth);
+		$team = $this->bucketFor($service->getTrends('absence-rate', 'quarter', 'ADM-001', ['id' => 'team', 'minimumMembers' => 0])['series'], $thisMonth);
+		$other = $this->bucketFor($service->getTrends('absence-rate', 'quarter', 'ADM-001', ['id' => 'other', 'minimumMembers' => 0])['series'], $thisMonth);
 		$all = $this->bucketFor($service->getTrends('absence-rate', 'quarter', 'ADM-001')['series'], $thisMonth);
 
 		$this->assertSame(0.0, $team['value']);
@@ -378,7 +379,7 @@ class AnalyticsServiceTest extends TestCase {
 			],
 		]);
 
-		$team = $this->bucketFor($service->getTrends('payroll-cost', 'quarter', 'ADM-001', 'team')['series'], $thisMonth);
+		$team = $this->bucketFor($service->getTrends('payroll-cost', 'quarter', 'ADM-001', ['id' => 'team', 'minimumMembers' => 0])['series'], $thisMonth);
 		$all = $this->bucketFor($service->getTrends('payroll-cost', 'quarter', 'ADM-001')['series'], $thisMonth);
 
 		$this->assertSame(3600.0, $team['value']);
@@ -402,7 +403,7 @@ class AnalyticsServiceTest extends TestCase {
 			],
 		]);
 
-		$bucket = $this->bucketFor($service->getTrends('absence-rate', 'quarter', 'ADM-001', 'team', 5)['series'], $thisMonth);
+		$bucket = $this->bucketFor($service->getTrends('absence-rate', 'quarter', 'ADM-001', ['id' => 'team', 'minimumMembers' => 5])['series'], $thisMonth);
 
 		$this->assertNull($bucket['value']);
 		$this->assertSame('unit-too-small', $bucket['suppressed']);
@@ -627,7 +628,7 @@ class AnalyticsServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return new AnalyticsService($container, $settings, new AbsenceRateService(), new Percentile(), $logger);
+		return new AnalyticsService($container, $settings, $logger, new AnalyticsCalculators(new AbsenceRateService(), new Percentile()));
 	}//end buildServiceWithObjectService()
 
 	/**

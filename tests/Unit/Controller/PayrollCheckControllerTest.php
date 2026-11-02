@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\PayrollCheckController;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\SettingsService;
@@ -88,12 +89,9 @@ class PayrollCheckControllerTest extends TestCase {
 
 		return new PayrollCheckController(
 			$this->createMock(IRequest::class),
-			$container,
 			$settings,
 			($check ?? $this->createMock(PayrollRunCheckService::class)),
-			$session,
-			$roles,
-			new NullLogger()
+			new CallerContext($session, $roles, $container, new NullLogger())
 		);
 	}//end controller()
 

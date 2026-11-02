@@ -39,16 +39,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -58,19 +55,13 @@ class LoonbeslagController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param SettingsService $settingsService The register-slug source.
-	 * @param IUserSession $userSession The current user session (admin/HR check + stamped by/at fields).
-	 * @param HumaniqRoles $roles Whether the caller is HR, payroll or an administrator.
-	 * @param LoggerInterface $logger Logger.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
-		private readonly IUserSession $userSession,
-		private readonly HumaniqRoles $roles,
-		private readonly LoggerInterface $logger,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -251,12 +242,12 @@ class LoonbeslagController extends Controller {
 	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
 	 */
 	private function isAdminOrHr(): bool {
-		$uid = $this->userSession->getUser()?->getUID();
+		$uid = $this->caller->userSession->getUser()?->getUID();
 		if ($uid === null || $uid === '') {
 			return false;
 		}
 
-		return $this->roles->isHr($uid);
+		return $this->caller->roles->isHr($uid);
 	}//end isAdminOrHr()
 
 	/**
@@ -265,7 +256,7 @@ class LoonbeslagController extends Controller {
 	 * @return string
 	 */
 	private function currentUserId(): string {
-		return (string)($this->userSession->getUser()?->getUID() ?? '');
+		return (string)($this->caller->userSession->getUser()?->getUID() ?? '');
 	}//end currentUserId()
 
 	/**
@@ -315,7 +306,7 @@ class LoonbeslagController extends Controller {
 				schema: 'Loonbeslag'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('LoonbeslagController: loonbeslag ' . $loonbeslagId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->info('LoonbeslagController: loonbeslag ' . $loonbeslagId . ' kon niet worden opgehaald: ' . $e->getMessage());
 			return null;
 		}
 
@@ -341,7 +332,7 @@ class LoonbeslagController extends Controller {
 			);
 		}
 
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 
 	/**

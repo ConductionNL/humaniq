@@ -78,45 +78,27 @@ class AgendaComposer {
 	 * Compose the agenda for one subject over a period.
 	 *
 	 * @param array<string, mixed> $sources Rows per source: assignments, shifts, leaveRequests, sickLeaveCases, interviews, bookings, subscriptions.
-	 * @param string $subjectType `employee`, `orgUnit` or `resource`.
-	 * @param string $subjectId The subject's id.
-	 * @param string $from First day, inclusive (ISO date).
-	 * @param string $to Last day, inclusive (ISO date).
-	 * @param array<int, string> $memberEmployeeIds The employees in the org unit, when the subject is one.
+	 * @param array{subjectType: string, subjectId: string, from: string, to: string, memberEmployeeIds?: array<int, mixed>} $query The subject kind (`employee`, `orgUnit` or `resource`), its id, the first and last day (inclusive, ISO dates), and the employees in the org unit when the subject is one.
 	 *
 	 * @return array<int, array<string, mixed>> The entries, in start order.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
 	 */
-	public function compose(
-		array $sources,
-		string $subjectType,
-		string $subjectId,
-		string $from,
-		string $to,
-		array $memberEmployeeIds = [],
-	): array {
-		$employees = $this->subjectEmployees(
-			subjectType: $subjectType,
-			subjectId: $subjectId,
-			memberEmployeeIds: $memberEmployeeIds
+	public function compose(array $sources, array $query): array {
+		$window = new AgendaWindow(
+			subject: new AgendaSubject(type: $query['subjectType'], id: $query['subjectId'], memberEmployeeIds: ($query['memberEmployeeIds'] ?? [])),
+			from: $query['from'],
+			to: $query['to']
 		);
 
 		$entries = array_merge(
-			$this->shiftEntries(sources: $sources, employees: $employees, from: $from, to: $to),
-			$this->leaveEntries(sources: $sources, employees: $employees, from: $from, to: $to),
-			$this->absenceEntries(sources: $sources, employees: $employees, from: $from, to: $to),
-			$this->interviewEntries(sources: $sources, employees: $employees, from: $from, to: $to),
-			$this->secondments->entries(sources: $sources, employees: $employees, from: $from, to: $to),
-			$this->bookings->bookingEntries(
-				sources: $sources,
-				employees: $employees,
-				subjectType: $subjectType,
-				subjectId: $subjectId,
-				from: $from,
-				to: $to
-			),
-			$this->bookings->busyEntries(sources: $sources, employees: $employees, from: $from, to: $to)
+			$this->shiftEntries(sources: $sources, window: $window),
+			$this->leaveEntries(sources: $sources, window: $window),
+			$this->absenceEntries(sources: $sources, window: $window),
+			$this->interviewEntries(sources: $sources, window: $window),
+			$this->secondments->entries(sources: $sources, window: $window),
+			$this->bookings->bookingEntries(sources: $sources, window: $window),
+			$this->bookings->busyEntries(sources: $sources, window: $window)
 		);
 
 		usort(
@@ -130,41 +112,16 @@ class AgendaComposer {
 	}//end compose()
 
 	/**
-	 * The employees an agenda subject stands for.
-	 *
-	 * @param string $subjectType `employee`, `orgUnit` or `resource`.
-	 * @param string $subjectId The subject's id.
-	 * @param array<int, string> $memberEmployeeIds The org unit's members.
-	 *
-	 * @return array<int, string> The employee ids, empty for a resource.
-	 *
-	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
-	 */
-	private function subjectEmployees(string $subjectType, string $subjectId, array $memberEmployeeIds): array {
-		if ($subjectType === 'employee') {
-			return [$subjectId];
-		}
-
-		if ($subjectType === 'orgUnit') {
-			return array_values(array_unique(array_map('strval', $memberEmployeeIds)));
-		}
-
-		return [];
-	}//end subjectEmployees()
-
-	/**
 	 * Rostered shifts as agenda entries.
 	 *
 	 * @param array<string, mixed> $sources The source rows.
-	 * @param array<int, string> $employees The subject's employees.
-	 * @param string $from First day (ISO date).
-	 * @param string $to Last day (ISO date).
+	 * @param AgendaWindow $window The subject's employees and the first and last day.
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
 	 */
-	private function shiftEntries(array $sources, array $employees, string $from, string $to): array {
+	private function shiftEntries(array $sources, AgendaWindow $window): array {
 		$shiftsById = [];
 		foreach (($sources['shifts'] ?? []) as $shift) {
 			$shiftsById[trim((string)($shift['id'] ?? ''))] = $shift;
@@ -174,11 +131,11 @@ class AgendaComposer {
 		foreach (($sources['assignments'] ?? []) as $assignment) {
 			$employeeId = trim((string)($assignment['employeeId'] ?? ''));
 			$date = substr(trim((string)($assignment['date'] ?? '')), 0, 10);
-			if (in_array($employeeId, $employees, true) === false || $date === '') {
+			if (in_array($employeeId, $window->employees, true) === false || $date === '') {
 				continue;
 			}
 
-			if ($date < $from || $date > $to) {
+			if ($date < $window->from || $date > $window->to) {
 				continue;
 			}
 
@@ -202,19 +159,17 @@ class AgendaComposer {
 	 * Approved leave as agenda entries.
 	 *
 	 * @param array<string, mixed> $sources The source rows.
-	 * @param array<int, string> $employees The subject's employees.
-	 * @param string $from First day (ISO date).
-	 * @param string $to Last day (ISO date).
+	 * @param AgendaWindow $window The subject's employees and the first and last day.
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
 	 */
-	private function leaveEntries(array $sources, array $employees, string $from, string $to): array {
+	private function leaveEntries(array $sources, AgendaWindow $window): array {
 		$entries = [];
 		foreach (($sources['leaveRequests'] ?? []) as $request) {
 			$employeeId = trim((string)($request['employeeId'] ?? ''));
-			if (in_array($employeeId, $employees, true) === false) {
+			if (in_array($employeeId, $window->employees, true) === false) {
 				continue;
 			}
 
@@ -224,7 +179,7 @@ class AgendaComposer {
 
 			$start = substr(trim((string)($request['startDate'] ?? '')), 0, 10);
 			$end = substr(trim((string)($request['endDate'] ?? '')), 0, 10);
-			if ($start === '' || $end === '' || $start > $to || $end < $from) {
+			if ($start === '' || $end === '' || $start > $window->to || $end < $window->from) {
 				continue;
 			}
 
@@ -250,19 +205,17 @@ class AgendaComposer {
 	 * diagnosis and no progression, because none of those is copied here.
 	 *
 	 * @param array<string, mixed> $sources The source rows.
-	 * @param array<int, string> $employees The subject's employees.
-	 * @param string $from First day (ISO date).
-	 * @param string $to Last day (ISO date).
+	 * @param AgendaWindow $window The subject's employees and the first and last day.
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
 	 */
-	private function absenceEntries(array $sources, array $employees, string $from, string $to): array {
+	private function absenceEntries(array $sources, AgendaWindow $window): array {
 		$entries = [];
 		foreach (($sources['sickLeaveCases'] ?? []) as $case) {
 			$employeeId = trim((string)($case['employeeId'] ?? ''));
-			if (in_array($employeeId, $employees, true) === false) {
+			if (in_array($employeeId, $window->employees, true) === false) {
 				continue;
 			}
 
@@ -273,8 +226,8 @@ class AgendaComposer {
 
 			$recovered = substr(trim((string)($case['recoveredDate'] ?? '')), 0, 10);
 			$closed = (trim((string)($case['status'] ?? '')) === 'hersteld');
-			$end = (($closed === true && $recovered !== '') ? $recovered : $to);
-			if ($start > $to || $end < $from) {
+			$end = (($closed === true && $recovered !== '') ? $recovered : $window->to);
+			if ($start > $window->to || $end < $window->from) {
 				continue;
 			}
 
@@ -297,15 +250,13 @@ class AgendaComposer {
 	 * Interviews as agenda entries.
 	 *
 	 * @param array<string, mixed> $sources The source rows.
-	 * @param array<int, string> $employees The subject's employees.
-	 * @param string $from First day (ISO date).
-	 * @param string $to Last day (ISO date).
+	 * @param AgendaWindow $window The subject's employees and the first and last day.
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
 	 */
-	private function interviewEntries(array $sources, array $employees, string $from, string $to): array {
+	private function interviewEntries(array $sources, AgendaWindow $window): array {
 		$entries = [];
 		foreach (($sources['interviews'] ?? []) as $interview) {
 			$start = $this->stringOrNull(($interview['scheduledStart'] ?? ($interview['start'] ?? null)));
@@ -315,12 +266,12 @@ class AgendaComposer {
 			}
 
 			$day = substr($start, 0, 10);
-			if ($day < $from || $day > $to) {
+			if ($day < $window->from || $day > $window->to) {
 				continue;
 			}
 
 			$participants = $this->interviewParticipants($interview);
-			$held = array_values(array_intersect($participants, $employees));
+			$held = array_values(array_intersect($participants, $window->employees));
 			if ($held === []) {
 				continue;
 			}

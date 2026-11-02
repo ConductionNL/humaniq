@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\LoonbeslagController;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Http;
@@ -388,7 +389,7 @@ class LoonbeslagControllerTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new LoonbeslagController($request, $container, $settings, $userSession, new HumaniqRoles($groupManager), $logger), $fake];
+		return [new LoonbeslagController($request, $settings, new CallerContext($userSession, new HumaniqRoles($groupManager), $container, $logger)), $fake];
 	}//end buildController()
 
 }//end class
