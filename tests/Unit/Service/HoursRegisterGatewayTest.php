@@ -322,4 +322,20 @@ class HoursRegisterGatewayTest extends TestCase {
 		$this->assertNull($this->gateway->uniqueManagerUserIdFor('emp-sanne', '2026-11-02'));
 	}//end testTheStampDoesNotClimbIntoAnotherAdministration()
 
+	/**
+	 * A placement unit without an administration takes the employee's own
+	 * administration as the boundary, so the stamp stays empty.
+	 *
+	 * @return void
+	 */
+	public function testTheStampUsesTheEmployeeAdministrationWhenTheUnitHasNone(): void {
+		$this->store->seed('Employee', 'emp-sanne', ['nextcloudUserId' => 'sanne', 'administrationId' => 'ADM-1']);
+		$this->store->seed('Employee', 'emp-pieter', ['nextcloudUserId' => 'pieter', 'administrationId' => 'ADM-2']);
+		$this->store->seed('OrgUnit', 'unit-consultancy', ['managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie']);
+		$this->store->seed('OrgUnit', 'unit-directie', ['managerId' => 'emp-pieter', 'administrationId' => 'ADM-2']);
+		$this->store->seed('OrgAssignment', 'as-sanne', ['employeeId' => 'emp-sanne', 'orgUnitId' => 'unit-consultancy', 'endDate' => '']);
+
+		$this->assertNull($this->gateway->uniqueManagerUserIdFor('emp-sanne', '2026-11-02'));
+	}//end testTheStampUsesTheEmployeeAdministrationWhenTheUnitHasNone()
+
 }//end class

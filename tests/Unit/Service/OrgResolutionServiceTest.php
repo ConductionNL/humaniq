@@ -398,11 +398,47 @@ class OrgResolutionServiceTest extends TestCase {
 		$units['unit-directie']['administrationId'] = ' ADM-1 ';
 		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
 
-		// A placement unit without an administration sets no boundary.
+		// Without a placement unit administration and without an employee
+		// administration there is no boundary.
 		$units['unit-consultancy']['administrationId'] = '';
 		$units['unit-directie']['administrationId'] = 'ADM-2';
 		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
 	}//end testTheClimbStopsAtTheAdministrationBoundary()
+
+	/**
+	 * A placement unit without an administration takes the employee's own
+	 * administration as the boundary.
+	 *
+	 * @return void
+	 */
+	public function testAPlacementUnitWithoutAnAdministrationUsesTheEmployeeAdministration(): void {
+		$assignments = [
+			'emp-sanne' => [['orgUnitId' => 'unit-consultancy', 'endDate' => '']],
+			'emp-tim' => [['orgUnitId' => 'unit-consultancy', 'endDate' => '']],
+		];
+		$units = [
+			'unit-consultancy' => ['id' => 'unit-consultancy', 'managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie'],
+			'unit-directie' => ['id' => 'unit-directie', 'managerId' => 'emp-pieter', 'parentUnitId' => '', 'administrationId' => 'ADM-2'],
+		];
+		$employees = [
+			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne', 'administrationId' => 'ADM-1'],
+			'emp-tim' => ['id' => 'emp-tim', 'nextcloudUserId' => 'tim', 'administrationId' => 'ADM-1'],
+			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter', 'administrationId' => 'ADM-2'],
+		];
+
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+
+		// The placement unit itself is never outside the boundary: a team
+		// member still gets the unit's own manager.
+		$this->assertSame(['sanne'], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-02'));
+
+		$employees['emp-sanne']['administrationId'] = ' ADM-2 ';
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+
+		// The placement unit's own administration wins over the employee's.
+		$units['unit-consultancy']['administrationId'] = 'ADM-1';
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+	}//end testAPlacementUnitWithoutAnAdministrationUsesTheEmployeeAdministration()
 
 	/**
 	 * The boundary is the placement unit's administration at every level,

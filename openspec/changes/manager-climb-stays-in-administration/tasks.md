@@ -1,6 +1,6 @@
 ## 1. Resolution
 
-- [x] 1.1 `OrgResolutionService::resolveManagerUserIds()` ends the climb at a unit outside the placement unit's administration. Verify: OrgResolutionServiceTest cases for a parent in another administration, a parent without one, a start unit without one, and a middle unit in another administration.
+- [x] 1.1 `OrgResolutionService::resolveManagerUserIds()` ends the climb at a unit outside the placement unit's administration. Verify: OrgResolutionServiceTest cases for a parent in another administration, a parent without one, a start unit without one (the employee's administration is the boundary), and a middle unit in another administration.
 - [x] 1.2 The stamp follows. Verify: HoursRegisterGatewayTest::testTheStampDoesNotClimbIntoAnotherAdministration.
 
 ## 2. Audit

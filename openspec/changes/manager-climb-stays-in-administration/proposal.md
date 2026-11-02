@@ -19,13 +19,15 @@ Ruben decided on 2 November 2026: stop at the administration boundary.
 
 ## What changes
 
-- The walk never leaves the administration of the placement's unit.
-- When that unit has an administration, a unit above it in another administration ends the
-  walk with no manager. So does a unit above it without an administration.
-- A placement unit without an administration sets no boundary, so the walk climbs as before.
+- The walk never leaves the administration of the placement's unit. When that unit has no
+  administration, the employee's own administration is the boundary.
+- A unit above the placement unit in another administration ends the walk with no manager.
+  So does a unit above it without an administration.
+- Only when neither the placement unit nor the employee has an administration is there no
+  boundary, so the walk climbs as before.
 - No manager keeps the existing behaviour: no stamp, so the record shows in no team queue.
-- The audit's OrgUnit index carries `administrationId`, so the `nl-mss-manager-consistency`
-  audit stops where the stamp does.
+- The audit's OrgUnit and Employee indexes carry `administrationId`, so the
+  `nl-mss-manager-consistency` audit stops where the stamp does.
 
 ## Out of scope
 

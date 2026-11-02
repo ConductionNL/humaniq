@@ -24,10 +24,12 @@ The shared `OrgResolutionService` SHALL resolve an employee's manager per active
 4. An unmanaged unit, a manager Employee that does not resolve, and a manager without a
    Nextcloud account also resolve no manager for that placement. Only a self-managed unit
    makes the walk climb.
-5. The walk never leaves the administration of the placement's unit. When that unit has an
-   `administrationId`, a unit above it in another administration, or without an
-   administration, ends the walk and the placement resolves no manager. A placement unit
-   without an `administrationId` sets no boundary.
+5. The walk never leaves the boundary administration: the `administrationId` of the
+   placement's unit, or the employee's own `administrationId` when that unit has none. A unit
+   above the placement unit in another administration, or without an administration, ends
+   the walk and the placement resolves no manager. Only when neither the placement unit nor
+   the employee has an administration is there no boundary. The placement unit itself is
+   never outside the boundary, so a placement that does not climb is unchanged.
 
 The walk stays inside one administration because the stamp grants the manager access: read
 access to relations cases and the decision on change requests. A manager in another
@@ -114,6 +116,15 @@ denormalization rationale in `x-notes`.
 - **WHEN** Sanne's manager is resolved
 - **THEN** no manager resolves
 
+#### Scenario: A placement unit without an administration uses the employee's
+
+@e2e exclude Resolution over the org indexes with no screen of its own; covered by OrgResolutionServiceTest::testAPlacementUnitWithoutAnAdministrationUsesTheEmployeeAdministration and HoursRegisterGatewayTest::testTheStampUsesTheEmployeeAdministrationWhenTheUnitHasNone
+- **GIVEN** Sanne's Employee record is in `ADM-1`, and she manages Consultancy and is placed in it
+- **AND** Consultancy has no administration and sits under Directie in `ADM-2`, managed by
+  Pieter
+- **WHEN** Sanne's manager is resolved
+- **THEN** no manager resolves, and a team member placed in Consultancy still resolves Sanne
+
 #### Scenario: The boundary holds at every level
 
 @e2e exclude Resolution over the org indexes with no screen of its own; covered by OrgResolutionServiceTest::testTheAdministrationBoundaryHoldsOverSeveralLevels
@@ -141,8 +152,8 @@ active placements through `OrgResolutionService`, exactly as REQ-MSS-001 describ
 the walk up `parentUnitId` past a self-managed unit and its stop at the administration
 boundary. Its inputs are the `context['related']['OrgAssignment']['byEmployeeId']` index
 (lists of `{orgUnitId, endDate}`), the OrgUnit index (with `managerId`, `parentUnitId` and
-`administrationId`) and the Employee index (with `nextcloudUserId`). The OrgUnit index SHALL
-carry `administrationId`, so the audit stops the walk where the stamp does.
+`administrationId`) and the Employee index (with `nextcloudUserId` and `administrationId`). Both
+indexes SHALL carry `administrationId`, so the audit stops the walk where the stamp does.
 
 It **violates** only when the record carries a non-empty `managerUserId`, at least one
 placement resolves a manager, and NO resolved manager equals `managerUserId`. It is

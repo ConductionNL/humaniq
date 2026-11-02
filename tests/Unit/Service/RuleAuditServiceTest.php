@@ -1051,6 +1051,13 @@ class RuleAuditServiceTest extends TestCase {
 		$report = $this->serviceWithRows($rows)->audit(['jurisdiction' => 'NL']);
 		$this->assertContains('nl-mss-manager-consistency', array_column($report['topViolatedRules'], 'ruleId'));
 
+		// A placement unit without an administration takes the employee's.
+		$rows['OrgUnit'][0]['administrationId'] = 'ADM-2';
+		$rows['OrgUnit'][1]['administrationId'] = '';
+		$rows['Employee'][0]['administrationId'] = 'ADM-1';
+		$report = $this->serviceWithRows($rows)->audit(['jurisdiction' => 'NL']);
+		$this->assertNotContains('nl-mss-manager-consistency', array_column($report['topViolatedRules'], 'ruleId'));
+
 	}//end testTheAuditClimbStopsAtTheAdministrationBoundary()
 
 	/**

@@ -96,7 +96,8 @@ class OrgResolutionService {
 	 * A placement in a unit the employee manages themself resolves the
 	 * manager of the nearest unit above it managed by someone else
 	 * ({@see managerUserIdFrom()}), so nobody is their own manager. The
-	 * climb never leaves the placement unit's administration.
+	 * climb never leaves the placement unit's administration, or the
+	 * employee's own when the unit has none.
 	 *
 	 * A hop that dead-ends (no unit, unmanaged unit, unresolvable manager
 	 * Employee, manager without a Nextcloud account) contributes nothing —
@@ -123,6 +124,7 @@ class OrgResolutionService {
 		$chain = [
 			'employeeId'    => $employeeId,
 			'ownUserId'     => trim((string)($employeesById[$employeeId]['nextcloudUserId'] ?? '')),
+			'ownAdministrationId' => trim((string)($employeesById[$employeeId]['administrationId'] ?? '')),
 			'unitsById'     => $unitsById,
 			'employeesById' => $employeesById,
 		];
@@ -145,10 +147,11 @@ class OrgResolutionService {
 	 * Null when the walk dead-ends: an unmanaged unit, an unresolvable
 	 * manager Employee, a manager without an account, a root or dangling
 	 * parent, a unit already visited (a loop in the tree), or a unit
-	 * outside the placement unit's administration.
+	 * above the placement unit outside the boundary administration: the
+	 * placement unit's, or the employee's when the unit has none.
 	 *
 	 * @param string $unitId The placement's unit.
-	 * @param array{employeeId: string, ownUserId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 * @param array{employeeId: string, ownUserId: string, ownAdministrationId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
 	 *
 	 * @return string|null The manager's Nextcloud user id, or null.
 	 *
@@ -157,12 +160,17 @@ class OrgResolutionService {
 	private function managerUserIdFrom(string $unitId, array $chain): ?string {
 		$visited = [];
 		$administrationId = $this->administrationOf($chain['unitsById'][$unitId] ?? null);
+		if ($administrationId === '') {
+			$administrationId = $chain['ownAdministrationId'];
+		}
+
 		while ($unitId !== '' && isset($visited[$unitId]) === false) {
-			$visited[$unitId] = true;
 			$unit = ($chain['unitsById'][$unitId] ?? null);
-			if (is_array($unit) === false || $this->leavesAdministration(unit: $unit, administrationId: $administrationId) === true) {
+			if (is_array($unit) === false || ($visited !== [] && $this->leavesAdministration(unit: $unit, administrationId: $administrationId) === true)) {
 				return null;
 			}
+
+			$visited[$unitId] = true;
 
 			$managerId = trim((string)($unit['managerId'] ?? ''));
 			if ($this->isSelf(managerId: $managerId, chain: $chain) === false) {
@@ -176,12 +184,12 @@ class OrgResolutionService {
 	}//end managerUserIdFrom()
 
 	/**
-	 * Whether a unit lies outside the administration the climb started in.
-	 * A placement unit without an administration sets no boundary; with
-	 * one, a unit in another administration or without one is outside it.
+	 * Whether a unit lies outside the boundary administration. An empty
+	 * boundary admits every unit; otherwise a unit in another
+	 * administration or without one is outside it.
 	 *
 	 * @param array<string, mixed> $unit The unit the walk reached.
-	 * @param string $administrationId The placement unit's administration, '' when it has none.
+	 * @param string $administrationId The boundary administration, '' for none.
 	 *
 	 * @return bool
 	 *
@@ -213,7 +221,7 @@ class OrgResolutionService {
 	 * record, or another one with the same Nextcloud account.
 	 *
 	 * @param string $managerId The unit's manager Employee id.
-	 * @param array{employeeId: string, ownUserId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 * @param array{employeeId: string, ownUserId: string, ownAdministrationId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
 	 *
 	 * @return bool
 	 *
@@ -234,7 +242,7 @@ class OrgResolutionService {
 	 * Employee does not resolve or has no account.
 	 *
 	 * @param string $employeeId The Employee id.
-	 * @param array{employeeId: string, ownUserId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 * @param array{employeeId: string, ownUserId: string, ownAdministrationId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
 	 *
 	 * @return string|null
 	 *
