@@ -5,9 +5,9 @@
  *
  * Rewrites an outdated `managerUserId` stamp on open records after the
  * manager resolution changed. Registered after MigrateHoursProcess as a
- * post-migration and install step, so it runs on every upgrade and every
- * `occ maintenance:repair`. `occ humaniq:manager:restamp` runs the same
- * pass on demand, with a dry run.
+ * post-migration and install step. It runs until one pass finishes without
+ * a failed record, then stores a done marker and skips every later run.
+ * `occ humaniq:manager:restamp` runs the same pass on demand, with a dry run.
  *
  * @category Repair
  * @package  OCA\Humaniq\Repair
@@ -28,8 +28,10 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Repair;
 
+use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\ManagerStampRepair;
 use OCA\Humaniq\Service\SettingsService;
+use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -42,11 +44,19 @@ use Psr\Log\LoggerInterface;
 class RestampOpenManagerRecords implements IRepairStep {
 
 	/**
+	 * App config key set after a pass in which nothing failed.
+	 *
+	 * @var string
+	 */
+	public const DONE_KEY = 'manager_restamp_done';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ManagerStampRepair $repair The restamp pass.
 	 * @param SettingsService $settingsService Availability check.
 	 * @param LoggerInterface $logger The logger.
+	 * @param IAppConfig $appConfig Holds the done marker.
 	 *
 	 * @spec openspec/changes/restamp-open-manager-records/specs/mss-team-scope/spec.md#Requirement:-Open-records-SHALL-be-restamped-with-the-manager-the-shared-resolution-gives-today-(REQ-MSS-007)
 	 */
@@ -54,6 +64,7 @@ class RestampOpenManagerRecords implements IRepairStep {
 		private readonly ManagerStampRepair $repair,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly IAppConfig $appConfig,
 	) {
 
 	}//end __construct()
@@ -79,6 +90,10 @@ class RestampOpenManagerRecords implements IRepairStep {
 	 * @spec openspec/changes/restamp-open-manager-records/specs/mss-team-scope/spec.md#Requirement:-Open-records-SHALL-be-restamped-with-the-manager-the-shared-resolution-gives-today-(REQ-MSS-007)
 	 */
 	public function run(IOutput $output): void {
+		if ($this->appConfig->getValueBool(Application::APP_ID, self::DONE_KEY, false) === true) {
+			return;
+		}
+
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			$output->warning('OpenRegister is not installed or enabled. Skipping the manager restamp.');
 			return;
@@ -92,9 +107,18 @@ class RestampOpenManagerRecords implements IRepairStep {
 			return;
 		}
 
+		$failed = 0;
 		foreach ($report as $schema => $counts) {
-			$output->info(sprintf('%s: inspected=%d open=%d restamped=%d', $schema, $counts['inspected'], $counts['open'], $counts['changed']));
+			$output->info(sprintf('%s: inspected=%d open=%d restamped=%d failed=%d', $schema, $counts['inspected'], $counts['open'], $counts['changed'], $counts['failed']));
+			$failed += $counts['failed'];
 		}
+
+		if ($failed > 0) {
+			$output->warning(sprintf('%d records could not be restamped; the step runs again on the next upgrade or repair.', $failed));
+			return;
+		}
+
+		$this->appConfig->setValueBool(Application::APP_ID, self::DONE_KEY, true);
 	}//end run()
 
 }//end class

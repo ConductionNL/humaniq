@@ -63,7 +63,7 @@ class ManagerRestampCommand extends Command {
 	 */
 	protected function configure(): void {
 		$this->setName('humaniq:manager:restamp')
-			->setDescription('Rewrite an outdated manager stamp on open records (idempotent).')
+			->setDescription('Rewrite an outdated manager stamp on open records (idempotent). Exits 1 when a record failed.')
 			->addOption('dry-run', null, InputOption::VALUE_NONE, 'Count the records that would change, without writing.');
 
 	}//end configure()
@@ -84,8 +84,15 @@ class ManagerRestampCommand extends Command {
 
 		$output->writeln($dryRun === true ? '<info>Manager restamp (dry run, nothing written)</info>' : '<info>Manager restamp</info>');
 		$label = $dryRun === true ? 'wouldRestamp' : 'restamped';
+		$failed = 0;
 		foreach ($report as $schema => $counts) {
-			$output->writeln(sprintf('  %-22s inspected=%d open=%d %s=%d', $schema, $counts['inspected'], $counts['open'], $label, $counts['changed']));
+			$output->writeln(sprintf('  %-22s inspected=%d open=%d %s=%d failed=%d', $schema, $counts['inspected'], $counts['open'], $label, $counts['changed'], $counts['failed']));
+			$failed += $counts['failed'];
+		}
+
+		if ($failed > 0) {
+			$output->writeln(sprintf('<error>%d records could not be restamped; see the log.</error>', $failed));
+			return 1;
 		}
 
 		return 0;

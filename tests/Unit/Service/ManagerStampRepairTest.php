@@ -77,6 +77,13 @@ class ManagerStampRepairTest extends TestCase {
 	private array $savedInternally = [];
 
 	/**
+	 * The gateway over the fake store.
+	 *
+	 * @var HoursRegisterGateway
+	 */
+	private HoursRegisterGateway $gateway;
+
+	/**
 	 * The subject.
 	 *
 	 * @var ManagerStampRepair
@@ -102,9 +109,60 @@ class ManagerStampRepairTest extends TestCase {
 			 * @param InternalWriteMarker $marker The marker.
 			 * @param list<bool> $saved Collects one flag per save.
 			 */
+			/**
+			 * The record id whose save throws, if any.
+			 *
+			 * @var string|null
+			 */
+			public ?string $failOn = null;
+
+			/**
+			 * A schema whose reads ignore `offset`, so paging never ends.
+			 *
+			 * @var string|null
+			 */
+			public ?string $offsetIgnoredFor = null;
+
+			/**
+			 * The schema the next read is for.
+			 *
+			 * @var string
+			 */
+			private string $readSchema = '';
+
+			/**
+			 * Remember the schema, then set it.
+			 *
+			 * @param mixed $schema The schema slug.
+			 *
+			 * @return FakeObjectStore
+			 */
+			public function setSchema(mixed $schema): FakeObjectStore {
+				$this->readSchema = (string)$schema;
+
+				return parent::setSchema($schema);
+			}//end setSchema()
+
 			public function __construct(private InternalWriteMarker $marker, private array &$saved) {
 				parent::__construct();
 			}//end __construct()
+
+			/**
+			 * Read a page, or always the first page for the stuck schema.
+			 *
+			 * @param array<string, mixed> $config The query.
+			 * @param bool $_rbac Ignored.
+			 * @param bool $_multitenancy Ignored.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				if ($this->offsetIgnoredFor !== null && $this->readSchema === $this->offsetIgnoredFor) {
+					$config['offset'] = 0;
+				}
+
+				return parent::findAll($config, $_rbac, $_multitenancy);
+			}//end findAll()
 
 			/**
 			 * Record the marker, then save.
@@ -128,6 +186,10 @@ class ManagerStampRepairTest extends TestCase {
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): \OCA\OpenRegister\Db\ObjectEntity {
+				if ($this->failOn !== null && $uuid === $this->failOn) {
+					throw new \RuntimeException('validation failed');
+				}
+
 				$this->saved[] = $this->marker->isInternal();
 
 				return parent::saveObject($object, $extend, $register, $schema, $uuid, $_rbac, $_multitenancy);
@@ -147,7 +209,7 @@ class ManagerStampRepairTest extends TestCase {
 
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
-		$gateway = new HoursRegisterGateway(
+		$this->gateway = new HoursRegisterGateway(
 			container: new FakeContainer([
 				'OCA\OpenRegister\Service\ObjectService' => $this->store,
 				'OCA\OpenRegister\Db\SchemaMapper' => new FakeSchemaMapper(),
@@ -161,7 +223,7 @@ class ManagerStampRepairTest extends TestCase {
 			$this->logged[] = ['message' => $message, 'context' => $context];
 		});
 
-		$this->repair = new ManagerStampRepair(gateway: $gateway, marker: $this->marker, logger: $logger);
+		$this->repair = $this->repairWith(logger: $logger);
 	}//end setUp()
 
 	/**
@@ -209,7 +271,7 @@ class ManagerStampRepairTest extends TestCase {
 
 		foreach (['EmployeeChangeRequest' => 'cr-1', 'SideActivity' => 'sa-1', 'EmployeeRelationsCase' => 'erc-1', 'CommuteArrangement' => 'ca-1', 'Expense' => 'ex-1'] as $schema => $id) {
 			self::assertSame('pieter', $this->stampOf($schema, $id), $schema);
-			self::assertSame(['inspected' => 1, 'open' => 1, 'changed' => 1], $report[$schema], $schema);
+			self::assertSame(['inspected' => 1, 'open' => 1, 'changed' => 1, 'failed' => 0], $report[$schema], $schema);
 		}
 
 		self::assertSame([true, true, true, true, true], $this->savedInternally);
@@ -221,11 +283,11 @@ class ManagerStampRepairTest extends TestCase {
 			['schema' => 'EmployeeChangeRequest', 'id' => 'cr-1', 'old' => 'sanne', 'new' => 'pieter', 'dryRun' => false],
 			$this->logged[0]['context']
 		);
+		self::assertSame('humaniq: manager stamp restamped', $this->logged[0]['message']);
 	}//end testASelfStampOnAnOpenRecordIsRestamped()
 
 	/**
-	 * Decided, closed and draft records, and claims other than travel, keep
-	 * their stamp.
+	 * Decided, closed and draft records keep their stamp.
 	 *
 	 * @return void
 	 */
@@ -239,17 +301,19 @@ class ManagerStampRepairTest extends TestCase {
 		$this->store->seed('CommuteArrangement', 'ca-approved', $base + ['status' => 'approved']);
 		$this->store->seed('CommuteArrangement', 'ca-draft', $base + ['status' => 'draft']);
 		$this->store->seed('CommuteArrangement', 'ca-none', $base);
-		$this->store->seed('Expense', 'ex-hotel', $base + ['status' => 'submitted', 'category' => 'hotel']);
+		$this->store->seed('Expense', 'ex-meals-draft', $base + ['status' => 'draft', 'category' => 'meals']);
 		$this->store->seed('Expense', 'ex-approved', $base + ['status' => 'approved', 'category' => 'travel']);
+		$this->store->seed('Expense', 'ex-rejected', $base + ['status' => 'rejected', 'category' => 'software']);
+		$this->store->seed('Expense', 'ex-paid', $base + ['status' => 'reimbursed', 'category' => 'training']);
 
 		$report = $this->repair->run(false);
 
 		self::assertSame([], $this->store->state->saves);
-		self::assertSame(['inspected' => 2, 'open' => 0, 'changed' => 0], $report['EmployeeChangeRequest']);
-		self::assertSame(['inspected' => 2, 'open' => 0, 'changed' => 0], $report['SideActivity']);
-		self::assertSame(['inspected' => 1, 'open' => 0, 'changed' => 0], $report['EmployeeRelationsCase']);
-		self::assertSame(['inspected' => 3, 'open' => 0, 'changed' => 0], $report['CommuteArrangement']);
-		self::assertSame(['inspected' => 2, 'open' => 0, 'changed' => 0], $report['Expense']);
+		self::assertSame(['inspected' => 2, 'open' => 0, 'changed' => 0, 'failed' => 0], $report['EmployeeChangeRequest']);
+		self::assertSame(['inspected' => 2, 'open' => 0, 'changed' => 0, 'failed' => 0], $report['SideActivity']);
+		self::assertSame(['inspected' => 1, 'open' => 0, 'changed' => 0, 'failed' => 0], $report['EmployeeRelationsCase']);
+		self::assertSame(['inspected' => 3, 'open' => 0, 'changed' => 0, 'failed' => 0], $report['CommuteArrangement']);
+		self::assertSame(['inspected' => 4, 'open' => 0, 'changed' => 0, 'failed' => 0], $report['Expense']);
 	}//end testClosedAndDecidedRecordsKeepTheirStamp()
 
 	/**
@@ -288,7 +352,7 @@ class ManagerStampRepairTest extends TestCase {
 		$report = $this->repair->run(false);
 
 		self::assertSame([], $this->store->state->saves);
-		self::assertSame(['inspected' => 4, 'open' => 4, 'changed' => 0], $report['EmployeeChangeRequest']);
+		self::assertSame(['inspected' => 4, 'open' => 4, 'changed' => 0, 'failed' => 0], $report['EmployeeChangeRequest']);
 		self::assertSame([], $this->logged);
 	}//end testCurrentAndEmptyStampsAreLeftAlone()
 
@@ -355,6 +419,7 @@ class ManagerStampRepairTest extends TestCase {
 		self::assertSame(1, $report['Expense']['changed']);
 		self::assertCount(5, $this->logged);
 		self::assertTrue($this->logged[0]['context']['dryRun']);
+		self::assertSame('humaniq: manager stamp would be restamped (dry run)', $this->logged[0]['message']);
 	}//end testADryRunWritesNothing()
 
 	/**
@@ -375,5 +440,141 @@ class ManagerStampRepairTest extends TestCase {
 			self::assertSame(0, $counts['changed']);
 		}
 	}//end testASecondRunChangesNothing()
+
+	/**
+	 * Open claims of every category are restamped, each for its own date.
+	 *
+	 * @return void
+	 */
+	public function testOpenClaimsOfEveryCategoryAreRestamped(): void {
+		$categories = ['travel', 'accommodation', 'meals', 'supplies', 'software', 'training', 'other'];
+		foreach ($categories as $category) {
+			$this->store->seed('Expense', 'ex-' . $category, ['employeeId' => 'emp-sanne', 'managerUserId' => 'sanne', 'status' => 'submitted', 'category' => $category]);
+		}
+
+		$this->store->seed('Expense', 'ex-uncategorised', ['employeeId' => 'emp-tim', 'managerUserId' => 'tim', 'status' => 'submitted', 'expenseDate' => '2026-05-15']);
+
+		$report = $this->repair->run(false);
+
+		foreach ($categories as $category) {
+			self::assertSame('pieter', $this->stampOf('Expense', 'ex-' . $category), $category);
+		}
+
+		self::assertSame('kees', $this->stampOf('Expense', 'ex-uncategorised'));
+		self::assertSame(['inspected' => 8, 'open' => 8, 'changed' => 8, 'failed' => 0], $report['Expense']);
+	}//end testOpenClaimsOfEveryCategoryAreRestamped()
+
+	/**
+	 * A record that cannot be saved is logged and counted as failed, and
+	 * the pass carries on with the next record and the next schema.
+	 *
+	 * @return void
+	 */
+	public function testAFailingRecordIsCountedAndThePassCarriesOn(): void {
+		$errors = [];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('error')->willReturnCallback(function (string $message, array $context = []) use (&$errors): void {
+			$errors[] = ['message' => $message, 'context' => $context];
+		});
+		$repair = $this->repairWith(logger: $logger);
+		$this->seedOpenRecords('emp-sanne', 'sanne');
+		$this->store->seed('EmployeeChangeRequest', 'cr-2', ['employeeId' => 'emp-sanne', 'managerUserId' => 'sanne', 'status' => 'ingediend']);
+		$this->store->failOn = 'cr-1';
+
+		$report = $repair->run(false);
+
+		self::assertSame('sanne', $this->stampOf('EmployeeChangeRequest', 'cr-1'));
+		self::assertSame('pieter', $this->stampOf('EmployeeChangeRequest', 'cr-2'));
+		self::assertSame(['inspected' => 2, 'open' => 2, 'changed' => 1, 'failed' => 1], $report['EmployeeChangeRequest']);
+		foreach (['SideActivity' => 'sa-1', 'EmployeeRelationsCase' => 'erc-1', 'CommuteArrangement' => 'ca-1', 'Expense' => 'ex-1'] as $schema => $id) {
+			self::assertSame('pieter', $this->stampOf($schema, $id), $schema);
+		}
+
+		self::assertSame(
+			[['message' => 'humaniq: manager stamp could not be restamped', 'context' => ['schema' => 'EmployeeChangeRequest', 'id' => 'cr-1', 'error' => 'validation failed']]],
+			$errors
+		);
+	}//end testAFailingRecordIsCountedAndThePassCarriesOn()
+
+	/**
+	 * Every page is read: open records past the first 500 rows, and an
+	 * assignment past the first 500 assignments, all count.
+	 *
+	 * @return void
+	 */
+	public function testMoreThan500RowsAreAllRead(): void {
+		for ($i = 0; $i < 600; $i++) {
+			$this->store->seed('Expense', sprintf('ex-old-%03d', $i), ['employeeId' => 'emp-sanne', 'managerUserId' => 'sanne', 'status' => 'reimbursed']);
+			$this->store->seed('OrgAssignment', sprintf('as-other-%03d', $i), ['employeeId' => 'emp-other-' . $i, 'orgUnitId' => 'unit-support']);
+		}
+
+		$sanne = $this->store->state->objects['OrgAssignment']['as-sanne'];
+		unset($this->store->state->objects['OrgAssignment']['as-sanne']);
+		$this->store->state->objects['OrgAssignment']['as-sanne'] = $sanne;
+		$this->store->seed('Expense', 'ex-last', ['employeeId' => 'emp-sanne', 'managerUserId' => 'sanne', 'status' => 'submitted', 'category' => 'meals']);
+
+		$report = $this->repair->run(false);
+
+		self::assertSame('pieter', $this->stampOf('Expense', 'ex-last'));
+		self::assertSame(['inspected' => 601, 'open' => 1, 'changed' => 1, 'failed' => 0], $report['Expense']);
+	}//end testMoreThan500RowsAreAllRead()
+
+	/**
+	 * When a lookup read is cut off, a stamp is never cleared to null: the
+	 * record is counted as failed and keeps its stamp. A manager that does
+	 * resolve is still written.
+	 *
+	 * @return void
+	 */
+	public function testAStampIsNotClearedWhenALookupWasCutOff(): void {
+		for ($i = 0; $i < 500; $i++) {
+			$this->store->seed('OrgAssignment', sprintf('as-other-%03d', $i), ['employeeId' => 'emp-other-' . $i, 'orgUnitId' => 'unit-support']);
+		}
+
+		$tim = $this->store->state->objects['OrgAssignment']['as-tim'];
+		$sanne = $this->store->state->objects['OrgAssignment']['as-sanne'];
+		unset($this->store->state->objects['OrgAssignment']['as-tim'], $this->store->state->objects['OrgAssignment']['as-sanne']);
+		$this->store->state->objects['OrgAssignment'] = ['as-sanne' => $sanne] + $this->store->state->objects['OrgAssignment'];
+		$this->store->state->objects['OrgAssignment']['as-tim'] = $tim;
+		$this->store->offsetIgnoredFor = 'OrgAssignment';
+		$this->store->seed('EmployeeChangeRequest', 'cr-tim', ['employeeId' => 'emp-tim', 'managerUserId' => 'kees', 'status' => 'ingediend']);
+		$this->store->seed('EmployeeChangeRequest', 'cr-sanne', ['employeeId' => 'emp-sanne', 'managerUserId' => 'sanne', 'status' => 'ingediend']);
+
+		$report = $this->repair->run(false);
+
+		self::assertSame('kees', $this->stampOf('EmployeeChangeRequest', 'cr-tim'));
+		self::assertSame('pieter', $this->stampOf('EmployeeChangeRequest', 'cr-sanne'));
+		self::assertSame(['inspected' => 2, 'open' => 2, 'changed' => 1, 'failed' => 1], $report['EmployeeChangeRequest']);
+	}//end testAStampIsNotClearedWhenALookupWasCutOff()
+
+	/**
+	 * A schema read that stopped before the end counts as failed.
+	 *
+	 * @return void
+	 */
+	public function testACutOffSchemaReadCountsAsFailed(): void {
+		for ($i = 0; $i < 500; $i++) {
+			$this->store->seed('SideActivity', sprintf('sa-done-%03d', $i), ['employeeId' => 'emp-sanne', 'managerUserId' => 'sanne', 'status' => 'akkoord']);
+		}
+
+		$this->store->offsetIgnoredFor = 'SideActivity';
+
+		$report = $this->repair->run(false);
+
+		self::assertSame(HoursRegisterGateway::MAX_ROWS, $report['SideActivity']['inspected']);
+		self::assertSame(1, $report['SideActivity']['failed']);
+		self::assertSame(0, $report['Expense']['failed']);
+	}//end testACutOffSchemaReadCountsAsFailed()
+
+	/**
+	 * A repair over the test's store with another logger.
+	 *
+	 * @param LoggerInterface $logger The logger.
+	 *
+	 * @return ManagerStampRepair
+	 */
+	private function repairWith(LoggerInterface $logger): ManagerStampRepair {
+		return new ManagerStampRepair(gateway: $this->gateway, marker: $this->marker, logger: $logger, orgResolution: new OrgResolutionService());
+	}//end repairWith()
 
 }//end class

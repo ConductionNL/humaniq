@@ -45,8 +45,8 @@ class ManagerRestampCommandTest extends TestCase {
 	private function runWith(bool $dryRun): string {
 		$repair = $this->createMock(ManagerStampRepair::class);
 		$repair->expects(self::once())->method('run')->with($dryRun)->willReturn([
-			'Expense' => ['inspected' => 4, 'open' => 2, 'changed' => 1],
-			'SideActivity' => ['inspected' => 0, 'open' => 0, 'changed' => 0],
+			'Expense' => ['inspected' => 4, 'open' => 2, 'changed' => 1, 'failed' => 0],
+			'SideActivity' => ['inspected' => 0, 'open' => 0, 'changed' => 0, 'failed' => 0],
 		]);
 
 		$command = new ManagerRestampCommand($repair);
@@ -66,8 +66,8 @@ class ManagerRestampCommandTest extends TestCase {
 		$text = $this->runWith(true);
 
 		self::assertStringContainsString('dry run', $text);
-		self::assertMatchesRegularExpression('/Expense\s+inspected=4 open=2 wouldRestamp=1/', $text);
-		self::assertMatchesRegularExpression('/SideActivity\s+inspected=0 open=0 wouldRestamp=0/', $text);
+		self::assertMatchesRegularExpression('/Expense\s+inspected=4 open=2 wouldRestamp=1 failed=0/', $text);
+		self::assertMatchesRegularExpression('/SideActivity\s+inspected=0 open=0 wouldRestamp=0 failed=0/', $text);
 	}//end testADryRunPrintsWhatWouldChange()
 
 	/**
@@ -79,7 +79,7 @@ class ManagerRestampCommandTest extends TestCase {
 		$text = $this->runWith(false);
 
 		self::assertStringNotContainsString('dry run', $text);
-		self::assertMatchesRegularExpression('/Expense\s+inspected=4 open=2 restamped=1/', $text);
+		self::assertMatchesRegularExpression('/Expense\s+inspected=4 open=2 restamped=1 failed=0/', $text);
 	}//end testARunPrintsWhatChanged()
 
 	/**
@@ -93,5 +93,25 @@ class ManagerRestampCommandTest extends TestCase {
 		self::assertSame('humaniq:manager:restamp', $command->getName());
 		self::assertTrue($command->getDefinition()->hasOption('dry-run'));
 	}//end testTheCommandIsNamed()
+
+	/**
+	 * A failed record makes the command exit 1 and say so.
+	 *
+	 * @return void
+	 */
+	public function testAFailedRecordExitsOne(): void {
+		$repair = $this->createMock(ManagerStampRepair::class);
+		$repair->method('run')->willReturn([
+			'Expense' => ['inspected' => 4, 'open' => 2, 'changed' => 1, 'failed' => 1],
+		]);
+
+		$command = new ManagerRestampCommand($repair);
+		$output = new BufferedOutput();
+
+		self::assertSame(1, $command->run(new ArrayInput([], $command->getDefinition()), $output));
+		$text = $output->fetch();
+		self::assertMatchesRegularExpression('/Expense\s+inspected=4 open=2 restamped=1 failed=1/', $text);
+		self::assertStringContainsString('1 records could not be restamped', $text);
+	}//end testAFailedRecordExitsOne()
 
 }//end class
