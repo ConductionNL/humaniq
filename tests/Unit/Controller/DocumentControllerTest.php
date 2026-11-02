@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
+use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Controller\DocumentController;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\SettingsService;
@@ -108,11 +110,9 @@ class DocumentControllerTest extends TestCase {
 
 		return new DocumentController(
 			$this->createMock(IRequest::class),
-			$container,
 			$this->service,
 			$settings,
-			$session,
-			$this->createMock(LoggerInterface::class),
+			new CallerContext($session, $this->createMock(HumaniqRoles::class), $container, $this->createMock(LoggerInterface::class)),
 		);
 	}//end controller()
 
