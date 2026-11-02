@@ -195,6 +195,9 @@ class DemoDataServiceTest extends TestCase {
 		$importer = new class($marker) {
 			public array $seen = [];
 
+			/**
+			 * @param InternalWriteMarker $marker The marker the service sets.
+			 */
 			public function __construct(private InternalWriteMarker $marker) {
 			}
 
