@@ -60,7 +60,8 @@ const expected = RECORD ? {} : JSON.parse(readFileSync(GOLDEN, 'utf8'))
 
 /**
  * A component state: the data fields the booking paths read and write, the
- * computed values as plain fields, and reloads that record their calls.
+ * computed values as plain fields, the component's methods bound to it as
+ * Vue binds them, and reloads that record their calls.
  *
  * @param {object} fields Fields to override.
  * @return {object} The state.
@@ -76,6 +77,9 @@ function state(fields) {
 		formComplete: true,
 		form: { date: '2026-03-04', hours: '1.5', description: 'Calls', extra: 'kept' },
 		...fields,
+	}
+	for (const [name, method] of Object.entries(component.methods)) {
+		ctx[name] = method.bind(ctx)
 	}
 	ctx.load = async () => {
 		hooks.calls.push(['load', ctx.saving])
