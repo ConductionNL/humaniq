@@ -53,6 +53,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\AvgDsrService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
@@ -61,8 +62,6 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use RuntimeException;
 
 /**
@@ -79,19 +78,15 @@ class AvgDsrController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param AvgDsrService $avgDsrService The DSR orchestration service.
 	 * @param SettingsService $settingsService The register-slug source.
-	 * @param IUserSession $userSession The current user session (admin gate; ambient session for the guarded OpenRegister service).
-	 * @param IGroupManager $groupManager To check the caller's admin membership (admin gate).
+	 * @param CallerContext $caller The signed-in caller (admin gate; ambient session for the guarded OpenRegister service), their roles and the container.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly AvgDsrService $avgDsrService,
 		private readonly SettingsService $settingsService,
-		private readonly IUserSession $userSession,
-		private readonly IGroupManager $groupManager,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -321,12 +316,12 @@ class AvgDsrController extends Controller {
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
 	 */
 	private function isAdmin(): bool {
-		$uid = $this->userSession->getUser()?->getUID();
+		$uid = $this->caller->userSession->getUser()?->getUID();
 		if ($uid === null || $uid === '') {
 			return false;
 		}
 
-		return $this->groupManager->isAdmin($uid);
+		return $this->caller->roles->isAdmin($uid);
 	}//end isAdmin()
 
 	/**
@@ -411,7 +406,7 @@ class AvgDsrController extends Controller {
 			);
 		}
 
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 
 	/**

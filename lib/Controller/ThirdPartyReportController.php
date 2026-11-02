@@ -29,17 +29,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\ThirdPartyPaymentServices;
 use OCA\Humaniq\Service\SettingsService;
-use OCA\Humaniq\Service\ThirdPartyReportService;
-use OCA\Humaniq\Service\ThirdPartyStatementService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Assemble a third-party payments report; generate a payee's statement.
@@ -49,30 +46,38 @@ use Psr\Log\LoggerInterface;
 class ThirdPartyReportController extends Controller {
 
 	/**
+	 * The signed-in caller, their roles, the container and the logger.
+	 *
+	 * @var CallerContext
+	 */
+	private readonly CallerContext $caller;
+
+	/**
+	 * Whether the caller is HR or payroll.
+	 *
+	 * @var HumaniqRoles
+	 */
+	private readonly HumaniqRoles $roles;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest                   $request     The request.
-	 * @param ContainerInterface         $container   Resolves OpenRegister's ObjectService.
 	 * @param SettingsService            $settings    The register slug.
-	 * @param ThirdPartyReportService    $reports     Assembles the report.
-	 * @param ThirdPartyStatementService $statements  Generates the statement.
-	 * @param IUserSession               $userSession The caller.
-	 * @param HumaniqRoles               $roles       Whether the caller is HR or payroll.
-	 * @param LoggerInterface            $logger      The logger.
+	 * @param ThirdPartyPaymentServices $payments Assembles the report and generates the statement.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 *
 	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-001
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly SettingsService $settings,
-		private readonly ThirdPartyReportService $reports,
-		private readonly ThirdPartyStatementService $statements,
-		private readonly IUserSession $userSession,
-		private readonly HumaniqRoles $roles,
-		private readonly LoggerInterface $logger,
+		private readonly ThirdPartyPaymentServices $payments,
+		CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
+		$this->caller = $caller;
+		$this->roles = $caller->roles;
 	}//end __construct()
 
 	/**
@@ -106,7 +111,7 @@ class ThirdPartyReportController extends Controller {
 			return new JSONResponse(['error' => 'Administratie niet gevonden.'], 404);
 		}
 
-		$outcome = $this->reports->assemble($administrationId, $year, $uid);
+		$outcome = $this->payments->reports->assemble($administrationId, $year, $uid);
 		if (($outcome['status'] ?? '') !== 'assembled') {
 			return new JSONResponse($outcome, 409);
 		}
@@ -140,7 +145,7 @@ class ThirdPartyReportController extends Controller {
 		try {
 			$report = $this->objects()->find(id: $reportId, register: $this->settings->getRegisterSlug(), schema: 'ThirdPartyReport');
 		} catch (\Throwable $e) {
-			$this->logger->info('ThirdPartyReportController: report ' . $reportId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->info('ThirdPartyReportController: report ' . $reportId . ' could not be read: ' . $e->getMessage());
 			$report = null;
 		}
 
@@ -149,7 +154,7 @@ class ThirdPartyReportController extends Controller {
 		}
 
 		$report = (is_object($report) === true && method_exists($report, 'jsonSerialize') === true) ? (array)$report->jsonSerialize() : (array)$report;
-		$outcome = $this->statements->generateForReport($report, $uid);
+		$outcome = $this->payments->statements->generateForReport($report, $uid);
 		if ($outcome['generated'] === 0) {
 			return new JSONResponse($outcome, 409);
 		}
@@ -180,7 +185,7 @@ class ThirdPartyReportController extends Controller {
 	 * @return string|null
 	 */
 	private function allowedCaller(): ?string {
-		$uid = $this->userSession->getUser()?->getUID();
+		$uid = $this->caller->userSession->getUser()?->getUID();
 		if ($this->roles->isHr($uid) === false && $this->roles->isPayroll($uid) === false) {
 			return null;
 		}
@@ -215,7 +220,7 @@ class ThirdPartyReportController extends Controller {
 				->setSchema('hrAdministration')
 				->findAll(['filters' => ['administrationId' => $administrationId], 'limit' => 1]);
 		} catch (\Throwable $e) {
-			$this->logger->info('ThirdPartyReportController: administration ' . $administrationId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->info('ThirdPartyReportController: administration ' . $administrationId . ' could not be read: ' . $e->getMessage());
 			return false;
 		}
 
@@ -228,7 +233,7 @@ class ThirdPartyReportController extends Controller {
 	 * @return mixed
 	 */
 	private function objects(): mixed {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objects()
 
 }//end class

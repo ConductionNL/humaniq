@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
+use OCA\Humaniq\Service\ThirdPartyPaymentServices;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Controller\ThirdPartyReportController;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\ThirdPartyReportService;
@@ -51,7 +53,7 @@ class ThirdPartyReportControllerTest extends TestCase {
 	 *
 	 * @return ThirdPartyReportController
 	 */
-	private function controller(bool $hr, array $readable, ?ThirdPartyReportService $service = null, ?ThirdPartyStatementService $statements = null): ThirdPartyReportController {
+	private function controller(bool $hr, array $readable, ?ThirdPartyReportService $service = null, ?ThirdPartyStatementService $statements = null, bool $hrOnly = false): ThirdPartyReportController {
 		$objects = new class($readable) {
 
 			/**
@@ -134,18 +136,14 @@ class ThirdPartyReportControllerTest extends TestCase {
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 		$roles = $this->createMock(HumaniqRoles::class);
-		$roles->method('isHr')->willReturn(false);
-		$roles->method('isPayroll')->willReturn($hr);
+		$roles->method('isHr')->willReturn($hrOnly);
+		$roles->method('isPayroll')->willReturn($hr && $hrOnly === false);
 
 		return new ThirdPartyReportController(
 			$this->createMock(IRequest::class),
-			$container,
 			$settings,
-			($service ?? $this->createMock(ThirdPartyReportService::class)),
-			($statements ?? $this->createMock(ThirdPartyStatementService::class)),
-			$session,
-			$roles,
-			new NullLogger()
+			new ThirdPartyPaymentServices(($service ?? $this->createMock(ThirdPartyReportService::class)), ($statements ?? $this->createMock(ThirdPartyStatementService::class))),
+			new CallerContext($session, $roles, $container, new NullLogger())
 		);
 	}//end controller()
 
@@ -199,6 +197,19 @@ class ThirdPartyReportControllerTest extends TestCase {
 		$this->assertSame(2, $response->getData()['lineCount']);
 		$this->assertSame(409, $controller->assemble('ADM-001', '2026')->getStatus());
 	}//end testPayrollAssemblesAYear()
+
+	/**
+	 * HR, outside the payroll group, assembles a year too.
+	 *
+	 * @return void
+	 */
+	public function testHrAssemblesAYear(): void {
+		$service = $this->createMock(ThirdPartyReportService::class);
+		$service->expects($this->once())->method('assemble')->with('ADM-001', 2026, 'payroll-1')->willReturn(['status' => 'assembled', 'reportId' => 'r-1', 'lineCount' => 1]);
+		$controller = $this->controller(true, ['hrAdministration' => [['administrationId' => 'ADM-001']]], $service, null, true);
+
+		$this->assertSame(200, $controller->assemble('ADM-001', '2026')->getStatus());
+	}//end testHrAssemblesAYear()
 
 	/**
 	 * The statements need a report the caller can read; a run that
