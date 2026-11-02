@@ -31,10 +31,6 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Flow;
 
 use OCA\Humaniq\Service\PayrollNetPayService;
-use OCA\Humaniq\Service\SettingsService;
-use OCP\IL10N;
-use OCP\IURLGenerator;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -59,24 +55,18 @@ class PayrollNetPayNode extends PayrollFlowNodeBase {
 	public const OUTCOME_KEY = 'netpay';
 
 	/**
-	 * @param IL10N $l10n Localisation.
-	 * @param IURLGenerator $urls URL generator.
-	 * @param ContainerInterface $container DI container.
-	 * @param SettingsService $settingsService Settings bridge.
+	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
 	 * @param LoggerInterface $logger Logger.
 	 * @param PayrollNetPayService $netPayService The existing SEPA handoff service, reused as-is.
 	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	public function __construct(
-		IL10N $l10n,
-		IURLGenerator $urls,
-		ContainerInterface $container,
-		SettingsService $settingsService,
+		PayrollFlowNodeServices $services,
 		LoggerInterface $logger,
 		private readonly PayrollNetPayService $netPayService,
 	) {
-		parent::__construct($l10n, $urls, $container, $settingsService, $logger);
+		parent::__construct($services, $logger);
 
 	}//end __construct()
 

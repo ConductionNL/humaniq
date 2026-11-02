@@ -80,19 +80,45 @@ abstract class PayrollFlowNodeBase implements IFlowNode {
 	private const PLACEHOLDER = '/\{\{\s*([A-Za-z0-9_@.]+)\s*\}\}/';
 
 	/**
-	 * @param IL10N $l10n Localisation for palette strings.
-	 * @param IURLGenerator $urls URL generator for the node icon.
-	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
-	 * @param SettingsService $settingsService Register slug + OpenRegister availability.
+	 * Localisation for palette strings.
+	 *
+	 * @var IL10N
+	 */
+	protected readonly IL10N $l10n;
+
+	/**
+	 * URL generator for the node icon.
+	 *
+	 * @var IURLGenerator
+	 */
+	protected readonly IURLGenerator $urls;
+
+	/**
+	 * DI container for lazy ObjectService resolution.
+	 *
+	 * @var ContainerInterface
+	 */
+	protected readonly ContainerInterface $container;
+
+	/**
+	 * Register slug + OpenRegister availability.
+	 *
+	 * @var SettingsService
+	 */
+	protected readonly SettingsService $settingsService;
+
+	/**
+	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		protected readonly IL10N $l10n,
-		protected readonly IURLGenerator $urls,
-		protected readonly ContainerInterface $container,
-		protected readonly SettingsService $settingsService,
+		PayrollFlowNodeServices $services,
 		protected readonly LoggerInterface $logger,
 	) {
+		$this->l10n = $services->l10n;
+		$this->urls = $services->urls;
+		$this->container = $services->container;
+		$this->settingsService = $services->settingsService;
 
 	}//end __construct()
 
