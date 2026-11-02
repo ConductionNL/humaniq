@@ -54,15 +54,19 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 	/**
 	 * Build the agenda controller with every collaborator doubled.
 	 *
+	 * @param AgendaComposer|null $composer The composer double, or null for one that answers no entries.
+	 *
 	 * @return AgendaController The subject.
 	 */
-	private function agendaController(): AgendaController {
+	private function agendaController(?AgendaComposer $composer = null): AgendaController {
 		$gateway = $this->createMock(HoursRegisterGateway::class);
 		$gateway->method('loadAll')->willReturn([]);
 		$gateway->method('findFiltered')->willReturn([]);
 
-		$composer = $this->createMock(AgendaComposer::class);
-		$composer->method('compose')->willReturn([]);
+		if ($composer === null) {
+			$composer = $this->createMock(AgendaComposer::class);
+			$composer->method('compose')->willReturn([]);
+		}
 
 		$calendar = $this->createMock(WorkingCalendarReader::class);
 		$calendar->method('nonWorkingDates')->willReturn(
@@ -112,6 +116,33 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 			$rbac
 		);
 	}//end leaveController()
+
+	/**
+	 * `GET /api/agenda` hands the composer the trimmed subject and the days asked for.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
+	 */
+	public function testTheAgendaAsksTheComposerForTheRequestedSubjectAndDays(): void {
+		$composer = $this->createMock(AgendaComposer::class);
+		$composer->expects($this->once())
+			->method('compose')
+			->with(
+				$this->isType('array'),
+				['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-09-01', 'to' => '2026-09-07', 'memberEmployeeIds' => []]
+			)
+			->willReturn([['kind' => 'leave']]);
+
+		$response = $this->agendaController($composer)->agenda(
+			subjectType: ' employee ',
+			subjectId: 'emp-1',
+			from: '2026-09-01',
+			to: '2026-09-07'
+		);
+
+		$this->assertSame([['kind' => 'leave']], $response->getData()['entries']);
+	}//end testTheAgendaAsksTheComposerForTheRequestedSubjectAndDays()
 
 	/**
 	 * `GET /api/agenda` refuses a subject kind it does not serve.

@@ -87,10 +87,7 @@ class ResourceBookingService {
 		$quantity = $this->capacity(resource: $resource);
 		$overlapping = $this->overlapping(
 			existing: $existing,
-			resourceId: $resourceId,
-			bookingId: trim((string)($booking['id'] ?? '')),
-			start: $start,
-			end: $end
+			incoming: ['resourceId' => $resourceId, 'id' => trim((string)($booking['id'] ?? '')), 'start' => $start, 'end' => $end]
 		);
 
 		if ((count($overlapping) + 1) <= $quantity) {
@@ -129,25 +126,16 @@ class ResourceBookingService {
 	 * clash either, so its own id is skipped.
 	 *
 	 * @param array<array<string, mixed>> $existing Every booking already stored, any resource.
-	 * @param string $resourceId The resource the incoming booking asks for.
-	 * @param string $bookingId The incoming booking's own id, empty when it is new.
-	 * @param int $start The incoming booking's start.
-	 * @param int $end The incoming booking's end.
+	 * @param array{resourceId: string, id: string, start: int, end: int} $incoming The incoming booking: its resource, its own id (empty when it is new), its start and its end.
 	 *
 	 * @return array<int, array<string, mixed>> The clashing bookings.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-004
 	 */
-	private function overlapping(
-		array $existing,
-		string $resourceId,
-		string $bookingId,
-		int $start,
-		int $end
-	): array {
+	private function overlapping(array $existing, array $incoming): array {
 		$overlapping = [];
 		foreach ($existing as $other) {
-			if ($this->concerns(other: $other, resourceId: $resourceId, bookingId: $bookingId) === false) {
+			if ($this->concerns(other: $other, incoming: $incoming) === false) {
 				continue;
 			}
 
@@ -157,7 +145,7 @@ class ResourceBookingService {
 				continue;
 			}
 
-			if ($otherStart < $end && $start < $otherEnd) {
+			if ($otherStart < $incoming['end'] && $incoming['start'] < $otherEnd) {
 				$overlapping[] = $other;
 			}
 		}
@@ -169,21 +157,20 @@ class ResourceBookingService {
 	 * Whether a stored booking could clash with the incoming one at all.
 	 *
 	 * @param array<string, mixed> $other The stored booking.
-	 * @param string $resourceId The resource the incoming booking asks for.
-	 * @param string $bookingId The incoming booking's own id, empty when it is new.
+	 * @param array{resourceId: string, id: string, start: int, end: int} $incoming The incoming booking.
 	 *
 	 * @return bool True when it books the same resource and is not the booking under edit.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-004
 	 */
-	private function concerns(array $other, string $resourceId, string $bookingId): bool {
-		if (trim((string)($other['resourceId'] ?? '')) !== $resourceId) {
+	private function concerns(array $other, array $incoming): bool {
+		if (trim((string)($other['resourceId'] ?? '')) !== $incoming['resourceId']) {
 			return false;
 		}
 
 		$otherId = trim((string)($other['id'] ?? ''));
 
-		return ($otherId === '' || $otherId !== $bookingId);
+		return ($otherId === '' || $otherId !== $incoming['id']);
 	}//end concerns()
 
 	/**

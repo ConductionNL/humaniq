@@ -239,7 +239,7 @@
             "CompAdjustment": {
                 "slug": "CompAdjustment",
                 "icon": "CashPlus",
-                "version": "0.2.0",
+                "version": "0.2.1",
                 "title": "Compensation adjustment",
                 "description": "One manager-proposed compensation adjustment for one employee within one CompReviewCycle (comp-cycles), carrying the review-round lifecycle draft → proposed → approved → effective. Separation of duties on approve/reject is enforced by the reused NoSelfApprovalGuard; the approved→effective transition is gated by the read-only, fail-closed CompEffectiveDateGuard. The effective-dated write onto the employee's compensation is a separate imperative step (CompAdjustmentService), never performed by the declarative transition alone.",
                 "type": "object",
@@ -256,6 +256,7 @@
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "draft",
+                        "createStates": ["proposed"],
                         "terminal": [
                             "effective",
                             "refused"
