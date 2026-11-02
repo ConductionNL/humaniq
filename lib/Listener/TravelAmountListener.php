@@ -133,7 +133,7 @@ class TravelAmountListener implements IEventListener {
 		}
 
 		if ($modified !== [] && ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent || $event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent)) {
-			$event->setModifiedData($modified);
+			$event->setModifiedData(array_merge($event->getModifiedData(), $modified));
 		}
 	}//end handle()
 

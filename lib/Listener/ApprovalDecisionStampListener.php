@@ -80,7 +80,7 @@ class ApprovalDecisionStampListener implements IEventListener {
 		$old = ($event->getOldObject()?->getObject() ?? []);
 		$stamps = $this->stampsFor(from: (string)($old['status'] ?? ''), to: (string)($new['status'] ?? ''));
 		if ($stamps !== []) {
-			$event->setModifiedData($stamps);
+			$event->setModifiedData(array_merge($event->getModifiedData(), $stamps));
 		}
 	}//end handle()
 
