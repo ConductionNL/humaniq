@@ -70,20 +70,16 @@ class SurveyService {
 	 *
 	 * @param HoursRegisterGateway $gateway       Register reads and writes.
 	 * @param UnitMembership       $membership    Row ids and unit subtrees.
-	 * @param OrgResolutionService $orgResolution Whether a placement is active on a day.
 	 * @param InternalWriteMarker  $marker        Marks the response write as humaniq's own.
-	 * @param SurveyResults        $results       The folded results.
-	 * @param SurveyAnswers        $answers       Checks answers against the questions.
+	 * @param SurveyRules          $rules         Placements on a day, answer checks and result folding.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly UnitMembership $membership,
-		OrgResolutionService $orgResolution,
 		private readonly InternalWriteMarker $marker,
-		private readonly SurveyResults $results,
-		private readonly SurveyAnswers $answers,
+		private readonly SurveyRules $rules,
 	) {
-		$this->audience = new SurveyAudience(gateway: $gateway, membership: $membership, orgResolution: $orgResolution);
+		$this->audience = new SurveyAudience(gateway: $gateway, membership: $membership, orgResolution: $rules->orgResolution);
 	}//end __construct()
 
 	/**
@@ -171,7 +167,7 @@ class SurveyService {
 			return ['status' => 409, 'message' => 'This survey does not take answers now.'];
 		}
 
-		$clean = $this->answers->clean(questions: (array)($survey['questions'] ?? []), answers: $answers);
+		$clean = $this->rules->answers->clean(questions: (array)($survey['questions'] ?? []), answers: $answers);
 		if ($clean['missing'] !== []) {
 			return ['status' => 400, 'message' => 'Answer every required question: ' . implode(', ', $clean['missing']) . '.'];
 		}
@@ -218,7 +214,7 @@ class SurveyService {
 		}
 
 		$rate = (count($invitations) === 0 ? 0.0 : round($answered / count($invitations) * 100, 1));
-		$computed = $this->results->compute(survey: $survey, responses: $this->gateway->findFiltered(self::RESPONSE, ['surveyId' => $surveyId]), unitNames: $units);
+		$computed = $this->rules->results->compute(survey: $survey, responses: $this->gateway->findFiltered(self::RESPONSE, ['surveyId' => $surveyId]), unitNames: $units);
 		$figures = [
 			['figure' => 'Invited', 'value' => (string)count($invitations)],
 			['figure' => 'Answered', 'value' => (string)$answered],
