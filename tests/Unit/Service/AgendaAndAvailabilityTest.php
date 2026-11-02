@@ -134,10 +134,7 @@ class AgendaAndAvailabilityTest extends TestCase {
 					['id' => 'booking-1', 'employeeId' => 'emp-1', 'resourceId' => 'room-2', 'start' => '2026-06-05T10:00:00+02:00', 'end' => '2026-06-05T12:00:00+02:00', 'purpose' => 'Hoorzitting'],
 				],
 			],
-			subjectType: 'employee',
-			subjectId: 'emp-1',
-			from: '2026-06-01',
-			to: '2026-06-07'
+			query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-06-01', 'to' => '2026-06-07']
 		);
 
 		$this->assertSame(['shift', 'leave', 'booking'], array_column($entries, 'kind'));
@@ -158,9 +155,9 @@ class AgendaAndAvailabilityTest extends TestCase {
 			],
 		];
 
-		$before = $this->agenda->compose(sources: $sources, subjectType: 'employee', subjectId: 'emp-1', from: '2026-06-01', to: '2026-06-07');
+		$before = $this->agenda->compose(sources: $sources, query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-06-01', 'to' => '2026-06-07']);
 		$sources['leaveRequests'][0]['status'] = 'draft';
-		$after = $this->agenda->compose(sources: $sources, subjectType: 'employee', subjectId: 'emp-1', from: '2026-06-01', to: '2026-06-07');
+		$after = $this->agenda->compose(sources: $sources, query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-06-01', 'to' => '2026-06-07']);
 
 		$this->assertCount(1, $before);
 		$this->assertSame([], $after, 'No sync stands between the two reads');
@@ -186,10 +183,7 @@ class AgendaAndAvailabilityTest extends TestCase {
 					],
 				],
 			],
-			subjectType: 'employee',
-			subjectId: 'emp-1',
-			from: '2026-06-01',
-			to: '2026-06-07'
+			query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-06-01', 'to' => '2026-06-07']
 		);
 
 		$this->assertCount(1, $entries);
@@ -216,10 +210,7 @@ class AgendaAndAvailabilityTest extends TestCase {
 					],
 				],
 			],
-			subjectType: 'employee',
-			subjectId: 'emp-1',
-			from: '2026-06-01',
-			to: '2026-06-07'
+			query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-06-01', 'to' => '2026-06-07']
 		);
 
 		$this->assertCount(1, $entries);
@@ -388,7 +379,7 @@ class AgendaAndAvailabilityTest extends TestCase {
 		$this->assertEqualsWithDelta(16.0, $answer[0]['committedHours'], 0.01);
 		$this->assertEqualsWithDelta(20.0, $answer[0]['freeHours'], 0.01);
 
-		$entries = $this->agenda->compose(sources: $sources, subjectType: 'employee', subjectId: 'emp-1', from: '2026-09-07', to: '2026-09-13');
+		$entries = $this->agenda->compose(sources: $sources, query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-09-07', 'to' => '2026-09-13']);
 		$this->assertSame(['secondment'], array_values(array_unique(array_column($entries, 'kind'))));
 		$this->assertSame('Secondment', $entries[0]['sourceType']);
 		$this->assertSame('sec-1', $entries[0]['sourceId']);
