@@ -169,7 +169,11 @@ use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Payroll\SickPayCircumstances;
 use OCA\Humaniq\Payroll\SickPayInput;
+use OCA\Humaniq\Payroll\SickPayHours;
+use OCA\Humaniq\Payroll\SickPayTiming;
+use OCA\Humaniq\Payroll\SickPayWage;
 use OCA\Humaniq\Payroll\SickPayResult;
 use OCA\Humaniq\Payroll\TaxTables;
 use Psr\Container\ContainerInterface;
@@ -1664,14 +1668,8 @@ class PayrollRunService {
 		$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
 
 		return new SickPayInput(
-			referenceWageCents: $grossMonthlySalaryCents,
-			aangepastLoonCents: (is_numeric($aangepastLoon) === true ? (int)round(((float)$aangepastLoon) * 100) : 0),
-			loondoorbetalingPercentage: (float)($case['loondoorbetalingPercentage'] ?? 70),
-			yearOne: $this->isYearOne($firstSickDay, $period),
-			wachtdag: (($case['wachtdag'] ?? false) === true),
-			firstSickDayInPeriod: $this->coversPeriod($firstSickDay, $firstSickDay, $period),
-			contractHoursPerWeek: (is_numeric($hoursPerWeek) === true ? (float)$hoursPerWeek : self::FULLTIME_HOURS_PER_WEEK),
-			fulltimeHoursPerWeek: self::FULLTIME_HOURS_PER_WEEK
+			wage: new SickPayWage(referenceWageCents: $grossMonthlySalaryCents, aangepastLoonCents: (is_numeric($aangepastLoon) === true ? (int)round(((float)$aangepastLoon) * 100) : 0), loondoorbetalingPercentage: (float)($case['loondoorbetalingPercentage'] ?? 70)),
+			circumstances: new SickPayCircumstances(timing: new SickPayTiming(yearOne: $this->isYearOne($firstSickDay, $period), wachtdag: (($case['wachtdag'] ?? false) === true), firstSickDayInPeriod: $this->coversPeriod($firstSickDay, $firstSickDay, $period)), hours: new SickPayHours(contractHoursPerWeek: (is_numeric($hoursPerWeek) === true ? (float)$hoursPerWeek : self::FULLTIME_HOURS_PER_WEEK), fulltimeHoursPerWeek: self::FULLTIME_HOURS_PER_WEEK))
 		);
 
 	}//end sickPayInputFor()
