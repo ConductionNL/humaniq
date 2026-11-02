@@ -1,0 +1,348 @@
+{
+	"recordHours/ok": {
+		"calls": [
+			[
+				"bookHours",
+				{
+					"domainObjectType": "dossiq:case",
+					"domainObjectRef": "case-1",
+					"date": "2026-03-04",
+					"hours": 1.5,
+					"description": "Calls"
+				}
+			],
+			[
+				"load",
+				true
+			],
+			[
+				"loadEstimate",
+				true
+			]
+		],
+		"state": {
+			"saving": false,
+			"error": "",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "",
+				"description": "",
+				"extra": "kept"
+			}
+		}
+	},
+	"onRowRecorded/ok": {
+		"calls": [
+			[
+				"bookHours",
+				{
+					"domainObjectType": "dossiq:case",
+					"domainObjectRef": "case-1",
+					"date": "(today)",
+					"hours": 2.5,
+					"description": "Dag afgesloten"
+				}
+			]
+		],
+		"state": {
+			"saving": false,
+			"error": "",
+			"rowHours": "",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"recordHours/message": {
+		"calls": [
+			[
+				"bookHours",
+				{
+					"domainObjectType": "dossiq:case",
+					"domainObjectRef": "case-1",
+					"date": "2026-03-04",
+					"hours": 1.5,
+					"description": "Calls"
+				}
+			]
+		],
+		"state": {
+			"saving": false,
+			"error": "Too many hours.",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"onRowRecorded/message": {
+		"calls": [
+			[
+				"bookHours",
+				{
+					"domainObjectType": "dossiq:case",
+					"domainObjectRef": "case-1",
+					"date": "(today)",
+					"hours": 2.5,
+					"description": "Dag afgesloten"
+				}
+			]
+		],
+		"state": {
+			"saving": false,
+			"error": "Too many hours.",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"recordHours/error": {
+		"calls": [
+			[
+				"bookHours",
+				{
+					"domainObjectType": "dossiq:case",
+					"domainObjectRef": "case-1",
+					"date": "2026-03-04",
+					"hours": 1.5,
+					"description": "Calls"
+				}
+			]
+		],
+		"state": {
+			"saving": false,
+			"error": "Closed week.",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"onRowRecorded/error": {
+		"calls": [
+			[
+				"bookHours",
+				{
+					"domainObjectType": "dossiq:case",
+					"domainObjectRef": "case-1",
+					"date": "(today)",
+					"hours": 2.5,
+					"description": "Dag afgesloten"
+				}
+			]
+		],
+		"state": {
+			"saving": false,
+			"error": "Closed week.",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"recordHours/bare": {
+		"calls": [
+			[
+				"bookHours",
+				{
+					"domainObjectType": "dossiq:case",
+					"domainObjectRef": "case-1",
+					"date": "2026-03-04",
+					"hours": 1.5,
+					"description": "Calls"
+				}
+			]
+		],
+		"state": {
+			"saving": false,
+			"error": "The hours could not be recorded.",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"onRowRecorded/bare": {
+		"calls": [
+			[
+				"bookHours",
+				{
+					"domainObjectType": "dossiq:case",
+					"domainObjectRef": "case-1",
+					"date": "(today)",
+					"hours": 2.5,
+					"description": "Dag afgesloten"
+				}
+			]
+		],
+		"state": {
+			"saving": false,
+			"error": "The hours could not be recorded.",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"recordHours/incomplete": {
+		"calls": [],
+		"state": {
+			"saving": false,
+			"error": "stale",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"recordHours/saving": {
+		"calls": [],
+		"state": {
+			"saving": true,
+			"error": "stale",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"recordHours/load fails": {
+		"calls": [
+			[
+				"bookHours",
+				{
+					"domainObjectType": "dossiq:case",
+					"domainObjectRef": "case-1",
+					"date": "2026-03-04",
+					"hours": 1.5,
+					"description": "Calls"
+				}
+			],
+			[
+				"load",
+				true
+			]
+		],
+		"state": {
+			"saving": false,
+			"error": "The hours could not be recorded.",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "",
+				"description": "",
+				"extra": "kept"
+			}
+		}
+	},
+	"onRowRecorded/other object": {
+		"calls": [],
+		"state": {
+			"saving": false,
+			"error": "stale",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"onRowRecorded/no detail": {
+		"calls": [],
+		"state": {
+			"saving": false,
+			"error": "stale",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"onRowRecorded/no hours": {
+		"calls": [],
+		"state": {
+			"saving": false,
+			"error": "stale",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"onRowRecorded/saving": {
+		"calls": [],
+		"state": {
+			"saving": true,
+			"error": "stale",
+			"rowHours": "2,5",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	},
+	"onRowRecorded/no note": {
+		"calls": [
+			[
+				"bookHours",
+				{
+					"domainObjectType": "dossiq:case",
+					"domainObjectRef": "case-1",
+					"date": "(today)",
+					"hours": 2.5,
+					"description": ""
+				}
+			]
+		],
+		"state": {
+			"saving": false,
+			"error": "",
+			"rowHours": "",
+			"form": {
+				"date": "2026-03-04",
+				"hours": "1.5",
+				"description": "Calls",
+				"extra": "kept"
+			}
+		}
+	}
+}
