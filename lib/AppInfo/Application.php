@@ -35,6 +35,7 @@ use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
 use OCA\Humaniq\Lifecycle\HandoffCloseGuard;
 use OCA\Humaniq\Lifecycle\HandoffReleaseGuard;
+use OCA\Humaniq\Lifecycle\HrReopenGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Humaniq\Lifecycle\LoonaangifteMessageGuard;
 use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
@@ -66,6 +67,7 @@ use OCA\Humaniq\Listener\CandidateEvaluationStampListener;
 use OCA\Humaniq\Listener\ReferralListener;
 use OCA\Humaniq\Listener\ExpenseCategoryGuardListener;
 use OCA\Humaniq\Listener\ExpenseManagerStampListener;
+use OCA\Humaniq\Listener\ExpenseReopenAuditListener;
 use OCA\Humaniq\Listener\ExpensePayoutFieldsListener;
 use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\PayrollRunApprovedListener;
@@ -158,6 +160,9 @@ class Application extends App implements IBootstrap {
 		// `requires` tag declared on the transitions. The guard has no app
 		// dependencies, so a plain construction closure suffices.
 		$context->registerService(NoSelfApprovalGuard::class, static fn ($c): NoSelfApprovalGuard => new NoSelfApprovalGuard());
+
+		// hr-reopens-an-approved-claim: only HR outside the claim reopens an approved Expense.
+		$context->registerService(HrReopenGuard::class, static fn ($c): HrReopenGuard => new HrReopenGuard($c->get(\OCA\Humaniq\Service\HumaniqRoles::class)));
 
 		// OpenRegister lifecycle guard for the PensionFiling `controleren` transition
 		// (pension-filing-upa-mvp) — denies review unless the referenced PayrollRun is
@@ -997,6 +1002,9 @@ class Application extends App implements IBootstrap {
 			registers: null,
 			schemas: ApprovalDecisionStampListener::SLUGS
 		);
+
+		// hr-reopens-an-approved-claim: each reopen of an expense claim is logged.
+		$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: ObjectUpdatedEvent::class, listener: ExpenseReopenAuditListener::class, registers: null, schemas: [ExpenseReopenAuditListener::SLUG]);
 
 	}//end registerApprovalsInboxListeners()
 

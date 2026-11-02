@@ -269,4 +269,33 @@ class ExpensePayoutFieldsListenerTest extends TestCase {
 		self::assertSame([], $create->getModifiedData());
 	}//end testAShippedImportMayCreateADecidedClaim()
 
+	/**
+	 * The reopen write keeps the approved amounts and clears the approval
+	 * and the route; a claim a run holds is not reopened this way.
+	 *
+	 * @return void
+	 */
+	public function testTheReopenWriteClearsTheApprovalAndTheRoute(): void {
+		$stamped = $this->updated(self::APPROVED, array_merge(self::APPROVED, self::FORGED, ['status' => 'submitted']));
+
+		self::assertSame(
+			[
+				'earlier' => 'kept', 'payrollRunId' => null, 'paidInPeriod' => null,
+				'amount' => 34.5, 'taxFreeAmount' => 34.5, 'taxableAmount' => 0.0, 'currency' => 'EUR',
+				'approvedBy' => null, 'approvedAt' => null, 'reimbursementRoute' => null,
+			],
+			$stamped
+		);
+
+		self::assertNull($this->updated(self::APPROVED, array_merge(self::APPROVED, ['status' => ' submitted ']))['approvedBy']);
+
+		$held = array_merge(self::APPROVED, ['payrollRunId' => 'run-1']);
+		$kept = $this->updated($held, array_merge($held, ['status' => ' submitted ']));
+		self::assertSame('sanne', $kept['approvedBy']);
+		self::assertSame('payroll', $kept['reimbursementRoute']);
+
+		$paid = array_merge(self::APPROVED, ['status' => 'reimbursed']);
+		self::assertSame('sanne', $this->updated($paid, array_merge($paid, ['status' => 'submitted']))['approvedBy']);
+	}//end testTheReopenWriteClearsTheApprovalAndTheRoute()
+
 }//end class

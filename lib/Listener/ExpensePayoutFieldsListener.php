@@ -16,6 +16,9 @@
  *   who approved it when, and its reimbursement route;
  * - the approve write (stored `submitted`, saved `approved`) keeps the
  *   amounts and currency it was submitted with;
+ * - HR's reopen (stored `approved`, saved `submitted`, no payroll run) keeps
+ *   the amounts and currency, and clears the approval and the route, so the
+ *   claim is approved, and its route chosen, again;
  * - `payrollRunId` and `paidInPeriod` change only through humaniq's own writes
  *   (the payroll run).
  *
@@ -148,10 +151,15 @@ class ExpensePayoutFieldsListener implements IEventListener {
 		}
 
 		$stored = ($event->getOldObject()?->getObject() ?? []);
-		$fields = array_merge(self::RUN_FIELDS, $this->keptFields(claim: ($entity->getObject() ?? []), stored: $stored));
+		$claim = ($entity->getObject() ?? []);
+		$fields = array_merge(self::RUN_FIELDS, $this->keptFields(claim: $claim, stored: $stored));
 		$kept = [];
 		foreach ($fields as $field) {
 			$kept[$field] = ($stored[$field] ?? null);
+		}
+
+		if ($this->isReopen(claim: $claim, stored: $stored) === true) {
+			$kept = array_merge($kept, array_fill_keys(self::DECISION_FIELDS, null));
 		}
 
 		$event->setModifiedData(array_merge($event->getModifiedData(), $kept));
@@ -181,6 +189,22 @@ class ExpensePayoutFieldsListener implements IEventListener {
 	}//end onCreate()
 
 	/**
+	 * Whether this write is HR's reopen: an approved claim no payroll run
+	 * holds goes back to submitted. The lifecycle's HrReopenGuard decides who
+	 * may make it.
+	 *
+	 * @param array<string, mixed> $claim The claim as it will be saved.
+	 * @param array<string, mixed> $stored The claim as stored.
+	 *
+	 * @return bool
+	 */
+	private function isReopen(array $claim, array $stored): bool {
+		return trim((string)($stored['status'] ?? '')) === 'approved'
+			&& trim((string)($claim['status'] ?? '')) === 'submitted'
+			&& trim((string)($stored['payrollRunId'] ?? '')) === '';
+	}//end isReopen()
+
+	/**
 	 * Which amount and decision fields this write keeps from the stored claim.
 	 *
 	 * @param array<string, mixed> $claim The claim as it will be saved.
@@ -190,6 +214,10 @@ class ExpensePayoutFieldsListener implements IEventListener {
 	 */
 	private function keptFields(array $claim, array $stored): array {
 		$from = trim((string)($stored['status'] ?? ''));
+		if ($this->isReopen(claim: $claim, stored: $stored) === true) {
+			return self::AMOUNT_FIELDS;
+		}
+
 		if (in_array($from, self::DECIDED_STATES, true) === true) {
 			return array_merge(self::AMOUNT_FIELDS, self::DECISION_FIELDS);
 		}

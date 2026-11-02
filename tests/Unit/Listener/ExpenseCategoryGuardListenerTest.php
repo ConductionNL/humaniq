@@ -178,6 +178,8 @@ class ExpenseCategoryGuardListenerTest extends TestCase {
 		self::assertTrue($this->updateRefused($meals + ['status' => 'draft'], $meals + ['status' => 'submitted']));
 		self::assertTrue($this->updateRefused($meals + ['status' => 'rejected'], $meals + ['status' => ' submitted ']));
 		self::assertFalse($this->updateRefused($meals + ['status' => 'submitted'], $meals + ['status' => 'approved']));
+		self::assertFalse($this->updateRefused($meals + ['status' => 'approved'], $meals + ['status' => 'submitted']));
+		self::assertTrue($this->updateRefused($meals + ['status' => ''], $meals + ['status' => 'submitted']));
 		self::assertFalse($this->updateRefused($meals + ['status' => 'submitted'], $meals + ['status' => 'rejected']));
 		self::assertFalse($this->updateRefused($meals + ['status' => 'approved'], $meals + ['status' => 'reimbursed']));
 		self::assertFalse($this->updateRefused($meals + ['status' => 'submitted'], $meals + ['status' => 'submitted', 'title' => 'x']));
