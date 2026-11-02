@@ -39,6 +39,7 @@
     "OCA\\Humaniq\\Listener\\TravelAmountListener::$gateway",
     "OCA\\Humaniq\\Listener\\WorkingPatternOverlapListener::$gateway",
     "OCA\\Humaniq\\Notification\\CaseManagerResolver::$gateway",
+    "OCA\\Humaniq\\Repair\\SettleShippedExampleClaim::$gateway",
     "OCA\\Humaniq\\Service\\AccessRevocationService::$gateway",
     "OCA\\Humaniq\\Service\\AnnouncementService::$gateway",
     "OCA\\Humaniq\\Service\\ApprovalsInboxService::$gateway",
