@@ -382,7 +382,7 @@ class OrgResolutionServiceTest extends TestCase {
 		];
 		$employees = [
 			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne'],
-			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter'],
+			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter', 'administrationId' => 'ADM-1'],
 		];
 
 		$managers = $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02');
@@ -457,8 +457,8 @@ class OrgResolutionServiceTest extends TestCase {
 			'unit-directie' => ['id' => 'unit-directie', 'managerId' => 'emp-pieter', 'parentUnitId' => '', 'administrationId' => 'ADM-2'],
 		];
 		$employees = [
-			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne'],
-			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter'],
+			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne', 'administrationId' => 'ADM-1'],
+			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter', 'administrationId' => 'ADM-1'],
 		];
 
 		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
@@ -530,6 +530,10 @@ class OrgResolutionServiceTest extends TestCase {
 			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne', 'administrationId' => 'ADM-2'],
 		];
 
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-03'));
+
+		// An employee without an administration is bounded by the unit's.
+		$employees['emp-tim']['administrationId'] = '';
 		$this->assertSame([], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-03'));
 
 		$employees['emp-sanne']['administrationId'] = 'ADM-1';

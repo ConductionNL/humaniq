@@ -661,7 +661,7 @@ class NlOrgChecksTest extends TestCase {
 			],
 			[
 				'employee-jansen' => ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin'],
-				'employee-degroot' => ['id' => 'employee-degroot', 'nextcloudUserId' => 'pieter'],
+				'employee-degroot' => ['id' => 'employee-degroot', 'nextcloudUserId' => 'pieter', 'administrationId' => 'ADM-1'],
 			]
 		);
 

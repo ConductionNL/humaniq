@@ -96,8 +96,11 @@ class OrgResolutionService {
 	 * A placement in a unit the employee manages themself resolves the
 	 * manager of the nearest unit above it managed by someone else
 	 * ({@see managerUserIdFrom()}), so nobody is their own manager. The
-	 * climb never leaves the placement unit's administration, or the
-	 * employee's own when the unit has none.
+	 * approver belongs to the boundary administration: the placement
+	 * unit's, or the employee's own when the unit has none. A placement in
+	 * a unit of another administration than the employee's resolves
+	 * nothing, and so does a manager whose own Employee record lies outside
+	 * the boundary.
 	 *
 	 * A hop that dead-ends (no unit, unmanaged unit, unresolvable manager
 	 * Employee, manager without a Nextcloud account) contributes nothing —
@@ -146,9 +149,10 @@ class OrgResolutionService {
 	 *
 	 * Null when the walk dead-ends: an unmanaged unit, an unresolvable
 	 * manager Employee, a manager without an account, a root or dangling
-	 * parent, a unit already visited (a loop in the tree), or a unit
-	 * above the placement unit outside the boundary administration: the
-	 * placement unit's, or the employee's when the unit has none.
+	 * parent, a unit already visited (a loop in the tree), a placement
+	 * unit in another administration than the employee's, a unit above the
+	 * placement unit outside the boundary administration, or a manager
+	 * whose own Employee record lies outside it.
 	 *
 	 * @param string $unitId The placement's unit.
 	 * @param array{employeeId: string, ownUserId: string, ownAdministrationId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
@@ -158,15 +162,15 @@ class OrgResolutionService {
 	 * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
 	private function managerUserIdFrom(string $unitId, array $chain): ?string {
-		$visited = [];
-		$administrationId = $this->administrationOf($chain['unitsById'][$unitId] ?? null);
-		if ($administrationId === '') {
-			$administrationId = $chain['ownAdministrationId'];
+		$administrationId = $this->boundaryOf(unit: ($chain['unitsById'][$unitId] ?? null), chain: $chain);
+		if ($administrationId === null) {
+			return null;
 		}
 
+		$visited = [];
 		while ($unitId !== '' && isset($visited[$unitId]) === false) {
 			$unit = ($chain['unitsById'][$unitId] ?? null);
-			if (is_array($unit) === false || ($visited !== [] && $this->leavesAdministration(unit: $unit, administrationId: $administrationId) === true)) {
+			if (is_array($unit) === false || ($visited !== [] && $this->leavesAdministration(row: $unit, administrationId: $administrationId) === true)) {
 				return null;
 			}
 
@@ -174,7 +178,9 @@ class OrgResolutionService {
 
 			$managerId = trim((string)($unit['managerId'] ?? ''));
 			if ($this->isSelf(managerId: $managerId, chain: $chain) === false) {
-				return $this->accountOf(employeeId: $managerId, chain: $chain);
+				$manager = ($chain['employeesById'][$managerId] ?? null);
+
+				return $this->leavesAdministration(row: $manager, administrationId: $administrationId) === true ? null : $this->accountOf(employeeId: $managerId, chain: $chain);
 			}
 
 			$unitId = trim((string)($unit['parentUnitId'] ?? ''));
@@ -184,36 +190,63 @@ class OrgResolutionService {
 	}//end managerUserIdFrom()
 
 	/**
-	 * Whether a unit lies outside the boundary administration. An empty
-	 * boundary admits every unit; otherwise a unit in another
-	 * administration or without one is outside it.
+	 * The boundary administration of a placement: the placement unit's, or
+	 * the employee's own when the unit has none ('' when neither has one).
+	 * Null when the unit and the employee name different administrations,
+	 * so that placement resolves no manager.
 	 *
-	 * @param array<string, mixed> $unit The unit the walk reached.
+	 * @param mixed $unit The placement unit row.
+	 * @param array{employeeId: string, ownUserId: string, ownAdministrationId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/approver-in-employee-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	private function boundaryOf(mixed $unit, array $chain): ?string {
+		$unitAdministration = $this->administrationOf($unit);
+		if ($unitAdministration === '') {
+			return $chain['ownAdministrationId'];
+		}
+
+		if ($chain['ownAdministrationId'] !== '' && $chain['ownAdministrationId'] !== $unitAdministration) {
+			return null;
+		}
+
+		return $unitAdministration;
+	}//end boundaryOf()
+
+	/**
+	 * Whether a unit or an Employee lies outside the boundary
+	 * administration. An empty boundary admits every row; otherwise a row
+	 * in another administration, without one, or not resolving is outside
+	 * it.
+	 *
+	 * @param mixed $row The unit the walk reached, or the manager Employee.
 	 * @param string $administrationId The boundary administration, '' for none.
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/manager-climb-stays-in-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 * @spec openspec/changes/approver-in-employee-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
-	private function leavesAdministration(array $unit, string $administrationId): bool {
-		return $administrationId !== '' && $this->administrationOf($unit) !== $administrationId;
+	private function leavesAdministration(mixed $row, string $administrationId): bool {
+		return $administrationId !== '' && $this->administrationOf($row) !== $administrationId;
 	}//end leavesAdministration()
 
 	/**
-	 * A unit's administration, '' when the unit does not resolve or has none.
+	 * A row's administration, '' when the row does not resolve or has none.
 	 *
-	 * @param mixed $unit The unit row.
+	 * @param mixed $row The unit or Employee row.
 	 *
 	 * @return string
 	 *
 	 * @spec openspec/changes/manager-climb-stays-in-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
-	private function administrationOf(mixed $unit): string {
-		if (is_array($unit) === false) {
+	private function administrationOf(mixed $row): string {
+		if (is_array($row) === false) {
 			return '';
 		}
 
-		return trim((string)($unit['administrationId'] ?? ''));
+		return trim((string)($row['administrationId'] ?? ''));
 	}//end administrationOf()
 
 	/**

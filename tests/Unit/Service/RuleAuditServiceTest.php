@@ -1039,6 +1039,7 @@ class RuleAuditServiceTest extends TestCase {
 	public function testTheAuditClimbStopsAtTheAdministrationBoundary(): void {
 		$rows = $this->seededMssRows();
 		$rows['Employee'][1]['nextcloudUserId'] = 'devries';
+		$rows['Employee'][1]['administrationId'] = 'ADM-1';
 		$rows['OrgUnit'][0]['managerId'] = 'employee-devries';
 		$rows['OrgUnit'][0]['administrationId'] = 'ADM-2';
 		$rows['OrgUnit'][1]['administrationId'] = 'ADM-1';
