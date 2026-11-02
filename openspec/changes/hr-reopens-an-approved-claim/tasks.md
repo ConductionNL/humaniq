@@ -7,7 +7,7 @@
 
 - [x] 2.1 `ExpensePayoutFieldsListener` keeps the amounts and clears the approval and the route on the reopen write. Verify: ExpensePayoutFieldsListenerTest, ExpensePreSaveChainTest::testHrReopensAnApprovedClaim.
 - [x] 2.2 `ExpenseCategoryGuardListener` does not refuse a reopen. Verify: ExpenseCategoryGuardListenerTest.
-- [x] 2.3 `ExpenseReopenAuditListener` logs each reopen. Verify: ExpenseReopenAuditListenerTest.
+- [x] 2.3 The reopen is recorded by OpenRegister's audit trail; no app-local audit listener (gate 23, ADR-022).
 
 ## 3. Verification
 

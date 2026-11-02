@@ -15,8 +15,9 @@ The reopen write SHALL keep the stored `amount`, `taxFreeAmount`, `taxableAmount
 and `reimbursementRoute`, and stamp a new `submittedAt`, so the claim goes through approval
 again and its route is chosen again. A switched-off category SHALL NOT refuse a reopen.
 
-Each reopen SHALL be logged with the claim's id, the account that reopened it and the account
-that had approved it.
+Each reopen SHALL be recorded in OpenRegister's audit trail with the account that made it and
+the values before and after, including the approver it clears; humaniq SHALL NOT keep an audit
+log of its own for it.
 
 #### Scenario: HR reopens an approved claim
 
@@ -25,7 +26,8 @@ that had approved it.
 - **WHEN** Ilse from HR reopens it
 - **THEN** the claim is submitted again with 34.50 EUR, without an approver, an approval date
   or a route
-- **AND** the reopen is logged with the claim, Ilse and Sanne
+- **AND** OpenRegister's audit trail records that Ilse changed the claim, and that Sanne was
+  the approver before
 
 #### Scenario: Only HR, not the claimant or the approver, may reopen
 

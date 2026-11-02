@@ -22,7 +22,6 @@
     "OCA\\Humaniq\\Listener\\ExpenseCategoryGuardListener::$gateway",
     "OCA\\Humaniq\\Listener\\ExpenseManagerStampListener::$gateway",
     "OCA\\Humaniq\\Listener\\ExpensePayoutFieldsListener::$gateway",
-    "OCA\\Humaniq\\Listener\\ExpenseReopenAuditListener::$gateway",
     "OCA\\Humaniq\\Listener\\FieldAccessListener::$gateway",
     "OCA\\Humaniq\\Listener\\FrequentAbsenceListener::$gateway",
     "OCA\\Humaniq\\Listener\\HrLifecycleEventListener::$gateway",

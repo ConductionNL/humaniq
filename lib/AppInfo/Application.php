@@ -67,7 +67,6 @@ use OCA\Humaniq\Listener\CandidateEvaluationStampListener;
 use OCA\Humaniq\Listener\ReferralListener;
 use OCA\Humaniq\Listener\ExpenseCategoryGuardListener;
 use OCA\Humaniq\Listener\ExpenseManagerStampListener;
-use OCA\Humaniq\Listener\ExpenseReopenAuditListener;
 use OCA\Humaniq\Listener\ExpensePayoutFieldsListener;
 use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\PayrollRunApprovedListener;
@@ -1002,9 +1001,6 @@ class Application extends App implements IBootstrap {
 			registers: null,
 			schemas: ApprovalDecisionStampListener::SLUGS
 		);
-
-		// hr-reopens-an-approved-claim: each reopen of an expense claim is logged.
-		$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: ObjectUpdatedEvent::class, listener: ExpenseReopenAuditListener::class, registers: null, schemas: [ExpenseReopenAuditListener::SLUG]);
 
 	}//end registerApprovalsInboxListeners()
 

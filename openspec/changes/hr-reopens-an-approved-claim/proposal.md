@@ -23,9 +23,9 @@ that HR may reopen such a claim, so it goes through approval again.
   again when the claim is approved again. The claim keeps its employee and identity.
 - A reopen is not refused because its category was switched off later: that rule covers a
   claim being made or submitted by an employee, not HR sending one back to approval.
-- Each reopen is written to the humaniq log with the claim's id, the HR account that
-  reopened it and the account that had approved it. OpenRegister's audit trail records the
-  change as well.
+- Each reopen is recorded in OpenRegister's audit trail, as every change to a claim is: the
+  account that made it, and the status, approver, approval date and route before and after.
+  humaniq keeps no audit log of its own (ADR-022).
 
 ## Out of scope
 

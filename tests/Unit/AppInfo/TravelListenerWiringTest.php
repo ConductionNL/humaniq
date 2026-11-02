@@ -69,7 +69,6 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 	use OCA\Humaniq\Listener\ExpenseCategoryGuardListener;
 	use OCA\Humaniq\Listener\ExpenseManagerStampListener;
 	use OCA\Humaniq\Listener\ExpensePayoutFieldsListener;
-	use OCA\Humaniq\Listener\ExpenseReopenAuditListener;
 	use OCA\Humaniq\Listener\TravelAmountListener;
 	use OCA\OpenRegister\Event\ObjectEventSubscription;
 	use OCP\EventDispatcher\IEventDispatcher;
@@ -141,26 +140,6 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 			$order = array_values(preg_grep('/\$this->register(Travel|ApprovalsInbox|ExpensePayroll|FieldAccess)Listeners?\(/', $lines));
 			self::assertStringContainsString('registerExpensePayrollListeners', (string)end($order));
 		}//end testTheExpenseApproverStampIsSubscribedLast()
-
-		/**
-		 * The reopen audit is subscribed for the saved event of claims.
-		 *
-		 * @return void
-		 */
-		public function testTheReopenAuditIsSubscribed(): void {
-			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
-				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
-			}
-
-			ObjectEventSubscription::$recorded = [];
-			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
-			(new \ReflectionMethod(Application::class, 'registerApprovalsInboxListeners'))->invoke($app, $this->createMock(IEventDispatcher::class));
-
-			self::assertContains(
-				['event' => 'OCA\OpenRegister\Event\ObjectUpdatedEvent', 'listener' => ExpenseReopenAuditListener::class, 'registers' => null, 'schemas' => ['expense']],
-				ObjectEventSubscription::$recorded
-			);
-		}//end testTheReopenAuditIsSubscribed()
 
 	}//end class
 }
