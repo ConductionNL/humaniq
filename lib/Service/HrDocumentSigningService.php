@@ -83,14 +83,14 @@ class HrDocumentSigningService {
 	 * Constructor.
 	 *
 	 * @param FilinqSigningGateway $signing   Raises and reads filinq requests.
-	 * @param HoursRegisterGateway $register  Reads and writes the register.
+	 * @param RecordStoreInterface $register  Reads and writes the register.
 	 * @param ContainerInterface   $container Resolves OpenRegister's file service.
 	 * @param IUserManager         $users     Signer names and addresses.
 	 * @param SettingsService      $settings  Register slug and signing deadline.
 	 */
 	public function __construct(
 		private readonly FilinqSigningGateway $signing,
-		private readonly HoursRegisterGateway $register,
+		private readonly RecordStoreInterface $register,
 		private readonly ContainerInterface $container,
 		private readonly IUserManager $users,
 		private readonly SettingsService $settings,

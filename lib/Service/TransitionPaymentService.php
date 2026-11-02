@@ -44,13 +44,13 @@ class TransitionPaymentService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway        $gateway    The register read and write.
+	 * @param RecordStoreInterface        $gateway    The register read and write.
 	 * @param TransitionPaymentCalculator $calculator The statutory arithmetic.
 	 *
 	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-004
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly TransitionPaymentCalculator $calculator,
 	) {
 

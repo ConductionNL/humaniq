@@ -57,10 +57,6 @@
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/HrDocumentService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/HrDocumentService.php" method="generateBacklog"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/HrDocumentService.php" method="generateBacklog"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/HrDocumentService.php" method="generateInternal"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/HrDocumentService.php" method="generateInternal"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/HrDocumentService.php" method="generateInternal"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/HrDocumentService.php" method="activeDocumentFor"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/HrDocumentService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/JurisdictionPackService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/LeaveBuySellSettlementService.php" method="settle"/>
@@ -69,11 +65,7 @@
   <violation rule="PHPMD\Rule\Design\TooManyMethods" file="lib/Service/LeaveCalendarService.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/LeaveCalendarService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/LeaveCalendarService.php"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/LeaveCalendarService.php" method="upsertEvent"/>
-  <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Service/LeaveCalendarService.php" method="upsertEvent"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/LeaveCalendarService.php"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/LeaveCalendarService.php" method="reconcileOrphans"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/LeaveCalendarService.php" method="reconcileOrphans"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/LeaveCalendarService.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/PayrollGLPostService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/PayrollGLPostService.php" method="postRun"/>
@@ -92,9 +84,6 @@
   <violation rule="PHPMD\Rule\Design\TooManyMethods" file="lib/Service/PayrollRunService.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/PayrollRunService.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Service/PayrollRunService.php"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/PayrollRunService.php" method="generate"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/PayrollRunService.php" method="generate"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/PayrollRunService.php" method="generate"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/PayrollRunService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/PayrollRunService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/PayrollRunService.php"/>
@@ -102,9 +91,6 @@
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/ProformaPayslipService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/ProformaPayslipService.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/RetroAdjustmentService.php"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/RetroAdjustmentService.php" method="adjustFor"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/RetroAdjustmentService.php" method="adjustFor"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/RetroAdjustmentService.php" method="adjustFor"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/RetroAdjustmentService.php" method="computeDelta"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/RetroAdjustmentService.php" method="computeDelta"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/RetroAdjustmentService.php"/>

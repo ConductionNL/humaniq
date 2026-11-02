@@ -78,13 +78,13 @@ class ThirdPartyReportService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway    The register plumbing.
+	 * @param RecordStoreInterface $gateway    The register plumbing.
 	 * @param IAppConfig           $appConfig  The software relation number.
 	 * @param LoggerInterface      $logger     The logger.
 	 * @param IAppManager|null     $appManager The app version for versieSwPakket; 'dev' without it.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly ?IAppManager $appManager = null,

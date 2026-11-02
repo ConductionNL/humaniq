@@ -63,11 +63,11 @@ class WpmReportService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway      $gateway    Reads and writes the register.
+	 * @param RecordStoreInterface      $gateway    Reads and writes the register.
 	 * @param TravelAllowanceCalculator $calculator The 214-day arithmetic.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly TravelAllowanceCalculator $calculator,
 	) {
 

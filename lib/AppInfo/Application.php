@@ -144,19 +144,10 @@ class Application extends App implements IBootstrap {
 	 * @spec exclude composition root — registers services owned by many capabilities (rule engine, lifecycle guards, jurisdiction packs, hours process); each registration cites its own change in the adjacent comment
 	 */
 	public function register(IRegistrationContext $context): void {
-		$context->registerService(
-			RulesAuditCommand::class,
-			static function ($c): RulesAuditCommand {
-				return new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class));
-			}
-		);
-
-		$context->registerService(
-			RulesSeedTestDataCommand::class,
-			static function ($c): RulesSeedTestDataCommand {
-				return new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class));
-			}
-		);
+		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class)));
+		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
+		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
+		$context->registerServiceAlias(\OCA\Humaniq\Service\OrgLookupInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 
 		// OpenRegister lifecycle guard for the Timesheet/Expense approve+reject
 		// transitions (separation of duties — no self-approval). Registered keyed

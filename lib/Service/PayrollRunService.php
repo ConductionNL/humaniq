@@ -229,6 +229,29 @@ class PayrollRunService {
 	];
 
 	/**
+	 * What a run has paid before its first employee: the computed and skipped
+	 * lists, the cents totals and what the folds stamp after the run.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private const EMPTY_TALLY = [
+		'paidTimesheets' => [],
+		'paidClaimIds' => [],
+		'wkrRows' => [],
+		'allocatable' => [],
+		'computed' => [],
+		'skipped' => [],
+		'totals' => [
+			'gross' => 0,
+			'loonheffing' => 0,
+			'employerCharges' => 0,
+			'withholdings' => 0,
+			'net' => 0,
+			'reimbursements' => 0,
+		],
+	];
+
+	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param SettingsService $settingsService Register slug + employer-level payroll config.
 	 * @param PayrollCalculator $calculator The pure gross-to-net calculator.
@@ -414,275 +437,549 @@ class PayrollRunService {
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-002
 	 */
 	private function generate(array $run): array {
-		$runId = $this->idOf($run);
-		$period = (string)($run['period'] ?? '');
-		$administrationId = (string)($run['administrationId'] ?? '');
-
-		// jurisdiction-packs design.md D7: the country is no longer hardcoded
-		// in the resolver (this was `'nl-'.substr($period, 0, 4)`). The pack is
-		// a lookup on (run.jurisdiction, year-of(period)) against the packs'
-		// own DECLARED jurisdiction/taxYear fields, and the pack in turn
-		// declares which tables corpus its @table.* refs resolve against — so
-		// no code path parses a country out of an id or a period any more.
-		$jurisdiction = strtoupper(trim((string)($run['jurisdiction'] ?? '')));
-		if ($jurisdiction === '') {
-			$jurisdiction = 'NL';
+		$state = $this->runState($run);
+		if (isset($state['failed']) === true) {
+			return $state['failed'];
 		}
-
-		try {
-			$pack = $this->packs->resolve($jurisdiction, $period);
-			$tables = TaxTables::load($pack->tablesId());
-		} catch (\Throwable $e) {
-			return $this->outcome($runId, $period, $administrationId, 'failed', 'Geen jurisdictiepack of belastingtabellen voor ' . $jurisdiction . ' ' . $period . ': ' . $e->getMessage());
-		}
-
-		$aofTariff = $this->settingsService->getPayrollAofTariff();
-		$whkPercentage = $this->settingsService->getPayrollWhkPercentage($tables->werknemersverzekeringen()['whkDefault']);
-
-		$contractsByEmployeeKey = $this->contractsByEmployeeKey();
-		$sickCasesByEmployeeKey = $this->openSickCasesByEmployeeKey();
-		$existingByEmployeeId = $this->enginePayslipsByEmployeeId($runId);
-		// filings-premium-differentiation D2/D3: the review writes its
-		// awf-herziening adjustments first, so this run settles them.
-		$this->awfReview?->review(period: $period, runId: $runId);
-		$retroAdjustmentsByEmployeeId = $this->appliedRetroAdjustmentsByEmployeeId($period);
-		$leaveBuySellByEmployeeId = $this->settledLeaveTransactionsByEmployeeId($period);
-		$loonbeslagenByEmployeeKey = $this->activeLoonbeslagenByEmployeeKey();
-		$assetAssignmentsByEmployeeKey = $this->openAssetAssignmentsByEmployeeKey();
-		$vehicleAssetsById = $this->vehicleAssetsById();
-		$hours = $this->hoursInputs(period: $period);
-		$paidTimesheets = [];
-		$expenseInputs = $this->expenses?->inputs(norm: $this->expenses->normFrom($tables));
-		$paidClaimIds = [];
-		$wkrRows = [];
-		$allocatable = [];
-
-		$computed = [];
-		$skipped = [];
-		$totals = [
-			'gross' => 0,
-			'loonheffing' => 0,
-			'employerCharges' => 0,
-			'withholdings' => 0,
-			'net' => 0,
-			'reimbursements' => 0,
-		];
 
 		foreach ($this->loadAll('Employee') as $employee) {
-			if ($this->coversPeriod((string)($employee['startDate'] ?? ''), (string)($employee['endDate'] ?? ''), $period) === false) {
-				// Not employed in this period — not selected, not reported.
-				continue;
+			$failed = $this->payEmployee(state: $state, employee: $employee);
+			if ($failed !== null) {
+				return $failed;
 			}
+		}
 
-			$employeeId = $this->idOf($employee);
-			$employeeLabel = $this->employeeLabel($employee);
+		$this->deleteOrphans($state['existing']);
+		$this->stampPaidSources($state);
 
-			$contract = $this->coveringContract($employee, $contractsByEmployeeKey, $period);
-			if ($contract === null) {
-				$skipped[] = ['employee' => $employeeLabel, 'employeeId' => $employeeId, 'reason' => 'no-contract (geen contract dat de periode dekt)'];
-				continue;
+		$failed = $this->saveRunTotals($state);
+		if ($failed !== null) {
+			return $failed;
+		}
+
+		return $this->calculatedOutcome($state);
+	}//end generate()
+
+	/**
+	 * The run's identity, pack and tables, everything it reads once, and its
+	 * empty tallies. Holds `failed` instead when no pack or tables resolve.
+	 *
+	 * @param array<string, mixed> $run The draft PayrollRun.
+	 *
+	 * @return array<string, mixed> The run state.
+	 */
+	private function runState(array $run): array {
+		$state = [
+			'run' => $run,
+			'runId' => $this->idOf($run),
+			'period' => (string)($run['period'] ?? ''),
+			'administrationId' => (string)($run['administrationId'] ?? ''),
+			'jurisdiction' => $this->runJurisdiction($run),
+		];
+
+		try {
+			$state['pack'] = $this->packs->resolve($state['jurisdiction'], $state['period']);
+			$state['tables'] = TaxTables::load($state['pack']->tablesId());
+		} catch (\Throwable $e) {
+			return ['failed' => $this->outcome($state['runId'], $state['period'], $state['administrationId'], 'failed', 'Geen jurisdictiepack of belastingtabellen voor ' . $state['jurisdiction'] . ' ' . $state['period'] . ': ' . $e->getMessage())];
+		}
+
+		return $this->withRunInputs($state);
+	}//end runState()
+
+	/**
+	 * The run's jurisdiction, `NL` when the run names none.
+	 *
+	 * jurisdiction-packs design.md D7: the country is no longer hardcoded in
+	 * the resolver (this was `'nl-'.substr($period, 0, 4)`). The pack is a
+	 * lookup on (run.jurisdiction, year-of(period)) against the packs' own
+	 * DECLARED jurisdiction/taxYear fields, and the pack in turn declares
+	 * which tables corpus its @table.* refs resolve against, so no code path
+	 * parses a country out of an id or a period any more.
+	 *
+	 * @param array<string, mixed> $run The draft PayrollRun.
+	 *
+	 * @return string The upper-case jurisdiction.
+	 */
+	private function runJurisdiction(array $run): string {
+		$jurisdiction = strtoupper(trim((string)($run['jurisdiction'] ?? '')));
+		if ($jurisdiction === '') {
+			return 'NL';
+		}
+
+		return $jurisdiction;
+	}//end runJurisdiction()
+
+	/**
+	 * Add what the run reads once (settings, contracts, cases, adjustments,
+	 * hours, claims) and its empty tallies to the run state.
+	 *
+	 * @param array<string, mixed> $state The run state with its pack and tables.
+	 *
+	 * @return array<string, mixed> The run state.
+	 */
+	private function withRunInputs(array $state): array {
+		$period = $state['period'];
+		$state['aofTariff'] = $this->settingsService->getPayrollAofTariff();
+		$state['whkPercentage'] = $this->settingsService->getPayrollWhkPercentage($state['tables']->werknemersverzekeringen()['whkDefault']);
+		$state['contracts'] = $this->contractsByEmployeeKey();
+		$state['sickCases'] = $this->openSickCasesByEmployeeKey();
+		$state['existing'] = $this->enginePayslipsByEmployeeId($state['runId']);
+		// filings-premium-differentiation D2/D3: the review writes its
+		// awf-herziening adjustments first, so this run settles them.
+		$this->awfReview?->review(period: $period, runId: $state['runId']);
+		$state['retro'] = $this->appliedRetroAdjustmentsByEmployeeId($period);
+		$state['leaveBuySell'] = $this->settledLeaveTransactionsByEmployeeId($period);
+		$state['loonbeslagen'] = $this->activeLoonbeslagenByEmployeeKey();
+		$state['assetAssignments'] = $this->openAssetAssignmentsByEmployeeKey();
+		$state['vehicleAssets'] = $this->vehicleAssetsById();
+		$state['hours'] = $this->hoursInputs(period: $period);
+		$state['expenseInputs'] = $this->expenses?->inputs(norm: $this->expenses->normFrom($state['tables']));
+
+		return array_merge($state, self::EMPTY_TALLY);
+	}//end withRunInputs()
+
+	/**
+	 * Calculate and save one employee's payslip into the run state, or note
+	 * why the employee is skipped.
+	 *
+	 * @param array<string, mixed> $state    The run state; its tallies grow.
+	 * @param array<string, mixed> $employee The Employee.
+	 *
+	 * @return array<string, mixed>|null The failed outcome when the payslip cannot be saved.
+	 */
+	private function payEmployee(array &$state, array $employee): ?array {
+		$slip = $this->eligibleSlip(state: $state, employee: $employee);
+		if ($slip === null) {
+			return null;
+		}
+
+		if ($slip['skip'] !== null) {
+			$state['skipped'][] = ['employee' => $slip['label'], 'employeeId' => $slip['employeeId'], 'reason' => $slip['skip']];
+			return null;
+		}
+
+		$slip = $this->calculateSlip(state: $state, slip: $this->foldGross(state: $state, slip: $slip));
+
+		return $this->recordSlip(state: $state, slip: $slip);
+	}//end payEmployee()
+
+	/**
+	 * An employee's slip in progress: who, which contract and hours, and why
+	 * the employee is skipped (null when paid). Null when the employee is not
+	 * employed in the period, so is neither selected nor reported.
+	 *
+	 * @param array<string, mixed> $state    The run state.
+	 * @param array<string, mixed> $employee The Employee.
+	 *
+	 * @return array<string, mixed>|null The slip.
+	 */
+	private function eligibleSlip(array $state, array $employee): ?array {
+		if ($this->coversPeriod((string)($employee['startDate'] ?? ''), (string)($employee['endDate'] ?? ''), $state['period']) === false) {
+			return null;
+		}
+
+		$slip = [
+			'employee' => $employee,
+			'employeeId' => $this->idOf($employee),
+			'label' => $this->employeeLabel($employee),
+			'contract' => $this->coveringContract($employee, $state['contracts'], $state['period']),
+			'taxTableColor' => trim((string)($employee['taxTableColor'] ?? '')),
+		];
+		$slip['skip'] = $this->contractSkipReason($slip);
+		if ($slip['skip'] !== null) {
+			return $slip;
+		}
+
+		$slip = $this->withHoursPay(state: $state, slip: $slip);
+		$slip['skip'] = $this->paySkipReason($slip);
+
+		return $slip;
+	}//end eligibleSlip()
+
+	/**
+	 * Why a slip cannot be calculated from its contract and tax table colour.
+	 *
+	 * @param array<string, mixed> $slip The slip in progress.
+	 *
+	 * @return string|null The skip reason, or null.
+	 */
+	private function contractSkipReason(array $slip): ?string {
+		if ($slip['contract'] === null) {
+			return 'no-contract (geen contract dat de periode dekt)';
+		}
+
+		if (in_array($slip['taxTableColor'], ['wit', 'groen'], true) === false) {
+			return 'non-nl (geen NL tabelkleur wit/groen op het werknemersrecord)';
+		}
+
+		return null;
+	}//end contractSkipReason()
+
+	/**
+	 * Add the hours this run pays and whether the employee is salaried.
+	 *
+	 * time-hours-and-overtime-to-payroll D1/D2: approved hours and overtime
+	 * this run pays. An employee without a monthly salary is paid the hours at
+	 * the contract's hourly wage instead of skipped.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The slip in progress.
+	 *
+	 * @return array<string, mixed> The slip.
+	 */
+	private function withHoursPay(array $state, array $slip): array {
+		$slip['hoursPay'] = $this->hoursPayFor(employee: $slip['employee'], contract: $slip['contract'], period: $state['period'], runId: $state['runId'], hours: $state['hours']);
+		$slip['grossMonthly'] = ($slip['employee']['grossMonthlySalary'] ?? null);
+		$slip['salaried'] = (is_numeric($slip['grossMonthly']) === true && ((float)$slip['grossMonthly']) > 0.0);
+
+		return $slip;
+	}//end withHoursPay()
+
+	/**
+	 * Why a slip cannot be paid: an hourly employee without wage or hours, or
+	 * the anoniementarief precondition.
+	 *
+	 * @param array<string, mixed> $slip The slip in progress.
+	 *
+	 * @return string|null The skip reason, or null.
+	 */
+	private function paySkipReason(array $slip): ?string {
+		if ($slip['salaried'] === false) {
+			$hourlySkip = $this->hourlySkipReason(contract: $slip['contract'], hoursPay: $slip['hoursPay']);
+			if ($hourlySkip !== null) {
+				return $hourlySkip;
 			}
+		}
 
-			$taxTableColor = trim((string)($employee['taxTableColor'] ?? ''));
-			if (in_array($taxTableColor, ['wit', 'groen'], true) === false) {
-				$skipped[] = ['employee' => $employeeLabel, 'employeeId' => $employeeId, 'reason' => 'non-nl (geen NL tabelkleur wit/groen op het werknemersrecord)'];
-				continue;
-			}
+		$employee = $slip['employee'];
+		if (trim((string)($employee['bsn'] ?? '')) === '' || ($employee['identityDocumentVerified'] ?? false) !== true) {
+			// Anoniementarief precondition: never compute a knowingly-wrong
+			// slip — the 52% flat path is a named fast-follow (design.md D2).
+			return 'anoniementarief-precondition (BSN/ID-verificatie ontbreekt; 52%-tarief: fast-follow)';
+		}
 
-			// time-hours-and-overtime-to-payroll D1/D2: approved hours and
-			// overtime this run pays. An employee without a monthly salary is
-			// paid the hours at the contract's hourly wage instead of skipped.
-			$hoursPay = $this->hoursPayFor(employee: $employee, contract: $contract, period: $period, runId: $runId, hours: $hours);
-			$grossMonthly = ($employee['grossMonthlySalary'] ?? null);
-			$salaried = (is_numeric($grossMonthly) === true && ((float)$grossMonthly) > 0.0);
-			if ($salaried === false) {
-				$hourlySkip = $this->hourlySkipReason(contract: $contract, hoursPay: $hoursPay);
-				if ($hourlySkip !== null) {
-					$skipped[] = ['employee' => $employeeLabel, 'employeeId' => $employeeId, 'reason' => $hourlySkip];
-					continue;
-				}
-			}
+		return null;
+	}//end paySkipReason()
 
-			if (trim((string)($employee['bsn'] ?? '')) === '' || ($employee['identityDocumentVerified'] ?? false) !== true) {
-				// Anoniementarief precondition: never compute a knowingly-wrong
-				// slip — the 52% flat path is a named fast-follow (design.md D2).
-				$skipped[] = ['employee' => $employeeLabel, 'employeeId' => $employeeId, 'reason' => 'anoniementarief-precondition (BSN/ID-verificatie ontbreekt; 52%-tarief: fast-follow)'];
-				continue;
-			}
+	/**
+	 * The gross fed to the calculator: the salary or hours pay, the Awf
+	 * tariff, then every fold that is wage (sick pay, overtime, bijtelling,
+	 * leave buy/sell, CAO components, taxed allowances).
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The eligible slip.
+	 *
+	 * @return array<string, mixed> The slip with `grossCents` and its folds.
+	 */
+	private function foldGross(array $state, array $slip): array {
+		$employee = $slip['employee'];
+		$slip['grossCents'] = ($slip['salaried'] === true ? (int)round(((float)$slip['grossMonthly']) * 100) : (int)($slip['hoursPay']['hourlyCents'] ?? 0));
+		$slip['regularWageCents'] = $slip['grossCents'];
 
-			$grossMonthlySalaryCents = ($salaried === true ? (int)round(((float)$grossMonthly) * 100) : (int)($hoursPay['hourlyCents'] ?? 0));
-			$regularWageCents = $grossMonthlySalaryCents;
+		// filings-premium-differentiation D1: the Awf tariff follows the
+		// contract, the BBL and young part-timer exceptions and an early end.
+		$slip['employeeContracts'] = $this->employeeContracts($employee, $state['contracts']);
+		$slip['awfPaidHours'] = $this->awfPaidHours(contract: $slip['contract'], hoursPay: $slip['hoursPay'], salaried: $slip['salaried'], period: $state['period']);
+		$slip['awf'] = AwfTariffResolver::resolve($slip['contract'], (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null), $state['period'], $slip['awfPaidHours'], AwfTariffResolver::endsEarly($slip['contract'], $slip['employeeContracts']));
 
-			// filings-premium-differentiation D1: the Awf tariff follows the
-			// contract, the BBL and young part-timer exceptions and an early end.
-			$employeeContracts = $this->employeeContracts($employee, $contractsByEmployeeKey);
-			$awfPaidHours = $this->awfPaidHours(contract: $contract, hoursPay: $hoursPay, salaried: $salaried, period: $period);
-			$awf = AwfTariffResolver::resolve($contract, (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null), $period, $awfPaidHours, AwfTariffResolver::endsEarly($contract, $employeeContracts));
+		$slip = $this->foldSickPay(state: $state, slip: $slip);
 
-			// sick-pay-calc (design.md D4): an open (gemeld) SickLeaveCase
-			// covering the period substitutes the doorbetaald loon for the
-			// full salary as the gross fed into PayrollCalculator. No open
-			// case -> the full-salary path below is completely unchanged.
-			$sickCase = $this->openSickCaseFor($employee, $sickCasesByEmployeeKey, $period);
-			$sickResult = null;
-			if ($sickCase !== null) {
-				$sickInput = $this->sickPayInputFor($sickCase, $contract, $grossMonthlySalaryCents, $period);
-				$sickResult = $this->sickPayCalculator->compute($sickInput, $tables);
+		// time-hours-and-overtime-to-payroll D1: overtime is wage worked in
+		// the period, so it enters the gross the engine taxes.
+		$slip['grossCents'] += (int)($slip['hoursPay']['overtimeCents'] ?? 0);
 
-				$grossMonthlySalaryCents = $sickResult->payableGrossCents;
-			}
+		$slip = $this->foldBijtelling(state: $state, slip: $slip);
 
-			// time-hours-and-overtime-to-payroll D1: overtime is wage worked in
-			// the period, so it enters the gross the engine taxes.
-			$grossMonthlySalaryCents += (int)($hoursPay['overtimeCents'] ?? 0);
+		// leave-buy-sell (humaniq#513): a settled LeaveTransaction is WAGE,
+		// so it is settled BEFORE tax. Every settled transaction whose
+		// settlementPeriod equals THIS period enters the gross fed to the
+		// calculator: a sell adds taxable wage, a buy takes it off. The
+		// engine then withholds loonheffing on it and the net follows from
+		// the engine, never from adding a gross amount onto net after tax.
+		// No settled transaction -> leaveBuySellCents is 0 and the gross is
+		// unchanged.
+		$slip['leaveBuySellCents'] = ($state['leaveBuySell'][$slip['employeeId']] ?? 0);
+		$slip['grossCents'] += $slip['leaveBuySellCents'];
 
-			// fleet-bijtelling (design.md D3/D4; hrmq-asset-fleet-merge): a
-			// genuine engine-INPUT change -- unlike sick-pay-calc's
-			// substitution above (which still lands here as the "gross fed
-			// to the calculator"), this ADDS to that gross rather than
-			// replacing it. An open AssetAssignment on a category: vehicle
-			// Asset, covering the period, contributes its monthly bijtelling;
-			// PayrollCalculator is never touched -- it only ever sees the
-			// (possibly larger) tvl. No covering assignment -> $bijtellingCents
-			// stays 0 and the gross is unchanged.
-			$assetAssignment = $this->openVehicleAssignmentFor($employee, $assetAssignmentsByEmployeeKey, $vehicleAssetsById, $period);
-			$bijtellingCents = 0;
-			if ($assetAssignment !== null) {
-				$vehicleAsset = ($vehicleAssetsById[(string)($assetAssignment['assetId'] ?? '')] ?? null);
-				$bijtellingCents = $this->bijtellingCentsFor($vehicleAsset, $assetAssignment, $tables);
+		return $this->foldCaoAndExpenses(state: $state, slip: $slip);
+	}//end foldGross()
 
-				$grossMonthlySalaryCents += $bijtellingCents;
-			}
+	/**
+	 * Substitute the doorbetaald loon for the gross when an open sick case
+	 * covers the period.
+	 *
+	 * sick-pay-calc (design.md D4): an open (gemeld) SickLeaveCase covering
+	 * the period substitutes the doorbetaald loon for the full salary as the
+	 * gross fed into PayrollCalculator. No open case -> the full-salary path
+	 * is completely unchanged.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The slip in progress.
+	 *
+	 * @return array<string, mixed> The slip with `sickCase` and `sickResult`.
+	 */
+	private function foldSickPay(array $state, array $slip): array {
+		$slip['sickCase'] = $this->openSickCaseFor($slip['employee'], $state['sickCases'], $state['period']);
+		$slip['sickResult'] = null;
+		if ($slip['sickCase'] !== null) {
+			$sickInput = $this->sickPayInputFor($slip['sickCase'], $slip['contract'], $slip['grossCents'], $state['period']);
+			$slip['sickResult'] = $this->sickPayCalculator->compute($sickInput, $state['tables']);
 
-			// leave-buy-sell (humaniq#513): a settled LeaveTransaction is WAGE,
-			// so it is settled BEFORE tax. Every settled transaction whose
-			// settlementPeriod equals THIS period enters the gross fed to the
-			// calculator: a sell adds taxable wage, a buy takes it off. The
-			// engine then withholds loonheffing on it and the net follows from
-			// the engine, never from adding a gross amount onto net after tax.
-			// No settled transaction -> leaveBuySellCents is 0 and the gross is
-			// unchanged.
-			$leaveBuySellCents = ($leaveBuySellByEmployeeId[$employeeId] ?? 0);
-			$grossMonthlySalaryCents += $leaveBuySellCents;
+			$slip['grossCents'] = $slip['sickResult']->payableGrossCents;
+		}
 
-			// payroll-cao-components D3: the allowances and premiums the
-			// collective agreement prescribes are wage, added before the
-			// calculator. A contract naming none folds nothing.
-			$caoFold = $this->caoComponents?->foldFor(contract: $contract, regularWageCents: $regularWageCents, hoursPay: $hoursPay, entries: $hours['entries'], nonWorkingDates: $hours['nonWorkingDates'], period: $period);
-			$grossMonthlySalaryCents += (int)($caoFold['totalCents'] ?? 0);
+		return $slip;
+	}//end foldSickPay()
 
-			// payroll-expenses-and-allowances D2/D4: the taxed part of every
-			// allowance is wage and enters the gross before the calculator;
-			// approved payroll-route claims and the untaxed allowance parts
-			// are added to net after the leave fold, before the garnishment.
-			$expenseFold = $this->expenses?->foldFor(inputs: $expenseInputs, employeeId: $employeeId, period: $period, runId: $runId);
-			$grossMonthlySalaryCents += (int)($expenseFold['taxedCents'] ?? 0);
-			$expenseNetCents = ((int)($expenseFold['claimCents'] ?? 0) + (int)($expenseFold['untaxedCents'] ?? 0));
+	/**
+	 * Add a covering company car's monthly bijtelling to the gross.
+	 *
+	 * fleet-bijtelling (design.md D3/D4; hrmq-asset-fleet-merge): a genuine
+	 * engine-INPUT change -- unlike sick-pay-calc's substitution (which still
+	 * lands as the "gross fed to the calculator"), this ADDS to that gross
+	 * rather than replacing it. An open AssetAssignment on a category: vehicle
+	 * Asset, covering the period, contributes its monthly bijtelling;
+	 * PayrollCalculator is never touched -- it only ever sees the (possibly
+	 * larger) tvl. No covering assignment -> bijtellingCents stays 0 and the
+	 * gross is unchanged.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The slip in progress.
+	 *
+	 * @return array<string, mixed> The slip with `assetAssignment` and `bijtellingCents`.
+	 */
+	private function foldBijtelling(array $state, array $slip): array {
+		$slip['assetAssignment'] = $this->openVehicleAssignmentFor($slip['employee'], $state['assetAssignments'], $state['vehicleAssets'], $state['period']);
+		$slip['bijtellingCents'] = 0;
+		if ($slip['assetAssignment'] !== null) {
+			$vehicleAsset = ($state['vehicleAssets'][(string)($slip['assetAssignment']['assetId'] ?? '')] ?? null);
+			$slip['bijtellingCents'] = $this->bijtellingCentsFor($vehicleAsset, $slip['assetAssignment'], $state['tables']);
 
-			// 30-procent-regeling (design.md D2/D7): a granted 30%-ruling feeds
-			// its applied rate into the engine, which reduces the TAXABLE base
-			// (pack `belastbaarLoon` binding) while leaving the net-fold's gross
-			// untouched -- so nettoPay RISES. Not granted -> rate 0.0 -> the
-			// pack's cappedRate exemption degrades to zero (byte-identical path).
-			$thirtyPercentRulingRate = ((($employee['thirtyPercentRulingGranted'] ?? false) === true)
-				? (float)($employee['thirtyPercentRulingRate'] ?? 0.0)
-				: 0.0);
+			$slip['grossCents'] += $slip['bijtellingCents'];
+		}
 
-			$input = new CalculationInput(
-				grossMonthlySalaryCents: $grossMonthlySalaryCents,
-				taxTableColor: $taxTableColor,
-				loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true),
-				dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null),
-				period: $period,
-				awfTariff: $awf['tariff'],
-				aofTariff: $aofTariff,
-				whkPercentage: $whkPercentage,
-				verzekeringsplichtig: (($employee['isDga'] ?? false) !== true),
-				jurisdiction: $jurisdiction,
-				thirtyPercentRulingRate: $thirtyPercentRulingRate
-			);
+		return $slip;
+	}//end foldBijtelling()
 
-			$result = $this->calculator->calculate($input, $tables);
+	/**
+	 * Add the CAO components and the taxed allowances to the gross, and note
+	 * the claims and untaxed allowances paid on net.
+	 *
+	 * payroll-cao-components D3: the allowances and premiums the collective
+	 * agreement prescribes are wage, added before the calculator. A contract
+	 * naming none folds nothing. payroll-expenses-and-allowances D2/D4: the
+	 * taxed part of every allowance is wage and enters the gross before the
+	 * calculator; approved payroll-route claims and the untaxed allowance
+	 * parts are added to net after the leave fold, before the garnishment.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The slip in progress.
+	 *
+	 * @return array<string, mixed> The slip with `caoFold`, `expenseFold` and `expenseNetCents`.
+	 */
+	private function foldCaoAndExpenses(array $state, array $slip): array {
+		$slip['caoFold'] = $this->caoComponents?->foldFor(contract: $slip['contract'], regularWageCents: $slip['regularWageCents'], hoursPay: $slip['hoursPay'], entries: $state['hours']['entries'], nonWorkingDates: $state['hours']['nonWorkingDates'], period: $state['period']);
+		$slip['grossCents'] += (int)($slip['caoFold']['totalCents'] ?? 0);
 
-			// 30-procent-regeling (design.md D5): independently re-derive the
-			// exemption amount (the same cappedRate formula, in PHP -- the
-			// bijtelling D3 precedent) over the SAME tvl the engine saw, to
-			// stamp the Payslip. nl-30-regeling-aftoppingsgrens-bedrag is the
-			// drift detector if this ever disagrees with the pack binding.
-			$thirtyPercentExemptionCents = $this->thirtyPercentExemptionCentsFor($employee, $grossMonthlySalaryCents, $tables);
+		$slip['expenseFold'] = $this->expenses?->foldFor(inputs: $state['expenseInputs'], employeeId: $slip['employeeId'], period: $state['period'], runId: $state['runId']);
+		$slip['grossCents'] += (int)($slip['expenseFold']['taxedCents'] ?? 0);
+		$slip['expenseNetCents'] = ((int)($slip['expenseFold']['claimCents'] ?? 0) + (int)($slip['expenseFold']['untaxedCents'] ?? 0));
 
-			// retro-adjustments (design.md D4): fold every APPLIED
-			// PayrollAdjustment settling into THIS period for this employee
-			// into the payslip's retroAdjustment component + nettoPay. No
-			// applied adjustment -> retroAdjustmentCents is 0 and the payload
-			// stays byte-identical to before this change.
-			$retroAdjustment = ($retroAdjustmentsByEmployeeId[$employeeId] ?? self::NO_RETRO_ADJUSTMENT);
-			$retroAdjustmentCents = $retroAdjustment['net'];
+		return $slip;
+	}//end foldCaoAndExpenses()
 
-			// loonbeslag (design.md D3): computed against the FULLY-folded
-			// nettoPay-so-far (engine net, which already carries any settled
-			// leave buy/sell, + retroAdjustment) -- the final fold, so the
-			// beslagvrije voet protects the employee's actual take-home this
-			// period, never an intermediate figure a same-period
-			// nabetaling/leave-payout would still inflate past.
-			$nettoPaySoFarCents = ($result->nettoPayCents + $retroAdjustmentCents + $expenseNetCents);
-			$loonbeslag = $this->activeLoonbeslagFor($employee, $loonbeslagenByEmployeeKey, $period);
-			$loonbeslagDeductionCents = ($loonbeslag !== null) ? $this->loonbeslagDeductionCents($loonbeslag, $nettoPaySoFarCents) : 0;
+	/**
+	 * Run the calculator over the folded gross, then fold the retro
+	 * adjustment and the loonbeslag into the net.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The folded slip.
+	 *
+	 * @return array<string, mixed> The slip with its input, result and net.
+	 */
+	private function calculateSlip(array $state, array $slip): array {
+		$slip['input'] = $this->calculationInput(state: $state, slip: $slip);
+		$slip['result'] = $this->calculator->calculate($slip['input'], $state['tables']);
 
-			$payload = $this->payslipPayload($runId, $employee, $contract, $period, $result);
-			$payload = array_merge($payload, $this->sickPayFields($sickCase, $sickResult));
-			$payload = array_merge($payload, $this->bijtellingFields($assetAssignment, $bijtellingCents));
-			$payload = array_merge($payload, $this->thirtyPercentRulingFields($thirtyPercentExemptionCents));
-			$payload = array_merge($payload, $this->retroAdjustmentFields($retroAdjustmentCents, $result->nettoPayCents));
-			$payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents));
-			$payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
-			$payload = array_merge($payload, $this->hoursPayFields(hoursPay: $hoursPay, salaried: $salaried));
-			$payload = array_merge($payload, $this->awfFields(awf: $awf, employeeId: $employeeId, contracts: $employeeContracts, period: $period, paidHours: $awfPaidHours));
-			$payload = array_merge($payload, ($this->caoComponents?->payslipFields(fold: $caoFold) ?? []));
-			$payload = array_merge($payload, $this->expenseFields(fold: $expenseFold, netCents: ($nettoPaySoFarCents - $loonbeslagDeductionCents)));
-			$paidClaimIds = array_merge($paidClaimIds, (array)($expenseFold['claimIds'] ?? []));
-			$wkrRows = array_merge($wkrRows, (array)($expenseFold['wkr'] ?? []));
-			foreach ((array)($hoursPay['timesheetIds'] ?? []) as $timesheetId) {
-				$paidTimesheets[$timesheetId] = $this->creditFor(hoursPay: $hoursPay, timesheetId: $timesheetId);
-			}
+		// 30-procent-regeling (design.md D5): independently re-derive the
+		// exemption amount (the same cappedRate formula, in PHP -- the
+		// bijtelling D3 precedent) over the SAME tvl the engine saw, to
+		// stamp the Payslip. nl-30-regeling-aftoppingsgrens-bedrag is the
+		// drift detector if this ever disagrees with the pack binding.
+		$slip['thirtyPercentExemptionCents'] = $this->thirtyPercentExemptionCentsFor($slip['employee'], $slip['grossCents'], $state['tables']);
 
-			// audit-trail-payroll (REQ-AUDP-001): stamp the exact resolved
-			// CalculationInput alongside the engine output, in the SAME write
-			// -- the input that produced this payslip is never re-derivable
-			// from Employee/EmploymentContract state once either is edited
-			// later, so it is persisted here, once, at generation time.
-			$payload['engineInputSnapshot'] = $input->toArray();
+		// retro-adjustments (design.md D4): fold every APPLIED
+		// PayrollAdjustment settling into THIS period for this employee
+		// into the payslip's retroAdjustment component + nettoPay. No
+		// applied adjustment -> retroAdjustmentCents is 0 and the payload
+		// stays byte-identical to before this change.
+		$slip['retroAdjustment'] = ($state['retro'][$slip['employeeId']] ?? self::NO_RETRO_ADJUSTMENT);
 
-			try {
-				$existingPayslip = ($existingByEmployeeId[$employeeId] ?? null);
-				$saved = $this->savePayslip($payload, $existingPayslip);
-				unset($existingByEmployeeId[$employeeId]);
-			} catch (\Throwable $e) {
-				$this->logger->error('PayrollRunService: kon loonstrook niet opslaan voor ' . $employeeLabel . ': ' . $e->getMessage());
-				return $this->outcome($runId, $period, $administrationId, 'failed', 'Opslaan van de loonstrook voor ' . $employeeLabel . ' is mislukt: ' . $e->getMessage());
-			}
+		// loonbeslag (design.md D3): computed against the FULLY-folded
+		// nettoPay-so-far (engine net, which already carries any settled
+		// leave buy/sell, + retroAdjustment) -- the final fold, so the
+		// beslagvrije voet protects the employee's actual take-home this
+		// period, never an intermediate figure a same-period
+		// nabetaling/leave-payout would still inflate past.
+		$slip['nettoPaySoFarCents'] = ($slip['result']->nettoPayCents + $slip['retroAdjustment']['net'] + $slip['expenseNetCents']);
+		$slip['loonbeslag'] = $this->activeLoonbeslagFor($slip['employee'], $state['loonbeslagen'], $state['period']);
+		$slip['loonbeslagDeductionCents'] = ($slip['loonbeslag'] !== null) ? $this->loonbeslagDeductionCents($slip['loonbeslag'], $slip['nettoPaySoFarCents']) : 0;
 
-			$computed[] = ['employee' => $employeeLabel, 'payslipId' => $this->idOf($saved)];
-			$allocatable[] = ['payslipId' => $this->idOf($saved), 'employeeId' => $employeeId, 'grossCents' => ($result->grossPayCents + $retroAdjustment['gross']), 'chargesCents' => ($result->employerChargesCents + $retroAdjustment['employerCharges'])];
+		return $slip;
+	}//end calculateSlip()
 
-			// humaniq#514: the retro nabetaling/terugvordering is paid out in
-			// net, so its gross, its wage tax and its employer charges belong
-			// on the cost side too. Without them totalNet holds money
-			// totalGross does not, the GL journal books no cost for it, and a
-			// large enough delta makes the run unpostable. A leave buy/sell
-			// already sits inside the engine gross since humaniq#513.
-			$totals['gross'] += ($result->grossPayCents + $retroAdjustment['gross']);
-			$totals['loonheffing'] += ($result->loonheffingCents + $retroAdjustment['loonheffing']);
-			$totals['employerCharges'] += ($result->employerChargesCents + $retroAdjustment['employerCharges']);
-			$totals['withholdings'] += ($result->loonheffingCents + $retroAdjustment['loonheffing']);
-			$totals['net'] += ($nettoPaySoFarCents - $loonbeslagDeductionCents);
-			$totals['reimbursements'] += $expenseNetCents;
-		}//end foreach
+	/**
+	 * The calculator input for a folded slip.
+	 *
+	 * 30-procent-regeling (design.md D2/D7): a granted 30%-ruling feeds its
+	 * applied rate into the engine, which reduces the TAXABLE base (pack
+	 * `belastbaarLoon` binding) while leaving the net-fold's gross untouched,
+	 * so nettoPay RISES. Not granted -> rate 0.0 -> the pack's cappedRate
+	 * exemption degrades to zero (byte-identical path).
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The folded slip.
+	 *
+	 * @return CalculationInput
+	 */
+	private function calculationInput(array $state, array $slip): CalculationInput {
+		$employee = $slip['employee'];
 
-		// Orphan cleanup (design.md D4): engine payslips of THIS run whose
-		// employee no longer computes are deleted; payslips with a different
-		// or null payrollRunId are never touched (they were never selected).
-		foreach ($existingByEmployeeId as $orphan) {
+		return new CalculationInput(
+			grossMonthlySalaryCents: $slip['grossCents'],
+			taxTableColor: $slip['taxTableColor'],
+			loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true),
+			dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null),
+			period: $state['period'],
+			awfTariff: $slip['awf']['tariff'],
+			aofTariff: $state['aofTariff'],
+			whkPercentage: $state['whkPercentage'],
+			verzekeringsplichtig: (($employee['isDga'] ?? false) !== true),
+			jurisdiction: $state['jurisdiction'],
+			thirtyPercentRulingRate: ((($employee['thirtyPercentRulingGranted'] ?? false) === true) ? (float)($employee['thirtyPercentRulingRate'] ?? 0.0) : 0.0)
+		);
+	}//end calculationInput()
+
+	/**
+	 * Save a calculated slip's payslip and add it to the run's tallies.
+	 *
+	 * @param array<string, mixed> $state The run state; its tallies grow.
+	 * @param array<string, mixed> $slip  The calculated slip.
+	 *
+	 * @return array<string, mixed>|null The failed outcome when the payslip cannot be saved.
+	 */
+	private function recordSlip(array &$state, array $slip): ?array {
+		$payload = $this->slipPayload(state: $state, slip: $slip);
+		$this->collectPaidSources(state: $state, slip: $slip);
+
+		// audit-trail-payroll (REQ-AUDP-001): stamp the exact resolved
+		// CalculationInput alongside the engine output, in the SAME write
+		// -- the input that produced this payslip is never re-derivable
+		// from Employee/EmploymentContract state once either is edited
+		// later, so it is persisted here, once, at generation time.
+		$payload['engineInputSnapshot'] = $slip['input']->toArray();
+
+		try {
+			$saved = $this->savePayslip($payload, ($state['existing'][$slip['employeeId']] ?? null));
+			unset($state['existing'][$slip['employeeId']]);
+		} catch (\Throwable $e) {
+			$this->logger->error('PayrollRunService: kon loonstrook niet opslaan voor ' . $slip['label'] . ': ' . $e->getMessage());
+			return $this->outcome($state['runId'], $state['period'], $state['administrationId'], 'failed', 'Opslaan van de loonstrook voor ' . $slip['label'] . ' is mislukt: ' . $e->getMessage());
+		}
+
+		$slip['payslipId'] = $this->idOf($saved);
+		$this->tallySlip(state: $state, slip: $slip);
+
+		return null;
+	}//end recordSlip()
+
+	/**
+	 * The payslip payload: the engine output, then each fold's fields.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The calculated slip.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function slipPayload(array $state, array $slip): array {
+		$payload = $this->payslipPayload($state['runId'], $slip['employee'], $slip['contract'], $state['period'], $slip['result']);
+		$fieldSets = [
+			$this->sickPayFields($slip['sickCase'], $slip['sickResult']),
+			$this->bijtellingFields($slip['assetAssignment'], $slip['bijtellingCents']),
+			$this->thirtyPercentRulingFields($slip['thirtyPercentExemptionCents']),
+			$this->retroAdjustmentFields($slip['retroAdjustment']['net'], $slip['result']->nettoPayCents),
+			$this->leaveBuySellFields($slip['leaveBuySellCents']),
+			$this->loonbeslagFields($slip['loonbeslag'], $slip['loonbeslagDeductionCents'], $slip['nettoPaySoFarCents']),
+			$this->hoursPayFields(hoursPay: $slip['hoursPay'], salaried: $slip['salaried']),
+			$this->awfFields(awf: $slip['awf'], employeeId: $slip['employeeId'], contracts: $slip['employeeContracts'], period: $state['period'], paidHours: $slip['awfPaidHours']),
+			($this->caoComponents?->payslipFields(fold: $slip['caoFold']) ?? []),
+			$this->expenseFields(fold: $slip['expenseFold'], netCents: ($slip['nettoPaySoFarCents'] - $slip['loonbeslagDeductionCents'])),
+		];
+		foreach ($fieldSets as $fields) {
+			$payload = array_merge($payload, $fields);
+		}
+
+		return $payload;
+	}//end slipPayload()
+
+	/**
+	 * Note the claims, WKR rows and timesheets this slip pays.
+	 *
+	 * @param array<string, mixed> $state The run state; its paid lists grow.
+	 * @param array<string, mixed> $slip  The calculated slip.
+	 *
+	 * @return void
+	 */
+	private function collectPaidSources(array &$state, array $slip): void {
+		$state['paidClaimIds'] = array_merge($state['paidClaimIds'], (array)($slip['expenseFold']['claimIds'] ?? []));
+		$state['wkrRows'] = array_merge($state['wkrRows'], (array)($slip['expenseFold']['wkr'] ?? []));
+		foreach ((array)($slip['hoursPay']['timesheetIds'] ?? []) as $timesheetId) {
+			$state['paidTimesheets'][$timesheetId] = $this->creditFor(hoursPay: $slip['hoursPay'], timesheetId: $timesheetId);
+		}
+	}//end collectPaidSources()
+
+	/**
+	 * Add a saved slip to the computed list, the cost allocation and the
+	 * cents-exact totals.
+	 *
+	 * humaniq#514: the retro nabetaling/terugvordering is paid out in net, so
+	 * its gross, its wage tax and its employer charges belong on the cost side
+	 * too. Without them totalNet holds money totalGross does not, the GL
+	 * journal books no cost for it, and a large enough delta makes the run
+	 * unpostable. A leave buy/sell already sits inside the engine gross since
+	 * humaniq#513.
+	 *
+	 * @param array<string, mixed> $state The run state; its tallies grow.
+	 * @param array<string, mixed> $slip  The saved slip, with `payslipId`.
+	 *
+	 * @return void
+	 */
+	private function tallySlip(array &$state, array $slip): void {
+		$result = $slip['result'];
+		$retro = $slip['retroAdjustment'];
+		$state['computed'][] = ['employee' => $slip['label'], 'payslipId' => $slip['payslipId']];
+		$state['allocatable'][] = ['payslipId' => $slip['payslipId'], 'employeeId' => $slip['employeeId'], 'grossCents' => ($result->grossPayCents + $retro['gross']), 'chargesCents' => ($result->employerChargesCents + $retro['employerCharges'])];
+
+		$state['totals']['gross'] += ($result->grossPayCents + $retro['gross']);
+		$state['totals']['loonheffing'] += ($result->loonheffingCents + $retro['loonheffing']);
+		$state['totals']['employerCharges'] += ($result->employerChargesCents + $retro['employerCharges']);
+		$state['totals']['withholdings'] += ($result->loonheffingCents + $retro['loonheffing']);
+		$state['totals']['net'] += ($slip['nettoPaySoFarCents'] - $slip['loonbeslagDeductionCents']);
+		$state['totals']['reimbursements'] += $slip['expenseNetCents'];
+	}//end tallySlip()
+
+	/**
+	 * Orphan cleanup (design.md D4): engine payslips of THIS run whose
+	 * employee no longer computes are deleted; payslips with a different or
+	 * null payrollRunId are never touched (they were never selected).
+	 *
+	 * @param array<string, array<string, mixed>> $orphans The run's payslips no employee claimed.
+	 *
+	 * @return void
+	 */
+	private function deleteOrphans(array $orphans): void {
+		foreach ($orphans as $orphan) {
 			$orphanId = $this->idOf($orphan);
 			try {
 				$this->objectService()->deleteObject(
@@ -696,36 +993,52 @@ class PayrollRunService {
 				$this->logger->warning('PayrollRunService: kon verweesde loonstrook ' . $orphanId . ' niet verwijderen: ' . $e->getMessage());
 			}
 		}
+	}//end deleteOrphans()
 
-		// time-hours-and-overtime-to-payroll D2: each paid timesheet names
-		// this run, so no later run pays it again; a timesheet this run paid
-		// before but no longer pays (reopened) is unstamped.
+	/**
+	 * Stamp the timesheets and claims this run paid, and write the WKR rows.
+	 *
+	 * time-hours-and-overtime-to-payroll D2: each paid timesheet names this
+	 * run, so no later run pays it again; a timesheet this run paid before but
+	 * no longer pays (reopened) is unstamped. payroll-expenses-and-allowances
+	 * D2/D5: each paid claim names this run, and every untaxed allowance
+	 * payment has its one WKR row.
+	 *
+	 * @param array<string, mixed> $state The run state after every employee.
+	 *
+	 * @return void
+	 */
+	private function stampPaidSources(array $state): void {
 		if ($this->hoursPay !== null) {
-			$this->hoursPay->stamp(timesheets: $hours['timesheets'], paid: $paidTimesheets, runId: $runId, period: $period);
+			$this->hoursPay->stamp(timesheets: $state['hours']['timesheets'], paid: $state['paidTimesheets'], runId: $state['runId'], period: $state['period']);
 		}
 
-		// payroll-expenses-and-allowances D2/D5: each paid claim names this
-		// run, and every untaxed allowance payment has its one WKR row.
-		if ($this->expenses !== null && $expenseInputs !== null) {
-			$this->expenses->stampClaims(expenses: $expenseInputs['expenses'], paidIds: $paidClaimIds, runId: $runId, period: $period);
-			$this->expenses->writeWkr(inputs: $expenseInputs, rows: $wkrRows, administrationId: $administrationId);
+		if ($this->expenses !== null && $state['expenseInputs'] !== null) {
+			$this->expenses->stampClaims(expenses: $state['expenseInputs']['expenses'], paidIds: $state['paidClaimIds'], runId: $state['runId'], period: $state['period']);
+			$this->expenses->writeWkr(inputs: $state['expenseInputs'], rows: $state['wkrRows'], administrationId: $state['administrationId']);
 		}
+	}//end stampPaidSources()
 
-		// Roll-up + stamps (design.md D4): totals cents-exact, calculatedAt =
-		// now. Status and GL/clearing fields are deliberately NOT written.
-		// engineVersion is now `{packId}@{packVersion}` (jurisdiction-packs
-		// design.md D7) — strictly more information than the bare tables id it
-		// stamped before, since it names the CHAIN as well as the parameters.
+	/**
+	 * Save the run's roll-up and stamps.
+	 *
+	 * Roll-up + stamps (design.md D4): totals cents-exact, calculatedAt = now.
+	 * Status and GL/clearing fields are deliberately NOT written.
+	 * engineVersion is `{packId}@{packVersion}` (jurisdiction-packs design.md
+	 * D7): strictly more information than the bare tables id, since it names
+	 * the CHAIN as well as the parameters.
+	 *
+	 * @param array<string, mixed> $state The run state after every employee.
+	 *
+	 * @return array<string, mixed>|null The failed outcome when the run cannot be saved.
+	 */
+	private function saveRunTotals(array $state): ?array {
 		$runUpdate = array_merge(
-			$run,
+			$state['run'],
+			$this->euroTotals($state['totals']),
 			[
-				'totalGross' => $this->euros($totals['gross']),
-				'totalLoonheffing' => $this->euros($totals['loonheffing']),
-				'totalEmployerCharges' => $this->euros($totals['employerCharges']),
-				'totalWithholdings' => $this->euros($totals['withholdings']),
-				'totalNet' => $this->euros($totals['net']),
-				'totalReimbursements' => $this->euros($totals['reimbursements']),
-				'engineVersion' => $pack->engineVersion(),
+				'totalReimbursements' => $this->euros($state['totals']['reimbursements']),
+				'engineVersion' => $state['pack']->engineVersion(),
 				'calculatedAt' => gmdate('Y-m-d\TH:i:s\Z'),
 			]
 		);
@@ -736,30 +1049,53 @@ class PayrollRunService {
 				object: $runUpdate,
 				register: $this->register(),
 				schema: 'PayrollRun',
-				uuid: ($runId === '' ? null : $runId),
+				uuid: ($state['runId'] === '' ? null : $state['runId']),
 				_rbac: false,
 				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error('PayrollRunService: kon PayrollRun-totalen niet opslaan: ' . $e->getMessage());
-			return $this->outcome($runId, $period, $administrationId, 'failed', 'Opslaan van de loonrun-totalen is mislukt: ' . $e->getMessage());
+			return $this->outcome($state['runId'], $state['period'], $state['administrationId'], 'failed', 'Opslaan van de loonrun-totalen is mislukt: ' . $e->getMessage());
 		}
 
-		$outcome = $this->outcome($runId, $period, $administrationId, 'calculated', sprintf('%d loonstro(o)k(en) berekend, %d overgeslagen.', count($computed), count($skipped)));
-		$outcome['computed'] = $computed;
-		$outcome['skipped'] = $skipped;
-		$outcome['check'] = $this->runTheCheck(runId: $runId, skipped: $skipped);
-		$outcome['allocationLines'] = $this->allocateCosts(runId: $runId, period: $period, administrationId: $administrationId, payslips: $allocatable);
-		$outcome['totals'] = [
+		return null;
+	}//end saveRunTotals()
+
+	/**
+	 * The outcome of a calculated run, with its check and cost allocation.
+	 *
+	 * @param array<string, mixed> $state The run state after every employee.
+	 *
+	 * @return array<string, mixed> Outcome (see runFor()).
+	 */
+	private function calculatedOutcome(array $state): array {
+		$runId = $state['runId'];
+		$outcome = $this->outcome($runId, $state['period'], $state['administrationId'], 'calculated', sprintf('%d loonstro(o)k(en) berekend, %d overgeslagen.', count($state['computed']), count($state['skipped'])));
+		$outcome['computed'] = $state['computed'];
+		$outcome['skipped'] = $state['skipped'];
+		$outcome['check'] = $this->runTheCheck(runId: $runId, skipped: $state['skipped']);
+		$outcome['allocationLines'] = $this->allocateCosts(runId: $runId, period: $state['period'], administrationId: $state['administrationId'], payslips: $state['allocatable']);
+		$outcome['totals'] = $this->euroTotals($state['totals']);
+
+		return $outcome;
+	}//end calculatedOutcome()
+
+	/**
+	 * The run totals in euros, as the run and the outcome carry them.
+	 *
+	 * @param array<string, int> $totals The cents totals.
+	 *
+	 * @return array<string, float>
+	 */
+	private function euroTotals(array $totals): array {
+		return [
 			'totalGross' => $this->euros($totals['gross']),
 			'totalLoonheffing' => $this->euros($totals['loonheffing']),
 			'totalEmployerCharges' => $this->euros($totals['employerCharges']),
 			'totalWithholdings' => $this->euros($totals['withholdings']),
 			'totalNet' => $this->euros($totals['net']),
 		];
-
-		return $outcome;
-	}//end generate()
+	}//end euroTotals()
 
 	/**
 	 * The timesheets, entries, runs and calendar the hours fold reads, once

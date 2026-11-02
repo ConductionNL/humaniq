@@ -47,7 +47,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
  */
-class HoursRegisterGateway {
+class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 
 	/**
 	 * Upper bound for lookup queries (dev-stage volumes; the

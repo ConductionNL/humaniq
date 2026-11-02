@@ -54,7 +54,7 @@ class PayrollRunCheckService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway      Reads the rows, writes the findings.
+	 * @param RecordStoreInterface $gateway      Reads the rows, writes the findings.
 	 * @param RuleAuditService     $audit        The rule audit of a period's runs.
 	 * @param PayAnomalyDetector   $detector     The deviations.
 	 * @param PayrollUnpaidInputs  $unpaidInputs The approved inputs no run pays.
@@ -65,7 +65,7 @@ class PayrollRunCheckService {
 	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly RuleAuditService $audit,
 		private readonly PayAnomalyDetector $detector,
 		private readonly PayrollUnpaidInputs $unpaidInputs,

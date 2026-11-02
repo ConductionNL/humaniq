@@ -92,14 +92,8 @@ class AvailabilityService {
 	): array {
 		$answers = [];
 		foreach (array_values(array_unique(array_map('strval', $employeeIds))) as $employeeId) {
-			if ($this->qualified(
-				employeeId: $employeeId,
-				requiredCompetences: $requiredCompetences,
-				competences: ($sources['competences'] ?? []),
-				from: $from,
-				to: $to
-			) === false
-			) {
+			$window = new EmployeeWindow(employeeId: $employeeId, from: $from, to: $to, sources: $sources);
+			if ($this->qualified(window: $window, requiredCompetences: $requiredCompetences) === false) {
 				continue;
 			}
 
@@ -112,18 +106,7 @@ class AvailabilityService {
 				nonWorkingDates: ($sources['nonWorkingDates'] ?? null)
 			);
 
-			$committed = $this->committedHours(
-				employeeId: $employeeId,
-				sources: $sources,
-				from: $from,
-				to: $to,
-				contractedPerDay: $this->contractedPerDay(
-					employeeId: $employeeId,
-					sources: $sources,
-					from: $from,
-					to: $to
-				)
-			);
+			$committed = $this->committedHours(window: $window, contractedPerDay: $this->contractedPerDay(window: $window));
 
 			$answers[] = [
 				'employeeId' => $employeeId,
@@ -149,31 +132,23 @@ class AvailabilityService {
 	 * The contracted hours of each day in the window, for turning a whole-day
 	 * absence into hours.
 	 *
-	 * @param string $employeeId The employee.
-	 * @param array<string, mixed> $sources The source rows.
-	 * @param DateTimeImmutable $from First day.
-	 * @param DateTimeImmutable $to Last day.
+	 * @param EmployeeWindow $window The employee, the days and the source rows.
 	 *
-	 * @return array<string, float> Hours keyed by ISO date.
+	 * @return array<string, float> Hours keyed by ISO date, one entry per day of the window, in order.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
 	 */
-	private function contractedPerDay(
-		string $employeeId,
-		array $sources,
-		DateTimeImmutable $from,
-		DateTimeImmutable $to,
-	): array {
+	private function contractedPerDay(EmployeeWindow $window): array {
 		$perDay = [];
-		$cursor = $from->setTime(hour: 0, minute: 0);
-		$last = $to->setTime(hour: 0, minute: 0);
+		$cursor = $window->from->setTime(hour: 0, minute: 0);
+		$last = $window->to->setTime(hour: 0, minute: 0);
 		while ($cursor <= $last) {
 			$perDay[$cursor->format('Y-m-d')] = $this->workingHours->contractedHoursOn(
-				employeeId: $employeeId,
+				employeeId: $window->employeeId,
 				date: $cursor,
-				patterns: ($sources['workingPatterns'] ?? []),
-				nonWorkingTimes: ($sources['nonWorkingTimes'] ?? []),
-				nonWorkingDates: ($sources['nonWorkingDates'] ?? null)
+				patterns: ($window->sources['workingPatterns'] ?? []),
+				nonWorkingTimes: ($window->sources['nonWorkingTimes'] ?? []),
+				nonWorkingDates: ($window->sources['nonWorkingDates'] ?? null)
 			)['hours'];
 
 			$cursor = $cursor->modify('+1 day');
@@ -188,34 +163,47 @@ class AvailabilityService {
 	 * A whole-day entry (leave, sickness) costs that day's contracted hours; a
 	 * timed entry (shift, booking, external busy time) costs its own length,
 	 * capped at the day's contracted hours so an evening booking cannot make a
-	 * person more than fully committed.
+	 * person more than fully committed. A day never counts more than the
+	 * contracted hours, so two entries on one day cannot commit more time than
+	 * the person has.
 	 *
-	 * @param string $employeeId The employee.
-	 * @param array<string, mixed> $sources The source rows.
-	 * @param DateTimeImmutable $from First day.
-	 * @param DateTimeImmutable $to Last day.
+	 * @param EmployeeWindow $window The employee, the days and the source rows.
 	 * @param array<string, float> $contractedPerDay Contracted hours by ISO date.
 	 *
 	 * @return float The committed hours.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
 	 */
-	private function committedHours(
-		string $employeeId,
-		array $sources,
-		DateTimeImmutable $from,
-		DateTimeImmutable $to,
-		array $contractedPerDay,
-	): float {
+	private function committedHours(EmployeeWindow $window, array $contractedPerDay): float {
+		$perDay = [];
+		foreach ($this->spansOf(window: $window) as $span) {
+			foreach ($this->spreadOverDays(span: $span, contractedPerDay: $contractedPerDay) as $day => $hours) {
+				$perDay[$day] = min((float)$contractedPerDay[$day], (($perDay[$day] ?? 0.0) + $hours));
+			}
+		}
+
+		return array_sum($perDay);
+	}//end committedHours()
+
+	/**
+	 * The committing agenda entries of one employee in the window, as spans.
+	 *
+	 * @param EmployeeWindow $window The employee, the days and the source rows.
+	 *
+	 * @return list<CommitmentSpan>
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
+	 */
+	private function spansOf(EmployeeWindow $window): array {
 		$entries = $this->agenda->compose(
-			sources: $sources,
+			sources: $window->sources,
 			subjectType: 'employee',
-			subjectId: $employeeId,
-			from: $from->format('Y-m-d'),
-			to: $to->format('Y-m-d')
+			subjectId: $window->employeeId,
+			from: $window->from->format('Y-m-d'),
+			to: $window->to->format('Y-m-d')
 		);
 
-		$perDay = [];
+		$spans = [];
 		foreach ($entries as $entry) {
 			if (in_array($entry['kind'], ['shift', 'leave', 'absent', 'booking', 'busy', 'interview', 'secondment'], true) === false) {
 				continue;
@@ -227,78 +215,41 @@ class AvailabilityService {
 				continue;
 			}
 
-			$perDay = $this->spreadOverDays(
-				perDay: $perDay,
-				share: $this->dayShare(entry: $entry, employeeId: $employeeId, sources: $sources, from: $from),
-				start: $start,
-				end: $end,
-				from: $from,
-				to: $to,
-				contractedPerDay: $contractedPerDay
-			);
+			$spans[] = new CommitmentSpan(start: $start, end: $end, share: $this->dayShare(entry: $entry, window: $window));
 		}
 
-		return array_sum($perDay);
-	}//end committedHours()
+		return $spans;
+	}//end spansOf()
 
 	/**
-	 * Add one agenda entry's hours to the per-day totals it touches.
+	 * One agenda entry's hours on each working day it touches.
 	 *
-	 * A day never counts more than the contracted hours, so two entries on one
-	 * day cannot commit more time than the person has.
+	 * @param CommitmentSpan $span The entry.
+	 * @param array<string, float> $contractedPerDay Contracted hours by ISO date, one entry per day of the window.
 	 *
-	 * @param array<string, float> $perDay Committed hours so far, by ISO date.
-	 * @param float|null $share The share of each working day a whole-day entry commits, null for a timed one.
-	 * @param int $start The entry's start timestamp.
-	 * @param int $end The entry's end timestamp.
-	 * @param DateTimeImmutable $from First day.
-	 * @param DateTimeImmutable $to Last day.
-	 * @param array<string, float> $contractedPerDay Contracted hours by ISO date.
-	 *
-	 * @return array<string, float> The per-day totals, with this entry added.
+	 * @return array<string, float> The entry's hours by ISO date, only on the days it touches that the person works.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
 	 */
-	private function spreadOverDays(
-		array $perDay,
-		?float $share,
-		int $start,
-		int $end,
-		DateTimeImmutable $from,
-		DateTimeImmutable $to,
-		array $contractedPerDay
-	): array {
-		$cursor = $from->setTime(hour: 0, minute: 0);
-		$last = $to->setTime(hour: 0, minute: 0);
-		while ($cursor <= $last) {
-			$day = $cursor->format('Y-m-d');
+	private function spreadOverDays(CommitmentSpan $span, array $contractedPerDay): array {
+		$hours = [];
+		foreach ($contractedPerDay as $day => $contracted) {
+			$day = (string)$day;
 			$dayStart = strtotime($day . ' 00:00:00');
 			$dayEnd = strtotime($day . ' 23:59:59');
-			$cursor = $cursor->modify('+1 day');
-
-			if ($dayStart === false || $dayEnd === false || $end <= $dayStart || $start >= $dayEnd) {
+			if ($dayStart === false || $dayEnd === false || $span->end <= $dayStart || $span->start >= $dayEnd) {
 				continue;
 			}
 
-			$contracted = (float)($contractedPerDay[$day] ?? 0.0);
-			if ($contracted <= 0.0) {
+			if ((float)$contracted <= 0.0) {
 				// Nothing is committed on a day the person does not work.
 				continue;
 			}
 
-			$overlapHours = $this->dayHours(
-				share: $share,
-				start: $start,
-				end: $end,
-				dayStart: $dayStart,
-				dayEnd: $dayEnd,
-				contracted: $contracted
-			);
-
-			$perDay[$day] = min($contracted, (($perDay[$day] ?? 0.0) + $overlapHours));
+			$hours[$day] = $this->dayHours(span: $span, day: ['start' => $dayStart, 'end' => $dayEnd, 'contracted' => (float)$contracted]);
 		}
 
-		return $perDay;
+		return $hours;
 	}//end spreadOverDays()
 
 	/**
@@ -308,30 +259,19 @@ class AvailabilityService {
 	 * clock says: a 0.6 fte on leave loses 4.8 hours, not 24, and a 16-hour
 	 * secondment in a 36-hour week costs 16/36 of each working day.
 	 *
-	 * @param float|null $share The share of the day, null for a timed entry.
-	 * @param int $start The entry's start timestamp.
-	 * @param int $end The entry's end timestamp.
-	 * @param int $dayStart Midnight at the start of the day.
-	 * @param int $dayEnd The last second of the day.
-	 * @param float $contracted Contracted hours on that day.
+	 * @param CommitmentSpan $span The entry.
+	 * @param array{start: int, end: int, contracted: float} $day Midnight, the last second and the contracted hours of the day.
 	 *
 	 * @return float The committed hours.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
 	 */
-	private function dayHours(
-		?float $share,
-		int $start,
-		int $end,
-		int $dayStart,
-		int $dayEnd,
-		float $contracted
-	): float {
-		if ($share !== null) {
-			return ($contracted * $share);
+	private function dayHours(CommitmentSpan $span, array $day): float {
+		if ($span->share !== null) {
+			return ($day['contracted'] * $span->share);
 		}
 
-		return ((min($end, $dayEnd) - max($start, $dayStart)) / 3600);
+		return ((min($span->end, $day['end']) - max($span->start, $day['start'])) / 3600);
 	}//end dayHours()
 
 	/**
@@ -340,15 +280,13 @@ class AvailabilityService {
 	 * null for a timed entry.
 	 *
 	 * @param array<string, mixed> $entry The agenda entry.
-	 * @param string $employeeId The employee.
-	 * @param array<string, mixed> $sources The source rows.
-	 * @param DateTimeImmutable $from First day of the window.
+	 * @param EmployeeWindow $window The employee, the first day of the window and the source rows.
 	 *
 	 * @return float|null
 	 *
 	 * @spec openspec/specs/secondment-and-side-activities/spec.md#REQ-SEC-002
 	 */
-	private function dayShare(array $entry, string $employeeId, array $sources, DateTimeImmutable $from): ?float {
+	private function dayShare(array $entry, EmployeeWindow $window): ?float {
 		if (in_array($entry['kind'], ['leave', 'absent'], true) === true) {
 			return 1.0;
 		}
@@ -360,9 +298,9 @@ class AvailabilityService {
 		$week = 0.0;
 		for ($day = 0; $day < 7; $day++) {
 			$week += $this->workingHours->contractedHoursOn(
-				employeeId: $employeeId,
-				date: $from->modify('+' . $day . ' days'),
-				patterns: ($sources['workingPatterns'] ?? []),
+				employeeId: $window->employeeId,
+				date: $window->from->modify('+' . $day . ' days'),
+				patterns: ($window->sources['workingPatterns'] ?? []),
 				nonWorkingTimes: [],
 				nonWorkingDates: []
 			)['hours'];
@@ -382,34 +320,25 @@ class AvailabilityService {
 	 * Every day, not any day: a qualification that expires on the Wednesday
 	 * does not make somebody available for a Thursday shift.
 	 *
-	 * @param string $employeeId The employee.
+	 * @param EmployeeWindow $window The employee, the days and the EmployeeCompetence rows.
 	 * @param array<int, string> $requiredCompetences The codes.
-	 * @param array<array<string, mixed>> $competences The EmployeeCompetence rows.
-	 * @param DateTimeImmutable $from First day.
-	 * @param DateTimeImmutable $to Last day.
 	 *
 	 * @return bool True when qualified throughout.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
 	 */
-	private function qualified(
-		string $employeeId,
-		array $requiredCompetences,
-		array $competences,
-		DateTimeImmutable $from,
-		DateTimeImmutable $to,
-	): bool {
+	private function qualified(EmployeeWindow $window, array $requiredCompetences): bool {
 		if ($requiredCompetences === []) {
 			return true;
 		}
 
 		foreach ($requiredCompetences as $code) {
-			$cursor = $from->setTime(hour: 0, minute: 0);
-			$last = $to->setTime(hour: 0, minute: 0);
+			$cursor = $window->from->setTime(hour: 0, minute: 0);
+			$last = $window->to->setTime(hour: 0, minute: 0);
 			while ($cursor <= $last) {
 				if ($this->competences->holds(
-					competences: $competences,
-					employeeId: $employeeId,
+					competences: ($window->sources['competences'] ?? []),
+					employeeId: $window->employeeId,
 					code: (string)$code,
 					date: $cursor->format('Y-m-d')
 				) === false

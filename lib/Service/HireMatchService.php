@@ -37,12 +37,12 @@ class HireMatchService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Reads the employees.
+	 * @param RecordStoreInterface $gateway Reads the employees.
 	 *
 	 * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-002
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 	) {
 	}//end __construct()
 

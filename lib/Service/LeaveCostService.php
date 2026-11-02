@@ -40,14 +40,14 @@ class LeaveCostService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway  $gateway  Reads patterns, non-working times and balances.
+	 * @param RecordStoreInterface  $gateway  Reads patterns, non-working times and balances.
 	 * @param WorkingCalendarReader $calendar openregister's working calendar.
 	 * @param IL10N                 $l10n     Day labels.
 	 *
 	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-003
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly WorkingCalendarReader $calendar,
 		private readonly IL10N $l10n,
 	) {

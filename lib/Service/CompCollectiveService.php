@@ -60,12 +60,12 @@ class CompCollectiveService {
 	public const PREVIEW_ROWS = 50;
 
 	/**
-	 * @param HoursRegisterGateway $gateway Register reads and writes, unscoped (the caller is authorised by the controller).
+	 * @param RecordStoreInterface $gateway Register reads and writes, unscoped (the caller is authorised by the controller).
 	 * @param LoggerInterface $logger Logger.
 	 * @param CompProposalBuilder $builder The pure proposal arithmetic.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly LoggerInterface $logger,
 		private readonly CompProposalBuilder $builder = new CompProposalBuilder(),
 	) {

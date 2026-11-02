@@ -44,9 +44,12 @@ use OCA\Humaniq\Service\ProformaPayslipService;
 use OCA\Humaniq\Service\RetroAdjustmentService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WkrService;
+use OCA\Humaniq\Tests\Unit\Support\NextcloudDispatch;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Response;
 use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -61,14 +64,21 @@ use Psr\Log\LoggerInterface;
 class PayrollControllerProformaTest extends TestCase {
 
 	/**
+	 * Every capability probe of the current test: register, schema, query.
+	 *
+	 * @var list<array{0: string, 1: string, 2: array<string, mixed>}>
+	 */
+	public array $probes = [];
+
+	/**
 	 * REQ-PRO-004 "An HR caller reaches the simulation" scenario.
 	 *
 	 * @return void
 	 */
 	public function testAuthorizedCallerReceivesTheFullBreakdown(): void {
-		$controller = $this->buildController(rbacAllowed: true);
+		$params = ['gross' => 3800, 'table' => 'wit', 'dateOfBirth' => '1990-04-12', 'period' => '2026-02', 'aof' => 'laag', 'whk' => 1.52];
 
-		$response = $controller->proforma(gross: 3800, table: 'wit', dateOfBirth: '1990-04-12', period: '2026-02', aof: 'laag', whk: 1.52);
+		$response = NextcloudDispatch::call($this->buildController(rbacAllowed: true, params: $params), 'proforma', $params);
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$data = $response->getData();
@@ -86,9 +96,9 @@ class PayrollControllerProformaTest extends TestCase {
 	 * @return void
 	 */
 	public function testUnauthorizedCallerReceives404(): void {
-		$controller = $this->buildController(rbacAllowed: false);
+		$params = ['gross' => 3800, 'table' => 'wit', 'period' => '2026-02'];
 
-		$response = $controller->proforma(gross: 3800, table: 'wit', period: '2026-02');
+		$response = NextcloudDispatch::call($this->buildController(rbacAllowed: false, params: $params), 'proforma', $params);
 
 		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 		$this->assertArrayNotHasKey('nettoPay', $response->getData());
@@ -102,9 +112,9 @@ class PayrollControllerProformaTest extends TestCase {
 	 * @return void
 	 */
 	public function testMalformedGrossReturns400(): void {
-		$controller = $this->buildController(rbacAllowed: true);
+		$params = ['gross' => 'n/a'];
 
-		$response = $controller->proforma(gross: 'n/a');
+		$response = NextcloudDispatch::call($this->buildController(rbacAllowed: true, params: $params), 'proforma', $params);
 
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertArrayHasKey('error', $response->getData());
@@ -113,51 +123,129 @@ class PayrollControllerProformaTest extends TestCase {
 	}//end testMalformedGrossReturns400()
 
 	/**
+	 * A string parameter of another type is the dispatcher's bare 400, before
+	 * the capability probe runs.
+	 *
+	 * @return void
+	 */
+	public function testNonStringTableIsABare400BeforeTheProbe(): void {
+		$params = ['gross' => 3800, 'table' => ['wit'], 'period' => '2026-02'];
+
+		$response = NextcloudDispatch::call($this->buildController(rbacAllowed: true, params: $params), 'proforma', $params);
+
+		$this->assertSame(Response::class, $response::class);
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertSame([], $this->probes);
+
+	}//end testNonStringTableIsABare400BeforeTheProbe()
+
+	/**
+	 * REQ-PRO-004: the capability probe runs for the session, never for a
+	 * userId in the request. A forged userId of a payroll administrator,
+	 * offered through getParam() and getParams(), neither opens a register
+	 * the session's RBAC refuses nor narrows the probe's query.
+	 *
+	 * @return void
+	 */
+	public function testForgedUserIdDoesNotOpenTheProbe(): void {
+		$params = ['gross' => 3800, 'table' => 'wit', 'period' => '2026-02', 'userId' => 'admin', 'owner' => 'admin'];
+
+		$response = NextcloudDispatch::call($this->buildController(rbacAllowed: false, params: $params), 'proforma', $params);
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertSame([['humaniq', 'PayrollRun', ['limit' => 1]]], $this->probes);
+
+	}//end testForgedUserIdDoesNotOpenTheProbe()
+
+	/**
+	 * REQ-PRO-004: with the session's RBAC allowing the probe, a forged
+	 * userId changes neither the probe nor the breakdown.
+	 *
+	 * @return void
+	 */
+	public function testForgedUserIdLeavesTheAllowedProbeAlone(): void {
+		$params = ['gross' => 3800, 'table' => 'wit', 'period' => '2026-02', 'userId' => 'admin'];
+
+		$response = NextcloudDispatch::call($this->buildController(rbacAllowed: true, params: $params), 'proforma', $params);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame([['humaniq', 'PayrollRun', ['limit' => 1]]], $this->probes);
+		$this->assertArrayNotHasKey('userId', $response->getData()['input']);
+
+	}//end testForgedUserIdLeavesTheAllowedProbeAlone()
+
+	/**
 	 * Build a `PayrollController` with a fake container-resolved
 	 * ObjectService whose `findAll()` either succeeds (RBAC ok) or throws
-	 * (RBAC denies / register unresolvable).
+	 * (RBAC denies / register unresolvable). The session user is `mila`;
+	 * only `admin` is an administrator, so a check run for a forged userId
+	 * would pass where the session's would not.
 	 *
-	 * @param bool $rbacAllowed Whether the fake ObjectService allows the capability probe.
+	 * @param bool                 $rbacAllowed Whether the fake ObjectService allows the capability probe.
+	 * @param array<string, mixed> $params      The request parameters, for getParam() and getParams().
 	 *
 	 * @return PayrollController
 	 */
-	private function buildController(bool $rbacAllowed): PayrollController {
+	private function buildController(bool $rbacAllowed, array $params): PayrollController {
 		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static fn (string $key, mixed $default = null): mixed => (isset($params[$key]) === true ? $params[$key] : $default)
+		);
+		$request->method('getParams')->willReturn($params);
 
-		$objectService = new class($rbacAllowed) {
+		$objectService = new class($rbacAllowed, $this) {
 
 			/**
-			 * @param bool $allowed Whether findAll() should succeed.
+			 * The register slug of the probe.
+			 *
+			 * @var string
+			 */
+			private string $register = '';
+
+			/**
+			 * The schema slug of the probe.
+			 *
+			 * @var string
+			 */
+			private string $schema = '';
+
+			/**
+			 * @param bool                         $allowed Whether findAll() should succeed.
+			 * @param PayrollControllerProformaTest $test    The test that records the probes.
 			 */
 			public function __construct(
 				private readonly bool $allowed,
+				private readonly PayrollControllerProformaTest $test,
 			) {
 			}
 
 			/**
-			 * @param string $register Ignored; chainable.
+			 * @param string $register The register slug; chainable.
 			 *
 			 * @return self
 			 */
 			public function setRegister(string $register): self {
+				$this->register = $register;
 				return $this;
 			}
 
 			/**
-			 * @param string $schema Ignored; chainable.
+			 * @param string $schema The schema slug; chainable.
 			 *
 			 * @return self
 			 */
 			public function setSchema(string $schema): self {
+				$this->schema = $schema;
 				return $this;
 			}
 
 			/**
-			 * @param array<string, mixed> $options Ignored.
+			 * @param array<string, mixed> $options The query, recorded.
 			 *
 			 * @return array<int, mixed>
 			 */
 			public function findAll(array $options): array {
+				$this->test->probes[] = [$this->register, $this->schema, $options];
 				if ($this->allowed === false) {
 					throw new \RuntimeException('RBAC denied.');
 				}
@@ -188,8 +276,13 @@ class PayrollControllerProformaTest extends TestCase {
 		$payrollMutationService = $this->createMock(PayrollMutationService::class);
 		$retroAdjustmentService = $this->createMock(RetroAdjustmentService::class);
 		$wkrService = $this->createMock(WkrService::class);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('mila');
 		$userSession = $this->createMock(IUserSession::class);
+		$userSession->method('getUser')->willReturn($user);
 		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturnCallback(static fn (string $uid): bool => $uid === 'admin');
+		$groupManager->method('isInGroup')->willReturnCallback(static fn (string $uid): bool => $uid === 'admin');
 
 		$logger = $this->createMock(LoggerInterface::class);
 

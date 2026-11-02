@@ -102,10 +102,10 @@ class RunningTimerService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway The hours process's door to OpenRegister.
+	 * @param RecordStoreInterface $gateway The hours process's door to OpenRegister.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 	) {
 	}//end __construct()
 

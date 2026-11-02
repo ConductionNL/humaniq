@@ -41,10 +41,10 @@ class HrLifecycleMoments {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Reads contracts and placements.
+	 * @param RecordStoreInterface $gateway Reads contracts and placements.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 	) {
 
 	}//end __construct()

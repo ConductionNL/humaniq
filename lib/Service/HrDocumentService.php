@@ -389,7 +389,7 @@ class HrDocumentService {
 	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-006
 	 */
 	public function generate(string $employeeId, ?string $contractId, string $documentType, ?string $userId = null): array {
-		return $this->generateInternal($employeeId, $contractId, null, null, $documentType, $userId);
+		return $this->generateInternal(new HrDocumentRequest(subject: new HrDocumentSubject(employeeId: $employeeId, contractId: $contractId), documentType: $documentType, userId: $userId));
 	}//end generate()
 
 	/**
@@ -422,7 +422,7 @@ class HrDocumentService {
 			return $this->outcome('', null, self::LOONSTROOK_DOCUMENT_TYPE, 'failed', 'Payslip heeft geen gekoppelde medewerker: ' . $payslipId);
 		}
 
-		$outcome = $this->generateInternal($employeeId, null, $payslipId, null, self::LOONSTROOK_DOCUMENT_TYPE, $userId);
+		$outcome = $this->generateInternal(new HrDocumentRequest(subject: new HrDocumentSubject(employeeId: $employeeId, payslipId: $payslipId), documentType: self::LOONSTROOK_DOCUMENT_TYPE, userId: $userId));
 		$this->inheritRetentionIfSourceHeld($outcome, self::PAYSLIP_SCHEMA, $payslipId, 'Payslip ' . $payslipId);
 
 		return $outcome;
@@ -490,7 +490,7 @@ class HrDocumentService {
 			return $this->outcome($employeeId, null, self::JAAROPGAAF_DOCUMENT_TYPE, 'failed', 'De aangemaakte jaaropgaaf heeft geen id.');
 		}
 
-		$outcome = $this->generateInternal($employeeId, null, null, $jaaropgaafId, self::JAAROPGAAF_DOCUMENT_TYPE, $userId);
+		$outcome = $this->generateInternal(new HrDocumentRequest(subject: new HrDocumentSubject(employeeId: $employeeId, jaaropgaafId: $jaaropgaafId), documentType: self::JAAROPGAAF_DOCUMENT_TYPE, userId: $userId));
 		$this->inheritRetentionIfAnyPayslipHeld($outcome, $employeeId, $year);
 
 		return $outcome;
@@ -534,7 +534,8 @@ class HrDocumentService {
 		$data = $this->uwvData->build($case, ($this->rowById(self::EMPLOYEE_SCHEMA, $employeeId) ?? []), $contract, $administration);
 		$contractId = ($contract === null ? null : (string)($contract['id'] ?? ''));
 
-		return $this->generateInternal($employeeId, $contractId, null, null, $type, $userId, ['sickLeaveCaseId' => $caseId, 'adHocData' => ['uwvMelding' => $data]]);
+		$subject = new HrDocumentSubject(employeeId: $employeeId, contractId: $contractId);
+		return $this->generateInternal(new HrDocumentRequest(subject: $subject, documentType: $type, userId: $userId, extra: ['sickLeaveCaseId' => $caseId, 'adHocData' => ['uwvMelding' => $data]]));
 	}//end generateUwvNotification()
 
 	/**
@@ -546,13 +547,7 @@ class HrDocumentService {
 	 * OpenRegister's FileService -- recording the outcome on a
 	 * `GeneratedDocument` at every step.
 	 *
-	 * @param string $employeeId The Employee this document is for.
-	 * @param string|null $contractId The EmploymentContract it evidences, or null.
-	 * @param string|null $payslipId The Payslip a loonstrook renders, or null.
-	 * @param string|null $jaaropgaafId The Jaaropgaaf a jaaropgaaf renders, or null.
-	 * @param string $documentType The document type.
-	 * @param string|null $userId The acting Nextcloud user id, or null for 'system' (occ context).
-	 * @param array<string, mixed> $extra `sickLeaveCaseId` (the 42-week notification's key) and `adHocData` merged into the render data.
+	 * @param HrDocumentRequest $request The document to generate.
 	 *
 	 * @return array<string, mixed> Outcome: {employeeId, contractId, documentType, status, message, generatedDocumentId}.
 	 *
@@ -565,34 +560,30 @@ class HrDocumentService {
 	 * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-003
 	 * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-002
 	 */
-	private function generateInternal(
-		string $employeeId,
-		?string $contractId,
-		?string $payslipId,
-		?string $jaaropgaafId,
-		string $documentType,
-		?string $userId,
-		array $extra = [],
-	): array {
-		$employeeId = trim($employeeId);
-		$sickLeaveCaseId = ($extra['sickLeaveCaseId'] ?? null);
-		$contractId = ($contractId !== null && trim($contractId) !== '') ? trim($contractId) : null;
+	private function generateInternal(HrDocumentRequest $request): array {
+		$request = new HrDocumentRequest(subject: $request->subject->normalised(), documentType: $request->documentType, userId: $request->userId, extra: $request->extra);
+		$result = $this->runGeneration($request);
+		$subject = $request->subject;
 
-		if ($employeeId === '') {
-			return $this->outcome($employeeId, $contractId, $documentType, 'failed', 'Geen employeeId opgegeven; genereren is geweigerd.');
+		return $this->outcome($subject->employeeId, $subject->contractId, $request->documentType, $result['status'], $result['message'], $result['document']);
+	}//end generateInternal()
+
+	/**
+	 * The generation steps of one request, up to the first exit.
+	 *
+	 * @param HrDocumentRequest $request The normalised request.
+	 *
+	 * @return array{status: string, message: string, document: array<string, mixed>|null}
+	 */
+	private function runGeneration(HrDocumentRequest $request): array {
+		if ($request->subject->employeeId === '') {
+			return ['status' => 'failed', 'message' => 'Geen employeeId opgegeven; genereren is geweigerd.', 'document' => null];
 		}
 
-		$active = $this->activeDocumentFor($employeeId, $contractId, $payslipId, $jaaropgaafId, $documentType, $sickLeaveCaseId);
+		$active = $this->activeDocumentFor($request);
 		if ($active !== null) {
 			if ((string)($active['status'] ?? '') === 'generated') {
-				return $this->outcome(
-					$employeeId,
-					$contractId,
-					$documentType,
-					'already-generated',
-					'Er bestaat al een gegenereerd document; geen nieuwe poging nodig.',
-					$active
-				);
+				return ['status' => 'already-generated', 'message' => 'Er bestaat al een gegenereerd document; geen nieuwe poging nodig.', 'document' => $active];
 			}
 
 			// Stale pending -- supersede, then fall through to a fresh attempt (design.md D6).
@@ -604,78 +595,62 @@ class HrDocumentService {
 
 		if ($this->docudeskAvailable() === false) {
 			$doc = $this->createGeneratedDocument(
-				[
-					'documentType' => $documentType,
-					'employeeId' => $employeeId,
-					'contractId' => $contractId,
-					'payslipId' => $payslipId,
-					'jaaropgaafId' => $jaaropgaafId,
-					'sickLeaveCaseId' => $sickLeaveCaseId,
-					'status' => 'skipped-no-docudesk',
-					'errorMessage' => 'Docudesk is niet geïnstalleerd of de renderer kon niet worden geladen; deze poging kan later opnieuw worden uitgevoerd.',
-				]
+				array_merge(
+					$request->documentFields(),
+					[
+						'status' => 'skipped-no-docudesk',
+						'errorMessage' => 'Docudesk is niet geïnstalleerd of de renderer kon niet worden geladen; deze poging kan later opnieuw worden uitgevoerd.',
+					]
+				)
 			);
 
-			return $this->outcome($employeeId, $contractId, $documentType, 'skipped-no-docudesk', (string)$doc['errorMessage'], $doc);
+			return ['status' => 'skipped-no-docudesk', 'message' => (string)$doc['errorMessage'], 'document' => $doc];
 		}
 
-		$selected = $this->selectTemplate($documentType);
+		$selected = $this->selectTemplate($request->documentType);
 		if ($selected['error'] !== null) {
-			$doc = $this->createGeneratedDocument(
-				[
-					'documentType' => $documentType,
-					'employeeId' => $employeeId,
-					'contractId' => $contractId,
-					'payslipId' => $payslipId,
-					'jaaropgaafId' => $jaaropgaafId,
-					'sickLeaveCaseId' => $sickLeaveCaseId,
-					'status' => 'failed',
-					'errorMessage' => $selected['error'],
-				]
-			);
-
-			return $this->outcome($employeeId, $contractId, $documentType, 'failed', (string)$selected['error'], $doc);
+			$doc = $this->createGeneratedDocument(array_merge($request->documentFields(), ['status' => 'failed', 'errorMessage' => $selected['error']]));
+			return ['status' => 'failed', 'message' => (string)$selected['error'], 'document' => $doc];
 		}
 
-		$doc = $this->createGeneratedDocument(
-			[
-				'documentType' => $documentType,
-				'employeeId' => $employeeId,
-				'contractId' => $contractId,
-				'payslipId' => $payslipId,
-				'jaaropgaafId' => $jaaropgaafId,
-				'sickLeaveCaseId' => $sickLeaveCaseId,
-				'templateRef' => $selected['templateId'],
-				'status' => 'pending',
-			]
-		);
+		$doc = $this->createGeneratedDocument(array_merge($request->documentFields(), ['templateRef' => $selected['templateId'], 'status' => 'pending']));
 
-		$dataRefs = $this->buildDataRefs($employeeId, $contractId, $payslipId, $jaaropgaafId);
-		$options = $this->buildOptions($documentType, $userId);
-		$options['adHocData'] = array_merge($options['adHocData'], ($extra['adHocData'] ?? []));
+		return $this->renderAndStore($request, ['doc' => $doc, 'templateId' => $selected['templateId']]);
+	}//end runGeneration()
+
+	/**
+	 * Render a pending GeneratedDocument through docudesk and store the PDF on it.
+	 *
+	 * @param HrDocumentRequest $request The normalised request.
+	 * @param array{doc: array<string, mixed>, templateId: mixed} $pending The pending GeneratedDocument and the selected template.
+	 *
+	 * @return array{status: string, message: string, document: array<string, mixed>|null}
+	 */
+	private function renderAndStore(HrDocumentRequest $request, array $pending): array {
+		$doc = $pending['doc'];
+		$dataRefs = $this->buildDataRefs($request->subject);
+		$options = $this->buildOptions($request->documentType, $request->userId);
+		$options['adHocData'] = array_merge($options['adHocData'], ($request->extra['adHocData'] ?? []));
 
 		try {
-			$rendered = $this->documentService()->generateDocument($selected['templateId'], $dataRefs, $options);
+			$rendered = $this->documentService()->generateDocument($pending['templateId'], $dataRefs, $options);
 		} catch (\Throwable $e) {
-			$doc = $this->saveGeneratedDocument($doc, ['status' => 'failed', 'errorMessage' => 'Genereren via docudesk is mislukt: ' . $e->getMessage()]);
-			return $this->outcome($employeeId, $contractId, $documentType, 'failed', (string)$doc['errorMessage'], $doc);
+			return $this->failGeneration($doc, 'Genereren via docudesk is mislukt: ' . $e->getMessage());
 		}
 
 		$content = (string)($rendered['content'] ?? '');
 		if ($content === '') {
-			$doc = $this->saveGeneratedDocument($doc, ['status' => 'failed', 'errorMessage' => 'Docudesk leverde geen documentinhoud terug.']);
-			return $this->outcome($employeeId, $contractId, $documentType, 'failed', (string)$doc['errorMessage'], $doc);
+			return $this->failGeneration($doc, 'Docudesk leverde geen documentinhoud terug.');
 		}
 
-		$fileName = $this->fileName($documentType, $employeeId);
+		$fileName = $this->fileName($request->documentType, $request->subject->employeeId);
 		$docId = (string)($doc['id'] ?? $doc['@self']['id'] ?? '');
 
 		try {
 			$file = $this->fileService()->addFile($docId, $fileName, $content);
 			$filePath = (is_object($file) === true && method_exists($file, 'getPath') === true) ? (string)$file->getPath() : $fileName;
 		} catch (\Throwable $e) {
-			$doc = $this->saveGeneratedDocument($doc, ['status' => 'failed', 'errorMessage' => 'Opslaan van het gegenereerde bestand is mislukt: ' . $e->getMessage()]);
-			return $this->outcome($employeeId, $contractId, $documentType, 'failed', (string)$doc['errorMessage'], $doc);
+			return $this->failGeneration($doc, 'Opslaan van het gegenereerde bestand is mislukt: ' . $e->getMessage());
 		}
 
 		$doc = $this->saveGeneratedDocument(
@@ -688,8 +663,21 @@ class HrDocumentService {
 			]
 		);
 
-		return $this->outcome($employeeId, $contractId, $documentType, 'generated', 'Document gegenereerd en opgeslagen.', $doc);
-	}//end generateInternal()
+		return ['status' => 'generated', 'message' => 'Document gegenereerd en opgeslagen.', 'document' => $doc];
+	}//end renderAndStore()
+
+	/**
+	 * Record a failed attempt on its GeneratedDocument.
+	 *
+	 * @param array<string, mixed> $doc The GeneratedDocument.
+	 * @param string $message The error message.
+	 *
+	 * @return array{status: string, message: string, document: array<string, mixed>|null}
+	 */
+	private function failGeneration(array $doc, string $message): array {
+		$doc = $this->saveGeneratedDocument($doc, ['status' => 'failed', 'errorMessage' => $message]);
+		return ['status' => 'failed', 'message' => (string)$doc['errorMessage'], 'document' => $doc];
+	}//end failGeneration()
 
 	/**
 	 * The permanent, written EmploymentContracts eligible for the default
@@ -1003,31 +991,20 @@ class HrDocumentService {
 	 * (contractId|employeeId, documentType); loonstrook keys on (payslipId,
 	 * documentType); jaaropgaaf keys on (jaaropgaafId, documentType).
 	 *
-	 * @param string $employeeId The Employee id.
-	 * @param string|null $contractId The EmploymentContract id, or null.
-	 * @param string|null $payslipId The Payslip id (loonstrook key), or null.
-	 * @param string|null $jaaropgaafId The Jaaropgaaf id (jaaropgaaf key), or null.
-	 * @param string $documentType The document type.
-	 * @param string|null $sickLeaveCaseId The sickness case (the 42-week notification's key), or null.
+	 * @param HrDocumentRequest $request The request; its sickness case (the 42-week notification's key) wins over its subject.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function activeDocumentFor(
-		string $employeeId,
-		?string $contractId,
-		?string $payslipId,
-		?string $jaaropgaafId,
-		string $documentType,
-		?string $sickLeaveCaseId = null,
-	): ?array {
+	private function activeDocumentFor(HrDocumentRequest $request): ?array {
+		$sickLeaveCaseId = $request->sickLeaveCaseId();
 		foreach ($this->loadAll(self::GENERATED_DOCUMENT_SCHEMA) as $row) {
-			if ((string)($row['documentType'] ?? '') !== $documentType) {
+			if ((string)($row['documentType'] ?? '') !== $request->documentType) {
 				continue;
 			}
 
 			$matches = ($sickLeaveCaseId !== null)
 				? trim((string)($row['sickLeaveCaseId'] ?? '')) === $sickLeaveCaseId
-				: $this->rowMatchesKey($row, $employeeId, $contractId, $payslipId, $jaaropgaafId);
+				: $this->rowMatchesKey($row, $request->subject);
 			if ($matches === false) {
 				continue;
 			}
@@ -1049,34 +1026,25 @@ class HrDocumentService {
 	 * sequence of guards instead of nested if/else branches.
 	 *
 	 * @param array<string, mixed> $row The GeneratedDocument row.
-	 * @param string $employeeId The Employee id.
-	 * @param string|null $contractId The EmploymentContract id, or null.
-	 * @param string|null $payslipId The Payslip id (loonstrook key), or null.
-	 * @param string|null $jaaropgaafId The Jaaropgaaf id (jaaropgaaf key), or null.
+	 * @param HrDocumentSubject $subject The document's subject.
 	 *
 	 * @return bool
 	 */
-	private function rowMatchesKey(
-		array $row,
-		string $employeeId,
-		?string $contractId,
-		?string $payslipId,
-		?string $jaaropgaafId,
-	): bool {
-		if ($payslipId !== null) {
-			return trim((string)($row['payslipId'] ?? '')) === $payslipId;
+	private function rowMatchesKey(array $row, HrDocumentSubject $subject): bool {
+		if ($subject->payslipId !== null) {
+			return trim((string)($row['payslipId'] ?? '')) === $subject->payslipId;
 		}
 
-		if ($jaaropgaafId !== null) {
-			return trim((string)($row['jaaropgaafId'] ?? '')) === $jaaropgaafId;
+		if ($subject->jaaropgaafId !== null) {
+			return trim((string)($row['jaaropgaafId'] ?? '')) === $subject->jaaropgaafId;
 		}
 
 		$rowContractId = trim((string)($row['contractId'] ?? ''));
-		if ($contractId !== null) {
-			return $rowContractId === $contractId;
+		if ($subject->contractId !== null) {
+			return $rowContractId === $subject->contractId;
 		}
 
-		return $rowContractId === '' && trim((string)($row['employeeId'] ?? '')) === $employeeId;
+		return $rowContractId === '' && trim((string)($row['employeeId'] ?? '')) === $subject->employeeId;
 	}//end rowMatchesKey()
 
 	/**
@@ -1169,28 +1137,25 @@ class HrDocumentService {
 	 * ever set) -- docudesk re-resolves the objects itself via OpenRegister,
 	 * so no object field values are copied here.
 	 *
-	 * @param string $employeeId The Employee id.
-	 * @param string|null $contractId The EmploymentContract id, or null.
-	 * @param string|null $payslipId The Payslip id, or null.
-	 * @param string|null $jaaropgaafId The Jaaropgaaf id, or null.
+	 * @param HrDocumentSubject $subject The document's subject.
 	 *
 	 * @return array<int, array<string, string>>
 	 */
-	private function buildDataRefs(string $employeeId, ?string $contractId, ?string $payslipId = null, ?string $jaaropgaafId = null): array {
+	private function buildDataRefs(HrDocumentSubject $subject): array {
 		$refs = [
-			['register' => $this->register(), 'schema' => self::EMPLOYEE_SCHEMA, 'id' => $employeeId],
+			['register' => $this->register(), 'schema' => self::EMPLOYEE_SCHEMA, 'id' => $subject->employeeId],
 		];
 
-		if ($contractId !== null) {
-			$refs[] = ['register' => $this->register(), 'schema' => self::CONTRACT_SCHEMA, 'id' => $contractId];
+		if ($subject->contractId !== null) {
+			$refs[] = ['register' => $this->register(), 'schema' => self::CONTRACT_SCHEMA, 'id' => $subject->contractId];
 		}
 
-		if ($payslipId !== null) {
-			$refs[] = ['register' => $this->register(), 'schema' => self::PAYSLIP_SCHEMA, 'id' => $payslipId];
+		if ($subject->payslipId !== null) {
+			$refs[] = ['register' => $this->register(), 'schema' => self::PAYSLIP_SCHEMA, 'id' => $subject->payslipId];
 		}
 
-		if ($jaaropgaafId !== null) {
-			$refs[] = ['register' => $this->register(), 'schema' => self::JAAROPGAAF_SCHEMA, 'id' => $jaaropgaafId];
+		if ($subject->jaaropgaafId !== null) {
+			$refs[] = ['register' => $this->register(), 'schema' => self::JAAROPGAAF_SCHEMA, 'id' => $subject->jaaropgaafId];
 		}
 
 		return $refs;

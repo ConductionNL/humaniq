@@ -34,7 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Notification;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\Notification\RecipientResolverInterface;
@@ -47,11 +47,11 @@ use OCA\OpenRegister\Service\Notification\RecipientResolverInterface;
 class CaseManagerResolver implements RecipientResolverInterface {
 
 	/**
-	 * @param HoursRegisterGateway $gateway Reads access rows, placements, units and employees.
+	 * @param RecordStoreInterface $gateway Reads access rows, placements, units and employees.
 	 * @param OrgResolutionService $orgResolution Resolves an employee's managers.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly OrgResolutionService $orgResolution,
 	) {
 

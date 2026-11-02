@@ -28,23 +28,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 /**
- * Immutable bundle of the resolved CalDAV backend + calendar + configured principal/URI.
+ * The calendar target of one interview-scheduling run.
+ *
+ * @spec openspec/specs/interview-scheduling/spec.md#REQ-INTV-002
  */
-final class InterviewCalendarTarget {
-
-	/**
-	 * @param mixed $backend The duck-typed CalDavBackend.
-	 * @param mixed $calendarId The resolved calendar's id.
-	 * @param string $principal The configured CalDAV principal.
-	 * @param string $calendarUri The configured calendar URI.
-	 */
-	public function __construct(
-		public readonly mixed $backend,
-		public readonly mixed $calendarId,
-		public readonly string $principal,
-		public readonly string $calendarUri,
-	) {
-
-	}//end __construct()
-
+final class InterviewCalendarTarget extends CalendarTarget {
 }//end class

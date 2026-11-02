@@ -66,14 +66,14 @@ class LoonaangifteMessageService {
 	/**
 	 * The service.
 	 *
-	 * @param HoursRegisterGateway $gateway      Register reads and writes.
+	 * @param RecordStoreInterface $gateway      Register reads and writes.
 	 * @param PayslipRecalculator  $recalculator The engine, to recalculate a payslip's components.
 	 * @param IAppConfig           $appConfig    The software relation number.
 	 * @param IAppManager|null        $appManager   The app version for the message header.
 	 * @param CarriedCorrections|null $carried      The corrections a return carries (defaults to one over the gateway).
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly PayslipRecalculator $recalculator,
 		private readonly IAppConfig $appConfig,
 		private readonly ?IAppManager $appManager=null,

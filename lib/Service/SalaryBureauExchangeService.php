@@ -57,13 +57,13 @@ class SalaryBureauExchangeService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway     $gateway The register plumbing.
+	 * @param RecordStoreInterface     $gateway The register plumbing.
 	 * @param LoggerInterface          $logger  The logger.
 	 * @param HandoffPeriodItems|null  $items   The period items; built on the gateway when absent.
 	 * @param HandoffEmployeeView|null $view    The employee view; built on the gateway when absent.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly LoggerInterface $logger,
 		?HandoffPeriodItems $items = null,
 		?HandoffEmployeeView $view = null,

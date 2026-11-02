@@ -47,14 +47,14 @@ class HoursPayService {
 	 * Constructor.
 	 *
 	 * @param EmploymentTermsResolver $terms   The overtime surcharge and default settlement.
-	 * @param HoursRegisterGateway    $gateway Writes the timesheet stamps.
+	 * @param RecordStoreInterface    $gateway Writes the timesheet stamps.
 	 * @param InternalWriteMarker     $marker  Marks the stamps as humaniq's own writes.
 	 *
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
 	 */
 	public function __construct(
 		private readonly EmploymentTermsResolver $terms,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly InternalWriteMarker $marker,
 	) {
 	}//end __construct()

@@ -38,7 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Lifecycle;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\RightToWorkService;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
@@ -53,11 +53,11 @@ final class RightToWorkGuard implements LifecycleGuardInterface {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Register reads, past RBAC: the guard must see every check.
+	 * @param RecordStoreInterface $gateway Register reads, past RBAC: the guard must see every check.
 	 * @param RightToWorkService $rule The stated rule, re-applied to the stored facts.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly RightToWorkService $rule,
 	) {
 

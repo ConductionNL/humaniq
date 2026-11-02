@@ -302,7 +302,7 @@ class LeaveCalendarServiceTest extends TestCase {
 	 * for the current schema (the PayrollGLPostServiceTest idiom, read-only
 	 * here since LeaveCalendarService never writes back to the register).
 	 *
-	 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
+	 * @param array<string, array<int, array<string, mixed>>|null> $rowsBySchema Seed rows keyed by schema; null makes findAll() throw.
 	 *
 	 * @return object The fake ObjectService.
 	 */
@@ -347,6 +347,10 @@ class LeaveCalendarServiceTest extends TestCase {
 			 * @return array<int, array<string, mixed>>
 			 */
 			public function findAll(array $options = []): array {
+				if (array_key_exists($this->schema, $this->rowsBySchema) === true && $this->rowsBySchema[$this->schema] === null) {
+					throw new \RuntimeException('register unreadable');
+				}
+
 				return $this->rowsBySchema[$this->schema] ?? [];
 			}//end findAll()
 
@@ -668,6 +672,56 @@ class LeaveCalendarServiceTest extends TestCase {
 	}//end testDeletedSourceIsReconciled()
 
 	/**
+	 * A register that cannot be read gives no live id set, so no event is
+	 * treated as an orphan.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function unreadableSchemas(): array {
+		return ['leave requests' => ['LeaveRequest'], 'sickness cases' => ['SickLeaveCase']];
+	}//end unreadableSchemas()
+
+	/**
+	 * @param string $schema The schema whose load fails.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider unreadableSchemas
+	 */
+	public function testUnreadableRegisterKeepsEveryCalendarEvent(string $schema): void {
+		[$service, $backend] = $this->service([$schema => null]);
+		$backend->seedObject('hrmq-leave-kept-1.ics', 'hrmq-leave-kept-1', "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
+		$backend->seedObject('hrmq-sick-kept-2.ics', 'hrmq-sick-kept-2', "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
+
+		$results = $service->sync();
+
+		$this->assertSame([], $backend->deleted);
+		$this->assertTrue($backend->hasObject('hrmq-leave-kept-1.ics'));
+		$this->assertTrue($backend->hasObject('hrmq-sick-kept-2.ics'));
+		$this->assertSame([], $results);
+
+	}//end testUnreadableRegisterKeepsEveryCalendarEvent()
+
+	/**
+	 * @return void
+	 */
+	public function testUnreadableEmployeesLeaveEveryEventAsItIs(): void {
+		$moved = $this->approvedLeave(['id' => 'leave-2', 'startDate' => '2026-09-01', 'endDate' => '2026-09-02']);
+		[$service, $backend] = $this->service(['LeaveRequest' => [$this->approvedLeave(), $moved], 'Employee' => null]);
+		$stored = "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:hrmq-leave-leave-2\r\nDTSTART;VALUE=DATE:20260803\r\nDTEND;VALUE=DATE:20260804\r\nSUMMARY:Verlof — Sam Jansen\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+		$backend->seedObject('hrmq-leave-leave-2.ics', 'hrmq-leave-leave-2', $stored);
+
+		$results = $service->sync();
+
+		$this->assertSame([], $backend->created);
+		$this->assertSame([], $backend->updated);
+		$this->assertSame($stored, $backend->calendarData('hrmq-leave-leave-2.ics'));
+		$this->assertSame('skipped', $this->findOutcome($results, 'leave', 'leave-1')['status']);
+		$this->assertSame('skipped', $this->findOutcome($results, 'leave', 'leave-2')['status']);
+
+	}//end testUnreadableEmployeesLeaveEveryEventAsItIs()
+
+	/**
 	 * @return void
 	 */
 	public function testOrphanReconciliationNeverTouchesNonHumaniqEvents(): void {
@@ -680,6 +734,53 @@ class LeaveCalendarServiceTest extends TestCase {
 		$this->assertSame([], $backend->deleted);
 
 	}//end testOrphanReconciliationNeverTouchesNonHumaniqEvents()
+
+	/**
+	 * Dates that only parse by rolling over into another day.
+	 *
+	 * @return array<string, array{0: array<string, mixed>, 1: string}>
+	 */
+	public static function rolledOverDates(): array {
+		return [
+			'leave start on 31 February' => [['LeaveRequest' => [['id' => 'leave-1', 'status' => 'approved', 'startDate' => '2026-02-31', 'endDate' => '2026-03-02']]], 'leave'],
+			'leave end in month 13' => [['LeaveRequest' => [['id' => 'leave-1', 'status' => 'approved', 'startDate' => '2026-03-02', 'endDate' => '2026-13-40']]], 'leave'],
+			'first sick day on 30 February' => [['SickLeaveCase' => [['id' => 'leave-1', 'status' => 'gemeld', 'firstSickDay' => '2026-02-30']]], 'sick'],
+			'recovery in month 13' => [['SickLeaveCase' => [['id' => 'leave-1', 'status' => 'hersteld', 'firstSickDay' => '2026-03-02', 'recoveredDate' => '2026-13-01']]], 'sick'],
+		];
+	}//end rolledOverDates()
+
+	/**
+	 * @param array<string, array<int, array<string, mixed>>> $rows The register rows.
+	 * @param string $type The source type.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider rolledOverDates
+	 */
+	public function testRolledOverDatesFailInsteadOfSyncing(array $rows, string $type): void {
+		[$service, $backend] = $this->service($rows);
+
+		$results = $service->sync();
+
+		$outcome = $this->findOutcome($results, $type, 'leave-1');
+		$this->assertSame('failed', $outcome['status']);
+		$this->assertStringContainsString('geen geldige datum', $outcome['message']);
+		$this->assertSame([], $backend->created);
+
+	}//end testRolledOverDatesFailInsteadOfSyncing()
+
+	/**
+	 * @return void
+	 */
+	public function testARolledOverEndDateIsNotSkippedAsOutOfTheBound(): void {
+		$leave = ['id' => 'leave-1', 'status' => 'approved', 'startDate' => '2026-02-20', 'endDate' => '2026-02-31'];
+		[$service, ] = $this->service(['LeaveRequest' => [$leave]]);
+
+		$results = $service->sync('2026-03-05');
+
+		$this->assertSame('failed', $this->findOutcome($results, 'leave', 'leave-1')['status']);
+
+	}//end testARolledOverEndDateIsNotSkippedAsOutOfTheBound()
 
 	/**
 	 * @return void

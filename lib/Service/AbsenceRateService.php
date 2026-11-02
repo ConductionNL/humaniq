@@ -117,12 +117,8 @@ class AbsenceRateService {
 	 *
 	 * @param array<array<string, mixed>> $cases SickLeaveCase objects (plain arrays), any status.
 	 * @param array<array<string, mixed>> $contracts EmploymentContract objects (plain arrays).
-	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
-	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
-	 * @param float $fullTimeHoursWeek Hours per week a 1.0 FTE works.
-	 * @param array<array<string, mixed>> $workingPatterns WorkingPattern objects, when the caller has them.
-	 * @param array<array<string, mixed>> $nonWorkingTimes NonWorkingTime objects, when the caller has them.
-	 * @param array<int, string>|null $nonWorkingDates ISO dates openregister's working calendar marks non-working, or null when it could not be read.
+	 * @param AbsencePeriod $period The period, inclusive, and the hours a 1.0 FTE works per week.
+	 * @param WorkingTimeSources $workingTime WorkingPattern and NonWorkingTime objects and the working calendar's non-working dates, when the caller has them.
 	 *
 	 * @return array{absentDayEquivalents: float, availableDayEquivalents: float, percentage: float|null, casesWithoutContract: int, employeesMeasuredOnPattern: int}
 	 *                                                                                                                                                                `percentage` is null when availability is zero -- see the class docblock.
@@ -133,19 +129,10 @@ class AbsenceRateService {
 	public function absenceRate(
 		array $cases,
 		array $contracts,
-		DateTimeImmutable $periodStart,
-		DateTimeImmutable $periodEnd,
-		float $fullTimeHoursWeek = self::DEFAULT_FULL_TIME_HOURS_PER_WEEK,
-		array $workingPatterns = [],
-		array $nonWorkingTimes = [],
-		?array $nonWorkingDates = null,
+		AbsencePeriod $period,
+		WorkingTimeSources $workingTime = new WorkingTimeSources(),
 	): array {
-		$ftePerEmployee = $this->fteByEmployee(
-			contracts: $contracts,
-			periodStart: $periodStart,
-			periodEnd: $periodEnd,
-			fullTimeHoursWeek: $fullTimeHoursWeek
-		);
+		$ftePerEmployee = $this->fteByEmployee(contracts: $contracts, period: $period);
 
 		// Availability comes from the working pattern wherever the employee has
 		// one, so an absence percentage and a capacity percentage divide by the
@@ -153,50 +140,51 @@ class AbsenceRateService {
 		// employee with no pattern keeps the contract-and-fte path, which is
 		// what every instance had before patterns existed.
 		$onPattern = $this->employeesOnPattern(
-			workingPatterns: $workingPatterns,
+			workingPatterns: $workingTime->workingPatterns,
 			ftePerEmployee: $ftePerEmployee
 		);
 
-		$available = ($this->contractAvailabilityOutsidePattern(
-			contracts: $contracts,
-			onPattern: $onPattern,
-			periodStart: $periodStart,
-			periodEnd: $periodEnd,
-			fullTimeHoursWeek: $fullTimeHoursWeek
-		) + $this->patternAvailability(
-			onPattern: $onPattern,
-			periodStart: $periodStart,
-			periodEnd: $periodEnd,
-			fullTimeHoursWeek: $fullTimeHoursWeek,
-			workingPatterns: $workingPatterns,
-			nonWorkingTimes: $nonWorkingTimes,
-			nonWorkingDates: $nonWorkingDates
-		));
+		// The pattern path measures both sides in pattern working hours, so an
+		// absent day the pattern does not contract counts on neither side.
+		$basis = new PatternDayEquivalents(workingHours: $this->workingHours, sources: $workingTime, period: $period);
+		$byPath = $this->recordsByPath(records: $cases, onPattern: $onPattern);
 
-		$measured = $this->absentDayEquivalents(
-			cases: $cases,
-			ftePerEmployee: $ftePerEmployee,
-			periodStart: $periodStart,
-			periodEnd: $periodEnd
-		);
+		$measured = $this->absentDayEquivalents(cases: $byPath['contract'], ftePerEmployee: $ftePerEmployee, period: $period);
+		$measured['absent'] += $this->patternAbsence(cases: $byPath['pattern'], basis: $basis);
+		$measured['available'] = ($this->contractAvailability(
+			contracts: $this->recordsByPath(records: $contracts, onPattern: $onPattern)['contract'],
+			period: $period
+		) + $basis->total(employeeIds: array_map('strval', array_keys($onPattern))));
+		$measured['onPattern'] = count($onPattern);
 
-		$absent = $measured['absent'];
-		$unmeasured = $measured['unmeasured'];
+		return $this->rateResult(measured: $measured);
+	}//end absenceRate()
 
-		// Refusal 2: no availability means no rate, not a rate of zero.
+	/**
+	 * The rate's result array from its measured totals.
+	 *
+	 * Refusal 2: no availability means no rate, not a rate of zero.
+	 *
+	 * @param array{absent: float, unmeasured: int, available: float, onPattern: int} $measured The totals.
+	 *
+	 * @return array{absentDayEquivalents: float, availableDayEquivalents: float, percentage: float|null, casesWithoutContract: int, employeesMeasuredOnPattern: int}
+	 *
+	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-001
+	 */
+	private function rateResult(array $measured): array {
 		$percentage = null;
-		if ($available > 0.0) {
-			$percentage = round(num: (($absent / $available) * 100.0), precision: 2);
+		if ($measured['available'] > 0.0) {
+			$percentage = round(num: (($measured['absent'] / $measured['available']) * 100.0), precision: 2);
 		}
 
 		return [
-			'absentDayEquivalents' => round(num: $absent, precision: 4),
-			'availableDayEquivalents' => round(num: $available, precision: 4),
+			'absentDayEquivalents' => round(num: $measured['absent'], precision: 4),
+			'availableDayEquivalents' => round(num: $measured['available'], precision: 4),
 			'percentage' => $percentage,
-			'casesWithoutContract' => $unmeasured,
-			'employeesMeasuredOnPattern' => count($onPattern),
+			'casesWithoutContract' => $measured['unmeasured'],
+			'employeesMeasuredOnPattern' => $measured['onPattern'],
 		];
-	}//end absenceRate()
+	}//end rateResult()
 
 	/**
 	 * The employees whose availability comes from a working pattern.
@@ -224,89 +212,79 @@ class AbsenceRateService {
 	}//end employeesOnPattern()
 
 	/**
-	 * Availability of the employees who have no working pattern.
-	 *
-	 * This is the contract-and-fte path every instance used before patterns
-	 * existed, and it stays the answer for anybody still without one.
+	 * Available day-equivalents a set of contracts contributes to a period.
 	 *
 	 * @param array<array<string, mixed>> $contracts EmploymentContract objects.
-	 * @param array<string, bool> $onPattern The employees the pattern path owns.
-	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
-	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
-	 * @param float $fullTimeHoursWeek Hours per week a 1.0 FTE works.
+	 * @param AbsencePeriod $period The period and its full-time week.
 	 *
-	 * @return float Available day-equivalents.
+	 * @return float Day-equivalents.
 	 *
 	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-001
 	 */
-	private function contractAvailabilityOutsidePattern(
-		array $contracts,
-		array $onPattern,
-		DateTimeImmutable $periodStart,
-		DateTimeImmutable $periodEnd,
-		float $fullTimeHoursWeek
-	): float {
+	private function contractAvailability(array $contracts, AbsencePeriod $period): float {
 		$available = 0.0;
 		foreach ($contracts as $contract) {
-			$contractEmployee = $this->stringOrNull(value: ($contract['employeeId'] ?? null));
-			if ($contractEmployee !== null && isset($onPattern[$contractEmployee]) === true) {
-				continue;
-			}
-
-			$available += $this->contractAvailability(
-				contract: $contract,
-				periodStart: $periodStart,
-				periodEnd: $periodEnd,
-				fullTimeHoursWeek: $fullTimeHoursWeek
-			);
+			$available += $this->oneContractAvailability(contract: $contract, period: $period);
 		}
 
 		return $available;
-	}//end contractAvailabilityOutsidePattern()
+	}//end contractAvailability()
 
 	/**
-	 * Availability of the employees whose hours come from a working pattern.
+	 * Split records by the path that measures their employee.
 	 *
+	 * A record whose employee has no working pattern, or no usable employee
+	 * id, takes the contract-and-fte path every instance used before
+	 * patterns existed.
+	 *
+	 * @param array<array<string, mixed>> $records SickLeaveCase or EmploymentContract objects.
 	 * @param array<string, bool> $onPattern The employees the pattern path owns.
-	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
-	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
-	 * @param float $fullTimeHoursWeek Hours per week a 1.0 FTE works.
-	 * @param array<array<string, mixed>> $workingPatterns WorkingPattern objects.
-	 * @param array<array<string, mixed>> $nonWorkingTimes NonWorkingTime objects.
-	 * @param array<int, string>|null $nonWorkingDates ISO dates the working calendar marks non-working, or null when unread.
 	 *
-	 * @return float Available day-equivalents.
+	 * @return array{pattern: list<array<string, mixed>>, contract: list<array<string, mixed>>}
 	 *
 	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-003
 	 */
-	private function patternAvailability(
-		array $onPattern,
-		DateTimeImmutable $periodStart,
-		DateTimeImmutable $periodEnd,
-		float $fullTimeHoursWeek,
-		array $workingPatterns,
-		array $nonWorkingTimes,
-		?array $nonWorkingDates
-	): float {
-		$available = 0.0;
-		foreach (array_keys($onPattern) as $patternEmployee) {
-			$resolved = $this->workingHours->contractedHoursOver(
-				employeeId: (string)$patternEmployee,
-				from: $periodStart,
-				to: $periodEnd,
-				patterns: $workingPatterns,
-				nonWorkingTimes: $nonWorkingTimes,
-				nonWorkingDates: $nonWorkingDates
-			);
+	private function recordsByPath(array $records, array $onPattern): array {
+		$byPath = ['pattern' => [], 'contract' => []];
+		foreach ($records as $record) {
+			$employeeId = $this->stringOrNull(value: ($record['employeeId'] ?? null));
+			$path = ($employeeId !== null && isset($onPattern[$employeeId]) === true) ? 'pattern' : 'contract';
+			$byPath[$path][] = $record;
+		}
 
-			$available += $this->workingHours->dayEquivalents(
-				hours: $resolved['hours'],
-				fullTimeHoursWeek: $fullTimeHoursWeek
+		return $byPath;
+	}//end recordsByPath()
+
+	/**
+	 * Absent day-equivalents of the cases on the pattern path.
+	 *
+	 * Each progression segment counts the pattern working hours it covers,
+	 * net of non-working time and calendar days off, at the segment's
+	 * percentage: the same hours the availability counts.
+	 *
+	 * @param array<array<string, mixed>> $cases SickLeaveCase objects of employees on a pattern.
+	 * @param PatternDayEquivalents $basis Contracted pattern hours over the period.
+	 *
+	 * @return float Day-equivalents.
+	 *
+	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-003
+	 */
+	private function patternAbsence(array $cases, PatternDayEquivalents $basis): float {
+		$absent = 0.0;
+		foreach ($cases as $case) {
+			$span = $this->caseSpan(case: $case, period: $basis->period);
+			if ($span === null) {
+				continue;
+			}
+
+			$absent += $basis->absent(
+				employeeId: (string)$case['employeeId'],
+				segments: $this->progression->segments(steps: $span['steps'], window: $span['window'])
 			);
 		}
 
-		return $available;
-	}//end patternAvailability()
+		return $absent;
+	}//end patternAbsence()
 
 	/**
 	 * Absent day-equivalents over the period, and the cases nothing measured.
@@ -316,19 +294,13 @@ class AbsenceRateService {
 	 *
 	 * @param array<array<string, mixed>> $cases SickLeaveCase objects.
 	 * @param array<string, float> $ftePerEmployee FTE over the period, per employee.
-	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
-	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
+	 * @param AbsencePeriod $period The period.
 	 *
 	 * @return array{absent: float, unmeasured: int} The total and the count of unmeasured cases.
 	 *
 	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
-	private function absentDayEquivalents(
-		array $cases,
-		array $ftePerEmployee,
-		DateTimeImmutable $periodStart,
-		DateTimeImmutable $periodEnd
-	): array {
+	private function absentDayEquivalents(array $cases, array $ftePerEmployee, AbsencePeriod $period): array {
 		$absent = 0.0;
 		$unmeasured = 0;
 		foreach ($cases as $case) {
@@ -340,8 +312,8 @@ class AbsenceRateService {
 
 			$absent += $this->caseAbsenceDayEquivalents(
 				case: $case,
-				periodStart: $periodStart,
-				periodEnd: $periodEnd,
+				periodStart: $period->start,
+				periodEnd: $period->end,
 				fte: $ftePerEmployee[$employeeId]
 			);
 		}
@@ -376,31 +348,51 @@ class AbsenceRateService {
 		DateTimeImmutable $periodEnd,
 		float $fte,
 	): float {
+		$span = $this->caseSpan(case: $case, period: new AbsencePeriod(start: $periodStart, end: $periodEnd));
+		if ($span === null) {
+			return 0.0;
+		}
+
+		return $this->progression->sum(
+			steps: $span['steps'],
+			windowStart: $span['window'][0],
+			windowEnd: $span['window'][1],
+			fte: $fte
+		);
+	}//end caseAbsenceDayEquivalents()
+
+	/**
+	 * One case's progression steps and its window inside the period.
+	 *
+	 * @param array<string, mixed> $case The SickLeaveCase.
+	 * @param AbsencePeriod $period The period.
+	 *
+	 * @return array{steps: list<array{from: DateTimeImmutable, percentage: float}>, window: array{0: DateTimeImmutable, 1: DateTimeImmutable}}|null
+	 *     Null when the case has no first sick day or does not overlap the period.
+	 *
+	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-002
+	 */
+	private function caseSpan(array $case, AbsencePeriod $period): ?array {
 		$firstSickDay = $this->progression->date(value: ($case['firstSickDay'] ?? null));
 		if ($firstSickDay === null) {
 			// firstSickDay is a required property; a case missing it is
 			// unmeasurable rather than zero-length, but there is no channel to
 			// report it from here, so the caller's own validation owns that.
-			return 0.0;
+			return null;
 		}
 
 		$window = $this->caseWindow(
 			case: $case,
 			firstSickDay: $firstSickDay,
-			periodStart: $periodStart,
-			periodEnd: $periodEnd
+			periodStart: $period->start,
+			periodEnd: $period->end
 		);
 		if ($window === null) {
-			return 0.0;
+			return null;
 		}
 
-		return $this->progression->sum(
-			steps: $this->progression->steps(case: $case, firstSickDay: $firstSickDay),
-			windowStart: $window[0],
-			windowEnd: $window[1],
-			fte: $fte
-		);
-	}//end caseAbsenceDayEquivalents()
+		return ['steps' => $this->progression->steps(case: $case, firstSickDay: $firstSickDay), 'window' => $window];
+	}//end caseSpan()
 
 	/**
 	 * The intersection of one case's own window with the reporting period.
@@ -444,36 +436,29 @@ class AbsenceRateService {
 	 * Available day-equivalents one contract contributes to a period.
 	 *
 	 * @param array<string, mixed> $contract The EmploymentContract.
-	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
-	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
-	 * @param float $fullTimeHoursWeek Hours per week a 1.0 FTE works.
+	 * @param AbsencePeriod $period The period and its full-time week.
 	 *
 	 * @return float Day-equivalents.
 	 *
 	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
-	private function contractAvailability(
-		array $contract,
-		DateTimeImmutable $periodStart,
-		DateTimeImmutable $periodEnd,
-		float $fullTimeHoursWeek,
-	): float {
-		$fte = $this->contractFte(contract: $contract, fullTimeHoursWeek: $fullTimeHoursWeek);
+	private function oneContractAvailability(array $contract, AbsencePeriod $period): float {
+		$fte = $this->contractFte(contract: $contract, fullTimeHoursWeek: $period->fullTimeHoursWeek);
 		if ($fte <= 0.0) {
 			return 0.0;
 		}
 
-		$start = ($this->progression->date(value: ($contract['startDate'] ?? null)) ?? $periodStart);
-		$end = ($this->progression->date(value: ($contract['endDate'] ?? null)) ?? $periodEnd);
+		$start = ($this->progression->date(value: ($contract['startDate'] ?? null)) ?? $period->start);
+		$end = ($this->progression->date(value: ($contract['endDate'] ?? null)) ?? $period->end);
 
-		$from = ($start > $periodStart) ? $start : $periodStart;
-		$to = ($end < $periodEnd) ? $end : $periodEnd;
+		$from = ($start > $period->start) ? $start : $period->start;
+		$to = ($end < $period->end) ? $end : $period->end;
 		if ($from > $to) {
 			return 0.0;
 		}
 
 		return ($this->progression->inclusiveDays(from: $from, to: $to) * $fte);
-	}//end contractAvailability()
+	}//end oneContractAvailability()
 
 	/**
 	 * Map each employee to the FTE their contracts give them over the period.
@@ -483,20 +468,13 @@ class AbsenceRateService {
 	 * denominator stay on the same basis even where the contract data is odd.
 	 *
 	 * @param array<array<string, mixed>> $contracts The EmploymentContracts.
-	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
-	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
-	 * @param float $fullTimeHoursWeek Hours per week a 1.0 FTE works.
+	 * @param AbsencePeriod $period The period and its full-time week.
 	 *
 	 * @return array<string, float> Employee id to FTE, only for employees with a contract overlapping the period.
 	 *
 	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
-	private function fteByEmployee(
-		array $contracts,
-		DateTimeImmutable $periodStart,
-		DateTimeImmutable $periodEnd,
-		float $fullTimeHoursWeek,
-	): array {
+	private function fteByEmployee(array $contracts, AbsencePeriod $period): array {
 		$out = [];
 		foreach ($contracts as $contract) {
 			$employeeId = $this->stringOrNull(value: ($contract['employeeId'] ?? null));
@@ -504,14 +482,14 @@ class AbsenceRateService {
 				continue;
 			}
 
-			$fte = $this->contractFte(contract: $contract, fullTimeHoursWeek: $fullTimeHoursWeek);
+			$fte = $this->contractFte(contract: $contract, fullTimeHoursWeek: $period->fullTimeHoursWeek);
 			if ($fte <= 0.0) {
 				continue;
 			}
 
-			$start = ($this->progression->date(value: ($contract['startDate'] ?? null)) ?? $periodStart);
-			$end = ($this->progression->date(value: ($contract['endDate'] ?? null)) ?? $periodEnd);
-			if ($start > $periodEnd || $end < $periodStart) {
+			$start = ($this->progression->date(value: ($contract['startDate'] ?? null)) ?? $period->start);
+			$end = ($this->progression->date(value: ($contract['endDate'] ?? null)) ?? $period->end);
+			if ($start > $period->end || $end < $period->start) {
 				continue;
 			}
 

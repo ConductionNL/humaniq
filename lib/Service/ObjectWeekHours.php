@@ -49,12 +49,12 @@ class ObjectWeekHours {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway  $gateway      The register reads.
+	 * @param RecordStoreInterface  $gateway      The register reads.
 	 * @param IUserManager          $users        Display names.
 	 * @param OrgResolutionService  $orgResolution Whether a placement is active on a date.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly IUserManager $users,
 		private readonly OrgResolutionService $orgResolution,
 	) {

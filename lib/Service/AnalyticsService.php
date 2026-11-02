@@ -254,8 +254,7 @@ class AnalyticsService {
 
 		$series = [];
 		foreach ($periodKeys as $period) {
-			[$start, $end] = $this->periods->bounds($period);
-			$result = $this->absenceRateService->absenceRate($cases, $contracts, $start, $end);
+			$result = $this->absenceRateService->absenceRate($cases, $contracts, $this->periods->absencePeriod($period));
 			$series[] = ['date' => $period, 'value' => $result['percentage']];
 		}
 

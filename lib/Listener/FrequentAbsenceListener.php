@@ -32,7 +32,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\FrequentAbsenceService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -59,13 +59,13 @@ class FrequentAbsenceListener implements IEventListener {
 	/**
 	 * @param FrequentAbsenceService $service Counts and stamps.
 	 * @param InternalWriteMarker $marker Tells humaniq's own writes apart.
-	 * @param HoursRegisterGateway $gateway Resolves the event's schema slug.
+	 * @param OrgLookupInterface   $gateway Resolves the event's schema slug.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly FrequentAbsenceService $service,
 		private readonly InternalWriteMarker $marker,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly OrgLookupInterface $gateway,
 		private readonly LoggerInterface $logger,
 	) {
 

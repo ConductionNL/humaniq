@@ -33,7 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\Humaniq\Service\TrainingCompetenceWriter;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
@@ -62,12 +62,12 @@ class TrainingRecordListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway     $gateway Resolves slugs.
+	 * @param OrgLookupInterface       $gateway Resolves slugs.
 	 * @param TrainingCompetenceWriter $writer  Stamps the record and grants the competence.
 	 * @param LoggerInterface          $logger  Logger.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly OrgLookupInterface $gateway,
 		private readonly TrainingCompetenceWriter $writer,
 		private readonly LoggerInterface $logger,
 	) {

@@ -32,6 +32,8 @@ use DateTimeImmutable;
 
 /**
  * Who is away, and how much, on a day.
+ *
+ * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-003
  */
 class FormationAbsence {
 
@@ -50,24 +52,18 @@ class FormationAbsence {
 	private array $sick = [];
 
 	/**
-	 * @param AbsenceProgression         $progression       Date parsing and progression steps.
-	 * @param list<array<string, mixed>> $leaveRequests     LeaveRequest records.
-	 * @param list<array<string, mixed>> $sickCases         SickLeaveCase records.
-	 * @param array<int, string>         $netLeaveTypes     Leave type codes that count as away.
-	 * @param int                        $longTermSickWeeks Weeks after which sickness counts.
+	 * @param AbsenceProgression      $progression Date parsing and progression steps.
+	 * @param FormationAbsenceSources $sources     The leave and sickness records and the rules that make them count.
 	 */
 	public function __construct(
 		private readonly AbsenceProgression $progression,
-		array $leaveRequests,
-		array $sickCases,
-		array $netLeaveTypes,
-		private readonly int $longTermSickWeeks,
+		private readonly FormationAbsenceSources $sources,
 	) {
-		foreach ($leaveRequests as $request) {
-			$this->addLeave(request: $request, netLeaveTypes: $netLeaveTypes);
+		foreach ($sources->leaveRequests as $request) {
+			$this->addLeave(request: $request, netLeaveTypes: $sources->netLeaveTypes);
 		}
 
-		foreach ($sickCases as $case) {
+		foreach ($sources->sickCases as $case) {
 			$this->addSickness(case: $case);
 		}
 
@@ -155,7 +151,7 @@ class FormationAbsence {
 	 * @return float
 	 */
 	private function sickFraction(array $case, DateTimeImmutable $day): float {
-		$longTermFrom = $case['first']->modify('+' . $this->longTermSickWeeks . ' weeks');
+		$longTermFrom = $case['first']->modify('+' . $this->sources->longTermSickWeeks . ' weeks');
 		if ($day < $longTermFrom || ($case['last'] !== null && $day > $case['last'])) {
 			return 0.0;
 		}
