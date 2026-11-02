@@ -116,13 +116,15 @@
                     "id": "unit-1",
                     "parentUnitId": "unit-0",
                     "active": false,
-                    "managerId": "emp-1"
+                    "managerId": "emp-1",
+                    "administrationId": "ADM-1"
                 },
                 "unit-2": {
                     "id": "unit-2",
                     "parentUnitId": "",
                     "active": true,
-                    "managerId": ""
+                    "managerId": "",
+                    "administrationId": ""
                 }
             }
         },

@@ -306,4 +306,20 @@ class HoursRegisterGatewayTest extends TestCase {
 		$this->assertSame('pieter', $this->gateway->uniqueManagerUserIdFor('emp-sanne', '2026-11-02'));
 	}//end testTheStampOfAUnitManagerNamesTheManagerAboveThem()
 
+	/**
+	 * The stamp never names a manager from another administration: the
+	 * climb stops at the placement unit's administration.
+	 *
+	 * @return void
+	 */
+	public function testTheStampDoesNotClimbIntoAnotherAdministration(): void {
+		$this->store->seed('Employee', 'emp-sanne', ['nextcloudUserId' => 'sanne']);
+		$this->store->seed('Employee', 'emp-pieter', ['nextcloudUserId' => 'pieter']);
+		$this->store->seed('OrgUnit', 'unit-consultancy', ['managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie', 'administrationId' => 'ADM-1']);
+		$this->store->seed('OrgUnit', 'unit-directie', ['managerId' => 'emp-pieter', 'administrationId' => 'ADM-2']);
+		$this->store->seed('OrgAssignment', 'as-sanne', ['employeeId' => 'emp-sanne', 'orgUnitId' => 'unit-consultancy', 'endDate' => '']);
+
+		$this->assertNull($this->gateway->uniqueManagerUserIdFor('emp-sanne', '2026-11-02'));
+	}//end testTheStampDoesNotClimbIntoAnotherAdministration()
+
 }//end class

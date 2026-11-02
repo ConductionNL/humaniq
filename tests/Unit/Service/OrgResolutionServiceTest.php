@@ -367,4 +367,75 @@ class OrgResolutionServiceTest extends TestCase {
 		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
 	}//end testALoopInTheUnitTreeEndsTheClimb()
 
+	/**
+	 * The climb stays inside the placement unit's administration: a parent
+	 * in another administration, or one without an administration, ends it
+	 * with no manager.
+	 *
+	 * @return void
+	 */
+	public function testTheClimbStopsAtTheAdministrationBoundary(): void {
+		$assignments = ['emp-sanne' => [['orgUnitId' => 'unit-consultancy', 'endDate' => '']]];
+		$units = [
+			'unit-consultancy' => ['id' => 'unit-consultancy', 'managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie', 'administrationId' => 'ADM-1'],
+			'unit-directie' => ['id' => 'unit-directie', 'managerId' => 'emp-pieter', 'parentUnitId' => '', 'administrationId' => 'ADM-2'],
+		];
+		$employees = [
+			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne'],
+			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter'],
+		];
+
+		$managers = $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02');
+		$this->assertSame([], $managers);
+		$this->assertNull($this->service->uniqueOrNull($managers));
+
+		$units['unit-directie']['administrationId'] = '';
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+
+		unset($units['unit-directie']['administrationId']);
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+
+		$units['unit-directie']['administrationId'] = ' ADM-1 ';
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+
+		// A placement unit without an administration sets no boundary.
+		$units['unit-consultancy']['administrationId'] = '';
+		$units['unit-directie']['administrationId'] = 'ADM-2';
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+	}//end testTheClimbStopsAtTheAdministrationBoundary()
+
+	/**
+	 * The boundary is the placement unit's administration at every level,
+	 * and it never applies to a placement that does not climb.
+	 *
+	 * @return void
+	 */
+	public function testTheAdministrationBoundaryHoldsOverSeveralLevels(): void {
+		$assignments = [
+			'emp-sanne' => [['orgUnitId' => 'unit-noord', 'endDate' => '']],
+			'emp-tim' => [['orgUnitId' => 'unit-noord', 'endDate' => '']],
+		];
+		$units = [
+			'unit-noord' => ['id' => 'unit-noord', 'managerId' => 'emp-sanne', 'parentUnitId' => 'unit-consultancy', 'administrationId' => 'ADM-1'],
+			'unit-consultancy' => ['id' => 'unit-consultancy', 'managerId' => 'emp-sanne', 'parentUnitId' => 'unit-directie', 'administrationId' => 'ADM-1'],
+			'unit-directie' => ['id' => 'unit-directie', 'managerId' => 'emp-pieter', 'parentUnitId' => '', 'administrationId' => 'ADM-2'],
+		];
+		$employees = [
+			'emp-sanne' => ['id' => 'emp-sanne', 'nextcloudUserId' => 'sanne'],
+			'emp-pieter' => ['id' => 'emp-pieter', 'nextcloudUserId' => 'pieter'],
+		];
+
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+		$this->assertSame(['sanne'], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-02'));
+
+		// A middle unit in another administration ends the climb even when
+		// the unit above it is back in the placement's administration.
+		$units['unit-consultancy']['administrationId'] = 'ADM-2';
+		$units['unit-directie']['administrationId'] = 'ADM-1';
+		$this->assertSame([], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+
+		$units['unit-consultancy']['administrationId'] = 'ADM-1';
+		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-sanne', $assignments, $units, $employees, '2026-11-02'));
+	}//end testTheAdministrationBoundaryHoldsOverSeveralLevels()
+
 }//end class

@@ -95,7 +95,8 @@ class OrgResolutionService {
 	 *
 	 * A placement in a unit the employee manages themself resolves the
 	 * manager of the nearest unit above it managed by someone else
-	 * ({@see managerUserIdFrom()}), so nobody is their own manager.
+	 * ({@see managerUserIdFrom()}), so nobody is their own manager. The
+	 * climb never leaves the placement unit's administration.
 	 *
 	 * A hop that dead-ends (no unit, unmanaged unit, unresolvable manager
 	 * Employee, manager without a Nextcloud account) contributes nothing —
@@ -143,7 +144,8 @@ class OrgResolutionService {
 	 *
 	 * Null when the walk dead-ends: an unmanaged unit, an unresolvable
 	 * manager Employee, a manager without an account, a root or dangling
-	 * parent, or a unit already visited (a loop in the tree).
+	 * parent, a unit already visited (a loop in the tree), or a unit
+	 * outside the placement unit's administration.
 	 *
 	 * @param string $unitId The placement's unit.
 	 * @param array{employeeId: string, ownUserId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
@@ -154,10 +156,11 @@ class OrgResolutionService {
 	 */
 	private function managerUserIdFrom(string $unitId, array $chain): ?string {
 		$visited = [];
+		$administrationId = $this->administrationOf($chain['unitsById'][$unitId] ?? null);
 		while ($unitId !== '' && isset($visited[$unitId]) === false) {
 			$visited[$unitId] = true;
 			$unit = ($chain['unitsById'][$unitId] ?? null);
-			if (is_array($unit) === false) {
+			if (is_array($unit) === false || $this->leavesAdministration(unit: $unit, administrationId: $administrationId) === true) {
 				return null;
 			}
 
@@ -171,6 +174,39 @@ class OrgResolutionService {
 
 		return null;
 	}//end managerUserIdFrom()
+
+	/**
+	 * Whether a unit lies outside the administration the climb started in.
+	 * A placement unit without an administration sets no boundary; with
+	 * one, a unit in another administration or without one is outside it.
+	 *
+	 * @param array<string, mixed> $unit The unit the walk reached.
+	 * @param string $administrationId The placement unit's administration, '' when it has none.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/manager-climb-stays-in-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	private function leavesAdministration(array $unit, string $administrationId): bool {
+		return $administrationId !== '' && $this->administrationOf($unit) !== $administrationId;
+	}//end leavesAdministration()
+
+	/**
+	 * A unit's administration, '' when the unit does not resolve or has none.
+	 *
+	 * @param mixed $unit The unit row.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/manager-climb-stays-in-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	private function administrationOf(mixed $unit): string {
+		if (is_array($unit) === false) {
+			return '';
+		}
+
+		return trim((string)($unit['administrationId'] ?? ''));
+	}//end administrationOf()
 
 	/**
 	 * Whether a unit manager is the employee themself: the same Employee

@@ -645,4 +645,34 @@ class NlOrgChecksTest extends TestCase {
 
 	}//end testASelfManagedChainUpToTheRootIsVacuous()
 
+	/**
+	 * A manager above the self-managed unit in another administration is
+	 * not the employee's manager, so a self stamp passes vacuously and a
+	 * stamp naming that manager is not confirmed either.
+	 *
+	 * @return void
+	 */
+	public function testAParentManagerInAnotherAdministrationResolvesNoManager(): void {
+		$context = $this->managerContext(
+			['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '']]],
+			[
+				'orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-jansen', 'parentUnitId' => 'orgunit-directie', 'administrationId' => 'ADM-1'],
+				'orgunit-directie' => ['id' => 'orgunit-directie', 'managerId' => 'employee-degroot', 'parentUnitId' => '', 'administrationId' => 'ADM-2'],
+			],
+			[
+				'employee-jansen' => ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin'],
+				'employee-degroot' => ['id' => 'employee-degroot', 'nextcloudUserId' => 'pieter'],
+			]
+		);
+
+		$this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($this->managerScopedRecord(['managerUserId' => 'admin']), $context));
+
+		$context['related']['OrgUnit']['byId']['orgunit-directie']['administrationId'] = 'ADM-1';
+		$this->assertFalse(
+			($this->timesheetChecks['nl-mss-manager-consistency'])($this->managerScopedRecord(['managerUserId' => 'admin']), $context),
+			'Inside one administration the manager above still resolves.'
+		);
+
+	}//end testAParentManagerInAnotherAdministrationResolvesNoManager()
+
 }//end class
