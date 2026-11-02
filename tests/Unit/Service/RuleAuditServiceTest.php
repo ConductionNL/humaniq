@@ -1008,8 +1008,14 @@ class RuleAuditServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testMismatchingManagerStampIsFlaggedThroughAudit(): void {
+		// jansen manages Consultancy, so the chain climbs to Directie,
+		// managed here by devries.
 		$rows = $this->seededMssRows();
+		$rows['Employee'][1]['nextcloudUserId'] = 'devries';
+		$rows['OrgUnit'][0]['managerId'] = 'employee-devries';
 		$rows['Timesheet'][0]['managerUserId'] = 'someone-else';
+		$rows['Expense'][0]['managerUserId'] = 'devries';
+		$rows['LeaveRequest'][0]['managerUserId'] = 'devries';
 
 		$service = $this->serviceWithRows($rows);
 		$report = $service->audit(['jurisdiction' => 'NL']);
@@ -1019,7 +1025,7 @@ class RuleAuditServiceTest extends TestCase {
 			$byRule[$entry['ruleId']] = $entry['count'];
 		}
 
-		$this->assertSame(1, ($byRule['nl-mss-manager-consistency'] ?? 0));
+		$this->assertSame(1, ($byRule['nl-mss-manager-consistency'] ?? 0), 'Only the timesheet mismatches; the expense and leave request name the manager above.');
 
 	}//end testMismatchingManagerStampIsFlaggedThroughAudit()
 
