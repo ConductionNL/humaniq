@@ -10,6 +10,7 @@
  look; this file only fills its sections.
 
  @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
+ @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
 -->
 <template>
 	<div class="humaniq-admin">
@@ -65,6 +66,27 @@
 						{{ t('humaniq', 'The groups are fixed: OpenRegister guards the sensitive fields by these group names. Add people to a group under Users and groups.') }}
 					</p>
 				</CnSettingsSection>
+
+				<!-- Which expense categories employees may claim. The server refuses
+				     a claim in a category that is off. -->
+				<CnSettingsSection
+					:name="t('humaniq', 'Expense categories')"
+					:description="t('humaniq', 'Choose what employees may claim. A claim in a category that is off cannot be made or submitted.')"
+					data-testid="humaniq-admin-expense-categories">
+					<NcCheckboxRadioSwitch
+						v-for="category in expenseCategories"
+						:key="category.id"
+						type="switch"
+						:modelValue="category.allowed"
+						:disabled="savingCategories"
+						:data-category="category.id"
+						@update:modelValue="toggleCategory(category.id, $event)">
+						{{ categoryLabel(category.id) }}
+					</NcCheckboxRadioSwitch>
+					<p v-if="categoryError" class="humaniq-admin__note" role="alert">
+						{{ categoryError }}
+					</p>
+				</CnSettingsSection>
 			</div>
 		</CnAdminSettingsShell>
 	</div>
@@ -72,10 +94,15 @@
 
 <script>
 import { CnAdminSettingsShell, CnSettingsSection } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
+import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { defineComponent } from 'vue'
+import { allowedAfterToggle, loadCategories, saveCategories } from './expenseCategories.js'
+
+const CATEGORIES_URL = generateUrl('/apps/humaniq/api/expense-categories')
 
 export default defineComponent({
 	name: 'AdminSettings',
@@ -83,11 +110,29 @@ export default defineComponent({
 	components: {
 		CnAdminSettingsShell,
 		CnSettingsSection,
+		NcCheckboxRadioSwitch,
 	},
 
 	data() {
 		return {
 			roleGroups: loadState('humaniq', 'roleGroups', {}),
+			expenseCategories: [],
+			savingCategories: false,
+			categoryError: '',
+		}
+	},
+
+	/**
+	 * Read the expense category switches.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
+	 */
+	async mounted() {
+		try {
+			this.expenseCategories = await loadCategories(axios, CATEGORIES_URL)
+		} catch (e) {
+			this.categoryError = t('humaniq', 'The expense categories could not be loaded.')
 		}
 	},
 
@@ -151,6 +196,46 @@ export default defineComponent({
 
 	methods: {
 		t,
+
+		/**
+		 * The label of an expense category.
+		 *
+		 * @param {string} id The category id.
+		 * @return {string}
+		 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
+		 */
+		categoryLabel(id) {
+			const labels = {
+				travel: t('humaniq', 'Travel'),
+				accommodation: t('humaniq', 'Accommodation'),
+				meals: t('humaniq', 'Meals'),
+				supplies: t('humaniq', 'Supplies'),
+				software: t('humaniq', 'Software'),
+				training: t('humaniq', 'Training'),
+				other: t('humaniq', 'Other'),
+			}
+			return labels[id] ?? id
+		},
+
+		/**
+		 * Save one switch; the page shows what the server stored.
+		 *
+		 * @param {string} id The category.
+		 * @param {boolean} on Whether it is now on.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
+		 */
+		async toggleCategory(id, on) {
+			this.savingCategories = true
+			this.categoryError = ''
+			try {
+				this.expenseCategories = await saveCategories(axios, CATEGORIES_URL, allowedAfterToggle(this.expenseCategories, id, on))
+			} catch (e) {
+				this.categoryError = t('humaniq', 'The expense categories could not be saved.')
+			} finally {
+				this.savingCategories = false
+			}
+		},
 
 		/**
 		 * The group id the server reported for a role, or the fixed id.

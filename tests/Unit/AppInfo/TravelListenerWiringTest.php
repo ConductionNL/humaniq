@@ -66,6 +66,7 @@ namespace OCA\OpenRegister\Event {
 namespace OCA\Humaniq\Tests\Unit\AppInfo {
 
 	use OCA\Humaniq\AppInfo\Application;
+	use OCA\Humaniq\Listener\ExpenseCategoryGuardListener;
 	use OCA\Humaniq\Listener\ExpenseManagerStampListener;
 	use OCA\Humaniq\Listener\TravelAmountListener;
 	use OCA\OpenRegister\Event\ObjectEventSubscription;
@@ -130,6 +131,7 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 			foreach (['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\OpenRegister\Event\ObjectUpdatingEvent'] as $event) {
 				self::assertSame(ExpenseManagerStampListener::class, end($expense[$event]), $event);
 				self::assertSame(1, count(array_keys($expense[$event], ExpenseManagerStampListener::class, true)), $event);
+				self::assertContains(ExpenseCategoryGuardListener::class, $expense[$event], $event);
 			}
 
 			$boot = new \ReflectionMethod(Application::class, 'boot');
