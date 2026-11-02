@@ -159,32 +159,53 @@ class LeaveCalendarService {
 		$target = new CalendarTarget(backend: $backend, calendarId: $calendar['id'], principal: $principal, calendarUri: $uri);
 		$run = new LeaveCalendarRun(target: $target, employeesById: $this->buildEmployeeIndex(), from: $from);
 
-		$liveIds = ['leave' => [], 'sick' => []];
-
-		foreach ($this->loadAll(self::LEAVE_SCHEMA) as $leave) {
-			$id = $this->sourceId($leave);
-			if ($id === '') {
-				continue;
-			}
-
-			$liveIds['leave'][] = $id;
-			$this->syncLeave($run, $leave);
-		}
-
-		foreach ($this->loadAll(self::SICK_SCHEMA) as $sick) {
-			$id = $this->sourceId($sick);
-			if ($id === '') {
-				continue;
-			}
-
-			$liveIds['sick'][] = $id;
-			$this->syncSick($run, $sick);
+		$liveIds = ['leave' => $this->syncSources($run, 'leave'), 'sick' => $this->syncSources($run, 'sick')];
+		if ($liveIds['leave'] === null || $liveIds['sick'] === null) {
+			$this->logger->warning('LeaveCalendarService: weesreconciliatie overgeslagen; het register kon niet volledig worden gelezen.');
+			return $run->results();
 		}
 
 		$this->reconcileOrphans($run, $liveIds);
 
 		return $run->results();
 	}//end sync()
+
+	/**
+	 * Sync every LeaveRequest (`leave`) or SickLeaveCase (`sick`) in the
+	 * register and return the ids seen, or null when the register could not
+	 * be read, so the orphan reconciliation never runs on a missing id set.
+	 *
+	 * @param LeaveCalendarRun $run The sync run.
+	 * @param string $type `leave` or `sick`.
+	 *
+	 * @return array<int, string>|null
+	 *
+	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-005
+	 */
+	private function syncSources(LeaveCalendarRun $run, string $type): ?array {
+		$rows = $this->tryLoadAll($type === 'leave' ? self::LEAVE_SCHEMA : self::SICK_SCHEMA);
+		if ($rows === null) {
+			return null;
+		}
+
+		$ids = [];
+		foreach ($rows as $row) {
+			$id = $this->sourceId($row);
+			if ($id === '') {
+				continue;
+			}
+
+			$ids[] = $id;
+			if ($type === 'leave') {
+				$this->syncLeave($run, $row);
+				continue;
+			}
+
+			$this->syncSick($run, $row);
+		}
+
+		return $ids;
+	}//end syncSources()
 
 	/**
 	 * The id of a LeaveRequest or SickLeaveCase row, or '' when it has none.
@@ -914,6 +935,18 @@ class LeaveCalendarService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function loadAll(string $schema): array {
+		return ($this->tryLoadAll($schema) ?? []);
+	}//end loadAll()
+
+	/**
+	 * Load and normalise every object of a schema, or null (logged) when the
+	 * register cannot be read.
+	 *
+	 * @param string $schema The schema name.
+	 *
+	 * @return array<int, array<string, mixed>>|null
+	 */
+	private function tryLoadAll(string $schema): ?array {
 		try {
 			$rows = $this->objectService()
 				->setRegister($this->register())
@@ -921,11 +954,11 @@ class LeaveCalendarService {
 				->findAll(['limit' => self::LIMIT]);
 		} catch (\Throwable $e) {
 			$this->logger->warning('LeaveCalendarService: kon ' . $schema . ' niet laden: ' . $e->getMessage());
-			return [];
+			return null;
 		}
 
 		return $this->normaliseRows($rows);
-	}//end loadAll()
+	}//end tryLoadAll()
 
 	/**
 	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
