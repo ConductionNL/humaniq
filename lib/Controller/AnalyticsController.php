@@ -119,8 +119,7 @@ class AnalyticsController extends Controller {
 				$metric,
 				$period,
 				$access['administrationId'],
-				($orgUnitId === '') ? null : $orgUnitId,
-				$access['minimumMembers']
+				($orgUnitId === '') ? null : ['id' => $orgUnitId, 'minimumMembers' => $access['minimumMembers']]
 			);
 
 			// The Dashboard's KPI tiles read a headline number from this same
