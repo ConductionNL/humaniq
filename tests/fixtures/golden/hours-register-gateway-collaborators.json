@@ -42,6 +42,7 @@
     "OCA\\Humaniq\\Notification\\CaseManagerResolver::$gateway",
     "OCA\\Humaniq\\Repair\\SettleShippedExampleClaim::$gateway",
     "OCA\\Humaniq\\Service\\AccessRevocationService::$gateway",
+    "OCA\\Humaniq\\Service\\AgendaReadAccess::$store",
     "OCA\\Humaniq\\Service\\AnnouncementService::$gateway",
     "OCA\\Humaniq\\Service\\ApprovalsInboxService::$gateway",
     "OCA\\Humaniq\\Service\\AwfReviewService::$gateway",
