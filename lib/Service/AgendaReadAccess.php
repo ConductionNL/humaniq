@@ -5,13 +5,16 @@
  *
  * Who may read which agenda, and how much of it. An employee's agenda is open
  * to the employee, their managers, HR and the colleagues placed in a unit with
- * them. An org unit's agenda is open to its members, its manager and HR.
- * Interviews and secondment hours stay with the employee, their managers and
- * HR: a colleague sees the other entries without them.
+ * them. An org unit's agenda is open to its members, its manager, the managers
+ * of the units above it, a deputy standing in for one of those managers today,
+ * and HR. Interviews and secondment hours stay with the employee, their
+ * managers and HR: a colleague sees the other entries without them. The
+ * availability and capacity answers follow the same rule.
  *
  * The viewer is the session user, and every role and placement is read from
  * the register and the Nextcloud groups, never from the request. Placements
- * count when they are active today, whatever window the agenda covers.
+ * count when they are active today, whatever window the agenda covers, and a
+ * placement whose start or end date cannot be read does not count.
  *
  * @category Service
  * @package  OCA\Humaniq\Service
@@ -59,19 +62,27 @@ class AgendaReadAccess {
 	public const COLLEAGUE_HIDDEN_FIELDS = ['hoursPerWeek'];
 
 	/**
+	 * Active placements and an employee's managers; stateless rules.
+	 *
+	 * @var OrgResolutionService
+	 */
+	private readonly OrgResolutionService $orgResolution;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IUserSession $userSession The signed-in user.
 	 * @param RecordStoreInterface $store Employees, units and placements.
-	 * @param OrgResolutionService $orgResolution Active placements and an employee's managers.
 	 * @param HumaniqRoles $roles The HR check.
+	 * @param ManagerDeputies $deputies The managers a user stands in for today.
 	 */
 	public function __construct(
 		private readonly IUserSession $userSession,
 		private readonly RecordStoreInterface $store,
-		private readonly OrgResolutionService $orgResolution,
 		private readonly HumaniqRoles $roles,
+		private readonly ManagerDeputies $deputies,
 	) {
+		$this->orgResolution = new OrgResolutionService();
 
 	}//end __construct()
 
@@ -88,7 +99,7 @@ class AgendaReadAccess {
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
 	 */
 	public function grant(string $subjectType, string $subjectId): ?array {
-		$viewer = (string)$this->userSession->getUser()?->getUID();
+		$viewer = $this->viewer();
 		if ($viewer === '') {
 			return null;
 		}
@@ -97,13 +108,51 @@ class AgendaReadAccess {
 			return ['all' => true, 'full' => []];
 		}
 
-		$org = $this->orgFor($viewer);
+		$org = $this->view($viewer);
 		if ($subjectType === 'employee') {
 			return $this->employeeGrant(employeeId: $subjectId, org: $org);
 		}
 
 		return $this->unitGrant(orgUnitId: $subjectId, org: $org);
 	}//end grant()
+
+	/**
+	 * The employees an availability or capacity answer may cover for the
+	 * session user. With a unit: its members, when the user may read the
+	 * unit's agenda. Without one: everybody for HR, otherwise the employees
+	 * whose agenda the user may read. Null when that leaves nobody.
+	 *
+	 * @param string $orgUnitId The unit asked for, or '' for none.
+	 * @param DateTimeImmutable $onDate The date a unit placement must be active on.
+	 *
+	 * @return array<int, string>|null The employee ids, or null when refused.
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function employeeScope(string $orgUnitId, DateTimeImmutable $onDate): ?array {
+		if ($orgUnitId !== '') {
+			return $this->grant(subjectType: 'orgUnit', subjectId: $orgUnitId) === null ? null : $this->members(orgUnitId: $orgUnitId, onDate: $onDate);
+		}
+
+		$viewer = $this->viewer();
+		if ($viewer === '') {
+			return null;
+		}
+
+		$org = $this->view($viewer);
+		if ($this->roles->isHr($viewer) === true) {
+			return $org->employeeIds();
+		}
+
+		$visible = [];
+		foreach ($org->employeeIds() as $employeeId) {
+			if ($this->employeeGrant(employeeId: $employeeId, org: $org) !== null) {
+				$visible[] = $employeeId;
+			}
+		}
+
+		return $visible === [] ? null : $visible;
+	}//end employeeScope()
 
 	/**
 	 * The entries a grant lets the viewer see: a colleague's interviews and
@@ -162,60 +211,54 @@ class AgendaReadAccess {
 
 	/**
 	 * Self and managers see an employee in full, a colleague in a shared unit
-	 * sees the trimmed agenda, anyone else nothing.
+	 * sees the trimmed agenda, anyone else nothing. A subject without an
+	 * Employee record is nobody's to see.
 	 *
 	 * @param string $employeeId The employee asked for.
-	 * @param array<string, mixed> $org The viewer and the org indexes, from {@see orgFor()}.
+	 * @param AgendaOrgView $org The viewer's view of the organisation.
 	 *
 	 * @return array{all: bool, full: array<int, string>}|null
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
 	 */
-	private function employeeGrant(string $employeeId, array $org): ?array {
-		if ($this->seesInFull(employeeId: $employeeId, org: $org) === true) {
+	private function employeeGrant(string $employeeId, AgendaOrgView $org): ?array {
+		if ($org->hasEmployee($employeeId) === false) {
+			return null;
+		}
+
+		if ($org->isSelfOrManagerOf($employeeId) === true) {
 			return ['all' => false, 'full' => [$employeeId]];
 		}
 
-		$shared = array_intersect(
-			$this->unitsOf(employeeIds: [$employeeId], org: $org),
-			$this->unitsOf(employeeIds: $org['viewerEmployeeIds'], org: $org)
-		);
-		if ($shared === []) {
-			return null;
-		}
-
-		return ['all' => false, 'full' => []];
+		return $org->isColleagueOf($employeeId) === true ? ['all' => false, 'full' => []] : null;
 	}//end employeeGrant()
 
 	/**
-	 * The unit's manager sees it in full, a member sees it with their own and
-	 * their reports' entries in full, anyone else nothing.
+	 * The managers of the unit and of the units above it, and a deputy
+	 * standing in for one of them today, see it in full. A member sees it
+	 * with their own and their reports' entries in full. Anyone else nothing.
 	 *
 	 * @param string $orgUnitId The unit asked for.
-	 * @param array<string, mixed> $org The viewer and the org indexes, from {@see orgFor()}.
+	 * @param AgendaOrgView $org The viewer's view of the organisation.
 	 *
 	 * @return array{all: bool, full: array<int, string>}|null
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
 	 */
-	private function unitGrant(string $orgUnitId, array $org): ?array {
-		$unit = ($org['unitsById'][$orgUnitId] ?? null);
-		if (is_array($unit) === false) {
-			return null;
-		}
-
-		$managerId = trim((string)($unit['managerId'] ?? ''));
-		if ($managerId !== '' && in_array($managerId, $org['viewerEmployeeIds'], true) === true) {
+	private function unitGrant(string $orgUnitId, AgendaOrgView $org): ?array {
+		$accounts = $this->deputies->managersCoveredBy($this->viewer(), $org->today());
+		$accounts[] = $this->viewer();
+		if ($org->isManagedBy(orgUnitId: $orgUnitId, accounts: $accounts) === true) {
 			return ['all' => true, 'full' => []];
 		}
 
-		if (in_array($orgUnitId, $this->unitsOf(employeeIds: $org['viewerEmployeeIds'], org: $org), true) === false) {
+		if ($org->isMemberOf($orgUnitId) === false) {
 			return null;
 		}
 
 		$full = [];
-		foreach ($this->members(orgUnitId: $orgUnitId, onDate: $org['today']) as $memberId) {
-			if ($this->seesInFull(employeeId: $memberId, org: $org) === true) {
+		foreach ($this->members(orgUnitId: $orgUnitId, onDate: new DateTimeImmutable($org->today())) as $memberId) {
+			if ($org->isSelfOrManagerOf($memberId) === true) {
 				$full[] = $memberId;
 			}
 		}
@@ -224,104 +267,28 @@ class AgendaReadAccess {
 	}//end unitGrant()
 
 	/**
-	 * Whether the viewer is the employee or one of the employee's managers.
+	 * The session user's id, '' when nobody is signed in.
 	 *
-	 * @param string $employeeId The employee.
-	 * @param array<string, mixed> $org The viewer and the org indexes, from {@see orgFor()}.
-	 *
-	 * @return bool
-	 *
-	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 * @return string
 	 */
-	private function seesInFull(string $employeeId, array $org): bool {
-		if (in_array($employeeId, $org['viewerEmployeeIds'], true) === true) {
-			return true;
-		}
-
-		$managers = $this->orgResolution->resolveManagerUserIds(
-			employeeId: $employeeId,
-			assignmentsByEmployeeId: $org['assignmentsByEmployeeId'],
-			unitsById: $org['unitsById'],
-			employeesById: $org['employeesById'],
-			onDate: $org['today']->format('Y-m-d')
-		);
-
-		return in_array($org['viewer'], $managers, true);
-	}//end seesInFull()
+	private function viewer(): string {
+		return (string)$this->userSession->getUser()?->getUID();
+	}//end viewer()
 
 	/**
-	 * The units the employees are placed in today.
-	 *
-	 * @param array<int, string> $employeeIds The employees.
-	 * @param array<string, mixed> $org The viewer and the org indexes, from {@see orgFor()}.
-	 *
-	 * @return array<int, string> The unit ids.
-	 *
-	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
-	 */
-	private function unitsOf(array $employeeIds, array $org): array {
-		$units = [];
-		foreach ($employeeIds as $employeeId) {
-			foreach (($org['assignmentsByEmployeeId'][$employeeId] ?? []) as $assignment) {
-				$unitId = trim((string)($assignment['orgUnitId'] ?? ''));
-				if ($unitId !== '' && $this->orgResolution->isActiveOn($assignment, $org['today']->format('Y-m-d')) === true) {
-					$units[$unitId] = $unitId;
-				}
-			}
-		}
-
-		return array_values($units);
-	}//end unitsOf()
-
-	/**
-	 * The viewer, their Employee records and the org indexes, read once.
+	 * The viewer's view of the organisation, read once per question.
 	 *
 	 * @param string $viewer The session user.
 	 *
-	 * @return array<string, mixed>
-	 *
-	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 * @return AgendaOrgView
 	 */
-	private function orgFor(string $viewer): array {
-		$employeesById = $this->indexById($this->store->loadAll('Employee'));
-		$viewerEmployeeIds = [];
-		foreach ($employeesById as $id => $employee) {
-			if (trim((string)($employee['nextcloudUserId'] ?? '')) === $viewer) {
-				$viewerEmployeeIds[] = (string)$id;
-			}
+	private function view(string $viewer): AgendaOrgView {
+		$rows = [];
+		foreach (['Employee', 'OrgUnit', 'OrgAssignment'] as $schema) {
+			$rows[$schema] = $this->store->loadAll($schema);
 		}
 
-		$assignmentsByEmployeeId = [];
-		foreach ($this->store->loadAll('OrgAssignment') as $assignment) {
-			$assignmentsByEmployeeId[trim((string)($assignment['employeeId'] ?? ''))][] = $assignment;
-		}
-
-		return [
-			'viewer' => $viewer,
-			'viewerEmployeeIds' => $viewerEmployeeIds,
-			'employeesById' => $employeesById,
-			'unitsById' => $this->indexById($this->store->loadAll('OrgUnit')),
-			'assignmentsByEmployeeId' => $assignmentsByEmployeeId,
-			'today' => new DateTimeImmutable('today'),
-		];
-	}//end orgFor()
-
-	/**
-	 * Key rows by their id.
-	 *
-	 * @param array<int, array<string, mixed>> $rows The rows.
-	 *
-	 * @return array<string, array<string, mixed>>
-	 */
-	private function indexById(array $rows): array {
-		$index = [];
-		foreach ($rows as $row) {
-			$index[trim((string)($row['id'] ?? ''))] = $row;
-		}
-
-		unset($index['']);
-
-		return $index;
-	}//end indexById()
+		return new AgendaOrgView(viewer: $viewer, rows: $rows);
+	}//end view()
 
 }//end class
