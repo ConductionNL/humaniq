@@ -17,9 +17,10 @@
  * manager. Two writes keep the stored values instead: the approve write
  * (stored `submitted`, saved `approved`) and any write of a claim stored as
  * approved or reimbursed, so a decided claim keeps the identity it was
- * decided under. Which case applies is read from the STORED status, never
- * from the client's. humaniq's own writes (the payroll run, the restamp
- * repair) pass untouched.
+ * decided under. On those two writes the claim also keeps its stored
+ * `employeeId`, because payroll pays a claim to that employee. Which case
+ * applies is read from the STORED status, never from the client's.
+ * humaniq's own writes (the payroll run, the restamp repair) pass untouched.
  *
  * @category Listener
  * @package  OCA\Humaniq\Listener
@@ -35,6 +36,7 @@
  *
  * @spec openspec/changes/restamp-open-manager-records/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
  * @spec openspec/changes/restamp-open-manager-records/specs/humaniq-expenses/spec.md#Requirement:-An-expense-claim-of-any-category-SHALL-be-approved-the-way-hours-are
+ * @spec openspec/changes/approved-claim-keeps-its-employee/specs/humaniq-expenses/spec.md#Requirement:-An-approved-expense-claim-SHALL-keep-its-employee
  */
 
 declare(strict_types=1);
@@ -117,13 +119,16 @@ class ExpenseManagerStampListener implements IEventListener {
 
 	/**
 	 * The identity stamps for a claim: derived from the Employee, or the
-	 * stored values for a decided claim, the approve write, and an Employee
+	 * stored values (with the stored employee) for a decided claim and the
+	 * approve write, or the stored values for an Employee
 	 * that cannot be read (a claim without an employee has none).
 	 *
 	 * @param array<string, mixed> $claim The claim as it will be saved.
 	 * @param array<string, mixed> $stored The claim as stored, [] on create.
 	 *
 	 * @return array<string, string|null>
+	 *
+	 * @spec openspec/changes/approved-claim-keeps-its-employee/specs/humaniq-expenses/spec.md#Requirement:-An-approved-expense-claim-SHALL-keep-its-employee
 	 */
 	private function stampsFor(array $claim, array $stored): array {
 		$kept = [
@@ -133,7 +138,7 @@ class ExpenseManagerStampListener implements IEventListener {
 		];
 
 		if ($this->keepsStoredIdentity(claim: $claim, stored: $stored) === true) {
-			return $kept;
+			return array_merge($kept, ['employeeId' => ($stored['employeeId'] ?? null)]);
 		}
 
 		$employeeId = trim((string)($claim['employeeId'] ?? ($stored['employeeId'] ?? '')));
