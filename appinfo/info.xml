@@ -41,7 +41,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl.
     ]]></description>
-    <version>0.2.13-unstable.20261103000000</version>
+    <version>0.2.13-unstable.20261103120000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Humaniq</namespace>
@@ -247,6 +247,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  Runs AFTER MigrateHoursProcess. Idempotent: only a stamp that
                  differs from the shared resolution is written. -->
             <step>OCA\Humaniq\Repair\RestampOpenManagerRecords</step>
+            <!-- settle-the-shipped-example-claim: the old seed shipped the example
+                 travel claim approved on the payroll route without a run. Marks it
+                 reimbursed on the direct route, once, only while it still holds the
+                 shipped content. Runs AFTER InitializeRegister. -->
+            <step>OCA\Humaniq\Repair\SettleShippedExampleClaim</step>
             <!-- payroll-run-as-a-flow (design.md D8): the v1 Loonrun gate read
                  review.outcome where the engine writes json.review.outcome, so
                  every approval took the rejected exit. The schema re-import
@@ -350,6 +355,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  Runs AFTER MigrateHoursProcess. Idempotent: only a stamp that
                  differs from the shared resolution is written. -->
             <step>OCA\Humaniq\Repair\RestampOpenManagerRecords</step>
+            <!-- settle-the-shipped-example-claim: the old seed shipped the example
+                 travel claim approved on the payroll route without a run. Marks it
+                 reimbursed on the direct route, once, only while it still holds the
+                 shipped content. Runs AFTER InitializeRegister. -->
+            <step>OCA\Humaniq\Repair\SettleShippedExampleClaim</step>
             <!-- payroll-run-as-a-flow (design.md D8): on a fresh install the
                  flow imports already corrected and freshly published, so this
                  reports a no-op — it exists here for the rename path, where
