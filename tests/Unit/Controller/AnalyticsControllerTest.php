@@ -282,7 +282,7 @@ class AnalyticsControllerTest extends TestCase {
 
 			$analyticsService = $this->createMock(AnalyticsService::class);
 			$analyticsService->expects($this->once())->method('getTrends')
-				->with('absence-rate', 'quarter', 'ADM-001', 'belastingen', 0)
+				->with('absence-rate', 'quarter', 'ADM-001', ['id' => 'belastingen', 'minimumMembers' => 0])
 				->willReturn(['metric' => 'absence-rate', 'period' => 'quarter', 'series' => []]);
 
 			$figures = $this->createMock(DepartmentFiguresService::class);
@@ -320,7 +320,7 @@ class AnalyticsControllerTest extends TestCase {
 
 		$analyticsService = $this->createMock(AnalyticsService::class);
 		$analyticsService->expects($this->once())->method('getTrends')
-			->with('absence-rate', 'quarter', 'ADM-001', 'burgerzaken', 5)
+			->with('absence-rate', 'quarter', 'ADM-001', ['id' => 'burgerzaken', 'minimumMembers' => 5])
 			->willReturn(['metric' => 'absence-rate', 'period' => 'quarter', 'series' => []]);
 
 		$controller = $this->buildController(

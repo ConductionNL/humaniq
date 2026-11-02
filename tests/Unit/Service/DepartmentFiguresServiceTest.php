@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\AbsenceRateService;
+use OCA\Humaniq\Service\AnalyticsCalculators;
 use OCA\Humaniq\Service\AnalyticsService;
 use OCA\Humaniq\Service\DepartmentFigures;
 use OCA\Humaniq\Service\DepartmentFiguresService;
@@ -268,7 +269,7 @@ class DepartmentFiguresServiceTest extends TestCase {
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 		$settings->method('getDepartmentFiguresMinimumMembers')->willReturn($minimum);
 
-		$analytics = new AnalyticsService($container, $settings, new AbsenceRateService(), new Percentile(), $this->createMock(LoggerInterface::class));
+		$analytics = new AnalyticsService($container, $settings, $this->createMock(LoggerInterface::class), new AnalyticsCalculators(new AbsenceRateService(), new Percentile()));
 
 		return new DepartmentFiguresService($analytics, new UnitMembership(), new DepartmentFigures(), new AbsenceRateService(), $settings);
 	}//end buildService()
