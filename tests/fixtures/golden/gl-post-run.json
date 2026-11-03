@@ -2091,6 +2091,52 @@
             }
         ]
     },
+    "stale pending with a stored journalNumber, padded period and administration, adopts": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Bestaande shillinq-journaalpost overgenomen (crash-recovery).",
+            "glPostId": "g-3",
+            "journalEntryId": "je-9"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": "g-3",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "g-3",
+                    "payrollRunId": "run-1",
+                    "status": "posted",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "journalEntryId": "je-9",
+                    "postedAt": "<now>",
+                    "errorMessage": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": " 2026-05 ",
+                    "administrationId": " ADM-001 ",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
     "already posted": {
         "outcome": {
             "runId": "run-1",

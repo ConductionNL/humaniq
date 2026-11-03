@@ -123,6 +123,13 @@ class PayrollGLPostRunGoldenTest extends TestCase {
 				'JournalEntry' => [['id' => 'je-9', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001']],
 			],
 		];
+		$cases['stale pending with a stored journalNumber, padded period and administration, adopts'] = [
+			'run' => $run(['period' => ' 2026-05 ', 'administrationId' => ' ADM-001 ']),
+			'rows' => [
+				'PayrollGLPost' => [['id' => 'g-3', 'payrollRunId' => 'run-1', 'status' => 'pending', 'journalNumber' => 'HRMQ-LOON-2026-04-ADM-OLD']],
+				'JournalEntry' => [['id' => 'je-old', 'journalNumber' => 'HRMQ-LOON-2026-04-ADM-OLD'], ['id' => 'je-9', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001']],
+			],
+		];
 		$cases['already posted'] = ['run' => $run(), 'rows' => ['PayrollGLPost' => [['id' => 'g-2', 'payrollRunId' => 'run-1', 'status' => 'posted', 'journalEntryId' => 'je-1']]]];
 		$cases['shillinq not installed'] = ['run' => $run(), 'rows' => [], 'installed' => false];
 		$cases['inconsistent totals'] = ['run' => $run(['totalNet' => 9999.0]), 'rows' => []];
