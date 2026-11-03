@@ -221,7 +221,7 @@ final class AgendaOrgView {
 		$visited = [];
 		while (isset($this->units[$orgUnitId]) === true && isset($visited[$orgUnitId]) === false) {
 			$unit = $this->units[$orgUnitId];
-			if ($this->orgResolution->leavesAdministration($unit, $boundary) === true) {
+			if ($visited !== [] && $this->orgResolution->leavesAdministration($unit, $boundary) === true) {
 				return false;
 			}
 
