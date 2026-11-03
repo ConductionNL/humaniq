@@ -76,11 +76,8 @@ class RosterCheckCommand extends Command {
 	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-005
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$rosterOption = $input->getOption('roster');
-		$rosterId = (is_string($rosterOption) === true) ? trim($rosterOption) : '';
-
-		$periodOption = $input->getOption('period');
-		$period = (is_string($periodOption) === true) ? trim($periodOption) : '';
+		$rosterId = self::trimmedOption(input: $input, name: 'roster');
+		$period = self::trimmedOption(input: $input, name: 'period');
 
 		if ($rosterId === '' && $period === '') {
 			$output->writeln('<error>--roster of --period is verplicht.</error>');
@@ -93,6 +90,37 @@ class RosterCheckCommand extends Command {
 
 		$output->writeln('<info>Humaniq roster check</info>');
 
+		return $this->printReport(output: $output, report: $report);
+	}//end execute()
+
+	/**
+	 * A string option, trimmed; '' when it is absent or not a string.
+	 *
+	 * @param InputInterface $input Console input.
+	 * @param string $name The option name.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-005
+	 */
+	private static function trimmedOption(InputInterface $input, string $name): string {
+		$value = $input->getOption($name);
+
+		return (is_string($value) === true) ? trim($value) : '';
+	}//end trimmedOption()
+
+	/**
+	 * Print a check report and answer the exit code: 1 when nothing could be
+	 * checked or a mandatory rule is broken, 0 otherwise.
+	 *
+	 * @param OutputInterface $output Console output.
+	 * @param array<string, mixed> $report The check report.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-005
+	 */
+	private function printReport(OutputInterface $output, array $report): int {
 		// A check that could not read anything is NOT a check that found
 		// nothing. Without this branch both print "rosters gecontroleerd: 0"
 		// and the operator reads a compliant estate off a register that is not
@@ -117,27 +145,41 @@ class RosterCheckCommand extends Command {
 		}
 
 		foreach ($report['violations'] as $violation) {
-			$line = sprintf(
-				'    %s %s [%s] %s: %s',
-				(string)$violation['objectType'],
-				(string)$violation['objectId'],
-				(string)$violation['severity'],
-				(string)$violation['ruleId'],
-				(string)$violation['statement']
-			);
-
-			if ((string)$violation['severity'] === 'mandatory') {
-				$output->writeln('<error>' . $line . '</error>');
-				continue;
-			}
-
-			$output->writeln('<comment>' . $line . '</comment>');
+			self::printViolation(output: $output, violation: $violation);
 		}
 
 		$output->writeln(sprintf('  %d overtreding(en), waarvan %d verplicht.', count($report['violations']), $report['mandatoryViolations']));
 
 		return $report['mandatoryViolations'] > 0 ? 1 : 0;
-	}//end execute()
+	}//end printReport()
+
+	/**
+	 * Print one violation, mandatory ones as errors.
+	 *
+	 * @param OutputInterface $output Console output.
+	 * @param array<string, mixed> $violation The violation.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-005
+	 */
+	private static function printViolation(OutputInterface $output, array $violation): void {
+		$line = sprintf(
+			'    %s %s [%s] %s: %s',
+			(string)$violation['objectType'],
+			(string)$violation['objectId'],
+			(string)$violation['severity'],
+			(string)$violation['ruleId'],
+			(string)$violation['statement']
+		);
+
+		if ((string)$violation['severity'] === 'mandatory') {
+			$output->writeln('<error>' . $line . '</error>');
+			return;
+		}
+
+		$output->writeln('<comment>' . $line . '</comment>');
+	}//end printViolation()
 
 	/**
 	 * Run the roster check for whichever selector the caller supplied.

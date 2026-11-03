@@ -1,0 +1,756 @@
+{
+    "roster | unresolved, no message": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  \u001b[37;41mHet humaniq-register is niet gevonden op deze instance.\u001b[39;49m",
+            "  \u001b[37;41mEr is NIETS gecontroleerd; dit is geen goedkeuring.\u001b[39;49m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-1",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "roster | unresolved, message": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  \u001b[37;41mRegister weg.\u001b[39;49m",
+            "  \u001b[37;41mEr is NIETS gecontroleerd; dit is geen goedkeuring.\u001b[39;49m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-1",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "roster | nothing found": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 0",
+            "  assignments gecontroleerd: 0",
+            "  \u001b[33mgeen roster gevonden.\u001b[39m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-1",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "roster | clean": {
+        "exit": 0,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 2",
+            "  assignments gecontroleerd: 14",
+            "  \u001b[32mgeen overtredingen — de roster voldoet aan het ATW-corpus.\u001b[39m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-1",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "roster | advisory only": {
+        "exit": 0,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 1",
+            "  assignments gecontroleerd: 3",
+            "\u001b[33m    RosterAssignment a1 [advisory] atw-a1: Rust a1\u001b[39m",
+            "  1 overtreding(en), waarvan 0 verplicht.",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-1",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "roster | mixed": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 3",
+            "  assignments gecontroleerd: 30",
+            "\u001b[37;41m    RosterAssignment m1 [mandatory] atw-m1: Rust m1\u001b[39;49m",
+            "\u001b[33m    RosterAssignment a2 [advisory] atw-a2: Rust a2\u001b[39m",
+            "\u001b[37;41m    RosterAssignment m3 [mandatory] atw-m3: Rust m3\u001b[39;49m",
+            "  3 overtreding(en), waarvan 2 verplicht.",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-1",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "roster wins over period | unresolved, no message": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  \u001b[37;41mHet humaniq-register is niet gevonden op deze instance.\u001b[39;49m",
+            "  \u001b[37;41mEr is NIETS gecontroleerd; dit is geen goedkeuring.\u001b[39;49m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-2",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "roster wins over period | unresolved, message": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  \u001b[37;41mRegister weg.\u001b[39;49m",
+            "  \u001b[37;41mEr is NIETS gecontroleerd; dit is geen goedkeuring.\u001b[39;49m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-2",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "roster wins over period | nothing found": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 0",
+            "  assignments gecontroleerd: 0",
+            "  \u001b[33mgeen roster gevonden.\u001b[39m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-2",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "roster wins over period | clean": {
+        "exit": 0,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 2",
+            "  assignments gecontroleerd: 14",
+            "  \u001b[32mgeen overtredingen — de roster voldoet aan het ATW-corpus.\u001b[39m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-2",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "roster wins over period | advisory only": {
+        "exit": 0,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 1",
+            "  assignments gecontroleerd: 3",
+            "\u001b[33m    RosterAssignment a1 [advisory] atw-a1: Rust a1\u001b[39m",
+            "  1 overtreding(en), waarvan 0 verplicht.",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-2",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "roster wins over period | mixed": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 3",
+            "  assignments gecontroleerd: 30",
+            "\u001b[37;41m    RosterAssignment m1 [mandatory] atw-m1: Rust m1\u001b[39;49m",
+            "\u001b[33m    RosterAssignment a2 [advisory] atw-a2: Rust a2\u001b[39m",
+            "\u001b[37;41m    RosterAssignment m3 [mandatory] atw-m3: Rust m3\u001b[39;49m",
+            "  3 overtreding(en), waarvan 2 verplicht.",
+            ""
+        ],
+        "calls": [
+            [
+                "checkRoster",
+                [
+                    "r-2",
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period | unresolved, no message": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  \u001b[37;41mHet humaniq-register is niet gevonden op deze instance.\u001b[39;49m",
+            "  \u001b[37;41mEr is NIETS gecontroleerd; dit is geen goedkeuring.\u001b[39;49m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-06",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period | unresolved, message": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  \u001b[37;41mRegister weg.\u001b[39;49m",
+            "  \u001b[37;41mEr is NIETS gecontroleerd; dit is geen goedkeuring.\u001b[39;49m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-06",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period | nothing found": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 0",
+            "  assignments gecontroleerd: 0",
+            "  \u001b[33mgeen roster gevonden.\u001b[39m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-06",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period | clean": {
+        "exit": 0,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 2",
+            "  assignments gecontroleerd: 14",
+            "  \u001b[32mgeen overtredingen — de roster voldoet aan het ATW-corpus.\u001b[39m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-06",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period | advisory only": {
+        "exit": 0,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 1",
+            "  assignments gecontroleerd: 3",
+            "\u001b[33m    RosterAssignment a1 [advisory] atw-a1: Rust a1\u001b[39m",
+            "  1 overtreding(en), waarvan 0 verplicht.",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-06",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period | mixed": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 3",
+            "  assignments gecontroleerd: 30",
+            "\u001b[37;41m    RosterAssignment m1 [mandatory] atw-m1: Rust m1\u001b[39;49m",
+            "\u001b[33m    RosterAssignment a2 [advisory] atw-a2: Rust a2\u001b[39m",
+            "\u001b[37;41m    RosterAssignment m3 [mandatory] atw-m3: Rust m3\u001b[39;49m",
+            "  3 overtreding(en), waarvan 2 verplicht.",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-06",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and administration | unresolved, no message": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  \u001b[37;41mHet humaniq-register is niet gevonden op deze instance.\u001b[39;49m",
+            "  \u001b[37;41mEr is NIETS gecontroleerd; dit is geen goedkeuring.\u001b[39;49m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    "ADM-1",
+                    {
+                        "jurisdiction": "BE"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and administration | unresolved, message": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  \u001b[37;41mRegister weg.\u001b[39;49m",
+            "  \u001b[37;41mEr is NIETS gecontroleerd; dit is geen goedkeuring.\u001b[39;49m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    "ADM-1",
+                    {
+                        "jurisdiction": "BE"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and administration | nothing found": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 0",
+            "  assignments gecontroleerd: 0",
+            "  \u001b[33mgeen roster gevonden.\u001b[39m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    "ADM-1",
+                    {
+                        "jurisdiction": "BE"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and administration | clean": {
+        "exit": 0,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 2",
+            "  assignments gecontroleerd: 14",
+            "  \u001b[32mgeen overtredingen — de roster voldoet aan het ATW-corpus.\u001b[39m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    "ADM-1",
+                    {
+                        "jurisdiction": "BE"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and administration | advisory only": {
+        "exit": 0,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 1",
+            "  assignments gecontroleerd: 3",
+            "\u001b[33m    RosterAssignment a1 [advisory] atw-a1: Rust a1\u001b[39m",
+            "  1 overtreding(en), waarvan 0 verplicht.",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    "ADM-1",
+                    {
+                        "jurisdiction": "BE"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and administration | mixed": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 3",
+            "  assignments gecontroleerd: 30",
+            "\u001b[37;41m    RosterAssignment m1 [mandatory] atw-m1: Rust m1\u001b[39;49m",
+            "\u001b[33m    RosterAssignment a2 [advisory] atw-a2: Rust a2\u001b[39m",
+            "\u001b[37;41m    RosterAssignment m3 [mandatory] atw-m3: Rust m3\u001b[39;49m",
+            "  3 overtreding(en), waarvan 2 verplicht.",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    "ADM-1",
+                    {
+                        "jurisdiction": "BE"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and blank administration | unresolved, no message": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  \u001b[37;41mHet humaniq-register is niet gevonden op deze instance.\u001b[39;49m",
+            "  \u001b[37;41mEr is NIETS gecontroleerd; dit is geen goedkeuring.\u001b[39;49m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and blank administration | unresolved, message": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  \u001b[37;41mRegister weg.\u001b[39;49m",
+            "  \u001b[37;41mEr is NIETS gecontroleerd; dit is geen goedkeuring.\u001b[39;49m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and blank administration | nothing found": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 0",
+            "  assignments gecontroleerd: 0",
+            "  \u001b[33mgeen roster gevonden.\u001b[39m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and blank administration | clean": {
+        "exit": 0,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 2",
+            "  assignments gecontroleerd: 14",
+            "  \u001b[32mgeen overtredingen — de roster voldoet aan het ATW-corpus.\u001b[39m",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and blank administration | advisory only": {
+        "exit": 0,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 1",
+            "  assignments gecontroleerd: 3",
+            "\u001b[33m    RosterAssignment a1 [advisory] atw-a1: Rust a1\u001b[39m",
+            "  1 overtreding(en), waarvan 0 verplicht.",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "period and blank administration | mixed": {
+        "exit": 1,
+        "output": [
+            "\u001b[32mHumaniq roster check\u001b[39m",
+            "  rosters gecontroleerd    : 3",
+            "  assignments gecontroleerd: 30",
+            "\u001b[37;41m    RosterAssignment m1 [mandatory] atw-m1: Rust m1\u001b[39;49m",
+            "\u001b[33m    RosterAssignment a2 [advisory] atw-a2: Rust a2\u001b[39m",
+            "\u001b[37;41m    RosterAssignment m3 [mandatory] atw-m3: Rust m3\u001b[39;49m",
+            "  3 overtreding(en), waarvan 2 verplicht.",
+            ""
+        ],
+        "calls": [
+            [
+                "checkPeriod",
+                [
+                    "2026-07",
+                    null,
+                    {
+                        "jurisdiction": "NL"
+                    }
+                ]
+            ]
+        ]
+    },
+    "neither | unresolved, no message": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    },
+    "neither | unresolved, message": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    },
+    "neither | nothing found": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    },
+    "neither | clean": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    },
+    "neither | advisory only": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    },
+    "neither | mixed": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    },
+    "blank roster | unresolved, no message": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    },
+    "blank roster | unresolved, message": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    },
+    "blank roster | nothing found": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    },
+    "blank roster | clean": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    },
+    "blank roster | advisory only": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    },
+    "blank roster | mixed": {
+        "exit": 1,
+        "output": [
+            "\u001b[37;41m--roster of --period is verplicht.\u001b[39;49m",
+            ""
+        ],
+        "calls": []
+    }
+}
