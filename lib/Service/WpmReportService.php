@@ -125,7 +125,7 @@ class WpmReportService {
 	 * @return array<string, array{transportMode: string, fuelType: string|null, km: float}>
 	 */
 	private function businessKm(string $administrationId, int $year, array &$missing): array {
-		$groups = [];
+		$tally = ['groups' => [], 'missing' => $missing];
 		$claims = $this->gateway->findFiltered('Expense', ['administrationId' => $administrationId, 'category' => 'travel', 'travelType' => 'business']);
 		foreach ($claims as $claim) {
 			$distance = ($claim['distanceKm'] ?? null);
@@ -137,10 +137,11 @@ class WpmReportService {
 				continue;
 			}
 
-			$this->add($groups, $missing, 'Expense', $claim, (float)$distance);
+			$this->add(tally: $tally, trip: ['schema' => 'Expense', 'row' => $claim, 'km' => (float)$distance]);
 		}
 
-		return $groups;
+		$missing = $tally['missing'];
+		return $tally['groups'];
 	}//end businessKm()
 
 	/**
@@ -154,7 +155,7 @@ class WpmReportService {
 	 * @return array<string, array{transportMode: string, fuelType: string|null, km: float}>
 	 */
 	private function commuteKm(string $administrationId, int $year, array &$missing): array {
-		$groups = [];
+		$tally = ['groups' => [], 'missing' => $missing];
 		foreach ($this->gateway->findFiltered('CommuteArrangement', ['administrationId' => $administrationId]) as $arrangement) {
 			$distance = ($arrangement['distanceKmOneWay'] ?? null);
 			$days = ($arrangement['daysPerWeek'] ?? null);
@@ -168,38 +169,37 @@ class WpmReportService {
 				continue;
 			}
 
-			$this->add($groups, $missing, 'CommuteArrangement', $arrangement, $kilometres);
+			$this->add(tally: $tally, trip: ['schema' => 'CommuteArrangement', 'row' => $arrangement, 'km' => $kilometres]);
 		}
 
-		return $groups;
+		$missing = $tally['missing'];
+		return $tally['groups'];
 	}//end commuteKm()
 
 	/**
 	 * Add a trip to its mode and fuel group, or to the missing list.
 	 *
-	 * @param array<string, array{transportMode: string, fuelType: string|null, km: float}> $groups     The groups.
-	 * @param list<array<string, mixed>>                                                   $missing    The trips without a mode.
-	 * @param string                                                                       $schema     The trip's schema.
-	 * @param array<string, mixed>                                                         $trip       The trip.
-	 * @param float                                                                        $kilometres Its kilometres.
+	 * @param array{groups: array<string, array{transportMode: string, fuelType: string|null, km: float}>, missing: list<array<string, mixed>>} $tally The groups and the trips without a mode.
+	 * @param array{schema: string, row: array<string, mixed>, km: float} $trip The trip's schema, the trip and its kilometres.
 	 *
 	 * @return void
 	 */
-	private function add(array &$groups, array &$missing, string $schema, array $trip, float $kilometres): void {
-		$mode = trim((string)($trip['transportMode'] ?? ''));
+	private function add(array &$tally, array $trip): void {
+		$row = $trip['row'];
+		$mode = trim((string)($row['transportMode'] ?? ''));
 		if ($mode === '') {
-			$missing[] = ['schema' => $schema, 'id' => (string)($trip['id'] ?? ''), 'title' => $this->titleOf($trip), 'km' => round($kilometres, 1)];
+			$tally['missing'][] = ['schema' => $trip['schema'], 'id' => (string)($row['id'] ?? ''), 'title' => $this->titleOf($row), 'km' => round($trip['km'], 1)];
 			return;
 		}
 
-		$fuel = trim((string)($trip['fuelType'] ?? ''));
+		$fuel = trim((string)($row['fuelType'] ?? ''));
 		$fuel = ($fuel === '' ? null : $fuel);
 		$key = $mode . '|' . ($fuel ?? '');
-		if (isset($groups[$key]) === false) {
-			$groups[$key] = ['transportMode' => $mode, 'fuelType' => $fuel, 'km' => 0.0];
+		if (isset($tally['groups'][$key]) === false) {
+			$tally['groups'][$key] = ['transportMode' => $mode, 'fuelType' => $fuel, 'km' => 0.0];
 		}
 
-		$groups[$key]['km'] = round(($groups[$key]['km'] + $kilometres), 1);
+		$tally['groups'][$key]['km'] = round(($tally['groups'][$key]['km'] + $trip['km']), 1);
 	}//end add()
 
 	/**
