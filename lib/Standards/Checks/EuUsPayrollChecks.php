@@ -39,6 +39,8 @@ namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * German + French + US payroll, social-security, filing and reporting checks.
+ *
+ * @spec openspec/specs/hrm-rule-engine/spec.md
  */
 final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	use PayrollSampleFields;
@@ -47,6 +49,8 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md
 	 */
 	public static function checks(): array {
 		return [
@@ -267,6 +271,8 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -280,6 +286,8 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * fields (so a `--jurisdiction=DE|FR|US` audit also reports zero violations).
 	 *
 	 * @return array<string, array<int, array<string, mixed>>>
+	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md
 	 */
 	public static function seedObjects(): array {
 		return [

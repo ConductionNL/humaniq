@@ -38,6 +38,8 @@ use OCA\Humaniq\Payroll\TaxTables;
 
 /**
  * Dutch payroll / loonheffingen + global GL-control + EU A1 executable checks.
+ *
+ * @spec openspec/specs/hrm-rule-engine/spec.md
  */
 final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	use PayrollSampleFields;
@@ -217,6 +219,8 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md
 	 */
 	public static function seedSpec(): array {
 		return [];
