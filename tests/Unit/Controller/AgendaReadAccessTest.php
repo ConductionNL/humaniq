@@ -70,11 +70,35 @@ class AgendaReadAccessTest extends TestCase {
 	private array $loaded = [];
 
 	/**
+	 * Schemas whose rows a case replaces.
+	 *
+	 * @var array<string, list<array<string, mixed>>>
+	 */
+	private array $patch = [];
+
+	/**
+	 * Whether availability and capacity run the real services instead of
+	 * echoing the employees they were asked for.
+	 *
+	 * @var bool
+	 */
+	private bool $realHours = false;
+
+	/**
 	 * The organisation and its planned items.
 	 *
 	 * @return array<string, list<array<string, mixed>>>
 	 */
 	private function world(): array {
+		return array_replace($this->baseWorld(), $this->patch);
+	}//end world()
+
+	/**
+	 * The organisation before a case patches it.
+	 *
+	 * @return array<string, list<array<string, mixed>>>
+	 */
+	private function baseWorld(): array {
 		$placed = ['startDate' => '2020-01-01'];
 
 		return [
@@ -141,7 +165,7 @@ class AgendaReadAccessTest extends TestCase {
 				['id' => 'book-1', 'resourceId' => 'room-1', 'employeeId' => 'emp-anna', 'start' => '2026-09-02T09:00:00', 'end' => '2026-09-02T10:00:00', 'purpose' => 'Overleg'],
 			],
 		];
-	}//end world()
+	}//end baseWorld()
 
 	/**
 	 * The controller, built by constructor type, with the given acting user.
@@ -203,8 +227,8 @@ class AgendaReadAccessTest extends TestCase {
 			HoursRegisterGateway::class => static fn (): HoursRegisterGateway => $gateway,
 			RecordStoreInterface::class => static fn (): HoursRegisterGateway => $gateway,
 			AgendaComposer::class => static fn (): AgendaComposer => new AgendaComposer(),
-			AvailabilityService::class => static fn (): AvailabilityService => $availability,
-			ForwardCapacityService::class => static fn (): ForwardCapacityService => $capacity,
+			AvailabilityService::class => fn (): AvailabilityService => ($this->realHours === true ? new AvailabilityService() : $availability),
+			ForwardCapacityService::class => fn (): ForwardCapacityService => ($this->realHours === true ? new ForwardCapacityService() : $capacity),
 			OrgResolutionService::class => static fn (): OrgResolutionService => new OrgResolutionService(),
 			WorkingCalendarReader::class => static fn (): WorkingCalendarReader => $calendar,
 			HumaniqRoles::class => static fn (): HumaniqRoles => $roles,
@@ -896,5 +920,187 @@ class AgendaReadAccessTest extends TestCase {
 	public function testALoopInTheUnitTreeEndsTheWalk(): void {
 		$this->assertRefused($this->read('carl', 'orgUnit', 'unit-loop-a'));
 	}//end testALoopInTheUnitTreeEndsTheWalk()
+
+	/**
+	 * Put the employees of Zorg and the unit above it in administrations.
+	 *
+	 * @param array<string, string> $employees Employee id to administration; the rest get `adm-A`.
+	 * @param array<string, string> $units     Unit id to administration; the rest get `adm-A`.
+	 *
+	 * @return void
+	 */
+	private function administrations(array $employees, array $units): void {
+		$world = $this->baseWorld();
+		foreach ($world['Employee'] as $index => $employee) {
+			$world['Employee'][$index]['administrationId'] = ($employees[$employee['id']] ?? 'adm-A');
+		}
+
+		foreach ($world['OrgUnit'] as $index => $unit) {
+			$world['OrgUnit'][$index]['administrationId'] = ($units[$unit['id']] ?? 'adm-A');
+		}
+
+		$this->patch = ['Employee' => $world['Employee'], 'OrgUnit' => $world['OrgUnit']];
+	}//end administrations()
+
+	/**
+	 * The manager of the unit above opens the unit only within its
+	 * administration.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testTheClimbStopsAtTheAdministrationBoundary(): void {
+		$this->administrations(['emp-olga' => 'adm-B'], ['unit-org' => 'adm-B']);
+		$this->assertRefused($this->read('olga', 'orgUnit', 'unit-zorg'));
+
+		$this->loaded = [];
+		$this->administrations([], []);
+		$this->assertSame(Http::STATUS_OK, $this->read('olga', 'orgUnit', 'unit-zorg')->getStatus());
+	}//end testTheClimbStopsAtTheAdministrationBoundary()
+
+	/**
+	 * A manager whose own Employee record lies in another administration
+	 * opens neither the unit nor anyone in it, and nor does their deputy.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAManagerOutsideTheAdministrationOpensNothing(): void {
+		$this->administrations(['emp-mila' => 'adm-B'], []);
+		$this->assertRefused($this->read('mila', 'orgUnit', 'unit-zorg'));
+		$this->assertRefused($this->read('mila', 'employee', 'emp-anna'));
+		$this->assertRefused($this->read('dirk', 'orgUnit', 'unit-zorg'));
+	}//end testAManagerOutsideTheAdministrationOpensNothing()
+
+	/**
+	 * Data provider: the endpoints that answer hours, with the field that
+	 * carries an employee's planned hours.
+	 *
+	 * @return array<string, array{0: string, 1: string}>
+	 */
+	public static function plannedHourFields(): array {
+		return [
+			'availability' => ['availability', 'committedHours'],
+			'capacity' => ['capacity', 'plannedHours'],
+		];
+	}//end plannedHourFields()
+
+	/**
+	 * Planned hours per employee from the real availability or capacity
+	 * answer, for one viewer and one unit, over one window.
+	 *
+	 * @param string|null $viewer   The acting user.
+	 * @param string      $endpoint `availability` or `capacity`.
+	 * @param string      $field    The planned-hours field.
+	 * @param string      $from     First day.
+	 * @param string      $to       Last day.
+	 *
+	 * @return array<string, float>
+	 */
+	private function plannedHours(?string $viewer, string $endpoint, string $field, string $from, string $to): array {
+		$this->realHours = true;
+		$response = $this->controller($viewer)->{$endpoint}(from: $from, to: $to, orgUnitId: 'unit-zorg');
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$planned = [];
+		foreach ($response->getData()['employees'] as $row) {
+			$planned[$row['employeeId']] = (float)$row[$field];
+		}
+
+		return $planned;
+	}//end plannedHours()
+
+	/**
+	 * A full working week for one employee.
+	 *
+	 * @param string $employeeId The employee.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function fullWeek(string $employeeId): array {
+		return ['id' => 'wp-' . $employeeId, 'employeeId' => $employeeId, 'validFrom' => '2026-01-01', 'hoursMonday' => 8, 'hoursTuesday' => 8, 'hoursWednesday' => 8, 'hoursThursday' => 8, 'hoursFriday' => 8];
+	}//end fullWeek()
+
+	/**
+	 * A colleague's view of the hours leaves a secondment out, so its hours
+	 * per week cannot be read off the planned hours.
+	 *
+	 * @param string $endpoint The endpoint.
+	 * @param string $field    The planned-hours field.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider plannedHourFields
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAColleagueCannotReadSecondmentHoursOffPlannedHours(string $endpoint, string $field): void {
+		$this->patch = [
+			'WorkingPattern' => [$this->fullWeek('emp-anna'), $this->fullWeek('emp-bram')],
+			'Interview' => [],
+			'SickLeaveCase' => [],
+			'RosterAssignment' => [],
+			'ResourceBooking' => [],
+		];
+
+		$colleague = $this->plannedHours('bram', $endpoint, $field, '2026-09-07', '2026-09-11');
+		$this->assertEqualsWithDelta(0.0, $colleague['emp-anna'], 0.01);
+		$this->assertEqualsWithDelta(8.0, $colleague['emp-bram'], 0.01, 'his own secondment still counts');
+
+		$manager = $this->plannedHours('mila', $endpoint, $field, '2026-09-07', '2026-09-11');
+		$this->assertEqualsWithDelta(16.0, $manager['emp-anna'], 0.01);
+	}//end testAColleagueCannotReadSecondmentHoursOffPlannedHours()
+
+	/**
+	 * A colleague's view of the hours leaves an interview out, so its date
+	 * and length cannot be read off the planned hours.
+	 *
+	 * @param string $endpoint The endpoint.
+	 * @param string $field    The planned-hours field.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider plannedHourFields
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAColleagueCannotReadAnInterviewOffPlannedHours(string $endpoint, string $field): void {
+		$this->patch = [
+			'WorkingPattern' => [$this->fullWeek('emp-anna'), $this->fullWeek('emp-bram')],
+			'Secondment' => [],
+			'SickLeaveCase' => [],
+			'RosterAssignment' => [],
+			'ResourceBooking' => [],
+			'Interview' => [
+				['id' => 'int-x', 'employeeId' => 'emp-anna', 'interviewerIds' => ['emp-bram'], 'scheduledStart' => '2026-09-08T10:00:00', 'scheduledEnd' => '2026-09-08T11:30:00'],
+			],
+		];
+
+		$colleague = $this->plannedHours('bram', $endpoint, $field, '2026-09-08', '2026-09-08');
+		$this->assertEqualsWithDelta(0.0, $colleague['emp-anna'], 0.01);
+		$this->assertEqualsWithDelta(1.5, $colleague['emp-bram'], 0.01, 'his own interview still counts');
+
+		$this->assertEqualsWithDelta(1.5, $this->plannedHours('hanna', $endpoint, $field, '2026-09-08', '2026-09-08')['emp-anna'], 0.01);
+	}//end testAColleagueCannotReadAnInterviewOffPlannedHours()
+
+	/**
+	 * A window that starts years ago does not bring back former members for
+	 * anyone but HR, and neither does a placement with an unreadable date.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAnEarlyWindowDoesNotBringBackFormerMembers(): void {
+		$members = fn (?string $viewer): array => $this->covered($this->controller($viewer)->availability(from: '2020-06-01', to: '2026-09-07', orgUnitId: 'unit-zorg'));
+
+		$this->assertSame(['emp-anna', 'emp-bram', 'emp-dora', 'emp-nobody'], $members('bram'));
+		$this->assertSame(['emp-anna', 'emp-bram', 'emp-dora', 'emp-nobody'], $members('mila'));
+		$this->assertContains('emp-eva', $members('hanna'));
+
+		$unit = $this->controller('mila')->agenda(subjectType: 'orgUnit', subjectId: 'unit-zorg', from: '2020-06-01', to: '2026-09-07');
+		$this->assertNotContains('shift:emp-eva', $this->kinds($unit));
+	}//end testAnEarlyWindowDoesNotBringBackFormerMembers()
 
 }//end class
