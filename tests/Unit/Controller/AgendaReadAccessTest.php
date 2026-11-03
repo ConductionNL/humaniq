@@ -955,6 +955,10 @@ class AgendaReadAccessTest extends TestCase {
 		$this->assertRefused($this->read('olga', 'orgUnit', 'unit-zorg'));
 
 		$this->loaded = [];
+		$this->administrations([], ['unit-org' => 'adm-B']);
+		$this->assertRefused($this->read('olga', 'orgUnit', 'unit-zorg'));
+
+		$this->loaded = [];
 		$this->administrations([], []);
 		$this->assertSame(Http::STATUS_OK, $this->read('olga', 'orgUnit', 'unit-zorg')->getStatus());
 	}//end testTheClimbStopsAtTheAdministrationBoundary()
@@ -996,12 +1000,13 @@ class AgendaReadAccessTest extends TestCase {
 	 * @param string      $field    The planned-hours field.
 	 * @param string      $from     First day.
 	 * @param string      $to       Last day.
+	 * @param string      $orgUnitId The unit, or '' for none.
 	 *
 	 * @return array<string, float>
 	 */
-	private function plannedHours(?string $viewer, string $endpoint, string $field, string $from, string $to): array {
+	private function plannedHours(?string $viewer, string $endpoint, string $field, string $from, string $to, string $orgUnitId = 'unit-zorg'): array {
 		$this->realHours = true;
-		$response = $this->controller($viewer)->{$endpoint}(from: $from, to: $to, orgUnitId: 'unit-zorg');
+		$response = $this->controller($viewer)->{$endpoint}(from: $from, to: $to, orgUnitId: $orgUnitId);
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$planned = [];
 		foreach ($response->getData()['employees'] as $row) {
@@ -1050,6 +1055,11 @@ class AgendaReadAccessTest extends TestCase {
 
 		$manager = $this->plannedHours('mila', $endpoint, $field, '2026-09-07', '2026-09-11');
 		$this->assertEqualsWithDelta(16.0, $manager['emp-anna'], 0.01);
+
+		$unscoped = $this->plannedHours('bram', $endpoint, $field, '2026-09-07', '2026-09-11', '');
+		$this->assertEqualsWithDelta(0.0, $unscoped['emp-anna'], 0.01);
+		$this->assertEqualsWithDelta(8.0, $unscoped['emp-bram'], 0.01);
+		$this->assertEqualsWithDelta(16.0, $this->plannedHours('hanna', $endpoint, $field, '2026-09-07', '2026-09-11', '')['emp-anna'], 0.01);
 	}//end testAColleagueCannotReadSecondmentHoursOffPlannedHours()
 
 	/**
@@ -1074,14 +1084,15 @@ class AgendaReadAccessTest extends TestCase {
 			'ResourceBooking' => [],
 			'Interview' => [
 				['id' => 'int-x', 'employeeId' => 'emp-anna', 'interviewerIds' => ['emp-bram'], 'scheduledStart' => '2026-09-08T10:00:00', 'scheduledEnd' => '2026-09-08T11:30:00'],
+				['id' => 'int-y', 'employeeId' => 'emp-bram', 'interviewerIds' => ['emp-anna'], 'scheduledStart' => '2026-09-08T14:00:00', 'scheduledEnd' => '2026-09-08T15:00:00'],
 			],
 		];
 
 		$colleague = $this->plannedHours('bram', $endpoint, $field, '2026-09-08', '2026-09-08');
 		$this->assertEqualsWithDelta(0.0, $colleague['emp-anna'], 0.01);
-		$this->assertEqualsWithDelta(1.5, $colleague['emp-bram'], 0.01, 'his own interview still counts');
+		$this->assertEqualsWithDelta(2.5, $colleague['emp-bram'], 0.01, 'his own interviews still count');
 
-		$this->assertEqualsWithDelta(1.5, $this->plannedHours('hanna', $endpoint, $field, '2026-09-08', '2026-09-08')['emp-anna'], 0.01);
+		$this->assertEqualsWithDelta(2.5, $this->plannedHours('hanna', $endpoint, $field, '2026-09-08', '2026-09-08')['emp-anna'], 0.01);
 	}//end testAColleagueCannotReadAnInterviewOffPlannedHours()
 
 	/**
