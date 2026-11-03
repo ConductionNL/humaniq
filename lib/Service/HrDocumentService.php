@@ -260,15 +260,15 @@ class HrDocumentService {
 		$yearInt = ($year !== null && trim($year) !== '') ? (int)trim($year) : null;
 
 		if ($period !== null && $type !== self::LOONSTROOK_DOCUMENT_TYPE) {
-			return [$this->outcome('', null, $type, 'usage-error', '--period is alleen geldig bij --type loonstrook.')];
+			return [$this->outcome(['documentType' => $type], ['status' => 'usage-error', 'message' => '--period is alleen geldig bij --type loonstrook.'])];
 		}
 
 		if ($yearInt !== null && $type !== self::JAAROPGAAF_DOCUMENT_TYPE) {
-			return [$this->outcome('', null, $type, 'usage-error', '--year is alleen geldig bij --type jaaropgaaf.')];
+			return [$this->outcome(['documentType' => $type], ['status' => 'usage-error', 'message' => '--year is alleen geldig bij --type jaaropgaaf.'])];
 		}
 
 		if ($type === self::JAAROPGAAF_DOCUMENT_TYPE && $yearInt === null) {
-			return [$this->outcome('', null, $type, 'usage-error', 'Documenttype "jaaropgaaf" vereist --year.')];
+			return [$this->outcome(['documentType' => $type], ['status' => 'usage-error', 'message' => 'Documenttype "jaaropgaaf" vereist --year.'])];
 		}
 
 		if ($type === self::LOONSTROOK_DOCUMENT_TYPE) {
@@ -281,13 +281,7 @@ class HrDocumentService {
 
 		if ($type !== self::BACKLOG_DOCUMENT_TYPE && $employeeId === null) {
 			return [
-				$this->outcome(
-					'',
-					null,
-					$type,
-					'usage-error',
-					sprintf('Documenttype "%s" heeft geen backlog-semantiek en vereist --employee.', $type)
-				),
+				$this->outcome(['documentType' => $type], ['status' => 'usage-error', 'message' => sprintf('Documenttype "%s" heeft geen backlog-semantiek en vereist --employee.', $type)]),
 			];
 		}
 
@@ -409,17 +403,17 @@ class HrDocumentService {
 	public function generateLoonstrook(string $payslipId, ?string $userId = null): array {
 		$payslipId = trim($payslipId);
 		if ($payslipId === '') {
-			return $this->outcome('', null, self::LOONSTROOK_DOCUMENT_TYPE, 'failed', 'Geen payslipId opgegeven; genereren is geweigerd.');
+			return $this->outcome(['documentType' => self::LOONSTROOK_DOCUMENT_TYPE], ['status' => 'failed', 'message' => 'Geen payslipId opgegeven; genereren is geweigerd.']);
 		}
 
 		$payslip = $this->findPayslip($payslipId);
 		if ($payslip === null) {
-			return $this->outcome('', null, self::LOONSTROOK_DOCUMENT_TYPE, 'failed', 'Payslip niet gevonden: ' . $payslipId);
+			return $this->outcome(['documentType' => self::LOONSTROOK_DOCUMENT_TYPE], ['status' => 'failed', 'message' => 'Payslip niet gevonden: ' . $payslipId]);
 		}
 
 		$employeeId = trim((string)($payslip['employeeId'] ?? ''));
 		if ($employeeId === '') {
-			return $this->outcome('', null, self::LOONSTROOK_DOCUMENT_TYPE, 'failed', 'Payslip heeft geen gekoppelde medewerker: ' . $payslipId);
+			return $this->outcome(['documentType' => self::LOONSTROOK_DOCUMENT_TYPE], ['status' => 'failed', 'message' => 'Payslip heeft geen gekoppelde medewerker: ' . $payslipId]);
 		}
 
 		$outcome = $this->generateInternal(new HrDocumentRequest(subject: new HrDocumentSubject(employeeId: $employeeId, payslipId: $payslipId), documentType: self::LOONSTROOK_DOCUMENT_TYPE, userId: $userId));
@@ -471,23 +465,17 @@ class HrDocumentService {
 	public function generateJaaropgaaf(string $employeeId, int $year, ?string $userId = null): array {
 		$employeeId = trim($employeeId);
 		if ($employeeId === '') {
-			return $this->outcome('', null, self::JAAROPGAAF_DOCUMENT_TYPE, 'failed', 'Geen employeeId opgegeven; genereren is geweigerd.');
+			return $this->outcome(['documentType' => self::JAAROPGAAF_DOCUMENT_TYPE], ['status' => 'failed', 'message' => 'Geen employeeId opgegeven; genereren is geweigerd.']);
 		}
 
 		$aggregate = $this->upsertJaaropgaaf($employeeId, $year);
 		if ($aggregate === null) {
-			return $this->outcome(
-				$employeeId,
-				null,
-				self::JAAROPGAAF_DOCUMENT_TYPE,
-				'failed',
-				sprintf('Geen payslips gevonden voor medewerker %s in %d; jaaropgaaf is niet aangemaakt.', $employeeId, $year)
-			);
+			return $this->outcome(['documentType' => self::JAAROPGAAF_DOCUMENT_TYPE, 'employeeId' => $employeeId], ['status' => 'failed', 'message' => sprintf('Geen payslips gevonden voor medewerker %s in %d; jaaropgaaf is niet aangemaakt.', $employeeId, $year)]);
 		}
 
 		$jaaropgaafId = (string)($aggregate['id'] ?? $aggregate['@self']['id'] ?? '');
 		if ($jaaropgaafId === '') {
-			return $this->outcome($employeeId, null, self::JAAROPGAAF_DOCUMENT_TYPE, 'failed', 'De aangemaakte jaaropgaaf heeft geen id.');
+			return $this->outcome(['documentType' => self::JAAROPGAAF_DOCUMENT_TYPE, 'employeeId' => $employeeId], ['status' => 'failed', 'message' => 'De aangemaakte jaaropgaaf heeft geen id.']);
 		}
 
 		$outcome = $this->generateInternal(new HrDocumentRequest(subject: new HrDocumentSubject(employeeId: $employeeId, jaaropgaafId: $jaaropgaafId), documentType: self::JAAROPGAAF_DOCUMENT_TYPE, userId: $userId));
@@ -518,7 +506,7 @@ class HrDocumentService {
 		$case = ($this->rowById('SickLeaveCase', $caseId) ?? []);
 		$refusal = $this->uwvData->refusal($case);
 		if ($refusal !== null) {
-			return $this->outcome((string)($case['employeeId'] ?? ''), null, $type, $refusal['status'], $refusal['message']);
+			return $this->outcome(['documentType' => $type, 'employeeId' => (string)($case['employeeId'] ?? '')], $refusal);
 		}
 
 		$employeeId = trim((string)$case['employeeId']);
@@ -565,7 +553,7 @@ class HrDocumentService {
 		$result = $this->runGeneration($request);
 		$subject = $request->subject;
 
-		return $this->outcome($subject->employeeId, $subject->contractId, $request->documentType, $result['status'], $result['message'], $result['document']);
+		return $this->outcome(['documentType' => $request->documentType, 'employeeId' => $subject->employeeId, 'contractId' => $subject->contractId], $result);
 	}//end generateInternal()
 
 	/**
@@ -1311,37 +1299,27 @@ class HrDocumentService {
 	}//end saveJaaropgaaf()
 
 	/**
-	 * Build the outcome array returned by generate()/generateBacklog().
+	 * Build one outcome row.
 	 *
-	 * @param string $employeeId The Employee id.
-	 * @param string|null $contractId The EmploymentContract id, or null.
-	 * @param string $documentType The document type.
-	 * @param string $status The outcome status.
-	 * @param string $message A human-readable outcome message.
-	 * @param array<string, mixed>|null $document The GeneratedDocument record, if any.
+	 * @param array<string, mixed> $about  The `documentType`, and the `employeeId` ('' when none) and `contractId` (null when none) it concerns.
+	 * @param array<string, mixed> $result The `status`, `message` and, when one was saved, the `document`.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function outcome(
-		string $employeeId,
-		?string $contractId,
-		string $documentType,
-		string $status,
-		string $message,
-		?array $document = null,
-	): array {
+	private function outcome(array $about, array $result): array {
 		$documentId = null;
+		$document = ($result['document'] ?? null);
 		if ($document !== null) {
 			$documentId = (string)($document['id'] ?? $document['@self']['id'] ?? '');
 			$documentId = ($documentId === '' ? null : $documentId);
 		}
 
 		return [
-			'employeeId' => $employeeId,
-			'contractId' => $contractId,
-			'documentType' => $documentType,
-			'status' => $status,
-			'message' => $message,
+			'employeeId' => (string)($about['employeeId'] ?? ''),
+			'contractId' => ($about['contractId'] ?? null),
+			'documentType' => (string)$about['documentType'],
+			'status' => (string)$result['status'],
+			'message' => (string)$result['message'],
 			'generatedDocumentId' => $documentId,
 		];
 
