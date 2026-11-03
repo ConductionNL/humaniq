@@ -58,6 +58,8 @@ use RuntimeException;
 /**
  * Collects payslip net-pay lines and hands them off to shillinq as a draft
  * SEPA PaymentRun, one per payable PayrollRun.
+ *
+ * @spec openspec/specs/payroll-sepa-netpay-shillinq/spec.md
  */
 class PayrollNetPayService {
 
@@ -161,7 +163,7 @@ class PayrollNetPayService {
 			return $this->outcome($runId, 'failed', 'PayrollRun mist id/period/administrationId; kan niet worden verwerkt.');
 		}
 
-		$runNumber = sprintf('HRMQ-NETPAY-%s-%s', $period, $administrationId);
+		$runNumber = $this->runNumber($run);
 
 		$active = $this->activeBatchForRun($runId);
 		if ($active !== null && (string)($active['status'] ?? '') === 'created') {
@@ -169,7 +171,7 @@ class PayrollNetPayService {
 		}
 
 		if ($active !== null && (string)($active['status'] ?? '') === 'pending') {
-			$recovered = $this->recoverStalePending($active, $runId, $runNumber);
+			$recovered = $this->recoverStalePending($active, $run);
 			if ($recovered !== null) {
 				return $recovered;
 			}
@@ -204,7 +206,7 @@ class PayrollNetPayService {
 		}
 
 		try {
-			$paymentRunId = $this->createOrAdoptPaymentRun($runNumber, $period, $administrationId, $collected['lines'], (float)$collected['totalAmount']);
+			$paymentRunId = $this->createOrAdoptPaymentRun($run, $collected);
 		} catch (\Throwable $e) {
 			$batch = $this->createBatch(
 				[
@@ -353,14 +355,15 @@ class PayrollNetPayService {
 	 * return null so the caller starts a fresh attempt.
 	 *
 	 * @param array<string, mixed> $stalePending The stale `pending` PayrollPaymentBatch.
-	 * @param string $runId The PayrollRun id being processed.
-	 * @param string $runNumber The deterministic idempotency key.
+	 * @param array<string, mixed> $run The PayrollRun being processed.
 	 *
 	 * @return array<string, mixed>|null The outcome when adopted, or null to retry fresh.
 	 *
 	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
 	 */
-	private function recoverStalePending(array $stalePending, string $runId, string $runNumber): ?array {
+	private function recoverStalePending(array $stalePending, array $run): ?array {
+		$runId = $this->idOf($run);
+		$runNumber = $this->runNumber($run);
 		if ($this->shillinqAvailable() === false) {
 			return null;
 		}
@@ -390,17 +393,15 @@ class PayrollNetPayService {
 	 * Find an existing shillinq PaymentRun by runNumber (idempotency probe,
 	 * design.md D6), or create it when none exists yet.
 	 *
-	 * @param string $runNumber Deterministic idempotency key.
-	 * @param string $period Wage period (YYYY-MM).
-	 * @param string $administrationId Administration/employer id, passed through verbatim.
-	 * @param array<int, mixed> $lines The collected payment lines.
-	 * @param float $totalAmount Sum of the line amounts.
+	 * @param array<string, mixed> $run The PayrollRun object (period and administration).
+	 * @param array<string, mixed> $collected The collectLines() result (lines and totalAmount).
 	 *
 	 * @return string The shillinq PaymentRun id (adopted or newly created).
 	 *
 	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-004
 	 */
-	private function createOrAdoptPaymentRun(string $runNumber, string $period, string $administrationId, array $lines, float $totalAmount): string {
+	private function createOrAdoptPaymentRun(array $run, array $collected): string {
+		$runNumber = $this->runNumber($run);
 		$adopted = $this->findPaymentRunByNumber($runNumber);
 		if ($adopted !== null) {
 			return $this->idOf($adopted);
@@ -408,13 +409,13 @@ class PayrollNetPayService {
 
 		$payload = [
 			'runNumber' => $runNumber,
-			'administrationId' => $administrationId,
-			'executionDate' => $this->executionDate($period),
+			'administrationId' => trim((string)($run['administrationId'] ?? '')),
+			'executionDate' => $this->executionDate(trim((string)($run['period'] ?? ''))),
 			'status' => 'draft',
 			'lifecycleState' => 'draft',
 			'currency' => 'EUR',
-			'totalAmount' => $totalAmount,
-			'paymentLines' => $lines,
+			'totalAmount' => (float)$collected['totalAmount'],
+			'paymentLines' => $collected['lines'],
 		];
 
 		$debtorIban = trim($this->settingsService->getNetPayDebtorIban());
@@ -432,6 +433,20 @@ class PayrollNetPayService {
 
 		return $this->idOf($this->toArray($created));
 	}//end createOrAdoptPaymentRun()
+
+	/**
+	 * The deterministic idempotency key of a run's PaymentRun: its trimmed
+	 * period and administration.
+	 *
+	 * @param array<string, mixed> $run The PayrollRun object.
+	 *
+	 * @return string The run number.
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private function runNumber(array $run): string {
+		return sprintf('HRMQ-NETPAY-%s-%s', trim((string)($run['period'] ?? '')), trim((string)($run['administrationId'] ?? '')));
+	}//end runNumber()
 
 	/**
 	 * The shillinq PaymentRun `executionDate`: the configured
