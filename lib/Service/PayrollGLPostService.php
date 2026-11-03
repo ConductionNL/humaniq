@@ -50,6 +50,8 @@ use RuntimeException;
 
 /**
  * Builds and posts the balanced payroll-to-GL journal for approved runs.
+ *
+ * @spec openspec/specs/payroll-glpost-shillinq/spec.md
  */
 class PayrollGLPostService {
 
@@ -153,7 +155,7 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', 'PayrollRun is missing id/period/administrationId; cannot post.');
 		}
 
-		$journalNumber = sprintf('HRMQ-LOON-%s-%s', $period, $administrationId);
+		$journalNumber = $this->journalNumber($run);
 
 		$active = $this->activeGlPostForRun($runId);
 		if ($active !== null && (string)($active['status'] ?? '') === 'posted') {
@@ -161,7 +163,7 @@ class PayrollGLPostService {
 		}
 
 		if ($active !== null && (string)($active['status'] ?? '') === 'pending') {
-			$recovered = $this->recoverStalePending($active, $run, $journalNumber);
+			$recovered = $this->recoverStalePending($active, $run);
 			if ($recovered !== null) {
 				return $recovered;
 			}
@@ -196,7 +198,7 @@ class PayrollGLPostService {
 		}
 
 		try {
-			$journalEntryId = $this->createOrAdoptJournalEntry($journalNumber, $period, $administrationId, $runId, $built['lines']);
+			$journalEntryId = $this->createOrAdoptJournalEntry($run, $built['lines']);
 		} catch (\Throwable $e) {
 			$glPost = $this->createGlPost(
 				[
@@ -426,14 +428,14 @@ class PayrollGLPostService {
 	 *
 	 * @param array<string, mixed> $stalePending The stale `pending` PayrollGLPost.
 	 * @param array<string, mixed> $run The PayrollRun being posted.
-	 * @param string $journalNumber The deterministic idempotency key.
 	 *
 	 * @return array<string, mixed>|null The outcome when adopted, or null to retry fresh.
 	 *
 	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-007
 	 */
-	private function recoverStalePending(array $stalePending, array $run, string $journalNumber): ?array {
+	private function recoverStalePending(array $stalePending, array $run): ?array {
 		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
+		$journalNumber = $this->journalNumber($run);
 
 		if ($this->shillinqAvailable() === false) {
 			return null;
@@ -469,33 +471,32 @@ class PayrollGLPostService {
 	 * Find an existing shillinq JournalEntry by journalNumber (idempotency
 	 * probe, design.md D6), or create it when none exists yet.
 	 *
-	 * @param string $journalNumber Deterministic idempotency key.
-	 * @param string $period Wage period (YYYY-MM).
-	 * @param string $administrationId Administration/employer id, passed through verbatim.
-	 * @param string $payrollRunId The humaniq PayrollRun id (for the description).
+	 * @param array<string, mixed> $run The PayrollRun object (id, period and administration).
 	 * @param array<int, mixed> $lines The balanced journal lines.
 	 *
 	 * @return string The shillinq JournalEntry id (adopted or newly created).
 	 *
 	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-003
 	 */
-	private function createOrAdoptJournalEntry(string $journalNumber, string $period, string $administrationId, string $payrollRunId, array $lines): string {
+	private function createOrAdoptJournalEntry(array $run, array $lines): string {
+		$journalNumber = $this->journalNumber($run);
 		$adopted = $this->findJournalEntryByNumber($journalNumber);
 		if ($adopted !== null) {
 			return (string)($adopted['id'] ?? $adopted['@self']['id'] ?? '');
 		}
 
+		$period = trim((string)($run['period'] ?? ''));
 		$payload = [
 			'journalNumber' => $journalNumber,
 			'entryDate' => $this->periodEndDate($period),
-			'description' => sprintf('Loonjournaalpost %s — humaniq loonrun %s', $period, $payrollRunId),
+			'description' => sprintf('Loonjournaalpost %s — humaniq loonrun %s', $period, (string)($run['id'] ?? $run['@self']['id'] ?? '')),
 			'lines' => $lines,
 			'journalType' => 'manual',
 			// The sub-ledger this journal comes from: shillinq's payroll
 			// control-account role admits only humaniq's postings (humaniq#549).
 			'sourceApp' => 'humaniq',
 			'approvalState' => 'not-required',
-			'administrationId' => $administrationId,
+			'administrationId' => trim((string)($run['administrationId'] ?? '')),
 			'state' => 'draft',
 		];
 
@@ -509,6 +510,20 @@ class PayrollGLPostService {
 
 		return (string)($this->toArray($created)['id'] ?? $this->toArray($created)['@self']['id'] ?? '');
 	}//end createOrAdoptJournalEntry()
+
+	/**
+	 * The deterministic idempotency key of a run's JournalEntry: its trimmed
+	 * period and administration.
+	 *
+	 * @param array<string, mixed> $run The PayrollRun object.
+	 *
+	 * @return string The journal number.
+	 *
+	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-003
+	 */
+	private function journalNumber(array $run): string {
+		return sprintf('HRMQ-LOON-%s-%s', trim((string)($run['period'] ?? '')), trim((string)($run['administrationId'] ?? '')));
+	}//end journalNumber()
 
 	/**
 	 * The last day of a YYYY-MM wage period, per design.md D3 (`entryDate` =
