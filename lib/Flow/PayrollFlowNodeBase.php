@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Flow;
 
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -60,6 +61,10 @@ use RuntimeException;
  * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
  */
 abstract class PayrollFlowNodeBase implements IFlowNode {
+
+	use ConvertsRowsToArrays {
+		toArray as protected;
+	}
 
 	/**
 	 * Max PayrollRun objects scanned when resolving a run by id — the
@@ -253,28 +258,6 @@ abstract class PayrollFlowNodeBase implements IFlowNode {
 
 		return null;
 	}//end findRun()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array — the
-	 * PayrollRunService convention.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
-	 */
-	protected function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * The object id of a row, falling back to `@self.id`.

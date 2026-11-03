@@ -59,6 +59,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -67,6 +68,8 @@ use RuntimeException;
  * Pure run-to-run payroll diff service — reads persisted Payslips only.
  */
 class PayrollMutationService {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * Max objects loaded per type.
@@ -511,25 +514,6 @@ class PayrollMutationService {
 
 		return $out;
 	}//end loadAll()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * The object id of a row, falling back to `@self.id`.
