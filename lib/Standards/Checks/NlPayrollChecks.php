@@ -40,6 +40,7 @@ use OCA\Humaniq\Payroll\TaxTables;
  * Dutch payroll / loonheffingen + global GL-control + EU A1 executable checks.
  */
 final class NlPayrollChecks implements CheckProvider, SeedsObjects {
+	use PayrollSampleFields;
 
 	/**
 	 * The 30%-ruling maximum term in months (Belastingdienst beschikking; the
@@ -346,11 +347,7 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 			'wkrExcess' => 0.00,
 			'wkrEindheffingRate' => null,
 			'pensionContribution' => 190.00,
-			'statementProvided' => true,
-			'showsGrossWage' => true,
-			'showsDeductionBasis' => true,
-			'showsMinimumWage' => true,
-			'showsEmployerEmployeeIds' => true,
+			...self::statementFlags(),
 		];
 	}//end seedPayslip()
 
@@ -363,28 +360,10 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 		return [
 			// Cross-jurisdiction-neutral fields so a DE/FR/US audit of this NL
 			// payslip also reports zero violations (the matching country checks).
-			'lohnsteuer' => 0.00,
-			'solzApplicable' => false,
-			'solidaritaetszuschlag' => 0.00,
-			'churchMember' => false,
-			'kirchensteuer' => 0.00,
-			'kirchensteuerRate' => 9.0,
-			'rvEmployeeRate' => 9.3,
-			'rvEmployerRate' => 9.3,
-			'kvBaseRate' => 14.6,
-			'avRate' => 2.6,
-			'pvBaseRate' => 3.6,
-			'svContributionBase' => 3800.00,
-			'kvPvContributionBase' => 3800.00,
-			'ficaSsRate' => 6.2,
-			'ficaSsWageBaseApplied' => 3800.00,
-			'medicareRate' => 1.45,
-			'additionalMedicareApplied' => false,
-			'federalIncomeTaxWithheld' => 0.00,
-			'cotisations' => 0.00,
-			'pasRate' => 0.0,
-			'prelevementSource' => 0.00,
-			'reductionGeneraleApplied' => false,
+			...self::germanTaxAbsent(),
+			...self::germanSocialRates(3800.00),
+			...self::usWithholding(3800.00, 0.00),
+			...self::frenchContributionsAbsent(),
 			'netImposable' => 3800.00,
 			'netAPayer' => 2698.00,
 			'montantNetSocial' => 3200.00,
