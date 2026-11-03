@@ -111,6 +111,11 @@ Invariant: at most one `PayrollPaymentBatch` in `{pending, created}` per `payrol
 - **WHEN** the next invocation processes the run
 - **THEN** the existing PaymentRun is adopted — the stale record completes as `created` with its id in `shillinqPaymentRunRef`, and no second PaymentRun is created
 
+#### Scenario: A slow owner keeps the hand-off lock
+- **GIVEN** a process that claimed the run and stalls past the claim window right before it writes shillinq, holding Nextcloud's exclusive lock on the run number
+- **WHEN** a second process processes the run
+- **THEN** the second process is refused with status `pending` and creates no PaymentRun, and exactly one PaymentRun exists once the owner finishes; with file locking off the claim alone guards the run, as before
+
 ### REQ-PNP-007: An occ command SHALL be the MVP trigger
 
 `lib/Command/NetPayRunCommand.php` (NEW) registers `humaniq:netpay:run` with optional `--period YYYY-MM`, declared in `appinfo/info.xml` `<commands>` next to `humaniq:glpost:run`. It selects payable runs (`status ∈ {approved, posted}`, period-filtered when given), invokes the service per run, prints one outcome line per run plus a summary, and exits `0` when every selected run ends `created` or `skipped-no-shillinq`, `1` when any ends `failed`. No automatic lifecycle hook ships (deferred to `humaniq-rule-compliance-enforcement`'s guard/event wiring).

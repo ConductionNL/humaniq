@@ -180,7 +180,9 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', (string)$built['error'], $glPost);
 		}
 
-		return $this->postUnderClaim($run, $built);
+		$locked = (new HandoffLock($this->container))->holding('glpost/' . $this->journalNumber($run), fn (): array => $this->postUnderClaim($run, $built));
+
+		return ($locked ?? $this->outcome($runId, 'pending', 'Another process holds the hand-off lock for this journal number.'));
 	}//end postRun()
 
 	/**

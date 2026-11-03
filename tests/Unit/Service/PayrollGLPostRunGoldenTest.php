@@ -26,6 +26,8 @@ use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\Humaniq\Tests\Unit\Service\Support\InMemoryLocks;
+use OCP\Lock\ILockingProvider;
 
 /**
  * Golden test for {@see PayrollGLPostService::postRun()}.
@@ -33,6 +35,7 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Humaniq\Service\PayrollGLPostService
  * @uses   \OCA\Humaniq\Service\PayrollJournalTotals
  * @uses   \OCA\Humaniq\Service\PendingClaims
+ * @uses   \OCA\Humaniq\Service\HandoffLock
  */
 class PayrollGLPostRunGoldenTest extends TestCase {
 
@@ -269,7 +272,11 @@ class PayrollGLPostRunGoldenTest extends TestCase {
 		};
 
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($store);
+		$locks = new InMemoryLocks();
+		$container->method('get')->willReturnCallback(static fn (string $id): object => match ($id) {
+			'OCA\OpenRegister\Service\ObjectService' => $store,
+			ILockingProvider::class => $locks,
+		});
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('isInstalled')->willReturnCallback(fn (string $app): bool => $app === 'shillinq' && ($case['installed'] ?? true));
 		$settings = $this->createMock(SettingsService::class);

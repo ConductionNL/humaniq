@@ -39,6 +39,8 @@ use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Tests\Unit\Service\Support\InMemoryLocks;
+use OCP\Lock\ILockingProvider;
 
 /**
  * Tests for PayrollNetPayService.
@@ -192,7 +194,11 @@ class PayrollNetPayServiceTest extends TestCase {
 		$fake = $this->fakeObjectService($rowsBySchema, $shillinqThrows);
 
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($fake);
+		$locks = new InMemoryLocks();
+		$container->method('get')->willReturnCallback(static fn (string $id): object => match ($id) {
+			'OCA\OpenRegister\Service\ObjectService' => $fake,
+			ILockingProvider::class => $locks,
+		});
 
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('isInstalled')->willReturn($shillinqInstalled);

@@ -22,6 +22,8 @@ use Fiber;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Tests\Unit\Service\Support\InMemoryLocks;
+use OCP\Lock\ILockingProvider;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -34,6 +36,7 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Humaniq\Service\PayrollGLPostService
  * @uses   \OCA\Humaniq\Service\PayrollJournalTotals
  * @uses   \OCA\Humaniq\Service\PendingClaims
+ * @uses   \OCA\Humaniq\Service\HandoffLock
  */
 class ShillinqHandoffConcurrencyTest extends TestCase {
 
@@ -338,6 +341,46 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 	}//end testAFreshPendingRecordBlocksTheRun()
 
 	/**
+	 * An owner that stalls past the claim window right before it writes
+	 * shillinq still holds the hand-off lock: a second process supersedes
+	 * the stale claim but is refused, so shillinq gets one record, the
+	 * owner's, and the owner's claim ends settled.
+	 *
+	 * @param string $kind       Which service.
+	 * @param string $target     The shillinq schema.
+	 * @param string $ownSchema  The service's own record schema.
+	 * @param string $handOff    The hand-off method.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider handoffs
+	 */
+	public function testASlowOwnerPastTheClaimWindowKeepsTheLock(string $kind, string $target, string $ownSchema, string $handOff): void {
+		$store = $this->store();
+		$store->locks = new InMemoryLocks();
+		$second = null;
+		$store->beforeSave = function (string $schema) use ($store, $kind, $target, $ownSchema, $handOff, &$second): void {
+			if ($schema === $target && $second === null) {
+				$second = 'running';
+				foreach (array_keys($store->rows[$ownSchema]) as $i) {
+					$store->rows[$ownSchema][$i]['@self']['updated'] = gmdate('c', time() - 3600);
+				}
+
+				$second = $this->service($kind, $store)->$handOff($this->payrollRun());
+			}
+		};
+
+		$first = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertCount(1, $store->savesOf($target), 'One record reaches shillinq.');
+		$this->assertSame('pending', $second['status'], 'The second process is refused.');
+		$this->assertContains($first['status'], ['created', 'posted']);
+		$own = $store->savesOf($ownSchema);
+		$this->assertSame($first['status'], end($own)['status'], 'The owner settles its claim last.');
+		$this->assertSame([], $store->locks->held, 'The lock is released.');
+	}//end testASlowOwnerPastTheClaimWindowKeepsTheLock()
+
+	/**
 	 * The payroll run, approved, with totals and one payslip's period.
 	 *
 	 * @return array<string, mixed>
@@ -400,6 +443,13 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 			 * @var string|null
 			 */
 			public ?string $organisation = null;
+
+			/**
+			 * Nextcloud's locking provider, or null for a container without one.
+			 *
+			 * @var InMemoryLocks|null
+			 */
+			public ?InMemoryLocks $locks = null;
 
 			/**
 			 * Whether findAll applies its filters and limit, as OpenRegister does.
@@ -545,7 +595,7 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 	 */
 	private function service(string $kind, object $store): object {
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($store);
+		$container->method('get')->willReturnCallback(static fn (string $id): ?object => ($id === ILockingProvider::class ? $store->locks : $store));
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('isInstalled')->willReturn(true);
 		$settings = $this->createMock(SettingsService::class);

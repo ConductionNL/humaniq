@@ -124,6 +124,11 @@ Invariant: at most one `PayrollGLPost` in `{pending, posted}` per `payrollRunId`
 - **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** `nl-glpost-idempotent-per-run` violations are reported for those objects
 
+#### Scenario: A slow owner keeps the hand-off lock
+- **GIVEN** a process that claimed the run and stalls past the claim window right before it writes shillinq, holding Nextcloud's exclusive lock on the journal number
+- **WHEN** a second process posts the run
+- **THEN** the second process is refused with status `pending` and writes no JournalEntry, and exactly one JournalEntry exists once the owner finishes; with file locking off the claim alone guards the run, as before
+
 ### REQ-PGP-008: Manifest pages SHALL expose the GL-post records under Loonadministratie
 
 `src/manifest.json`: the `PayrollGroup` menu ("Loonadministratie") gains child `PayrollGLPosts` (label "Loonjournaalposten", icon `BookEditOutline`); NEW pages `PayrollGLPosts` (index: columns `period`, `status` badge, `journalEntryId`, `postedAt`; default sort `postedAt` desc) and `PayrollGLPostDetail` (all fields including `errorMessage`, the `lines` snapshot as a table, and `journalNumber`/`journalEntryId` displayed as the pointer into shillinq — plain display, no cross-app deep link in MVP), structured like the existing `PayrollRunDetail`. The manifest MUST keep validating (`npm run check:manifest`).

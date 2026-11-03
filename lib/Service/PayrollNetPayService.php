@@ -195,7 +195,9 @@ class PayrollNetPayService {
 			return $this->outcome($runId, 'failed', (string)$collected['error'], $batch);
 		}
 
-		return $this->createUnderClaim($run, $collected);
+		$locked = (new HandoffLock($this->container))->holding('netpay/' . $this->runNumber($run), fn (): array => $this->createUnderClaim($run, $collected));
+
+		return ($locked ?? $this->outcome($runId, 'pending', 'Een andere verwerking houdt de overdrachtsvergrendeling voor dit runnummer vast.'));
 	}//end processRun()
 
 	/**
