@@ -143,7 +143,7 @@ class CompController extends Controller {
 				schema: 'CompAdjustment'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('CompController: aanpassing ' . $adjustmentId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->logger->warning('CompController: a comp adjustment lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 

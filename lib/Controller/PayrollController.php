@@ -347,7 +347,7 @@ class PayrollController extends Controller {
 				->setSchema('PayrollRun')
 				->findAll(['limit' => 1]);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('PayrollController: proforma-toegang kon niet worden geresolved: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollController: the pro-forma access check failed and is answered as no access.', ['exceptionClass' => $e::class]);
 			return false;
 		}
 
@@ -446,7 +446,7 @@ class PayrollController extends Controller {
 				->setSchema('Employee')
 				->findAll(['limit' => self::EMPLOYEE_LOOKUP_LIMIT]);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('PayrollController: eigen werknemer kon niet worden geresolved: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollController: the own employee lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -529,7 +529,7 @@ class PayrollController extends Controller {
 				schema: 'PayrollAdjustment'
 			);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('PayrollController: correctie ' . $adjustmentId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollController: a payroll adjustment lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -610,7 +610,7 @@ class PayrollController extends Controller {
 				schema: 'WkrAssessment'
 			);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('PayrollController: WKR-beoordeling ' . $assessmentId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollController: a WKR assessment lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -642,7 +642,7 @@ class PayrollController extends Controller {
 				schema: 'PayrollRun'
 			);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('PayrollController: loonrun ' . $runId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollController: a payroll run lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 

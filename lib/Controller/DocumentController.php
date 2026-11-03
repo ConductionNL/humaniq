@@ -196,7 +196,7 @@ class DocumentController extends Controller {
 				schema: $schema
 			);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('DocumentController: ' . $schema . ' ' . $id . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('DocumentController: a document subject lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -228,7 +228,7 @@ class DocumentController extends Controller {
 				schema: 'EmploymentContract'
 			);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('DocumentController: contract ' . $contractId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('DocumentController: a contract lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -261,7 +261,7 @@ class DocumentController extends Controller {
 				schema: 'Payslip'
 			);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('DocumentController: payslip ' . $payslipId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('DocumentController: a payslip lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 

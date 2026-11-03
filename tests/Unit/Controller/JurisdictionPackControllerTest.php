@@ -34,6 +34,8 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use OCA\Humaniq\Tests\Unit\Support\RecordingLogger;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -41,8 +43,14 @@ use Psr\Log\NullLogger;
  */
 class JurisdictionPackControllerTest extends TestCase {
 
+	/**
+	 * @var JurisdictionPackService&MockObject
+	 */
 	private JurisdictionPackService&MockObject $packs;
 
+	/**
+	 * @var YearTransitionService&MockObject
+	 */
 	private YearTransitionService&MockObject $years;
 
 	/**
@@ -148,13 +156,30 @@ class JurisdictionPackControllerTest extends TestCase {
 	}//end testThePackListIsForAdministrators()
 
 	/**
+	 * A failing pack read is logged as an error with the exception class
+	 * only, and answered without the exception text.
+	 *
+	 * @return void
+	 */
+	public function testAFailingPackReadLogsOnlyTheExceptionClass(): void {
+		$this->packs->method('list')->willThrowException(new \RuntimeException('row of employee 42'));
+		$logger = new RecordingLogger();
+
+		$response = $this->controller(true, $logger)->index();
+
+		self::assertSame(500, $response->getStatus());
+		self::assertSame([['error', 'JurisdictionPackController: the packs could not be read.', ['exceptionClass' => \RuntimeException::class]]], $logger->records);
+		self::assertStringNotContainsString('employee 42', (string)json_encode($response->getData()));
+	}//end testAFailingPackReadLogsOnlyTheExceptionClass()
+
+	/**
 	 * The controller for an admin or a non-admin caller.
 	 *
 	 * @param bool $admin Whether the caller is an administrator.
 	 *
 	 * @return JurisdictionPackController
 	 */
-	private function controller(bool $admin): JurisdictionPackController {
+	private function controller(bool $admin, ?LoggerInterface $logger = null): JurisdictionPackController {
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn($admin === true ? 'admin' : 'hr-demo');
 		$session = $this->createMock(IUserSession::class);
@@ -168,7 +193,7 @@ class JurisdictionPackControllerTest extends TestCase {
 			yearTransition: $this->years,
 			userSession: $session,
 			groupManager: $groups,
-			logger: new NullLogger()
+			logger: ($logger ?? new NullLogger())
 		);
 	}//end controller()
 
