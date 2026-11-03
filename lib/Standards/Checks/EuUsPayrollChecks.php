@@ -39,13 +39,18 @@ namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * German + French + US payroll, social-security, filing and reporting checks.
+ *
+ * @spec openspec/specs/hrm-rule-engine/spec.md
  */
 final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
+	use PayrollSampleFields;
 
 	/**
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md
 	 */
 	public static function checks(): array {
 		return [
@@ -266,6 +271,8 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -279,6 +286,8 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * fields (so a `--jurisdiction=DE|FR|US` audit also reports zero violations).
 	 *
 	 * @return array<string, array<int, array<string, mixed>>>
+	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md
 	 */
 	public static function seedObjects(): array {
 		return [
@@ -473,11 +482,7 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 			'wkrVrijeRuimteRemaining' => 1000.00,
 			'wkrExcess' => 0.00,
 			'wkrEindheffingRate' => null,
-			'statementProvided' => true,
-			'showsGrossWage' => true,
-			'showsDeductionBasis' => true,
-			'showsMinimumWage' => true,
-			'showsEmployerEmployeeIds' => true,
+			...self::statementFlags(),
 		];
 
 	}//end nlSafePayslip()
@@ -501,24 +506,10 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 			'solidaritaetszuschlag' => 34.10,
 			'churchMember' => true,
 			'kirchensteuer' => 55.80,
-			'kirchensteuerRate' => 9.0,
-			'rvEmployeeRate' => 9.3,
-			'rvEmployerRate' => 9.3,
-			'kvBaseRate' => 14.6,
-			'avRate' => 2.6,
-			'pvBaseRate' => 3.6,
-			'svContributionBase' => 4200.00,
-			'kvPvContributionBase' => 4200.00,
+			...self::germanSocialRates(4200.00),
 			// US/FR neutral fields so the sample is self-consistent if audited cross-context.
-			'ficaSsRate' => 6.2,
-			'ficaSsWageBaseApplied' => 4200.00,
-			'medicareRate' => 1.45,
-			'additionalMedicareApplied' => false,
-			'federalIncomeTaxWithheld' => 0.00,
-			'cotisations' => 0.00,
-			'pasRate' => 0.0,
-			'prelevementSource' => 0.00,
-			'reductionGeneraleApplied' => false,
+			...self::usWithholding(4200.00, 0.00),
+			...self::frenchContributionsAbsent(),
 			'netImposable' => 4200.00,
 			'netAPayer' => 2700.00,
 			'montantNetSocial' => 3500.00,
@@ -549,24 +540,9 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 			'netAPayer' => 1924.00,
 			'montantNetSocial' => 2080.00,
 			'conventionCollective' => 'Syntec',
-			'lohnsteuer' => 0.00,
-			'solzApplicable' => false,
-			'solidaritaetszuschlag' => 0.00,
-			'churchMember' => false,
-			'kirchensteuer' => 0.00,
-			'kirchensteuerRate' => 9.0,
-			'rvEmployeeRate' => 9.3,
-			'rvEmployerRate' => 9.3,
-			'kvBaseRate' => 14.6,
-			'avRate' => 2.6,
-			'pvBaseRate' => 3.6,
-			'svContributionBase' => 2600.00,
-			'kvPvContributionBase' => 2600.00,
-			'ficaSsRate' => 6.2,
-			'ficaSsWageBaseApplied' => 2600.00,
-			'medicareRate' => 1.45,
-			'additionalMedicareApplied' => false,
-			'federalIncomeTaxWithheld' => 0.00,
+			...self::germanTaxAbsent(),
+			...self::germanSocialRates(2600.00),
+			...self::usWithholding(2600.00, 0.00),
 		]);
 
 	}//end frPayslip()
@@ -585,28 +561,10 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 			'hoursWorked' => 173.33,
 			'nettoPay' => 4400.00,
 			'pensionContribution' => 300.00,
-			'ficaSsRate' => 6.2,
-			'ficaSsWageBaseApplied' => 6000.00,
-			'medicareRate' => 1.45,
-			'additionalMedicareApplied' => false,
-			'federalIncomeTaxWithheld' => 900.00,
-			'lohnsteuer' => 0.00,
-			'solzApplicable' => false,
-			'solidaritaetszuschlag' => 0.00,
-			'churchMember' => false,
-			'kirchensteuer' => 0.00,
-			'kirchensteuerRate' => 9.0,
-			'rvEmployeeRate' => 9.3,
-			'rvEmployerRate' => 9.3,
-			'kvBaseRate' => 14.6,
-			'avRate' => 2.6,
-			'pvBaseRate' => 3.6,
-			'svContributionBase' => 5000.00,
-			'kvPvContributionBase' => 5000.00,
-			'cotisations' => 0.00,
-			'pasRate' => 0.0,
-			'prelevementSource' => 0.00,
-			'reductionGeneraleApplied' => false,
+			...self::usWithholding(6000.00, 900.00),
+			...self::germanTaxAbsent(),
+			...self::germanSocialRates(5000.00),
+			...self::frenchContributionsAbsent(),
 			'netImposable' => 6000.00,
 			'netAPayer' => 4400.00,
 			'montantNetSocial' => 5000.00,
