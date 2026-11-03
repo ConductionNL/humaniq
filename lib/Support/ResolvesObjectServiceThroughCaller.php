@@ -1,9 +1,9 @@
 <?php
 
 /**
- * ResolvesObjectServiceForAdmin.
+ * ResolvesObjectServiceThroughCaller.
  *
- * Looks up OpenRegister's ObjectService for a controller that holds SettingsService and a container, and tells the admin to install the app when it is missing.
+ * Looks up OpenRegister's ObjectService for a controller that holds SettingsService and reaches the container through `$caller`.
  *
  * @category Support
  * @package  OCA\Humaniq\Support
@@ -29,7 +29,7 @@ use RuntimeException;
 /**
  * Looks up OpenRegister's ObjectService for a controller that holds SettingsService and a container.
  */
-trait ResolvesObjectServiceForAdmin {
+trait ResolvesObjectServiceThroughCaller {
 	/**
 	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
 	 */

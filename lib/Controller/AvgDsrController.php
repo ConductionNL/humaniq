@@ -64,7 +64,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use RuntimeException;
-use OCA\Humaniq\Support\ResolvesObjectServiceForAdmin;
+use OCA\Humaniq\Support\ResolvesObjectServiceThroughCaller;
 
 /**
  * Guarded endpoints for AVG data-subject-rights export/erase/rectify.
@@ -72,7 +72,7 @@ use OCA\Humaniq\Support\ResolvesObjectServiceForAdmin;
 class AvgDsrController extends Controller {
 
 	use ConvertsRowsToArrays;
-	use ResolvesObjectServiceForAdmin;
+	use ResolvesObjectServiceThroughCaller;
 
 	/**
 	 * The Employee fields a data subject may have corrected through a

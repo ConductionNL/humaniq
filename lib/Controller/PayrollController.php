@@ -98,7 +98,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
-use OCA\Humaniq\Support\ResolvesObjectServiceForAdmin;
+use OCA\Humaniq\Support\ResolvesObjectServiceThroughCaller;
 
 /**
  * Guarded endpoint that (re)calculates one draft payroll run, and the
@@ -111,7 +111,7 @@ class PayrollController extends Controller {
 
 	use ConvertsRowsToArrays;
 	use ReadsTypedRequestParameters;
-	use ResolvesObjectServiceForAdmin;
+	use ResolvesObjectServiceThroughCaller;
 
 	/**
 	 * Max Employee rows loaded when resolving the caller's own record for

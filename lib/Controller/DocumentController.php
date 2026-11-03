@@ -48,7 +48,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCA\Humaniq\Support\ResolvesObjectServiceForAdmin;
+use OCA\Humaniq\Support\ResolvesObjectServiceThroughCaller;
 
 /**
  * Guarded endpoint that triggers a single HR-document generation attempt.
@@ -56,7 +56,7 @@ use OCA\Humaniq\Support\ResolvesObjectServiceForAdmin;
 class DocumentController extends Controller {
 
 	use ConvertsRowsToArrays;
-	use ResolvesObjectServiceForAdmin;
+	use ResolvesObjectServiceThroughCaller;
 
 	/**
 	 * @param IRequest $request The request object.
