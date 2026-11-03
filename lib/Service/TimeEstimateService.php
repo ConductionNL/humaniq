@@ -98,33 +98,15 @@ class TimeEstimateService {
 		$mine = $this->forObject(rows: $estimates, type: $domainObjectType, ref: $domainObjectRef);
 		$booked = $this->forObject(rows: $entries, type: $domainObjectType, ref: $domainObjectRef);
 
-		$spentByRole = [];
-		$spent = 0.0;
-		foreach ($booked as $entry) {
-			$hours = $this->hours($entry);
-			$spent += $hours;
-			$role = $this->role($entry);
-			$spentByRole[$role] = (($spentByRole[$role] ?? 0.0) + $hours);
-		}
+		[$spent, $spentByRole] = $this->spent(booked: $booked);
 
 		$roles = [];
 		$estimatedTotal = 0.0;
 		$hasEstimate = false;
 		foreach ($mine as $estimate) {
 			$hasEstimate = true;
-			$role = $this->role($estimate);
-			$estimated = $this->estimatedHours($estimate);
-			$estimatedTotal += $estimated;
-			$roleSpent = (float)($spentByRole[$role] ?? 0.0);
-
-			$roles[] = [
-				'role' => ($role === self::NO_ROLE ? null : $role),
-				'estimatedHours' => round(num: $estimated, precision: 2),
-				'spentHours' => round(num: $roleSpent, precision: 2),
-				// Negative on purpose: an overrun clipped to zero is invisible.
-				'remainingHours' => round(num: ($estimated - $roleSpent), precision: 2),
-				'enforced' => (($estimate['enforced'] ?? false) === true),
-			];
+			$estimatedTotal += $this->estimatedHours($estimate);
+			$roles[] = $this->roleRow(estimate: $estimate, spentByRole: $spentByRole);
 		}
 
 		if ($hasEstimate === false) {
@@ -147,6 +129,49 @@ class TimeEstimateService {
 			'roles' => $roles,
 		];
 	}//end summary()
+
+	/**
+	 * The hours booked in total and per role.
+	 *
+	 * @param array<array<string, mixed>> $booked TimeEntry rows of one object.
+	 *
+	 * @return array{0: float, 1: array<string, float>}
+	 */
+	private function spent(array $booked): array {
+		$spentByRole = [];
+		$spent = 0.0;
+		foreach ($booked as $entry) {
+			$hours = $this->hours($entry);
+			$spent += $hours;
+			$role = $this->role($entry);
+			$spentByRole[$role] = (($spentByRole[$role] ?? 0.0) + $hours);
+		}
+
+		return [$spent, $spentByRole];
+	}//end spent()
+
+	/**
+	 * One estimate's role row: estimated, spent and remaining hours.
+	 *
+	 * @param array<string, mixed> $estimate    One TimeEstimate row.
+	 * @param array<string, float> $spentByRole Booked hours per role.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function roleRow(array $estimate, array $spentByRole): array {
+		$role = $this->role($estimate);
+		$estimated = $this->estimatedHours($estimate);
+		$roleSpent = (float)($spentByRole[$role] ?? 0.0);
+
+		return [
+			'role' => ($role === self::NO_ROLE ? null : $role),
+			'estimatedHours' => round(num: $estimated, precision: 2),
+			'spentHours' => round(num: $roleSpent, precision: 2),
+			// Negative on purpose: an overrun clipped to zero is invisible.
+			'remainingHours' => round(num: ($estimated - $roleSpent), precision: 2),
+			'enforced' => (($estimate['enforced'] ?? false) === true),
+		];
+	}//end roleRow()
 
 	/**
 	 * The refusal for writing one estimate, or null when it may be written.
