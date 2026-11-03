@@ -178,7 +178,7 @@ class AssetDialectMigrationService {
 				continue;
 			}
 
-			$this->writeAssetRow(id: $id, row: $row, mapped: $mapped, report: $report, register: $register);
+			$this->writeAssetRow(candidate: ['id' => $id, 'row' => $row, 'mapped' => $mapped, 'register' => $register], report: $report);
 		}//end foreach
 
 		return $report;
@@ -206,16 +206,15 @@ class AssetDialectMigrationService {
 	 * writer of Asset while it was off, and which a fatal between toggle and
 	 * restore would have left off permanently and silently.
 	 *
-	 * @param string $id The object uuid.
-	 * @param array<string, mixed> $row The row as read.
-	 * @param array<string, mixed> $mapped The mapper's result for that row.
+	 * @param array{id: string, row: array<string, mixed>, mapped: array<string, mixed>, register: string} $candidate The object uuid, the row as read, the mapper's result for it and the register slug.
 	 * @param array<string, mixed> $report The report, mutated in place.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
 	 */
-	private function writeAssetRow(string $id, array $row, array $mapped, array &$report, string $register): void {
+	private function writeAssetRow(array $candidate, array &$report): void {
+		['id' => $id, 'row' => $row, 'mapped' => $mapped, 'register' => $register] = $candidate;
 		if ($mapped['nonStatusChanged'] === false && $mapped['statusChanged'] === false) {
 			$report['alreadyCurrent']++;
 			return;

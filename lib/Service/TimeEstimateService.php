@@ -229,10 +229,7 @@ class TimeEstimateService {
 
 		$booked = $this->bookedAgainst(
 			entries: $entries,
-			type: $type,
-			ref: $ref,
-			role: $role,
-			entryId: $entryId
+			target: ['type' => $type, 'ref' => $ref, 'role' => $role, 'entryId' => $entryId]
 		);
 
 		$incoming = $this->hours($entry);
@@ -255,30 +252,21 @@ class TimeEstimateService {
 	 * measured against the other entries and not against its own old value.
 	 *
 	 * @param array<array<string, mixed>> $entries Every stored TimeEntry.
-	 * @param string $type The `<app>:<schema>` literal.
-	 * @param string $ref The object's uuid.
-	 * @param string $role The role, or {@see NO_ROLE}.
-	 * @param string $entryId The incoming entry's own id, empty when it is new.
+	 * @param array{type: string, ref: string, role: string, entryId: string} $target The `<app>:<schema>` literal, the object's uuid, the role (or {@see NO_ROLE}) and the id of the entry being booked ('' when new).
 	 *
 	 * @return float The booked hours.
 	 *
 	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-004
 	 */
-	private function bookedAgainst(
-		array $entries,
-		string $type,
-		string $ref,
-		string $role,
-		string $entryId
-	): float {
+	private function bookedAgainst(array $entries, array $target): float {
 		$booked = 0.0;
-		foreach ($this->forObject(rows: $entries, type: $type, ref: $ref) as $other) {
+		foreach ($this->forObject(rows: $entries, type: $target['type'], ref: $target['ref']) as $other) {
 			$otherId = trim((string)($other['id'] ?? ''));
-			if ($otherId !== '' && $otherId === $entryId) {
+			if ($otherId !== '' && $otherId === $target['entryId']) {
 				continue;
 			}
 
-			if ($this->role($other) !== $role) {
+			if ($this->role($other) !== $target['role']) {
 				continue;
 			}
 

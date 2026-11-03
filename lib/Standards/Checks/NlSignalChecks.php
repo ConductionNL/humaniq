@@ -176,42 +176,52 @@ final class NlSignalChecks implements CheckProvider {
 	 * @return bool
 	 */
 	private static function hasSuccessor(array $o, array $context): bool {
-		$employeeId = (string)($o['employeeId'] ?? '');
-		$ownId = (string)($o['id'] ?? $o['@self']['id'] ?? '');
 		$ownStart = strtotime((string)($o['startDate'] ?? ''));
 		if ($ownStart === false) {
 			return false;
 		}
 
-		$siblings = self::contractsByEmployeeId($context)[$employeeId] ?? [];
-
-		foreach ($siblings as $sibling) {
-			$siblingId = (string)($sibling['id'] ?? '');
-			if ($ownId !== '' && $siblingId !== '' && $siblingId === $ownId) {
-				// Never count itself as its own successor.
-				continue;
-			}
-
-			$siblingStart = strtotime((string)($sibling['startDate'] ?? ''));
-			if ($siblingStart === false || $siblingStart <= $ownStart) {
-				continue;
-			}
-
-			$siblingEndRaw = trim((string)($sibling['endDate'] ?? ''));
-			if ($siblingEndRaw === '') {
-				// Open-ended successor.
-				return true;
-			}
-
-			$siblingEnd = strtotime($siblingEndRaw);
-			$ownEnd = strtotime((string)($o['endDate'] ?? ''));
-			if ($siblingEnd !== false && $ownEnd !== false && $siblingEnd > $ownEnd) {
+		$own = ['id' => (string)($o['id'] ?? $o['@self']['id'] ?? ''), 'start' => $ownStart, 'end' => strtotime((string)($o['endDate'] ?? ''))];
+		foreach ((self::contractsByEmployeeId($context)[(string)($o['employeeId'] ?? '')] ?? []) as $sibling) {
+			if (self::succeeds(sibling: $sibling, own: $own) === true) {
 				return true;
 			}
 		}
 
 		return false;
 	}//end hasSuccessor()
+
+	/**
+	 * Whether one sibling contract succeeds the contract: another contract
+	 * (never itself) that starts later and is open-ended or ends later.
+	 *
+	 * @param array<string, mixed> $sibling The sibling contract.
+	 * @param array{id: string, start: int, end: int|false} $own The contract's id, start and parsed end (false when unparseable).
+	 *
+	 * @return bool
+	 */
+	private static function succeeds(array $sibling, array $own): bool {
+		$siblingId = (string)($sibling['id'] ?? '');
+		if ($own['id'] !== '' && $siblingId !== '' && $siblingId === $own['id']) {
+			// Never count itself as its own successor.
+			return false;
+		}
+
+		$siblingStart = strtotime((string)($sibling['startDate'] ?? ''));
+		if ($siblingStart === false || $siblingStart <= $own['start']) {
+			return false;
+		}
+
+		$siblingEndRaw = trim((string)($sibling['endDate'] ?? ''));
+		if ($siblingEndRaw === '') {
+			// Open-ended successor.
+			return true;
+		}
+
+		$siblingEnd = strtotime($siblingEndRaw);
+
+		return ($siblingEnd !== false && $own['end'] !== false && $siblingEnd > $own['end']);
+	}//end succeeds()
 
 	/**
 	 * The `signals.contractsByEmployeeId` index from the context, or an empty
