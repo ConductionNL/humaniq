@@ -31,6 +31,7 @@ use Psr\Log\NullLogger;
  *
  * @covers \OCA\Humaniq\Service\PayrollNetPayService
  * @covers \OCA\Humaniq\Service\PayrollGLPostService
+ * @uses   \OCA\Humaniq\Service\PendingClaims
  */
 class ShillinqHandoffConcurrencyTest extends TestCase {
 

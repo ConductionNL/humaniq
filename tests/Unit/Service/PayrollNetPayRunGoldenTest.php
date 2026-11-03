@@ -30,6 +30,7 @@ use Psr\Log\NullLogger;
  * Golden test for {@see PayrollNetPayService::processRun()}.
  *
  * @covers \OCA\Humaniq\Service\PayrollNetPayService
+ * @uses   \OCA\Humaniq\Service\PendingClaims
  */
 class PayrollNetPayRunGoldenTest extends TestCase {
 

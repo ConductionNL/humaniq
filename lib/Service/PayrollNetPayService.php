@@ -106,14 +106,6 @@ class PayrollNetPayService {
 	private const ACTIVE_STATUSES = ['pending', 'created'];
 
 	/**
-	 * How long a `pending` batch counts as another process still working on
-	 * the run. An older one is a crash left behind and is recovered.
-	 *
-	 * @var int
-	 */
-	private const CLAIM_FRESH_SECONDS = 900;
-
-	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppManager $appManager To duck-type-probe shillinq's presence.
 	 * @param SettingsService $settingsService Register slug + net-pay config.
@@ -230,7 +222,7 @@ class PayrollNetPayService {
 			return null;
 		}
 
-		if ($this->isFreshClaim($active) === true) {
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->isFresh($active) === true) {
 			return $this->outcome($runId, 'pending', 'Deze loonrun wordt al door een andere verwerking klaargezet.', $active);
 		}
 
@@ -254,7 +246,7 @@ class PayrollNetPayService {
 		$runId = $this->idOf($run);
 		$runNumber = $this->runNumber($run);
 		$claim = $this->createBatch(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'runNumber' => $runNumber]);
-		if ($this->hasRivalBatch($claim, $runId) === true) {
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->hasRival($this->batchesForRun($runId), $claim) === true) {
 			$withdrawn = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Ingetrokken: een andere verwerking zet deze loonrun al klaar.']);
 			return $this->outcome($runId, 'pending', 'Deze loonrun wordt al door een andere verwerking klaargezet.', $withdrawn);
 		}
@@ -279,40 +271,6 @@ class PayrollNetPayService {
 
 		return $this->outcome($runId, 'created', 'Klaargezet in shillinq als PaymentRun ' . $runNumber . '.', $batch, $paymentRunId);
 	}//end createUnderClaim()
-
-	/**
-	 * Whether a pending batch was written recently enough that its process
-	 * may still be working (OpenRegister's `@self.updated`, else `created`).
-	 * A batch without either is treated as stale.
-	 *
-	 * @param array<string, mixed> $batch The pending batch.
-	 *
-	 * @return bool
-	 */
-	private function isFreshClaim(array $batch): bool {
-		$stamp = strtotime((string)($batch['@self']['updated'] ?? $batch['@self']['created'] ?? ''));
-
-		return $stamp !== false && (time() - $stamp) < self::CLAIM_FRESH_SECONDS;
-	}//end isFreshClaim()
-
-	/**
-	 * Whether the run has an active batch other than this claim.
-	 *
-	 * @param array<string, mixed> $claim The claim just written.
-	 * @param string               $runId The PayrollRun id.
-	 *
-	 * @return bool
-	 */
-	private function hasRivalBatch(array $claim, string $runId): bool {
-		$claimId = $this->idOf($claim);
-		foreach ($this->batchesForRun($runId) as $row) {
-			if ($this->idOf($row) !== $claimId && in_array((string)($row['status'] ?? ''), self::ACTIVE_STATUSES, true) === true) {
-				return true;
-			}
-		}
-
-		return false;
-	}//end hasRivalBatch()
 
 	/**
 	 * Collect one payment line per payable payslip in the run's period,
