@@ -2077,6 +2077,60 @@
             }
         ]
     },
+    "stale pending, run id only in @self, adopts": {
+        "outcome": {
+            "runId": "run-self",
+            "status": "created",
+            "message": "Bestaande shillinq PaymentRun overgenomen (crash-recovery).",
+            "batchId": "b-3",
+            "paymentRunId": "pr-9"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "b-3",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "b-3",
+                    "payrollRunId": "run-self",
+                    "status": "created",
+                    "shillinqPaymentRunRef": "pr-9",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "createdAt": "<now>",
+                    "errorMessage": null
+                }
+            }
+        ]
+    },
+    "stale pending with a different stored runNumber, padded administration, adopts": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Bestaande shillinq PaymentRun overgenomen (crash-recovery).",
+            "batchId": "b-4",
+            "paymentRunId": "pr-9"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "b-4",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "b-4",
+                    "payrollRunId": "run-1",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "shillinqPaymentRunRef": "pr-9",
+                    "createdAt": "<now>",
+                    "errorMessage": null
+                }
+            }
+        ]
+    },
     "already created": {
         "outcome": {
             "runId": "run-1",

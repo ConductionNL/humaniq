@@ -138,6 +138,20 @@ class PayrollNetPayRunGoldenTest extends TestCase {
 				'PaymentRun' => [['id' => 'pr-9', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001']],
 			],
 		];
+		$cases['stale pending, run id only in @self, adopts'] = [
+			'run' => $run(['id' => null, '@self' => ['id' => 'run-self']]),
+			'rows' => [
+				'PayrollPaymentBatch' => [['id' => 'b-3', 'payrollRunId' => 'run-self', 'status' => 'pending']],
+				'PaymentRun' => [['id' => 'pr-9', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001']],
+			],
+		];
+		$cases['stale pending with a different stored runNumber, padded administration, adopts'] = [
+			'run' => $run(['administrationId' => ' ADM-001 ']),
+			'rows' => [
+				'PayrollPaymentBatch' => [['id' => 'b-4', 'payrollRunId' => 'run-1', 'status' => 'pending', 'runNumber' => 'HRMQ-NETPAY-2026-04-ADM-OLD']],
+				'PaymentRun' => [['id' => 'pr-old', 'runNumber' => 'HRMQ-NETPAY-2026-04-ADM-OLD'], ['id' => 'pr-9', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001']],
+			],
+		];
 		$cases['already created'] = ['run' => $run(), 'rows' => ['PayrollPaymentBatch' => [['id' => 'b-2', 'payrollRunId' => 'run-1', 'status' => 'created', 'shillinqPaymentRunRef' => 'pr-1']]]];
 		$cases['shillinq not installed'] = ['run' => $run(), 'rows' => ['Employee' => $employees, 'Payslip' => $payslips('2026-05')], 'installed' => false];
 		$cases['a line error'] = ['run' => $run(), 'rows' => ['Employee' => $employees, 'Payslip' => [['id' => 'ps-x', 'period' => '2026-05', 'employeeId' => 'ghost', 'nettoPay' => 10]]]];
