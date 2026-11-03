@@ -43,6 +43,7 @@ use stdClass;
  * @covers \OCA\Humaniq\Flow\PayrollFlowNodeServices
  * @covers \OCA\Humaniq\Flow\PayrollFlowNodeBase
  * @covers \OCA\Humaniq\Flow\PayrollApproveNode
+ * @uses   \OCA\Humaniq\Support\ConvertsRowsToArrays
  */
 class PayrollFlowNodeServicesTest extends TestCase {
 

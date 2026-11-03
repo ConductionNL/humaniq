@@ -48,6 +48,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -56,6 +57,8 @@ use RuntimeException;
  * Upserts/removes approved-absence VEVENTs on the configured shared calendar.
  */
 class LeaveCalendarService {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * The duck-typed CalDAV backend's FQCN, resolved from the container by
@@ -993,25 +996,6 @@ class LeaveCalendarService {
 
 		return $out;
 	}//end normaliseRows()
-
-	/**
-	 * Normalise a single ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * @return mixed The OpenRegister ObjectService.

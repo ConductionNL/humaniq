@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -48,6 +49,8 @@ use RuntimeException;
  * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
  */
 class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * Rows per page of a lookup query (the
@@ -421,24 +424,5 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 
 		return clone $service;
 	}//end objects()
-
-	/**
-	 * Normalise a findAll row to an array.
-	 *
-	 * @param mixed $row The row (array or ObjectEntity).
-	 *
-	 * @return array<string, mixed> The payload array.
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 }//end class

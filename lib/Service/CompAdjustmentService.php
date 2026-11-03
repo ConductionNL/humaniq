@@ -58,6 +58,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -70,6 +71,8 @@ use RuntimeException;
  * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-006
  */
 class CompAdjustmentService {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * Max objects loaded per type.
@@ -422,25 +425,6 @@ class CompAdjustmentService {
 		];
 
 	}//end outcome()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * @return mixed The OpenRegister ObjectService.
