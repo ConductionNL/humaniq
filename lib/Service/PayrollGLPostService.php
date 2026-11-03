@@ -90,13 +90,6 @@ class PayrollGLPostService {
 	private const ACTIVE_STATUSES = ['pending', 'posted'];
 
 	/**
-	 * Required numeric PayrollRun totals the balanced journal is built from.
-	 *
-	 * @var string[]
-	 */
-	private const REQUIRED_TOTALS = ['totalGross', 'totalEmployerCharges', 'totalLoonheffing', 'totalNet'];
-
-	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppManager $appManager To duck-type-probe shillinq's presence.
 	 * @param SettingsService $settingsService Register slug + configurable RGS account numbers.
@@ -298,21 +291,21 @@ class PayrollGLPostService {
 	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
 	 */
 	public function buildLines(array $run, array $allocations = []): array {
-		foreach (self::REQUIRED_TOTALS as $field) {
-			if (isset($run[$field]) === false || is_numeric($run[$field]) === false) {
-				return $this->buildFailure(sprintf('PayrollRun-veld "%s" ontbreekt of is niet numeriek.', $field));
-			}
+		$totals = new PayrollJournalTotals($run);
+		$refusal = $totals->refusal();
+		if ($refusal !== null) {
+			return $this->buildFailure($refusal);
 		}
 
-		$grossCents = (int)round(((float)$run['totalGross']) * 100);
-		$chargesCents = (int)round(((float)$run['totalEmployerCharges']) * 100);
-		$loonheffingCents = (int)round(((float)$run['totalLoonheffing']) * 100);
-		$netCents = (int)round(((float)$run['totalNet']) * 100);
-		$reimbursementCents = (is_numeric($run['totalReimbursements'] ?? null) === true ? (int)round(((float)$run['totalReimbursements']) * 100) : 0);
+		$grossCents = $totals->cents('totalGross');
+		$chargesCents = $totals->cents('totalEmployerCharges');
+		$loonheffingCents = $totals->cents('totalLoonheffing');
+		$netCents = $totals->cents('totalNet');
+		$reimbursementCents = $totals->cents('totalReimbursements');
 
 		// payroll-expenses-and-allowances D6: reimbursements raise net with no
 		// wage cost behind them, so they carry their own debit line.
-		$debitTotalCents = ($grossCents + $chargesCents + max(0, $reimbursementCents));
+		$debitTotalCents = ($grossCents + $chargesCents + $reimbursementCents);
 		$creditKnownCents = ($loonheffingCents + $netCents);
 		$remainderCents = ($debitTotalCents - $creditKnownCents);
 

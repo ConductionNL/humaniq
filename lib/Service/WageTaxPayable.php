@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use InvalidArgumentException;
 
 /**
  * The draft payable to the Belastingdienst for one return.
@@ -84,19 +85,20 @@ class WageTaxPayable {
 	}//end build()
 
 	/**
-	 * The last day of a YYYY-MM period.
+	 * The last day of a YYYY-MM period (surrounding spaces allowed).
 	 *
 	 * @param string $period The period.
 	 *
 	 * @return string
+	 *
+	 * @throws InvalidArgumentException When the period is not a YYYY-MM month: PHP would read '' or '202605' as today.
 	 */
 	private function lastDayOf(string $period): string {
-		try {
-			$first = new DateTimeImmutable($period . '-01');
-		} catch (\Exception $e) {
-			return $period;
+		$period = trim($period);
+		if (preg_match('/^\d{4}-(0?[1-9]|1[0-2])$/', $period) !== 1) {
+			throw new InvalidArgumentException('The wage tax return has no period in YYYY-MM form, so the payable has no invoice date. Fix the period on the return.');
 		}
 
-		return $first->format('Y-m-t');
+		return (new DateTimeImmutable($period . '-01'))->format('Y-m-t');
 	}//end lastDayOf()
 }//end class

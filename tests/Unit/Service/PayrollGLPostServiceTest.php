@@ -417,6 +417,100 @@ class PayrollGLPostServiceTest extends TestCase {
 	}//end testPostRunFailsClosedOnInconsistentTotalsWithoutTouchingShillinq()
 
 	/**
+	 * Runs whose totals cannot make a journal: one negative total, or
+	 * nothing on the debit side.
+	 *
+	 * @return array<string, array{0: array<string, mixed>, 1: string}>
+	 */
+	public static function unpostableTotals(): array {
+		return [
+			'negative gross and net' => [['totalGross' => -100.0, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => 0.0, 'totalNet' => -100.0], 'Negatief runtotaal: PayrollRun-veld "totalGross" is -100.00; een loonjournaalpost boekt geen negatieve bedragen.'],
+			'negative employer charges' => [['totalEmployerCharges' => -0.01], 'Negatief runtotaal: PayrollRun-veld "totalEmployerCharges" is -0.01; een loonjournaalpost boekt geen negatieve bedragen.'],
+			'negative wage tax' => [['totalLoonheffing' => -50.0], 'Negatief runtotaal: PayrollRun-veld "totalLoonheffing" is -50.00; een loonjournaalpost boekt geen negatieve bedragen.'],
+			'negative net' => [['totalLoonheffing' => 1500.0, 'totalNet' => -50.0], 'Negatief runtotaal: PayrollRun-veld "totalNet" is -50.00; een loonjournaalpost boekt geen negatieve bedragen.'],
+			'negative net as text' => [['totalNet' => '-12.5'], 'Negatief runtotaal: PayrollRun-veld "totalNet" is -12.50; een loonjournaalpost boekt geen negatieve bedragen.'],
+			'negative reimbursements' => [['totalReimbursements' => -25.0], 'Negatief runtotaal: PayrollRun-veld "totalReimbursements" is -25.00; een loonjournaalpost boekt geen negatieve bedragen.'],
+			'a missing total before a negative one' => [['totalGross' => -100.0, 'totalNet' => null], 'PayrollRun-veld "totalNet" ontbreekt of is niet numeriek.'],
+			'all totals zero' => [['totalGross' => 0, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => '0', 'totalNet' => 0.0], 'Runtotalen zijn nul: bruto, werkgeverslasten en declaraties samen 0,00; er is geen loonjournaalpost te boeken.'],
+			'totals that round to zero' => [['totalGross' => 0.004, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => 0.0, 'totalNet' => 0.0, 'totalReimbursements' => 0.0], 'Runtotalen zijn nul: bruto, werkgeverslasten en declaraties samen 0,00; er is geen loonjournaalpost te boeken.'],
+		];
+
+	}//end unpostableTotals()
+
+	/**
+	 * @param array<string, mixed> $totals  The run totals.
+	 * @param string               $message The refusal.
+	 *
+	 * @dataProvider unpostableTotals
+	 *
+	 * @return void
+	 */
+	public function testBuildLinesRefusesTotalsThatCannotMakeAJournal(array $totals, string $message): void {
+		[$service] = $this->service();
+		$built = $service->buildLines($this->payrollRun($totals));
+
+		$this->assertSame(['lines' => [], 'error' => $message, 'glExpensePosted' => null, 'glLiabilityPosted' => null], $built);
+
+	}//end testBuildLinesRefusesTotalsThatCannotMakeAJournal()
+
+	/**
+	 * @param array<string, mixed> $totals  The run totals.
+	 * @param string               $message The refusal.
+	 *
+	 * @dataProvider unpostableTotals
+	 *
+	 * @return void
+	 */
+	public function testPostRunRefusesTotalsThatCannotMakeAJournalAndLeavesTheRunApproved(array $totals, string $message): void {
+		[$service, $fake] = $this->service(['PayrollRun' => [$this->payrollRun($totals)]]);
+
+		$result = $service->postRun($this->payrollRun($totals));
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertSame($message, $result['message']);
+		$this->assertNull($result['journalEntryId']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+		$this->assertCount(0, $this->savedFor($fake, 'PayrollRun'));
+		$this->assertSame([['payrollRunId' => 'run-1', 'period' => '2026-05', 'status' => 'failed', 'errorMessage' => $message, 'id' => 'generated-PayrollGLPost-1']], $this->savedFor($fake, 'PayrollGLPost'));
+
+	}//end testPostRunRefusesTotalsThatCannotMakeAJournalAndLeavesTheRunApproved()
+
+	/**
+	 * Zero is refused for the journal as a whole, not per total: a run with
+	 * no wage tax, no employer charges, or only reimbursements still posts.
+	 *
+	 * @return array<string, array{0: array<string, mixed>, 1: array<string, float>}>
+	 */
+	public static function postableEdgeTotals(): array {
+		return [
+			'no wage tax' => [['totalLoonheffing' => 0.0, 'totalNet' => 3800.0], ['4001' => 3800.0, '4002' => 649.8, '1702' => 4449.8]],
+			'no employer charges' => [['totalEmployerCharges' => 0.0], ['4001' => 3800.0, '1701' => 1102.0, '1702' => 2698.0]],
+			'only reimbursements' => [['totalGross' => 0.0, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => 0.0, 'totalNet' => 50.0, 'totalReimbursements' => 50.0], ['' => 50.0, '1702' => 50.0]],
+			'only employer charges' => [['totalGross' => 0.0, 'totalEmployerCharges' => 10.0, 'totalLoonheffing' => 0.0, 'totalNet' => 0.0], ['4002' => 10.0, '1702' => 10.0]],
+			'one cent of gross' => [['totalGross' => 0.01, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => 0.0, 'totalNet' => 0.01], ['4001' => 0.01, '1702' => 0.01]],
+			'negative zero' => [['totalEmployerCharges' => -0.0, 'totalReimbursements' => -0.004], ['4001' => 3800.0, '1701' => 1102.0, '1702' => 2698.0]],
+		];
+
+	}//end postableEdgeTotals()
+
+	/**
+	 * @param array<string, mixed> $totals   The run totals.
+	 * @param array<string, float> $expected Amount per account.
+	 *
+	 * @dataProvider postableEdgeTotals
+	 *
+	 * @return void
+	 */
+	public function testBuildLinesStillPostsZeroTotalsInsideAJournalWithADebit(array $totals, array $expected): void {
+		[$service] = $this->service();
+		$built = $service->buildLines($this->payrollRun($totals));
+
+		$this->assertNull($built['error']);
+		$this->assertSame($expected, array_column($built['lines'], 'amount', 'accountNumber'));
+
+	}//end testBuildLinesStillPostsZeroTotalsInsideAJournalWithADebit()
+
+	/**
 	 * @return void
 	 */
 	public function testPostRunRecordsSkippedNoShillinqWhenNotInstalled(): void {

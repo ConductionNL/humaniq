@@ -95,23 +95,7 @@
         "administrationId": "ADM-001"
     },
     "period mei": {
-        "vendorId": "payee-bd",
-        "invoiceNumber": "1234 5678 9012 3456",
-        "invoiceReference": "LH-2026-05-001",
-        "invoiceDate": "mei",
-        "dueDate": "2026-06-30",
-        "currency": "EUR",
-        "totalAmount": 12345.0,
-        "taxAmount": 0.0,
-        "lines": [
-            {
-                "description": "Loonheffingen mei, aangifte LH-2026-05-001",
-                "accountNumber": "1701",
-                "amount": 12345.0
-            }
-        ],
-        "state": "draft",
-        "administrationId": "ADM-001"
+        "refused": "The wage tax return has no period in YYYY-MM form, so the payable has no invoice date. Fix the period on the return."
     },
     "no return number": {
         "vendorId": "payee-bd",
