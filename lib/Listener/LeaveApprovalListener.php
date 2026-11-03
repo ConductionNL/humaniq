@@ -45,6 +45,7 @@ use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Support\ResolvesSchemaSlug;
 
 /**
  * Listener that recomputes a leave balance whenever a leave request changes.
@@ -54,6 +55,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-001
  */
 class LeaveApprovalListener implements IEventListener {
+
+	use ResolvesSchemaSlug;
 
 	/**
 	 * The schema slug this listener acts on, lower-cased for comparison.
@@ -121,30 +124,4 @@ class LeaveApprovalListener implements IEventListener {
 		}//end try
 
 	}//end handle()
-
-	/**
-	 * Resolve a schema id to its slug via OpenRegister's SchemaMapper.
-	 *
-	 * Returns an empty string when OpenRegister is absent or the schema cannot
-	 * be resolved, so the listener no-ops safely.
-	 *
-	 * @param string $schemaId The OpenRegister schema id/uuid carried by the object.
-	 *
-	 * @return string The schema slug, or '' when unresolvable.
-	 */
-	private function resolveSchemaSlug(string $schemaId): string {
-		if ($schemaId === '') {
-			return '';
-		}
-
-		try {
-			$schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
-			$schema = $schemaMapper->find($schemaId);
-			return (string)$schema->getSlug();
-		} catch (\Throwable $e) {
-			return '';
-		}
-
-	}//end resolveSchemaSlug()
-
 }//end class

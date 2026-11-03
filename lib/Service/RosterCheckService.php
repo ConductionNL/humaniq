@@ -50,7 +50,8 @@ use OCA\Humaniq\Support\RegisterSlugLookup;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\KeepsReadableRows;
+use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
 
 /**
  * On-demand Arbeidstijdenwet cross-check over one roster's RosterAssignments.
@@ -58,6 +59,9 @@ use RuntimeException;
  * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
  */
 class RosterCheckService {
+
+	use KeepsReadableRows;
+	use ResolvesObjectServiceByClass;
 
 	/**
 	 * Max objects loaded per type for a check run.
@@ -423,48 +427,6 @@ class RosterCheckService {
 	}//end loadAll()
 
 	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$out[] = (array)$row->jsonSerialize();
-			}
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. class_exists() rather
-		// than SettingsService::isOpenRegisterAvailable(), because this class
-		// does not inject SettingsService and adding a constructor dependency
-		// purely to ask a yes/no question is the wrong trade. It answers the
-		// same question the container would otherwise have answered fatally,
-		// with a message that names the app the admin has to install.
-		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * The slug this instance's humaniq register answers to, or null when absent.
 	 *
 	 * This used to end `return $register === '' ? 'hrmq' : $register;` under a
@@ -490,5 +452,4 @@ class RosterCheckService {
 	private function registerSlug(): ?string {
 		return (new RegisterSlugLookup($this->container, $this->appConfig))->slugOrNull();
 	}//end registerSlug()
-
 }//end class

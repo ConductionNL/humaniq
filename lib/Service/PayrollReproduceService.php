@@ -50,13 +50,15 @@ use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Recomputes a sealed Payslip from its own stored `engineInputSnapshot` and
  * compares the result cents-exact against the stored figures.
  */
 final class PayrollReproduceService {
+
+	use ResolvesObjectService;
 
 	/**
 	 * @var string
@@ -382,28 +384,6 @@ final class PayrollReproduceService {
 	}//end centsEqual()
 
 	/**
-	 * Find one object by id (uuid) within a schema.
-	 *
-	 * @param string $schema The schema slug.
-	 * @param string $id The object id (uuid).
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function findById(string $schema, string $id): ?array {
-		if ($id === '') {
-			return null;
-		}
-
-		foreach ($this->loadAll($schema) as $row) {
-			if ($this->idOf($row) === $id) {
-				return $row;
-			}
-		}
-
-		return null;
-	}//end findById()
-
-	/**
 	 * Load every object of a schema, normalised to plain arrays.
 	 *
 	 * @param string $schema The schema slug.
@@ -468,28 +448,33 @@ final class PayrollReproduceService {
 	}//end idOf()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
 
+	/**
+	 * Find one object by id (uuid) within a schema — the `loadAll()` +
+	 * filter pattern this codebase's services use throughout (no dedicated
+	 * find-by-uuid call on `ObjectService`).
+	 *
+	 * @param string $schema The schema slug.
+	 * @param string $id The object id (uuid).
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findById(string $schema, string $id): ?array {
+		if ($id === '') {
+			return null;
+		}
+
+		foreach ($this->loadAll($schema) as $row) {
+			if ($this->idOf($row) === $id) {
+				return $row;
+			}
+		}
+
+		return null;
+	}//end findById()
 }//end class

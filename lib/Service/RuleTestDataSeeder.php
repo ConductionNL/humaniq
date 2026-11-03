@@ -43,11 +43,14 @@ use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
 
 /**
  * Makes the local test data compliant with the enforced rules (idempotent).
  */
 class RuleTestDataSeeder {
+
+	use ResolvesObjectServiceByClass;
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppConfig $appConfig App config for the register slug.
@@ -189,24 +192,6 @@ class RuleTestDataSeeder {
 
 		return $this->userManager->get('admin');
 	}//end adminUser()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. class_exists() rather
-		// than SettingsService::isOpenRegisterAvailable(), because this class
-		// does not inject SettingsService and adding a constructor dependency
-		// purely to ask a yes/no question is the wrong trade. It answers the
-		// same question the container would otherwise have answered fatally.
-		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
 
 	/**
 	 * The slug this instance's humaniq register answers to.

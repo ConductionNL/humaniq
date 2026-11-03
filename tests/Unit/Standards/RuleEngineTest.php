@@ -91,6 +91,9 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Humaniq\Standards\RuleCatalogue
  * @uses \OCA\Humaniq\Standards\TableCheckRegistry
  * @uses \OCA\Humaniq\Standards\Violation
+ * @uses   \OCA\Humaniq\Standards\Checks\WorkingTimeRules
+ * @uses   \OCA\Humaniq\Support\RoundsToCents
+ * @uses   \OCA\Humaniq\Support\ChecksFilingDeadlines
  */
 final class RuleEngineTest extends TestCase {
 

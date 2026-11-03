@@ -68,7 +68,7 @@ use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Orchestrates AVG data-subject-rights operations over OpenRegister's
@@ -78,6 +78,7 @@ use RuntimeException;
 class AvgDsrService {
 
 	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
 
 	/**
 	 * The guarded service's field-level erase mode (mirrors
@@ -350,24 +351,6 @@ class AvgDsrService {
 	}//end rectifySubjectObject()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return mixed OpenRegister's guarded, RBAC/tenant-scoped
 	 *               `Gdpr\DataSubjectRequestService` (hrmq#99) -- unlike the
 	 *               previous `DsarService`, every public method runs under the
@@ -377,5 +360,4 @@ class AvgDsrService {
 	private function guardedService(): mixed {
 		return $this->container->get(self::GUARDED_SERVICE_FQCN);
 	}//end guardedService()
-
 }//end class

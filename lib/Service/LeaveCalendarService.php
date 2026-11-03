@@ -52,6 +52,9 @@ use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\NormalisesRows;
+use OCA\Humaniq\Support\ReadsIcsValues;
 
 /**
  * Upserts/removes approved-absence VEVENTs on the configured shared calendar.
@@ -59,6 +62,9 @@ use RuntimeException;
 class LeaveCalendarService {
 
 	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use NormalisesRows;
+	use ReadsIcsValues;
 
 	/**
 	 * The duck-typed CalDAV backend's FQCN, resolved from the container by
@@ -651,35 +657,6 @@ class LeaveCalendarService {
 	}//end veventUnchanged()
 
 	/**
-	 * Extract a single property's value from a raw ICS text
-	 * (`PROPERTY[;PARAMS]:VALUE`), tolerant of `;VALUE=DATE` parameters and
-	 * both CRLF and LF line endings. Returns null when the property is
-	 * absent.
-	 *
-	 * @param string $ics The raw ICS text.
-	 * @param string $property The property name (e.g. `DTSTART`).
-	 *
-	 * @return string|null
-	 */
-	private function extractIcsValue(string $ics, string $property): ?string {
-		$lines = preg_split('/\r\n|\n|\r/', $ics) ?: [];
-		foreach ($lines as $line) {
-			if (str_starts_with($line, $property . ':') === true) {
-				return substr($line, strlen($property) + 1);
-			}
-
-			if (str_starts_with($line, $property . ';') === true) {
-				$colonPos = strpos($line, ':');
-				if ($colonPos !== false) {
-					return substr($line, $colonPos + 1);
-				}
-			}
-		}
-
-		return null;
-	}//end extractIcsValue()
-
-	/**
 	 * Render one all-day VEVENT wrapped in a VCALENDAR (design.md D3): hand-built
 	 * RFC 5545, `DTSTART;VALUE=DATE`/`DTEND;VALUE=DATE`, `DTSTAMP` (current
 	 * UTC time), `SEQUENCE:0`, `TRANSP:TRANSPARENT`, no ATTENDEE/ORGANIZER/
@@ -982,44 +959,9 @@ class LeaveCalendarService {
 	}//end tryLoadAll()
 
 	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

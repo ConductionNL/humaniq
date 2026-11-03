@@ -36,6 +36,7 @@ use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Humaniq\Support\NormalisesRows;
 
 /**
  * Loads/finds/saves the Expense and ReceiptExtraction rows this leaf touches.
@@ -43,6 +44,7 @@ use RuntimeException;
 class ReceiptExtractionRepository {
 
 	use ConvertsRowsToArrays;
+	use NormalisesRows;
 
 	/**
 	 * OpenRegister's ObjectService, resolved by string FQCN.
@@ -254,22 +256,6 @@ class ReceiptExtractionRepository {
 	}//end loadAll()
 
 	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
 	 * @return mixed The OpenRegister ObjectService.
 	 */
 	private function objectService(): mixed {
@@ -293,5 +279,4 @@ class ReceiptExtractionRepository {
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class
