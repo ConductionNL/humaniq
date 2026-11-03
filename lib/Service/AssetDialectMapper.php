@@ -127,25 +127,7 @@ class AssetDialectMapper {
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function mapAssetRow(array $row): array {
-		$withoutStatusChange = $row;
-		$nonStatusChanged = false;
-		$hardSkipReasons = [];
-
-		// category.
-		$categoryResult = $this->mapEnumValue(
-			value: ($row['category'] ?? null),
-			map: self::ASSET_CATEGORY_MAP,
-			current: self::ASSET_CATEGORY_CURRENT,
-			label: 'category'
-		);
-		if ($categoryResult['skipReason'] !== null) {
-			$hardSkipReasons[] = $categoryResult['skipReason'];
-		}
-
-		if ($categoryResult['changed'] === true) {
-			$withoutStatusChange['category'] = $categoryResult['value'];
-			$nonStatusChanged = true;
-		}
+		$state = $this->withCategory(state: ['row' => $row, 'changed' => false, 'skips' => []]);
 
 		// status (translated into $final only -- left untouched in
 		// $withoutStatusChange, see class docblock).
@@ -156,39 +138,73 @@ class AssetDialectMapper {
 			label: 'status'
 		);
 		if ($statusResult['skipReason'] !== null) {
-			$hardSkipReasons[] = $statusResult['skipReason'];
+			$state['skips'][] = $statusResult['skipReason'];
 		}
 
-		$statusChanged = $statusResult['changed'];
-		$newStatus = $statusResult['value'];
-
-		// Field renames (kenteken/serienummer/aanschafdatum/aanschafwaarde).
-		$fieldResult = $this->applyFieldRenames($withoutStatusChange, self::ASSET_FIELD_MAP);
-		if ($fieldResult['hardSkipReason'] !== null) {
-			$hardSkipReasons[] = $fieldResult['hardSkipReason'];
-		}
-
-		if ($fieldResult['changed'] === true) {
-			$withoutStatusChange = $fieldResult['row'];
-			$nonStatusChanged = true;
-		}
-
-		$withoutStatusChange = $this->normaliseAssetTypes(row: $withoutStatusChange);
+		$state = $this->withFieldRenames(state: $state);
+		$withoutStatusChange = $this->normaliseAssetTypes(row: $state['row']);
 
 		$final = $withoutStatusChange;
-		if ($statusChanged === true) {
-			$final['status'] = $newStatus;
+		if ($statusResult['changed'] === true) {
+			$final['status'] = $statusResult['value'];
 		}
 
 		return [
-			'hardSkipReason' => ($hardSkipReasons === [] ? null : implode('; ', $hardSkipReasons)),
-			'nonStatusChanged' => $nonStatusChanged,
-			'statusChanged' => $statusChanged,
+			'hardSkipReason' => ($state['skips'] === [] ? null : implode('; ', $state['skips'])),
+			'nonStatusChanged' => $state['changed'],
+			'statusChanged' => $statusResult['changed'],
 			'withoutStatusChange' => $withoutStatusChange,
 			'final' => $final,
 		];
 
 	}//end mapAssetRow()
+
+	/**
+	 * Translate the row's category, recording a skip reason for an unknown value.
+	 *
+	 * @param array{row: array<string, mixed>, changed: bool, skips: array<int, string>} $state The row so far.
+	 *
+	 * @return array{row: array<string, mixed>, changed: bool, skips: array<int, string>}
+	 */
+	private function withCategory(array $state): array {
+		$result = $this->mapEnumValue(
+			value: ($state['row']['category'] ?? null),
+			map: self::ASSET_CATEGORY_MAP,
+			current: self::ASSET_CATEGORY_CURRENT,
+			label: 'category'
+		);
+		if ($result['skipReason'] !== null) {
+			$state['skips'][] = $result['skipReason'];
+		}
+
+		if ($result['changed'] === true) {
+			$state['row']['category'] = $result['value'];
+			$state['changed'] = true;
+		}
+
+		return $state;
+	}//end withCategory()
+
+	/**
+	 * Apply the field renames (kenteken/serienummer/aanschafdatum/aanschafwaarde).
+	 *
+	 * @param array{row: array<string, mixed>, changed: bool, skips: array<int, string>} $state The row so far.
+	 *
+	 * @return array{row: array<string, mixed>, changed: bool, skips: array<int, string>}
+	 */
+	private function withFieldRenames(array $state): array {
+		$result = $this->applyFieldRenames($state['row'], self::ASSET_FIELD_MAP);
+		if ($result['hardSkipReason'] !== null) {
+			$state['skips'][] = $result['hardSkipReason'];
+		}
+
+		if ($result['changed'] === true) {
+			$state['row'] = $result['row'];
+			$state['changed'] = true;
+		}
+
+		return $state;
+	}//end withFieldRenames()
 
 	/**
 	 * Map one enum value from the old dialect to the new one.

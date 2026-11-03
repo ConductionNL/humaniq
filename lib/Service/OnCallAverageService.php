@@ -57,51 +57,83 @@ final class OnCallAverageService {
 	 * @param array<int, array<string, mixed>> $contracts            EmploymentContract rows.
 	 * @param array<int, array<string, mixed>> $entries              TimeEntry rows: employeeId, timesheetId, date, hours.
 	 * @param array<int, string>               $approvedTimesheetIds The ids of approved timesheets.
-	 * @param string                           $from                 First day of the window (Y-m-d).
-	 * @param string                           $to                   Last day of the window (Y-m-d).
+	 * @param array{0: string, 1: string}      $window               First and last day of the window (Y-m-d), as {@see window()} returns them.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
 	 * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-002
 	 */
-	public function averages(array $contracts, array $entries, array $approvedTimesheetIds, string $from, string $to): array {
+	public function averages(array $contracts, array $entries, array $approvedTimesheetIds, array $window): array {
 		$approved = array_flip($approvedTimesheetIds);
 		$rows = [];
 		foreach ($contracts as $contract) {
-			if ((string)($contract['type'] ?? '') !== 'oproep') {
+			$span = $this->counted(contract: $contract, window: $window);
+			if ($span === null) {
 				continue;
 			}
 
-			$start = max($from, substr((string)($contract['startDate'] ?? ''), 0, 10));
-			$contractEnd = substr((string)($contract['endDate'] ?? ''), 0, 10);
-			$end = $to;
-			if ($contractEnd !== '' && $contractEnd < $to) {
-				$end = $contractEnd;
-			}
-
-			if ($start > $end) {
-				continue;
-			}
-
-			$hours = $this->approvedHours(employeeId: (string)($contract['employeeId'] ?? ''), entries: $entries, approved: $approved, start: $start, end: $end);
-			$days = ((new DateTimeImmutable($start))->diff(new DateTimeImmutable($end))->days + 1);
-			$rows[] = [
-				'contractId'          => (string)($contract['id'] ?? ''),
-				'employeeId'          => (string)($contract['employeeId'] ?? ''),
-				'startDate'           => (string)($contract['startDate'] ?? ''),
-				'countedFrom'         => $start,
-				'countedTo'           => $end,
-				'hours'               => round($hours, 2),
-				'hoursPerWeek'        => round($hours / ($days / 7), 2),
-				'hoursPerMonth'       => round($hours / ($days / self::DAYS_PER_MONTH), 2),
-				'offerDue'            => $this->offerDue(contract: $contract, onDate: $to),
-				'vasteUrenAanbodOp'   => ($contract['vasteUrenAanbodOp'] ?? null),
-				'vasteUrenAanbodUren' => ($contract['vasteUrenAanbodUren'] ?? null),
-			];
-		}//end foreach
+			$hours = $this->approvedHours(employeeId: (string)($contract['employeeId'] ?? ''), entries: $entries, approved: $approved, span: $span);
+			$rows[] = $this->row(contract: $contract, tally: ['span' => $span, 'hours' => $hours, 'onDate' => $window[1]]);
+		}
 
 		return $rows;
 	}//end averages()
+
+	/**
+	 * The days an on-call contract counts within the window, or null when it
+	 * is not an on-call contract or did not run in the window.
+	 *
+	 * @param array<string, mixed>        $contract The contract.
+	 * @param array{0: string, 1: string} $window   First and last day of the window.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function counted(array $contract, array $window): ?array {
+		if ((string)($contract['type'] ?? '') !== 'oproep') {
+			return null;
+		}
+
+		$start = max($window[0], substr((string)($contract['startDate'] ?? ''), 0, 10));
+		$contractEnd = substr((string)($contract['endDate'] ?? ''), 0, 10);
+		$end = $window[1];
+		if ($contractEnd !== '' && $contractEnd < $window[1]) {
+			$end = $contractEnd;
+		}
+
+		if ($start > $end) {
+			return null;
+		}
+
+		return [$start, $end];
+	}//end counted()
+
+	/**
+	 * One overview row.
+	 *
+	 * @param array<string, mixed>                                                 $contract The contract.
+	 * @param array{span: array{0: string, 1: string}, hours: float, onDate: string} $tally    The counted days, their approved hours and the day the offer is judged on.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function row(array $contract, array $tally): array {
+		[$start, $end] = $tally['span'];
+		$hours = $tally['hours'];
+		$days = ((new DateTimeImmutable($start))->diff(new DateTimeImmutable($end))->days + 1);
+
+		return [
+			'contractId'          => (string)($contract['id'] ?? ''),
+			'employeeId'          => (string)($contract['employeeId'] ?? ''),
+			'startDate'           => (string)($contract['startDate'] ?? ''),
+			'countedFrom'         => $start,
+			'countedTo'           => $end,
+			'hours'               => round($hours, 2),
+			'hoursPerWeek'        => round($hours / ($days / 7), 2),
+			'hoursPerMonth'       => round($hours / ($days / self::DAYS_PER_MONTH), 2),
+			'offerDue'            => $this->offerDue(contract: $contract, onDate: $tally['onDate']),
+			'vasteUrenAanbodOp'   => ($contract['vasteUrenAanbodOp'] ?? null),
+			'vasteUrenAanbodUren' => ($contract['vasteUrenAanbodUren'] ?? null),
+		];
+	}//end row()
 
 	/**
 	 * The window as two Y-m-d days, or null when it is not one. Without `to`
@@ -134,12 +166,12 @@ final class OnCallAverageService {
 	 * @param string                           $employeeId The employee.
 	 * @param array<int, array<string, mixed>> $entries    TimeEntry rows.
 	 * @param array<string, int>               $approved   Approved timesheet ids as keys.
-	 * @param string                           $start      First day (Y-m-d).
-	 * @param string                           $end        Last day (Y-m-d).
+	 * @param array{0: string, 1: string}      $span       First and last day (Y-m-d).
 	 *
 	 * @return float
 	 */
-	private function approvedHours(string $employeeId, array $entries, array $approved, string $start, string $end): float {
+	private function approvedHours(string $employeeId, array $entries, array $approved, array $span): float {
+		[$start, $end] = $span;
 		$hours = 0.0;
 		foreach ($entries as $entry) {
 			$date = substr((string)($entry['date'] ?? ''), 0, 10);

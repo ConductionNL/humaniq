@@ -1,0 +1,223 @@
+{
+    "all dutch": {
+        "hardSkipReason": null,
+        "nonStatusChanged": true,
+        "statusChanged": true,
+        "withoutStatusChange": {
+            "id": "a1",
+            "category": "vehicle",
+            "status": "uitgegeven",
+            "kenteken": "AB-12-CD",
+            "aanschafdatum": "2024-01-02",
+            "aanschafwaarde": "1250.50",
+            "licencePlate": "AB-12-CD",
+            "purchaseDate": "2024-01-02",
+            "purchaseValue": 1250.5
+        },
+        "final": {
+            "id": "a1",
+            "category": "vehicle",
+            "status": "issued",
+            "kenteken": "AB-12-CD",
+            "aanschafdatum": "2024-01-02",
+            "aanschafwaarde": "1250.50",
+            "licencePlate": "AB-12-CD",
+            "purchaseDate": "2024-01-02",
+            "purchaseValue": 1250.5
+        }
+    },
+    "already current": {
+        "hardSkipReason": null,
+        "nonStatusChanged": false,
+        "statusChanged": false,
+        "withoutStatusChange": {
+            "id": "a2",
+            "category": "laptop",
+            "status": "available",
+            "serialNumber": "SN1",
+            "purchaseValue": 900.0
+        },
+        "final": {
+            "id": "a2",
+            "category": "laptop",
+            "status": "available",
+            "serialNumber": "SN1",
+            "purchaseValue": 900.0
+        }
+    },
+    "status only": {
+        "hardSkipReason": null,
+        "nonStatusChanged": false,
+        "statusChanged": true,
+        "withoutStatusChange": {
+            "id": "a3",
+            "category": "phone",
+            "status": "afgeschreven"
+        },
+        "final": {
+            "id": "a3",
+            "category": "phone",
+            "status": "writtenOff"
+        }
+    },
+    "category only": {
+        "hardSkipReason": null,
+        "nonStatusChanged": true,
+        "statusChanged": false,
+        "withoutStatusChange": {
+            "id": "a4",
+            "category": "clothing",
+            "status": "issued"
+        },
+        "final": {
+            "id": "a4",
+            "category": "clothing",
+            "status": "issued"
+        }
+    },
+    "unknown category": {
+        "hardSkipReason": "unrecognised category value 'meubel'",
+        "nonStatusChanged": false,
+        "statusChanged": true,
+        "withoutStatusChange": {
+            "id": "a5",
+            "category": "meubel",
+            "status": "ingenomen"
+        },
+        "final": {
+            "id": "a5",
+            "category": "meubel",
+            "status": "checkedIn"
+        }
+    },
+    "unknown status": {
+        "hardSkipReason": "unrecognised status value 'kwijt'",
+        "nonStatusChanged": true,
+        "statusChanged": false,
+        "withoutStatusChange": {
+            "id": "a6",
+            "category": "tool",
+            "status": "kwijt"
+        },
+        "final": {
+            "id": "a6",
+            "category": "tool",
+            "status": "kwijt"
+        }
+    },
+    "both unknown": {
+        "hardSkipReason": "unrecognised category value 'meubel'; unrecognised status value 'kwijt'",
+        "nonStatusChanged": true,
+        "statusChanged": false,
+        "withoutStatusChange": {
+            "id": "a7",
+            "category": "meubel",
+            "status": "kwijt",
+            "serienummer": "X",
+            "serialNumber": "X"
+        },
+        "final": {
+            "id": "a7",
+            "category": "meubel",
+            "status": "kwijt",
+            "serienummer": "X",
+            "serialNumber": "X"
+        }
+    },
+    "rename clash": {
+        "hardSkipReason": "both 'serienummer' (\"OLD\") and 'serialNumber' (\"NEW\") present with different values, refusing to guess",
+        "nonStatusChanged": false,
+        "statusChanged": false,
+        "withoutStatusChange": {
+            "id": "a8",
+            "category": "tool",
+            "serienummer": "OLD",
+            "serialNumber": "NEW"
+        },
+        "final": {
+            "id": "a8",
+            "category": "tool",
+            "serienummer": "OLD",
+            "serialNumber": "NEW"
+        }
+    },
+    "clash after unknown": {
+        "hardSkipReason": "unrecognised category value 'meubel'; unrecognised status value 'kwijt'; both 'serienummer' (\"OLD\") and 'serialNumber' (\"NEW\") present with different values, refusing to guess",
+        "nonStatusChanged": false,
+        "statusChanged": false,
+        "withoutStatusChange": {
+            "id": "a13",
+            "category": "meubel",
+            "status": "kwijt",
+            "serienummer": "OLD",
+            "serialNumber": "NEW"
+        },
+        "final": {
+            "id": "a13",
+            "category": "meubel",
+            "status": "kwijt",
+            "serienummer": "OLD",
+            "serialNumber": "NEW"
+        }
+    },
+    "rename same value": {
+        "hardSkipReason": null,
+        "nonStatusChanged": false,
+        "statusChanged": false,
+        "withoutStatusChange": {
+            "id": "a9",
+            "serienummer": "SAME",
+            "serialNumber": "SAME"
+        },
+        "final": {
+            "id": "a9",
+            "serienummer": "SAME",
+            "serialNumber": "SAME"
+        }
+    },
+    "missing values": {
+        "hardSkipReason": null,
+        "nonStatusChanged": false,
+        "statusChanged": false,
+        "withoutStatusChange": {
+            "id": "a10"
+        },
+        "final": {
+            "id": "a10"
+        }
+    },
+    "null values": {
+        "hardSkipReason": null,
+        "nonStatusChanged": false,
+        "statusChanged": false,
+        "withoutStatusChange": {
+            "id": "a11",
+            "category": null,
+            "status": null,
+            "aanschafwaarde": null
+        },
+        "final": {
+            "id": "a11",
+            "category": null,
+            "status": null,
+            "aanschafwaarde": null
+        }
+    },
+    "padded values": {
+        "hardSkipReason": "unrecognised category value ' Toegangspas '; unrecognised status value 'BESCHIKBAAR'",
+        "nonStatusChanged": false,
+        "statusChanged": false,
+        "withoutStatusChange": {
+            "id": "a12",
+            "category": " Toegangspas ",
+            "status": "BESCHIKBAAR",
+            "purchaseValue": "12,50"
+        },
+        "final": {
+            "id": "a12",
+            "category": " Toegangspas ",
+            "status": "BESCHIKBAAR",
+            "purchaseValue": "12,50"
+        }
+    }
+}
