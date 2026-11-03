@@ -74,11 +74,12 @@ class TransitionPaymentService {
 		$employeeId = (string)($case['employeeId'] ?? '');
 		$result = $this->calculator->calculate(
 			employee: ($this->gateway->findObjectData($employeeId, 'Employee') ?? []),
-			contracts: $this->gateway->findFiltered('EmploymentContract', ['employeeId' => $employeeId]),
-			payslips: $this->gateway->findFiltered('Payslip', ['employeeId' => $employeeId]),
+			history: [
+				'contracts' => $this->gateway->findFiltered('EmploymentContract', ['employeeId' => $employeeId]),
+				'payslips' => $this->gateway->findFiltered('Payslip', ['employeeId' => $employeeId]),
+			],
 			parameters: $this->parameters(),
-			endDate: (string)($case['lastWorkingDay'] ?? ''),
-			reason: (string)($case['reason'] ?? '')
+			departure: ['endDate' => (string)($case['lastWorkingDay'] ?? ''), 'reason' => (string)($case['reason'] ?? '')]
 		);
 
 		if (isset($result['serviceYears']) === false) {
