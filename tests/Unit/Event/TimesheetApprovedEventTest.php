@@ -111,6 +111,19 @@ class TimesheetApprovedEventTest extends TestCase {
 			'quarter shorthand' => ['Q3-2026', TimesheetApprovedEvent::GRAIN_UNKNOWN],
 			'full ISO date' => ['2026-07-15', TimesheetApprovedEvent::GRAIN_UNKNOWN],
 			'year only' => ['2026', TimesheetApprovedEvent::GRAIN_UNKNOWN],
+			'month with a trailing newline' => ["2026-07\n", TimesheetApprovedEvent::GRAIN_UNKNOWN],
+			'week with a trailing newline' => ["2026-W29\n", TimesheetApprovedEvent::GRAIN_UNKNOWN],
+			'week-day with a trailing newline' => ["2026-W29-3\n", TimesheetApprovedEvent::GRAIN_UNKNOWN],
+			'month 00' => ['2026-00', TimesheetApprovedEvent::GRAIN_UNKNOWN],
+			'month 13' => ['2026-13', TimesheetApprovedEvent::GRAIN_UNKNOWN],
+			'month 12' => ['2026-12', TimesheetApprovedEvent::GRAIN_MONTH],
+			'week 00' => ['2026-W00', TimesheetApprovedEvent::GRAIN_UNKNOWN],
+			'week 54' => ['2026-W54', TimesheetApprovedEvent::GRAIN_UNKNOWN],
+			'week 53' => ['2026-W53', TimesheetApprovedEvent::GRAIN_WEEK],
+			'week 01' => ['2026-W01', TimesheetApprovedEvent::GRAIN_WEEK],
+			'week-day 0' => ['2026-W29-0', TimesheetApprovedEvent::GRAIN_UNKNOWN],
+			'week-day 8' => ['2026-W29-8', TimesheetApprovedEvent::GRAIN_UNKNOWN],
+			'week-day, Monday' => ['2026-W29-1', TimesheetApprovedEvent::GRAIN_DAY],
 		];
 
 	}//end periodGrainProvider()

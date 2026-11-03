@@ -289,15 +289,15 @@ class TimesheetApprovedEvent extends Event {
 	 * @spec openspec/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
 	 */
 	public static function classifyPeriodGrain(string $period): string {
-		if (preg_match('/^\d{4}-\d{2}$/', $period) === 1) {
+		if (preg_match('/^\d{4}-(0[1-9]|1[0-2])\z/', $period) === 1) {
 			return self::GRAIN_MONTH;
 		}
 
-		if (preg_match('/^\d{4}-W\d{2}-\d$/', $period) === 1) {
+		if (preg_match('/^\d{4}-W(0[1-9]|[1-4]\d|5[0-3])-[1-7]\z/', $period) === 1) {
 			return self::GRAIN_DAY;
 		}
 
-		if (preg_match('/^\d{4}-W\d{2}$/', $period) === 1) {
+		if (preg_match('/^\d{4}-W(0[1-9]|[1-4]\d|5[0-3])\z/', $period) === 1) {
 			return self::GRAIN_WEEK;
 		}
 
