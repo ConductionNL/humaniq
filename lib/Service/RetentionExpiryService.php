@@ -311,7 +311,7 @@ class RetentionExpiryService {
 	 * @return mixed OpenRegister's RetentionService.
 	 */
 	private function retentionService(): mixed {
-		return $this->container->get('OCA\OpenRegister\Service\RetentionService');
+		return $this->openRegisterService('OCA\OpenRegister\Service\RetentionService');
 	}//end retentionService()
 
 	/**

@@ -300,14 +300,14 @@ final class PayrollAuditVerificationService {
 	 * @return mixed OpenRegister's per-object audit-log read path.
 	 */
 	private function auditHandler(): mixed {
-		return $this->container->get('OCA\OpenRegister\Service\Object\AuditHandler');
+		return $this->openRegisterService('OCA\OpenRegister\Service\Object\AuditHandler');
 	}//end auditHandler()
 
 	/**
 	 * @return mixed OpenRegister's hash-chain verification service.
 	 */
 	private function auditHashService(): mixed {
-		return $this->container->get('OCA\OpenRegister\Service\AuditHashService');
+		return $this->openRegisterService('OCA\OpenRegister\Service\AuditHashService');
 	}//end auditHashService()
 
 	/**
