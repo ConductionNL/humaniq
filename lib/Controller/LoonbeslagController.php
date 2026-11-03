@@ -50,6 +50,8 @@ use RuntimeException;
 
 /**
  * Guarded endpoint that activates/settles/withdraws one Loonbeslag.
+ *
+ * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-006
  */
 class LoonbeslagController extends Controller {
 
@@ -81,12 +83,14 @@ class LoonbeslagController extends Controller {
 	#[NoAdminRequired]
 	public function activate(?string $loonbeslagId = null): JSONResponse {
 		return $this->transition(
-			$loonbeslagId,
-			expectedStatus: 'concept',
-			newStatus: 'actief',
-			wrongStatusMessage: 'alleen concept-loonbeslagen kunnen worden geactiveerd',
-			stampFields: static fn (string $uid, string $now): array => ['activatedBy' => $uid, 'activatedAt' => $now],
-			successMessage: 'Loonbeslag geverifieerd en geactiveerd.'
+			loonbeslagId: $loonbeslagId,
+			step: [
+				'from' => 'concept',
+				'to' => 'actief',
+				'refusal' => 'alleen concept-loonbeslagen kunnen worden geactiveerd',
+				'stamp' => static fn (string $uid, string $now): array => ['activatedBy' => $uid, 'activatedAt' => $now],
+				'done' => 'Loonbeslag geverifieerd en geactiveerd.',
+			]
 		);
 
 	}//end activate()
@@ -104,12 +108,14 @@ class LoonbeslagController extends Controller {
 	#[NoAdminRequired]
 	public function settle(?string $loonbeslagId = null): JSONResponse {
 		return $this->transition(
-			$loonbeslagId,
-			expectedStatus: 'actief',
-			newStatus: 'voldaan',
-			wrongStatusMessage: 'alleen actieve loonbeslagen kunnen als voldaan worden gemarkeerd',
-			stampFields: static fn (string $uid, string $now): array => ['settledBy' => $uid, 'settledAt' => $now],
-			successMessage: 'Loonbeslag gemarkeerd als voldaan.'
+			loonbeslagId: $loonbeslagId,
+			step: [
+				'from' => 'actief',
+				'to' => 'voldaan',
+				'refusal' => 'alleen actieve loonbeslagen kunnen als voldaan worden gemarkeerd',
+				'stamp' => static fn (string $uid, string $now): array => ['settledBy' => $uid, 'settledAt' => $now],
+				'done' => 'Loonbeslag gemarkeerd als voldaan.',
+			]
 		);
 
 	}//end settle()
@@ -179,24 +185,13 @@ class LoonbeslagController extends Controller {
 	 * status-precondition check (400) and the stamped write.
 	 *
 	 * @param string|null $loonbeslagId The Loonbeslag id.
-	 * @param string $expectedStatus The required current status.
-	 * @param string $newStatus The status to write.
-	 * @param string $wrongStatusMessage Human-readable precondition failure reason.
-	 * @param callable $stampFields `fn(string $uid, string $nowIso): array<string, mixed>` -- the transition-specific stamp fields.
-	 * @param string $successMessage Human-readable success message.
+	 * @param array{from: string, to: string, refusal: string, stamp: callable(string, string): array<string, mixed>, done: string} $step The required current status, the status to write, the human-readable precondition failure reason, the stamp fields as `fn(string $uid, string $nowIso)` and the success message.
 	 *
 	 * @return JSONResponse
 	 *
 	 * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-006
 	 */
-	private function transition(
-		?string $loonbeslagId,
-		string $expectedStatus,
-		string $newStatus,
-		string $wrongStatusMessage,
-		callable $stampFields,
-		string $successMessage,
-	): JSONResponse {
+	private function transition(?string $loonbeslagId, array $step): JSONResponse {
 		if ($this->isAdminOrHr() === false) {
 			return new JSONResponse(['error' => 'Alleen HR en beheerders mogen loonbeslagen wijzigen.'], Http::STATUS_FORBIDDEN);
 		}
@@ -215,21 +210,22 @@ class LoonbeslagController extends Controller {
 		}
 
 		$status = (string)($loonbeslag['status'] ?? '');
-		if ($status !== $expectedStatus) {
+		if ($status !== $step['from']) {
 			return new JSONResponse(
-				['error' => 'Loonbeslag heeft status "' . $status . '" — ' . $wrongStatusMessage . '.'],
+				['error' => 'Loonbeslag heeft status "' . $status . '" — ' . $step['refusal'] . '.'],
 				Http::STATUS_BAD_REQUEST
 			);
 		}
 
 		$uid = $this->currentUserId();
+		$stamp = $step['stamp'];
 
 		$saved = $this->save(
 			$loonbeslag,
-			array_merge(['status' => $newStatus], $stampFields($uid, gmdate('Y-m-d\TH:i:s\Z')))
+			array_merge(['status' => $step['to']], $stamp($uid, gmdate('Y-m-d\TH:i:s\Z')))
 		);
 
-		return new JSONResponse(['status' => 'ok', 'message' => $successMessage, 'loonbeslag' => $saved]);
+		return new JSONResponse(['status' => 'ok', 'message' => $step['done'], 'loonbeslag' => $saved]);
 	}//end transition()
 
 	/**
@@ -306,7 +302,12 @@ class LoonbeslagController extends Controller {
 				schema: 'Loonbeslag'
 			);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('LoonbeslagController: loonbeslag ' . $loonbeslagId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			// The id is caller input and the exception text can carry row
+			// content, so neither is logged: only the exception class.
+			$this->caller->logger->warning(
+				'LoonbeslagController: a loonbeslag lookup failed and is answered as not found.',
+				['exceptionClass' => $e::class]
+			);
 			return null;
 		}
 

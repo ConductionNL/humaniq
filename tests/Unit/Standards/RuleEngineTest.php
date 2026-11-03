@@ -87,6 +87,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Humaniq\Standards\Checks\NlWageTaxFilingChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlWkrChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlWntChecks
+ * @uses \OCA\Humaniq\Standards\Checks\PayrollSampleFields
  * @uses \OCA\Humaniq\Standards\RuleCatalogue
  * @uses \OCA\Humaniq\Standards\TableCheckRegistry
  * @uses \OCA\Humaniq\Standards\Violation
