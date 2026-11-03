@@ -194,7 +194,8 @@ final class AgendaOrgView {
 	 * Whether one of these accounts manages the registered unit or a unit
 	 * above it. The climb stays in the unit's administration, and a manager
 	 * whose own Employee record lies outside it does not count, as in
-	 * {@see OrgResolutionService::resolveManagerUserIds()}. A parent chain
+	 * {@see OrgResolutionService::resolveManagerUserIds()}. A unit without an
+	 * administration takes its members' ({@see boundaryOf()}). A parent chain
 	 * that loops is walked once.
 	 *
 	 * @param string $orgUnitId The unit.
@@ -205,7 +206,11 @@ final class AgendaOrgView {
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
 	 */
 	public function isManagedBy(string $orgUnitId, array $accounts): bool {
-		$boundary = $this->orgResolution->administrationOf($this->units[$orgUnitId] ?? null);
+		$boundary = $this->boundaryOf($orgUnitId);
+		if ($boundary === null) {
+			return false;
+		}
+
 		$managers = [];
 		foreach ($this->employeeIdsOf($accounts) as $employeeId) {
 			if ($this->orgResolution->leavesAdministration($this->employees[$employeeId], $boundary) === false) {
@@ -230,6 +235,37 @@ final class AgendaOrgView {
 
 		return false;
 	}//end isManagedBy()
+
+	/**
+	 * The administration a unit's managers must stay in: the unit's own, or,
+	 * when it has none, the one its members placed there today share ('' when
+	 * none of them has one). Null when those members name different
+	 * administrations, so no manager opens the unit.
+	 *
+	 * @param string $orgUnitId The unit.
+	 *
+	 * @return string|null
+	 */
+	private function boundaryOf(string $orgUnitId): ?string {
+		$own = $this->orgResolution->administrationOf($this->units[$orgUnitId] ?? null);
+		if ($own !== '') {
+			return $own;
+		}
+
+		$administrations = [];
+		foreach ($this->placedInToday($orgUnitId) as $employeeId) {
+			$administration = $this->orgResolution->administrationOf($this->employees[$employeeId] ?? null);
+			if ($administration !== '') {
+				$administrations[$administration] = true;
+			}
+		}
+
+		if (count($administrations) > 1) {
+			return null;
+		}
+
+		return (string)(array_key_first($administrations) ?? '');
+	}//end boundaryOf()
 
 	/**
 	 * The employees placed in the registered unit today.

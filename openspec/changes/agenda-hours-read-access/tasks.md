@@ -8,6 +8,8 @@
 - [x] 1.5 The climb stops at the administration boundary; a manager outside it counts for nothing. Verify: AgendaReadAccessTest::testTheClimbStopsAtTheAdministrationBoundary, testAManagerOutsideTheAdministrationOpensNothing.
 - [x] 1.6 Hours for an employee not seen in full leave secondments and interviews out (`AgendaHoursSources`). Verify: AgendaReadAccessTest::testAColleagueCannotReadSecondmentHoursOffPlannedHours, testAColleagueCannotReadAnInterviewOffPlannedHours.
 - [x] 1.7 Unit members for anyone but HR are also placed there today. Verify: AgendaReadAccessTest::testAnEarlyWindowDoesNotBringBackFormerMembers.
+- [x] 1.8 A unit without an administration takes its members'; mixed members open it for no manager. Verify: AgendaReadAccessTest::testAnUnlabelledUnit*.
+- [x] 1.9 A commuting arrangement whose manager does not resolve is stamped with none. Verify: TravelAmountListenerTest::testAClientManagerIsNotKeptWhenNoneResolves.
 
 ## 2. Verification
 

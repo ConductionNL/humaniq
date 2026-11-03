@@ -17,7 +17,9 @@ only. An org unit's agenda SHALL open for its members, its manager, the managers
 the units above it, a deputy standing in for one of those managers today, and HR. The
 climb to the units above stops at the unit's administration, and a manager whose own
 Employee record lies in another administration does not count, the same boundary the
-shared manager resolution draws.
+shared manager resolution draws. A unit without an administration takes the one its
+members placed there today share; when they name different administrations, no manager
+opens the unit.
 Anyone else SHALL get 403 with a short reason, before any planned item is read.
 
 Interview entries and a secondment's `hoursPerWeek` SHALL reach only the employee, their
@@ -69,6 +71,13 @@ that ground. A resource's agenda SHALL stay open to every signed-in user.
 - **GIVEN** the unit above Zorg, or Zorg's manager's own Employee record, lies in
   another administration than Zorg
 - **WHEN** that manager, or their deputy, reads the Zorg agenda
+- **THEN** the answer is 403
+
+#### Scenario: A unit without an administration takes its members'
+@e2e exclude needs two administrations and an unlabelled unit; covered by AgendaReadAccessTest::testAnUnlabelledUnitTakesItsMembersAdministration, testAnUnlabelledUnitsManagerOutsideTheMembersAdministrationIsRefused and testAnUnlabelledUnitWithMixedMembersOpensForNoManager
+- **GIVEN** Zorg has no administration and its members are in administration A
+- **WHEN** a manager in administration B, of Zorg or of the unit above it, reads Zorg's
+  agenda or hours
 - **THEN** the answer is 403
 
 #### Scenario: A placement that cannot be trusted makes nobody a colleague
