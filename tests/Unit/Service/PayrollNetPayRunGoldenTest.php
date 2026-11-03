@@ -31,6 +31,7 @@ use Psr\Log\NullLogger;
  *
  * @covers \OCA\Humaniq\Service\PayrollNetPayService
  * @uses   \OCA\Humaniq\Service\PendingClaims
+ * @uses   \OCA\Humaniq\Service\WagePeriod
  */
 class PayrollNetPayRunGoldenTest extends TestCase {
 
@@ -100,6 +101,10 @@ class PayrollNetPayRunGoldenTest extends TestCase {
 		$cases['other administration'] = ['run' => $run(['administrationId' => 'ADM-777']), 'rows' => ['Employee' => $employees, 'Payslip' => $payslips('2026-05')]];
 		$cases['padded unparseable period'] = ['run' => $run(['period' => ' mei ']), 'rows' => ['Employee' => $employees, 'Payslip' => $payslips('mei')]];
 		$cases['unparseable period'] = ['run' => $run(['period' => 'mei']), 'rows' => ['Employee' => $employees, 'Payslip' => $payslips('mei')]];
+		foreach (['2026-5', '202605', 'now', '2026-00', '2026-13', 'x2026-05', '12026-05', '2026-05x'] as $period) {
+			$cases['period ' . $period] = ['run' => $run(['period' => $period]), 'rows' => ['Employee' => $employees, 'Payslip' => $payslips($period)]];
+		}
+
 		foreach (['', '   ', 'NL69INGB0123456789', ' NL69INGB0123456789 '] as $i => $iban) {
 			$cases['debtor iban ' . $i] = ['run' => $run(), 'rows' => ['Employee' => $employees, 'Payslip' => $payslips('2026-05')], 'iban' => $iban];
 		}

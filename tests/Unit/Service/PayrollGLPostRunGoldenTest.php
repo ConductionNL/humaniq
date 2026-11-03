@@ -33,6 +33,7 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Humaniq\Service\PayrollGLPostService
  * @uses   \OCA\Humaniq\Service\PayrollJournalTotals
  * @uses   \OCA\Humaniq\Service\PendingClaims
+ * @uses   \OCA\Humaniq\Service\WagePeriod
  */
 class PayrollGLPostRunGoldenTest extends TestCase {
 
@@ -102,6 +103,10 @@ class PayrollGLPostRunGoldenTest extends TestCase {
 		$cases['other administration'] = ['run' => $run(['administrationId' => 'ADM-777']), 'rows' => []];
 		$cases['unparseable period'] = ['run' => $run(['period' => 'mei']), 'rows' => []];
 		$cases['padded unparseable period'] = ['run' => $run(['period' => ' mei ']), 'rows' => []];
+		foreach (['2026-5', '202605', 'now', '2026-00', '2026-13', 'x2026-05', '12026-05', '2026-05x'] as $period) {
+			$cases['period ' . $period] = ['run' => $run(['period' => $period]), 'rows' => []];
+		}
+
 		$cases['cents rounding'] = ['run' => $run(['totalGross' => 1234.565, 'totalEmployerCharges' => 0.1 + 0.2, 'totalLoonheffing' => 100.004, 'totalNet' => 1000.0]), 'rows' => []];
 		$cases['adopts the JournalEntry with the journal number'] = [
 			'run' => $run(),

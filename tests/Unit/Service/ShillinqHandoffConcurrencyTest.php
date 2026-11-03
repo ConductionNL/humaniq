@@ -34,6 +34,7 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Humaniq\Service\PayrollGLPostService
  * @uses   \OCA\Humaniq\Service\PayrollJournalTotals
  * @uses   \OCA\Humaniq\Service\PendingClaims
+ * @uses   \OCA\Humaniq\Service\WagePeriod
  */
 class ShillinqHandoffConcurrencyTest extends TestCase {
 
@@ -338,12 +339,216 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 	}//end testAFreshPendingRecordBlocksTheRun()
 
 	/**
+	 * A stale pending record of another payroll run with the same number is
+	 * a crash left behind: it is superseded, and the run is handed over,
+	 * adopting the shillinq record that crash already wrote.
+	 *
+	 * @param string $kind       Which service.
+	 * @param string $target     The shillinq schema.
+	 * @param string $ownSchema  The service's own record schema.
+	 * @param string $handOff    The hand-off method.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider handoffs
+	 */
+	public function testAStaleClaimOfAnotherRunWithTheSameNumberIsSuperseded(string $kind, string $target, string $ownSchema, string $handOff): void {
+		[$number, $value] = $this->numberOf($kind);
+		$stale = ['id' => 'crashed', 'payrollRunId' => 'run-2', 'status' => 'pending', $number => $value, '@self' => ['id' => 'crashed', 'updated' => gmdate('c', time() - 3600)]];
+		$store = $this->store();
+		$store->rows[$ownSchema] = [$stale];
+
+		$outcome = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertContains($outcome['status'], ['created', 'posted']);
+		$this->assertCount(1, $store->savesOf($target), 'The run is handed over once.');
+		$this->assertSame(['failed'], array_column($this->savesWithId($store, $ownSchema, 'crashed'), 'status'), 'The stale claim is superseded.');
+
+		$store = $this->store();
+		$store->rows[$ownSchema] = [$stale];
+		$store->rows[$target] = [['id' => 'by-crash', $number => $value]];
+
+		$adopted = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertContains($adopted['status'], ['created', 'posted']);
+		$this->assertSame([], $store->savesOf($target), 'The crashed run\'s shillinq record is adopted.');
+	}//end testAStaleClaimOfAnotherRunWithTheSameNumberIsSuperseded()
+
+	/**
+	 * A done record of another payroll run with the same number blocks the
+	 * run and names it a duplicate run; a fresh claim of the same run still
+	 * reads as another process at work.
+	 *
+	 * @param string $kind       Which service.
+	 * @param string $target     The shillinq schema.
+	 * @param string $ownSchema  The service's own record schema.
+	 * @param string $handOff    The hand-off method.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider handoffs
+	 */
+	public function testARecordOfAnotherRunWithTheSameNumberIsADuplicateRun(string $kind, string $target, string $ownSchema, string $handOff): void {
+		[$number, $value] = $this->numberOf($kind);
+		$done = ($kind === 'netpay' ? 'created' : 'posted');
+		$store = $this->store();
+		$store->rows[$ownSchema] = [['id' => 'done', 'payrollRunId' => 'run-2', 'status' => $done, $number => $value, '@self' => ['id' => 'done', 'updated' => gmdate('c', time() - 3600)]]];
+
+		$blocked = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertSame('pending', $blocked['status']);
+		$this->assertStringStartsWith(($kind === 'netpay' ? 'Dubbele loonrun: ' : 'Duplicate run: '), $blocked['message']);
+		$this->assertStringContainsString($value, $blocked['message']);
+		$this->assertSame([], $store->savesOf($target));
+		$this->assertSame([], $this->savesWithId($store, $ownSchema, 'done'), 'The other run\'s record is left alone.');
+
+		$store = $this->store();
+		$store->rows[$ownSchema] = [['id' => 'busy', 'payrollRunId' => 'run-1', 'status' => 'pending', $number => $value, '@self' => ['id' => 'busy', 'updated' => gmdate('c', time() - 60)]]];
+
+		$withdrawn = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertSame('pending', $withdrawn['status']);
+		$this->assertStringNotContainsString('uplicate', $withdrawn['message']);
+		$this->assertStringNotContainsString('Dubbele', $withdrawn['message']);
+	}//end testARecordOfAnotherRunWithTheSameNumberIsADuplicateRun()
+
+	/**
+	 * A period written as 2026-5 and one written as 2026-05 are one month,
+	 * so two runs for them share one number and reach shillinq once.
+	 *
+	 * @param string $kind       Which service.
+	 * @param string $target     The shillinq schema.
+	 * @param string $ownSchema  The service's own record schema.
+	 * @param string $handOff    The hand-off method.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider handoffs
+	 */
+	public function testAOneDigitMonthSharesTheNumberOfItsTwoDigitForm(string $kind, string $target, string $ownSchema, string $handOff): void {
+		[$number, $value] = $this->numberOf($kind);
+		$store = $this->store();
+		$store->rows['Payslip'][] = ['id' => 'ps-short', 'period' => '2026-5', 'employeeId' => 'emp-1', 'nettoPay' => 2698.0];
+
+		$first = $this->service($kind, $store)->$handOff($this->payrollRun(['period' => '2026-5']));
+		$second = $this->service($kind, $store)->$handOff($this->payrollRun(['id' => 'run-2']));
+
+		$this->assertContains($first['status'], ['created', 'posted']);
+		$this->assertSame('pending', $second['status']);
+		$this->assertSame([$value], array_column($store->savesOf($target), $number), 'One record, under the two-digit number.');
+	}//end testAOneDigitMonthSharesTheNumberOfItsTwoDigitForm()
+
+	/**
+	 * A user who may not read the hand-off's records or shillinq's still
+	 * sees what a cron run wrote: the hand-off reads them without RBAC, as
+	 * it writes them.
+	 *
+	 * @param string $kind       Which service.
+	 * @param string $target     The shillinq schema.
+	 * @param string $ownSchema  The service's own record schema.
+	 * @param string $handOff    The hand-off method.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider handoffs
+	 */
+	public function testAUserWithoutReadRightsSeesWhatACronRunWrote(string $kind, string $target, string $ownSchema, string $handOff): void {
+		[$number, $value] = $this->numberOf($kind);
+		$store = $this->store();
+		$first = $this->service($kind, $store)->$handOff($this->payrollRun());
+		$store->organisation = 'default';
+		$store->unreadable = [$target, $ownSchema];
+		$second = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertContains($first['status'], ['created', 'posted']);
+		$this->assertContains($second['status'], ['created', 'posted']);
+		$this->assertCount(1, $store->savesOf($target), 'One record reaches shillinq.');
+
+		$store = $this->store();
+		$store->rows[$target] = [['id' => 'by-cron', $number => $value, '_org' => 'default']];
+		$store->organisation = 'default';
+		$store->unreadable = [$target, $ownSchema];
+
+		$adopted = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertContains($adopted['status'], ['created', 'posted']);
+		$this->assertSame([], $store->savesOf($target), 'The cron run\'s shillinq record is adopted.');
+
+		$store = $this->store();
+		$store->rows[$ownSchema] = [['id' => 'cron-claim', 'payrollRunId' => 'run-1', 'status' => 'pending', $number => $value, '_org' => 'default', '@self' => ['id' => 'cron-claim', 'updated' => gmdate('c', time() - 60)]]];
+		$store->organisation = 'default';
+		$store->unreadable = [$target, $ownSchema];
+
+		$blocked = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertSame('pending', $blocked['status'], 'The cron run\'s fresh claim blocks the user run.');
+		$this->assertSame([], $store->savesOf($target));
+	}//end testAUserWithoutReadRightsSeesWhatACronRunWrote()
+
+	/**
+	 * A stale GL claim whose JournalEntry shillinq already holds is not
+	 * adopted as posted when the run's totals are refused: the claim fails
+	 * with the refusal, the run is not stamped, and a later pass does not
+	 * read it as already posted.
+	 *
+	 * @return void
+	 */
+	public function testAStaleGlClaimIsNotAdoptedWhenTheTotalsAreRefused(): void {
+		[$number, $value] = $this->numberOf('glpost');
+		$store = $this->store();
+		$store->rows['PayrollGLPost'] = [['id' => 'old', 'payrollRunId' => 'run-1', 'status' => 'pending', $number => $value, '@self' => ['id' => 'old', 'updated' => gmdate('c', time() - 3600)]]];
+		$store->rows['JournalEntry'] = [['id' => 'je-old', $number => $value]];
+		$run = $this->payrollRun(['totalGross' => -1.0]);
+
+		$outcome = $this->service('glpost', $store)->postRun($run);
+		$again = $this->service('glpost', $store)->postRun($run);
+
+		$this->assertSame('failed', $outcome['status']);
+		$this->assertStringStartsWith('Negatief runtotaal', $outcome['message']);
+		$this->assertStringContainsString($value, $outcome['message']);
+		$this->assertSame(['failed'], array_column($this->savesWithId($store, 'PayrollGLPost', 'old'), 'status'));
+		$this->assertSame([], $store->savesOf('PayrollRun'), 'The run is not stamped posted.');
+		$this->assertSame([], $store->savesOf('JournalEntry'));
+		$this->assertSame('failed', $again['status'], 'A later pass refuses again.');
+	}//end testAStaleGlClaimIsNotAdoptedWhenTheTotalsAreRefused()
+
+	/**
+	 * The number field and the number of run-1 for a hand-off.
+	 *
+	 * @param string $kind `netpay` or `glpost`.
+	 *
+	 * @return array{0: string, 1: string}
+	 */
+	private function numberOf(string $kind): array {
+		if ($kind === 'netpay') {
+			return ['runNumber', 'HRMQ-NETPAY-2026-05-ADM-001'];
+		}
+
+		return ['journalNumber', 'HRMQ-LOON-2026-05-ADM-001'];
+	}//end numberOf()
+
+	/**
+	 * The saves of one record of a schema, in order.
+	 *
+	 * @param object $store  The shared register.
+	 * @param string $schema The schema.
+	 * @param string $id     The record id.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function savesWithId(object $store, string $schema, string $id): array {
+		return array_values(array_filter($store->savesOf($schema), static fn (array $save): bool => $save['id'] === $id));
+	}//end savesWithId()
+
+	/**
 	 * The payroll run, approved, with totals and one payslip's period.
+	 *
+	 * @param array<string, mixed> $overrides Fields that differ.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function payrollRun(): array {
-		return [
+	private function payrollRun(array $overrides = []): array {
+		return $overrides + [
 			'id' => 'run-1',
 			'period' => '2026-05',
 			'administrationId' => 'ADM-001',
@@ -402,6 +607,14 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 			public ?string $organisation = null;
 
 			/**
+			 * Schemas the acting user may not read: a user context sees none
+			 * of their rows unless RBAC is off. The system context reads all.
+			 *
+			 * @var list<string>
+			 */
+			public array $unreadable = [];
+
+			/**
 			 * Whether findAll applies its filters and limit, as OpenRegister does.
 			 *
 			 * @var bool
@@ -439,8 +652,9 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 
 			/**
 			 * Rows of another organisation are hidden from a user context
-			 * unless multitenancy is off; rows written by the system belong
-			 * to the default organisation.
+			 * unless multitenancy is off, and rows of an unreadable schema
+			 * unless RBAC is off; rows written by the system belong to the
+			 * default organisation.
 			 *
 			 * @param array<string, mixed> $options       Query options.
 			 * @param bool                 $_rbac         RBAC flag.
@@ -455,6 +669,9 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 				}
 
 				$rows = $this->visibleRows(($this->rows[$schema] ?? []), $options, $_multitenancy);
+				if ($_rbac === true && $this->organisation !== null && in_array($schema, $this->unreadable, true) === true) {
+					$rows = [];
+				}
 				if ($this->afterFindAll !== null) {
 					($this->afterFindAll)($schema);
 				}
