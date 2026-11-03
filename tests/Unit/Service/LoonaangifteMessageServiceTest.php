@@ -32,6 +32,8 @@ use OCA\Humaniq\Payroll\Loonaangifte\PayslipRecalculator;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessageBuilder;
+use OCA\Humaniq\Service\CarriedCorrections;
 use OCA\Humaniq\Service\LoonaangifteMessageService;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
@@ -102,6 +104,41 @@ class LoonaangifteMessageServiceTest extends TestCase {
 		unset($filing['id']);
 		self::assertSame([], RegisterSchemaValidator::errors('LoonaangifteFiling', $filing));
 	}//end testAnApprovedRunRendersAValidMessage()
+
+	/**
+	 * A correction the return carries lands in the message: its saldo is
+	 * added to TotGen and listed per corrected period, and its tree goes out
+	 * as a TijdvakCorrectie.
+	 *
+	 * @return void
+	 */
+	public function testACarriedCorrectionTravelsInTheMessage(): void {
+		$stand = LoonaangifteMessageBuilder::collective([]);
+		unset($stand['TotGen']);
+		$tree = [
+			'DatAanvTv' => '2026-05-01',
+			'DatEindTv' => '2026-05-31',
+			'CollectieveAangifte' => array_map(static fn (int $euros): string => (string)$euros, $stand),
+			'InkomstenverhoudingInitieel' => [],
+			'InkomstenverhoudingIntrekking' => [],
+		];
+		$carried = $this->createMock(CarriedCorrections::class);
+		$carried->method('forReturn')->willReturn([['id' => 'corr-05', 'period' => '2026-05', 'correctionTree' => $tree, 'correctionSaldo' => 250]]);
+
+		$outcome = $this->serviceWithRelNr('SWO12345', $carried)->render($this->filing(), 'payroll-1');
+
+		self::assertSame('rendered', $outcome['status']);
+		$filing = $this->filingRow();
+		$totals = $filing['collectiveTotals'];
+		self::assertSame(($totals['TotTeBet'] + 250), $totals['TotGen']);
+		self::assertSame(['corr-05'], $filing['carriedCorrectionIds']);
+
+		$xml = new DOMDocument();
+		$xml->loadXML($filing['messageXml']);
+		self::assertSame(1, $xml->getElementsByTagNameNS(self::NS, 'TijdvakCorrectie')->length);
+		self::assertSame('250', $this->text($xml, 'Saldo'));
+		self::assertSame((string)$totals['TotGen'], $this->text($xml, 'TotGen'));
+	}//end testACarriedCorrectionTravelsInTheMessage()
 
 	/**
 	 * The anchor employee's line carries the engine's own components
@@ -367,11 +404,12 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	/**
 	 * The service with a given software relation number.
 	 *
-	 * @param string $relNr The relation number.
+	 * @param string                  $relNr   The relation number.
+	 * @param CarriedCorrections|null $carried The corrections the return carries, or null for the ones over the gateway.
 	 *
 	 * @return LoonaangifteMessageService
 	 */
-	private function serviceWithRelNr(string $relNr): LoonaangifteMessageService {
+	private function serviceWithRelNr(string $relNr, ?CarriedCorrections $carried = null): LoonaangifteMessageService {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$gateway = new HoursRegisterGateway(
@@ -385,7 +423,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn($relNr);
 
-		return new LoonaangifteMessageService(gateway: $gateway, recalculator: new PayslipRecalculator(new PayrollCalculator(), new NullLogger()), appConfig: $appConfig);
+		return new LoonaangifteMessageService(gateway: $gateway, recalculator: new PayslipRecalculator(new PayrollCalculator(), new NullLogger()), appConfig: $appConfig, carried: $carried);
 	}//end serviceWithRelNr()
 
 	/**
