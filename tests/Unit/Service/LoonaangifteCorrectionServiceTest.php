@@ -29,6 +29,10 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DOMDocument;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\Loonaangifte\PayslipRecalculator;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
@@ -320,7 +324,7 @@ class LoonaangifteCorrectionServiceTest extends TestCase {
 	 * @return void
 	 */
 	private function seedSlip(string $uuid, string $runId, string $employeeId, string $period, float $gross, bool $korting): void {
-		$snapshot = (new CalculationInput(grossMonthlySalaryCents: (int)round($gross * 100), taxTableColor: 'wit', loonheffingskortingToegepast: $korting, dateOfBirth: '1988-01-01', period: $period, awfTariff: 'low', aofTariff: 'laag', whkPercentage: 1.52))->toArray();
+		$snapshot = (new CalculationInput(wage: new CalculationWage(grossMonthlySalaryCents: (int)round($gross * 100), dateOfBirth: '1988-01-01', period: $period), levies: new CalculationLevies(wageTax: new WageTaxElection(taxTableColor: 'wit', loonheffingskortingToegepast: $korting), insurance: new InsuranceTariffs(awfTariff: 'low', aofTariff: 'laag', whkPercentage: 1.52))))->toArray();
 		$result = (new PayrollCalculator())->calculate(CalculationInput::fromDecoded($snapshot), TaxTables::load('nl-2026'));
 		$this->store->seed('Payslip', $uuid, [
 			'employeeId' => $employeeId,

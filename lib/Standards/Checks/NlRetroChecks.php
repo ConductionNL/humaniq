@@ -44,6 +44,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Standards\Checks;
 
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 
@@ -156,14 +160,11 @@ final class NlRetroChecks implements CheckProvider {
 		$whkPercentage = is_numeric($whkOverride) === true ? (float)$whkOverride : (float)($tables->werknemersverzekeringen()['whkDefault'] ?? 0.0);
 
 		$input = new CalculationInput(
-			grossMonthlySalaryCents: (int)round(((float)$correctedGross) * 100),
-			taxTableColor: ((string)($employee['taxTableColor'] ?? '') !== '' ? (string)$employee['taxTableColor'] : 'wit'),
-			loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true),
-			dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null),
-			period: $originalPeriod,
-			awfTariff: self::awfTariffFor($contract),
-			aofTariff: $aofTariff,
-			whkPercentage: $whkPercentage
+			wage: new CalculationWage(grossMonthlySalaryCents: (int)round(((float)$correctedGross) * 100), dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null), period: $originalPeriod),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(taxTableColor: ((string)($employee['taxTableColor'] ?? '') !== '' ? (string)$employee['taxTableColor'] : 'wit'), loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true)),
+				insurance: new InsuranceTariffs(awfTariff: self::awfTariffFor($contract), aofTariff: $aofTariff, whkPercentage: $whkPercentage)
+			)
 		);
 
 		$result = (new PayrollCalculator())->calculate($input, $tables);

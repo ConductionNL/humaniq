@@ -28,6 +28,10 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DOMDocument;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\Loonaangifte\PayslipRecalculator;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
@@ -321,14 +325,22 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 */
 	private function snapshot(float $gross, bool $korting, string $awf): array {
 		return (new CalculationInput(
-			grossMonthlySalaryCents: (int)round($gross * 100),
-			taxTableColor: 'wit',
-			loonheffingskortingToegepast: $korting,
-			dateOfBirth: ($gross === 3800.00 ? '1990-04-12' : '1985-09-30'),
-			period: '2026-06',
-			awfTariff: $awf,
-			aofTariff: 'laag',
-			whkPercentage: 1.52
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: (int)round($gross * 100),
+				dateOfBirth: ($gross === 3800.00 ? '1990-04-12' : '1985-09-30'),
+				period: '2026-06'
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'wit',
+					loonheffingskortingToegepast: $korting
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: $awf,
+					aofTariff: 'laag',
+					whkPercentage: 1.52
+				)
+			)
 		))->toArray();
 	}//end snapshot()
 
