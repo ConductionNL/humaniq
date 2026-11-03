@@ -901,7 +901,7 @@ class PayrollRunService {
 	 * @return array<string, mixed>
 	 */
 	private function slipPayload(array $state, array $slip): array {
-		$payload = $this->payslipPayload($state['runId'], $slip['employee'], $slip['contract'], $state['period'], $slip['result']);
+		$payload = $this->payslipPayload($state, $slip);
 		$fieldSets = [
 			$this->sickPayFields($slip['sickCase'], $slip['sickResult']),
 			$this->bijtellingFields($slip['assetAssignment'], $slip['bijtellingCents']),
@@ -1356,25 +1356,23 @@ class PayrollRunService {
 	 * is a denormalized copy of `Employee.isDga` (dga-payroll-mode), so a
 	 * payslip records WHY werknemersverzekeringen reads zero.
 	 *
-	 * @param string $runId The PayrollRun id.
-	 * @param array<string, mixed> $employee The Employee.
-	 * @param array<string, mixed> $contract The covering EmploymentContract.
-	 * @param string $period Wage period (YYYY-MM).
-	 * @param CalculationResult $result The calculator output.
+	 * @param array<string, mixed> $state The run state (`runId`, `period`).
+	 * @param array<string, mixed> $slip  The slip in progress: the `employee`, the covering `contract` and the calculator `result`.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-005
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
 	 */
-	private function payslipPayload(string $runId, array $employee, array $contract, string $period, CalculationResult $result): array {
+	private function payslipPayload(array $state, array $slip): array {
+		['employee' => $employee, 'contract' => $contract, 'result' => $result] = $slip;
 		$nextcloudUserId = trim((string)($employee['nextcloudUserId'] ?? ''));
 
 		$payload = [
 			'employeeId' => $this->idOf($employee),
 			'userId' => ($nextcloudUserId === '' ? null : $nextcloudUserId),
-			'payrollRunId' => $runId,
-			'period' => $period,
+			'payrollRunId' => $state['runId'],
+			'period' => $state['period'],
 			'jurisdiction' => 'NL',
 			'currency' => 'EUR',
 			'grossPay' => $this->euros($result->grossPayCents),

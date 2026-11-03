@@ -383,6 +383,10 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 			$this->employee('emp-retro'),
 			$this->employee('emp-cents', ['grossMonthlySalary' => 2999.995]),
 			$this->employee('emp-byslug', ['id' => 'emp-byslug', '@self' => ['slug' => 'slug-x']]),
+			$this->employee('emp-account', ['nextcloudUserId' => ' jan.jansen ']),
+			$this->employee('emp-blankaccount', ['nextcloudUserId' => '   ']),
+			$this->employee('emp-zerohours'),
+			$this->employee('emp-texthours'),
 		];
 
 		$contracts = [];
@@ -401,6 +405,14 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 
 			if ($contract['employeeId'] === 'emp-nohours') {
 				$contracts[$i] = $this->contract('emp-nohours', ['hourlyWage' => 15.00]);
+			}
+
+			if ($contract['employeeId'] === 'emp-zerohours') {
+				$contracts[$i] = $this->contract('emp-zerohours', ['hoursPerWeek' => 0]);
+			}
+
+			if ($contract['employeeId'] === 'emp-texthours') {
+				$contracts[$i] = $this->contract('emp-texthours', ['hoursPerWeek' => 'veertig']);
 			}
 
 			if ($contract['employeeId'] === 'emp-cao') {
