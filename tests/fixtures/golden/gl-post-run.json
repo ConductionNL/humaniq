@@ -1,0 +1,2162 @@
+{
+    "post 2026-05": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-05 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-05",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "post 2026-02": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-02-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-02-ADM-001",
+                    "entryDate": "2026-02-28",
+                    "description": "Loonjournaalpost 2026-02 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-02",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-02-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-02",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "post 2028-02": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2028-02-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2028-02-ADM-001",
+                    "entryDate": "2028-02-29",
+                    "description": "Loonjournaalpost 2028-02 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2028-02",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2028-02-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2028-02",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "post 2026-12": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-12-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-12-ADM-001",
+                    "entryDate": "2026-12-31",
+                    "description": "Loonjournaalpost 2026-12 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-12",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-12-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-12",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "post 2026-04": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-04-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-04-ADM-001",
+                    "entryDate": "2026-04-30",
+                    "description": "Loonjournaalpost 2026-04 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-04",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-04-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-04",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "with cost allocations": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-05 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-05",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "padded period and administration": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-05 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": " 2026-05 ",
+                    "administrationId": " ADM-001 ",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "id only in @self": {
+        "outcome": {
+            "runId": "run-self",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-05 — humaniq loonrun run-self",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-self",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-self",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": null,
+                    "period": "2026-05",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "padded id": {
+        "outcome": {
+            "runId": " run-1 ",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-05 — humaniq loonrun  run-1 ",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": " run-1 ",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": " run-1 ",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": " run-1 ",
+                    "period": "2026-05",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "other administration": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-777.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-777",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-05 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-777",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-777",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-05",
+                    "administrationId": "ADM-777",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "unparseable period": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-mei-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-mei-ADM-001",
+                    "entryDate": "mei-28",
+                    "description": "Loonjournaalpost mei — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-mei-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "mei",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "padded unparseable period": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-mei-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-mei-ADM-001",
+                    "entryDate": "mei-28",
+                    "description": "Loonjournaalpost mei — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-mei-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": " mei ",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "cents rounding": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-05 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 1234.57,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 0.3,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 100.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 1134.87,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 1234.57,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 0.3,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 100.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 1134.87,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-05",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 1234.565,
+                    "totalEmployerCharges": 0.30000000000000004,
+                    "totalLoonheffing": 100.004,
+                    "totalNet": 1000.0,
+                    "glExpensePosted": 1234.87,
+                    "glLiabilityPosted": 234.87
+                }
+            }
+        ]
+    },
+    "adopts the JournalEntry with the journal number": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "je-9"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "je-9",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-05",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "adopts a JournalEntry whose id is in @self": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "je-self"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "je-self",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-05",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "does not adopt a near journal number": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-05 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-05",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "create fails": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "Aanmaken van de shillinq JournalEntry is mislukt: shillinq refused the journal",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": null
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-05 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "failed",
+                    "errorMessage": "Aanmaken van de shillinq JournalEntry is mislukt: shillinq refused the journal"
+                }
+            }
+        ]
+    },
+    "create answers an entity with its id in @self": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-05 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-05",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "stale pending then a fresh create": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
+            "glPostId": "PayrollGLPost-new-2",
+            "journalEntryId": "JournalEntry-new-1"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": "g-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "g-1",
+                    "payrollRunId": "run-1",
+                    "status": "failed",
+                    "errorMessage": "Verlopen pending-poging vervangen; geen bijbehorende shillinq-journaalpost gevonden."
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "JournalEntry",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-05 — humaniq loonrun run-1",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ],
+                    "journalType": "manual",
+                    "sourceApp": "humaniq",
+                    "approvalState": "not-required",
+                    "administrationId": "ADM-001",
+                    "state": "draft"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "posted",
+                    "journalEntryId": "JournalEntry-new-1",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "lines": [
+                        {
+                            "side": "debit",
+                            "accountNumber": "4001",
+                            "amount": 3800.0,
+                            "description": "Loonkosten bruto"
+                        },
+                        {
+                            "side": "debit",
+                            "accountNumber": "4002",
+                            "amount": 649.8,
+                            "description": "Werkgeverslasten sociale premies"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1701",
+                            "amount": 1102.0,
+                            "description": "Loonheffing-schuld"
+                        },
+                        {
+                            "side": "credit",
+                            "accountNumber": "1702",
+                            "amount": 3347.8,
+                            "description": "Netto-loonschuld"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-05",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "stale pending adopts the posted journal": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Bestaande shillinq-journaalpost overgenomen (crash-recovery).",
+            "glPostId": "g-1",
+            "journalEntryId": "je-9"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": "g-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "g-1",
+                    "payrollRunId": "run-1",
+                    "status": "posted",
+                    "journalEntryId": "je-9",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "postedAt": "<now>",
+                    "errorMessage": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollRun",
+                "uuid": "run-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "run-1",
+                    "period": "2026-05",
+                    "administrationId": "ADM-001",
+                    "status": "posted",
+                    "totalGross": 3800.0,
+                    "totalEmployerCharges": 649.8,
+                    "totalLoonheffing": 1102.0,
+                    "totalNet": 2698.0,
+                    "glExpensePosted": 4449.8,
+                    "glLiabilityPosted": 1751.8
+                }
+            }
+        ]
+    },
+    "already posted": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "posted",
+            "message": "Already posted (idempotent no-op).",
+            "glPostId": "g-2",
+            "journalEntryId": "je-1"
+        },
+        "writes": []
+    },
+    "shillinq not installed": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "skipped-no-shillinq",
+            "message": "Shillinq is niet geïnstalleerd of het JournalEntry-register is niet beschikbaar; de loonrun blijft goedgekeurd voor een latere poging.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "skipped-no-shillinq",
+                    "errorMessage": "Shillinq is niet geïnstalleerd of het JournalEntry-register is niet beschikbaar; de loonrun blijft goedgekeurd voor een latere poging."
+                }
+            }
+        ]
+    },
+    "inconsistent totals": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "Inconsistente runtotalen: loonheffing + netto (11101.00) overschrijdt bruto + werkgeverslasten (4449.80) met 6651.20.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "failed",
+                    "errorMessage": "Inconsistente runtotalen: loonheffing + netto (11101.00) overschrijdt bruto + werkgeverslasten (4449.80) met 6651.20."
+                }
+            }
+        ]
+    },
+    "missing administration": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun is missing id/period/administrationId; cannot post.",
+            "glPostId": null,
+            "journalEntryId": null
+        },
+        "writes": []
+    }
+}
