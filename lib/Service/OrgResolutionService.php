@@ -228,7 +228,7 @@ class OrgResolutionService {
 	 *
 	 * @spec openspec/changes/approver-in-employee-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
-	private function leavesAdministration(mixed $row, string $administrationId): bool {
+	public function leavesAdministration(mixed $row, string $administrationId): bool {
 		return $administrationId !== '' && $this->administrationOf($row) !== $administrationId;
 	}//end leavesAdministration()
 
@@ -241,7 +241,7 @@ class OrgResolutionService {
 	 *
 	 * @spec openspec/changes/manager-climb-stays-in-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
-	private function administrationOf(mixed $row): string {
+	public function administrationOf(mixed $row): string {
 		if (is_array($row) === false) {
 			return '';
 		}

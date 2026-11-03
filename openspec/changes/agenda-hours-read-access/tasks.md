@@ -5,6 +5,10 @@
 - [x] 1.3 No Employee record, an unregistered unit or an unreadable placement date opens nothing. Verify: AgendaReadAccessTest::testASubjectWithoutAnEmployeeRecordIsRefused, testAPlacementInAnUnregisteredUnitOpensNothing, testAPlacementWithAnUnreadableDateDoesNotCount.
 - [x] 1.4 A refused resource agenda carries a reason. Verify: AgendaReadAccessTest::testARefusedResourceAgendaSaysWhy.
 
+- [x] 1.5 The climb stops at the administration boundary; a manager outside it counts for nothing. Verify: AgendaReadAccessTest::testTheClimbStopsAtTheAdministrationBoundary, testAManagerOutsideTheAdministrationOpensNothing.
+- [x] 1.6 Hours for an employee not seen in full leave secondments and interviews out (`AgendaHoursSources`). Verify: AgendaReadAccessTest::testAColleagueCannotReadSecondmentHoursOffPlannedHours, testAColleagueCannotReadAnInterviewOffPlannedHours.
+- [x] 1.7 Unit members for anyone but HR are also placed there today. Verify: AgendaReadAccessTest::testAnEarlyWindowDoesNotBringBackFormerMembers.
+
 ## 2. Verification
 
 - [x] 2.1 Tests written first and red on the `agenda-read-access` code.

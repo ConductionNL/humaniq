@@ -192,7 +192,10 @@ final class AgendaOrgView {
 
 	/**
 	 * Whether one of these accounts manages the registered unit or a unit
-	 * above it. A parent chain that loops is walked once.
+	 * above it. The climb stays in the unit's administration, and a manager
+	 * whose own Employee record lies outside it does not count, as in
+	 * {@see OrgResolutionService::resolveManagerUserIds()}. A parent chain
+	 * that loops is walked once.
 	 *
 	 * @param string $orgUnitId The unit.
 	 * @param array<int, string> $accounts Nextcloud user ids.
@@ -202,19 +205,51 @@ final class AgendaOrgView {
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
 	 */
 	public function isManagedBy(string $orgUnitId, array $accounts): bool {
-		$managers = $this->employeeIdsOf($accounts);
+		$boundary = $this->orgResolution->administrationOf($this->units[$orgUnitId] ?? null);
+		$managers = [];
+		foreach ($this->employeeIdsOf($accounts) as $employeeId) {
+			if ($this->orgResolution->leavesAdministration($this->employees[$employeeId], $boundary) === false) {
+				$managers[] = $employeeId;
+			}
+		}
+
 		$visited = [];
 		while (isset($this->units[$orgUnitId]) === true && isset($visited[$orgUnitId]) === false) {
+			$unit = $this->units[$orgUnitId];
+			if ($this->orgResolution->leavesAdministration($unit, $boundary) === true) {
+				return false;
+			}
+
 			$visited[$orgUnitId] = true;
-			if (in_array(trim((string)($this->units[$orgUnitId]['managerId'] ?? '')), $managers, true) === true) {
+			if (in_array(trim((string)($unit['managerId'] ?? '')), $managers, true) === true) {
 				return true;
 			}
 
-			$orgUnitId = trim((string)($this->units[$orgUnitId]['parentUnitId'] ?? ''));
+			$orgUnitId = trim((string)($unit['parentUnitId'] ?? ''));
 		}
 
 		return false;
 	}//end isManagedBy()
+
+	/**
+	 * The employees placed in the registered unit today.
+	 *
+	 * @param string $orgUnitId The unit.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function placedInToday(string $orgUnitId): array {
+		$placed = [];
+		foreach (array_keys($this->placements) as $employeeId) {
+			if (in_array($orgUnitId, $this->unitsOf([(string)$employeeId]), true) === true) {
+				$placed[] = (string)$employeeId;
+			}
+		}
+
+		return $placed;
+	}//end placedInToday()
 
 	/**
 	 * The registered units the employees are placed in today.

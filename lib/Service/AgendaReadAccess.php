@@ -118,20 +118,23 @@ class AgendaReadAccess {
 
 	/**
 	 * The employees an availability or capacity answer may cover for the
-	 * session user. With a unit: its members, when the user may read the
-	 * unit's agenda. Without one: everybody for HR, otherwise the employees
-	 * whose agenda the user may read. Null when that leaves nobody.
+	 * session user, and those it covers in full. With a unit: its members,
+	 * when the user may read the unit's agenda. Without one: everybody for HR,
+	 * otherwise the employees whose agenda the user may read. Null when that
+	 * leaves nobody.
 	 *
 	 * @param string $orgUnitId The unit asked for, or '' for none.
 	 * @param DateTimeImmutable $onDate The date a unit placement must be active on.
 	 *
-	 * @return array<int, string>|null The employee ids, or null when refused.
+	 * @return array{ids: array<int, string>, all: bool, full: array<int, string>}|null The scope, or null when refused.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
 	 */
 	public function employeeScope(string $orgUnitId, DateTimeImmutable $onDate): ?array {
 		if ($orgUnitId !== '') {
-			return $this->grant(subjectType: 'orgUnit', subjectId: $orgUnitId) === null ? null : $this->members(orgUnitId: $orgUnitId, onDate: $onDate);
+			$grant = $this->grant(subjectType: 'orgUnit', subjectId: $orgUnitId);
+
+			return $grant === null ? null : (['ids' => $this->members(orgUnitId: $orgUnitId, onDate: $onDate)] + $grant);
 		}
 
 		$viewer = $this->viewer();
@@ -141,17 +144,19 @@ class AgendaReadAccess {
 
 		$org = $this->view($viewer);
 		if ($this->roles->isHr($viewer) === true) {
-			return $org->employeeIds();
+			return ['ids' => $org->employeeIds(), 'all' => true, 'full' => []];
 		}
 
-		$visible = [];
+		$scope = ['ids' => [], 'all' => false, 'full' => []];
 		foreach ($org->employeeIds() as $employeeId) {
-			if ($this->employeeGrant(employeeId: $employeeId, org: $org) !== null) {
-				$visible[] = $employeeId;
+			$grant = $this->employeeGrant(employeeId: $employeeId, org: $org);
+			if ($grant !== null) {
+				$scope['ids'][] = $employeeId;
+				$scope['full'] = array_merge($scope['full'], $grant['full']);
 			}
 		}
 
-		return $visible === [] ? null : $visible;
+		return $scope['ids'] === [] ? null : $scope;
 	}//end employeeScope()
 
 	/**
@@ -187,7 +192,28 @@ class AgendaReadAccess {
 	}//end visibleEntries()
 
 	/**
-	 * The employees placed in one org unit on one date.
+	 * The source rows an hours answer may count for this scope: for an
+	 * employee not covered in full, no secondment and no interview.
+	 *
+	 * @param array<string, mixed> $sources The rows the answer reads.
+	 * @param array{ids: array<int, string>, all: bool, full: array<int, string>} $scope What {@see employeeScope()} answered.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function visibleSources(array $sources, array $scope): array {
+		if ($scope['all'] === true) {
+			return $sources;
+		}
+
+		return (new AgendaHoursSources($scope['full']))->trim($sources);
+	}//end visibleSources()
+
+	/**
+	 * The employees placed in one org unit on one date. Anyone but HR gets
+	 * only those placed there today as well, so an early window does not
+	 * bring back former members.
 	 *
 	 * @param string $orgUnitId The org unit.
 	 * @param DateTimeImmutable $onDate The date the placement must be active on.
@@ -206,7 +232,12 @@ class AgendaReadAccess {
 			}
 		}
 
-		return array_values($members);
+		$viewer = $this->viewer();
+		if ($this->roles->isHr($viewer) === true) {
+			return array_values($members);
+		}
+
+		return array_values(array_intersect($members, $this->view($viewer)->placedInToday($orgUnitId)));
 	}//end members()
 
 	/**

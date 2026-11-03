@@ -192,8 +192,8 @@ class AgendaController extends Controller {
 		}
 
 		$orgUnitId = trim((string)$orgUnitId);
-		$employeeIds = $this->access->employeeScope(orgUnitId: $orgUnitId, onDate: $window[0]);
-		if ($employeeIds === null) {
+		$scope = $this->access->employeeScope(orgUnitId: $orgUnitId, onDate: $window[0]);
+		if ($scope === null) {
 			return new JSONResponse(['error' => self::REFUSALS['hours']], Http::STATUS_FORBIDDEN);
 		}
 
@@ -203,10 +203,10 @@ class AgendaController extends Controller {
 			'orgUnitId' => ($orgUnitId === '' ? null : $orgUnitId),
 			'competences' => $this->codes($competences),
 			'employees' => $this->availability->availability(
-				employeeIds: $employeeIds,
+				employeeIds: $scope['ids'],
 				from: $window[0],
 				to: $window[1],
-				sources: $this->sources(from: $window[0], to: $window[1]),
+				sources: $this->access->visibleSources(sources: $this->sources(from: $window[0], to: $window[1]), scope: $scope),
 				requiredCompetences: $this->codes($competences)
 			),
 		]);
@@ -234,17 +234,17 @@ class AgendaController extends Controller {
 			);
 		}
 
-		$employeeIds = $this->access->employeeScope(orgUnitId: trim((string)$orgUnitId), onDate: $window[0]);
-		if ($employeeIds === null) {
+		$scope = $this->access->employeeScope(orgUnitId: trim((string)$orgUnitId), onDate: $window[0]);
+		if ($scope === null) {
 			return new JSONResponse(['error' => self::REFUSALS['hours']], Http::STATUS_FORBIDDEN);
 		}
 
 		return new JSONResponse(
 			$this->capacity->capacity(
-				employeeIds: $employeeIds,
+				employeeIds: $scope['ids'],
 				from: $window[0],
 				to: $window[1],
-				sources: $this->sources(from: $window[0], to: $window[1])
+				sources: $this->access->visibleSources(sources: $this->sources(from: $window[0], to: $window[1]), scope: $scope)
 			)
 		);
 	}//end capacity()
