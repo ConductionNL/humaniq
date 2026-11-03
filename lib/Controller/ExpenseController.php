@@ -142,7 +142,7 @@ class ExpenseController extends Controller {
 				schema: 'Expense'
 			);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('ExpenseController: expense ' . $expenseId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('ExpenseController: an expense lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 

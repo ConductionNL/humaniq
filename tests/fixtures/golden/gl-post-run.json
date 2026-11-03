@@ -4,10 +4,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -54,15 +67,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -118,10 +132,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-02-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-02",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-02-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -168,15 +195,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-02",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-02-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -232,10 +260,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2028-02-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2028-02",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2028-02-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -282,15 +323,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2028-02",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2028-02-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -346,10 +388,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-12-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-12",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-12-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -396,15 +451,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-12",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-12-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -460,10 +516,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-04-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-04",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-04-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -510,15 +579,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-04",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-04-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -574,10 +644,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -624,15 +707,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -688,10 +772,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -738,15 +835,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -802,10 +900,23 @@
             "runId": "run-self",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-self",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -852,15 +963,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-self",
                     "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -916,10 +1028,23 @@
             "runId": " run-1 ",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": " run-1 ",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -966,15 +1091,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": " run-1 ",
                     "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -1030,10 +1156,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-777.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-777"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -1080,15 +1219,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-777",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -1144,10 +1284,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-mei-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-mei-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -1194,15 +1347,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "mei",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-mei-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -1258,10 +1412,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-mei-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-mei-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -1308,15 +1475,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "mei",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-mei-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -1372,10 +1540,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -1422,15 +1603,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -1499,9 +1681,23 @@
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": "PayrollGLPost-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "je-9",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "je-9",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -1570,9 +1766,23 @@
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": "PayrollGLPost-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "je-self",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "je-self",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -1628,10 +1838,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -1678,15 +1901,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -1747,6 +1971,19 @@
         },
         "writes": [
             {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
+                }
+            },
+            {
                 "register": "shillinq",
                 "schema": "JournalEntry",
                 "uuid": null,
@@ -1792,13 +2029,15 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-05",
                     "status": "failed",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
                     "errorMessage": "Aanmaken van de shillinq JournalEntry is mislukt: shillinq refused the journal"
                 }
             }
@@ -1809,10 +2048,23 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
+                }
+            },
             {
                 "register": "shillinq",
                 "schema": "JournalEntry",
@@ -1859,15 +2111,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {
@@ -1923,8 +2176,8 @@
             "runId": "run-1",
             "status": "posted",
             "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
-            "glPostId": "PayrollGLPost-new-2",
-            "journalEntryId": "JournalEntry-new-1"
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": "JournalEntry-new-2"
         },
         "writes": [
             {
@@ -1938,6 +2191,19 @@
                     "payrollRunId": "run-1",
                     "status": "failed",
                     "errorMessage": "Verlopen pending-poging vervangen; geen bijbehorende shillinq-journaalpost gevonden."
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
                 }
             },
             {
@@ -1986,15 +2252,16 @@
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": null,
+                "uuid": "PayrollGLPost-new-1",
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
                     "period": "2026-05",
                     "status": "posted",
-                    "journalEntryId": "JournalEntry-new-1",
                     "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "id": "PayrollGLPost-new-1",
+                    "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
                     "lines": [
                         {

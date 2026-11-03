@@ -145,7 +145,7 @@ class PayrollHandoffController extends Controller {
 		try {
 			$handoff = $this->objects()->find(id: $handoffId, register: $this->settings->getRegisterSlug(), schema: 'PayrollHandoff');
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('PayrollHandoffController: handoff ' . $handoffId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollHandoffController: a handoff lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			$handoff = null;
 		}
 
@@ -198,7 +198,7 @@ class PayrollHandoffController extends Controller {
 				->setSchema('hrAdministration')
 				->findAll(['filters' => ['administrationId' => $administrationId], 'limit' => 1]);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('PayrollHandoffController: administration ' . $administrationId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollHandoffController: an administration lookup failed and is answered as not readable.', ['exceptionClass' => $e::class]);
 			return false;
 		}
 

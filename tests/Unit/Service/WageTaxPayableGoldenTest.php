@@ -37,7 +37,12 @@ class WageTaxPayableGoldenTest extends TestCase {
 		$golden = json_decode((string)file_get_contents(__DIR__ . '/../../fixtures/golden/wage-tax-payable.json'), true);
 		self::assertSame(array_keys($golden), array_keys(wageTaxPayableCases()));
 		foreach (wageTaxPayableCases() as $name => $case) {
-			$payable = (new WageTaxPayable(amount: $case['amount'], payeeId: $case['payeeId'], account: $case['account']))->build(run: $case['run'], filing: $case['filing']);
+			try {
+				$payable = (new WageTaxPayable(amount: $case['amount'], payeeId: $case['payeeId'], account: $case['account']))->build(run: $case['run'], filing: $case['filing']);
+			} catch (\InvalidArgumentException $e) {
+				$payable = ['refused' => $e->getMessage()];
+			}
+
 			self::assertSame(json_encode($golden[$name], JSON_PRESERVE_ZERO_FRACTION), json_encode($payable, JSON_PRESERVE_ZERO_FRACTION), $name);
 		}
 	}//end testPayablesMatchTheGolden()

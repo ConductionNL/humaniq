@@ -93,13 +93,6 @@ class PayrollGLPostService {
 	private const ACTIVE_STATUSES = ['pending', 'posted'];
 
 	/**
-	 * Required numeric PayrollRun totals the balanced journal is built from.
-	 *
-	 * @var string[]
-	 */
-	private const REQUIRED_TOTALS = ['totalGross', 'totalEmployerCharges', 'totalLoonheffing', 'totalNet'];
-
-	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppManager $appManager To duck-type-probe shillinq's presence.
 	 * @param SettingsService $settingsService Register slug + configurable RGS account numbers.
@@ -158,19 +151,9 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', 'PayrollRun is missing id/period/administrationId; cannot post.');
 		}
 
-		$journalNumber = $this->journalNumber($run);
-
-		$active = $this->activeGlPostForRun($runId);
-		if ($active !== null && (string)($active['status'] ?? '') === 'posted') {
-			return $this->outcome($runId, 'posted', 'Already posted (idempotent no-op).', $active, (string)($active['journalEntryId'] ?? null));
-		}
-
-		if ($active !== null && (string)($active['status'] ?? '') === 'pending') {
-			$recovered = $this->recoverStalePending($active, $run);
-			if ($recovered !== null) {
-				return $recovered;
-			}
-			// Stale pending record marked failed (superseded); fall through to a fresh attempt.
+		$settled = $this->settledByActiveGlPost($run);
+		if ($settled !== null) {
+			return $settled;
 		}
 
 		if ($this->shillinqAvailable() === false) {
@@ -200,37 +183,95 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', (string)$built['error'], $glPost);
 		}
 
+		return $this->postUnderClaim($run, $built);
+	}//end postRun()
+
+	/**
+	 * The outcome an active GL post of the run already settles, or null to
+	 * go on: a posted one is an idempotent no-op, a fresh pending one is
+	 * another process still at work (nothing is written), and a stale one is
+	 * adopted when shillinq already carries its JournalEntry, or superseded.
+	 *
+	 * @param array<string, mixed> $run The PayrollRun.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-007
+	 */
+	private function settledByActiveGlPost(array $run): ?array {
+		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
+		$active = $this->activeGlPostForRun($runId);
+		$status = (string)($active['status'] ?? '');
+		if ($status === 'posted') {
+			return $this->outcome($runId, 'posted', 'Already posted (idempotent no-op).', $active, (string)($active['journalEntryId'] ?? null));
+		}
+
+		if ($status !== 'pending') {
+			return null;
+		}
+
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->isFresh($active) === true) {
+			return $this->outcome($runId, 'pending', 'Another process is already posting this payroll run.', $active);
+		}
+
+		// A stale pending GL post is a crash left behind (design.md D6): adopt
+		// the JournalEntry shillinq already carries for this journalNumber, or
+		// close the stale record and let the caller start a fresh attempt.
+		if ($this->shillinqAvailable() === false) {
+			return null;
+		}
+
+		$journalNumber = $this->journalNumber($run);
+		$adopted = $this->findJournalEntryByNumber($journalNumber);
+		if ($adopted === null) {
+			$this->saveGlPost($active, ['status' => 'failed', 'errorMessage' => 'Verlopen pending-poging vervangen; geen bijbehorende shillinq-journaalpost gevonden.']);
+			return null;
+		}
+
+		$journalEntryId = (string)($adopted['id'] ?? $adopted['@self']['id'] ?? '');
+		$glPost = $this->saveGlPost($active, ['status' => 'posted', 'journalEntryId' => $journalEntryId, 'journalNumber' => $journalNumber, 'postedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'errorMessage' => null]);
+		$built = $this->buildLines($run);
+		if ($built['error'] === null) {
+			$this->applySuccessToRun($run, (float)$built['glExpensePosted'], (float)$built['glLiabilityPosted']);
+		}
+
+		return $this->outcome($runId, 'posted', 'Bestaande shillinq-journaalpost overgenomen (crash-recovery).', $glPost, $journalEntryId);
+	}//end settledByActiveGlPost()
+
+	/**
+	 * Claim the run with a `pending` GL post, then create or adopt the
+	 * shillinq JournalEntry and settle the claim. A claim that finds another
+	 * active GL post of the run next to it withdraws, so two processes never
+	 * both create a JournalEntry for one run.
+	 *
+	 * @param array<string, mixed> $run   The PayrollRun.
+	 * @param array<string, mixed> $built The buildLines() result.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 *
+	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-007
+	 */
+	private function postUnderClaim(array $run, array $built): array {
+		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
+		$journalNumber = $this->journalNumber($run);
+		$claim = $this->createGlPost(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'journalNumber' => $journalNumber]);
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->hasRival($this->glPostsWhere('journalNumber', $journalNumber), $claim) === true) {
+			$withdrawn = $this->saveGlPost($claim, ['status' => 'failed', 'errorMessage' => 'Withdrawn: another process is already posting this payroll run.']);
+			return $this->outcome($runId, 'pending', 'Another process is already posting this payroll run.', $withdrawn);
+		}
+
 		try {
 			$journalEntryId = $this->createOrAdoptJournalEntry($run, $built['lines']);
 		} catch (\Throwable $e) {
-			$glPost = $this->createGlPost(
-				[
-					'payrollRunId' => $runId,
-					'period' => $period,
-					'status' => 'failed',
-					'errorMessage' => 'Aanmaken van de shillinq JournalEntry is mislukt: ' . $e->getMessage(),
-				]
-			);
-
+			$glPost = $this->saveGlPost($claim, ['status' => 'failed', 'errorMessage' => 'Aanmaken van de shillinq JournalEntry is mislukt: ' . $e->getMessage()]);
 			return $this->outcome($runId, 'failed', (string)$glPost['errorMessage'], $glPost);
 		}
 
-		$glPost = $this->createGlPost(
-			[
-				'payrollRunId' => $runId,
-				'period' => $period,
-				'status' => 'posted',
-				'journalEntryId' => $journalEntryId,
-				'journalNumber' => $journalNumber,
-				'postedAt' => gmdate('Y-m-d\TH:i:s\Z'),
-				'lines' => $built['lines'],
-			]
-		);
-
+		$glPost = $this->saveGlPost($claim, ['status' => 'posted', 'journalEntryId' => $journalEntryId, 'postedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'lines' => $built['lines']]);
 		$this->applySuccessToRun($run, (float)$built['glExpensePosted'], (float)$built['glLiabilityPosted']);
 
 		return $this->outcome($runId, 'posted', 'Geboekt als shillinq journaalpost ' . $journalNumber . '.', $glPost, $journalEntryId);
-	}//end postRun()
+	}//end postUnderClaim()
 
 	/**
 	 * Build the balanced 4-line journal from a run's totals (design.md D2), pure
@@ -253,21 +294,21 @@ class PayrollGLPostService {
 	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
 	 */
 	public function buildLines(array $run, array $allocations = []): array {
-		foreach (self::REQUIRED_TOTALS as $field) {
-			if (isset($run[$field]) === false || is_numeric($run[$field]) === false) {
-				return $this->buildFailure(sprintf('PayrollRun-veld "%s" ontbreekt of is niet numeriek.', $field));
-			}
+		$totals = new PayrollJournalTotals($run);
+		$refusal = $totals->refusal();
+		if ($refusal !== null) {
+			return $this->buildFailure($refusal);
 		}
 
-		$grossCents = (int)round(((float)$run['totalGross']) * 100);
-		$chargesCents = (int)round(((float)$run['totalEmployerCharges']) * 100);
-		$loonheffingCents = (int)round(((float)$run['totalLoonheffing']) * 100);
-		$netCents = (int)round(((float)$run['totalNet']) * 100);
-		$reimbursementCents = (is_numeric($run['totalReimbursements'] ?? null) === true ? (int)round(((float)$run['totalReimbursements']) * 100) : 0);
+		$grossCents = $totals->cents('totalGross');
+		$chargesCents = $totals->cents('totalEmployerCharges');
+		$loonheffingCents = $totals->cents('totalLoonheffing');
+		$netCents = $totals->cents('totalNet');
+		$reimbursementCents = $totals->cents('totalReimbursements');
 
 		// payroll-expenses-and-allowances D6: reimbursements raise net with no
 		// wage cost behind them, so they carry their own debit line.
-		$debitTotalCents = ($grossCents + $chargesCents + max(0, $reimbursementCents));
+		$debitTotalCents = ($grossCents + $chargesCents + $reimbursementCents);
 		$creditKnownCents = ($loonheffingCents + $netCents);
 		$remainderCents = ($debitTotalCents - $creditKnownCents);
 
@@ -422,55 +463,6 @@ class PayrollGLPostService {
 	}//end buildFailure()
 
 	/**
-	 * Resolve a stale `pending` PayrollGLPost via the deterministic journalNumber
-	 * probe (design.md D6, crash-recovery): a prior invocation crashed after
-	 * marking `pending` but before recording the outcome. If shillinq already
-	 * carries a JournalEntry for this journalNumber, adopt it as `posted`
-	 * (including the run's success effects); otherwise mark the stale record
-	 * `failed` (superseded) and return null so the caller starts a fresh attempt.
-	 *
-	 * @param array<string, mixed> $stalePending The stale `pending` PayrollGLPost.
-	 * @param array<string, mixed> $run The PayrollRun being posted.
-	 *
-	 * @return array<string, mixed>|null The outcome when adopted, or null to retry fresh.
-	 *
-	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-007
-	 */
-	private function recoverStalePending(array $stalePending, array $run): ?array {
-		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
-		$journalNumber = $this->journalNumber($run);
-
-		if ($this->shillinqAvailable() === false) {
-			return null;
-		}
-
-		$adopted = $this->findJournalEntryByNumber($journalNumber);
-		if ($adopted === null) {
-			$this->saveGlPost($stalePending, ['status' => 'failed', 'errorMessage' => 'Verlopen pending-poging vervangen; geen bijbehorende shillinq-journaalpost gevonden.']);
-			return null;
-		}
-
-		$journalEntryId = (string)($adopted['id'] ?? $adopted['@self']['id'] ?? '');
-		$glPost = $this->saveGlPost(
-			$stalePending,
-			[
-				'status' => 'posted',
-				'journalEntryId' => $journalEntryId,
-				'journalNumber' => $journalNumber,
-				'postedAt' => gmdate('Y-m-d\TH:i:s\Z'),
-				'errorMessage' => null,
-			]
-		);
-
-		$built = $this->buildLines($run);
-		if ($built['error'] === null) {
-			$this->applySuccessToRun($run, (float)$built['glExpensePosted'], (float)$built['glLiabilityPosted']);
-		}
-
-		return $this->outcome($runId, 'posted', 'Bestaande shillinq-journaalpost overgenomen (crash-recovery).', $glPost, $journalEntryId);
-	}//end recoverStalePending()
-
-	/**
 	 * Find an existing shillinq JournalEntry by journalNumber (idempotency
 	 * probe, design.md D6), or create it when none exists yet.
 	 *
@@ -619,9 +611,9 @@ class PayrollGLPostService {
 	 */
 	private function findJournalEntryByNumber(string $journalNumber): ?array {
 		try {
-			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000]);
+			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000, 'filters' => ['journalNumber' => $journalNumber]], false, false);
 		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollGLPostService: kon shillinq JournalEntry niet doorzoeken: ' . $e->getMessage());
+			$this->logger->warning('PayrollGLPostService: the shillinq JournalEntry lookup failed.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -635,29 +627,33 @@ class PayrollGLPostService {
 	}//end findJournalEntryByNumber()
 
 	/**
-	 * The PayrollGLPost rows referencing a given PayrollRun.
+	 * The PayrollGLPost rows whose field holds the value: those of one run
+	 * (`payrollRunId`), or every claim on one journal number
+	 * (`journalNumber`). Read outside the caller's RBAC and organisation, as
+	 * they are written, so a cron run and a user run see each other.
 	 *
-	 * @param string $runId The PayrollRun id.
+	 * @param string $field The field, `payrollRunId` or `journalNumber`.
+	 * @param string $value Its value.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function glPostsForRun(string $runId): array {
+	private function glPostsWhere(string $field, string $value): array {
 		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::GLPOST_SCHEMA)->findAll(['limit' => 10000]);
+			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::GLPOST_SCHEMA)->findAll(['limit' => 10000, 'filters' => [$field => $value]], false, false);
 		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollGLPostService: kon PayrollGLPost niet laden: ' . $e->getMessage());
+			$this->logger->warning('PayrollGLPostService: the PayrollGLPost lookup failed.', ['exceptionClass' => $e::class]);
 			return [];
 		}
 
 		$out = [];
 		foreach ($this->normaliseRows($rows) as $row) {
-			if ((string)($row['payrollRunId'] ?? '') === $runId) {
+			if ((string)($row[$field] ?? '') === $value) {
 				$out[] = $row;
 			}
 		}
 
 		return $out;
-	}//end glPostsForRun()
+	}//end glPostsWhere()
 
 	/**
 	 * The active (pending/posted) PayrollGLPost for a run, if any — the
@@ -668,7 +664,7 @@ class PayrollGLPostService {
 	 * @return array<string, mixed>|null
 	 */
 	private function activeGlPostForRun(string $runId): ?array {
-		foreach ($this->glPostsForRun($runId) as $row) {
+		foreach ($this->glPostsWhere('payrollRunId', $runId) as $row) {
 			if (in_array((string)($row['status'] ?? ''), self::ACTIVE_STATUSES, true) === true) {
 				return $row;
 			}

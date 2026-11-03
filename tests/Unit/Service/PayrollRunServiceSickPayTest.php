@@ -38,6 +38,11 @@ use OCA\Humaniq\Payroll\InsuranceTariffs;
 use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Payroll\SickPayCircumstances;
+use OCA\Humaniq\Payroll\SickPayHours;
+use OCA\Humaniq\Payroll\SickPayInput;
+use OCA\Humaniq\Payroll\SickPayTiming;
+use OCA\Humaniq\Payroll\SickPayWage;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunService;
@@ -373,6 +378,77 @@ class PayrollRunServiceSickPayTest extends TestCase {
 	}//end testOpenCaseEmployeePayslipReflectsDoorbetaaldLoonNotFullSalary()
 
 	/**
+	 * Cases where the year-one flag, the first sick day in the period, the
+	 * wachtdag and the contract hours each differ from their neighbour, so a
+	 * swapped argument shows: name => [contract hours, first sick day,
+	 * wachtdag, year one, first sick day in the run period].
+	 *
+	 * @return array<string, array{0: float, 1: string, 2: bool, 3: bool, 4: bool}>
+	 */
+	public static function sickPayCircumstances(): array {
+		return [
+			'24 hours, sick since January, wachtdag' => [24.0, '2026-01-05', true, true, false],
+			'24 hours, sick in the period, no wachtdag' => [24.0, '2026-02-10', false, true, true],
+			'24 hours, sick in the period, wachtdag' => [24.0, '2026-02-10', true, true, true],
+			'24 hours, past week 52, wachtdag' => [24.0, '2024-12-02', true, false, false],
+			'40 hours, past week 52, no wachtdag' => [40.0, '2024-12-02', false, false, false],
+		];
+
+	}//end sickPayCircumstances()
+
+	/**
+	 * The stamped sick-pay figures follow the case and the contract: year one
+	 * from the first sick day, the wachtdag only when the case has one and
+	 * starts in the period, and the WML floor scaled by the contract hours.
+	 * Each expected payslip is computed straight from SickPayCalculator with
+	 * the circumstances stated by hand.
+	 *
+	 * @param float $hours The contract hours per week.
+	 * @param string $firstSickDay The case's first sick day.
+	 * @param bool $wachtdag Whether the case has a wachtdag.
+	 * @param bool $yearOne Whether 2026-02 falls in the case's first 52 weeks.
+	 * @param bool $firstSickDayInPeriod Whether the first sick day falls in 2026-02.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider sickPayCircumstances
+	 *
+	 * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-005
+	 */
+	public function testStampedSickPayFollowsTheCaseAndTheContract(float $hours, string $firstSickDay, bool $wachtdag, bool $yearOne, bool $firstSickDayInPeriod): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'EmploymentContract' => [$this->contract(['hoursPerWeek' => $hours])],
+				'SickLeaveCase' => [$this->sickCase(['firstSickDay' => $firstSickDay, 'wachtdag' => $wachtdag])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$expected = (new SickPayCalculator())->compute(
+			new SickPayInput(
+				wage: new SickPayWage(referenceWageCents: 380000, aangepastLoonCents: 0, loondoorbetalingPercentage: 70.0),
+				circumstances: new SickPayCircumstances(
+					timing: new SickPayTiming(yearOne: $yearOne, wachtdag: $wachtdag, firstSickDayInPeriod: $firstSickDayInPeriod),
+					hours: new SickPayHours(contractHoursPerWeek: $hours, fulltimeHoursPerWeek: 36.0)
+				)
+			),
+			TaxTables::load('nl-2026')
+		);
+
+		$this->assertSame($yearOne, $payslip['sickPayYearOne']);
+		$this->assertSame(round(($expected->doorbetaaldLoonCents / 100), 2), $payslip['doorbetaaldLoon']);
+		$this->assertSame(round(($expected->wachtdagDeductionCents / 100), 2), $payslip['wachtdagDeduction']);
+		$this->assertSame(round(($expected->minimumWageFloorCents / 100), 2), $payslip['sickPayMinimumWageFloor']);
+		$this->assertSame(round(($expected->payableGrossCents / 100), 2), $payslip['grossPay']);
+
+	}//end testStampedSickPayFollowsTheCaseAndTheContract()
+
+	/**
 	 * A normal employee (no open SickLeaveCase) is completely unaffected —
 	 * the full-salary path stays byte-identical, and every sick-pay field is
 	 * null (REQ-SICK-001 scenario: "The reference wage is untouched when no
@@ -471,6 +547,56 @@ class PayrollRunServiceSickPayTest extends TestCase {
 		$this->assertSame('case-1', $payslips[0]['sickLeaveCaseId']);
 
 	}//end testRecalculatingASickPayRunUpsertsInPlaceWithoutDuplicating()
+
+	/**
+	 * A sick case without a loondoorbetaling percentage pays 70%.
+	 *
+	 * @return void
+	 */
+	public function testACaseWithoutAPercentagePaysSeventyPercent(): void {
+		$case = $this->sickCase();
+		unset($case['loondoorbetalingPercentage']);
+		[$service, $fake] = $this->service(['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'SickLeaveCase' => [$case], 'PayrollRun' => [], 'Payslip' => []]);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$this->assertSame(70.0, $payslip['sickPayPercentage']);
+		$this->assertSame(2660.00, $payslip['doorbetaaldLoon']);
+
+	}//end testACaseWithoutAPercentagePaysSeventyPercent()
+
+	/**
+	 * An aangepast loon with a half cent is rounded to the nearest cent,
+	 * not floored: 3000.125 is 300013 cents. At 50% continuation that cent
+	 * shows in the doorbetaald loon.
+	 *
+	 * @return void
+	 */
+	public function testAnAangepastLoonWithAHalfCentIsRoundedToTheNearestCent(): void {
+		[$service, $fake] = $this->service(['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'SickLeaveCase' => [$this->sickCase(['aangepastLoon' => 3000.125, 'loondoorbetalingPercentage' => 50])], 'PayrollRun' => [], 'Payslip' => []]);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$expected = static function (int $aangepastLoonCents): \OCA\Humaniq\Payroll\SickPayResult {
+			return (new SickPayCalculator())->compute(
+				new \OCA\Humaniq\Payroll\SickPayInput(
+					wage: new \OCA\Humaniq\Payroll\SickPayWage(referenceWageCents: 380000, aangepastLoonCents: $aangepastLoonCents, loondoorbetalingPercentage: 50.0),
+					circumstances: new \OCA\Humaniq\Payroll\SickPayCircumstances(
+						timing: new \OCA\Humaniq\Payroll\SickPayTiming(yearOne: true, wachtdag: false, firstSickDayInPeriod: true),
+						hours: new \OCA\Humaniq\Payroll\SickPayHours(contractHoursPerWeek: 36.0, fulltimeHoursPerWeek: 36.0)
+					)
+				),
+				TaxTables::load('nl-2026')
+			);
+		};
+		$rounded = $expected(300013);
+		$this->assertNotSame($rounded->payableGrossCents, $expected(300012)->payableGrossCents, 'One cent of aangepast loon shows in the payable gross.');
+		$this->assertSame(round(($rounded->payableGrossCents / 100), 2), $payslip['grossPay']);
+		$this->assertSame(round(($rounded->doorbetaaldLoonCents / 100), 2), $payslip['doorbetaaldLoon']);
+
+	}//end testAnAangepastLoonWithAHalfCentIsRoundedToTheNearestCent()
 
 	/**
 	 * Objects saved to a given schema, in save order.

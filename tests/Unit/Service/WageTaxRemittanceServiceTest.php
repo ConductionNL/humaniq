@@ -189,6 +189,51 @@ class WageTaxRemittanceServiceTest extends TestCase {
 	}//end testNothingToPayWritesNoPayable()
 
 	/**
+	 * Return periods PHP would read as today, or as another month.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function periodsWithoutAMonth(): array {
+		return ['empty' => [''], 'blank' => ['  '], 'no dash' => ['202605'], 'month 00' => ['2026-00'], 'month 13' => ['2026-13'], 'a day' => ['2026-05-15'], 'a word' => ['mei'], 'relative' => ['now']];
+	}//end periodsWithoutAMonth()
+
+	/**
+	 * A return without a YYYY-MM period writes no payable.
+	 *
+	 * @param string $period The return's period.
+	 *
+	 * @dataProvider periodsWithoutAMonth
+	 *
+	 * @return void
+	 */
+	public function testAReturnWithoutAPeriodMonthWritesNothing(string $period): void {
+		$this->patchFiling(['period' => $period]);
+
+		$outcome = $this->serviceOn($this->store)->processPayableRuns('2026-05');
+
+		self::assertSame('failed', $outcome[0]['status']);
+		self::assertSame('The wage tax return has no period in YYYY-MM form, so the payable has no invoice date. Fix the period on the return.', $outcome[0]['message']);
+		self::assertSame([], $this->rowsOf('APTransaction'));
+		$record = $this->rowsOf('WageTaxRemittance')[0];
+		self::assertSame(['failed', $period], [$record['status'], $record['period']]);
+		self::assertArrayNotHasKey('shillinqPayableRef', $record);
+	}//end testAReturnWithoutAPeriodMonthWritesNothing()
+
+	/**
+	 * A padded or one-digit month still makes the period's last day.
+	 *
+	 * @return void
+	 */
+	public function testAPaddedOrShortMonthStillPays(): void {
+		$this->patchFiling(['period' => ' 2026-5 ']);
+
+		$outcome = $this->serviceOn($this->store)->processPayableRuns('2026-05');
+
+		self::assertSame('created', $outcome[0]['status']);
+		self::assertSame('2026-05-31', $this->rowsOf('APTransaction')[0]['invoiceDate']);
+	}//end testAPaddedOrShortMonthStillPays()
+
+	/**
 	 * Without a payment reference nothing reaches shillinq.
 	 *
 	 * @return void

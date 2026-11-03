@@ -119,10 +119,7 @@ class TimeEntryController extends Controller {
 				domainObjectRef: $domainObjectRef
 			);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'TimeEntryController: the estimate for ' . $domainObjectType . ' ' . $domainObjectRef
-				. ' could not be read: ' . $e->getMessage()
-			);
+			$this->logger->error('TimeEntryController: the estimate of an object could not be read.', ['exceptionClass' => $e::class]);
 
 			return new JSONResponse(
 				['error' => 'De schatting kon niet worden gelezen.'],
@@ -267,7 +264,7 @@ class TimeEntryController extends Controller {
 		try {
 			$rows = $this->gateway->findFiltered('TimeEntry', ['userId' => $uid, 'date' => $day]);
 		} catch (\Throwable $e) {
-			$this->logger->warning('TimeEntryController: the hours of ' . $day . ' could not be read: ' . $e->getMessage());
+			$this->logger->error('TimeEntryController: the hours of a day could not be read.', ['exceptionClass' => $e::class]);
 
 			return new JSONResponse(['error' => 'Je uren konden niet worden gelezen.'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
@@ -309,7 +306,7 @@ class TimeEntryController extends Controller {
 	 * @return JSONResponse The refusal, as 400.
 	 */
 	private function refused(HoursWriteRefusedException $e): JSONResponse {
-		$this->logger->info('TimeEntryController weigerde een timerverzoek: ' . $e->getMessage());
+		$this->logger->info('TimeEntryController: a timer request was refused.', ['exceptionClass' => $e::class]);
 
 		return new JSONResponse(
 			['status' => RunningTimerService::STATUS_INVALID, 'error' => $e->getMessage()],

@@ -166,19 +166,9 @@ class PayrollNetPayService {
 			return $this->outcome($runId, 'failed', 'PayrollRun mist id/period/administrationId; kan niet worden verwerkt.');
 		}
 
-		$runNumber = $this->runNumber($run);
-
-		$active = $this->activeBatchForRun($runId);
-		if ($active !== null && (string)($active['status'] ?? '') === 'created') {
-			return $this->outcome($runId, 'created', 'Al klaargezet in shillinq (idempotent no-op).', $active, (string)($active['shillinqPaymentRunRef'] ?? null));
-		}
-
-		if ($active !== null && (string)($active['status'] ?? '') === 'pending') {
-			$recovered = $this->recoverStalePending($active, $run);
-			if ($recovered !== null) {
-				return $recovered;
-			}
-			// Stale pending record marked failed (superseded); fall through to a fresh attempt.
+		$settled = $this->settledByActiveBatch($run);
+		if ($settled !== null) {
+			return $settled;
 		}
 
 		if ($this->shillinqAvailable() === false) {
@@ -208,28 +198,74 @@ class PayrollNetPayService {
 			return $this->outcome($runId, 'failed', (string)$collected['error'], $batch);
 		}
 
+		return $this->createUnderClaim($run, $collected);
+	}//end processRun()
+
+	/**
+	 * The outcome an active batch of the run already settles, or null to go
+	 * on: a created batch is an idempotent no-op, a fresh pending batch is
+	 * another process still at work (nothing is written), and a stale one is
+	 * recovered or superseded.
+	 *
+	 * @param array<string, mixed> $run The PayrollRun.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private function settledByActiveBatch(array $run): ?array {
+		$runId = $this->idOf($run);
+		$active = $this->activeBatchForRun($runId);
+		$status = (string)($active['status'] ?? '');
+		if ($status === 'created') {
+			return $this->outcome($runId, 'created', 'Al klaargezet in shillinq (idempotent no-op).', $active, (string)($active['shillinqPaymentRunRef'] ?? null));
+		}
+
+		if ($status !== 'pending') {
+			return null;
+		}
+
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->isFresh($active) === true) {
+			return $this->outcome($runId, 'pending', 'Deze loonrun wordt al door een andere verwerking klaargezet.', $active);
+		}
+
+		return $this->recoverStalePending($active, $run);
+	}//end settledByActiveBatch()
+
+	/**
+	 * Claim the run with a `pending` batch, then create or adopt the shillinq
+	 * PaymentRun and settle the claim. A claim that finds another active
+	 * batch of the run next to it withdraws, so two processes never both
+	 * create a PaymentRun for one run.
+	 *
+	 * @param array<string, mixed> $run       The PayrollRun.
+	 * @param array<string, mixed> $collected The collectLines() result.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private function createUnderClaim(array $run, array $collected): array {
+		$runId = $this->idOf($run);
+		$runNumber = $this->runNumber($run);
+		$claim = $this->createBatch(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'runNumber' => $runNumber]);
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->hasRival($this->batchesWhere('runNumber', $runNumber), $claim) === true) {
+			$withdrawn = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Ingetrokken: een andere verwerking zet deze loonrun al klaar.']);
+			return $this->outcome($runId, 'pending', 'Deze loonrun wordt al door een andere verwerking klaargezet.', $withdrawn);
+		}
+
 		try {
 			$paymentRunId = $this->createOrAdoptPaymentRun($run, $collected);
 		} catch (\Throwable $e) {
-			$batch = $this->createBatch(
-				[
-					'payrollRunId' => $runId,
-					'period' => $period,
-					'status' => 'failed',
-					'errorMessage' => 'Aanmaken van de shillinq PaymentRun is mislukt: ' . $e->getMessage(),
-				]
-			);
-
+			$batch = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Aanmaken van de shillinq PaymentRun is mislukt: ' . $e->getMessage()]);
 			return $this->outcome($runId, 'failed', (string)$batch['errorMessage'], $batch);
 		}
 
-		$batch = $this->createBatch(
+		$batch = $this->saveBatch(
+			$claim,
 			[
-				'payrollRunId' => $runId,
-				'period' => $period,
 				'status' => 'created',
 				'shillinqPaymentRunRef' => $paymentRunId,
-				'runNumber' => $runNumber,
 				'totalAmount' => $collected['totalAmount'],
 				'lineCount' => $collected['lineCount'],
 				'createdAt' => gmdate('Y-m-d\TH:i:s\Z'),
@@ -237,7 +273,7 @@ class PayrollNetPayService {
 		);
 
 		return $this->outcome($runId, 'created', 'Klaargezet in shillinq als PaymentRun ' . $runNumber . '.', $batch, $paymentRunId);
-	}//end processRun()
+	}//end createUnderClaim()
 
 	/**
 	 * Collect one payment line per payable payslip in the run's period,
@@ -506,9 +542,9 @@ class PayrollNetPayService {
 	 */
 	private function findPaymentRunByNumber(string $runNumber): ?array {
 		try {
-			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000]);
+			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000, 'filters' => ['runNumber' => $runNumber]], false, false);
 		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollNetPayService: kon shillinq PaymentRun niet doorzoeken: ' . $e->getMessage());
+			$this->logger->warning('PayrollNetPayService: the shillinq PaymentRun lookup failed.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -522,29 +558,33 @@ class PayrollNetPayService {
 	}//end findPaymentRunByNumber()
 
 	/**
-	 * The PayrollPaymentBatch rows referencing a given PayrollRun.
+	 * The PayrollPaymentBatch rows whose field holds the value: those of one
+	 * run (`payrollRunId`), or every claim on one run number (`runNumber`).
+	 * Read outside the caller's RBAC and organisation, as they are written,
+	 * so a cron run and a user run see each other.
 	 *
-	 * @param string $runId The PayrollRun id.
+	 * @param string $field The field, `payrollRunId` or `runNumber`.
+	 * @param string $value Its value.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function batchesForRun(string $runId): array {
+	private function batchesWhere(string $field, string $value): array {
 		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::BATCH_SCHEMA)->findAll(['limit' => 10000]);
+			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::BATCH_SCHEMA)->findAll(['limit' => 10000, 'filters' => [$field => $value]], false, false);
 		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollNetPayService: kon PayrollPaymentBatch niet laden: ' . $e->getMessage());
+			$this->logger->warning('PayrollNetPayService: the PayrollPaymentBatch lookup failed.', ['exceptionClass' => $e::class]);
 			return [];
 		}
 
 		$out = [];
 		foreach ($this->normaliseRows($rows) as $row) {
-			if ((string)($row['payrollRunId'] ?? '') === $runId) {
+			if ((string)($row[$field] ?? '') === $value) {
 				$out[] = $row;
 			}
 		}
 
 		return $out;
-	}//end batchesForRun()
+	}//end batchesWhere()
 
 	/**
 	 * The active (pending/created) PayrollPaymentBatch for a run, if any --
@@ -555,7 +595,7 @@ class PayrollNetPayService {
 	 * @return array<string, mixed>|null
 	 */
 	private function activeBatchForRun(string $runId): ?array {
-		foreach ($this->batchesForRun($runId) as $row) {
+		foreach ($this->batchesWhere('payrollRunId', $runId) as $row) {
 			if (in_array((string)($row['status'] ?? ''), self::ACTIVE_STATUSES, true) === true) {
 				return $row;
 			}

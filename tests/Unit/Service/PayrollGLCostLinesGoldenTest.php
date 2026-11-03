@@ -26,6 +26,7 @@ require_once __DIR__ . '/../../fixtures/golden/gl-cost-lines.input.php';
  *
  * @covers \OCA\Humaniq\Service\PayrollGLPostService
  * @uses   \OCA\Humaniq\Support\ConvertsRowsToArrays
+ * @uses   \OCA\Humaniq\Service\PayrollJournalTotals
  */
 class PayrollGLCostLinesGoldenTest extends TestCase {
 

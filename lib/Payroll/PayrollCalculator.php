@@ -65,7 +65,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Payroll;
 
-use OCA\Humaniq\Payroll\Dsl\DslException;
 use OCA\Humaniq\Payroll\Dsl\PackInterpreter;
 use OCA\Humaniq\Payroll\Dsl\PackRunResult;
 
@@ -138,11 +137,7 @@ final class PayrollCalculator {
 	}//end calculate()
 
 	/**
-	 * Map the interpreter's output onto `CalculationResult`'s 18 fields.
-	 *
-	 * `nettoPayCents` and `employerChargesCents` are the interpreter's
-	 * incidence folds — this method reads them, it does not compute them
-	 * (REQ-JP-003).
+	 * The result of one pack run.
 	 *
 	 * @param PackRunResult $out The pack run's output.
 	 *
@@ -151,48 +146,8 @@ final class PayrollCalculator {
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
 	 */
 	private function resultFrom(PackRunResult $out): CalculationResult {
-		return new CalculationResult(
-			grossPayCents: $out->gross(),
-			loonheffingCents: $out->cents('loonheffing'),
-			arbeidskortingCents: $out->cents('arbeidskorting'),
-			volksverzekeringenCents: $out->cents('volksverzekeringen'),
-			zvwCents: $out->cents('zvw'),
-			zvwMode: 'werkgeversheffing',
-			zvwRate: (float)$out->binding('zvwRate'),
-			appliedTaxRate: (float)$out->step('appliedTaxRate'),
-			nettoPayCents: $out->net(),
-			vakantiegeldReservedCents: $out->cents('vakantiegeld'),
-			vakantiegeldRate: (float)$out->binding('vakantiegeldRate'),
-			awfCents: $out->cents('awf'),
-			aofCents: $out->cents('aof'),
-			wkoCents: $out->cents('wko'),
-			whkCents: $out->cents('whk'),
-			werknemersverzekeringenCents: $out->cents('werknemersverzekeringen'),
-			employerChargesCents: $out->employerCharges(),
-			aboveLmax: (bool)$out->binding('aboveLmax'),
-			taxableWageCents: $this->optionalCents($out, 'belastbaarLoon'),
-			premiumWageCents: min($this->optionalCents($out, 'belastbaarLoon'), $this->optionalCents($out, 'premieloonCap'))
-		);
+		return new CalculationResult($out);
 
 	}//end resultFrom()
-
-	/**
-	 * A binding in cents, or 0 when the pack does not declare it (a third-party
-	 * pack need not carry the Dutch wage bindings).
-	 *
-	 * @param PackRunResult $out The interpreter output.
-	 * @param string        $id  The binding id.
-	 *
-	 * @return int
-	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
-	 */
-	private function optionalCents(PackRunResult $out, string $id): int {
-		try {
-			return (int)$out->binding($id);
-		} catch (DslException $e) {
-			return 0;
-		}
-	}//end optionalCents()
 
 }//end class

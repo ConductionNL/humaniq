@@ -145,7 +145,7 @@ class LeaveController extends Controller {
 				schema: 'LeaveTransaction'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('LeaveController: transactie ' . $transactionId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->logger->warning('LeaveController: a leave transaction lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
