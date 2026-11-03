@@ -365,9 +365,13 @@ class PayrollGLPostServiceTest extends TestCase {
 		$this->assertEqualsWithDelta(1751.80, $runSaves[0]['glLiabilityPosted'], 0.001);
 		$this->assertSame('posted', $runSaves[0]['status']);
 
+		// The run is claimed with a pending GL post before shillinq is
+		// written, and that same GL post is then settled as posted.
 		$glPostSaves = $this->savedFor($fake, 'PayrollGLPost');
-		$this->assertCount(1, $glPostSaves);
-		$this->assertSame('posted', $glPostSaves[0]['status']);
+		$this->assertCount(2, $glPostSaves);
+		$this->assertSame('pending', $glPostSaves[0]['status']);
+		$this->assertSame('posted', $glPostSaves[1]['status']);
+		$this->assertSame($glPostSaves[0]['id'], $glPostSaves[1]['id']);
 
 	}//end testPostRunPostsSuccessfullyAndUpdatesTheRun()
 

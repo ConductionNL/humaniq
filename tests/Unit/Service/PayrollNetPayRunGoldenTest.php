@@ -253,7 +253,15 @@ class PayrollNetPayRunGoldenTest extends TestCase {
 
 				$id = ($uuid ?? ($schema . '-new-' . $this->nextId++));
 				$saved = array_merge($object, ['id' => $id]);
-				$this->rows[(string)$schema][] = $saved;
+				$kept = [];
+				foreach (($this->rows[(string)$schema] ?? []) as $row) {
+					if ((string)($row['id'] ?? $row['@self']['id'] ?? '') !== $id) {
+						$kept[] = $row;
+					}
+				}
+
+				$kept[] = $saved;
+				$this->rows[(string)$schema] = $kept;
 				if ($schema === 'PaymentRun' && $this->entity === true) {
 					unset($saved['id']);
 					$saved['@self'] = ['id' => $id];

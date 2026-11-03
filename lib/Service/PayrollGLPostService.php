@@ -90,6 +90,14 @@ class PayrollGLPostService {
 	private const ACTIVE_STATUSES = ['pending', 'posted'];
 
 	/**
+	 * How long a `pending` GL post counts as another process still working
+	 * on the run. An older one is a crash left behind and is recovered.
+	 *
+	 * @var int
+	 */
+	private const CLAIM_FRESH_SECONDS = 900;
+
+	/**
 	 * Required numeric PayrollRun totals the balanced journal is built from.
 	 *
 	 * @var string[]
@@ -155,19 +163,9 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', 'PayrollRun is missing id/period/administrationId; cannot post.');
 		}
 
-		$journalNumber = $this->journalNumber($run);
-
-		$active = $this->activeGlPostForRun($runId);
-		if ($active !== null && (string)($active['status'] ?? '') === 'posted') {
-			return $this->outcome($runId, 'posted', 'Already posted (idempotent no-op).', $active, (string)($active['journalEntryId'] ?? null));
-		}
-
-		if ($active !== null && (string)($active['status'] ?? '') === 'pending') {
-			$recovered = $this->recoverStalePending($active, $run);
-			if ($recovered !== null) {
-				return $recovered;
-			}
-			// Stale pending record marked failed (superseded); fall through to a fresh attempt.
+		$settled = $this->settledByActiveGlPost($run);
+		if ($settled !== null) {
+			return $settled;
 		}
 
 		if ($this->shillinqAvailable() === false) {
@@ -197,37 +195,109 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', (string)$built['error'], $glPost);
 		}
 
+		return $this->postUnderClaim($run, $built);
+	}//end postRun()
+
+	/**
+	 * The outcome an active GL post of the run already settles, or null to
+	 * go on: a posted one is an idempotent no-op, a fresh pending one is
+	 * another process still at work (nothing is written), and a stale one is
+	 * recovered or superseded.
+	 *
+	 * @param array<string, mixed> $run The PayrollRun.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-007
+	 */
+	private function settledByActiveGlPost(array $run): ?array {
+		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
+		$active = $this->activeGlPostForRun($runId);
+		$status = (string)($active['status'] ?? '');
+		if ($status === 'posted') {
+			return $this->outcome($runId, 'posted', 'Already posted (idempotent no-op).', $active, (string)($active['journalEntryId'] ?? null));
+		}
+
+		if ($status !== 'pending') {
+			return null;
+		}
+
+		if ($this->isFreshClaim($active) === true) {
+			return $this->outcome($runId, 'pending', 'Another process is already posting this payroll run.', $active);
+		}
+
+		return $this->recoverStalePending($active, $run);
+	}//end settledByActiveGlPost()
+
+	/**
+	 * Claim the run with a `pending` GL post, then create or adopt the
+	 * shillinq JournalEntry and settle the claim. A claim that finds another
+	 * active GL post of the run next to it withdraws, so two processes never
+	 * both create a JournalEntry for one run.
+	 *
+	 * @param array<string, mixed> $run   The PayrollRun.
+	 * @param array<string, mixed> $built The buildLines() result.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 *
+	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-007
+	 */
+	private function postUnderClaim(array $run, array $built): array {
+		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
+		$journalNumber = $this->journalNumber($run);
+		$claim = $this->createGlPost(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'journalNumber' => $journalNumber]);
+		if ($this->hasRivalGlPost($claim, $runId) === true) {
+			$withdrawn = $this->saveGlPost($claim, ['status' => 'failed', 'errorMessage' => 'Withdrawn: another process is already posting this payroll run.']);
+			return $this->outcome($runId, 'pending', 'Another process is already posting this payroll run.', $withdrawn);
+		}
+
 		try {
 			$journalEntryId = $this->createOrAdoptJournalEntry($run, $built['lines']);
 		} catch (\Throwable $e) {
-			$glPost = $this->createGlPost(
-				[
-					'payrollRunId' => $runId,
-					'period' => $period,
-					'status' => 'failed',
-					'errorMessage' => 'Aanmaken van de shillinq JournalEntry is mislukt: ' . $e->getMessage(),
-				]
-			);
-
+			$glPost = $this->saveGlPost($claim, ['status' => 'failed', 'errorMessage' => 'Aanmaken van de shillinq JournalEntry is mislukt: ' . $e->getMessage()]);
 			return $this->outcome($runId, 'failed', (string)$glPost['errorMessage'], $glPost);
 		}
 
-		$glPost = $this->createGlPost(
-			[
-				'payrollRunId' => $runId,
-				'period' => $period,
-				'status' => 'posted',
-				'journalEntryId' => $journalEntryId,
-				'journalNumber' => $journalNumber,
-				'postedAt' => gmdate('Y-m-d\TH:i:s\Z'),
-				'lines' => $built['lines'],
-			]
-		);
-
+		$glPost = $this->saveGlPost($claim, ['status' => 'posted', 'journalEntryId' => $journalEntryId, 'postedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'lines' => $built['lines']]);
 		$this->applySuccessToRun($run, (float)$built['glExpensePosted'], (float)$built['glLiabilityPosted']);
 
 		return $this->outcome($runId, 'posted', 'Geboekt als shillinq journaalpost ' . $journalNumber . '.', $glPost, $journalEntryId);
-	}//end postRun()
+	}//end postUnderClaim()
+
+	/**
+	 * Whether a pending GL post was written recently enough that its process
+	 * may still be working (OpenRegister's `@self.updated`, else `created`).
+	 * One without either is treated as stale.
+	 *
+	 * @param array<string, mixed> $glPost The pending GL post.
+	 *
+	 * @return bool
+	 */
+	private function isFreshClaim(array $glPost): bool {
+		$stamp = strtotime((string)($glPost['@self']['updated'] ?? $glPost['@self']['created'] ?? ''));
+
+		return $stamp !== false && (time() - $stamp) < self::CLAIM_FRESH_SECONDS;
+	}//end isFreshClaim()
+
+	/**
+	 * Whether the run has an active GL post other than this claim.
+	 *
+	 * @param array<string, mixed> $claim The claim just written.
+	 * @param string               $runId The PayrollRun id.
+	 *
+	 * @return bool
+	 */
+	private function hasRivalGlPost(array $claim, string $runId): bool {
+		$claimId = (string)($claim['id'] ?? $claim['@self']['id'] ?? '');
+		foreach ($this->glPostsForRun($runId) as $row) {
+			$rowId = (string)($row['id'] ?? $row['@self']['id'] ?? '');
+			if ($rowId !== $claimId && in_array((string)($row['status'] ?? ''), self::ACTIVE_STATUSES, true) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end hasRivalGlPost()
 
 	/**
 	 * Build the balanced 4-line journal from a run's totals (design.md D2), pure
