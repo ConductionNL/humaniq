@@ -32,6 +32,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
@@ -344,14 +348,22 @@ class PayrollRunServiceSickPayTest extends TestCase {
 		$tables = TaxTables::load('nl-2026');
 		$expectedOnDoorbetaald = (new PayrollCalculator())->calculate(
 			new CalculationInput(
-				grossMonthlySalaryCents: 266000,
-				taxTableColor: 'wit',
-				loonheffingskortingToegepast: true,
-				dateOfBirth: '1990-04-12',
-				period: '2026-02',
-				awfTariff: 'low',
-				aofTariff: 'laag',
-				whkPercentage: 1.52
+				wage: new CalculationWage(
+					grossMonthlySalaryCents: 266000,
+					dateOfBirth: '1990-04-12',
+					period: '2026-02'
+				),
+				levies: new CalculationLevies(
+					wageTax: new WageTaxElection(
+						taxTableColor: 'wit',
+						loonheffingskortingToegepast: true
+					),
+					insurance: new InsuranceTariffs(
+						awfTariff: 'low',
+						aofTariff: 'laag',
+						whkPercentage: 1.52
+					)
+				)
 			),
 			$tables
 		);

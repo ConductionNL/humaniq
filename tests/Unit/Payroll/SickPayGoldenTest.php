@@ -30,7 +30,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Payroll;
 
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Payroll\SickPayCircumstances;
 use OCA\Humaniq\Payroll\SickPayInput;
+use OCA\Humaniq\Payroll\SickPayHours;
+use OCA\Humaniq\Payroll\SickPayTiming;
+use OCA\Humaniq\Payroll\SickPayWage;
 use OCA\Humaniq\Payroll\SickPayResult;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\PayrollRunService;
@@ -123,14 +127,8 @@ class SickPayGoldenTest extends TestCase {
 	 */
 	private function compute(TaxTables $tables, array $p): SickPayResult {
 		$input = new SickPayInput(
-			referenceWageCents: $p[0],
-			aangepastLoonCents: $p[1],
-			loondoorbetalingPercentage: $p[2],
-			yearOne: $p[3],
-			wachtdag: $p[4],
-			firstSickDayInPeriod: $p[5],
-			contractHoursPerWeek: $p[6],
-			fulltimeHoursPerWeek: $p[7]
+			wage: new SickPayWage(referenceWageCents: $p[0], aangepastLoonCents: $p[1], loondoorbetalingPercentage: $p[2]),
+			circumstances: new SickPayCircumstances(timing: new SickPayTiming(yearOne: $p[3], wachtdag: $p[4], firstSickDayInPeriod: $p[5]), hours: new SickPayHours(contractHoursPerWeek: $p[6], fulltimeHoursPerWeek: $p[7]))
 		);
 
 		return (new SickPayCalculator())->compute($input, $tables);

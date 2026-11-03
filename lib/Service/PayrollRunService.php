@@ -165,11 +165,19 @@ use DateTimeImmutable;
 use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Payroll\SickPayCircumstances;
 use OCA\Humaniq\Payroll\SickPayInput;
+use OCA\Humaniq\Payroll\SickPayHours;
+use OCA\Humaniq\Payroll\SickPayTiming;
+use OCA\Humaniq\Payroll\SickPayWage;
 use OCA\Humaniq\Payroll\SickPayResult;
 use OCA\Humaniq\Payroll\TaxTables;
 use Psr\Container\ContainerInterface;
@@ -847,17 +855,11 @@ class PayrollRunService {
 		$employee = $slip['employee'];
 
 		return new CalculationInput(
-			grossMonthlySalaryCents: $slip['grossCents'],
-			taxTableColor: $slip['taxTableColor'],
-			loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true),
-			dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null),
-			period: $state['period'],
-			awfTariff: $slip['awf']['tariff'],
-			aofTariff: $state['aofTariff'],
-			whkPercentage: $state['whkPercentage'],
-			verzekeringsplichtig: (($employee['isDga'] ?? false) !== true),
-			jurisdiction: $state['jurisdiction'],
-			thirtyPercentRulingRate: ((($employee['thirtyPercentRulingGranted'] ?? false) === true) ? (float)($employee['thirtyPercentRulingRate'] ?? 0.0) : 0.0)
+			wage: new CalculationWage(grossMonthlySalaryCents: $slip['grossCents'], dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null), period: $state['period'], jurisdiction: $state['jurisdiction']),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(taxTableColor: $slip['taxTableColor'], loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true), thirtyPercentRulingRate: ((($employee['thirtyPercentRulingGranted'] ?? false) === true) ? (float)($employee['thirtyPercentRulingRate'] ?? 0.0) : 0.0)),
+				insurance: new InsuranceTariffs(awfTariff: $slip['awf']['tariff'], aofTariff: $state['aofTariff'], whkPercentage: $state['whkPercentage'], verzekeringsplichtig: (($employee['isDga'] ?? false) !== true))
+			)
 		);
 	}//end calculationInput()
 
@@ -1664,14 +1666,8 @@ class PayrollRunService {
 		$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
 
 		return new SickPayInput(
-			referenceWageCents: $grossMonthlySalaryCents,
-			aangepastLoonCents: (is_numeric($aangepastLoon) === true ? (int)round(((float)$aangepastLoon) * 100) : 0),
-			loondoorbetalingPercentage: (float)($case['loondoorbetalingPercentage'] ?? 70),
-			yearOne: $this->isYearOne($firstSickDay, $period),
-			wachtdag: (($case['wachtdag'] ?? false) === true),
-			firstSickDayInPeriod: $this->coversPeriod($firstSickDay, $firstSickDay, $period),
-			contractHoursPerWeek: (is_numeric($hoursPerWeek) === true ? (float)$hoursPerWeek : self::FULLTIME_HOURS_PER_WEEK),
-			fulltimeHoursPerWeek: self::FULLTIME_HOURS_PER_WEEK
+			wage: new SickPayWage(referenceWageCents: $grossMonthlySalaryCents, aangepastLoonCents: (is_numeric($aangepastLoon) === true ? (int)round(((float)$aangepastLoon) * 100) : 0), loondoorbetalingPercentage: (float)($case['loondoorbetalingPercentage'] ?? 70)),
+			circumstances: new SickPayCircumstances(timing: new SickPayTiming(yearOne: $this->isYearOne($firstSickDay, $period), wachtdag: (($case['wachtdag'] ?? false) === true), firstSickDayInPeriod: $this->coversPeriod($firstSickDay, $firstSickDay, $period)), hours: new SickPayHours(contractHoursPerWeek: (is_numeric($hoursPerWeek) === true ? (float)$hoursPerWeek : self::FULLTIME_HOURS_PER_WEEK), fulltimeHoursPerWeek: self::FULLTIME_HOURS_PER_WEEK))
 		);
 
 	}//end sickPayInputFor()

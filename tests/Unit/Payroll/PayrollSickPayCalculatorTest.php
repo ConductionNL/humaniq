@@ -33,7 +33,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Payroll;
 
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Payroll\SickPayCircumstances;
 use OCA\Humaniq\Payroll\SickPayInput;
+use OCA\Humaniq\Payroll\SickPayHours;
+use OCA\Humaniq\Payroll\SickPayTiming;
+use OCA\Humaniq\Payroll\SickPayWage;
 use OCA\Humaniq\Payroll\TaxTables;
 use PHPUnit\Framework\TestCase;
 
@@ -251,14 +255,8 @@ class PayrollSickPayCalculatorTest extends TestCase {
 		$tables = TaxTables::load('nl-2026');
 
 		$input = new SickPayInput(
-			referenceWageCents: $referenceWage,
-			aangepastLoonCents: $aangepastLoon,
-			loondoorbetalingPercentage: $percentage,
-			yearOne: $yearOne,
-			wachtdag: $wachtdag,
-			firstSickDayInPeriod: $firstSickDayInPeriod,
-			contractHoursPerWeek: 36.0,
-			fulltimeHoursPerWeek: 36.0
+			wage: new SickPayWage(referenceWageCents: $referenceWage, aangepastLoonCents: $aangepastLoon, loondoorbetalingPercentage: $percentage),
+			circumstances: new SickPayCircumstances(timing: new SickPayTiming(yearOne: $yearOne, wachtdag: $wachtdag, firstSickDayInPeriod: $firstSickDayInPeriod), hours: new SickPayHours(contractHoursPerWeek: 36.0, fulltimeHoursPerWeek: 36.0))
 		);
 
 		return $calculator->compute($input, $tables);
@@ -285,14 +283,8 @@ class PayrollSickPayCalculatorTest extends TestCase {
 	 */
 	private static function inputFromFixture(array $input): SickPayInput {
 		return new SickPayInput(
-			referenceWageCents: self::cents((float)$input['referenceWage']),
-			aangepastLoonCents: self::cents((float)$input['aangepastLoon']),
-			loondoorbetalingPercentage: (float)$input['percentage'],
-			yearOne: (bool)$input['yearOne'],
-			wachtdag: (bool)$input['wachtdag'],
-			firstSickDayInPeriod: (bool)$input['firstSickDayInPeriod'],
-			contractHoursPerWeek: (float)$input['contractHoursPerWeek'],
-			fulltimeHoursPerWeek: (float)$input['fulltimeHoursPerWeek']
+			wage: new SickPayWage(referenceWageCents: self::cents((float)$input['referenceWage']), aangepastLoonCents: self::cents((float)$input['aangepastLoon']), loondoorbetalingPercentage: (float)$input['percentage']),
+			circumstances: new SickPayCircumstances(timing: new SickPayTiming(yearOne: (bool)$input['yearOne'], wachtdag: (bool)$input['wachtdag'], firstSickDayInPeriod: (bool)$input['firstSickDayInPeriod']), hours: new SickPayHours(contractHoursPerWeek: (float)$input['contractHoursPerWeek'], fulltimeHoursPerWeek: (float)$input['fulltimeHoursPerWeek']))
 		);
 
 	}//end inputFromFixture()
