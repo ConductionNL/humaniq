@@ -190,16 +190,54 @@ class OrgResolutionServiceTest extends TestCase {
 	}//end testMultiplePlacementsResolveAllButStampNothing()
 
 	/**
-	 * Malformed dates fail open (treated as absent), matching the audit's
-	 * historical leniency.
+	 * A start or end date that is set but cannot be read makes a placement
+	 * inactive; a missing date still means no bound.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/mss-team-scope/spec.md#REQ-MSS-008
+	 */
+	public function testAnUnreadablePlacementDateCountsAsNotActive(): void {
+		$this->assertFalse($this->service->isActiveOn(['startDate' => 'not-a-date', 'endDate' => 'also-not'], '2026-08-21'));
+		$this->assertFalse($this->service->isActiveOn(['startDate' => 'sinds kort'], '2026-08-21'));
+		$this->assertFalse($this->service->isActiveOn(['startDate' => '2020-01-01', 'endDate' => 'tot nader order'], '2026-08-21'));
+		$this->assertTrue($this->service->isActiveOn([], '2026-08-21'));
+		$this->assertTrue($this->service->isActiveOn(['startDate' => '', 'endDate' => '  '], '2026-08-21'));
+		$this->assertTrue($this->service->isActiveOn(['startDate' => '2020-01-01', 'endDate' => ''], '2026-08-21'));
+		$this->assertFalse($this->service->isActiveOn(['endDate' => '2020-01-01'], '2026-08-21'));
+	}//end testAnUnreadablePlacementDateCountsAsNotActive()
+
+	/**
+	 * A placement with an unreadable date gives no manager and no cost
+	 * centre, so no approval is routed through it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/mss-team-scope/spec.md#REQ-MSS-008
+	 */
+	public function testAPlacementWithAnUnreadableDateRoutesNoApproval(): void {
+		$units = ['unit-1' => ['id' => 'unit-1', 'managerId' => 'emp-mgr', 'costCenter' => 'CC-100']];
+		$employees = ['emp-mgr' => ['id' => 'emp-mgr', 'nextcloudUserId' => 'admin']];
+		foreach ([['startDate' => 'sinds kort'], ['startDate' => '2020-01-01', 'endDate' => 'tot nader order']] as $dates) {
+			$assignments = ['emp-1' => [['orgUnitId' => 'unit-1'] + $dates]];
+			$this->assertSame([], $this->service->resolveManagerUserIds('emp-1', $assignments, $units, $employees, '2026-08-21'));
+			$this->assertSame([], $this->service->resolveCostCenters('emp-1', $assignments, $units, '2026-08-21'));
+		}
+	}//end testAPlacementWithAnUnreadableDateRoutesNoApproval()
+
+	/**
+	 * A placement is active on its first and on its last day, and not the
+	 * day before or after.
 	 *
 	 * @return void
 	 */
-	public function testMalformedDatesAreTreatedAsAbsent(): void {
-		$this->assertTrue($this->service->isActiveOn(['startDate' => 'not-a-date', 'endDate' => 'also-not'], '2026-08-21'));
-		$this->assertTrue($this->service->isActiveOn([], '2026-08-21'));
-		$this->assertFalse($this->service->isActiveOn(['endDate' => '2020-01-01'], '2026-08-21'));
-	}//end testMalformedDatesAreTreatedAsAbsent()
+	public function testAPlacementIsActiveOnItsFirstAndLastDay(): void {
+		$placement = ['startDate' => '2026-03-01', 'endDate' => '2026-03-31'];
+		$this->assertTrue($this->service->isActiveOn($placement, '2026-03-01'));
+		$this->assertTrue($this->service->isActiveOn($placement, '2026-03-31'));
+		$this->assertFalse($this->service->isActiveOn($placement, '2026-02-28'));
+		$this->assertFalse($this->service->isActiveOn($placement, '2026-04-01'));
+	}//end testAPlacementIsActiveOnItsFirstAndLastDay()
 
 	/**
 	 * An unparseable REFERENCE date falls back to today — a caller handing a

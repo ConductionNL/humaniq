@@ -277,9 +277,10 @@ class PayrollGLPostService {
 
 		$netLiabilityCents = ($netCents + $remainderCents);
 
+		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
 		$candidates = array_merge(
-			$this->costLines(allocations: $allocations, runId: (string)($run['id'] ?? $run['@self']['id'] ?? ''), field: 'gross', totalCents: $grossCents, account: $this->settingsService->getGlPostAccountGross(), description: 'Loonkosten bruto'),
-			$this->costLines(allocations: $allocations, runId: (string)($run['id'] ?? $run['@self']['id'] ?? ''), field: 'employerCharges', totalCents: $chargesCents, account: $this->settingsService->getGlPostAccountEmployerCharges(), description: 'Werkgeverslasten sociale premies')
+			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'gross', 'totalCents' => $grossCents, 'account' => $this->settingsService->getGlPostAccountGross(), 'description' => 'Loonkosten bruto']),
+			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'employerCharges', 'totalCents' => $chargesCents, 'account' => $this->settingsService->getGlPostAccountEmployerCharges(), 'description' => 'Werkgeverslasten sociale premies'])
 		);
 		$liabilities = [
 			['side' => 'credit', 'accountNumber' => $this->settingsService->getGlPostAccountWageTaxLiability(), 'amount' => $loonheffingCents, 'description' => 'Loonheffing-schuld'],
@@ -318,35 +319,19 @@ class PayrollGLPostService {
 	 * without codes for whatever they do not cover (payroll-cost-allocation
 	 * D4). Without allocation lines: the one total line as before.
 	 *
-	 * @param list<array<string, mixed>> $allocations The allocation lines.
-	 * @param string                     $runId       The run, so another run's lines are never booked.
-	 * @param string                     $field       The allocation field: gross or employerCharges.
-	 * @param int                        $totalCents  The run total, in cents.
-	 * @param string                     $account     The debit account.
-	 * @param string                     $description The line description.
+	 * @param list<array<string, mixed>>                                                                $allocations The allocation lines.
+	 * @param array{runId: string, field: string, totalCents: int, account: string, description: string} $cost        The run (so another run's lines are never booked), the allocation field (gross or employerCharges), the run total in cents, the debit account and the line description.
 	 *
 	 * @return list<array<string, mixed>> Lines with the amount in cents.
 	 *
 	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
 	 */
-	private function costLines(array $allocations, string $runId, string $field, int $totalCents, string $account, string $description): array {
-		$groups = [];
-		foreach ($allocations as $row) {
-			if ((string)($row['payrollRunId'] ?? '') !== $runId || is_numeric($row[$field] ?? null) === false) {
-				continue;
-			}
-
-			$costCenter = trim((string)($row['costCenter'] ?? ''));
-			$project = trim((string)($row['projectId'] ?? ''));
-			$key = $costCenter . '|' . $project;
-			$groups[$key] = ($groups[$key] ?? ['costCenterCode' => $costCenter, 'projectCode' => $project, 'cents' => 0]);
-			$groups[$key]['cents'] += (int)round(((float)$row[$field]) * 100);
-		}
-
-		$uncoded = ($totalCents - array_sum(array_column($groups, 'cents')));
+	private function costLines(array $allocations, array $cost): array {
+		$groups = $this->costGroups(allocations: $allocations, cost: $cost);
+		$uncoded = ($cost['totalCents'] - array_sum(array_column($groups, 'cents')));
 		$lines = [];
 		foreach ($groups as $group) {
-			$line = ['side' => 'debit', 'accountNumber' => $account, 'amount' => $group['cents'], 'description' => $description];
+			$line = ['side' => 'debit', 'accountNumber' => $cost['account'], 'amount' => $group['cents'], 'description' => $cost['description']];
 			if ($group['costCenterCode'] === '') {
 				$uncoded += $group['cents'];
 				continue;
@@ -360,10 +345,38 @@ class PayrollGLPostService {
 			$lines[] = $line;
 		}
 
-		$lines[] = ['side' => 'debit', 'accountNumber' => $account, 'amount' => $uncoded, 'description' => $description];
+		$lines[] = ['side' => 'debit', 'accountNumber' => $cost['account'], 'amount' => $uncoded, 'description' => $cost['description']];
 
 		return $lines;
 	}//end costLines()
+
+	/**
+	 * The run's allocated cents per cost centre and project, in the order
+	 * they first appear; lines of another run or without a numeric amount
+	 * are skipped.
+	 *
+	 * @param list<array<string, mixed>>                                                                $allocations The allocation lines.
+	 * @param array{runId: string, field: string, totalCents: int, account: string, description: string} $cost        The cost total; its run and allocation field are read.
+	 *
+	 * @return array<string, array{costCenterCode: string, projectCode: string, cents: int}>
+	 */
+	private function costGroups(array $allocations, array $cost): array {
+		$field = $cost['field'];
+		$groups = [];
+		foreach ($allocations as $row) {
+			if ((string)($row['payrollRunId'] ?? '') !== $cost['runId'] || is_numeric($row[$field] ?? null) === false) {
+				continue;
+			}
+
+			$costCenter = trim((string)($row['costCenter'] ?? ''));
+			$project = trim((string)($row['projectId'] ?? ''));
+			$key = $costCenter . '|' . $project;
+			$groups[$key] = ($groups[$key] ?? ['costCenterCode' => $costCenter, 'projectCode' => $project, 'cents' => 0]);
+			$groups[$key]['cents'] += (int)round(((float)$row[$field]) * 100);
+		}
+
+		return $groups;
+	}//end costGroups()
 
 	/**
 	 * The WageCostAllocation lines of one run; none when they cannot be read

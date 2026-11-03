@@ -118,7 +118,7 @@ class PayAnomalyDetector {
 		$explanation = $this->explanation(payslip: $payslip, earlier: $earlier, raiseApplied: $raiseApplied);
 		$findings = [];
 		foreach (self::DEFAULT_THRESHOLDS as $component => $default) {
-			$finding = $this->componentFinding(component: $component, payslip: $payslip, earlier: $earlier, threshold: ($thresholds[$component] ?? $default), explanation: $explanation);
+			$finding = $this->componentFinding(component: $component, payslip: $payslip, basis: ['earlier' => $earlier, 'threshold' => ($thresholds[$component] ?? $default), 'explanation' => $explanation]);
 			if ($finding !== null) {
 				$findings[] = $finding;
 			}
@@ -156,24 +156,16 @@ class PayAnomalyDetector {
 	 * One component's finding, or null when it is within its threshold or
 	 * cannot be read.
 	 *
-	 * @param string                               $component   The component.
-	 * @param array<string, mixed>                 $payslip     The payslip.
-	 * @param list<array<string, mixed>>           $earlier     The baseline payslips.
-	 * @param array{relative: float, absolute: float} $threshold The threshold.
-	 * @param string|null                          $explanation The named cause, or null.
+	 * @param string                                                                                                          $component The component.
+	 * @param array<string, mixed>                                                                                            $payslip   The payslip.
+	 * @param array{earlier: list<array<string, mixed>>, threshold: array{relative: float, absolute: float}, explanation: string|null} $basis     The baseline payslips, the threshold and the named cause (or null).
 	 *
 	 * @return array{kind: string, severity: string, component: string|null, currentValue: float|null, baselineValue: float|null, explanation: string|null, message: string}|null
 	 */
-	private function componentFinding(string $component, array $payslip, array $earlier, array $threshold, ?string $explanation): ?array {
+	private function componentFinding(string $component, array $payslip, array $basis): ?array {
+		['threshold' => $threshold, 'explanation' => $explanation] = $basis;
 		$current = self::valueOf(payslip: $payslip, component: $component);
-		$values = [];
-		foreach ($earlier as $previous) {
-			$value = self::valueOf(payslip: $previous, component: $component);
-			if ($value !== null) {
-				$values[] = $value;
-			}
-		}
-
+		$values = self::readable(component: $component, payslips: $basis['earlier']);
 		if ($current === null || count($values) < self::MIN_HISTORY) {
 			return null;
 		}
@@ -194,6 +186,26 @@ class PayAnomalyDetector {
 			'message' => sprintf('%s is %.2f, de mediaan van de eerdere loonstroken is %.2f.', $component, $current, $baseline),
 		];
 	}//end componentFinding()
+
+	/**
+	 * The component's readable values on the given payslips, in their order.
+	 *
+	 * @param string                     $component The component.
+	 * @param list<array<string, mixed>> $payslips  The payslips.
+	 *
+	 * @return list<float>
+	 */
+	private static function readable(string $component, array $payslips): array {
+		$values = [];
+		foreach ($payslips as $payslip) {
+			$value = self::valueOf(payslip: $payslip, component: $component);
+			if ($value !== null) {
+				$values[] = $value;
+			}
+		}
+
+		return $values;
+	}//end readable()
 
 	/**
 	 * The six most recent payslips of periods before this one.
