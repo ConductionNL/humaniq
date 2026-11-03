@@ -28,6 +28,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Event;
 
 use OCA\Humaniq\Event\TimesheetApprovedEvent;
+use OCA\Humaniq\Event\TimesheetApproval;
+use OCA\Humaniq\Event\TimesheetBooking;
+use OCA\Humaniq\Event\TimesheetEventIds;
+use OCA\Humaniq\Event\TimesheetPeriodHours;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -46,19 +50,10 @@ class TimesheetApprovedEventTest extends TestCase {
 	 */
 	public function testGettersExposeConstructorValues(): void {
 		$event = new TimesheetApprovedEvent(
-			eventId: 'evt-1',
-			timesheetId: 'ts-1',
-			employeeId: 'emp-1',
-			period: '2026-07',
-			periodGrain: TimesheetApprovedEvent::GRAIN_MONTH,
-			hours: 36.5,
-			projectId: 'proj-alpha',
-			costCenter: 'cc-42',
-			billable: true,
-			clientRef: 'client-7',
-			administrationId: 'ADM-001',
-			approvedBy: 'manager-jansen',
-			approvedAt: '2026-07-15T10:00:00Z',
+			ids: new TimesheetEventIds(eventId: 'evt-1', timesheetId: 'ts-1', employeeId: 'emp-1', administrationId: 'ADM-001'),
+			period: new TimesheetPeriodHours(period: '2026-07', hours: 36.5),
+			booking: new TimesheetBooking(['projectId' => 'proj-alpha', 'costCenter' => 'cc-42', 'billable' => true, 'clientRef' => 'client-7']),
+			approval: new TimesheetApproval(approvedBy: 'manager-jansen', approvedAt: '2026-07-15T10:00:00Z')
 		);
 
 		$this->assertSame('evt-1', $event->getEventId());
