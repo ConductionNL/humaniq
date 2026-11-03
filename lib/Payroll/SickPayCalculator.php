@@ -130,14 +130,8 @@ final class SickPayCalculator {
 		$payableGross = ($l - $wd);
 
 		return new SickPayResult(
-			doorbetaaldLoonCents: $l,
-			wachtdagDeductionCents: $wd,
-			payableGrossCents: $payableGross,
-			minimumWageFloorCents: $m,
-			floorApplied: $floorApplied,
-			appliedPercentage: $p,
-			yearOne: $in->yearOne,
-			referenceWageCents: $w
+			amounts: new SickPayAmounts(doorbetaaldLoonCents: $l, wachtdagDeductionCents: $wd, payableGrossCents: $payableGross, minimumWageFloorCents: $m),
+			basis: new SickPayBasis(floorApplied: $floorApplied, appliedPercentage: $p, yearOne: $in->yearOne, referenceWageCents: $w)
 		);
 
 	}//end compute()
