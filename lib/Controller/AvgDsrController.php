@@ -53,9 +53,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\AvgDsrService;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -68,6 +69,8 @@ use RuntimeException;
  * Guarded endpoints for AVG data-subject-rights export/erase/rectify.
  */
 class AvgDsrController extends Controller {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * The Employee fields a data subject may have corrected through a
@@ -420,24 +423,5 @@ class AvgDsrController extends Controller {
 		$value = trim((string)$value);
 		return $value === '' ? null : $value;
 	}//end nullableId()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 }//end class

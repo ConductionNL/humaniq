@@ -57,6 +57,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Lifecycle;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\RegisterSlugLookup;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
@@ -73,6 +74,8 @@ use RuntimeException;
  * on a guess.
  */
 final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * Max LeaveBalance rows loaded when scanning for a match.
@@ -194,25 +197,6 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 
 		return null;
 	}//end resolveBalance()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * @return mixed The OpenRegister ObjectService.
