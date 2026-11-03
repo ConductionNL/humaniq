@@ -97,6 +97,8 @@ class InterviewIcsRenderer {
 	 * @param array{dtstart: string, dtend: string, summary: string, location: string} $event Desired compact UTC DATE-TIMEs (YYYYMMDDTHHMMSSZ), SUMMARY and LOCATION texts (unescaped, '' means no location).
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/specs/interview-scheduling/spec.md#REQ-INTV-003
 	 */
 	public function unchanged(string $ics, array $event): bool {
 		$existingDtstart = $this->extractIcsValue($ics, 'DTSTART');
