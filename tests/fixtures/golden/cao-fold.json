@@ -626,6 +626,57 @@
         },
         "log": []
     },
+    "hours fold rate and contract hourly wage both set": {
+        "fold": {
+            "totalCents": 37650,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7650,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 76.5
+                }
+            ],
+            "caoComponentsTotal": 376.5,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
     "non-numeric rate": {
         "fold": {
             "totalCents": 30000,

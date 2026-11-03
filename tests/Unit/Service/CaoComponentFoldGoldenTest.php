@@ -31,6 +31,7 @@ require_once __DIR__ . '/../../fixtures/golden/cao-fold.input.php';
  * @uses   \OCA\Humaniq\Service\EmploymentTermsResolver
  * @uses   \OCA\Humaniq\Service\CaoComponentTerms
  * @uses   \OCA\Humaniq\Standards\CaoComponents
+ * @uses   \OCA\Humaniq\Standards\CaoRegistry
  */
 class CaoComponentFoldGoldenTest extends TestCase {
 
