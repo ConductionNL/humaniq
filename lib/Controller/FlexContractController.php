@@ -136,8 +136,7 @@ class FlexContractController extends Controller {
 			contracts: $this->readable(rows: $this->gateway->findFiltered('EmploymentContract', ['type' => 'oproep'])),
 			entries: $this->gateway->loadAll('TimeEntry'),
 			approvedTimesheetIds: array_map(static fn (array $row): string => (string)($row['id'] ?? ''), $this->gateway->findFiltered('Timesheet', ['status' => 'approved'])),
-			from: $window[0],
-			to: $window[1]
+			window: $window
 		));
 
 		if ($format === 'csv') {

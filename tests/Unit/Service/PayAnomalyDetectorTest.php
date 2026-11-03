@@ -125,4 +125,24 @@ class PayAnomalyDetectorTest extends TestCase {
 		$this->assertSame(['nettoPay'], array_column($findings, 'component'));
 	}//end testThresholdsAreSettings()
 
+	/**
+	 * Earlier payslips that do not state a component are left out of its
+	 * baseline instead of counting as zero, and a component stated on fewer
+	 * than three earlier payslips is not judged at all.
+	 *
+	 * @return void
+	 */
+	public function testOnlyEarlierPayslipsThatStateAComponentFormItsBaseline(): void {
+		$history = [];
+		foreach (['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'] as $index => $period) {
+			$history[] = $this->payslip($period, 2800.0, ['loonheffing' => ($index % 2 === 0 ? 700.0 : 'n/a')]);
+		}
+
+		$steady = (new PayAnomalyDetector())->detect(payslip: $this->payslip('2026-07', 2800.0), history: $history);
+		$this->assertSame([], array_column($steady, 'component'));
+
+		$history[0]['loonheffing'] = 'n/a';
+		$jump = (new PayAnomalyDetector())->detect(payslip: $this->payslip('2026-07', 2800.0, ['loonheffing' => 5000.0]), history: $history);
+		$this->assertSame([], array_column($jump, 'component'));
+	}//end testOnlyEarlierPayslipsThatStateAComponentFormItsBaseline()
 }//end class

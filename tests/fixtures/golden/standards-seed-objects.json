@@ -1,0 +1,179 @@
+{
+    "NlPayrollChecks": {
+        "Employee": [
+            {
+                "employeeNumber": "EMP-NL-0001",
+                "bsn": "123456782",
+                "firstName": "Sanne",
+                "lastName": "de Vries",
+                "dateOfBirth": "1990-04-12",
+                "startDate": "2022-01-01",
+                "endDate": null,
+                "grossMonthlySalary": 3800.0,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "identityDocumentRetainedUntil": "2035-12-31",
+                "loonheffingenVerklaringOnFile": true,
+                "postedWorker": false,
+                "a1CertificateNumber": null,
+                "a1ValidUntil": null,
+                "thirtyPercentRulingGranted": true,
+                "thirtyPercentRulingRate": 30.0,
+                "thirtyPercentCappedAtWntNorm": true,
+                "thirtyPercentRulingReducedNormApplies": true,
+                "elstamRetrieved": true,
+                "steuerklasse": "I",
+                "w4OnFile": true,
+                "i9VerifiedWithinThreeDays": true,
+                "newHireReportedDate": "2022-01-05",
+                "iban": "NL00BANK0000000001",
+                "tenaamstelling": "S. de Vries"
+            }
+        ],
+        "EmploymentContract": [
+            {
+                "employeeId": "EMP-NL-0001",
+                "type": "permanent",
+                "writtenContract": true,
+                "startDate": "2022-01-01",
+                "endDate": null,
+                "hoursPerWeek": 36.0,
+                "hourlyWage": 24.36,
+                "cao": "CAO Metalektro",
+                "awfTariff": "low",
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true
+            }
+        ],
+        "Payslip": [
+            {
+                "employeeId": "EMP-NL-0001",
+                "period": "2026-01",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 3800.0,
+                "hoursWorked": 156.0,
+                "loonheffing": 1102.0,
+                "volksverzekeringen": 712.5,
+                "werknemersverzekeringen": 418.0,
+                "zvw": 231.8,
+                "zvwMode": "werkgeversheffing",
+                "zvwRate": 6.1,
+                "anoniementariefApplied": false,
+                "appliedTaxRate": 29.0,
+                "nettoPay": 2698.0,
+                "vakantiegeldReserved": 304.0,
+                "vakantiegeldRate": 8.0,
+                "wkrUsed": 0.0,
+                "wkrVrijeRuimteRemaining": 1200.0,
+                "wkrExcess": 0.0,
+                "wkrEindheffingRate": null,
+                "pensionContribution": 190.0,
+                "statementProvided": true,
+                "showsGrossWage": true,
+                "showsDeductionBasis": true,
+                "showsMinimumWage": true,
+                "showsEmployerEmployeeIds": true,
+                "lohnsteuer": 0.0,
+                "solzApplicable": false,
+                "solidaritaetszuschlag": 0.0,
+                "churchMember": false,
+                "kirchensteuer": 0.0,
+                "kirchensteuerRate": 9.0,
+                "rvEmployeeRate": 9.3,
+                "rvEmployerRate": 9.3,
+                "kvBaseRate": 14.6,
+                "avRate": 2.6,
+                "pvBaseRate": 3.6,
+                "svContributionBase": 3800.0,
+                "kvPvContributionBase": 3800.0,
+                "ficaSsRate": 6.2,
+                "ficaSsWageBaseApplied": 3800.0,
+                "medicareRate": 1.45,
+                "additionalMedicareApplied": false,
+                "federalIncomeTaxWithheld": 0.0,
+                "cotisations": 0.0,
+                "pasRate": 0.0,
+                "prelevementSource": 0.0,
+                "reductionGeneraleApplied": false,
+                "netImposable": 3800.0,
+                "netAPayer": 2698.0,
+                "montantNetSocial": 3200.0,
+                "conventionCollective": "n\/a"
+            }
+        ],
+        "PayrollRun": [
+            {
+                "period": "2026-01",
+                "administrationId": "ADM-001",
+                "jurisdiction": "NL",
+                "status": "posted",
+                "totalGross": 3800.0,
+                "totalLoonheffing": 1102.0,
+                "totalEmployerCharges": 649.8,
+                "totalWithholdings": 1102.0,
+                "totalNet": 2698.0,
+                "glExpensePosted": 4449.8,
+                "glLiabilityPosted": 1751.8,
+                "withholdingsClearedToZero": true,
+                "withholdingLiabilityBalance": 0.0
+            }
+        ]
+    },
+    "NlHr21Checks": {
+        "Normfunctie": [
+            {
+                "functiecode": "HR21-001",
+                "naam": "Medewerker Beheer",
+                "functiegroep": "Beheer",
+                "caoSchaal": "6",
+                "caoSchaalVerified": false,
+                "caoSchaalSource": "HR21\/VNG functieboek \u2014 mapping not yet independently confirmed against a primary source.",
+                "bron": "hr21",
+                "status": "actief"
+            },
+            {
+                "functiecode": "HR21-002",
+                "naam": "Senior Beleidsmedewerker",
+                "functiegroep": "Beleid",
+                "caoSchaal": "10",
+                "caoSchaalVerified": true,
+                "caoSchaalSource": "Illustrative proof-case only \u2014 flipped to verified:true so the nl-hr21-schaal-consistentie check has one resolvable mapping to demonstrate against; NOT an actual VNG\/HR21 confirmation.",
+                "bron": "hr21",
+                "status": "actief"
+            },
+            {
+                "functiecode": "HR21-003",
+                "naam": "Beleidsmedewerker",
+                "functiegroep": "Beleid",
+                "caoSchaal": "9",
+                "caoSchaalVerified": false,
+                "caoSchaalSource": "HR21\/VNG functieboek \u2014 mapping not yet independently confirmed against a primary source.",
+                "bron": "hr21",
+                "status": "actief"
+            },
+            {
+                "functiecode": "HR21-004",
+                "naam": "Teammanager",
+                "functiegroep": "Management",
+                "caoSchaal": "11",
+                "caoSchaalVerified": false,
+                "caoSchaalSource": "HR21\/VNG functieboek \u2014 mapping not yet independently confirmed against a primary source.",
+                "bron": "hr21",
+                "status": "actief"
+            },
+            {
+                "functiecode": "HR21-005",
+                "naam": "Afdelingsmanager",
+                "functiegroep": "Management",
+                "caoSchaal": "13",
+                "caoSchaalVerified": false,
+                "caoSchaalSource": "HR21\/VNG functieboek \u2014 mapping not yet independently confirmed against a primary source.",
+                "bron": "hr21",
+                "status": "actief"
+            }
+        ]
+    }
+}
