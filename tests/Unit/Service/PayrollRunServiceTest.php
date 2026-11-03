@@ -455,6 +455,57 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testNonGrantedRulingPayslipIsByteIdenticalWithNullExemption()
 
 	/**
+	 * A ruling rate on an employee whose ruling is not granted changes
+	 * nothing: the payslip is the plain anchor.
+	 *
+	 * @return void
+	 */
+	public function testARulingRateWithoutTheGrantLeavesNetPayUnchanged(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['thirtyPercentRulingRate' => 30.0])],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$this->assertNull($payslip['thirtyPercentRulingExemption']);
+		$this->assertSame(718.83, $payslip['loonheffing']);
+		$this->assertSame(3081.17, $payslip['nettoPay']);
+
+	}//end testARulingRateWithoutTheGrantLeavesNetPayUnchanged()
+
+	/**
+	 * An employee without the loonheffingskorting election gets it applied,
+	 * the same payslip as an explicit election.
+	 *
+	 * @return void
+	 */
+	public function testAnEmployeeWithoutTheKortingElectionGetsItApplied(): void {
+		$employee = $this->employee();
+		unset($employee['loonheffingskortingToegepast']);
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$employee],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$this->assertSame(718.83, $payslip['loonheffing']);
+		$this->assertSame(3081.17, $payslip['nettoPay']);
+
+	}//end testAnEmployeeWithoutTheKortingElectionGetsItApplied()
+
+	/**
 	 * hrmq#99 regression fix: `savePayslip()` places the AWR art. 52 lid 4
 	 * statutory-retention legal hold on every sealed Payslip -- a plain NL
 	 * Payslip has neither a populated `retainedUntil` nor an OpenRegister-
