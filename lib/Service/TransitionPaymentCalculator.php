@@ -62,12 +62,10 @@ class TransitionPaymentCalculator {
 	/**
 	 * Calculate the payment.
 	 *
-	 * @param array<string, mixed>             $employee   The employee: grossMonthlySalary, startDate.
-	 * @param array<int, array<string, mixed>> $contracts  The employee's contracts: startDate, endDate, hoursPerWeek, hourlyWage.
-	 * @param array<int, array<string, mixed>> $payslips   The employee's payslips: period, grossPay, vakantiegeldRate.
-	 * @param array<string, mixed>             $parameters The rule parameters: capEur, dismissalInitiatedReasons.
-	 * @param string                           $endDate    The last working day, `YYYY-MM-DD`.
-	 * @param string                           $reason     The departure reason.
+	 * @param array<string, mixed>                                                                         $employee   The employee: grossMonthlySalary, startDate.
+	 * @param array{contracts: array<int, array<string, mixed>>, payslips: array<int, array<string, mixed>>} $history    The employee's contracts (startDate, endDate, hoursPerWeek, hourlyWage) and payslips (period, grossPay, vakantiegeldRate).
+	 * @param array<string, mixed>                                                                         $parameters The rule parameters: capEur, dismissalInitiatedReasons.
+	 * @param array{endDate: string, reason: string}                                                       $departure  The last working day (`YYYY-MM-DD`) and the departure reason.
 	 *
 	 * @return array<string, mixed> amountEur and the breakdown, or zero with the reason.
 	 *
@@ -75,35 +73,53 @@ class TransitionPaymentCalculator {
 	 *
 	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-004
 	 */
-	public function calculate(array $employee, array $contracts, array $payslips, array $parameters, string $endDate, string $reason): array {
+	public function calculate(array $employee, array $history, array $parameters, array $departure): array {
 		$capEur = $parameters['capEur'] ?? null;
 		if (is_int($capEur) === false && is_float($capEur) === false) {
 			throw new InvalidArgumentException('The transition payment rule carries no cap (capEur); it is not invented here.');
 		}
 
-		$end = $this->date(value: $endDate);
+		$end = $this->date(value: $departure['endDate']);
 		if ($end === null) {
 			throw new InvalidArgumentException('The last working day is not a date.');
 		}
 
 		$reasons = array_map('strval', (array)($parameters['dismissalInitiatedReasons'] ?? []));
-		if (in_array($reason, $reasons, true) === false) {
+		if (in_array($departure['reason'], $reasons, true) === false) {
 			return [
 				'amountEur' => 0.00,
 				'reason' => 'The departure was not initiated by the employer, so no transition payment is due.',
-				'departureReason' => $reason,
+				'departureReason' => $departure['reason'],
 				'ruleId' => self::RULE_ID,
 			];
 		}
 
-		$service = $this->service(employee: $employee, contracts: $contracts, end: $end);
-		$parts = $this->wageParts(employee: $employee, contracts: $contracts, payslips: $payslips);
+		return $this->breakdown(
+			basis: [
+				'service' => $this->service(employee: $employee, contracts: $history['contracts'], end: $end),
+				'parts' => $this->wageParts(employee: $employee, contracts: $history['contracts'], payslips: $history['payslips']),
+				'end' => $end,
+			],
+			capEur: (float)$capEur
+		);
+	}//end calculate()
+
+	/**
+	 * The amount and its breakdown: one third of a monthly wage per year of
+	 * service, capped at the rule's cap or a year's wage, whichever is higher.
+	 *
+	 * @param array{service: array{start: string, months: int, days: int}, parts: array{base: int, holidayAllowance: int, variableAverage: int, monthsRead: int}, end: DateTimeImmutable} $basis  The service, the wage parts in cents and the last working day.
+	 * @param float                                                                                                                                                                     $capEur The rule's cap in euro.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function breakdown(array $basis, float $capEur): array {
+		['service' => $service, 'parts' => $parts] = $basis;
 		$wageCents = ($parts['base'] + $parts['holidayAllowance'] + $parts['variableAverage']);
 
 		// One third of a monthly wage per year is 1/36 of it per month.
 		$amountCents = (int)round($wageCents * ($service['months'] + ($service['days'] * 12 / 365)) / 36);
-		$capCents = max((int)round((float)$capEur * 100), (12 * $wageCents));
-		$capApplied = ($amountCents > $capCents);
+		$capCents = max((int)round($capEur * 100), (12 * $wageCents));
 
 		return [
 			'amountEur' => $this->euro(cents: min($amountCents, $capCents)),
@@ -119,11 +135,11 @@ class TransitionPaymentCalculator {
 				'variableMonthsRead' => $parts['monthsRead'],
 			],
 			'capEur' => $this->euro(cents: $capCents),
-			'capApplied' => $capApplied,
-			'endDate' => $end->format('Y-m-d'),
+			'capApplied' => ($amountCents > $capCents),
+			'endDate' => $basis['end']->format('Y-m-d'),
 			'ruleId' => self::RULE_ID,
 		];
-	}//end calculate()
+	}//end breakdown()
 
 	/**
 	 * The service counted: the months and days of every contract in the chain

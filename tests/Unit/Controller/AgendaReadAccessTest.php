@@ -11,7 +11,11 @@
  * The organisation: Anna and Bram work in unit Zorg, managed by Mila. Carl
  * works in unit Facilitair. Hanna is HR. Eva left Zorg in 2021, and a shift of
  * hers was left on the roster. Dora works in Zorg without a Nextcloud account.
- * `admin` is a Nextcloud administrator.
+ * `admin` is a Nextcloud administrator. Zorg sits under unit Organisatie,
+ * managed by Olga. Dirk stands in for Mila today; Evert's stand-in ended last
+ * year. Gina and Anna also have a placement in a unit nobody registered.
+ * Ursula's and Vince's Zorg placements carry a date nobody can read. A
+ * placement in Zorg names an employee who does not exist.
  *
  * @category Test
  * @package  OCA\Humaniq\Tests\Unit\Controller
@@ -39,7 +43,9 @@ use OCA\Humaniq\Service\AvailabilityService;
 use OCA\Humaniq\Service\ForwardCapacityService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\ManagerDeputies;
 use OCA\Humaniq\Service\OrgResolutionService;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\WorkingCalendarReader;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -64,11 +70,35 @@ class AgendaReadAccessTest extends TestCase {
 	private array $loaded = [];
 
 	/**
+	 * Schemas whose rows a case replaces.
+	 *
+	 * @var array<string, list<array<string, mixed>>>
+	 */
+	private array $patch = [];
+
+	/**
+	 * Whether availability and capacity run the real services instead of
+	 * echoing the employees they were asked for.
+	 *
+	 * @var bool
+	 */
+	private bool $realHours = false;
+
+	/**
 	 * The organisation and its planned items.
 	 *
 	 * @return array<string, list<array<string, mixed>>>
 	 */
 	private function world(): array {
+		return array_replace($this->baseWorld(), $this->patch);
+	}//end world()
+
+	/**
+	 * The organisation before a case patches it.
+	 *
+	 * @return array<string, list<array<string, mixed>>>
+	 */
+	private function baseWorld(): array {
 		$placed = ['startDate' => '2020-01-01'];
 
 		return [
@@ -80,9 +110,18 @@ class AgendaReadAccessTest extends TestCase {
 				['id' => 'emp-hanna', 'nextcloudUserId' => 'hanna'],
 				['id' => 'emp-eva', 'nextcloudUserId' => 'eva'],
 				['id' => 'emp-dora', 'nextcloudUserId' => ''],
+				['id' => 'emp-olga', 'nextcloudUserId' => 'olga'],
+				['id' => 'emp-dirk', 'nextcloudUserId' => 'dirk'],
+				['id' => 'emp-evert', 'nextcloudUserId' => 'evert'],
+				['id' => 'emp-gina', 'nextcloudUserId' => 'gina'],
+				['id' => 'emp-ursula', 'nextcloudUserId' => 'ursula'],
+				['id' => 'emp-vince', 'nextcloudUserId' => 'vince'],
 			],
 			'OrgUnit' => [
-				['id' => 'unit-zorg', 'managerId' => 'emp-mila'],
+				['id' => 'unit-org', 'managerId' => 'emp-olga'],
+				['id' => 'unit-loop-a', 'managerId' => 'emp-eva', 'parentUnitId' => 'unit-loop-b'],
+				['id' => 'unit-loop-b', 'managerId' => 'emp-eva', 'parentUnitId' => 'unit-loop-a'],
+				['id' => 'unit-zorg', 'managerId' => 'emp-mila', 'parentUnitId' => 'unit-org'],
 				['id' => 'unit-fac', 'managerId' => 'emp-hanna'],
 			],
 			'OrgAssignment' => [
@@ -92,6 +131,18 @@ class AgendaReadAccessTest extends TestCase {
 				['id' => 'oa-4', 'employeeId' => 'emp-hanna', 'orgUnitId' => 'unit-fac'] + $placed,
 				['id' => 'oa-5', 'employeeId' => 'emp-eva', 'orgUnitId' => 'unit-zorg', 'startDate' => '2019-01-01', 'endDate' => '2021-01-01'],
 				['id' => 'oa-6', 'employeeId' => 'emp-dora', 'orgUnitId' => 'unit-zorg'] + $placed,
+				['id' => 'oa-7', 'employeeId' => 'emp-olga', 'orgUnitId' => 'unit-org'] + $placed,
+				['id' => 'oa-8', 'employeeId' => 'emp-dirk', 'orgUnitId' => 'unit-fac'] + $placed,
+				['id' => 'oa-9', 'employeeId' => 'emp-evert', 'orgUnitId' => 'unit-fac'] + $placed,
+				['id' => 'oa-10', 'employeeId' => 'emp-gina', 'orgUnitId' => 'unit-ghost'] + $placed,
+				['id' => 'oa-11', 'employeeId' => 'emp-anna', 'orgUnitId' => 'unit-ghost'] + $placed,
+				['id' => 'oa-12', 'employeeId' => 'emp-ursula', 'orgUnitId' => 'unit-zorg', 'startDate' => 'sinds kort'],
+				['id' => 'oa-13', 'employeeId' => 'emp-vince', 'orgUnitId' => 'unit-zorg', 'startDate' => '2020-01-01', 'endDate' => 'tot nader order'],
+				['id' => 'oa-14', 'employeeId' => 'emp-nobody', 'orgUnitId' => 'unit-zorg'] + $placed,
+			],
+			'ManagerDeputy' => [
+				['id' => 'dep-1', 'managerUserId' => 'mila', 'deputyUserId' => 'dirk', 'from' => date('Y-m-d', strtotime('-1 day')), 'until' => date('Y-m-d', strtotime('+1 day'))],
+				['id' => 'dep-2', 'managerUserId' => 'mila', 'deputyUserId' => 'evert', 'from' => date('Y-m-d', strtotime('-400 days')), 'until' => date('Y-m-d', strtotime('-300 days'))],
 			],
 			'RosterAssignment' => [
 				['id' => 'ra-anna', 'employeeId' => 'emp-anna', 'date' => '2026-09-01', 'shiftId' => 'shift-1'],
@@ -114,7 +165,7 @@ class AgendaReadAccessTest extends TestCase {
 				['id' => 'book-1', 'resourceId' => 'room-1', 'employeeId' => 'emp-anna', 'start' => '2026-09-02T09:00:00', 'end' => '2026-09-02T10:00:00', 'purpose' => 'Overleg'],
 			],
 		];
-	}//end world()
+	}//end baseWorld()
 
 	/**
 	 * The controller, built by constructor type, with the given acting user.
@@ -162,32 +213,51 @@ class AgendaReadAccessTest extends TestCase {
 		$calendar = $this->createMock(WorkingCalendarReader::class);
 		$calendar->method('nonWorkingDates')->willReturn(['dates' => null, 'resolved' => false, 'reason' => 'none']);
 
+		$availability = $this->createMock(AvailabilityService::class);
+		$availability->method('availability')->willReturnCallback(
+			static fn (array $employeeIds): array => array_map(static fn (string $id): array => ['employeeId' => $id], $employeeIds)
+		);
+		$capacity = $this->createMock(ForwardCapacityService::class);
+		$capacity->method('capacity')->willReturnCallback(static fn (array $employeeIds): array => ['employeeIds' => $employeeIds]);
+
+		$roles = new HumaniqRoles($this->groupManager());
 		$factories = [
 			IRequest::class => static fn (): IRequest => $request,
+			IUserSession::class => fn (): IUserSession => $this->session($uid),
 			HoursRegisterGateway::class => static fn (): HoursRegisterGateway => $gateway,
+			RecordStoreInterface::class => static fn (): HoursRegisterGateway => $gateway,
 			AgendaComposer::class => static fn (): AgendaComposer => new AgendaComposer(),
-			AvailabilityService::class => fn (): AvailabilityService => $this->createMock(AvailabilityService::class),
-			ForwardCapacityService::class => fn (): ForwardCapacityService => $this->createMock(ForwardCapacityService::class),
+			AvailabilityService::class => fn (): AvailabilityService => ($this->realHours === true ? new AvailabilityService() : $availability),
+			ForwardCapacityService::class => fn (): ForwardCapacityService => ($this->realHours === true ? new ForwardCapacityService() : $capacity),
 			OrgResolutionService::class => static fn (): OrgResolutionService => new OrgResolutionService(),
 			WorkingCalendarReader::class => static fn (): WorkingCalendarReader => $calendar,
-			AgendaReadAccess::class => fn (): object => new AgendaReadAccess(
-				$this->session($uid),
-				$gateway,
-				new OrgResolutionService(),
-				new HumaniqRoles($this->groupManager())
-			),
+			HumaniqRoles::class => static fn (): HumaniqRoles => $roles,
+			ManagerDeputies::class => static fn (): ManagerDeputies => new ManagerDeputies($gateway, $roles),
 		];
+		$factories[AgendaReadAccess::class] = fn (): object => $this->build(AgendaReadAccess::class, $factories);
 
+		return $this->build(AgendaController::class, $factories);
+	}//end controller()
+
+	/**
+	 * Construct a class with a double per constructor parameter type.
+	 *
+	 * @param class-string                    $class     The class.
+	 * @param array<string, callable():mixed> $factories A double per type.
+	 *
+	 * @return object
+	 */
+	private function build(string $class, array $factories): object {
 		$arguments = [];
-		foreach ((new ReflectionClass(AgendaController::class))->getConstructor()->getParameters() as $parameter) {
+		foreach ((new ReflectionClass($class))->getConstructor()->getParameters() as $parameter) {
 			$type = $parameter->getType();
 			$this->assertInstanceOf(ReflectionNamedType::class, $type);
 			$this->assertArrayHasKey($type->getName(), $factories, 'no double for ' . $type->getName());
 			$arguments[] = $factories[$type->getName()]();
 		}
 
-		return new AgendaController(...$arguments);
-	}//end controller()
+		return new $class(...$arguments);
+	}//end build()
 
 	/**
 	 * A session holding one user, or nobody.
@@ -570,5 +640,655 @@ class AgendaReadAccessTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}//end testABadRequestIsStillABadRequest()
+
+	/**
+	 * Read availability or capacity for the first week of September 2026.
+	 *
+	 * @param string|null $viewer    The acting user.
+	 * @param string      $endpoint  `availability` or `capacity`.
+	 * @param string      $orgUnitId The unit, or '' for no unit.
+	 *
+	 * @return JSONResponse
+	 */
+	private function hours(?string $viewer, string $endpoint, string $orgUnitId): JSONResponse {
+		return $this->controller($viewer, ['userId' => 'hanna', 'role' => 'hr'])->{$endpoint}(
+			from: '2026-09-01',
+			to: '2026-09-07',
+			orgUnitId: $orgUnitId
+		);
+	}//end hours()
+
+	/**
+	 * The employee ids an availability or capacity answer covers, sorted.
+	 *
+	 * @param JSONResponse $response The answer.
+	 *
+	 * @return list<string>
+	 */
+	private function covered(JSONResponse $response): array {
+		$data = $response->getData();
+		$ids = ($data['employeeIds'] ?? array_column(($data['employees'] ?? []), 'employeeId'));
+		sort($ids);
+
+		return $ids;
+	}//end covered()
+
+	/**
+	 * Assert a refused hours read, and that no planned item was read for it.
+	 *
+	 * @param JSONResponse $response The answer.
+	 *
+	 * @return void
+	 */
+	private function assertHoursRefused(JSONResponse $response): void {
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertSame(['error'], array_keys($response->getData()));
+		$this->assertStringStartsWith('Je kunt deze uren niet opvragen.', $response->getData()['error']);
+		foreach (['Interview', 'Secondment', 'SickLeaveCase', 'RosterAssignment', 'ResourceBooking'] as $schema) {
+			$this->assertNotContains($schema, $this->loaded, $schema . ' was read for a refused hours read');
+		}
+	}//end assertHoursRefused()
+
+	/**
+	 * Data provider: who may open the Zorg agenda and its hours besides its
+	 * members and HR: the manager, the manager of the unit above it, and the
+	 * manager's deputy of today.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function unitManagersAndDeputies(): array {
+		return [
+			'the unit manager' => ['mila'],
+			'the manager of the unit above' => ['olga'],
+			'the manager\'s deputy today' => ['dirk'],
+		];
+	}//end unitManagersAndDeputies()
+
+	/**
+	 * A parent-unit manager and a deputy see the whole unit agenda.
+	 *
+	 * @param string $viewer The acting user.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider unitManagersAndDeputies
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testParentManagersAndDeputiesSeeTheWholeUnitAgenda(string $viewer): void {
+		$response = $this->read($viewer, 'orgUnit', 'unit-zorg');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertContains('interview:emp-anna', $this->kinds($response));
+		$this->assertSame(['emp-anna' => 16.0, 'emp-bram' => 8.0], $this->secondmentHours($response));
+	}//end testParentManagersAndDeputiesSeeTheWholeUnitAgenda()
+
+	/**
+	 * A deputy whose stand-in has ended is refused the unit agenda.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAnEndedDeputyIsRefusedTheUnitAgenda(): void {
+		$this->assertRefused($this->read('evert', 'orgUnit', 'unit-zorg'));
+	}//end testAnEndedDeputyIsRefusedTheUnitAgenda()
+
+	/**
+	 * A parent-unit manager and a deputy open the unit, not a person: an
+	 * employee's agenda stays with the employee's own managers.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testParentManagersAndDeputiesDoNotOpenAnEmployeeAgenda(): void {
+		$this->assertRefused($this->read('olga', 'employee', 'emp-anna'));
+		$this->assertRefused($this->read('dirk', 'employee', 'emp-anna'));
+	}//end testParentManagersAndDeputiesDoNotOpenAnEmployeeAgenda()
+
+	/**
+	 * A subject without an Employee record is refused, even when a placement
+	 * puts it in the viewer's unit.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testASubjectWithoutAnEmployeeRecordIsRefused(): void {
+		$this->assertRefused($this->read('bram', 'employee', 'emp-nobody'));
+	}//end testASubjectWithoutAnEmployeeRecordIsRefused()
+
+	/**
+	 * A placement in a unit nobody registered makes nobody a colleague, and
+	 * that unit's agenda opens for nobody but HR.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAPlacementInAnUnregisteredUnitOpensNothing(): void {
+		$this->assertRefused($this->read('gina', 'employee', 'emp-anna'));
+		$this->assertRefused($this->read('gina', 'orgUnit', 'unit-ghost'));
+		$this->assertRefused($this->read('anna', 'orgUnit', 'unit-ghost'));
+	}//end testAPlacementInAnUnregisteredUnitOpensNothing()
+
+	/**
+	 * A placement whose start or end date cannot be read does not count.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAPlacementWithAnUnreadableDateDoesNotCount(): void {
+		$this->assertRefused($this->read('ursula', 'employee', 'emp-anna'));
+		$this->assertRefused($this->read('vince', 'employee', 'emp-anna'));
+		$this->assertRefused($this->read('ursula', 'orgUnit', 'unit-zorg'));
+		$this->assertRefused($this->read('bram', 'employee', 'emp-vince'));
+	}//end testAPlacementWithAnUnreadableDateDoesNotCount()
+
+	/**
+	 * A refused resource agenda says why, like the other refusals.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testARefusedResourceAgendaSaysWhy(): void {
+		$this->assertRefused($this->read(null, 'resource', 'room-1'));
+	}//end testARefusedResourceAgendaSaysWhy()
+
+	/**
+	 * Data provider: the endpoints that answer hours.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function hourEndpoints(): array {
+		return [
+			'availability' => ['availability'],
+			'capacity' => ['capacity'],
+		];
+	}//end hourEndpoints()
+
+	/**
+	 * A unit's hours open for its members, its managers, the managers above it,
+	 * a deputy and HR, and cover the unit's members.
+	 *
+	 * @param string $endpoint The endpoint.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider hourEndpoints
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAUnitsHoursOpenForWhoMayReadItsAgenda(string $endpoint): void {
+		foreach (['bram', 'mila', 'olga', 'dirk', 'hanna', 'admin'] as $viewer) {
+			$response = $this->hours($viewer, $endpoint, 'unit-zorg');
+
+			$this->assertSame(Http::STATUS_OK, $response->getStatus(), $viewer);
+			$this->assertContains('emp-anna', $this->covered($response), $viewer);
+			$this->assertContains('emp-bram', $this->covered($response), $viewer);
+		}
+	}//end testAUnitsHoursOpenForWhoMayReadItsAgenda()
+
+	/**
+	 * Anyone else is refused a unit's hours before anything is read, whatever
+	 * the request claims.
+	 *
+	 * @param string $endpoint The endpoint.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider hourEndpoints
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAnyoneElseIsRefusedAUnitsHours(string $endpoint): void {
+		foreach (['carl', 'eva', 'evert', 'gina', 'ursula', 'stranger', null] as $viewer) {
+			$this->loaded = [];
+			$this->assertHoursRefused($this->hours($viewer, $endpoint, 'unit-zorg'));
+		}
+
+		$this->loaded = [];
+		$this->assertHoursRefused($this->hours('gina', $endpoint, 'unit-ghost'));
+	}//end testAnyoneElseIsRefusedAUnitsHours()
+
+	/**
+	 * Without a unit, HR gets every employee.
+	 *
+	 * @param string $endpoint The endpoint.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider hourEndpoints
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testWithoutAUnitHrGetsEveryEmployee(string $endpoint): void {
+		$response = $this->hours('hanna', $endpoint, '');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(
+			['emp-anna', 'emp-bram', 'emp-carl', 'emp-dirk', 'emp-dora', 'emp-eva', 'emp-evert', 'emp-gina', 'emp-hanna', 'emp-mila', 'emp-olga', 'emp-ursula', 'emp-vince'],
+			$this->covered($response)
+		);
+	}//end testWithoutAUnitHrGetsEveryEmployee()
+
+	/**
+	 * Without a unit, anyone else gets only the people whose agenda they may
+	 * read: themself, the people they manage and their colleagues.
+	 *
+	 * @param string $endpoint The endpoint.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider hourEndpoints
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testWithoutAUnitOthersGetOnlyWhoTheyMaySee(string $endpoint): void {
+		$this->assertSame(['emp-anna', 'emp-bram', 'emp-dora'], $this->covered($this->hours('bram', $endpoint, '')));
+		$this->assertSame(['emp-carl', 'emp-dirk', 'emp-evert', 'emp-hanna'], $this->covered($this->hours('carl', $endpoint, '')));
+		$this->assertSame(['emp-gina'], $this->covered($this->hours('gina', $endpoint, '')));
+	}//end testWithoutAUnitOthersGetOnlyWhoTheyMaySee()
+
+	/**
+	 * Without a unit, a user who may read nobody's agenda is refused.
+	 *
+	 * @param string $endpoint The endpoint.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider hourEndpoints
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testWithoutAUnitSomeoneWhoMaySeeNobodyIsRefused(string $endpoint): void {
+		$this->assertHoursRefused($this->hours('stranger', $endpoint, ''));
+		$this->loaded = [];
+		$this->assertHoursRefused($this->hours(null, $endpoint, ''));
+	}//end testWithoutAUnitSomeoneWhoMaySeeNobodyIsRefused()
+
+	/**
+	 * A unit tree that loops back on itself ends the walk and refuses.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testALoopInTheUnitTreeEndsTheWalk(): void {
+		$this->assertRefused($this->read('carl', 'orgUnit', 'unit-loop-a'));
+	}//end testALoopInTheUnitTreeEndsTheWalk()
+
+	/**
+	 * Put the employees of Zorg and the unit above it in administrations.
+	 *
+	 * @param array<string, string> $employees Employee id to administration; the rest get `adm-A`.
+	 * @param array<string, string> $units     Unit id to administration; the rest get `adm-A`.
+	 *
+	 * @return void
+	 */
+	private function administrations(array $employees, array $units): void {
+		$world = $this->baseWorld();
+		foreach ($world['Employee'] as $index => $employee) {
+			$world['Employee'][$index]['administrationId'] = ($employees[$employee['id']] ?? 'adm-A');
+		}
+
+		foreach ($world['OrgUnit'] as $index => $unit) {
+			$world['OrgUnit'][$index]['administrationId'] = ($units[$unit['id']] ?? 'adm-A');
+		}
+
+		$this->patch = ['Employee' => $world['Employee'], 'OrgUnit' => $world['OrgUnit']];
+	}//end administrations()
+
+	/**
+	 * The manager of the unit above opens the unit only within its
+	 * administration.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testTheClimbStopsAtTheAdministrationBoundary(): void {
+		$this->administrations(['emp-olga' => 'adm-B'], ['unit-org' => 'adm-B']);
+		$this->assertRefused($this->read('olga', 'orgUnit', 'unit-zorg'));
+
+		$this->loaded = [];
+		$this->administrations([], ['unit-org' => 'adm-B']);
+		$this->assertRefused($this->read('olga', 'orgUnit', 'unit-zorg'));
+
+		$this->loaded = [];
+		$this->administrations([], []);
+		$this->assertSame(Http::STATUS_OK, $this->read('olga', 'orgUnit', 'unit-zorg')->getStatus());
+	}//end testTheClimbStopsAtTheAdministrationBoundary()
+
+	/**
+	 * A manager whose own Employee record lies in another administration
+	 * opens neither the unit nor anyone in it, and nor does their deputy.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAManagerOutsideTheAdministrationOpensNothing(): void {
+		$this->administrations(['emp-mila' => 'adm-B'], []);
+		$this->assertRefused($this->read('mila', 'orgUnit', 'unit-zorg'));
+		$this->assertRefused($this->read('mila', 'employee', 'emp-anna'));
+		$this->assertRefused($this->read('dirk', 'orgUnit', 'unit-zorg'));
+	}//end testAManagerOutsideTheAdministrationOpensNothing()
+
+	/**
+	 * Data provider: the endpoints that answer hours, with the field that
+	 * carries an employee's planned hours.
+	 *
+	 * @return array<string, array{0: string, 1: string}>
+	 */
+	public static function plannedHourFields(): array {
+		return [
+			'availability' => ['availability', 'committedHours'],
+			'capacity' => ['capacity', 'plannedHours'],
+		];
+	}//end plannedHourFields()
+
+	/**
+	 * Planned hours per employee from the real availability or capacity
+	 * answer, for one viewer and one unit, over one window.
+	 *
+	 * @param string|null $viewer   The acting user.
+	 * @param string      $endpoint `availability` or `capacity`.
+	 * @param string      $field    The planned-hours field.
+	 * @param string      $from     First day.
+	 * @param string      $to       Last day.
+	 * @param string      $orgUnitId The unit, or '' for none.
+	 *
+	 * @return array<string, float>
+	 */
+	private function plannedHours(?string $viewer, string $endpoint, string $field, string $from, string $to, string $orgUnitId = 'unit-zorg'): array {
+		$this->realHours = true;
+		$response = $this->controller($viewer)->{$endpoint}(from: $from, to: $to, orgUnitId: $orgUnitId);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$planned = [];
+		foreach ($response->getData()['employees'] as $row) {
+			$planned[$row['employeeId']] = (float)$row[$field];
+		}
+
+		return $planned;
+	}//end plannedHours()
+
+	/**
+	 * A full working week for one employee.
+	 *
+	 * @param string $employeeId The employee.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function fullWeek(string $employeeId): array {
+		return ['id' => 'wp-' . $employeeId, 'employeeId' => $employeeId, 'validFrom' => '2026-01-01', 'hoursMonday' => 8, 'hoursTuesday' => 8, 'hoursWednesday' => 8, 'hoursThursday' => 8, 'hoursFriday' => 8];
+	}//end fullWeek()
+
+	/**
+	 * A colleague's view of the hours leaves a secondment out, so its hours
+	 * per week cannot be read off the planned hours.
+	 *
+	 * @param string $endpoint The endpoint.
+	 * @param string $field    The planned-hours field.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider plannedHourFields
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAColleagueCannotReadSecondmentHoursOffPlannedHours(string $endpoint, string $field): void {
+		$this->patch = [
+			'WorkingPattern' => [$this->fullWeek('emp-anna'), $this->fullWeek('emp-bram')],
+			'Interview' => [],
+			'SickLeaveCase' => [],
+			'RosterAssignment' => [],
+			'ResourceBooking' => [],
+		];
+
+		$colleague = $this->plannedHours('bram', $endpoint, $field, '2026-09-07', '2026-09-11');
+		$this->assertEqualsWithDelta(0.0, $colleague['emp-anna'], 0.01);
+		$this->assertEqualsWithDelta(8.0, $colleague['emp-bram'], 0.01, 'his own secondment still counts');
+
+		$manager = $this->plannedHours('mila', $endpoint, $field, '2026-09-07', '2026-09-11');
+		$this->assertEqualsWithDelta(16.0, $manager['emp-anna'], 0.01);
+
+		$unscoped = $this->plannedHours('bram', $endpoint, $field, '2026-09-07', '2026-09-11', '');
+		$this->assertEqualsWithDelta(0.0, $unscoped['emp-anna'], 0.01);
+		$this->assertEqualsWithDelta(8.0, $unscoped['emp-bram'], 0.01);
+		$this->assertEqualsWithDelta(16.0, $this->plannedHours('hanna', $endpoint, $field, '2026-09-07', '2026-09-11', '')['emp-anna'], 0.01);
+	}//end testAColleagueCannotReadSecondmentHoursOffPlannedHours()
+
+	/**
+	 * A colleague's view of the hours leaves an interview out, so its date
+	 * and length cannot be read off the planned hours.
+	 *
+	 * @param string $endpoint The endpoint.
+	 * @param string $field    The planned-hours field.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider plannedHourFields
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAColleagueCannotReadAnInterviewOffPlannedHours(string $endpoint, string $field): void {
+		$this->patch = [
+			'WorkingPattern' => [$this->fullWeek('emp-anna'), $this->fullWeek('emp-bram')],
+			'Secondment' => [],
+			'SickLeaveCase' => [],
+			'RosterAssignment' => [],
+			'ResourceBooking' => [],
+			'Interview' => [
+				['id' => 'int-x', 'employeeId' => 'emp-anna', 'interviewerIds' => ['emp-bram'], 'scheduledStart' => '2026-09-08T10:00:00', 'scheduledEnd' => '2026-09-08T11:30:00'],
+				['id' => 'int-y', 'employeeId' => 'emp-bram', 'interviewerIds' => ['emp-anna'], 'scheduledStart' => '2026-09-08T14:00:00', 'scheduledEnd' => '2026-09-08T15:00:00'],
+			],
+		];
+
+		$colleague = $this->plannedHours('bram', $endpoint, $field, '2026-09-08', '2026-09-08');
+		$this->assertEqualsWithDelta(0.0, $colleague['emp-anna'], 0.01);
+		$this->assertEqualsWithDelta(2.5, $colleague['emp-bram'], 0.01, 'his own interviews still count');
+
+		$this->assertEqualsWithDelta(2.5, $this->plannedHours('hanna', $endpoint, $field, '2026-09-08', '2026-09-08')['emp-anna'], 0.01);
+	}//end testAColleagueCannotReadAnInterviewOffPlannedHours()
+
+	/**
+	 * A window that starts years ago does not bring back former members for
+	 * anyone but HR, and neither does a placement with an unreadable date.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAnEarlyWindowDoesNotBringBackFormerMembers(): void {
+		$members = fn (?string $viewer): array => $this->covered($this->controller($viewer)->availability(from: '2020-06-01', to: '2026-09-07', orgUnitId: 'unit-zorg'));
+
+		$this->assertSame(['emp-anna', 'emp-bram', 'emp-dora', 'emp-nobody'], $members('bram'));
+		$this->assertSame(['emp-anna', 'emp-bram', 'emp-dora', 'emp-nobody'], $members('mila'));
+		$this->assertContains('emp-eva', $members('hanna'));
+
+		$unit = $this->controller('mila')->agenda(subjectType: 'orgUnit', subjectId: 'unit-zorg', from: '2020-06-01', to: '2026-09-07');
+		$this->assertNotContains('shift:emp-eva', $this->kinds($unit));
+	}//end testAnEarlyWindowDoesNotBringBackFormerMembers()
+
+	/**
+	 * A unit without an administration takes its boundary from its members:
+	 * the manager above it in another administration does not open it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAnUnlabelledUnitTakesItsMembersAdministration(): void {
+		$this->administrations(['emp-olga' => 'adm-B'], ['unit-org' => 'adm-B']);
+		$this->patch['OrgUnit'] = array_map(
+			static fn (array $unit): array => ($unit['id'] === 'unit-zorg' ? array_diff_key($unit, ['administrationId' => true]) : $unit),
+			$this->patch['OrgUnit']
+		);
+
+		$this->assertRefused($this->read('olga', 'orgUnit', 'unit-zorg'));
+		$this->loaded = [];
+		$this->assertHoursRefused($this->hours('olga', 'availability', 'unit-zorg'));
+	}//end testAnUnlabelledUnitTakesItsMembersAdministration()
+
+	/**
+	 * The manager of a unit without an administration, whose own record lies
+	 * in another administration than the members', does not open it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAnUnlabelledUnitsManagerOutsideTheMembersAdministrationIsRefused(): void {
+		$world = $this->baseWorld();
+		foreach ($world['Employee'] as $index => $employee) {
+			$world['Employee'][$index]['administrationId'] = ($employee['id'] === 'emp-mila' ? 'adm-B' : 'adm-A');
+		}
+
+		$this->patch = ['Employee' => $world['Employee']];
+		$this->assertRefused($this->read('mila', 'orgUnit', 'unit-zorg'));
+		$this->assertRefused($this->read('mila', 'employee', 'emp-anna'));
+	}//end testAnUnlabelledUnitsManagerOutsideTheMembersAdministrationIsRefused()
+
+	/**
+	 * The manager of a unit without an administration, in the same
+	 * administration as its members, still opens it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAnUnlabelledUnitsManagerInTheMembersAdministrationOpensIt(): void {
+		$world = $this->baseWorld();
+		foreach ($world['Employee'] as $index => $employee) {
+			$world['Employee'][$index]['administrationId'] = 'adm-A';
+		}
+
+		$this->patch = ['Employee' => $world['Employee']];
+		$response = $this->read('mila', 'orgUnit', 'unit-zorg');
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertContains('interview:emp-anna', $this->kinds($response));
+	}//end testAnUnlabelledUnitsManagerInTheMembersAdministrationOpensIt()
+
+	/**
+	 * A unit without an administration whose members belong to different
+	 * administrations has no boundary to climb within: only its own members
+	 * and HR open it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAnUnlabelledUnitWithMixedMembersOpensForNoManager(): void {
+		$world = $this->baseWorld();
+		foreach ($world['Employee'] as $index => $employee) {
+			$world['Employee'][$index]['administrationId'] = ($employee['id'] === 'emp-bram' ? 'adm-B' : 'adm-A');
+		}
+
+		$this->patch = ['Employee' => $world['Employee']];
+		$this->assertRefused($this->read('mila', 'orgUnit', 'unit-zorg'));
+		$this->assertRefused($this->read('olga', 'orgUnit', 'unit-zorg'));
+		$this->assertSame(Http::STATUS_OK, $this->read('bram', 'orgUnit', 'unit-zorg')->getStatus());
+		$this->assertSame(Http::STATUS_OK, $this->read('hanna', 'orgUnit', 'unit-zorg')->getStatus());
+	}//end testAnUnlabelledUnitWithMixedMembersOpensForNoManager()
+
+	/**
+	 * Data provider: the interview fields that name who leads or joins it.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function interviewRoles(): array {
+		return [
+			'leads it' => ['interviewerId'],
+			'joins it' => ['participantId'],
+		];
+	}//end interviewRoles()
+
+	/**
+	 * A colleague who leads or joins someone else's interview has it counted
+	 * as their own, and the interviewee's planned hours keep it out.
+	 *
+	 * @param string $field The field naming the colleague.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider interviewRoles
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAnInterviewLedOrJoinedByAColleagueCountsOnlyForThem(string $field): void {
+		$this->patch = [
+			'WorkingPattern' => [$this->fullWeek('emp-anna'), $this->fullWeek('emp-bram')],
+			'Secondment' => [],
+			'SickLeaveCase' => [],
+			'RosterAssignment' => [],
+			'ResourceBooking' => [],
+			'Interview' => [
+				['id' => 'int-1', 'employeeId' => 'emp-bram', $field => 'emp-anna', 'scheduledStart' => '2026-09-08T10:00:00', 'scheduledEnd' => '2026-09-08T12:00:00'],
+			],
+		];
+
+		$colleague = $this->plannedHours('bram', 'availability', 'committedHours', '2026-09-08', '2026-09-08');
+		$this->assertEqualsWithDelta(0.0, $colleague['emp-anna'], 0.01);
+		$this->assertEqualsWithDelta(2.0, $colleague['emp-bram'], 0.01);
+		$this->assertEqualsWithDelta(2.0, $this->plannedHours('hanna', 'availability', 'committedHours', '2026-09-08', '2026-09-08')['emp-anna'], 0.01);
+	}//end testAnInterviewLedOrJoinedByAColleagueCountsOnlyForThem()
+
+	/**
+	 * A placement that starts today, or ends today, makes a colleague today.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAPlacementOnItsFirstOrLastDayCounts(): void {
+		$today = date('Y-m-d');
+		foreach ([['startDate' => $today], ['startDate' => '2020-01-01', 'endDate' => $today]] as $dates) {
+			$world = $this->baseWorld();
+			$world['OrgAssignment'][] = ['id' => 'oa-carl-zorg', 'employeeId' => 'emp-carl', 'orgUnitId' => 'unit-zorg'] + $dates;
+			$this->patch = ['OrgAssignment' => $world['OrgAssignment']];
+			$this->assertSame(Http::STATUS_OK, $this->read('carl', 'employee', 'emp-anna')->getStatus(), json_encode($dates));
+		}
+
+		$world = $this->baseWorld();
+		$world['OrgAssignment'][] = ['id' => 'oa-carl-zorg', 'employeeId' => 'emp-carl', 'orgUnitId' => 'unit-zorg', 'startDate' => '2020-01-01', 'endDate' => date('Y-m-d', strtotime('-1 day'))];
+		$this->patch = ['OrgAssignment' => $world['OrgAssignment']];
+		$this->loaded = [];
+		$this->assertRefused($this->read('carl', 'employee', 'emp-anna'));
+	}//end testAPlacementOnItsFirstOrLastDayCounts()
+
+	/**
+	 * A unit labelled with administration A whose members carry no label of
+	 * their own sits in A, so its manager in B is refused on the agenda, the
+	 * availability and the capacity of that unit: the unit's own label wins
+	 * over its unlabelled members.
+	 *
+	 * @return void
+	 */
+	public function testAUnitsOwnLabelWinsOverItsUnlabelledMembers(): void {
+		$world = $this->baseWorld();
+		foreach ($world['Employee'] as &$employee) {
+			if ($employee['id'] === 'emp-mila') {
+				$employee['administrationId'] = 'B';
+			}
+		}
+
+		unset($employee);
+		foreach ($world['OrgUnit'] as &$unit) {
+			if ($unit['id'] === 'unit-zorg') {
+				$unit['administrationId'] = 'A';
+			}
+		}
+
+		unset($unit);
+		$this->patch = ['Employee' => $world['Employee'], 'OrgUnit' => $world['OrgUnit']];
+
+		$this->assertRefused($this->controller('mila')->agenda(subjectType: 'orgUnit', subjectId: 'unit-zorg', from: '2026-09-01', to: '2026-09-07'));
+		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller('mila')->availability(from: '2026-09-01', to: '2026-09-07', orgUnitId: 'unit-zorg')->getStatus());
+		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller('mila')->capacity(from: '2026-09-01', to: '2026-09-07', orgUnitId: 'unit-zorg')->getStatus());
+	}//end testAUnitsOwnLabelWinsOverItsUnlabelledMembers()
 
 }//end class
