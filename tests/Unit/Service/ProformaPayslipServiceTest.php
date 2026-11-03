@@ -262,6 +262,28 @@ class ProformaPayslipServiceTest extends TestCase {
 	}//end testConstructorDeclaresNoObjectServiceDependency()
 
 	/**
+	 * Without a loonheffingskorting parameter the korting applies, as with
+	 * an explicit true; an explicit false reaches the calculator.
+	 *
+	 * @return void
+	 */
+	public function testAMissingKortingParameterAppliesTheKortingAndFalseReachesTheCalculator(): void {
+		$service = $this->buildService();
+		$params = ['gross' => 3800, 'table' => 'wit', 'dateOfBirth' => '1990-04-12', 'period' => '2026-02', 'aof' => 'laag', 'whk' => 1.52];
+
+		$missing = $service->simulate($params);
+		$without = $service->simulate($params + ['loonheffingskorting' => false]);
+
+		$this->assertTrue($missing['input']['loonheffingskorting']);
+		$this->assertSame(3081.17, $missing['nettoPay']);
+		$this->assertSame(473.75, $missing['arbeidskorting']);
+		$this->assertFalse($without['input']['loonheffingskorting']);
+		$this->assertSame(0.0, (float)$without['arbeidskorting']);
+		$this->assertLessThan(3081.17, $without['nettoPay']);
+
+	}//end testAMissingKortingParameterAppliesTheKortingAndFalseReachesTheCalculator()
+
+	/**
 	 * Build a `ProformaPayslipService` with a mocked `SettingsService`
 	 * (the real `nl-2026` `TaxTables` load is exercised for real — no fake
 	 * of the engine under test).

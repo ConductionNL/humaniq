@@ -549,6 +549,56 @@ class PayrollRunServiceSickPayTest extends TestCase {
 	}//end testRecalculatingASickPayRunUpsertsInPlaceWithoutDuplicating()
 
 	/**
+	 * A sick case without a loondoorbetaling percentage pays 70%.
+	 *
+	 * @return void
+	 */
+	public function testACaseWithoutAPercentagePaysSeventyPercent(): void {
+		$case = $this->sickCase();
+		unset($case['loondoorbetalingPercentage']);
+		[$service, $fake] = $this->service(['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'SickLeaveCase' => [$case], 'PayrollRun' => [], 'Payslip' => []]);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$this->assertSame(70.0, $payslip['sickPayPercentage']);
+		$this->assertSame(2660.00, $payslip['doorbetaaldLoon']);
+
+	}//end testACaseWithoutAPercentagePaysSeventyPercent()
+
+	/**
+	 * An aangepast loon with a half cent is rounded to the nearest cent,
+	 * not floored: 3000.125 is 300013 cents. At 50% continuation that cent
+	 * shows in the doorbetaald loon.
+	 *
+	 * @return void
+	 */
+	public function testAnAangepastLoonWithAHalfCentIsRoundedToTheNearestCent(): void {
+		[$service, $fake] = $this->service(['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'SickLeaveCase' => [$this->sickCase(['aangepastLoon' => 3000.125, 'loondoorbetalingPercentage' => 50])], 'PayrollRun' => [], 'Payslip' => []]);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$expected = static function (int $aangepastLoonCents): \OCA\Humaniq\Payroll\SickPayResult {
+			return (new SickPayCalculator())->compute(
+				new \OCA\Humaniq\Payroll\SickPayInput(
+					wage: new \OCA\Humaniq\Payroll\SickPayWage(referenceWageCents: 380000, aangepastLoonCents: $aangepastLoonCents, loondoorbetalingPercentage: 50.0),
+					circumstances: new \OCA\Humaniq\Payroll\SickPayCircumstances(
+						timing: new \OCA\Humaniq\Payroll\SickPayTiming(yearOne: true, wachtdag: false, firstSickDayInPeriod: true),
+						hours: new \OCA\Humaniq\Payroll\SickPayHours(contractHoursPerWeek: 36.0, fulltimeHoursPerWeek: 36.0)
+					)
+				),
+				TaxTables::load('nl-2026')
+			);
+		};
+		$rounded = $expected(300013);
+		$this->assertNotSame($rounded->payableGrossCents, $expected(300012)->payableGrossCents, 'One cent of aangepast loon shows in the payable gross.');
+		$this->assertSame(round(($rounded->payableGrossCents / 100), 2), $payslip['grossPay']);
+		$this->assertSame(round(($rounded->doorbetaaldLoonCents / 100), 2), $payslip['doorbetaaldLoon']);
+
+	}//end testAnAangepastLoonWithAHalfCentIsRoundedToTheNearestCent()
+
+	/**
 	 * Objects saved to a given schema, in save order.
 	 *
 	 * @param object $fake The fake ObjectService.
