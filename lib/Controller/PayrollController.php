@@ -84,12 +84,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\PayrollRunServices;
-use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WkrService;
 use OCA\Humaniq\Standards\Checks\NlDgaChecks;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -107,6 +108,8 @@ use RuntimeException;
  * @spec openspec/specs/proforma-payslip/spec.md#REQ-PRO-004
  */
 class PayrollController extends Controller {
+
+	use ConvertsRowsToArrays;
 	use ReadsTypedRequestParameters;
 
 	/**
@@ -670,24 +673,5 @@ class PayrollController extends Controller {
 
 		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 }//end class

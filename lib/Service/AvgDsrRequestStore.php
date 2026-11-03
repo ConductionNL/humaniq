@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -42,6 +43,8 @@ use RuntimeException;
  * Loads and updates one `DsrRequest` record's lifecycle fields.
  */
 final class AvgDsrRequestStore {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * @param ContainerInterface $container DI container for the lazy ObjectService resolve.
@@ -268,24 +271,5 @@ final class AvgDsrRequestStore {
 
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 }//end class

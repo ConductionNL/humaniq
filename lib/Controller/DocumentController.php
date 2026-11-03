@@ -42,6 +42,7 @@ use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -53,6 +54,8 @@ use RuntimeException;
  * Guarded endpoint that triggers a single HR-document generation attempt.
  */
 class DocumentController extends Controller {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * @param IRequest $request The request object.
@@ -289,24 +292,5 @@ class DocumentController extends Controller {
 
 		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 }//end class

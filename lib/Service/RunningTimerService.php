@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Listener\HoursWriteRefusedException;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Throwable;
 
 /**
@@ -44,6 +45,8 @@ use Throwable;
  * @spec openspec/specs/hours-leaf/spec.md#requirement-a-user-has-at-most-one-running-timer
  */
 class RunningTimerService {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * The schema slug every timer entry is written to.
@@ -265,24 +268,5 @@ class RunningTimerService {
 			(string)($row['id'] ?? ((is_array($self) === true ? ($self['id'] ?? '') : '')))
 		);
 	}//end idOf()
-
-	/**
-	 * Normalise a saved ObjectEntity to an array.
-	 *
-	 * @param mixed $row The saved row.
-	 *
-	 * @return array<string, mixed> The row as an array.
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 }//end class

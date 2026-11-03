@@ -53,6 +53,7 @@ namespace OCA\Humaniq\BackgroundJob;
 use DateTimeImmutable;
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
@@ -67,6 +68,8 @@ use RuntimeException;
  * @spec openspec/specs/leave-accrual-job/spec.md
  */
 class LeaveAccrualJob extends TimedJob {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * How often the job fires (~1 day). Correctness is independent of this
@@ -523,25 +526,6 @@ class LeaveAccrualJob extends TimedJob {
 
 		return $out;
 	}//end loadAll()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * The object id of a row, falling back to `@self.id`.
