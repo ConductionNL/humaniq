@@ -225,6 +225,11 @@ class TravelAmountListenerTest extends TestCase {
 		$stamped = $event->getModifiedData();
 		self::assertArrayHasKey('managerUserId', $stamped);
 		self::assertNull($stamped['managerUserId']);
+
+		$unknown = new ObjectCreatingEvent($this->entity('CommuteArrangement', ['employeeId' => 'emp-unknown'] + $arrangement));
+		$this->listener()->handle($unknown);
+		self::assertArrayHasKey('managerUserId', $unknown->getModifiedData());
+		self::assertNull($unknown->getModifiedData()['managerUserId']);
 	}//end testAClientManagerIsNotKeptWhenNoneResolves()
 
 }//end class
