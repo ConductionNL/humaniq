@@ -165,6 +165,10 @@ use DateTimeImmutable;
 use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
@@ -851,17 +855,11 @@ class PayrollRunService {
 		$employee = $slip['employee'];
 
 		return new CalculationInput(
-			grossMonthlySalaryCents: $slip['grossCents'],
-			taxTableColor: $slip['taxTableColor'],
-			loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true),
-			dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null),
-			period: $state['period'],
-			awfTariff: $slip['awf']['tariff'],
-			aofTariff: $state['aofTariff'],
-			whkPercentage: $state['whkPercentage'],
-			verzekeringsplichtig: (($employee['isDga'] ?? false) !== true),
-			jurisdiction: $state['jurisdiction'],
-			thirtyPercentRulingRate: ((($employee['thirtyPercentRulingGranted'] ?? false) === true) ? (float)($employee['thirtyPercentRulingRate'] ?? 0.0) : 0.0)
+			wage: new CalculationWage(grossMonthlySalaryCents: $slip['grossCents'], dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null), period: $state['period'], jurisdiction: $state['jurisdiction']),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(taxTableColor: $slip['taxTableColor'], loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true), thirtyPercentRulingRate: ((($employee['thirtyPercentRulingGranted'] ?? false) === true) ? (float)($employee['thirtyPercentRulingRate'] ?? 0.0) : 0.0)),
+				insurance: new InsuranceTariffs(awfTariff: $slip['awf']['tariff'], aofTariff: $state['aofTariff'], whkPercentage: $state['whkPercentage'], verzekeringsplichtig: (($employee['isDga'] ?? false) !== true))
+			)
 		);
 	}//end calculationInput()
 

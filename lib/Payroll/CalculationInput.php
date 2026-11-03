@@ -53,36 +53,106 @@ use InvalidArgumentException;
 final class CalculationInput {
 
 	/**
-	 * @param int $grossMonthlySalaryCents The fixed monthly gross salary, in integer cents (`tvl`).
-	 * @param string $taxTableColor `wit` or `groen`.
-	 * @param bool $loonheffingskortingToegepast Whether the employee elected the loonheffingskorting.
-	 * @param string|null $dateOfBirth ISO-8601 date of birth, or null when unknown (treated as below-AOW).
-	 * @param string $period Wage period, `YYYY-MM`.
-	 * @param string $awfTariff `low` or `high` (from the covering EmploymentContract).
-	 * @param string $aofTariff `laag` or `hoog` (employer-level config).
-	 * @param float $whkPercentage The employer's Whk percentage (percentage scale, e.g. `1.52`).
-	 * @param bool $verzekeringsplichtig Whether the employee is verzekeringsplichtig for the werknemersverzekeringen (dga-payroll-mode). `false` for a DGA — zeroes Awf/Aof/Wko/Whk; every other component is unaffected.
-	 * @param string $jurisdiction The ISO 3166-1 alpha-2 jurisdiction whose pack computes this wage (jurisdiction-packs). Additive and defaults to `NL`, so every pre-existing named-argument call site is unaffected.
-	 * @param float $thirtyPercentRulingRate The applied 30%-ruling percentage (30-procent-regeling). Additive and defaults to `0.0`, so every pre-existing named-argument call site is unaffected: a positive rate drives the pack's `thirtyPercentExemption`/`belastbaarLoon` bindings, reducing the taxable base while leaving the net-fold's gross unchanged. `0.0` degrades the exemption to zero (non-ruling path byte-identical).
+	 * The fixed monthly gross salary, in integer cents (`tvl`).
+	 *
+	 * @var integer
+	 */
+	public readonly int $grossMonthlySalaryCents;
+
+	/**
+	 * `wit` or `groen`.
+	 *
+	 * @var string
+	 */
+	public readonly string $taxTableColor;
+
+	/**
+	 * Whether the employee elected the loonheffingskorting.
+	 *
+	 * @var boolean
+	 */
+	public readonly bool $loonheffingskortingToegepast;
+
+	/**
+	 * ISO-8601 date of birth, or null when unknown (treated as below-AOW).
+	 *
+	 * @var string|null
+	 */
+	public readonly ?string $dateOfBirth;
+
+	/**
+	 * Wage period, `YYYY-MM`.
+	 *
+	 * @var string
+	 */
+	public readonly string $period;
+
+	/**
+	 * `low` or `high` (from the covering EmploymentContract).
+	 *
+	 * @var string
+	 */
+	public readonly string $awfTariff;
+
+	/**
+	 * `laag` or `hoog` (employer-level config).
+	 *
+	 * @var string
+	 */
+	public readonly string $aofTariff;
+
+	/**
+	 * The employer's Whk percentage (percentage scale, e.g. `1.52`).
+	 *
+	 * @var float
+	 */
+	public readonly float $whkPercentage;
+
+	/**
+	 * Whether the employee is verzekeringsplichtig for the werknemersverzekeringen (dga-payroll-mode). `false` for a DGA — zeroes Awf/Aof/Wko/Whk; every other component is unaffected.
+	 *
+	 * @var boolean
+	 */
+	public readonly bool $verzekeringsplichtig;
+
+	/**
+	 * The ISO 3166-1 alpha-2 jurisdiction whose pack computes this wage (jurisdiction-packs). Additive and defaults to `NL`, so every pre-existing named-argument call site is unaffected.
+	 *
+	 * @var string
+	 */
+	public readonly string $jurisdiction;
+
+	/**
+	 * The applied 30%-ruling percentage (30-procent-regeling). Additive and defaults to `0.0`, so every pre-existing named-argument call site is unaffected: a positive rate drives the pack's `thirtyPercentExemption`/`belastbaarLoon` bindings, reducing the taxable base while leaving the net-fold's gross unchanged. `0.0` degrades the exemption to zero (non-ruling path byte-identical).
+	 *
+	 * @var float
+	 */
+	public readonly float $thirtyPercentRulingRate;
+
+	/**
+	 * The fields stay flat and in this order: the pack mapper, toArray() and
+	 * the stamped engineInputSnapshot read them by name.
+	 *
+	 * @param CalculationWage $wage The gross salary, date of birth, period and jurisdiction.
+	 * @param CalculationLevies $levies The wage tax election and the insurance tariffs.
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-001
 	 * @spec openspec/specs/30-procent-regeling/spec.md#REQ-30P-003
 	 */
-	public function __construct(
-		public readonly int $grossMonthlySalaryCents,
-		public readonly string $taxTableColor,
-		public readonly bool $loonheffingskortingToegepast,
-		public readonly ?string $dateOfBirth,
-		public readonly string $period,
-		public readonly string $awfTariff,
-		public readonly string $aofTariff,
-		public readonly float $whkPercentage,
-		public readonly bool $verzekeringsplichtig = true,
-		public readonly string $jurisdiction = 'NL',
-		public readonly float $thirtyPercentRulingRate = 0.0,
-	) {
+	public function __construct(CalculationWage $wage, CalculationLevies $levies) {
+		$this->grossMonthlySalaryCents = $wage->grossMonthlySalaryCents;
+		$this->taxTableColor = $levies->wageTax->taxTableColor;
+		$this->loonheffingskortingToegepast = $levies->wageTax->loonheffingskortingToegepast;
+		$this->dateOfBirth = $wage->dateOfBirth;
+		$this->period = $wage->period;
+		$this->awfTariff = $levies->insurance->awfTariff;
+		$this->aofTariff = $levies->insurance->aofTariff;
+		$this->whkPercentage = $levies->insurance->whkPercentage;
+		$this->verzekeringsplichtig = $levies->insurance->verzekeringsplichtig;
+		$this->jurisdiction = $wage->jurisdiction;
+		$this->thirtyPercentRulingRate = $levies->wageTax->thirtyPercentRulingRate;
 
 	}//end __construct()
 
@@ -175,17 +245,25 @@ final class CalculationInput {
 	 */
 	public static function fromDecoded(array $decoded): self {
 		return new self(
-			grossMonthlySalaryCents: (int)($decoded['grossMonthlySalaryCents'] ?? 0),
-			taxTableColor: (string)($decoded['taxTableColor'] ?? ''),
-			loonheffingskortingToegepast: (($decoded['loonheffingskortingToegepast'] ?? false) === true),
-			dateOfBirth: (($decoded['dateOfBirth'] ?? null) !== null ? (string)$decoded['dateOfBirth'] : null),
-			period: (string)($decoded['period'] ?? ''),
-			awfTariff: (string)($decoded['awfTariff'] ?? ''),
-			aofTariff: (string)($decoded['aofTariff'] ?? ''),
-			whkPercentage: (float)($decoded['whkPercentage'] ?? 0.0),
-			verzekeringsplichtig: (($decoded['verzekeringsplichtig'] ?? true) === true),
-			jurisdiction: (string)($decoded['jurisdiction'] ?? 'NL'),
-			thirtyPercentRulingRate: (float)($decoded['thirtyPercentRulingRate'] ?? 0.0),
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: (int)($decoded['grossMonthlySalaryCents'] ?? 0),
+				dateOfBirth: (($decoded['dateOfBirth'] ?? null) !== null ? (string)$decoded['dateOfBirth'] : null),
+				period: (string)($decoded['period'] ?? ''),
+				jurisdiction: (string)($decoded['jurisdiction'] ?? 'NL')
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: (string)($decoded['taxTableColor'] ?? ''),
+					loonheffingskortingToegepast: (($decoded['loonheffingskortingToegepast'] ?? false) === true),
+					thirtyPercentRulingRate: (float)($decoded['thirtyPercentRulingRate'] ?? 0.0)
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: (string)($decoded['awfTariff'] ?? ''),
+					aofTariff: (string)($decoded['aofTariff'] ?? ''),
+					whkPercentage: (float)($decoded['whkPercentage'] ?? 0.0),
+					verzekeringsplichtig: (($decoded['verzekeringsplichtig'] ?? true) === true)
+				)
+			)
 		);
 
 	}//end fromDecoded()

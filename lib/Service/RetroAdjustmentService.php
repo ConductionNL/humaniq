@@ -375,16 +375,16 @@ class RetroAdjustmentService {
 		$aofTariff = $this->settingsService->getPayrollAofTariff();
 		$whkPercentage = $this->settingsService->getPayrollWhkPercentage($tables->werknemersverzekeringen()['whkDefault']);
 
-		$input = new CalculationInput(
-			grossMonthlySalaryCents: (int)round($correctedGrossMonthlySalary * 100),
-			taxTableColor: $taxTableColor,
-			loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true),
-			dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null),
-			period: $originalPeriod,
-			awfTariff: $this->awfTariffFor($contract, $employee, $payslip, $originalPeriod),
-			aofTariff: $aofTariff,
-			whkPercentage: $whkPercentage
-		);
+		$input = CalculationInput::fromDecoded([
+			'grossMonthlySalaryCents' => (int)round($correctedGrossMonthlySalary * 100),
+			'taxTableColor' => $taxTableColor,
+			'loonheffingskortingToegepast' => (($employee['loonheffingskortingToegepast'] ?? true) === true),
+			'dateOfBirth' => (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null),
+			'period' => $originalPeriod,
+			'awfTariff' => $this->awfTariffFor($contract, $employee, $payslip, $originalPeriod),
+			'aofTariff' => $aofTariff,
+			'whkPercentage' => $whkPercentage,
+		]);
 
 		$result = $this->calculator->calculate($input, $tables);
 
