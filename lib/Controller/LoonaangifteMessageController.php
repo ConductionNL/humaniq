@@ -137,7 +137,7 @@ class LoonaangifteMessageController extends Controller {
 		try {
 			$filing = $this->caller->container->get('OCA\OpenRegister\Service\ObjectService')->find(id: $filingId, register: $this->settings->getRegisterSlug(), schema: 'LoonaangifteFiling');
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('LoonaangifteMessageController: filing ' . $filingId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->warning('LoonaangifteMessageController: a filing lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 

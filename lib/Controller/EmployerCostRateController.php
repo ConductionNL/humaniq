@@ -141,7 +141,7 @@ class EmployerCostRateController extends Controller {
 			// an overtime-blended base. That is a client error, not a 500.
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
-			$this->logger->error('EmployerCostRateController: ' . $e->getMessage());
+			$this->logger->error('EmployerCostRateController: the cost rate could not be resolved.', ['exceptionClass' => $e::class]);
 			return new JSONResponse(['error' => 'Could not resolve the cost rate.'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 

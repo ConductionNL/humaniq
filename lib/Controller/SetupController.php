@@ -339,10 +339,7 @@ class SetupController extends Controller {
 		try {
 			$imported = $this->demoDataService->install();
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				'Setup install-demo-data failed: ' . $e->getMessage(),
-				['app' => Application::APP_ID, 'exception' => $e]
-			);
+			$this->logger->error('SetupController: installing the demo data failed.', ['exceptionClass' => $e::class]);
 
 			return new JSONResponse(
 				data: ['success' => false, 'message' => 'Could not import the demo data: ' . $e->getMessage()],

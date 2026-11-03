@@ -38,6 +38,8 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use OCA\Humaniq\Tests\Unit\Support\RecordingLogger;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -77,7 +79,7 @@ class TimeEntryControllerTest extends TestCase {
 	 *
 	 * @return TimeEntryController The subject.
 	 */
-	private function controller(?string $uid): TimeEntryController {
+	private function controller(?string $uid, ?LoggerInterface $logger = null): TimeEntryController {
 		$session = $this->createMock(IUserSession::class);
 		if ($uid === null) {
 			$session->method('getUser')->willReturn(null);
@@ -91,7 +93,7 @@ class TimeEntryControllerTest extends TestCase {
 			$this->createMock(IRequest::class),
 			$session,
 			$this->timers,
-			new NullLogger(),
+			($logger ?? new NullLogger()),
 			$this->gateway,
 			$this->createMock(TimeEstimateService::class)
 		);
@@ -253,6 +255,21 @@ class TimeEntryControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertSame('Er is geen medewerker gekoppeld aan je account.', $response->getData()['error']);
 	}//end testARefusalKeepsItsMessage()
+
+	/**
+	 * A refusal is logged at info without its text, which can name the
+	 * person; the response still carries it.
+	 *
+	 * @return void
+	 */
+	public function testARefusalIsLoggedWithoutItsText(): void {
+		$this->timers->method('running')->willThrowException(new HoursWriteRefusedException('Er is geen medewerker gekoppeld aan je account.'));
+		$logger = new RecordingLogger();
+
+		$this->controller('alice', $logger)->timer();
+
+		$this->assertSame([['info', 'TimeEntryController: a timer request was refused.', ['exceptionClass' => HoursWriteRefusedException::class]]], $logger->records);
+	}//end testARefusalIsLoggedWithoutItsText()
 
 	/**
 	 * The day's hours are read with the CALLER's id and the asked date, and

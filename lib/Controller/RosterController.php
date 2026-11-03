@@ -163,7 +163,7 @@ class RosterController extends Controller {
 				schema: 'Roster'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('RosterController: roster ' . $rosterId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->logger->warning('RosterController: a roster lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 

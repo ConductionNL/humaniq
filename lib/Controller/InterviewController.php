@@ -151,7 +151,7 @@ class InterviewController extends Controller {
 				schema: 'Interview'
 			);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('InterviewController: interview ' . $interviewId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('InterviewController: an interview lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
