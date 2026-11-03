@@ -23,6 +23,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @covers \OCA\Humaniq\Standards\Checks\NlPayrollChecks
  * @covers \OCA\Humaniq\Standards\Checks\NlHr21Checks
+ * @uses   \OCA\Humaniq\Standards\Checks\PayrollSampleFields
  */
 class StandardsSeedObjectsGoldenTest extends TestCase {
 
