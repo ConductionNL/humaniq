@@ -98,60 +98,40 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 	public static function seedObjects(): array {
 		return [
 			'Normfunctie' => [
-				[
-					'functiecode' => 'HR21-001',
-					'naam' => 'Medewerker Beheer',
-					'functiegroep' => 'Beheer',
-					'caoSchaal' => '6',
-					'caoSchaalVerified' => false,
-					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
-					'bron' => 'hr21',
-					'status' => 'actief',
-				],
-				[
-					'functiecode' => 'HR21-002',
-					'naam' => 'Senior Beleidsmedewerker',
-					'functiegroep' => 'Beleid',
-					'caoSchaal' => '10',
-					'caoSchaalVerified' => true,
-					'caoSchaalSource' => 'Illustrative proof-case only — flipped to verified:true so the nl-hr21-schaal-consistentie check has one resolvable mapping to demonstrate against; NOT an actual VNG/HR21 confirmation.',
-					'bron' => 'hr21',
-					'status' => 'actief',
-				],
-				[
-					'functiecode' => 'HR21-003',
-					'naam' => 'Beleidsmedewerker',
-					'functiegroep' => 'Beleid',
-					'caoSchaal' => '9',
-					'caoSchaalVerified' => false,
-					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
-					'bron' => 'hr21',
-					'status' => 'actief',
-				],
-				[
-					'functiecode' => 'HR21-004',
-					'naam' => 'Teammanager',
-					'functiegroep' => 'Management',
-					'caoSchaal' => '11',
-					'caoSchaalVerified' => false,
-					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
-					'bron' => 'hr21',
-					'status' => 'actief',
-				],
-				[
-					'functiecode' => 'HR21-005',
-					'naam' => 'Afdelingsmanager',
-					'functiegroep' => 'Management',
-					'caoSchaal' => '13',
-					'caoSchaalVerified' => false,
-					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
-					'bron' => 'hr21',
-					'status' => 'actief',
-				],
+				self::normfunctie(['HR21-001', 'Medewerker Beheer', 'Beheer', '6']),
+				array_merge(
+					self::normfunctie(['HR21-002', 'Senior Beleidsmedewerker', 'Beleid', '10']),
+					[
+						'caoSchaalVerified' => true,
+						'caoSchaalSource' => 'Illustrative proof-case only — flipped to verified:true so the nl-hr21-schaal-consistentie check has one resolvable mapping to demonstrate against; NOT an actual VNG/HR21 confirmation.',
+					]
+				),
+				self::normfunctie(['HR21-003', 'Beleidsmedewerker', 'Beleid', '9']),
+				self::normfunctie(['HR21-004', 'Teammanager', 'Management', '11']),
+				self::normfunctie(['HR21-005', 'Afdelingsmanager', 'Management', '13']),
 			],
 		];
-
 	}//end seedObjects()
+
+	/**
+	 * One active HR21 normfunctie whose CAO scale mapping is not yet confirmed.
+	 *
+	 * @param array{0: string, 1: string, 2: string, 3: string} $row Function code, name, function group and CAO scale.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function normfunctie(array $row): array {
+		return [
+			'functiecode' => $row[0],
+			'naam' => $row[1],
+			'functiegroep' => $row[2],
+			'caoSchaal' => $row[3],
+			'caoSchaalVerified' => false,
+			'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+			'bron' => 'hr21',
+			'status' => 'actief',
+		];
+	}//end normfunctie()
 
 	/**
 	 * The `nl-hr21-vervallen-functie` predicate (REQ-JFM-002): false only for a
