@@ -1154,6 +1154,26 @@ class AgendaReadAccessTest extends TestCase {
 	}//end testAnUnlabelledUnitsManagerOutsideTheMembersAdministrationIsRefused()
 
 	/**
+	 * The manager of a unit without an administration, in the same
+	 * administration as its members, still opens it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAnUnlabelledUnitsManagerInTheMembersAdministrationOpensIt(): void {
+		$world = $this->baseWorld();
+		foreach ($world['Employee'] as $index => $employee) {
+			$world['Employee'][$index]['administrationId'] = 'adm-A';
+		}
+
+		$this->patch = ['Employee' => $world['Employee']];
+		$response = $this->read('mila', 'orgUnit', 'unit-zorg');
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertContains('interview:emp-anna', $this->kinds($response));
+	}//end testAnUnlabelledUnitsManagerInTheMembersAdministrationOpensIt()
+
+	/**
 	 * A unit without an administration whose members belong to different
 	 * administrations has no boundary to climb within: only its own members
 	 * and HR open it.
