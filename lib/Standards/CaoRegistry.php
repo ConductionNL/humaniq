@@ -341,14 +341,8 @@ final class CaoRegistry {
 	 * @return bool
 	 */
 	private static function isWellFormed(mixed $decoded): bool {
-		if (is_array($decoded) === false) {
+		if (is_array($decoded) === false || self::hasRequiredKeys(decoded: $decoded) === false) {
 			return false;
-		}
-
-		foreach (self::REQUIRED_KEYS as $key) {
-			if (array_key_exists($key, $decoded) === false) {
-				return false;
-			}
 		}
 
 		if (is_string($decoded['id']) === false || trim($decoded['id']) === '') {
@@ -356,19 +350,45 @@ final class CaoRegistry {
 		}
 
 		foreach (self::LEAF_GROUPS as $group) {
-			$leaf = $decoded[$group];
-			if (is_array($leaf) === false
-				|| array_key_exists('value', $leaf) === false
-				|| array_key_exists('source', $leaf) === false
-				|| array_key_exists('verified', $leaf) === false
-				|| is_bool($leaf['verified']) === false
-			) {
+			if (self::isLeaf(leaf: $decoded[$group]) === false) {
 				return false;
 			}
 		}
 
 		return true;
 	}//end isWellFormed()
+
+	/**
+	 * Whether a decoded CAO carries every required top-level key (a null value counts).
+	 *
+	 * @param array<string, mixed> $decoded The decoded CAO.
+	 *
+	 * @return bool
+	 */
+	private static function hasRequiredKeys(array $decoded): bool {
+		foreach (self::REQUIRED_KEYS as $key) {
+			if (array_key_exists($key, $decoded) === false) {
+				return false;
+			}
+		}
+
+		return true;
+	}//end hasRequiredKeys()
+
+	/**
+	 * Whether a leaf group carries value, source and a boolean verified.
+	 *
+	 * @param mixed $leaf The leaf group.
+	 *
+	 * @return bool
+	 */
+	private static function isLeaf(mixed $leaf): bool {
+		return is_array($leaf) === true
+			&& array_key_exists('value', $leaf) === true
+			&& array_key_exists('source', $leaf) === true
+			&& array_key_exists('verified', $leaf) === true
+			&& is_bool($leaf['verified']) === true;
+	}//end isLeaf()
 
 	/**
 	 * The absolute path to `lib/Standards/cao/`.

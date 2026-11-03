@@ -56,10 +56,10 @@ class OrgResolutionService {
 	 * Whether an OrgAssignment is active on the given date.
 	 *
 	 * Active means: `startDate` absent or on/before the date, AND `endDate`
-	 * absent or on/after the date. An unparseable date is treated as absent
-	 * (fail-open on malformed data, matching the audit's historical
-	 * endDate-only leniency — the index the audit feeds carries no
-	 * `startDate`, which this method reads as "started").
+	 * absent or on/after the date. A missing or empty date is no bound (the
+	 * index the audit feeds carries no `startDate`, read as "started"). A
+	 * date that is set but cannot be read makes the placement inactive, so
+	 * no manager, cost centre or approval is resolved through it.
 	 *
 	 * @param array<string, mixed> $assignment The OrgAssignment (index row or full object).
 	 * @param string $onDate The reference date, `YYYY-MM-DD`.
@@ -67,6 +67,7 @@ class OrgResolutionService {
 	 * @return bool True when the placement is active on that date.
 	 *
 	 * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 * @spec openspec/specs/mss-team-scope/spec.md#REQ-MSS-008
 	 */
 	public function isActiveOn(array $assignment, string $onDate): bool {
 		$reference = strtotime($onDate);
@@ -74,18 +75,33 @@ class OrgResolutionService {
 			$reference = (new DateTimeImmutable('today'))->getTimestamp();
 		}
 
-		$start = strtotime(trim((string)($assignment['startDate'] ?? '')));
-		if ($start !== false && $start > $reference) {
+		$start = $this->boundOf($assignment['startDate'] ?? null);
+		$end = $this->boundOf($assignment['endDate'] ?? null);
+		if ($start === false || $end === false) {
 			return false;
 		}
 
-		$end = strtotime(trim((string)($assignment['endDate'] ?? '')));
-		if ($end !== false && $end < $reference) {
-			return false;
-		}
-
-		return true;
+		return ($start ?? PHP_INT_MIN) <= $reference && ($end ?? PHP_INT_MAX) >= $reference;
 	}//end isActiveOn()
+
+	/**
+	 * A placement date as a timestamp: null when it is not set, false when it
+	 * is set but cannot be read.
+	 *
+	 * @param mixed $value The date.
+	 *
+	 * @return int|false|null
+	 *
+	 * @spec openspec/specs/mss-team-scope/spec.md#REQ-MSS-008
+	 */
+	private function boundOf(mixed $value): int|false|null {
+		$text = trim((string)($value ?? ''));
+		if ($text === '') {
+			return null;
+		}
+
+		return strtotime($text);
+	}//end boundOf()
 
 	/**
 	 * Resolve the Nextcloud user ids of every manager reachable through the
@@ -228,7 +244,7 @@ class OrgResolutionService {
 	 *
 	 * @spec openspec/changes/approver-in-employee-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
-	private function leavesAdministration(mixed $row, string $administrationId): bool {
+	public function leavesAdministration(mixed $row, string $administrationId): bool {
 		return $administrationId !== '' && $this->administrationOf($row) !== $administrationId;
 	}//end leavesAdministration()
 
@@ -241,7 +257,7 @@ class OrgResolutionService {
 	 *
 	 * @spec openspec/changes/manager-climb-stays-in-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
-	private function administrationOf(mixed $row): string {
+	public function administrationOf(mixed $row): string {
 		if (is_array($row) === false) {
 			return '';
 		}

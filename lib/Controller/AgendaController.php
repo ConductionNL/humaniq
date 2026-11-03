@@ -62,13 +62,16 @@ class AgendaController extends Controller {
 	public const SUBJECT_TYPES = ['employee', 'orgUnit', 'resource'];
 
 	/**
-	 * What a caller who may not read an agenda is told, per subject kind.
+	 * What a caller who may not read an agenda is told, per subject kind,
+	 * and under `hours` what a refused availability or capacity read is told.
 	 *
 	 * @var array<string, string>
 	 */
 	private const REFUSALS = [
 		'employee' => 'Je kunt deze agenda niet openen. Hij is er voor de medewerker, de leidinggevende, HR en teamgenoten.',
-		'orgUnit' => 'Je kunt deze agenda niet openen. Hij is er voor het team, de leidinggevende en HR.',
+		'orgUnit' => 'Je kunt deze agenda niet openen. Hij is er voor het team, de leidinggevenden en HR.',
+		'resource' => 'Je kunt deze agenda niet openen. Meld je eerst aan.',
+		'hours' => 'Je kunt deze uren niet opvragen. Ze zijn er voor het team, de leidinggevenden en HR.',
 	];
 
 	/**
@@ -168,9 +171,10 @@ class AgendaController extends Controller {
 	 * @param string|null $orgUnitId Narrow to one org unit.
 	 * @param string|null $competences Comma-separated competence codes every answered employee must hold.
 	 *
-	 * @return JSONResponse The answer, or 400 when the window is unusable.
+	 * @return JSONResponse The answer, 400 when the window is unusable, or 403 when the caller may not read these hours.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
 	 */
 	#[NoAdminRequired]
 	public function availability(
@@ -188,7 +192,10 @@ class AgendaController extends Controller {
 		}
 
 		$orgUnitId = trim((string)$orgUnitId);
-		$employeeIds = $this->employeeScope(orgUnitId: $orgUnitId, onDate: $window[0]);
+		$scope = $this->access->employeeScope(orgUnitId: $orgUnitId, onDate: $window[0]);
+		if ($scope === null) {
+			return new JSONResponse(['error' => self::REFUSALS['hours']], Http::STATUS_FORBIDDEN);
+		}
 
 		return new JSONResponse([
 			'from' => $window[0]->format('Y-m-d'),
@@ -196,10 +203,10 @@ class AgendaController extends Controller {
 			'orgUnitId' => ($orgUnitId === '' ? null : $orgUnitId),
 			'competences' => $this->codes($competences),
 			'employees' => $this->availability->availability(
-				employeeIds: $employeeIds,
+				employeeIds: $scope['ids'],
 				from: $window[0],
 				to: $window[1],
-				sources: $this->sources(from: $window[0], to: $window[1]),
+				sources: $this->access->visibleSources(sources: $this->sources(from: $window[0], to: $window[1]), scope: $scope),
 				requiredCompetences: $this->codes($competences)
 			),
 		]);
@@ -212,9 +219,10 @@ class AgendaController extends Controller {
 	 * @param string|null $to Last day (ISO date).
 	 * @param string|null $orgUnitId Narrow to one org unit.
 	 *
-	 * @return JSONResponse The answer, or 400 when the window is unusable.
+	 * @return JSONResponse The answer, 400 when the window is unusable, or 403 when the caller may not read these hours.
 	 *
 	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C03
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
 	 */
 	#[NoAdminRequired]
 	public function capacity(?string $from = null, ?string $to = null, ?string $orgUnitId = null): JSONResponse {
@@ -226,14 +234,17 @@ class AgendaController extends Controller {
 			);
 		}
 
-		$orgUnitId = trim((string)$orgUnitId);
+		$scope = $this->access->employeeScope(orgUnitId: trim((string)$orgUnitId), onDate: $window[0]);
+		if ($scope === null) {
+			return new JSONResponse(['error' => self::REFUSALS['hours']], Http::STATUS_FORBIDDEN);
+		}
 
 		return new JSONResponse(
 			$this->capacity->capacity(
-				employeeIds: $this->employeeScope(orgUnitId: $orgUnitId, onDate: $window[0]),
+				employeeIds: $scope['ids'],
 				from: $window[0],
 				to: $window[1],
-				sources: $this->sources(from: $window[0], to: $window[1])
+				sources: $this->access->visibleSources(sources: $this->sources(from: $window[0], to: $window[1]), scope: $scope)
 			)
 		);
 	}//end capacity()
@@ -269,32 +280,6 @@ class AgendaController extends Controller {
 			'nonWorkingDates' => $calendar['dates'],
 		];
 	}//end sources()
-
-	/**
-	 * The employees an answer covers: one org unit's members, or everybody.
-	 *
-	 * @param string $orgUnitId The org unit, or an empty string for all.
-	 * @param DateTimeImmutable $onDate The date a placement must be active on.
-	 *
-	 * @return array<int, string> The employee ids.
-	 *
-	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
-	 */
-	private function employeeScope(string $orgUnitId, DateTimeImmutable $onDate): array {
-		if ($orgUnitId !== '') {
-			return $this->access->members(orgUnitId: $orgUnitId, onDate: $onDate);
-		}
-
-		$employees = [];
-		foreach ($this->gateway->loadAll('Employee') as $employee) {
-			$id = trim((string)($employee['id'] ?? ''));
-			if ($id !== '') {
-				$employees[] = $id;
-			}
-		}
-
-		return $employees;
-	}//end employeeScope()
 
 	/**
 	 * The competence codes a caller asked for.

@@ -145,7 +145,7 @@ class ThirdPartyReportController extends Controller {
 		try {
 			$report = $this->objects()->find(id: $reportId, register: $this->settings->getRegisterSlug(), schema: 'ThirdPartyReport');
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('ThirdPartyReportController: report ' . $reportId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->warning('ThirdPartyReportController: a report lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			$report = null;
 		}
 
@@ -220,7 +220,7 @@ class ThirdPartyReportController extends Controller {
 				->setSchema('hrAdministration')
 				->findAll(['filters' => ['administrationId' => $administrationId], 'limit' => 1]);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('ThirdPartyReportController: administration ' . $administrationId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->warning('ThirdPartyReportController: an administration lookup failed and is answered as not readable.', ['exceptionClass' => $e::class]);
 			return false;
 		}
 

@@ -87,7 +87,7 @@ class PayrollCheckController extends Controller {
 		try {
 			$run = $this->caller->container->get('OCA\OpenRegister\Service\ObjectService')->find(id: $runId, register: $this->settings->getRegisterSlug(), schema: 'PayrollRun');
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('PayrollCheckController: run ' . $runId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollCheckController: a payroll run lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			$run = null;
 		}
 

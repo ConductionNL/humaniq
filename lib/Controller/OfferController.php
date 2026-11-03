@@ -159,7 +159,7 @@ class OfferController extends Controller {
 				schema: 'job-application'
 			);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('OfferController: application ' . $applicationId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('OfferController: an application lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 

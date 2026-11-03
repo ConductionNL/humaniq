@@ -38,8 +38,11 @@ use OCA\Humaniq\Payroll\TaxTables;
 
 /**
  * Dutch payroll / loonheffingen + global GL-control + EU A1 executable checks.
+ *
+ * @spec openspec/specs/hrm-rule-engine/spec.md
  */
 final class NlPayrollChecks implements CheckProvider, SeedsObjects {
+	use PayrollSampleFields;
 
 	/**
 	 * The 30%-ruling maximum term in months (Belastingdienst beschikking; the
@@ -216,6 +219,8 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -225,146 +230,173 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<int, array<string, mixed>>>
+	 *
+	 * @spec exclude Seed samples the standards self-test runs its checks against; no behavioural requirement.
 	 */
 	public static function seedObjects(): array {
 		return [
-			'Employee' => [
-				[
-					'employeeNumber' => 'EMP-NL-0001',
-					'bsn' => '123456782',
-					'firstName' => 'Sanne',
-					'lastName' => 'de Vries',
-					'dateOfBirth' => '1990-04-12',
-					'startDate' => '2022-01-01',
-					'endDate' => null,
-					'grossMonthlySalary' => 3800.00,
-					'taxTableColor' => 'wit',
-					'identityDocumentVerified' => true,
-					'identityDocumentRetainedUntil' => '2035-12-31',
-					'loonheffingenVerklaringOnFile' => true,
-					'postedWorker' => false,
-					'a1CertificateNumber' => null,
-					'a1ValidUntil' => null,
-					'thirtyPercentRulingGranted' => true,
-					'thirtyPercentRulingRate' => 30.0,
-					'thirtyPercentCappedAtWntNorm' => true,
-					// 30-procent-regeling: the seeded ruling qualifies for the reduced
-					// (under-30 master's) salary norm, so its €45.600 annualised salary
-					// clears €36.497 -- nl-30-regeling-salarisnorm passes. (startDate/
-					// endDate are left absent: nl-30-regeling-looptijd-5jaar treats an
-					// incomplete-but-not-contradictory ruling as vacuous, D5.)
-					'thirtyPercentRulingReducedNormApplies' => true,
-					// Cross-jurisdiction-neutral fields so a DE/FR/US audit of this NL
-					// sample also reports zero violations (the matching country checks).
-					'elstamRetrieved' => true,
-					'steuerklasse' => 'I',
-					'w4OnFile' => true,
-					'i9VerifiedWithinThreeDays' => true,
-					'newHireReportedDate' => '2022-01-05',
-					// payroll-sepa-netpay-shillinq: placeholder bank details so
-					// `occ humaniq:rules:audit` stays green under nl-netpay-iban-present
-					// for this seeded run/payslip (both payable).
-					'iban' => 'NL00BANK0000000001',
-					'tenaamstelling' => 'S. de Vries',
-				],
-			],
-			'EmploymentContract' => [
-				[
-					'employeeId' => 'EMP-NL-0001',
-					'type' => 'permanent',
-					'writtenContract' => true,
-					'startDate' => '2022-01-01',
-					'endDate' => null,
-					'hoursPerWeek' => 36.0,
-					'hourlyWage' => 24.36,
-					'cao' => 'CAO Metalektro',
-					'awfTariff' => 'low',
-					// Cross-jurisdiction-neutral fields (DE/FR/US contract checks).
-					'workingTimeDocumented' => true,
-					'overtimeMultiplier' => 1.5,
-					'ftePartOfYearMinijob' => false,
-					'dpaeFiledBeforeStart' => true,
-				],
-			],
-			'Payslip' => [
-				[
-					'employeeId' => 'EMP-NL-0001',
-					'period' => '2026-01',
-					'jurisdiction' => 'NL',
-					'currency' => 'EUR',
-					'grossPay' => 3800.00,
-					'hoursWorked' => 156.0,
-					'loonheffing' => 1102.00,
-					'volksverzekeringen' => 712.50,
-					'werknemersverzekeringen' => 418.00,
-					'zvw' => 231.80,
-					'zvwMode' => 'werkgeversheffing',
-					'zvwRate' => 6.10,
-					'anoniementariefApplied' => false,
-					'appliedTaxRate' => 29.0,
-					'nettoPay' => 2698.00,
-					'vakantiegeldReserved' => 304.00,
-					'vakantiegeldRate' => 8.0,
-					'wkrUsed' => 0.00,
-					'wkrVrijeRuimteRemaining' => 1200.00,
-					'wkrExcess' => 0.00,
-					'wkrEindheffingRate' => null,
-					'pensionContribution' => 190.00,
-					'statementProvided' => true,
-					'showsGrossWage' => true,
-					'showsDeductionBasis' => true,
-					'showsMinimumWage' => true,
-					'showsEmployerEmployeeIds' => true,
-					// Cross-jurisdiction-neutral fields so a DE/FR/US audit of this NL
-					// payslip also reports zero violations (the matching country checks).
-					'lohnsteuer' => 0.00,
-					'solzApplicable' => false,
-					'solidaritaetszuschlag' => 0.00,
-					'churchMember' => false,
-					'kirchensteuer' => 0.00,
-					'kirchensteuerRate' => 9.0,
-					'rvEmployeeRate' => 9.3,
-					'rvEmployerRate' => 9.3,
-					'kvBaseRate' => 14.6,
-					'avRate' => 2.6,
-					'pvBaseRate' => 3.6,
-					'svContributionBase' => 3800.00,
-					'kvPvContributionBase' => 3800.00,
-					'ficaSsRate' => 6.2,
-					'ficaSsWageBaseApplied' => 3800.00,
-					'medicareRate' => 1.45,
-					'additionalMedicareApplied' => false,
-					'federalIncomeTaxWithheld' => 0.00,
-					'cotisations' => 0.00,
-					'pasRate' => 0.0,
-					'prelevementSource' => 0.00,
-					'reductionGeneraleApplied' => false,
-					'netImposable' => 3800.00,
-					'netAPayer' => 2698.00,
-					'montantNetSocial' => 3200.00,
-					'conventionCollective' => 'n/a',
-				],
-			],
-			'PayrollRun' => [
-				[
-					'period' => '2026-01',
-					'administrationId' => 'ADM-001',
-					'jurisdiction' => 'NL',
-					'status' => 'posted',
-					'totalGross' => 3800.00,
-					'totalLoonheffing' => 1102.00,
-					'totalEmployerCharges' => 649.80,
-					'totalWithholdings' => 1102.00,
-					'totalNet' => 2698.00,
-					'glExpensePosted' => 4449.80,
-					'glLiabilityPosted' => 1751.80,
-					'withholdingsClearedToZero' => true,
-					'withholdingLiabilityBalance' => 0.00,
-				],
-			],
+			'Employee'           => [array_merge(self::seedEmployee(), self::seedNeutralEmployee())],
+			'EmploymentContract' => [self::seedContract()],
+			'Payslip'            => [array_merge(self::seedPayslip(), self::seedNeutralPayslip())],
+			'PayrollRun'         => [self::seedPayrollRun()],
 		];
-
 	}//end seedObjects()
+
+	/**
+	 * The seeded Dutch employee: identity, salary, tax table and 30%-ruling fields.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function seedEmployee(): array {
+		return [
+			'employeeNumber' => 'EMP-NL-0001',
+			'bsn' => '123456782',
+			'firstName' => 'Sanne',
+			'lastName' => 'de Vries',
+			'dateOfBirth' => '1990-04-12',
+			'startDate' => '2022-01-01',
+			'endDate' => null,
+			'grossMonthlySalary' => 3800.00,
+			'taxTableColor' => 'wit',
+			'identityDocumentVerified' => true,
+			'identityDocumentRetainedUntil' => '2035-12-31',
+			'loonheffingenVerklaringOnFile' => true,
+			'postedWorker' => false,
+			'a1CertificateNumber' => null,
+			'a1ValidUntil' => null,
+			'thirtyPercentRulingGranted' => true,
+			'thirtyPercentRulingRate' => 30.0,
+			'thirtyPercentCappedAtWntNorm' => true,
+			// 30-procent-regeling: the seeded ruling qualifies for the reduced
+			// (under-30 master's) salary norm, so its €45.600 annualised salary
+			// clears €36.497 -- nl-30-regeling-salarisnorm passes. (startDate/
+			// endDate are left absent: nl-30-regeling-looptijd-5jaar treats an
+			// incomplete-but-not-contradictory ruling as vacuous, D5.)
+			'thirtyPercentRulingReducedNormApplies' => true,
+		];
+	}//end seedEmployee()
+
+	/**
+	 * Employee fields the DE/FR/US checks read, plus placeholder bank details, so a cross-jurisdiction audit of the NL sample also passes.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function seedNeutralEmployee(): array {
+		return [
+			// Cross-jurisdiction-neutral fields so a DE/FR/US audit of this NL
+			// sample also reports zero violations (the matching country checks).
+			'elstamRetrieved' => true,
+			'steuerklasse' => 'I',
+			'w4OnFile' => true,
+			'i9VerifiedWithinThreeDays' => true,
+			'newHireReportedDate' => '2022-01-05',
+			// payroll-sepa-netpay-shillinq: placeholder bank details so
+			// `occ humaniq:rules:audit` stays green under nl-netpay-iban-present
+			// for this seeded run/payslip (both payable).
+			'iban' => 'NL00BANK0000000001',
+			'tenaamstelling' => 'S. de Vries',
+		];
+	}//end seedNeutralEmployee()
+
+	/**
+	 * The seeded employee's permanent contract.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function seedContract(): array {
+		return [
+			'employeeId' => 'EMP-NL-0001',
+			'type' => 'permanent',
+			'writtenContract' => true,
+			'startDate' => '2022-01-01',
+			'endDate' => null,
+			'hoursPerWeek' => 36.0,
+			'hourlyWage' => 24.36,
+			'cao' => 'CAO Metalektro',
+			'awfTariff' => 'low',
+			// Cross-jurisdiction-neutral fields (DE/FR/US contract checks).
+			'workingTimeDocumented' => true,
+			'overtimeMultiplier' => 1.5,
+			'ftePartOfYearMinijob' => false,
+			'dpaeFiledBeforeStart' => true,
+		];
+	}//end seedContract()
+
+	/**
+	 * The seeded January payslip: the Dutch wage, tax and statement fields.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function seedPayslip(): array {
+		return [
+			'employeeId' => 'EMP-NL-0001',
+			'period' => '2026-01',
+			'jurisdiction' => 'NL',
+			'currency' => 'EUR',
+			'grossPay' => 3800.00,
+			'hoursWorked' => 156.0,
+			'loonheffing' => 1102.00,
+			'volksverzekeringen' => 712.50,
+			'werknemersverzekeringen' => 418.00,
+			'zvw' => 231.80,
+			'zvwMode' => 'werkgeversheffing',
+			'zvwRate' => 6.10,
+			'anoniementariefApplied' => false,
+			'appliedTaxRate' => 29.0,
+			'nettoPay' => 2698.00,
+			'vakantiegeldReserved' => 304.00,
+			'vakantiegeldRate' => 8.0,
+			'wkrUsed' => 0.00,
+			'wkrVrijeRuimteRemaining' => 1200.00,
+			'wkrExcess' => 0.00,
+			'wkrEindheffingRate' => null,
+			'pensionContribution' => 190.00,
+			...self::statementFlags(),
+		];
+	}//end seedPayslip()
+
+	/**
+	 * Payslip fields the DE/FR/US checks read, so a cross-jurisdiction audit of the NL payslip also passes.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function seedNeutralPayslip(): array {
+		return [
+			// Cross-jurisdiction-neutral fields so a DE/FR/US audit of this NL
+			// payslip also reports zero violations (the matching country checks).
+			...self::germanTaxAbsent(),
+			...self::germanSocialRates(3800.00),
+			...self::usWithholding(3800.00, 0.00),
+			...self::frenchContributionsAbsent(),
+			'netImposable' => 3800.00,
+			'netAPayer' => 2698.00,
+			'montantNetSocial' => 3200.00,
+			'conventionCollective' => 'n/a',
+		];
+	}//end seedNeutralPayslip()
+
+	/**
+	 * The seeded posted payroll run for January.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function seedPayrollRun(): array {
+		return [
+			'period' => '2026-01',
+			'administrationId' => 'ADM-001',
+			'jurisdiction' => 'NL',
+			'status' => 'posted',
+			'totalGross' => 3800.00,
+			'totalLoonheffing' => 1102.00,
+			'totalEmployerCharges' => 649.80,
+			'totalWithholdings' => 1102.00,
+			'totalNet' => 2698.00,
+			'glExpensePosted' => 4449.80,
+			'glLiabilityPosted' => 1751.80,
+			'withholdingsClearedToZero' => true,
+			'withholdingLiabilityBalance' => 0.00,
+		];
+	}//end seedPayrollRun()
 
 	/**
 	 * Whether a PayrollRun has reached the GL-posting stage (posted/paid) —

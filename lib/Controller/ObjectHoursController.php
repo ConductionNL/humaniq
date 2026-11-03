@@ -102,9 +102,7 @@ class ObjectHoursController extends Controller {
 		try {
 			$week = $this->weekHours->forObject($domainObjectType, $domainObjectRef, $day);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'ObjectHoursController: the week of ' . $domainObjectType . ' ' . $domainObjectRef . ' could not be read: ' . $e->getMessage()
-			);
+			$this->logger->error('ObjectHoursController: the week of an object could not be read.', ['exceptionClass' => $e::class]);
 
 			return new JSONResponse(['error' => 'De uren konden niet worden gelezen.'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}

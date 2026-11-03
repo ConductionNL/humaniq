@@ -131,7 +131,7 @@ class JurisdictionPackController extends Controller {
 			// offending op/ref/handler/bound so the author can fix their pack.
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		} catch (Throwable $e) {
-			$this->logger->error('humaniq: jurisdictiepack-upload mislukt: ' . $e->getMessage(), ['exception' => $e]);
+			$this->logger->error('JurisdictionPackController: a pack upload failed.', ['exceptionClass' => $e::class]);
 			return new JSONResponse(['error' => 'Pack-upload mislukt.'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
@@ -166,7 +166,7 @@ class JurisdictionPackController extends Controller {
 		try {
 			return new JSONResponse(['packs' => $this->packService->list()]);
 		} catch (Throwable $e) {
-			$this->logger->error('humaniq: jurisdictiepacks lezen mislukt: ' . $e->getMessage(), ['exception' => $e]);
+			$this->logger->error('JurisdictionPackController: the packs could not be read.', ['exceptionClass' => $e::class]);
 			return new JSONResponse(['error' => 'De packs konden niet worden gelezen.'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
@@ -194,7 +194,7 @@ class JurisdictionPackController extends Controller {
 		} catch (OutOfBoundsException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
 		} catch (Throwable $e) {
-			$this->logger->error('humaniq: jurisdictiepack intrekken mislukt: ' . $e->getMessage(), ['exception' => $e]);
+			$this->logger->error('JurisdictionPackController: a pack could not be revoked.', ['exceptionClass' => $e::class]);
 			return new JSONResponse(['error' => 'Het pack kon niet worden ingetrokken.'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 

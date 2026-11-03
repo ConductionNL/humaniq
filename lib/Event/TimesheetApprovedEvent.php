@@ -91,46 +91,150 @@ class TimesheetApprovedEvent extends Event {
 	public const GRAIN_UNKNOWN = 'unknown';
 
 	/**
-	 * Constructor.
+	 * The CloudEvents id (stable UUID per emission).
 	 *
-	 * @param string $eventId The CloudEvents id (stable UUID per emission).
-	 * @param string $timesheetId The approved Timesheet's OpenRegister id/uuid.
-	 * @param string $employeeId Reference to the Employee who logged the hours.
-	 * @param string $period The RAW Timesheet.period value, unmodified (`YYYY-MM` | `YYYY-Www` | `YYYY-Wnn-D`).
-	 * @param string $periodGrain One of the `GRAIN_*` constants — the grain `period` is expressed in.
-	 * @param float $hours Total approved hours for the period.
-	 * @param string $projectId Optional project reference the hours are booked against (may be empty).
-	 * @param string $costCenter Optional cost centre / kostenplaats reference (may be empty).
-	 * @param bool $billable Whether the hours are billable to a client/project.
-	 * @param string $clientRef Optional cross-app client/organisation reference (pipelinq domain object uuid; may be empty).
-	 * @param string $administrationId Denormalized multi-administratie tenant scope (may be empty when unset).
-	 * @param string $approvedBy Nextcloud user id of the approving manager.
-	 * @param string $approvedAt ISO 8601 UTC approval timestamp.
-	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) A CloudEvents-shaped
-	 *  cross-app event is a flat, immutable data envelope — every parameter is
-	 *  a scalar the consumer needs directly (mirrors pipelinq's
-	 *  PosStockMovedEvent shape); grouping them into a sub-object would only
-	 *  move the same field count one level down.
+	 * @var string
 	 */
-	public function __construct(
-		private string $eventId,
-		private string $timesheetId,
-		private string $employeeId,
-		private string $period,
-		private string $periodGrain,
-		private float $hours,
-		private string $projectId,
-		private string $costCenter,
-		private bool $billable,
-		private string $clientRef,
-		private string $administrationId,
-		private string $approvedBy,
-		private string $approvedAt,
-	) {
+	private string $eventId;
+
+	/**
+	 * The approved Timesheet's OpenRegister id/uuid.
+	 *
+	 * @var string
+	 */
+	private string $timesheetId;
+
+	/**
+	 * Reference to the Employee who logged the hours.
+	 *
+	 * @var string
+	 */
+	private string $employeeId;
+
+	/**
+	 * The raw period string.
+	 *
+	 * @var string
+	 */
+	private string $period;
+
+	/**
+	 * One of the `GRAIN_*` constants — the grain `period` is expressed in.
+	 *
+	 * @var string
+	 */
+	private string $periodGrain;
+
+	/**
+	 * Total approved hours for the period.
+	 *
+	 * @var float
+	 */
+	private float $hours;
+
+	/**
+	 * Optional project reference the hours are booked against (may be empty).
+	 *
+	 * @var string
+	 */
+	private string $projectId;
+
+	/**
+	 * Optional cost centre / kostenplaats reference (may be empty).
+	 *
+	 * @var string
+	 */
+	private string $costCenter;
+
+	/**
+	 * Whether the hours are billable to a client/project.
+	 *
+	 * @var boolean
+	 */
+	private bool $billable;
+
+	/**
+	 * Optional cross-app client/organisation reference (pipelinq domain object uuid; may be empty).
+	 *
+	 * @var string
+	 */
+	private string $clientRef;
+
+	/**
+	 * Denormalized multi-administratie tenant scope (may be empty when unset).
+	 *
+	 * @var string
+	 */
+	private string $administrationId;
+
+	/**
+	 * Nextcloud user id of the approving manager.
+	 *
+	 * @var string
+	 */
+	private string $approvedBy;
+
+	/**
+	 * ISO 8601 UTC approval timestamp.
+	 *
+	 * @var string
+	 */
+	private string $approvedAt;
+
+	/**
+	 * Constructor. The fields stay flat and in this order, behind the same
+	 * getters, for every consumer of the event.
+	 *
+	 * @param TimesheetEventIds $ids The emission, timesheet, employee and administration.
+	 * @param TimesheetPeriodHours $period The raw period, its grain and the approved hours.
+	 * @param TimesheetBooking $booking Project, cost centre, billable flag and client.
+	 * @param TimesheetApproval $approval Who approved and when.
+	 *
+	 * @spec openspec/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 */
+	public function __construct(TimesheetEventIds $ids, TimesheetPeriodHours $period, TimesheetBooking $booking, TimesheetApproval $approval) {
 		parent::__construct();
+		$this->eventId = $ids->eventId;
+		$this->timesheetId = $ids->timesheetId;
+		$this->employeeId = $ids->employeeId;
+		$this->period = $period->period;
+		$this->periodGrain = $period->periodGrain;
+		$this->hours = $period->hours;
+		$this->projectId = $booking->projectId;
+		$this->costCenter = $booking->costCenter;
+		$this->billable = $booking->billable;
+		$this->clientRef = $booking->clientRef;
+		$this->administrationId = $ids->administrationId;
+		$this->approvedBy = $approval->approvedBy;
+		$this->approvedAt = $approval->approvedAt;
 
 	}//end __construct()
+
+	/**
+	 * The event for one approved timesheet payload.
+	 *
+	 * The raw period is carried unchanged with its grain classified; the
+	 * timesheet id doubles as the event id.
+	 *
+	 * @param array<string, mixed> $timeEntry The approved Timesheet payload.
+	 * @param string $approvedAt The approval timestamp (ISO 8601 UTC).
+	 *
+	 * @return self
+	 *
+	 * @spec openspec/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 */
+	public static function forTimesheet(array $timeEntry, string $approvedAt): self {
+		$uuid = (string)($timeEntry['id'] ?? $timeEntry['uuid'] ?? '');
+		$period = (string)($timeEntry['period'] ?? '');
+
+		return new self(
+			ids: new TimesheetEventIds(eventId: $uuid, timesheetId: $uuid, employeeId: (string)($timeEntry['employeeId'] ?? ''), administrationId: (string)($timeEntry['administrationId'] ?? '')),
+			period: new TimesheetPeriodHours(period: $period, hours: (float)($timeEntry['hours'] ?? 0)),
+			booking: new TimesheetBooking($timeEntry),
+			approval: new TimesheetApproval(approvedBy: (string)($timeEntry['approvedBy'] ?? ''), approvedAt: $approvedAt)
+		);
+
+	}//end forTimesheet()
 
 	/**
 	 * The CloudEvents id (stable per emission).
@@ -289,15 +393,15 @@ class TimesheetApprovedEvent extends Event {
 	 * @spec openspec/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
 	 */
 	public static function classifyPeriodGrain(string $period): string {
-		if (preg_match('/^\d{4}-\d{2}$/', $period) === 1) {
+		if (preg_match('/^\d{4}-(0[1-9]|1[0-2])\z/', $period) === 1) {
 			return self::GRAIN_MONTH;
 		}
 
-		if (preg_match('/^\d{4}-W\d{2}-\d$/', $period) === 1) {
+		if (preg_match('/^\d{4}-W(0[1-9]|[1-4]\d|5[0-3])-[1-7]\z/', $period) === 1) {
 			return self::GRAIN_DAY;
 		}
 
-		if (preg_match('/^\d{4}-W\d{2}$/', $period) === 1) {
+		if (preg_match('/^\d{4}-W(0[1-9]|[1-4]\d|5[0-3])\z/', $period) === 1) {
 			return self::GRAIN_WEEK;
 		}
 

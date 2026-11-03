@@ -1,0 +1,60 @@
+{
+    "estimated per role": {
+        "hasEstimate": true,
+        "estimatedHours": 17.33,
+        "spentHours": 12.75,
+        "remainingHours": 4.58,
+        "roles": [
+            {
+                "role": "jurist",
+                "estimatedHours": 5.0,
+                "spentHours": 8.25,
+                "remainingHours": -3.25,
+                "enforced": true
+            },
+            {
+                "role": "behandelaar",
+                "estimatedHours": 10.33,
+                "spentHours": 1.5,
+                "remainingHours": 8.83,
+                "enforced": false
+            },
+            {
+                "role": null,
+                "estimatedHours": 2.0,
+                "spentHours": 3.0,
+                "remainingHours": -1.0,
+                "enforced": false
+            },
+            {
+                "role": "adviseur",
+                "estimatedHours": 0.0,
+                "spentHours": 0.0,
+                "remainingHours": 0.0,
+                "enforced": false
+            }
+        ]
+    },
+    "no estimate": {
+        "hasEstimate": false,
+        "estimatedHours": null,
+        "spentHours": 12.75,
+        "remainingHours": null,
+        "roles": []
+    },
+    "nothing booked": {
+        "hasEstimate": true,
+        "estimatedHours": 1.0,
+        "spentHours": 0.0,
+        "remainingHours": 1.0,
+        "roles": [
+            {
+                "role": "jurist",
+                "estimatedHours": 1.0,
+                "spentHours": 0.0,
+                "remainingHours": 1.0,
+                "enforced": false
+            }
+        ]
+    }
+}

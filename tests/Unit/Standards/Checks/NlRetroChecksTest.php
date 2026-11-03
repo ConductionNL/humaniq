@@ -207,6 +207,27 @@ class NlRetroChecksTest extends TestCase {
 	}//end testConsistentDeltaPassesThroughRuleEngine()
 
 	/**
+	 * An employee with no tax table colour, or an empty one, is recomputed
+	 * on the white table.
+	 *
+	 * @return void
+	 */
+	public function testAnEmployeeWithoutATableColourIsRecomputedOnTheWhiteTable(): void {
+		[$adjustment, $context] = $this->consistentAdjustmentAndContext();
+		$check = NlRetroChecks::checks()['PayrollAdjustment']['nl-retro-adjustment-consistency'];
+
+		unset($context['retro']['employeesById']['emp-1']['taxTableColor']);
+		$this->assertTrue($check($adjustment, $context), 'No colour: the white table.');
+
+		$context['retro']['employeesById']['emp-1']['taxTableColor'] = '';
+		$this->assertTrue($check($adjustment, $context), 'An empty colour: the white table.');
+
+		$context['retro']['employeesById']['emp-1']['taxTableColor'] = 'groen';
+		$this->assertFalse($check($adjustment, $context), 'The green table gives other figures, so the colour matters.');
+
+	}//end testAnEmployeeWithoutATableColourIsRecomputedOnTheWhiteTable()
+
+	/**
 	 * A tampered delta fires the `nl-retro-adjustment-consistency` violation at
 	 * `mandatory` severity -- through the REAL RuleEngine::evaluate.
 	 *

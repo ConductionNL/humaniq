@@ -159,7 +159,12 @@ class WageTaxRemittanceService {
 			return $this->finish(runId: $runId, fields: $base + ['status' => 'failed', 'errorMessage' => $problem]);
 		}
 
-		$payload = (new WageTaxPayable())->build(run: $run, filing: $filing, amount: $amount, payeeId: $this->settingsService->getWageTaxPayeeId(), account: $this->settingsService->getGlPostAccountWageTaxLiability());
+		try {
+			$payload = (new WageTaxPayable(amount: $amount, payeeId: $this->settingsService->getWageTaxPayeeId(), account: $this->settingsService->getGlPostAccountWageTaxLiability()))->build(run: $run, filing: $filing);
+		} catch (\InvalidArgumentException $e) {
+			return $this->finish(runId: $runId, fields: $base + ['status' => 'failed', 'errorMessage' => $e->getMessage()]);
+		}
+
 		try {
 			$payableId = $this->payables->createOrAdopt(payload: $payload);
 		} catch (\Throwable $e) {

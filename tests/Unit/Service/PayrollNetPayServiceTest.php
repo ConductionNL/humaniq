@@ -514,11 +514,15 @@ class PayrollNetPayServiceTest extends TestCase {
 		$this->assertCount(1, $paymentRunSaves[0]['paymentLines']);
 		$this->assertSame('2026-05-25', $paymentRunSaves[0]['executionDate']);
 
+		// The run is claimed with a pending batch before shillinq is written,
+		// and that same batch is then settled as created.
 		$batchSaves = $this->savedFor($fake, 'PayrollPaymentBatch');
-		$this->assertCount(1, $batchSaves);
-		$this->assertSame('created', $batchSaves[0]['status']);
-		$this->assertEqualsWithDelta(2698.00, $batchSaves[0]['totalAmount'], 0.001);
-		$this->assertSame(1, $batchSaves[0]['lineCount']);
+		$this->assertCount(2, $batchSaves);
+		$this->assertSame('pending', $batchSaves[0]['status']);
+		$this->assertSame('created', $batchSaves[1]['status']);
+		$this->assertSame($batchSaves[0]['id'], $batchSaves[1]['id']);
+		$this->assertEqualsWithDelta(2698.00, $batchSaves[1]['totalAmount'], 0.001);
+		$this->assertSame(1, $batchSaves[1]['lineCount']);
 
 		// humaniq writes NOTHING back to the PayrollRun (design.md D4).
 		$this->assertCount(0, $this->savedFor($fake, 'PayrollRun'));

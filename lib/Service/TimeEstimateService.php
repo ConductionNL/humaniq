@@ -98,33 +98,15 @@ class TimeEstimateService {
 		$mine = $this->forObject(rows: $estimates, type: $domainObjectType, ref: $domainObjectRef);
 		$booked = $this->forObject(rows: $entries, type: $domainObjectType, ref: $domainObjectRef);
 
-		$spentByRole = [];
-		$spent = 0.0;
-		foreach ($booked as $entry) {
-			$hours = $this->hours($entry);
-			$spent += $hours;
-			$role = $this->role($entry);
-			$spentByRole[$role] = (($spentByRole[$role] ?? 0.0) + $hours);
-		}
+		[$spent, $spentByRole] = $this->spent(booked: $booked);
 
 		$roles = [];
 		$estimatedTotal = 0.0;
 		$hasEstimate = false;
 		foreach ($mine as $estimate) {
 			$hasEstimate = true;
-			$role = $this->role($estimate);
-			$estimated = $this->estimatedHours($estimate);
-			$estimatedTotal += $estimated;
-			$roleSpent = (float)($spentByRole[$role] ?? 0.0);
-
-			$roles[] = [
-				'role' => ($role === self::NO_ROLE ? null : $role),
-				'estimatedHours' => round(num: $estimated, precision: 2),
-				'spentHours' => round(num: $roleSpent, precision: 2),
-				// Negative on purpose: an overrun clipped to zero is invisible.
-				'remainingHours' => round(num: ($estimated - $roleSpent), precision: 2),
-				'enforced' => (($estimate['enforced'] ?? false) === true),
-			];
+			$estimatedTotal += $this->estimatedHours($estimate);
+			$roles[] = $this->roleRow(estimate: $estimate, spentByRole: $spentByRole);
 		}
 
 		if ($hasEstimate === false) {
@@ -147,6 +129,49 @@ class TimeEstimateService {
 			'roles' => $roles,
 		];
 	}//end summary()
+
+	/**
+	 * The hours booked in total and per role.
+	 *
+	 * @param array<array<string, mixed>> $booked TimeEntry rows of one object.
+	 *
+	 * @return array{0: float, 1: array<string, float>}
+	 */
+	private function spent(array $booked): array {
+		$spentByRole = [];
+		$spent = 0.0;
+		foreach ($booked as $entry) {
+			$hours = $this->hours($entry);
+			$spent += $hours;
+			$role = $this->role($entry);
+			$spentByRole[$role] = (($spentByRole[$role] ?? 0.0) + $hours);
+		}
+
+		return [$spent, $spentByRole];
+	}//end spent()
+
+	/**
+	 * One estimate's role row: estimated, spent and remaining hours.
+	 *
+	 * @param array<string, mixed> $estimate    One TimeEstimate row.
+	 * @param array<string, float> $spentByRole Booked hours per role.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function roleRow(array $estimate, array $spentByRole): array {
+		$role = $this->role($estimate);
+		$estimated = $this->estimatedHours($estimate);
+		$roleSpent = (float)($spentByRole[$role] ?? 0.0);
+
+		return [
+			'role' => ($role === self::NO_ROLE ? null : $role),
+			'estimatedHours' => round(num: $estimated, precision: 2),
+			'spentHours' => round(num: $roleSpent, precision: 2),
+			// Negative on purpose: an overrun clipped to zero is invisible.
+			'remainingHours' => round(num: ($estimated - $roleSpent), precision: 2),
+			'enforced' => (($estimate['enforced'] ?? false) === true),
+		];
+	}//end roleRow()
 
 	/**
 	 * The refusal for writing one estimate, or null when it may be written.
@@ -229,10 +254,7 @@ class TimeEstimateService {
 
 		$booked = $this->bookedAgainst(
 			entries: $entries,
-			type: $type,
-			ref: $ref,
-			role: $role,
-			entryId: $entryId
+			target: ['type' => $type, 'ref' => $ref, 'role' => $role, 'entryId' => $entryId]
 		);
 
 		$incoming = $this->hours($entry);
@@ -255,30 +277,21 @@ class TimeEstimateService {
 	 * measured against the other entries and not against its own old value.
 	 *
 	 * @param array<array<string, mixed>> $entries Every stored TimeEntry.
-	 * @param string $type The `<app>:<schema>` literal.
-	 * @param string $ref The object's uuid.
-	 * @param string $role The role, or {@see NO_ROLE}.
-	 * @param string $entryId The incoming entry's own id, empty when it is new.
+	 * @param array{type: string, ref: string, role: string, entryId: string} $target The `<app>:<schema>` literal, the object's uuid, the role (or {@see NO_ROLE}) and the id of the entry being booked ('' when new).
 	 *
 	 * @return float The booked hours.
 	 *
 	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-004
 	 */
-	private function bookedAgainst(
-		array $entries,
-		string $type,
-		string $ref,
-		string $role,
-		string $entryId
-	): float {
+	private function bookedAgainst(array $entries, array $target): float {
 		$booked = 0.0;
-		foreach ($this->forObject(rows: $entries, type: $type, ref: $ref) as $other) {
+		foreach ($this->forObject(rows: $entries, type: $target['type'], ref: $target['ref']) as $other) {
 			$otherId = trim((string)($other['id'] ?? ''));
-			if ($otherId !== '' && $otherId === $entryId) {
+			if ($otherId !== '' && $otherId === $target['entryId']) {
 				continue;
 			}
 
-			if ($this->role($other) !== $role) {
+			if ($this->role($other) !== $target['role']) {
 				continue;
 			}
 

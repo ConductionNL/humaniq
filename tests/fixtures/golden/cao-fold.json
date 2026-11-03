@@ -1,0 +1,1189 @@
+{
+    "both, wage 300000, 2026-05": {
+        "fold": {
+            "totalCents": 37200,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7200,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 72.0
+                }
+            ],
+            "caoComponentsTotal": 372.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "both, wage 300000, 2026-02": {
+        "fold": {
+            "totalCents": 37200,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7200,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 72.0
+                }
+            ],
+            "caoComponentsTotal": 372.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "both, wage 300000, mei": {
+        "fold": {
+            "totalCents": 37200,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7200,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 72.0
+                }
+            ],
+            "caoComponentsTotal": 372.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "both, wage 0, 2026-05": {
+        "fold": {
+            "totalCents": 7200,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 0.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 0,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7200,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 0.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 0.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 72.0
+                }
+            ],
+            "caoComponentsTotal": 72.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "both, wage 0, 2026-02": {
+        "fold": {
+            "totalCents": 7200,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 0.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 0,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7200,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 0.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 0.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 72.0
+                }
+            ],
+            "caoComponentsTotal": 72.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "both, wage 0, mei": {
+        "fold": {
+            "totalCents": 7200,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 0.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 0,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7200,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 0.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 0.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 72.0
+                }
+            ],
+            "caoComponentsTotal": 72.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "both, wage 123457, 2026-05": {
+        "fold": {
+            "totalCents": 19546,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 1234.57",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 12346,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7200,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 1234.57",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 123.46
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 72.0
+                }
+            ],
+            "caoComponentsTotal": 195.46,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "both, wage 123457, 2026-02": {
+        "fold": {
+            "totalCents": 19546,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 1234.57",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 12346,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7200,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 1234.57",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 123.46
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 72.0
+                }
+            ],
+            "caoComponentsTotal": 195.46,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "both, wage 123457, mei": {
+        "fold": {
+            "totalCents": 19546,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 1234.57",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 12346,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7200,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 1234.57",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 123.46
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 72.0
+                }
+            ],
+            "caoComponentsTotal": 195.46,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "one timesheet paid": {
+        "fold": {
+            "totalCents": 30000,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                }
+            ],
+            "caoComponentsTotal": 300.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "numeric timesheet ids": {
+        "fold": {
+            "totalCents": 31600,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 2.0,
+                    "pct": 40.0,
+                    "amountCents": 1600,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 2.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 16.0
+                }
+            ],
+            "caoComponentsTotal": 316.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "no hours fold, contract hourly wage": {
+        "fold": {
+            "totalCents": 30000,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                }
+            ],
+            "caoComponentsTotal": 300.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "hours fold without rate, contract hourly wage": {
+        "fold": {
+            "totalCents": 36606,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 6606,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 66.06
+                }
+            ],
+            "caoComponentsTotal": 366.06,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "hours fold rate and contract hourly wage both set": {
+        "fold": {
+            "totalCents": 37650,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7650,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 76.5
+                }
+            ],
+            "caoComponentsTotal": 376.5,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "non-numeric rate": {
+        "fold": {
+            "totalCents": 30000,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "no-hourly-rate",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 0,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "no-hourly-rate",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 0.0
+                }
+            ],
+            "caoComponentsTotal": 300.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "holiday night": {
+        "fold": {
+            "totalCents": 50250,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "public holiday",
+                    "hours": 9.0,
+                    "pct": 100.0,
+                    "amountCents": 20250,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "public holiday",
+                    "hours": 9.0,
+                    "pct": 100.0,
+                    "source": "cao",
+                    "amount": 202.5
+                }
+            ],
+            "caoComponentsTotal": 502.5,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "empty holiday list": {
+        "fold": {
+            "totalCents": 38100,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 8100,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 81.0
+                }
+            ],
+            "caoComponentsTotal": 381.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "starts mid month": {
+        "fold": {
+            "totalCents": 37200,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "amountCents": 7200,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                },
+                {
+                    "key": "nachttoeslag",
+                    "kind": "hourly-surcharge",
+                    "basis": "00:00-06:00 monday, tuesday, wednesday, thursday, friday",
+                    "hours": 9.0,
+                    "pct": 40.0,
+                    "source": "cao",
+                    "amount": 72.0
+                }
+            ],
+            "caoComponentsTotal": 372.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "ends mid month": {
+        "fold": {
+            "totalCents": 30000,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                }
+            ],
+            "caoComponentsTotal": 300.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "nothing named": {
+        "fold": null,
+        "fields": [],
+        "log": []
+    },
+    "blank names only": {
+        "fold": null,
+        "fields": [],
+        "log": []
+    },
+    "refused override": {
+        "fold": {
+            "totalCents": 0,
+            "lines": [],
+            "unresolved": [
+                "ploegentoeslag",
+                "nachttoeslag"
+            ]
+        },
+        "fields": {
+            "caoComponentLines": [],
+            "caoComponentsTotal": 0.0,
+            "caoComponentsUnresolved": [
+                "ploegentoeslag",
+                "nachttoeslag"
+            ]
+        },
+        "log": [
+            [
+                "warning",
+                "humaniq: the CAO components of contract  are not paid: caoComponentOverrides is set without caoComponentOverrideReason; a contract departing from its CAO must give a reason"
+            ]
+        ]
+    },
+    "override with a reason": {
+        "fold": {
+            "totalCents": 50000,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "12% of 3000.00, at least 500.00",
+                    "hours": null,
+                    "pct": 12.0,
+                    "amountCents": 50000,
+                    "source": "contract-override"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "12% of 3000.00, at least 500.00",
+                    "hours": null,
+                    "pct": 12.0,
+                    "source": "contract-override",
+                    "amount": 500.0
+                }
+            ],
+            "caoComponentsTotal": 500.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "minimum pro rata 2026-05": {
+        "fold": {
+            "totalCents": 24194,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "12% of 1000.00, at least 241.94",
+                    "hours": null,
+                    "pct": 12.0,
+                    "amountCents": 24194,
+                    "source": "contract-override"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "12% of 1000.00, at least 241.94",
+                    "hours": null,
+                    "pct": 12.0,
+                    "source": "contract-override",
+                    "amount": 241.94
+                }
+            ],
+            "caoComponentsTotal": 241.94,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "minimum pro rata 2026-02": {
+        "fold": {
+            "totalCents": 17857,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "12% of 1000.00, at least 178.57",
+                    "hours": null,
+                    "pct": 12.0,
+                    "amountCents": 17857,
+                    "source": "contract-override"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "12% of 1000.00, at least 178.57",
+                    "hours": null,
+                    "pct": 12.0,
+                    "source": "contract-override",
+                    "amount": 178.57
+                }
+            ],
+            "caoComponentsTotal": 178.57,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "minimum pro rata mei": {
+        "fold": {
+            "totalCents": 50000,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "12% of 1000.00, at least 500.00",
+                    "hours": null,
+                    "pct": 12.0,
+                    "amountCents": 50000,
+                    "source": "contract-override"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "12% of 1000.00, at least 500.00",
+                    "hours": null,
+                    "pct": 12.0,
+                    "source": "contract-override",
+                    "amount": 500.0
+                }
+            ],
+            "caoComponentsTotal": 500.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "minimum pro rata 2026-04": {
+        "fold": {
+            "totalCents": 12000,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "12% of 1000.00",
+                    "hours": null,
+                    "pct": 12.0,
+                    "amountCents": 12000,
+                    "source": "contract-override"
+                }
+            ],
+            "unresolved": []
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "12% of 1000.00",
+                    "hours": null,
+                    "pct": 12.0,
+                    "source": "contract-override",
+                    "amount": 120.0
+                }
+            ],
+            "caoComponentsTotal": 120.0,
+            "caoComponentsUnresolved": []
+        },
+        "log": []
+    },
+    "unknown component": {
+        "fold": {
+            "totalCents": 30000,
+            "lines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "amountCents": 30000,
+                    "source": "cao"
+                }
+            ],
+            "unresolved": [
+                "bestaat-niet"
+            ]
+        },
+        "fields": {
+            "caoComponentLines": [
+                {
+                    "key": "ploegentoeslag",
+                    "kind": "percentage-of-wage",
+                    "basis": "10% of 3000.00",
+                    "hours": null,
+                    "pct": 10.0,
+                    "source": "cao",
+                    "amount": 300.0
+                }
+            ],
+            "caoComponentsTotal": 300.0,
+            "caoComponentsUnresolved": [
+                "bestaat-niet"
+            ]
+        },
+        "log": []
+    },
+    "unconfirmed agreement": {
+        "fold": {
+            "totalCents": 0,
+            "lines": [],
+            "unresolved": [
+                "ort"
+            ]
+        },
+        "fields": {
+            "caoComponentLines": [],
+            "caoComponentsTotal": 0.0,
+            "caoComponentsUnresolved": [
+                "ort"
+            ]
+        },
+        "log": []
+    },
+    "agreement does not resolve": {
+        "fold": {
+            "totalCents": 0,
+            "lines": [],
+            "unresolved": [
+                "ploegentoeslag",
+                "7"
+            ]
+        },
+        "fields": {
+            "caoComponentLines": [],
+            "caoComponentsTotal": 0.0,
+            "caoComponentsUnresolved": [
+                "ploegentoeslag",
+                "7"
+            ]
+        },
+        "log": []
+    }
+}

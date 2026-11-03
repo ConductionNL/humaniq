@@ -232,37 +232,20 @@ class TimeEntryEventService {
 	 *
 	 * @return TimesheetApprovedEvent The typed cross-app event.
 	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) TimesheetApprovedEvent::classifyPeriodGrain()
-	 *  is a pure, side-effect-free classifier — the same "pure value-object
+	 * @SuppressWarnings(PHPMD.StaticAccess) TimesheetApprovedEvent::forTimesheet()
+	 *  is a pure, side-effect-free named constructor — the same "pure value-object
 	 *  factory method" precedent already used unguarded in PayrollReproduceService.
 	 *
 	 * @spec openspec/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function buildTypedEvent(array $timeEntry): TimesheetApprovedEvent {
-		$uuid = (string)($timeEntry['id'] ?? $timeEntry['uuid'] ?? '');
 		$approvedAt = (string)($timeEntry['approvedAt'] ?? '');
 		$time = $approvedAt;
 		if ($time === '') {
 			$time = $this->now();
 		}
 
-		$period = (string)($timeEntry['period'] ?? '');
-
-		return new TimesheetApprovedEvent(
-			eventId: $uuid,
-			timesheetId: $uuid,
-			employeeId: (string)($timeEntry['employeeId'] ?? ''),
-			period: $period,
-			periodGrain: TimesheetApprovedEvent::classifyPeriodGrain($period),
-			hours: (float)($timeEntry['hours'] ?? 0),
-			projectId: (string)($timeEntry['projectId'] ?? ''),
-			costCenter: (string)($timeEntry['costCenter'] ?? ''),
-			billable: (bool)($timeEntry['billable'] ?? false),
-			clientRef: (string)($timeEntry['clientRef'] ?? ''),
-			administrationId: (string)($timeEntry['administrationId'] ?? ''),
-			approvedBy: (string)($timeEntry['approvedBy'] ?? ''),
-			approvedAt: $time,
-		);
+		return TimesheetApprovedEvent::forTimesheet(timeEntry: $timeEntry, approvedAt: $time);
 
 	}//end buildTypedEvent()
 

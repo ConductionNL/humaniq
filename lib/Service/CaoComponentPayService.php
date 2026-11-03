@@ -59,18 +59,17 @@ class CaoComponentPayService {
 	/**
 	 * The components of one payslip, or null when the contract names none.
 	 *
-	 * @param array<string, mixed>       $contract         The covering contract.
-	 * @param int                        $regularWageCents The regular wage of the period.
-	 * @param array<string, mixed>|null  $hoursPay        The hours fold (timesheetIds, hourlyRate), or null.
-	 * @param list<array<string, mixed>> $entries          Every TimeEntry.
-	 * @param list<string>|null          $nonWorkingDates  Public holidays, or null when unread.
-	 * @param string                     $period           The run's period.
+	 * @param array<string, mixed> $contract The covering contract.
+	 * @param array<string, mixed> $basis    The pay it folds onto: `regularWageCents` (the regular wage of the
+	 *                                       period), `hoursPay` (the hours fold with timesheetIds and hourlyRate,
+	 *                                       or null), `entries` (every TimeEntry), `nonWorkingDates` (public
+	 *                                       holidays, or null when unread) and `period` (the run's period).
 	 *
 	 * @return array{totalCents: int, lines: list<array<string, mixed>>, unresolved: list<string>}|null
 	 *
 	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-003
 	 */
-	public function foldFor(array $contract, int $regularWageCents, ?array $hoursPay, array $entries, ?array $nonWorkingDates, string $period): ?array {
+	public function foldFor(array $contract, array $basis): ?array {
 		if (array_filter((array)($contract['caoComponents'] ?? [])) === []) {
 			return null;
 		}
@@ -82,16 +81,16 @@ class CaoComponentPayService {
 			return ['totalCents' => 0, 'lines' => [], 'unresolved' => array_values(array_map('strval', (array)$contract['caoComponents']))];
 		}
 
-		$paid = array_flip(array_map('strval', (array)($hoursPay['timesheetIds'] ?? [])));
-		$worked = array_values(array_filter($entries, static fn (array $entry): bool => isset($paid[(string)($entry['timesheetId'] ?? '')])));
-		$rate = ($hoursPay['hourlyRate'] ?? ($contract['hourlyWage'] ?? null));
+		$paid = array_flip(array_map('strval', (array)($basis['hoursPay']['timesheetIds'] ?? [])));
+		$worked = array_values(array_filter($basis['entries'], static fn (array $entry): bool => isset($paid[(string)($entry['timesheetId'] ?? '')])));
+		$rate = ($basis['hoursPay']['hourlyRate'] ?? ($contract['hourlyWage'] ?? null));
 		$result = $this->calculator->compute(
 			components: $resolved['components'],
-			regularWageCents: $regularWageCents,
+			regularWageCents: (int)$basis['regularWageCents'],
 			hourlyRate: (is_numeric($rate) === true ? (float)$rate : null),
 			entries: $worked,
-			nonWorkingDates: ($nonWorkingDates ?? []),
-			monthFraction: self::monthFraction(contract: $contract, period: $period)
+			nonWorkingDates: ($basis['nonWorkingDates'] ?? []),
+			monthFraction: self::monthFraction(contract: $contract, period: (string)$basis['period'])
 		);
 
 		return ['totalCents' => $result['totalCents'], 'lines' => $result['lines'], 'unresolved' => $resolved['unresolved']];
