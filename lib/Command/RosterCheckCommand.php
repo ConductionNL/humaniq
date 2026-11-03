@@ -164,16 +164,9 @@ class RosterCheckCommand extends Command {
 	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-005
 	 */
 	private static function printViolation(OutputInterface $output, array $violation): void {
-		$line = sprintf(
-			'    %s %s [%s] %s: %s',
-			(string)$violation['objectType'],
-			(string)$violation['objectId'],
-			(string)$violation['severity'],
-			(string)$violation['ruleId'],
-			(string)$violation['statement']
-		);
-
-		if ((string)$violation['severity'] === 'mandatory') {
+		$severity = (string)$violation['severity'];
+		$line = sprintf('    %s %s [%s] %s: %s', (string)$violation['objectType'], (string)$violation['objectId'], $severity, (string)$violation['ruleId'], (string)$violation['statement']);
+		if ($severity === 'mandatory') {
 			$output->writeln('<error>' . $line . '</error>');
 			return;
 		}
