@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use Fiber;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\SettingsService;
@@ -111,6 +112,83 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 	}//end testAClaimNextToAnotherActiveRecordWithdraws()
 
 	/**
+	 * Two processes that both write their claim before either reads the
+	 * run's records, and both read before either withdraws, see each
+	 * other's claim, both withdraw, and nothing reaches shillinq. A process
+	 * that read before it claimed would see no rival and write.
+	 *
+	 * @param string $kind       Which service.
+	 * @param string $target     The shillinq schema.
+	 * @param string $ownSchema  The service's own record schema.
+	 * @param string $handOff    The hand-off method.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider handoffs
+	 */
+	public function testTwoClaimsWrittenBeforeEitherCheckBothWithdraw(string $kind, string $target, string $ownSchema, string $handOff): void {
+		$store = $this->store();
+		$store->beforeSave = static function (string $schema): void {
+			if (Fiber::getCurrent() !== null) {
+				Fiber::suspend('save ' . $schema);
+			}
+		};
+		$store->beforeFindAll = static function (string $schema): void {
+			if (Fiber::getCurrent() !== null) {
+				Fiber::suspend('read ' . $schema);
+			}
+		};
+		$first = new Fiber(fn (): array => $this->service($kind, $store)->$handOff($this->payrollRun()));
+		$second = new Fiber(fn (): array => $this->service($kind, $store)->$handOff($this->payrollRun()));
+
+		$this->stepUntil($second, 'save ' . $ownSchema);
+		$this->stepUntil($first, 'save ' . $ownSchema);
+		$this->assertSame('read ' . $ownSchema, $first->resume(), 'The first claim is written.');
+		$this->assertSame('read ' . $ownSchema, $second->resume(), 'The second claim is written.');
+		$this->stepUntil($first, 'save ' . $ownSchema);
+		$this->stepUntil($second, 'save ' . $ownSchema);
+		$outcomes = [$this->finish($first), $this->finish($second)];
+
+		$this->assertSame([], $store->savesOf($target), 'Nothing reaches shillinq.');
+		$this->assertSame(['pending', 'pending'], array_column($outcomes, 'status'));
+		$claims = $store->savesOf($ownSchema);
+		$this->assertSame(['pending', 'pending', 'failed', 'failed'], array_column($claims, 'status'));
+	}//end testTwoClaimsWrittenBeforeEitherCheckBothWithdraw()
+
+	/**
+	 * Runs a process until it pauses at the given step, before that save
+	 * or read happens.
+	 *
+	 * @param Fiber  $process The process.
+	 * @param string $step    The step, such as `save PayrollGLPost`.
+	 *
+	 * @return void
+	 */
+	private function stepUntil(Fiber $process, string $step): void {
+		$at = ($process->isStarted() === false ? $process->start() : $process->resume());
+		while ($at !== $step && $process->isTerminated() === false) {
+			$at = $process->resume();
+		}
+
+		$this->assertSame($step, $at, 'The process reaches ' . $step . '.');
+	}//end stepUntil()
+
+	/**
+	 * Runs a process to its end and returns its outcome.
+	 *
+	 * @param Fiber $process The process.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function finish(Fiber $process): array {
+		while ($process->isTerminated() === false) {
+			$process->resume();
+		}
+
+		return $process->getReturn();
+	}//end finish()
+
+	/**
 	 * A pending record older than the claim window is a crash left behind:
 	 * it is superseded and the run is handed over.
 	 *
@@ -176,7 +254,8 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 	}//end payrollRun()
 
 	/**
-	 * A shared in-memory register with hooks before a save and after a read.
+	 * A shared in-memory register with hooks before a save and before and
+	 * after a read.
 	 * Every saved row carries `@self.updated`, as OpenRegister's do.
 	 *
 	 * @return object
@@ -206,6 +285,11 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 			 * @var callable|null
 			 */
 			public $afterFindAll = null;
+
+			/**
+			 * @var callable|null
+			 */
+			public $beforeFindAll = null;
 
 			/**
 			 * @var string
@@ -243,6 +327,10 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 			 */
 			public function findAll(array $options = []): array {
 				$schema = $this->schema;
+				if ($this->beforeFindAll !== null) {
+					($this->beforeFindAll)($schema);
+				}
+
 				$rows = ($this->rows[$schema] ?? []);
 				if ($this->afterFindAll !== null) {
 					($this->afterFindAll)($schema);
