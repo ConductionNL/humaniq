@@ -252,7 +252,7 @@ class PayrollGLPostService {
 		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
 		$journalNumber = $this->journalNumber($run);
 		$claim = $this->createGlPost(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'journalNumber' => $journalNumber]);
-		if ((new PendingClaims(self::ACTIVE_STATUSES))->hasRival($this->glPostsForRun($runId), $claim) === true) {
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->hasRival($this->glPostsWhere('journalNumber', $journalNumber), $claim) === true) {
 			$withdrawn = $this->saveGlPost($claim, ['status' => 'failed', 'errorMessage' => 'Withdrawn: another process is already posting this payroll run.']);
 			return $this->outcome($runId, 'pending', 'Another process is already posting this payroll run.', $withdrawn);
 		}
@@ -608,9 +608,9 @@ class PayrollGLPostService {
 	 */
 	private function findJournalEntryByNumber(string $journalNumber): ?array {
 		try {
-			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000]);
+			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000, 'filters' => ['journalNumber' => $journalNumber]], false, false);
 		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollGLPostService: kon shillinq JournalEntry niet doorzoeken: ' . $e->getMessage());
+			$this->logger->warning('PayrollGLPostService: the shillinq JournalEntry lookup failed.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -624,29 +624,33 @@ class PayrollGLPostService {
 	}//end findJournalEntryByNumber()
 
 	/**
-	 * The PayrollGLPost rows referencing a given PayrollRun.
+	 * The PayrollGLPost rows whose field holds the value: those of one run
+	 * (`payrollRunId`), or every claim on one journal number
+	 * (`journalNumber`). Read outside the caller's RBAC and organisation, as
+	 * they are written, so a cron run and a user run see each other.
 	 *
-	 * @param string $runId The PayrollRun id.
+	 * @param string $field The field, `payrollRunId` or `journalNumber`.
+	 * @param string $value Its value.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function glPostsForRun(string $runId): array {
+	private function glPostsWhere(string $field, string $value): array {
 		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::GLPOST_SCHEMA)->findAll(['limit' => 10000]);
+			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::GLPOST_SCHEMA)->findAll(['limit' => 10000, 'filters' => [$field => $value]], false, false);
 		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollGLPostService: kon PayrollGLPost niet laden: ' . $e->getMessage());
+			$this->logger->warning('PayrollGLPostService: the PayrollGLPost lookup failed.', ['exceptionClass' => $e::class]);
 			return [];
 		}
 
 		$out = [];
 		foreach ($this->normaliseRows($rows) as $row) {
-			if ((string)($row['payrollRunId'] ?? '') === $runId) {
+			if ((string)($row[$field] ?? '') === $value) {
 				$out[] = $row;
 			}
 		}
 
 		return $out;
-	}//end glPostsForRun()
+	}//end glPostsWhere()
 
 	/**
 	 * The active (pending/posted) PayrollGLPost for a run, if any — the
@@ -657,7 +661,7 @@ class PayrollGLPostService {
 	 * @return array<string, mixed>|null
 	 */
 	private function activeGlPostForRun(string $runId): ?array {
-		foreach ($this->glPostsForRun($runId) as $row) {
+		foreach ($this->glPostsWhere('payrollRunId', $runId) as $row) {
 			if (in_array((string)($row['status'] ?? ''), self::ACTIVE_STATUSES, true) === true) {
 				return $row;
 			}

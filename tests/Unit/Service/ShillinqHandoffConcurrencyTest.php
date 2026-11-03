@@ -189,6 +189,108 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 	}//end finish()
 
 	/**
+	 * A run handed off by cron or occ, then again by a user whose active
+	 * organisation is another one, reaches shillinq once: the hand-off
+	 * reads its records outside the caller's organisation, as it writes
+	 * them.
+	 *
+	 * @param string $kind       Which service.
+	 * @param string $target     The shillinq schema.
+	 * @param string $ownSchema  The service's own record schema.
+	 * @param string $handOff    The hand-off method.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider handoffs
+	 */
+	public function testACronRunAndAUserRunInAnotherOrganisationHandOffOnce(string $kind, string $target, string $ownSchema, string $handOff): void {
+		$store = $this->store();
+
+		$first = $this->service($kind, $store)->$handOff($this->payrollRun());
+		$store->organisation = 'other-org';
+		$second = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertContains($first['status'], ['created', 'posted']);
+		$this->assertContains($second['status'], ['created', 'posted']);
+		$this->assertCount(1, $store->savesOf($target), 'One record reaches shillinq.');
+	}//end testACronRunAndAUserRunInAnotherOrganisationHandOffOnce()
+
+	/**
+	 * A user in another organisation sees the shillinq record a cron run
+	 * wrote, and adopts it; and sees a cron run's fresh claim, and writes
+	 * nothing.
+	 *
+	 * @param string $kind       Which service.
+	 * @param string $target     The shillinq schema.
+	 * @param string $ownSchema  The service's own record schema.
+	 * @param string $handOff    The hand-off method.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider handoffs
+	 */
+	public function testAUserInAnotherOrganisationSeesWhatACronRunWrote(string $kind, string $target, string $ownSchema, string $handOff): void {
+		$number = ($kind === 'netpay' ? 'runNumber' : 'journalNumber');
+		$value = ($kind === 'netpay' ? 'HRMQ-NETPAY-2026-05-ADM-001' : 'HRMQ-LOON-2026-05-ADM-001');
+		$store = $this->store();
+		$store->rows[$target] = [['id' => 'by-cron', $number => $value, '_org' => 'default']];
+		$store->organisation = 'other-org';
+
+		$adopted = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertContains($adopted['status'], ['created', 'posted']);
+		$this->assertSame([], $store->savesOf($target), 'The cron run\'s shillinq record is adopted.');
+
+		$store = $this->store();
+		$store->rows[$ownSchema] = [['id' => 'cron-claim', 'payrollRunId' => 'run-1', 'status' => 'pending', $number => $value, '_org' => 'default', '@self' => ['id' => 'cron-claim', 'updated' => gmdate('c', time() - 60)]]];
+		$store->organisation = 'other-org';
+
+		$blocked = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertSame('pending', $blocked['status'], 'The cron run\'s fresh claim blocks the user run.');
+		$this->assertSame([], $store->savesOf($target));
+	}//end testAUserInAnotherOrganisationSeesWhatACronRunWrote()
+
+	/**
+	 * Many older records of other runs do not push a fresh claim, or an
+	 * existing shillinq record, out of the read: the reads filter on the
+	 * run's number in the query, not after a limited page.
+	 *
+	 * @param string $kind       Which service.
+	 * @param string $target     The shillinq schema.
+	 * @param string $ownSchema  The service's own record schema.
+	 * @param string $handOff    The hand-off method.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider handoffs
+	 */
+	public function testOlderRecordsBeyondOnePageDoNotHideTheRunsRecords(string $kind, string $target, string $ownSchema, string $handOff): void {
+		$number = ($kind === 'netpay' ? 'runNumber' : 'journalNumber');
+		$value = ($kind === 'netpay' ? 'HRMQ-NETPAY-2026-05-ADM-001' : 'HRMQ-LOON-2026-05-ADM-001');
+		$store = $this->store();
+		$store->honourQuery = true;
+		for ($i = 0; $i < 10000; $i++) {
+			$store->rows[$ownSchema][] = ['id' => 'old-' . $i, 'payrollRunId' => 'run-old-' . $i, 'status' => 'failed', $number => 'OLD-' . $i];
+			$store->rows[$target][] = ['id' => 'old-' . $i, $number => 'OLD-' . $i];
+		}
+
+		$store->rows[$target][] = ['id' => 'mine', $number => $value];
+		$adopted = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertContains($adopted['status'], ['created', 'posted']);
+		$this->assertSame([], $store->savesOf($target), 'The existing shillinq record is adopted.');
+
+		$store->rows[$ownSchema] = array_values(array_filter($store->rows[$ownSchema], static fn (array $row): bool => ($row['payrollRunId'] ?? '') !== 'run-1'));
+		$store->rows[$target] = array_values(array_filter($store->rows[$target], static fn (array $row): bool => $row['id'] !== 'mine'));
+		$store->rows[$ownSchema][] = ['id' => 'busy', 'payrollRunId' => 'run-2', 'status' => 'pending', $number => $value, '@self' => ['id' => 'busy', 'updated' => gmdate('c', time() - 60)]];
+		$blocked = $this->service($kind, $store)->$handOff($this->payrollRun());
+
+		$this->assertSame('pending', $blocked['status'], 'A fresh claim on the same number, past the first page, withdraws this one.');
+		$this->assertSame([], $store->savesOf($target));
+	}//end testOlderRecordsBeyondOnePageDoNotHideTheRunsRecords()
+
+	/**
 	 * A pending record older than the claim window is a crash left behind:
 	 * it is superseded and the run is handed over.
 	 *
@@ -292,6 +394,21 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 			public $beforeFindAll = null;
 
 			/**
+			 * The acting user's organisation; null is the system context
+			 * (cron, occ), which reads every organisation.
+			 *
+			 * @var string|null
+			 */
+			public ?string $organisation = null;
+
+			/**
+			 * Whether findAll applies its filters and limit, as OpenRegister does.
+			 *
+			 * @var bool
+			 */
+			public bool $honourQuery = false;
+
+			/**
 			 * @var string
 			 */
 			private string $schema = '';
@@ -321,23 +438,56 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 			}//end setSchema()
 
 			/**
-			 * @param array<string, mixed> $options Query options.
+			 * Rows of another organisation are hidden from a user context
+			 * unless multitenancy is off; rows written by the system belong
+			 * to the default organisation.
+			 *
+			 * @param array<string, mixed> $options       Query options.
+			 * @param bool                 $_rbac         RBAC flag.
+			 * @param bool                 $_multitenancy Multitenancy flag.
 			 *
 			 * @return list<array<string, mixed>>
 			 */
-			public function findAll(array $options = []): array {
+			public function findAll(array $options = [], bool $_rbac = true, bool $_multitenancy = true): array {
 				$schema = $this->schema;
 				if ($this->beforeFindAll !== null) {
 					($this->beforeFindAll)($schema);
 				}
 
-				$rows = ($this->rows[$schema] ?? []);
+				$rows = $this->visibleRows(($this->rows[$schema] ?? []), $options, $_multitenancy);
 				if ($this->afterFindAll !== null) {
 					($this->afterFindAll)($schema);
 				}
 
 				return $rows;
 			}//end findAll()
+
+			/**
+			 * @param list<array<string, mixed>> $rows          The stored rows.
+			 * @param array<string, mixed>       $options       Query options.
+			 * @param bool                       $_multitenancy Multitenancy flag.
+			 *
+			 * @return list<array<string, mixed>>
+			 */
+			private function visibleRows(array $rows, array $options, bool $_multitenancy): array {
+				$organisation = $this->organisation;
+				if ($_multitenancy === true && $organisation !== null) {
+					$rows = array_values(array_filter($rows, static fn (array $row): bool => in_array(($row['_org'] ?? null), [null, $organisation], true)));
+				}
+
+				if ($this->honourQuery === true) {
+					foreach (($options['filters'] ?? []) as $field => $value) {
+						$rows = array_values(array_filter($rows, static fn (array $row): bool => ($row[$field] ?? null) === $value));
+					}
+
+					$rows = array_slice($rows, 0, (int)($options['limit'] ?? count($rows)));
+				}
+
+				return array_map(static function (array $row): array {
+					unset($row['_org']);
+					return $row;
+				}, $rows);
+			}//end visibleRows()
 
 			/**
 			 * @param array<string, mixed> $object The object.
@@ -357,8 +507,15 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 				$id = ($uuid ?? ($schema . '-' . $this->nextId++));
 				$saved = array_merge($object, ['id' => $id, '@self' => ['id' => $id, 'updated' => gmdate('c')]]);
 				$this->saves[] = ['schema' => $schema] + $saved;
+				$organisation = ($this->organisation ?? 'default');
+				foreach (($this->rows[(string)$schema] ?? []) as $row) {
+					if (($row['id'] ?? null) === $id) {
+						$organisation = ($row['_org'] ?? $organisation);
+					}
+				}
+
 				$rows = array_values(array_filter(($this->rows[(string)$schema] ?? []), static fn (array $row): bool => ($row['id'] ?? null) !== $id));
-				$rows[] = $saved;
+				$rows[] = $saved + ['_org' => $organisation];
 				$this->rows[(string)$schema] = $rows;
 
 				return $saved;

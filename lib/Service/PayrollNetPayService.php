@@ -246,7 +246,7 @@ class PayrollNetPayService {
 		$runId = $this->idOf($run);
 		$runNumber = $this->runNumber($run);
 		$claim = $this->createBatch(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'runNumber' => $runNumber]);
-		if ((new PendingClaims(self::ACTIVE_STATUSES))->hasRival($this->batchesForRun($runId), $claim) === true) {
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->hasRival($this->batchesWhere('runNumber', $runNumber), $claim) === true) {
 			$withdrawn = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Ingetrokken: een andere verwerking zet deze loonrun al klaar.']);
 			return $this->outcome($runId, 'pending', 'Deze loonrun wordt al door een andere verwerking klaargezet.', $withdrawn);
 		}
@@ -539,9 +539,9 @@ class PayrollNetPayService {
 	 */
 	private function findPaymentRunByNumber(string $runNumber): ?array {
 		try {
-			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000]);
+			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000, 'filters' => ['runNumber' => $runNumber]], false, false);
 		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollNetPayService: kon shillinq PaymentRun niet doorzoeken: ' . $e->getMessage());
+			$this->logger->warning('PayrollNetPayService: the shillinq PaymentRun lookup failed.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -555,29 +555,33 @@ class PayrollNetPayService {
 	}//end findPaymentRunByNumber()
 
 	/**
-	 * The PayrollPaymentBatch rows referencing a given PayrollRun.
+	 * The PayrollPaymentBatch rows whose field holds the value: those of one
+	 * run (`payrollRunId`), or every claim on one run number (`runNumber`).
+	 * Read outside the caller's RBAC and organisation, as they are written,
+	 * so a cron run and a user run see each other.
 	 *
-	 * @param string $runId The PayrollRun id.
+	 * @param string $field The field, `payrollRunId` or `runNumber`.
+	 * @param string $value Its value.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function batchesForRun(string $runId): array {
+	private function batchesWhere(string $field, string $value): array {
 		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::BATCH_SCHEMA)->findAll(['limit' => 10000]);
+			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::BATCH_SCHEMA)->findAll(['limit' => 10000, 'filters' => [$field => $value]], false, false);
 		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollNetPayService: kon PayrollPaymentBatch niet laden: ' . $e->getMessage());
+			$this->logger->warning('PayrollNetPayService: the PayrollPaymentBatch lookup failed.', ['exceptionClass' => $e::class]);
 			return [];
 		}
 
 		$out = [];
 		foreach ($this->normaliseRows($rows) as $row) {
-			if ((string)($row['payrollRunId'] ?? '') === $runId) {
+			if ((string)($row[$field] ?? '') === $value) {
 				$out[] = $row;
 			}
 		}
 
 		return $out;
-	}//end batchesForRun()
+	}//end batchesWhere()
 
 	/**
 	 * The active (pending/created) PayrollPaymentBatch for a run, if any --
@@ -588,7 +592,7 @@ class PayrollNetPayService {
 	 * @return array<string, mixed>|null
 	 */
 	private function activeBatchForRun(string $runId): ?array {
-		foreach ($this->batchesForRun($runId) as $row) {
+		foreach ($this->batchesWhere('payrollRunId', $runId) as $row) {
 			if (in_array((string)($row['status'] ?? ''), self::ACTIVE_STATUSES, true) === true) {
 				return $row;
 			}
