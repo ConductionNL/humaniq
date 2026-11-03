@@ -119,6 +119,8 @@ class TimesheetApprovedEventTest extends TestCase {
 			'week-day 0' => ['2026-W29-0', TimesheetApprovedEvent::GRAIN_UNKNOWN],
 			'week-day 8' => ['2026-W29-8', TimesheetApprovedEvent::GRAIN_UNKNOWN],
 			'week-day, Monday' => ['2026-W29-1', TimesheetApprovedEvent::GRAIN_DAY],
+			'week-day in week 54' => ['2026-W54-1', TimesheetApprovedEvent::GRAIN_UNKNOWN],
+			'week-day in week 00' => ['2026-W00-1', TimesheetApprovedEvent::GRAIN_UNKNOWN],
 		];
 
 	}//end periodGrainProvider()

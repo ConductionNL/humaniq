@@ -266,10 +266,14 @@ class PayrollGLPostServiceTest extends TestCase {
 		$this->assertCount(4, $built['lines']);
 
 		$bySide = [];
+		$descriptions = [];
 		foreach ($built['lines'] as $line) {
 			$bySide[$line['accountNumber']] = $line['amount'];
+			$descriptions[$line['accountNumber']] = $line['description'];
 		}
 
+		$this->assertSame('Loonkosten bruto', $descriptions['4001']);
+		$this->assertSame('Werkgeverslasten sociale premies', $descriptions['4002']);
 		$this->assertEqualsWithDelta(3800.00, $bySide['4001'], 0.001);
 		$this->assertEqualsWithDelta(649.80, $bySide['4002'], 0.001);
 		$this->assertEqualsWithDelta(1102.00, $bySide['1701'], 0.001);

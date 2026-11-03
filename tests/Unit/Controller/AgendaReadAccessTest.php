@@ -1260,4 +1260,35 @@ class AgendaReadAccessTest extends TestCase {
 		$this->assertRefused($this->read('carl', 'employee', 'emp-anna'));
 	}//end testAPlacementOnItsFirstOrLastDayCounts()
 
+	/**
+	 * A unit labelled with administration A whose members carry no label of
+	 * their own sits in A, so its manager in B is refused on the agenda, the
+	 * availability and the capacity of that unit: the unit's own label wins
+	 * over its unlabelled members.
+	 *
+	 * @return void
+	 */
+	public function testAUnitsOwnLabelWinsOverItsUnlabelledMembers(): void {
+		$world = $this->baseWorld();
+		foreach ($world['Employee'] as &$employee) {
+			if ($employee['id'] === 'emp-mila') {
+				$employee['administrationId'] = 'B';
+			}
+		}
+
+		unset($employee);
+		foreach ($world['OrgUnit'] as &$unit) {
+			if ($unit['id'] === 'unit-zorg') {
+				$unit['administrationId'] = 'A';
+			}
+		}
+
+		unset($unit);
+		$this->patch = ['Employee' => $world['Employee'], 'OrgUnit' => $world['OrgUnit']];
+
+		$this->assertRefused($this->controller('mila')->agenda(subjectType: 'orgUnit', subjectId: 'unit-zorg', from: '2026-09-01', to: '2026-09-07'));
+		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller('mila')->availability(from: '2026-09-01', to: '2026-09-07', orgUnitId: 'unit-zorg')->getStatus());
+		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller('mila')->capacity(from: '2026-09-01', to: '2026-09-07', orgUnitId: 'unit-zorg')->getStatus());
+	}//end testAUnitsOwnLabelWinsOverItsUnlabelledMembers()
+
 }//end class
