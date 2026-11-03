@@ -60,14 +60,7 @@ trait FindsCoveringContract {
 	 * @return array<string, mixed>|null
 	 */
 	private function coveringContract(array $employee, array $contractsByEmployeeKey, string $period): ?array {
-		$keys = array_filter(
-			[
-				$this->idOf($employee),
-				(string)($employee['@self']['slug'] ?? ''),
-				trim((string)($employee['employeeNumber'] ?? '')),
-			],
-			static fn (string $key): bool => $key !== ''
-		);
+		$keys = $this->employeeKeys($employee);
 
 		foreach ($keys as $key) {
 			foreach (($contractsByEmployeeKey[$key] ?? []) as $contract) {

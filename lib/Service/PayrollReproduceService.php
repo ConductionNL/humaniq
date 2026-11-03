@@ -384,6 +384,28 @@ final class PayrollReproduceService {
 	}//end centsEqual()
 
 	/**
+	 * Find one object by id (uuid) within a schema.
+	 *
+	 * @param string $schema The schema slug.
+	 * @param string $id The object id (uuid).
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findById(string $schema, string $id): ?array {
+		if ($id === '') {
+			return null;
+		}
+
+		foreach ($this->loadAll($schema) as $row) {
+			if ($this->idOf($row) === $id) {
+				return $row;
+			}
+		}
+
+		return null;
+	}//end findById()
+
+	/**
 	 * Load every object of a schema, normalised to plain arrays.
 	 *
 	 * @param string $schema The schema slug.
@@ -453,28 +475,4 @@ final class PayrollReproduceService {
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
-	/**
-	 * Find one object by id (uuid) within a schema — the `loadAll()` +
-	 * filter pattern this codebase's services use throughout (no dedicated
-	 * find-by-uuid call on `ObjectService`).
-	 *
-	 * @param string $schema The schema slug.
-	 * @param string $id The object id (uuid).
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function findById(string $schema, string $id): ?array {
-		if ($id === '') {
-			return null;
-		}
-
-		foreach ($this->loadAll($schema) as $row) {
-			if ($this->idOf($row) === $id) {
-				return $row;
-			}
-		}
-
-		return null;
-	}//end findById()
 }//end class

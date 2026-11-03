@@ -40,9 +40,7 @@ trait ResolvesObjectServiceForAdmin {
 		// install — which is rule 3's promise that the app still explains
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
+			throw new RuntimeException('humaniq requires the OpenRegister app, which is not installed on this instance.');
 		}
 
 		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');

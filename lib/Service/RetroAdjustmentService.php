@@ -58,6 +58,7 @@ use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
 use OCA\Humaniq\Support\LoadsAllRows;
 use OCA\Humaniq\Support\ChecksPeriodCoverage;
+use OCA\Humaniq\Support\ReadsEmployeeKeys;
 
 /**
  * Computes + settles TWK delta corrections against sealed payslips.
@@ -70,6 +71,7 @@ class RetroAdjustmentService {
 	use ResolvesObjectService;
 	use LoadsAllRows;
 	use ChecksPeriodCoverage;
+	use ReadsEmployeeKeys;
 
 	/**
 	 * Max objects loaded per type.
@@ -507,14 +509,7 @@ class RetroAdjustmentService {
 	 * @return array<string, mixed>|null
 	 */
 	private function coveringContract(array $employee, string $originalPeriod): ?array {
-		$keys = array_filter(
-			[
-				$this->idOf($employee),
-				(string)($employee['@self']['slug'] ?? ''),
-				trim((string)($employee['employeeNumber'] ?? '')),
-			],
-			static fn (string $key): bool => $key !== ''
-		);
+		$keys = $this->employeeKeys($employee);
 
 		foreach ($this->loadAll('EmploymentContract') as $contract) {
 			$key = trim((string)($contract['employeeId'] ?? ''));

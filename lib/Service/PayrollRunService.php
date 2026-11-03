@@ -186,6 +186,7 @@ use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
 use OCA\Humaniq\Support\LoadsAllRows;
 use OCA\Humaniq\Support\ChecksPeriodCoverage;
+use OCA\Humaniq\Support\ReadsEmployeeKeys;
 use OCA\Humaniq\Support\FindsCoveringContract;
 
 /**
@@ -197,6 +198,7 @@ class PayrollRunService {
 	use ResolvesObjectService;
 	use LoadsAllRows;
 	use ChecksPeriodCoverage;
+	use ReadsEmployeeKeys;
 	use FindsCoveringContract;
 
 	/**

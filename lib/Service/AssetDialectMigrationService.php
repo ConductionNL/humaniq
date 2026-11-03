@@ -87,6 +87,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
+use OCA\Humaniq\Support\KeepsReadableRows;
 
 /**
  * Rewrites existing Asset/AssetAssignment objects from the old Dutch dialect
@@ -97,6 +98,7 @@ use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
 class AssetDialectMigrationService {
 
 	use ResolvesObjectServiceByClass;
+	use KeepsReadableRows;
 
 	/**
 	 * Max objects loaded per schema for the migration (RuleAuditService::LIMIT precedent).
@@ -363,19 +365,7 @@ class AssetDialectMigrationService {
 			return [];
 		}
 
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$out[] = (array)$row->jsonSerialize();
-			}
-		}
-
-		return $out;
+		return $this->normaliseRows($rows);
 	}//end loadAll()
 
 	/**

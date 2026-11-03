@@ -41,9 +41,7 @@ trait ResolvesObjectServiceByClass {
 		// trade. It answers the same question the container would otherwise
 		// have answered fatally.
 		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
+			throw new RuntimeException('humaniq requires the OpenRegister app, which is not installed on this instance.');
 		}
 
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');

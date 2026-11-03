@@ -37,6 +37,7 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Humaniq\Support\ResolvesObjectService
  * @uses   \OCA\Humaniq\Support\LoadsAllRows
  * @uses   \OCA\Humaniq\Support\ChecksPeriodCoverage
+ * @uses   \OCA\Humaniq\Support\ReadsEmployeeKeys
  * @uses   \OCA\Humaniq\Support\FindsCoveringContract
  */
 class LeaveAccrualGoldenTest extends TestCase {

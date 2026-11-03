@@ -43,9 +43,7 @@ trait ResolvesObjectService {
 	 */
 	private function objectService(): mixed {
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
+			throw new RuntimeException('humaniq requires the OpenRegister app, which is not installed on this instance.');
 		}
 
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
