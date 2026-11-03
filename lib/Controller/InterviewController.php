@@ -140,7 +140,7 @@ class InterviewController extends Controller {
 		// endpoint cannot install anything, and "cannot be resolved" is exactly
 		// the outcome the catch below already collapses to.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			$this->caller->logger->info('InterviewController: OpenRegister is niet beschikbaar; interview ' . $interviewId . ' kan niet worden opgehaald.');
+			$this->caller->logger->info('InterviewController: OpenRegister is niet beschikbaar; een interview kan niet worden opgehaald.');
 			return null;
 		}
 
