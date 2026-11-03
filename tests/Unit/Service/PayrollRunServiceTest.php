@@ -230,7 +230,6 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
 	 * @param PayrollRetentionGuardService|null $retentionGuard A mocked retention guard, or null for a permissive default (hrmq#99 -- `savePayslip()` places the AWR floor hold on every seal; most tests here are not exercising that behaviour, so a plain mock with no expectations is the default).
-	 *
 	 * @param HoursPayService|null $hoursPay The hours-and-overtime fold, or null for a run without it.
 	 * @param PayrollExpenseFoldService|null $expenses The claims-and-allowances fold, or null for a run without it.
 	 * @param PayrollRunCheckService|null $runCheck The run check, or null for a run without it.
