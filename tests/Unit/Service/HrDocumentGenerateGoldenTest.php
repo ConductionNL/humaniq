@@ -75,6 +75,7 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 			'render and store failures',
 			'backlog refusals',
 			'saves without an id',
+			'saves with the id only in @self, another acting user',
 		];
 		return array_combine($names, array_map(static fn (string $n): array => [$n], $names));
 
@@ -199,6 +200,14 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 					['generate', 'emp-1', 'contract-1', 'arbeidsovereenkomst', null],
 				];
 				break;
+			case 'saves with the id only in @self, another acting user':
+				$config['selfIdOnly'] = ['Jaaropgaaf', 'HrGeneratedDocument'];
+				$steps = [
+					['generate', 'emp-1', 'contract-1', 'arbeidsovereenkomst', 'hr-adviser-7'],
+					['generateLoonstrook', 'payslip-1', 'hr-adviser-7'],
+					['generateJaaropgaaf', 'emp-1', 2026, 'hr-adviser-7'],
+				];
+				break;
 			case 'backlog refusals':
 				$steps = [
 					['generateBacklog', 'arbeidsovereenkomst', null, '2026-05', null],
@@ -300,6 +309,13 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 			public array $idless = [];
 
 			/**
+			 * Schemas whose saved object carries its id only in `@self`.
+			 *
+			 * @var list<string>
+			 */
+			public array $selfIdOnly = [];
+
+			/**
 			 * @param array<string, list<array<string, mixed>>> $rows Rows by schema.
 			 * @param HrDocumentGenerateGoldenTest $test The recording test.
 			 */
@@ -387,10 +403,16 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 					unset($saved['id']);
 				}
 
+				if (in_array($schema, $this->selfIdOnly, true) === true) {
+					unset($saved['id']);
+					$saved['@self'] = ['id' => $id];
+				}
+
 				return $saved;
 			}//end saveObject()
 		};
 		$objects->idless = ($config['idless'] ?? []);
+		$objects->selfIdOnly = ($config['selfIdOnly'] ?? []);
 
 		$documents = new class($test) {
 			/**
