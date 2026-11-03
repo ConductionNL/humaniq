@@ -31,6 +31,8 @@ use Psr\Log\NullLogger;
  * Golden test for {@see PayrollGLPostService::postRun()}.
  *
  * @covers \OCA\Humaniq\Service\PayrollGLPostService
+ * @uses   \OCA\Humaniq\Service\PayrollJournalTotals
+ * @uses   \OCA\Humaniq\Service\PendingClaims
  */
 class PayrollGLPostRunGoldenTest extends TestCase {
 
@@ -231,7 +233,15 @@ class PayrollGLPostRunGoldenTest extends TestCase {
 
 				$id = ($uuid ?? ($schema . '-new-' . $this->nextId++));
 				$saved = array_merge($object, ['id' => $id]);
-				$this->rows[(string)$schema][] = $saved;
+				$kept = [];
+				foreach (($this->rows[(string)$schema] ?? []) as $row) {
+					if ((string)($row['id'] ?? $row['@self']['id'] ?? '') !== $id) {
+						$kept[] = $row;
+					}
+				}
+
+				$kept[] = $saved;
+				$this->rows[(string)$schema] = $kept;
 				if ($schema === 'JournalEntry' && $this->entity === true) {
 					unset($saved['id']);
 					$saved['@self'] = ['id' => $id];

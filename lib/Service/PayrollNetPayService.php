@@ -163,19 +163,9 @@ class PayrollNetPayService {
 			return $this->outcome($runId, 'failed', 'PayrollRun mist id/period/administrationId; kan niet worden verwerkt.');
 		}
 
-		$runNumber = $this->runNumber($run);
-
-		$active = $this->activeBatchForRun($runId);
-		if ($active !== null && (string)($active['status'] ?? '') === 'created') {
-			return $this->outcome($runId, 'created', 'Al klaargezet in shillinq (idempotent no-op).', $active, (string)($active['shillinqPaymentRunRef'] ?? null));
-		}
-
-		if ($active !== null && (string)($active['status'] ?? '') === 'pending') {
-			$recovered = $this->recoverStalePending($active, $run);
-			if ($recovered !== null) {
-				return $recovered;
-			}
-			// Stale pending record marked failed (superseded); fall through to a fresh attempt.
+		$settled = $this->settledByActiveBatch($run);
+		if ($settled !== null) {
+			return $settled;
 		}
 
 		if ($this->shillinqAvailable() === false) {
@@ -205,28 +195,74 @@ class PayrollNetPayService {
 			return $this->outcome($runId, 'failed', (string)$collected['error'], $batch);
 		}
 
+		return $this->createUnderClaim($run, $collected);
+	}//end processRun()
+
+	/**
+	 * The outcome an active batch of the run already settles, or null to go
+	 * on: a created batch is an idempotent no-op, a fresh pending batch is
+	 * another process still at work (nothing is written), and a stale one is
+	 * recovered or superseded.
+	 *
+	 * @param array<string, mixed> $run The PayrollRun.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private function settledByActiveBatch(array $run): ?array {
+		$runId = $this->idOf($run);
+		$active = $this->activeBatchForRun($runId);
+		$status = (string)($active['status'] ?? '');
+		if ($status === 'created') {
+			return $this->outcome($runId, 'created', 'Al klaargezet in shillinq (idempotent no-op).', $active, (string)($active['shillinqPaymentRunRef'] ?? null));
+		}
+
+		if ($status !== 'pending') {
+			return null;
+		}
+
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->isFresh($active) === true) {
+			return $this->outcome($runId, 'pending', 'Deze loonrun wordt al door een andere verwerking klaargezet.', $active);
+		}
+
+		return $this->recoverStalePending($active, $run);
+	}//end settledByActiveBatch()
+
+	/**
+	 * Claim the run with a `pending` batch, then create or adopt the shillinq
+	 * PaymentRun and settle the claim. A claim that finds another active
+	 * batch of the run next to it withdraws, so two processes never both
+	 * create a PaymentRun for one run.
+	 *
+	 * @param array<string, mixed> $run       The PayrollRun.
+	 * @param array<string, mixed> $collected The collectLines() result.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private function createUnderClaim(array $run, array $collected): array {
+		$runId = $this->idOf($run);
+		$runNumber = $this->runNumber($run);
+		$claim = $this->createBatch(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'runNumber' => $runNumber]);
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->hasRival($this->batchesForRun($runId), $claim) === true) {
+			$withdrawn = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Ingetrokken: een andere verwerking zet deze loonrun al klaar.']);
+			return $this->outcome($runId, 'pending', 'Deze loonrun wordt al door een andere verwerking klaargezet.', $withdrawn);
+		}
+
 		try {
 			$paymentRunId = $this->createOrAdoptPaymentRun($run, $collected);
 		} catch (\Throwable $e) {
-			$batch = $this->createBatch(
-				[
-					'payrollRunId' => $runId,
-					'period' => $period,
-					'status' => 'failed',
-					'errorMessage' => 'Aanmaken van de shillinq PaymentRun is mislukt: ' . $e->getMessage(),
-				]
-			);
-
+			$batch = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Aanmaken van de shillinq PaymentRun is mislukt: ' . $e->getMessage()]);
 			return $this->outcome($runId, 'failed', (string)$batch['errorMessage'], $batch);
 		}
 
-		$batch = $this->createBatch(
+		$batch = $this->saveBatch(
+			$claim,
 			[
-				'payrollRunId' => $runId,
-				'period' => $period,
 				'status' => 'created',
 				'shillinqPaymentRunRef' => $paymentRunId,
-				'runNumber' => $runNumber,
 				'totalAmount' => $collected['totalAmount'],
 				'lineCount' => $collected['lineCount'],
 				'createdAt' => gmdate('Y-m-d\TH:i:s\Z'),
@@ -234,7 +270,7 @@ class PayrollNetPayService {
 		);
 
 		return $this->outcome($runId, 'created', 'Klaargezet in shillinq als PaymentRun ' . $runNumber . '.', $batch, $paymentRunId);
-	}//end processRun()
+	}//end createUnderClaim()
 
 	/**
 	 * Collect one payment line per payable payslip in the run's period,

@@ -42,7 +42,7 @@ vakantiegeld accruals are explicitly out of scope.
 
 ### REQ-PGP-002: `PayrollGLPostService` SHALL build a balanced 4-line journal from the run totals
 
-`lib/Service/PayrollGLPostService.php` (NEW) maps an approved run to exactly four lines on configurable accounts (via `SettingsService` getters `glpost_account_gross`/`glpost_account_employer_charges`/`glpost_account_wage_tax_liability`/`glpost_account_net_wages_liability`, placeholder defaults `4001`/`4002`/`1701`/`1702`): debit gross = `totalGross`, debit employer charges = `totalEmployerCharges`, credit loonheffing-schuld = `totalLoonheffing`, credit netto-loonschuld = `totalNet + R` with `R = (totalGross + totalEmployerCharges) − (totalLoonheffing + totalNet)`, so debits equal credits by construction (design.md D2). Amounts rounded to cents; zero-amount lines dropped. When any total is missing/non-numeric or `R < 0`, the attempt is recorded `failed` with a diagnostic `errorMessage` and nothing is written to shillinq.
+`lib/Service/PayrollGLPostService.php` (NEW) maps an approved run to exactly four lines on configurable accounts (via `SettingsService` getters `glpost_account_gross`/`glpost_account_employer_charges`/`glpost_account_wage_tax_liability`/`glpost_account_net_wages_liability`, placeholder defaults `4001`/`4002`/`1701`/`1702`): debit gross = `totalGross`, debit employer charges = `totalEmployerCharges`, credit loonheffing-schuld = `totalLoonheffing`, credit netto-loonschuld = `totalNet + R` with `R = (totalGross + totalEmployerCharges) − (totalLoonheffing + totalNet)`, so debits equal credits by construction (design.md D2). Amounts rounded to cents; zero-amount lines dropped. When any total is missing/non-numeric, any total (including `totalReimbursements`) is negative, gross plus employer charges plus reimbursements is zero, or `R < 0`, the attempt is recorded `failed` with a diagnostic `errorMessage`, nothing is written to shillinq, and the run stays `approved`.
 
 #### Scenario: Balanced journal for the seeded totals
 - **GIVEN** an approved run with totals gross 3800.00, employer charges 649.80, loonheffing 1102.00, net 2698.00
@@ -53,6 +53,11 @@ vakantiegeld accruals are explicitly out of scope.
 - **GIVEN** an approved run where `totalLoonheffing + totalNet > totalGross + totalEmployerCharges` (negative remainder)
 - **WHEN** posting is attempted
 - **THEN** no shillinq object is created and the `PayrollGLPost` ends `failed` with an `errorMessage` naming the inconsistency
+
+#### Scenario: Zero or negative totals fail closed
+- **GIVEN** an approved run with a negative total, or with gross, employer charges and reimbursements that add up to 0.00
+- **WHEN** posting is attempted
+- **THEN** no shillinq object is created, the `PayrollGLPost` ends `failed` with an `errorMessage` naming the negative total or the zero journal, and the run keeps `status: approved` with no `glExpensePosted`
 
 ### REQ-PGP-003: The service SHALL create the journal as a shillinq `JournalEntry` via OpenRegister's ObjectService
 
