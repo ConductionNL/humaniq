@@ -35,36 +35,47 @@ use DateTimeImmutable;
 class WageTaxPayable {
 
 	/**
+	 * @param float  $amount  The return's TotGen in euros.
+	 * @param string $payeeId The shillinq payee.
+	 * @param string $account The wage tax liability account.
+	 *
+	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+	 */
+	public function __construct(
+		private readonly float $amount,
+		private readonly string $payeeId,
+		private readonly string $account,
+	) {
+	}//end __construct()
+
+	/**
 	 * The draft APTransaction for a return (design D4).
 	 *
-	 * @param array<string, mixed> $run     The PayrollRun.
-	 * @param array<string, mixed> $filing  The confirmed return.
-	 * @param float                $amount  The return's TotGen in euros.
-	 * @param string               $payeeId The shillinq payee.
-	 * @param string               $account The wage tax liability account.
+	 * @param array<string, mixed> $run    The PayrollRun.
+	 * @param array<string, mixed> $filing The confirmed return.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
 	 */
-	public function build(array $run, array $filing, float $amount, string $payeeId, string $account): array {
+	public function build(array $run, array $filing): array {
 		$period = (string)($filing['period'] ?? '');
 		$number = (string)($filing['aangiftenummer'] ?? '');
 
 		return [
-			'vendorId' => $payeeId,
+			'vendorId' => $this->payeeId,
 			'invoiceNumber' => trim((string)$filing['betalingskenmerk']),
 			'invoiceReference' => ($number !== '' ? $number : null),
 			'invoiceDate' => $this->lastDayOf(period: $period),
 			'dueDate' => (string)($filing['deadline'] ?? ''),
 			'currency' => 'EUR',
-			'totalAmount' => $amount,
+			'totalAmount' => $this->amount,
 			'taxAmount' => 0.0,
 			'lines' => [
 				[
 					'description' => 'Loonheffingen ' . $period . ($number !== '' ? ', aangifte ' . $number : ''),
-					'accountNumber' => $account,
-					'amount' => $amount,
+					'accountNumber' => $this->account,
+					'amount' => $this->amount,
 				],
 			],
 			'state' => 'draft',
