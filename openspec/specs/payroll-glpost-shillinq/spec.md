@@ -59,6 +59,11 @@ vakantiegeld accruals are explicitly out of scope.
 - **WHEN** posting is attempted
 - **THEN** no shillinq object is created, the `PayrollGLPost` ends `failed` with an `errorMessage` naming the negative total or the zero journal, and the run keeps `status: approved` with no `glExpensePosted`
 
+#### Scenario: A period that is not a month fails closed
+- **GIVEN** an approved run whose `period` is not a `YYYY-MM` month (`''`, `202605`, `now`, `2026-00`, `2026-13`, `mei`, `x2026-05`)
+- **WHEN** posting is attempted
+- **THEN** no shillinq object is created and the `PayrollGLPost` ends `failed` with an `errorMessage` naming the period; a one-digit month (`2026-5`) is the same month as `2026-05` and gets the journal number `HRMQ-LOON-2026-05-{administrationId}`
+
 ### REQ-PGP-003: The service SHALL create the journal as a shillinq `JournalEntry` via OpenRegister's ObjectService
 
 The write targets register `shillinq`, schema `JournalEntry` (contract verified in `shillinq/lib/Settings/register.d/add-shillinq-bookkeeping-foundation.json` and `shillinq/openspec/specs/bookkeeping-journal-entries/spec.md` REQ-JE-002): required fields `journalNumber` (deterministic `HRMQ-LOON-{period}-{administrationId}`), `entryDate` (last day of the wage period), `description` ("Loonjournaalpost {period} — humaniq loonrun {payrollRunId}"), `lines` (per REQ-PGP-002; each `{accountNumber, side, amount}` with `side` ∈ `debit|credit`, non-negative amounts), `journalType: manual`, `sourceApp: humaniq` (the sub-ledger the journal comes from, so shillinq's payroll control-account role admits it; shillinq `ledger-booking-rules`, `PostingRestrictionGuard::SUB_LEDGER_ROLES`), `approvalState: not-required`, `administrationId` (passed through verbatim from the run), `state: draft`. humaniq SHALL NOT drive shillinq's post transition — GLTransaction materialisation stays behind shillinq's own lifecycle and approval policy (design.md D3). On success the `PayrollGLPost` records `journalEntryId`, `journalNumber`, `postedAt`, the `lines` snapshot, and `status: posted`.
@@ -128,6 +133,16 @@ Invariant: at most one `PayrollGLPost` in `{pending, posted}` per `payrollRunId`
 - **GIVEN** a process that claimed the run and stalls past the claim window right before it writes shillinq, holding Nextcloud's exclusive lock on the journal number
 - **WHEN** a second process posts the run
 - **THEN** the second process is refused with status `pending` and writes no JournalEntry, and exactly one JournalEntry exists once the owner finishes; with file locking off the claim alone guards the run, as before
+
+#### Scenario: A stale claim is not adopted for refused totals
+- **GIVEN** a stale `pending` GL post of a run whose JournalEntry shillinq already holds, and run totals that REQ-PGP-002 refuses
+- **WHEN** the next invocation processes the run
+- **THEN** the stale GL post ends `failed` with the refusal and the journal number, the run keeps `status: approved`, and later passes refuse again instead of reading the run as already posted
+
+#### Scenario: Another run with the same journal number
+- **GIVEN** a `posted` or fresh `pending` GL post of another PayrollRun with the same journal number
+- **WHEN** posting this run is attempted
+- **THEN** its claim is withdrawn as `failed` with a message that starts with "Duplicate run", and nothing reaches shillinq; a stale `pending` GL post of another run with that number is a crash left behind, is marked `failed` and does not block the run
 
 ### REQ-PGP-008: Manifest pages SHALL expose the GL-post records under Loonadministratie
 

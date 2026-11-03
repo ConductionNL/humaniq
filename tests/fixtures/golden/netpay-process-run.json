@@ -1532,8 +1532,56 @@
     "padded unparseable period": {
         "outcome": {
             "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun."
+                }
+            }
+        ]
+    },
+    "unparseable period": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun."
+                }
+            }
+        ]
+    },
+    "period 2026-5": {
+        "outcome": {
+            "runId": "run-1",
             "status": "created",
-            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-mei-ADM-001.",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
             "batchId": "PayrollPaymentBatch-new-1",
             "paymentRunId": "PaymentRun-new-2"
         },
@@ -1546,9 +1594,9 @@
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
-                    "period": "mei",
+                    "period": "2026-5",
                     "status": "pending",
-                    "runNumber": "HRMQ-NETPAY-mei-ADM-001"
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
                 }
             },
             {
@@ -1558,9 +1606,9 @@
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
-                    "runNumber": "HRMQ-NETPAY-mei-ADM-001",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
                     "administrationId": "ADM-001",
-                    "executionDate": "mei-25",
+                    "executionDate": "2026-05-25",
                     "status": "draft",
                     "lifecycleState": "draft",
                     "currency": "EUR",
@@ -1571,7 +1619,7 @@
                             "payeeName": "J. de Vries",
                             "creditorIban": "NL91ABNA0417164300",
                             "amount": 2698.0,
-                            "remittanceInfo": "Salaris mei",
+                            "remittanceInfo": "Salaris 2026-5",
                             "apTransactionRef": "ps-1"
                         },
                         {
@@ -1579,7 +1627,7 @@
                             "payeeName": "Anna Bakker",
                             "creditorIban": "NL02RABO0123456789",
                             "amount": 1234.57,
-                            "remittanceInfo": "Salaris mei",
+                            "remittanceInfo": "Salaris 2026-5",
                             "apTransactionRef": "ps-2"
                         },
                         {
@@ -1587,7 +1635,7 @@
                             "payeeName": "Kees",
                             "creditorIban": "NL20INGB0001234567",
                             "amount": 0.3,
-                            "remittanceInfo": "Salaris mei",
+                            "remittanceInfo": "Salaris 2026-5",
                             "apTransactionRef": "ps-3"
                         }
                     ],
@@ -1602,9 +1650,9 @@
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
-                    "period": "mei",
+                    "period": "2026-5",
                     "status": "created",
-                    "runNumber": "HRMQ-NETPAY-mei-ADM-001",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
                     "id": "PayrollPaymentBatch-new-1",
                     "shillinqPaymentRunRef": "PaymentRun-new-2",
                     "totalAmount": 3932.87,
@@ -1614,13 +1662,13 @@
             }
         ]
     },
-    "unparseable period": {
+    "period 202605": {
         "outcome": {
             "runId": "run-1",
-            "status": "created",
-            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-mei-ADM-001.",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun.",
             "batchId": "PayrollPaymentBatch-new-1",
-            "paymentRunId": "PaymentRun-new-2"
+            "paymentRunId": null
         },
         "writes": [
             {
@@ -1631,70 +1679,153 @@
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
-                    "period": "mei",
-                    "status": "pending",
-                    "runNumber": "HRMQ-NETPAY-mei-ADM-001"
+                    "period": "202605",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun."
                 }
-            },
+            }
+        ]
+    },
+    "period now": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": null
+        },
+        "writes": [
             {
-                "register": "shillinq",
-                "schema": "PaymentRun",
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
                 "uuid": null,
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
-                    "runNumber": "HRMQ-NETPAY-mei-ADM-001",
-                    "administrationId": "ADM-001",
-                    "executionDate": "mei-25",
-                    "status": "draft",
-                    "lifecycleState": "draft",
-                    "currency": "EUR",
-                    "totalAmount": 3932.87,
-                    "paymentLines": [
-                        {
-                            "payeeId": "emp-1",
-                            "payeeName": "J. de Vries",
-                            "creditorIban": "NL91ABNA0417164300",
-                            "amount": 2698.0,
-                            "remittanceInfo": "Salaris mei",
-                            "apTransactionRef": "ps-1"
-                        },
-                        {
-                            "payeeId": "emp-2",
-                            "payeeName": "Anna Bakker",
-                            "creditorIban": "NL02RABO0123456789",
-                            "amount": 1234.57,
-                            "remittanceInfo": "Salaris mei",
-                            "apTransactionRef": "ps-2"
-                        },
-                        {
-                            "payeeId": "emp-3",
-                            "payeeName": "Kees",
-                            "creditorIban": "NL20INGB0001234567",
-                            "amount": 0.3,
-                            "remittanceInfo": "Salaris mei",
-                            "apTransactionRef": "ps-3"
-                        }
-                    ],
-                    "debtorAccountIban": "NL69INGB0123456789"
+                    "payrollRunId": "run-1",
+                    "period": "now",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun."
                 }
-            },
+            }
+        ]
+    },
+    "period 2026-00": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": null
+        },
+        "writes": [
             {
                 "register": "humaniq",
                 "schema": "PayrollPaymentBatch",
-                "uuid": "PayrollPaymentBatch-new-1",
+                "uuid": null,
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
-                    "period": "mei",
-                    "status": "created",
-                    "runNumber": "HRMQ-NETPAY-mei-ADM-001",
-                    "id": "PayrollPaymentBatch-new-1",
-                    "shillinqPaymentRunRef": "PaymentRun-new-2",
-                    "totalAmount": 3932.87,
-                    "lineCount": 3,
-                    "createdAt": "<now>"
+                    "period": "2026-00",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun."
+                }
+            }
+        ]
+    },
+    "period 2026-13": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-13",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun."
+                }
+            }
+        ]
+    },
+    "period x2026-05": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "x2026-05",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun."
+                }
+            }
+        ]
+    },
+    "period 12026-05": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "12026-05",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun."
+                }
+            }
+        ]
+    },
+    "period 2026-05x": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05x",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun."
                 }
             }
         ]

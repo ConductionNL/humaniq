@@ -50,15 +50,16 @@ final class PayrollJournalTotals {
 	}//end __construct()
 
 	/**
-	 * Why the totals cannot make a journal, or null: a missing or
-	 * non-numeric total, a negative total, or nothing on the debit side.
+	 * Why the run cannot make a journal, or null: a missing or non-numeric
+	 * total, a negative total, nothing on the debit side, or a period that
+	 * is not a month (the journal is dated on the period's last day).
 	 *
 	 * @return string|null The diagnostic for the failed GL post.
 	 *
 	 * @spec openspec/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-002
 	 */
 	public function refusal(): ?string {
-		return ($this->missing() ?? $this->unpostable());
+		return ($this->missing() ?? $this->unpostable() ?? $this->undated());
 	}//end refusal()
 
 	/**
@@ -114,4 +115,17 @@ final class PayrollJournalTotals {
 
 		return null;
 	}//end unpostable()
+
+	/**
+	 * Refuses a period that is not a `YYYY-MM` month.
+	 *
+	 * @return string|null
+	 */
+	private function undated(): ?string {
+		if ((new WagePeriod((string)($this->run['period'] ?? '')))->month() !== null) {
+			return null;
+		}
+
+		return 'PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun.';
+	}//end undated()
 }//end class

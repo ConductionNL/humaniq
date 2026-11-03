@@ -25,6 +25,7 @@ require_once __DIR__ . '/../../fixtures/golden/wage-tax-payable.input.php';
  * Golden test for {@see WageTaxPayable::build()}.
  *
  * @covers \OCA\Humaniq\Service\WageTaxPayable
+ * @uses   \OCA\Humaniq\Service\WagePeriod
  */
 class WageTaxPayableGoldenTest extends TestCase {
 
