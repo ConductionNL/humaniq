@@ -50,6 +50,8 @@ use RuntimeException;
 
 /**
  * Guarded endpoint that activates/settles/withdraws one Loonbeslag.
+ *
+ * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-006
  */
 class LoonbeslagController extends Controller {
 
@@ -300,7 +302,12 @@ class LoonbeslagController extends Controller {
 				schema: 'Loonbeslag'
 			);
 		} catch (\Throwable $e) {
-			$this->caller->logger->info('LoonbeslagController: loonbeslag ' . $loonbeslagId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			// The id is caller input and the exception text can carry row
+			// content, so neither is logged: only the exception class.
+			$this->caller->logger->warning(
+				'LoonbeslagController: a loonbeslag lookup failed and is answered as not found.',
+				['exceptionClass' => $e::class]
+			);
 			return null;
 		}
 

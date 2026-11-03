@@ -293,6 +293,105 @@ class LoonbeslagControllerTest extends TestCase {
 	}//end testWithdrawHappyPathStampsTheTransition()
 
 	/**
+	 * REQ-RFA-001: the role check and the stamps follow the signed-in user.
+	 * The role mocks answer only for that uid, so a check or stamp on any
+	 * other user fails.
+	 *
+	 * @return void
+	 */
+	public function testTheActingUserIsCheckedAndStamped(): void {
+		$cases = [
+			'activate' => [['status' => 'concept'], 'activatedBy'],
+			'settle' => [['status' => 'actief'], 'settledBy'],
+			'withdraw' => [['status' => 'actief'], 'withdrawnBy'],
+		];
+		foreach ($cases as $action => [$row, $stampField]) {
+			[$controller, $fake] = $this->buildController(
+				isAdmin: false,
+				loonbeslagRow: $this->loonbeslag($row),
+				groups: ['humaniq-hr'],
+				actingUid: 'hr-adviser-7'
+			);
+
+			$response = ($action === 'withdraw') ? $controller->withdraw('lb-1', 'Schikking.') : $controller->$action('lb-1');
+
+			$this->assertSame(Http::STATUS_OK, $response->getStatus(), $action);
+			$this->assertSame('hr-adviser-7', $fake->saved[0][$stampField], $action);
+		}
+
+	}//end testTheActingUserIsCheckedAndStamped()
+
+	/**
+	 * Every transition updates the loonbeslag in place: saveObject() gets
+	 * the row's own id as uuid, so no second record is created.
+	 *
+	 * @return void
+	 */
+	public function testEveryTransitionSavesInPlaceUnderTheRowId(): void {
+		$cases = [
+			'activate' => ['status' => 'concept'],
+			'settle' => ['status' => 'actief'],
+			'withdraw' => ['status' => 'concept'],
+			'withdraw via @self' => ['status' => 'actief', 'id' => null, '@self' => ['id' => 'lb-1']],
+		];
+		foreach ($cases as $label => $row) {
+			[$controller, $fake] = $this->buildController(isAdmin: true, loonbeslagRow: $this->loonbeslag($row));
+			$action = explode(' ', $label)[0];
+
+			$response = ($action === 'withdraw') ? $controller->withdraw('lb-1', 'Schikking.') : $controller->$action('lb-1');
+
+			$this->assertSame(Http::STATUS_OK, $response->getStatus(), $label);
+			$this->assertSame(['lb-1'], $fake->savedUuids, $label);
+			$this->assertSame('lb-1', $response->getData()['loonbeslag']['id'], $label);
+		}
+
+	}//end testEveryTransitionSavesInPlaceUnderTheRowId()
+
+	/**
+	 * The 403 refusals carry their own text: a change refusal for activate
+	 * and settle, a withdrawal refusal for withdraw.
+	 *
+	 * @return void
+	 */
+	public function testTheForbiddenRefusalsCarryTheirText(): void {
+		[$controller] = $this->buildController(isAdmin: false, loonbeslagRow: $this->loonbeslag(), groups: ['humaniq-payroll']);
+
+		$change = ['error' => 'Alleen HR en beheerders mogen loonbeslagen wijzigen.'];
+		$this->assertSame($change, $controller->activate('lb-1')->getData());
+		$this->assertSame($change, $controller->settle('lb-1')->getData());
+		$this->assertSame(
+			['error' => 'Alleen HR en beheerders mogen loonbeslagen intrekken.'],
+			$controller->withdraw('lb-1', 'Schikking.')->getData()
+		);
+
+	}//end testTheForbiddenRefusalsCarryTheirText()
+
+	/**
+	 * A lookup that throws answers 404 and logs one neutral warning: the
+	 * caller-supplied id and the exception text stay out of the log.
+	 *
+	 * @return void
+	 */
+	public function testAFailedLookupLogsANeutralWarning(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->never())->method('info');
+		$logger->expects($this->once())->method('warning')->with(
+			'LoonbeslagController: a loonbeslag lookup failed and is answered as not found.',
+			['exceptionClass' => \RuntimeException::class]
+		);
+
+		[$controller, $fake] = $this->buildController(isAdmin: true, loonbeslagRow: $this->loonbeslag(), logger: $logger);
+		$fake->findFailure = new \RuntimeException('row of employee emp-1 at GDW-2026-00123');
+
+		$response = $controller->activate('forged-id-<script>');
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertSame(['error' => 'Loonbeslag niet gevonden.'], $response->getData());
+		$this->assertSame([], $fake->saved);
+
+	}//end testAFailedLookupLogsANeutralWarning()
+
+	/**
 	 * Build a `LoonbeslagController` with a fake container-resolved
 	 * ObjectService whose `find()` returns the fixed `$loonbeslagRow` (null
 	 * simulating unknown/unauthorized) and `saveObject()` records every
@@ -301,10 +400,18 @@ class LoonbeslagControllerTest extends TestCase {
 	 * @param bool $isAdmin Whether the fake caller is a Nextcloud administrator.
 	 * @param array<string, mixed>|null $loonbeslagRow The row `find()` should return.
 	 * @param list<string> $groups The groups the fake caller is a member of.
+	 * @param string $actingUid The signed-in user; the role mocks answer only for this uid.
+	 * @param LoggerInterface|null $logger The logger, a silent mock when null.
 	 *
 	 * @return array{0: LoonbeslagController, 1: object}
 	 */
-	private function buildController(bool $isAdmin, ?array $loonbeslagRow, array $groups = []): array {
+	private function buildController(
+		bool $isAdmin,
+		?array $loonbeslagRow,
+		array $groups = [],
+		string $actingUid = 'hr-admin',
+		?LoggerInterface $logger = null,
+	): array {
 		$request = $this->createMock(IRequest::class);
 
 		$fake = new class($loonbeslagRow) {
@@ -323,6 +430,16 @@ class LoonbeslagControllerTest extends TestCase {
 			 * @var bool
 			 */
 			public bool $findCalled = false;
+
+			/**
+			 * @var list<string|null> The uuid argument of every saveObject() call.
+			 */
+			public array $savedUuids = [];
+
+			/**
+			 * @var \Throwable|null Thrown by find() when set.
+			 */
+			public ?\Throwable $findFailure = null;
 
 			/**
 			 * @var int
@@ -345,6 +462,10 @@ class LoonbeslagControllerTest extends TestCase {
 			 */
 			public function find(string $id, ?string $register = null, ?string $schema = null): ?array {
 				$this->findCalled = true;
+				if ($this->findFailure !== null) {
+					throw $this->findFailure;
+				}
+
 				return $this->row;
 			}
 
@@ -366,6 +487,7 @@ class LoonbeslagControllerTest extends TestCase {
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {
+				$this->savedUuids[] = $uuid;
 				$id = ($uuid ?? ('generated-' . $this->nextId++));
 				$saved = array_merge($object, ['id' => $id]);
 				$this->saved[] = $saved;
@@ -384,16 +506,18 @@ class LoonbeslagControllerTest extends TestCase {
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 
 		$user = $this->createMock(IUser::class);
-		$user->method('getUID')->willReturn('hr-admin');
+		$user->method('getUID')->willReturn($actingUid);
 
 		$userSession = $this->createMock(IUserSession::class);
 		$userSession->method('getUser')->willReturn($user);
 
 		$groupManager = $this->createMock(IGroupManager::class);
-		$groupManager->method('isAdmin')->willReturn($isAdmin);
-		$groupManager->method('isInGroup')->willReturnCallback(fn (string $uid, string $gid): bool => in_array($gid, $groups, true));
+		$groupManager->method('isAdmin')->willReturnCallback(fn (?string $uid): bool => $isAdmin === true && $uid === $actingUid);
+		$groupManager->method('isInGroup')->willReturnCallback(
+			fn (string $uid, string $gid): bool => $uid === $actingUid && in_array($gid, $groups, true)
+		);
 
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger ??= $this->createMock(LoggerInterface::class);
 
 		return [new LoonbeslagController($request, $settings, new CallerContext($userSession, new HumaniqRoles($groupManager), $container, $logger)), $fake];
 	}//end buildController()
