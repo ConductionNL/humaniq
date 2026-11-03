@@ -87,8 +87,9 @@ class PersonnelBudgetService {
 		);
 
 		$lines = [];
+		$budgetRun = ['mutations' => $mutations, 'rows' => $rows, 'year' => $year, 'raise' => $raise];
 		foreach ($this->placesOf(rows: $rows, mutations: $mutations) as $place) {
-			$line = $this->placeLine(place: $place, mutations: $mutations, rows: $rows, year: $year, raise: $raise);
+			$line = $this->placeLine(place: $place, budgetRun: $budgetRun);
 			$lines[] = $this->totals->withSurcharges(line: $line, chargesRatio: $charges['ratio']);
 		}
 
@@ -166,15 +167,13 @@ class PersonnelBudgetService {
 	/**
 	 * One place's line: FTE and base cost per month, before surcharges.
 	 *
-	 * @param array<string, mixed> $place The place.
-	 * @param array<int, array<string, mixed>> $mutations The scenario's mutations.
-	 * @param array<string, mixed> $rows The rows.
-	 * @param int $year The year.
-	 * @param float $raise The CAO raise factor.
+	 * @param array<string, mixed> $place     The place.
+	 * @param array<string, mixed> $budgetRun The scenario's `mutations`, the `rows`, the `year` and the CAO `raise` factor.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function placeLine(array $place, array $mutations, array $rows, int $year, float $raise): array {
+	private function placeLine(array $place, array $budgetRun): array {
+		['mutations' => $mutations, 'rows' => $rows, 'year' => $year, 'raise' => $raise] = $budgetRun;
 		$placeId = (string)($place['id'] ?? '');
 		$unit = $this->find(rows: (array)($rows['orgUnits'] ?? []), id: (string)($place['orgUnitId'] ?? ''));
 		$minimum = $this->scaleMinimum(place: $place, normfuncties: (array)($rows['normfuncties'] ?? []));

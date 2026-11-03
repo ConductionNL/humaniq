@@ -779,7 +779,7 @@ class PayrollRunService {
 	 * @return array<string, mixed> The slip with `caoFold`, `expenseFold` and `expenseNetCents`.
 	 */
 	private function foldCaoAndExpenses(array $state, array $slip): array {
-		$slip['caoFold'] = $this->caoComponents?->foldFor(contract: $slip['contract'], regularWageCents: $slip['regularWageCents'], hoursPay: $slip['hoursPay'], entries: $state['hours']['entries'], nonWorkingDates: $state['hours']['nonWorkingDates'], period: $state['period']);
+		$slip['caoFold'] = $this->caoComponents?->foldFor(contract: $slip['contract'], basis: ['regularWageCents' => $slip['regularWageCents'], 'hoursPay' => $slip['hoursPay'], 'entries' => $state['hours']['entries'], 'nonWorkingDates' => $state['hours']['nonWorkingDates'], 'period' => $state['period']]);
 		$slip['grossCents'] += (int)($slip['caoFold']['totalCents'] ?? 0);
 
 		$slip['expenseFold'] = $this->expenses?->foldFor(inputs: $state['expenseInputs'], employeeId: $slip['employeeId'], period: $state['period'], runId: $state['runId']);
