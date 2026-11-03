@@ -49,10 +49,26 @@ class LoonaangifteMessageServiceTest extends TestCase {
 
 	private const NS = 'http://xml.belastingdienst.nl/schemas/Loonaangifte/2026/01';
 
+	/**
+	 * The register the service reads and writes.
+	 *
+	 * @var FakeObjectStore
+	 */
 	private FakeObjectStore $store;
 
+	/**
+	 * The service under test.
+	 *
+	 * @var LoonaangifteMessageService
+	 */
 	private LoonaangifteMessageService $service;
 
+	/**
+	 * Seed an administration, two employees with contracts, an approved run
+	 * with its payslips and a concept filing for June 2026.
+	 *
+	 * @return void
+	 */
 	protected function setUp(): void {
 		parent::setUp();
 		$this->store = new FakeObjectStore();
