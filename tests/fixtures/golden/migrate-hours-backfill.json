@@ -1,0 +1,3343 @@
+{
+    "first summary": {
+        "processed": 60,
+        "entriesCreated": 0,
+        "unresolvableUserLinks": 26
+    },
+    "first log": [
+        {
+            "lookup": "e1",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e1-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e1",
+                "period": "2026-01",
+                "hours": 0,
+                "id": "ts-e1-blank",
+                "userId": "u1",
+                "managerUserId": null,
+                "administrationId": "ADM-1"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e1-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e1",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e1-blank",
+                "userId": "u1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e2",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e2-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e2",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e2-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e2-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e2",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e2-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e3",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e3-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e3",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e3-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e3-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e3",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e3-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e4",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e4-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e4",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": "",
+                "managerUserId": "",
+                "administrationId": "",
+                "id": "ts-e4-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e5",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e5-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e5",
+                "period": "2026-01",
+                "hours": 0,
+                "id": "ts-e5-blank",
+                "userId": "u2",
+                "managerUserId": "mgr1",
+                "administrationId": null
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e5-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e5",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e5-blank",
+                "userId": "u2",
+                "managerUserId": "mgr1",
+                "administrationId": null,
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e6",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e6-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e6",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": "mgr1",
+                "administrationId": null,
+                "id": "ts-e6-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e6-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e6",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": "mgr1",
+                "administrationId": null,
+                "id": "ts-e6-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e7",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e7-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e7",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": "mgr1",
+                "administrationId": "ADM-1",
+                "id": "ts-e7-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e7-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e7",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": "mgr1",
+                "administrationId": "ADM-1",
+                "id": "ts-e7-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e8",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e8-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e8",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e8-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e8-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e8",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e8-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e9",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e9-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e9",
+                "period": "2026-01",
+                "hours": 0,
+                "id": "ts-e9-blank",
+                "userId": null,
+                "managerUserId": "mgr2",
+                "administrationId": "ADM-1"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e9-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e9",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e9-blank",
+                "userId": null,
+                "managerUserId": "mgr2",
+                "administrationId": "ADM-1",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e10",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e10-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e10",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e10-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e10-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e10",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e10-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e11",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e11-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e11",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": "mgr1",
+                "managerUserId": "mgr2",
+                "administrationId": null,
+                "id": "ts-e11-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e11-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e11",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": "mgr1",
+                "managerUserId": "mgr2",
+                "administrationId": null,
+                "id": "ts-e11-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e12",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e12-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e12",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": "u1",
+                "managerUserId": "mgr2",
+                "administrationId": null,
+                "id": "ts-e12-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e12-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e12",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": "u1",
+                "managerUserId": "mgr2",
+                "administrationId": null,
+                "id": "ts-e12-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e13",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1",
+                "mgr3"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e13-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e13",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e13-blank",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e14",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e14-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e14",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e14-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e14-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e14",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e14-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e15",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e15-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e15",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": " u1 ",
+                "managerUserId": " mgr1 ",
+                "administrationId": " ADM-1 ",
+                "id": "ts-e15-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e16",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr3"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e16-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e16",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": "u2",
+                "managerUserId": "mgr3",
+                "administrationId": "ADM-2",
+                "id": "ts-e16-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e16-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e16",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": "u2",
+                "managerUserId": "mgr3",
+                "administrationId": "ADM-2",
+                "id": "ts-e16-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e17",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e17-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e17",
+                "period": "2026-01",
+                "hours": 0,
+                "id": "ts-e17-blank",
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-2"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e17-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e17",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e17-blank",
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e18",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e18-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e18",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": "u1",
+                "managerUserId": "mgr1",
+                "administrationId": null,
+                "id": "ts-e18-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e18-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e18",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": "u1",
+                "managerUserId": "mgr1",
+                "administrationId": null,
+                "id": "ts-e18-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e19",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1",
+                "u1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e19-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e19",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": null,
+                "id": "ts-e19-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e19-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e19",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": null,
+                "id": "ts-e19-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e20",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1",
+                "u1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e20-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e20",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e20-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e20-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e20",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e20-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e21",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e21-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e21",
+                "period": "2026-01",
+                "hours": 0,
+                "id": "ts-e21-blank",
+                "userId": "u1",
+                "managerUserId": "mgr1",
+                "administrationId": "ADM-1"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e21-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e21",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e21-blank",
+                "userId": "u1",
+                "managerUserId": "mgr1",
+                "administrationId": "ADM-1",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e22",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "u1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e22-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e22",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": "u2",
+                "managerUserId": "u1",
+                "administrationId": "ADM-1",
+                "id": "ts-e22-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e22-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e22",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": "u2",
+                "managerUserId": "u1",
+                "administrationId": "ADM-1",
+                "id": "ts-e22-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e23",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e23-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e23",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e23-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e23-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e23",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e23-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e24",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "u1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e24-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e24",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": "u1",
+                "administrationId": null,
+                "id": "ts-e24-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e24-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e24",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": "u1",
+                "administrationId": null,
+                "id": "ts-e24-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e25",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e25-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e25",
+                "period": "2026-01",
+                "hours": 0,
+                "id": "ts-e25-blank",
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": null
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e25-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e25",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e25-blank",
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": null,
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e26",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e26-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e26",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": null,
+                "id": "ts-e26-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e26-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e26",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": null,
+                "id": "ts-e26-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e27",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e27-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e27",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e27-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e27-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e27",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e27-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e28",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e28-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e28",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e28-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e28-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e28",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e28-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e29",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e29-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e29",
+                "period": "2026-01",
+                "hours": 0,
+                "id": "ts-e29-blank",
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-1"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e29-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e29",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e29-blank",
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e30",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e30-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e30",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e30-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e30-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e30",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e30-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e31",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e31-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e31",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": null,
+                "id": "ts-e31-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e31-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e31",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": null,
+                "id": "ts-e31-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e32",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e32-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e32",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": "u1",
+                "managerUserId": null,
+                "administrationId": null,
+                "id": "ts-e32-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e32-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e32",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": "u1",
+                "managerUserId": null,
+                "administrationId": null,
+                "id": "ts-e32-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e33",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e33-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e33",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e33-blank",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e34",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e34-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e34",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e34-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e34-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e34",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e34-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e35",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e35-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e35",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": "u1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e35-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e35-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e35",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": "u1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e35-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e36",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e36-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e36",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e36-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e36-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e36",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e36-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e37",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e37-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e37",
+                "period": "2026-01",
+                "hours": 0,
+                "id": "ts-e37-blank",
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-2"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e37-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e37",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e37-blank",
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e38",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr5"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e38-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e38",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": "u1",
+                "managerUserId": "mgr5",
+                "administrationId": null,
+                "id": "ts-e38-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e38-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e38",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": "u1",
+                "managerUserId": "mgr5",
+                "administrationId": null,
+                "id": "ts-e38-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e39",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr5"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e39-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e39",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": "u2",
+                "managerUserId": "mgr5",
+                "administrationId": null,
+                "id": "ts-e39-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e39-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e39",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": "u2",
+                "managerUserId": "mgr5",
+                "administrationId": null,
+                "id": "ts-e39-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e40",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e40-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e40",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e40-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e40-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e40",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e40-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e41",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e41-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e41",
+                "period": "2026-01",
+                "hours": 0,
+                "id": "ts-e41-blank",
+                "userId": "u1",
+                "managerUserId": null,
+                "administrationId": "ADM-1"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e41-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e41",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e41-blank",
+                "userId": "u1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e42",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e42-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e42",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e42-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e42-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e42",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e42-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e43",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e43-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e43",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e43-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e43-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e43",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e43-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e44",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e44-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e44",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": "",
+                "managerUserId": "",
+                "administrationId": "",
+                "id": "ts-e44-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e45",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e45-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e45",
+                "period": "2026-01",
+                "hours": 0,
+                "id": "ts-e45-blank",
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": null
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e45-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e45",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e45-blank",
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": null,
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e46",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e46-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e46",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": null,
+                "id": "ts-e46-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e46-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e46",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": null,
+                "id": "ts-e46-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e47",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e47-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e47",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e47-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e47-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e47",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e47-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e48",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e48-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e48",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e48-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e48-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e48",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e48-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e49",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e49-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e49",
+                "period": "2026-01",
+                "hours": 0,
+                "id": "ts-e49-blank",
+                "userId": null,
+                "managerUserId": "mgr2",
+                "administrationId": "ADM-1"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e49-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e49",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e49-blank",
+                "userId": null,
+                "managerUserId": "mgr2",
+                "administrationId": "ADM-1",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e50",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e50-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e50",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e50-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e50-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e50",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e50-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e51",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e51-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e51",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": "mgr1",
+                "managerUserId": "mgr2",
+                "administrationId": null,
+                "id": "ts-e51-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e51-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e51",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": "mgr1",
+                "managerUserId": "mgr2",
+                "administrationId": null,
+                "id": "ts-e51-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e52",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e52-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e52",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": "u1",
+                "managerUserId": "mgr2",
+                "administrationId": null,
+                "id": "ts-e52-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e52-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e52",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": "u1",
+                "managerUserId": "mgr2",
+                "administrationId": null,
+                "id": "ts-e52-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e53",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e53-blank",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e53",
+                "period": "2026-01",
+                "hours": 0.0,
+                "id": "ts-e53-blank",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e54",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e54-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e54",
+                "period": "2026-02",
+                "hours": 0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e54-stale"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e54-stale",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e54",
+                "period": "2026-02",
+                "hours": 0.0,
+                "userId": "mgr1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e54-stale",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e55",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e55-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e55",
+                "period": "2026-03",
+                "hours": 0,
+                "userId": "u1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e55-padded"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e55-padded",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e55",
+                "period": "2026-03",
+                "hours": 0.0,
+                "userId": "u1",
+                "managerUserId": null,
+                "administrationId": "ADM-1",
+                "id": "ts-e55-padded",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e56",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e56-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e56",
+                "period": "2026-04",
+                "hours": 0,
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e56-empty"
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-e56-empty",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e56",
+                "period": "2026-04",
+                "hours": 0.0,
+                "userId": "u2",
+                "managerUserId": null,
+                "administrationId": "ADM-2",
+                "id": "ts-e56-empty",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-no-employee",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "period": "2026-05",
+                "hours": 0,
+                "userId": null,
+                "id": "ts-no-employee",
+                "managerUserId": null,
+                "administrationId": null
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-no-employee",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "period": "2026-05",
+                "hours": 0.0,
+                "userId": null,
+                "id": "ts-no-employee",
+                "managerUserId": null,
+                "administrationId": null,
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e5",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-padded-employee",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": " e5 ",
+                "period": "2026-05",
+                "hours": 0,
+                "id": "ts-padded-employee",
+                "userId": "u2",
+                "managerUserId": "mgr1",
+                "administrationId": null
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-padded-employee",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": " e5 ",
+                "period": "2026-05",
+                "hours": 0.0,
+                "id": "ts-padded-employee",
+                "userId": "u2",
+                "managerUserId": "mgr1",
+                "administrationId": null,
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "ghost",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-unknown-employee",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "ghost",
+                "period": "2026-05",
+                "hours": 0.0,
+                "id": "ts-unknown-employee",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        },
+        {
+            "lookup": "e6",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-self-only",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e6",
+                "period": "2026-05",
+                "hours": 0,
+                "userId": null,
+                "managerUserId": "mgr1",
+                "administrationId": null
+            }
+        },
+        {
+            "save": "Timesheet",
+            "uuid": "ts-self-only",
+            "register": "humaniq",
+            "rbac": false,
+            "multitenancy": false,
+            "internal": true,
+            "object": {
+                "employeeId": "e6",
+                "period": "2026-05",
+                "hours": 0.0,
+                "userId": null,
+                "managerUserId": "mgr1",
+                "administrationId": null,
+                "id": "ts-self-only",
+                "overtimeHours": 0.0,
+                "entryCount": 0,
+                "projectId": null,
+                "costCenter": null,
+                "billable": false
+            }
+        }
+    ],
+    "second summary": {
+        "processed": 60,
+        "entriesCreated": 0,
+        "unresolvableUserLinks": 26
+    },
+    "second log": [
+        {
+            "lookup": "e1",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e2",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e3",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e4",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e5",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "lookup": "e6",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "lookup": "e7",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "lookup": "e8",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e9",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "lookup": "e10",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e11",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "lookup": "e12",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "lookup": "e13",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1",
+                "mgr3"
+            ]
+        },
+        {
+            "lookup": "e14",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e15",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "lookup": "e16",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr3"
+            ]
+        },
+        {
+            "lookup": "e17",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e18",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "lookup": "e19",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1",
+                "u1"
+            ]
+        },
+        {
+            "lookup": "e20",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1",
+                "u1"
+            ]
+        },
+        {
+            "lookup": "e21",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "lookup": "e22",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "u1"
+            ]
+        },
+        {
+            "lookup": "e23",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e24",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "u1"
+            ]
+        },
+        {
+            "lookup": "e25",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e26",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e27",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e28",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e29",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e30",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e31",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e32",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e33",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e34",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e35",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e36",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e37",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e38",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr5"
+            ]
+        },
+        {
+            "lookup": "e39",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr5"
+            ]
+        },
+        {
+            "lookup": "e40",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e41",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e42",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e43",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e44",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e45",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e46",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e47",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e48",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e49",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "lookup": "e50",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e51",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "lookup": "e52",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr2"
+            ]
+        },
+        {
+            "lookup": "e53",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e54",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e55",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e56",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e5",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        },
+        {
+            "lookup": "ghost",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": []
+        },
+        {
+            "lookup": "e6",
+            "onDateIsToday": true,
+            "indexes": "6c5f2105c7ddc5d4e19f7b4483294fff",
+            "resolved": [
+                "mgr1"
+            ]
+        }
+    ],
+    "caches after": {
+        "ts-e1-blank": {
+            "userId": "u1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e10-stale": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-2"
+        },
+        "ts-e11-padded": {
+            "userId": "mgr1",
+            "managerUserId": "mgr2",
+            "administrationId": "(absent)"
+        },
+        "ts-e12-empty": {
+            "userId": "u1",
+            "managerUserId": "mgr2",
+            "administrationId": "(absent)"
+        },
+        "ts-e13-blank": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-e14-stale": {
+            "userId": "mgr1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e15-padded": {
+            "userId": " u1 ",
+            "managerUserId": " mgr1 ",
+            "administrationId": " ADM-1 "
+        },
+        "ts-e16-empty": {
+            "userId": "u2",
+            "managerUserId": "mgr3",
+            "administrationId": "ADM-2"
+        },
+        "ts-e17-blank": {
+            "userId": "mgr1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-2"
+        },
+        "ts-e18-stale": {
+            "userId": "u1",
+            "managerUserId": "mgr1",
+            "administrationId": "(absent)"
+        },
+        "ts-e19-padded": {
+            "userId": "u2",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-e2-stale": {
+            "userId": "u2",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e20-empty": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e21-blank": {
+            "userId": "u1",
+            "managerUserId": "mgr1",
+            "administrationId": "ADM-1"
+        },
+        "ts-e22-stale": {
+            "userId": "u2",
+            "managerUserId": "u1",
+            "administrationId": "ADM-1"
+        },
+        "ts-e23-padded": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-2"
+        },
+        "ts-e24-empty": {
+            "userId": "(absent)",
+            "managerUserId": "u1",
+            "administrationId": "(absent)"
+        },
+        "ts-e25-blank": {
+            "userId": "u2",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-e26-stale": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-e27-padded": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e28-empty": {
+            "userId": "mgr1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e29-blank": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e3-padded": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-2"
+        },
+        "ts-e30-stale": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-2"
+        },
+        "ts-e31-padded": {
+            "userId": "mgr1",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-e32-empty": {
+            "userId": "u1",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-e33-blank": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-e34-stale": {
+            "userId": "mgr1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e35-padded": {
+            "userId": "u1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e36-empty": {
+            "userId": "u2",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-2"
+        },
+        "ts-e37-blank": {
+            "userId": "mgr1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-2"
+        },
+        "ts-e38-stale": {
+            "userId": "u1",
+            "managerUserId": "mgr5",
+            "administrationId": "(absent)"
+        },
+        "ts-e39-padded": {
+            "userId": "u2",
+            "managerUserId": "mgr5",
+            "administrationId": "(absent)"
+        },
+        "ts-e4-empty": {
+            "userId": "",
+            "managerUserId": "",
+            "administrationId": ""
+        },
+        "ts-e40-empty": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e41-blank": {
+            "userId": "u1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e42-stale": {
+            "userId": "u2",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e43-padded": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-2"
+        },
+        "ts-e44-empty": {
+            "userId": "",
+            "managerUserId": "",
+            "administrationId": ""
+        },
+        "ts-e45-blank": {
+            "userId": "u2",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-e46-stale": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-e47-padded": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e48-empty": {
+            "userId": "mgr1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e49-blank": {
+            "userId": "(absent)",
+            "managerUserId": "mgr2",
+            "administrationId": "ADM-1"
+        },
+        "ts-e5-blank": {
+            "userId": "u2",
+            "managerUserId": "mgr1",
+            "administrationId": "(absent)"
+        },
+        "ts-e50-stale": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-2"
+        },
+        "ts-e51-padded": {
+            "userId": "mgr1",
+            "managerUserId": "mgr2",
+            "administrationId": "(absent)"
+        },
+        "ts-e52-empty": {
+            "userId": "u1",
+            "managerUserId": "mgr2",
+            "administrationId": "(absent)"
+        },
+        "ts-e53-blank": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-e54-stale": {
+            "userId": "mgr1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e55-padded": {
+            "userId": "u1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e56-empty": {
+            "userId": "u2",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-2"
+        },
+        "ts-e6-stale": {
+            "userId": "(absent)",
+            "managerUserId": "mgr1",
+            "administrationId": "(absent)"
+        },
+        "ts-e7-padded": {
+            "userId": "(absent)",
+            "managerUserId": "mgr1",
+            "administrationId": "ADM-1"
+        },
+        "ts-e8-empty": {
+            "userId": "mgr1",
+            "managerUserId": "(absent)",
+            "administrationId": "ADM-1"
+        },
+        "ts-e9-blank": {
+            "userId": "(absent)",
+            "managerUserId": "mgr2",
+            "administrationId": "ADM-1"
+        },
+        "ts-no-employee": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-no-id": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        },
+        "ts-padded-employee": {
+            "userId": "u2",
+            "managerUserId": "mgr1",
+            "administrationId": "(absent)"
+        },
+        "ts-self-only": {
+            "userId": "(absent)",
+            "managerUserId": "mgr1",
+            "administrationId": "(absent)"
+        },
+        "ts-unknown-employee": {
+            "userId": "(absent)",
+            "managerUserId": "(absent)",
+            "administrationId": "(absent)"
+        }
+    }
+}
