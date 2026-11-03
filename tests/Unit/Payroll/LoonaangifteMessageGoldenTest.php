@@ -24,6 +24,7 @@ require_once __DIR__ . '/../../fixtures/golden/loonaangifte-message.input.php';
  * Golden test for {@see LoonaangifteMessageBuilder::build()}.
  *
  * @covers \OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessageBuilder
+ * @uses   \OCA\Humaniq\Payroll\Loonaangifte\PersonPart
  */
 class LoonaangifteMessageGoldenTest extends TestCase {
 
