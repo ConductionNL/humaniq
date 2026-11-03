@@ -35,6 +35,7 @@ use Psr\Log\NullLogger;
  * Golden test for the identity-cache backfill of {@see MigrateHoursProcess::migrate()}.
  *
  * @covers \OCA\Humaniq\Repair\MigrateHoursProcess
+ * @uses   \OCA\Humaniq\Repair\TimesheetIdentityCaches
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\OrgResolutionService
  * @uses   \OCA\Humaniq\Service\TimesheetAggregationService
