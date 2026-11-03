@@ -211,4 +211,25 @@ class TravelAmountListenerTest extends TestCase {
 		self::assertSame([], RegisterSchemaValidator::errors('CommuteArrangement', array_merge($arrangement, $stamped)));
 	}//end testAnArrangementGetsItsMonthlyAllowanceAndTheEmployeesAccount()
 
+	/**
+	 * An arrangement whose employee resolves no manager is stamped without
+	 * one: a manager the client sent is not kept.
+	 *
+	 * @return void
+	 */
+	public function testAClientManagerIsNotKeptWhenNoneResolves(): void {
+		$arrangement = ['employeeId' => self::EMPLOYEE, 'managerUserId' => 'someone-else', 'distanceKmOneWay' => 18, 'daysPerWeek' => 4, 'startDate' => '2026-01-01', 'status' => 'submitted'];
+		$event = new ObjectCreatingEvent($this->entity('CommuteArrangement', $arrangement));
+		$this->listener()->handle($event);
+
+		$stamped = $event->getModifiedData();
+		self::assertArrayHasKey('managerUserId', $stamped);
+		self::assertNull($stamped['managerUserId']);
+
+		$unknown = new ObjectCreatingEvent($this->entity('CommuteArrangement', ['employeeId' => 'emp-unknown'] + $arrangement));
+		$this->listener()->handle($unknown);
+		self::assertArrayHasKey('managerUserId', $unknown->getModifiedData());
+		self::assertNull($unknown->getModifiedData()['managerUserId']);
+	}//end testAClientManagerIsNotKeptWhenNoneResolves()
+
 }//end class

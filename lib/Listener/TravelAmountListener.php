@@ -239,6 +239,7 @@ class TravelAmountListener implements IEventListener {
 
 	/**
 	 * The employee's account, administration and manager for an arrangement.
+	 * The manager is null when none resolves, so a client-sent one is not kept.
 	 *
 	 * @param array<string, mixed> $arrangement The arrangement.
 	 *
@@ -248,19 +249,14 @@ class TravelAmountListener implements IEventListener {
 		$employeeId = trim((string)($arrangement['employeeId'] ?? ''));
 		$employee = $employeeId === '' ? null : $this->gateway->findObjectData($employeeId, 'Employee');
 		if ($employee === null) {
-			return [];
+			return ['managerUserId' => null];
 		}
 
-		$identity = [
+		return [
 			'userId' => $this->nullableTrim($employee['nextcloudUserId'] ?? null),
 			'administrationId' => $this->nullableTrim($employee['administrationId'] ?? null),
+			'managerUserId' => $this->gateway->uniqueManagerUserIdFor($employeeId, (string)($arrangement['startDate'] ?? gmdate('Y-m-d'))),
 		];
-		$manager = $this->gateway->uniqueManagerUserIdFor($employeeId, (string)($arrangement['startDate'] ?? gmdate('Y-m-d')));
-		if ($manager !== null) {
-			$identity['managerUserId'] = $manager;
-		}
-
-		return $identity;
 	}//end identity()
 
 	/**

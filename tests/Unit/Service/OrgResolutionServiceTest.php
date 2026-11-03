@@ -226,6 +226,20 @@ class OrgResolutionServiceTest extends TestCase {
 	}//end testAPlacementWithAnUnreadableDateRoutesNoApproval()
 
 	/**
+	 * A placement is active on its first and on its last day, and not the
+	 * day before or after.
+	 *
+	 * @return void
+	 */
+	public function testAPlacementIsActiveOnItsFirstAndLastDay(): void {
+		$placement = ['startDate' => '2026-03-01', 'endDate' => '2026-03-31'];
+		$this->assertTrue($this->service->isActiveOn($placement, '2026-03-01'));
+		$this->assertTrue($this->service->isActiveOn($placement, '2026-03-31'));
+		$this->assertFalse($this->service->isActiveOn($placement, '2026-02-28'));
+		$this->assertFalse($this->service->isActiveOn($placement, '2026-04-01'));
+	}//end testAPlacementIsActiveOnItsFirstAndLastDay()
+
+	/**
 	 * An unparseable REFERENCE date falls back to today — a caller handing a
 	 * malformed onDate gets today's activeness, never a crash or vacuous no.
 	 *
