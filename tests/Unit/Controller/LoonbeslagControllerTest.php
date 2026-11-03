@@ -189,6 +189,10 @@ class LoonbeslagControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertSame([], $fake->saved);
+		$this->assertSame(
+			['error' => 'Loonbeslag heeft status "actief" — alleen concept-loonbeslagen kunnen worden geactiveerd.'],
+			$response->getData()
+		);
 
 	}//end testActivateRefusesANonConceptLoonbeslag()
 
@@ -213,6 +217,7 @@ class LoonbeslagControllerTest extends TestCase {
 		$data = $response->getData();
 		$this->assertSame('ok', $data['status']);
 		$this->assertSame('actief', $data['loonbeslag']['status']);
+		$this->assertSame('Loonbeslag geverifieerd en geactiveerd.', $data['message']);
 
 	}//end testActivateHappyPathStampsTheTransition()
 
@@ -231,6 +236,7 @@ class LoonbeslagControllerTest extends TestCase {
 		$this->assertSame('voldaan', $saved['status']);
 		$this->assertSame('hr-admin', $saved['settledBy']);
 		$this->assertNotEmpty($saved['settledAt']);
+		$this->assertSame('Loonbeslag gemarkeerd als voldaan.', $response->getData()['message']);
 
 	}//end testSettleHappyPathStampsTheTransition()
 
