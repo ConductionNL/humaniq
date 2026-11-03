@@ -88,11 +88,8 @@ final class TimesheetIdentityCaches {
 	 */
 	private function cacheValue(mixed $value): ?string {
 		$text = trim((string)($value ?? ''));
-		if ($text === '') {
-			return null;
-		}
 
-		return $text;
+		return ($text !== '') ? $text : null;
 	}//end cacheValue()
 
 }//end class
