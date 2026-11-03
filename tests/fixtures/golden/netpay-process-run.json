@@ -2050,6 +2050,43 @@
             }
         ]
     },
+    "stale pending adopts the PaymentRun": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Bestaande shillinq PaymentRun overgenomen (crash-recovery).",
+            "batchId": "b-1",
+            "paymentRunId": "pr-9"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "b-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "b-1",
+                    "payrollRunId": "run-1",
+                    "status": "created",
+                    "shillinqPaymentRunRef": "pr-9",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "createdAt": "<now>",
+                    "errorMessage": null
+                }
+            }
+        ]
+    },
+    "already created": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Al klaargezet in shillinq (idempotent no-op).",
+            "batchId": "b-2",
+            "paymentRunId": "pr-1"
+        },
+        "writes": []
+    },
     "shillinq not installed": {
         "outcome": {
             "runId": "run-1",

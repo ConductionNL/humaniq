@@ -171,7 +171,7 @@ class PayrollNetPayService {
 		}
 
 		if ($active !== null && (string)($active['status'] ?? '') === 'pending') {
-			$recovered = $this->recoverStalePending($active, $runId, $runNumber);
+			$recovered = $this->recoverStalePending($active, $run);
 			if ($recovered !== null) {
 				return $recovered;
 			}
@@ -355,14 +355,15 @@ class PayrollNetPayService {
 	 * return null so the caller starts a fresh attempt.
 	 *
 	 * @param array<string, mixed> $stalePending The stale `pending` PayrollPaymentBatch.
-	 * @param string $runId The PayrollRun id being processed.
-	 * @param string $runNumber The deterministic idempotency key.
+	 * @param array<string, mixed> $run The PayrollRun being processed.
 	 *
 	 * @return array<string, mixed>|null The outcome when adopted, or null to retry fresh.
 	 *
 	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
 	 */
-	private function recoverStalePending(array $stalePending, string $runId, string $runNumber): ?array {
+	private function recoverStalePending(array $stalePending, array $run): ?array {
+		$runId = $this->idOf($run);
+		$runNumber = $this->runNumber($run);
 		if ($this->shillinqAvailable() === false) {
 			return null;
 		}
