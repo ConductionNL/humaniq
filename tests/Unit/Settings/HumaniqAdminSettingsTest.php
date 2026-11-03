@@ -107,4 +107,31 @@ class HumaniqAdminSettingsTest extends TestCase {
 		$this->assertSame(['id' => 'humaniq-payroll', 'exists' => false, 'members' => null], $provided['roleGroups']['payroll']);
 		$this->assertSame(Application::APP_ID, $settings->getSection());
 	}//end testTheFormProvidesTheRoleGroups()
+
+	/**
+	 * A group backend that cannot count its members reports no count rather
+	 * than a boolean.
+	 *
+	 * @return void
+	 */
+	public function testAnUncountableGroupHasNoMemberCount(): void {
+		$hr = $this->createMock(IGroup::class);
+		$hr->method('count')->willReturn(false);
+
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('get')->willReturn($hr);
+
+		$provided = [];
+		$initialState = $this->createMock(IInitialState::class);
+		$initialState->method('provideInitialState')->willReturnCallback(
+			function (string $key, mixed $data) use (&$provided): void {
+				$provided[$key] = $data;
+			}
+		);
+
+		$settings = new HumaniqAdminSettings($this->createMock(IAppManager::class), $initialState, $groupManager);
+		$settings->getForm();
+
+		$this->assertSame(['id' => 'humaniq-hr', 'exists' => true, 'members' => null], $provided['roleGroups']['hr']);
+	}//end testAnUncountableGroupHasNoMemberCount()
 }//end class
