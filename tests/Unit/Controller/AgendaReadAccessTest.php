@@ -1114,4 +1114,130 @@ class AgendaReadAccessTest extends TestCase {
 		$this->assertNotContains('shift:emp-eva', $this->kinds($unit));
 	}//end testAnEarlyWindowDoesNotBringBackFormerMembers()
 
+	/**
+	 * A unit without an administration takes its boundary from its members:
+	 * the manager above it in another administration does not open it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAnUnlabelledUnitTakesItsMembersAdministration(): void {
+		$this->administrations(['emp-olga' => 'adm-B'], ['unit-org' => 'adm-B']);
+		$this->patch['OrgUnit'] = array_map(
+			static fn (array $unit): array => ($unit['id'] === 'unit-zorg' ? array_diff_key($unit, ['administrationId' => true]) : $unit),
+			$this->patch['OrgUnit']
+		);
+
+		$this->assertRefused($this->read('olga', 'orgUnit', 'unit-zorg'));
+		$this->loaded = [];
+		$this->assertHoursRefused($this->hours('olga', 'availability', 'unit-zorg'));
+	}//end testAnUnlabelledUnitTakesItsMembersAdministration()
+
+	/**
+	 * The manager of a unit without an administration, whose own record lies
+	 * in another administration than the members', does not open it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAnUnlabelledUnitsManagerOutsideTheMembersAdministrationIsRefused(): void {
+		$world = $this->baseWorld();
+		foreach ($world['Employee'] as $index => $employee) {
+			$world['Employee'][$index]['administrationId'] = ($employee['id'] === 'emp-mila' ? 'adm-B' : 'adm-A');
+		}
+
+		$this->patch = ['Employee' => $world['Employee']];
+		$this->assertRefused($this->read('mila', 'orgUnit', 'unit-zorg'));
+		$this->assertRefused($this->read('mila', 'employee', 'emp-anna'));
+	}//end testAnUnlabelledUnitsManagerOutsideTheMembersAdministrationIsRefused()
+
+	/**
+	 * A unit without an administration whose members belong to different
+	 * administrations has no boundary to climb within: only its own members
+	 * and HR open it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAnUnlabelledUnitWithMixedMembersOpensForNoManager(): void {
+		$world = $this->baseWorld();
+		foreach ($world['Employee'] as $index => $employee) {
+			$world['Employee'][$index]['administrationId'] = ($employee['id'] === 'emp-bram' ? 'adm-B' : 'adm-A');
+		}
+
+		$this->patch = ['Employee' => $world['Employee']];
+		$this->assertRefused($this->read('mila', 'orgUnit', 'unit-zorg'));
+		$this->assertRefused($this->read('olga', 'orgUnit', 'unit-zorg'));
+		$this->assertSame(Http::STATUS_OK, $this->read('bram', 'orgUnit', 'unit-zorg')->getStatus());
+		$this->assertSame(Http::STATUS_OK, $this->read('hanna', 'orgUnit', 'unit-zorg')->getStatus());
+	}//end testAnUnlabelledUnitWithMixedMembersOpensForNoManager()
+
+	/**
+	 * Data provider: the interview fields that name who leads or joins it.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function interviewRoles(): array {
+		return [
+			'leads it' => ['interviewerId'],
+			'joins it' => ['participantId'],
+		];
+	}//end interviewRoles()
+
+	/**
+	 * A colleague who leads or joins someone else's interview has it counted
+	 * as their own, and the interviewee's planned hours keep it out.
+	 *
+	 * @param string $field The field naming the colleague.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider interviewRoles
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
+	 */
+	public function testAnInterviewLedOrJoinedByAColleagueCountsOnlyForThem(string $field): void {
+		$this->patch = [
+			'WorkingPattern' => [$this->fullWeek('emp-anna'), $this->fullWeek('emp-bram')],
+			'Secondment' => [],
+			'SickLeaveCase' => [],
+			'RosterAssignment' => [],
+			'ResourceBooking' => [],
+			'Interview' => [
+				['id' => 'int-1', 'employeeId' => 'emp-bram', $field => 'emp-anna', 'scheduledStart' => '2026-09-08T10:00:00', 'scheduledEnd' => '2026-09-08T12:00:00'],
+			],
+		];
+
+		$colleague = $this->plannedHours('bram', 'availability', 'committedHours', '2026-09-08', '2026-09-08');
+		$this->assertEqualsWithDelta(0.0, $colleague['emp-anna'], 0.01);
+		$this->assertEqualsWithDelta(2.0, $colleague['emp-bram'], 0.01);
+		$this->assertEqualsWithDelta(2.0, $this->plannedHours('hanna', 'availability', 'committedHours', '2026-09-08', '2026-09-08')['emp-anna'], 0.01);
+	}//end testAnInterviewLedOrJoinedByAColleagueCountsOnlyForThem()
+
+	/**
+	 * A placement that starts today, or ends today, makes a colleague today.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
+	 */
+	public function testAPlacementOnItsFirstOrLastDayCounts(): void {
+		$today = date('Y-m-d');
+		foreach ([['startDate' => $today], ['startDate' => '2020-01-01', 'endDate' => $today]] as $dates) {
+			$world = $this->baseWorld();
+			$world['OrgAssignment'][] = ['id' => 'oa-carl-zorg', 'employeeId' => 'emp-carl', 'orgUnitId' => 'unit-zorg'] + $dates;
+			$this->patch = ['OrgAssignment' => $world['OrgAssignment']];
+			$this->assertSame(Http::STATUS_OK, $this->read('carl', 'employee', 'emp-anna')->getStatus(), json_encode($dates));
+		}
+
+		$world = $this->baseWorld();
+		$world['OrgAssignment'][] = ['id' => 'oa-carl-zorg', 'employeeId' => 'emp-carl', 'orgUnitId' => 'unit-zorg', 'startDate' => '2020-01-01', 'endDate' => date('Y-m-d', strtotime('-1 day'))];
+		$this->patch = ['OrgAssignment' => $world['OrgAssignment']];
+		$this->loaded = [];
+		$this->assertRefused($this->read('carl', 'employee', 'emp-anna'));
+	}//end testAPlacementOnItsFirstOrLastDayCounts()
+
 }//end class
