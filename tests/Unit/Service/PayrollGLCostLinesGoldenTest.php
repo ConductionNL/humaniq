@@ -27,6 +27,7 @@ require_once __DIR__ . '/../../fixtures/golden/gl-cost-lines.input.php';
  * @covers \OCA\Humaniq\Service\PayrollGLPostService
  * @uses   \OCA\Humaniq\Support\ConvertsRowsToArrays
  * @uses   \OCA\Humaniq\Service\PayrollJournalTotals
+ * @uses   \OCA\Humaniq\Service\WagePeriod
  * @uses   \OCA\Humaniq\Support\ResolvesObjectService
  * @uses   \OCA\Humaniq\Support\NormalisesRows
  * @uses   \OCA\Humaniq\Support\ChecksShillinqAvailability

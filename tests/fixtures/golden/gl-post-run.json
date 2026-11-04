@@ -1282,8 +1282,56 @@
     "unparseable period": {
         "outcome": {
             "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun."
+                }
+            }
+        ]
+    },
+    "padded unparseable period": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun."
+                }
+            }
+        ]
+    },
+    "period 2026-5": {
+        "outcome": {
+            "runId": "run-1",
             "status": "posted",
-            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-mei-ADM-001.",
+            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-2026-05-ADM-001.",
             "glPostId": "PayrollGLPost-new-1",
             "journalEntryId": "JournalEntry-new-2"
         },
@@ -1296,9 +1344,9 @@
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
-                    "period": "mei",
+                    "period": "2026-5",
                     "status": "pending",
-                    "journalNumber": "HRMQ-LOON-mei-ADM-001"
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001"
                 }
             },
             {
@@ -1308,9 +1356,9 @@
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
-                    "journalNumber": "HRMQ-LOON-mei-ADM-001",
-                    "entryDate": "mei-28",
-                    "description": "Loonjournaalpost mei — humaniq loonrun run-1",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
+                    "entryDate": "2026-05-31",
+                    "description": "Loonjournaalpost 2026-5 — humaniq loonrun run-1",
                     "lines": [
                         {
                             "side": "debit",
@@ -1352,9 +1400,9 @@
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
-                    "period": "mei",
+                    "period": "2026-5",
                     "status": "posted",
-                    "journalNumber": "HRMQ-LOON-mei-ADM-001",
+                    "journalNumber": "HRMQ-LOON-2026-05-ADM-001",
                     "id": "PayrollGLPost-new-1",
                     "journalEntryId": "JournalEntry-new-2",
                     "postedAt": "<now>",
@@ -1394,7 +1442,7 @@
                 "multitenancy": false,
                 "object": {
                     "id": "run-1",
-                    "period": "mei",
+                    "period": "2026-5",
                     "administrationId": "ADM-001",
                     "status": "posted",
                     "totalGross": 3800.0,
@@ -1407,13 +1455,13 @@
             }
         ]
     },
-    "padded unparseable period": {
+    "period 202605": {
         "outcome": {
             "runId": "run-1",
-            "status": "posted",
-            "message": "Geboekt als shillinq journaalpost HRMQ-LOON-mei-ADM-001.",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun.",
             "glPostId": "PayrollGLPost-new-1",
-            "journalEntryId": "JournalEntry-new-2"
+            "journalEntryId": null
         },
         "writes": [
             {
@@ -1424,113 +1472,153 @@
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
-                    "period": "mei",
-                    "status": "pending",
-                    "journalNumber": "HRMQ-LOON-mei-ADM-001"
+                    "period": "202605",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun."
                 }
-            },
+            }
+        ]
+    },
+    "period now": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": null
+        },
+        "writes": [
             {
-                "register": "shillinq",
-                "schema": "JournalEntry",
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
                 "uuid": null,
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
-                    "journalNumber": "HRMQ-LOON-mei-ADM-001",
-                    "entryDate": "mei-28",
-                    "description": "Loonjournaalpost mei — humaniq loonrun run-1",
-                    "lines": [
-                        {
-                            "side": "debit",
-                            "accountNumber": "4001",
-                            "amount": 3800.0,
-                            "description": "Loonkosten bruto"
-                        },
-                        {
-                            "side": "debit",
-                            "accountNumber": "4002",
-                            "amount": 649.8,
-                            "description": "Werkgeverslasten sociale premies"
-                        },
-                        {
-                            "side": "credit",
-                            "accountNumber": "1701",
-                            "amount": 1102.0,
-                            "description": "Loonheffing-schuld"
-                        },
-                        {
-                            "side": "credit",
-                            "accountNumber": "1702",
-                            "amount": 3347.8,
-                            "description": "Netto-loonschuld"
-                        }
-                    ],
-                    "journalType": "manual",
-                    "sourceApp": "humaniq",
-                    "approvalState": "not-required",
-                    "administrationId": "ADM-001",
-                    "state": "draft"
+                    "payrollRunId": "run-1",
+                    "period": "now",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun."
                 }
-            },
+            }
+        ]
+    },
+    "period 2026-00": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": null
+        },
+        "writes": [
             {
                 "register": "humaniq",
                 "schema": "PayrollGLPost",
-                "uuid": "PayrollGLPost-new-1",
+                "uuid": null,
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
                     "payrollRunId": "run-1",
-                    "period": "mei",
-                    "status": "posted",
-                    "journalNumber": "HRMQ-LOON-mei-ADM-001",
-                    "id": "PayrollGLPost-new-1",
-                    "journalEntryId": "JournalEntry-new-2",
-                    "postedAt": "<now>",
-                    "lines": [
-                        {
-                            "side": "debit",
-                            "accountNumber": "4001",
-                            "amount": 3800.0,
-                            "description": "Loonkosten bruto"
-                        },
-                        {
-                            "side": "debit",
-                            "accountNumber": "4002",
-                            "amount": 649.8,
-                            "description": "Werkgeverslasten sociale premies"
-                        },
-                        {
-                            "side": "credit",
-                            "accountNumber": "1701",
-                            "amount": 1102.0,
-                            "description": "Loonheffing-schuld"
-                        },
-                        {
-                            "side": "credit",
-                            "accountNumber": "1702",
-                            "amount": 3347.8,
-                            "description": "Netto-loonschuld"
-                        }
-                    ]
+                    "period": "2026-00",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun."
                 }
-            },
+            }
+        ]
+    },
+    "period 2026-13": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": null
+        },
+        "writes": [
             {
                 "register": "humaniq",
-                "schema": "PayrollRun",
-                "uuid": "run-1",
+                "schema": "PayrollGLPost",
+                "uuid": null,
                 "rbac": false,
                 "multitenancy": false,
                 "object": {
-                    "id": "run-1",
-                    "period": " mei ",
-                    "administrationId": "ADM-001",
-                    "status": "posted",
-                    "totalGross": 3800.0,
-                    "totalEmployerCharges": 649.8,
-                    "totalLoonheffing": 1102.0,
-                    "totalNet": 2698.0,
-                    "glExpensePosted": 4449.8,
-                    "glLiabilityPosted": 1751.8
+                    "payrollRunId": "run-1",
+                    "period": "2026-13",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun."
+                }
+            }
+        ]
+    },
+    "period x2026-05": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "x2026-05",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun."
+                }
+            }
+        ]
+    },
+    "period 12026-05": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "12026-05",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun."
+                }
+            }
+        ]
+    },
+    "period 2026-05x": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun.",
+            "glPostId": "PayrollGLPost-new-1",
+            "journalEntryId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollGLPost",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05x",
+                    "status": "failed",
+                    "errorMessage": "PayrollRun-periode is geen maand in de vorm JJJJ-MM; een loonjournaalpost heeft een boekdatum nodig. Corrigeer de periode van de loonrun."
                 }
             }
         ]

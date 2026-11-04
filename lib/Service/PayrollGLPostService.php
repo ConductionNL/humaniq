@@ -42,7 +42,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
-use DateTimeImmutable;
+use InvalidArgumentException;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -233,12 +233,15 @@ class PayrollGLPostService {
 			return null;
 		}
 
+		$built = $this->buildLines($run);
+		if ($built['error'] !== null) {
+			$glPost = $this->saveGlPost($active, ['status' => 'failed', 'errorMessage' => $built['error'] . ' Shillinq heeft al journaalpost ' . $journalNumber . ' van een eerdere poging; controleer die met de hand.']);
+			return $this->outcome($runId, 'failed', (string)$glPost['errorMessage'], $glPost);
+		}
+
 		$journalEntryId = (string)($adopted['id'] ?? $adopted['@self']['id'] ?? '');
 		$glPost = $this->saveGlPost($active, ['status' => 'posted', 'journalEntryId' => $journalEntryId, 'journalNumber' => $journalNumber, 'postedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'errorMessage' => null]);
-		$built = $this->buildLines($run);
-		if ($built['error'] === null) {
-			$this->applySuccessToRun($run, (float)$built['glExpensePosted'], (float)$built['glLiabilityPosted']);
-		}
+		$this->applySuccessToRun($run, (float)$built['glExpensePosted'], (float)$built['glLiabilityPosted']);
 
 		return $this->outcome($runId, 'posted', 'Bestaande shillinq-journaalpost overgenomen (crash-recovery).', $glPost, $journalEntryId);
 	}//end settledByActiveGlPost()
@@ -260,9 +263,17 @@ class PayrollGLPostService {
 		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
 		$journalNumber = $this->journalNumber($run);
 		$claim = $this->createGlPost(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'journalNumber' => $journalNumber]);
-		if ((new PendingClaims(self::ACTIVE_STATUSES))->hasRival($this->glPostsWhere('journalNumber', $journalNumber), $claim) === true) {
-			$withdrawn = $this->saveGlPost($claim, ['status' => 'failed', 'errorMessage' => 'Withdrawn: another process is already posting this payroll run.']);
-			return $this->outcome($runId, 'pending', 'Another process is already posting this payroll run.', $withdrawn);
+		$claims = new PendingClaims(self::ACTIVE_STATUSES);
+		$records = $this->glPostsWhere('journalNumber', $journalNumber);
+		foreach ($claims->staleOthers($records, $claim) as $stale) {
+			$this->saveGlPost($stale, ['status' => 'failed', 'errorMessage' => 'Verlopen pending-poging met hetzelfde journaalnummer vervangen.']);
+		}
+
+		$rival = $claims->rival($records, $claim);
+		if ($rival !== null) {
+			$message = ($claims->isAnotherRun($rival, $claim) === true ? 'Duplicate run: another payroll run of this period and administration already holds journal number ' . $journalNumber . '.' : 'Another process is already posting this payroll run.');
+			$withdrawn = $this->saveGlPost($claim, ['status' => 'failed', 'errorMessage' => 'Withdrawn: ' . $message]);
+			return $this->outcome($runId, 'pending', $message, $withdrawn);
 		}
 
 		try {
@@ -522,7 +533,8 @@ class PayrollGLPostService {
 	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-003
 	 */
 	private function journalNumber(array $run): string {
-		return sprintf('HRMQ-LOON-%s-%s', trim((string)($run['period'] ?? '')), trim((string)($run['administrationId'] ?? '')));
+		$period = trim((string)($run['period'] ?? ''));
+		return sprintf('HRMQ-LOON-%s-%s', ((new WagePeriod($period))->month() ?? $period), trim((string)($run['administrationId'] ?? '')));
 	}//end journalNumber()
 
 	/**
@@ -532,17 +544,16 @@ class PayrollGLPostService {
 	 * @param string $period Wage period in YYYY-MM.
 	 *
 	 * @return string The period-end date (Y-m-d).
+	 *
+	 * @throws InvalidArgumentException When the period is not a month.
 	 */
 	private function periodEndDate(string $period): string {
-		try {
-			$date = new DateTimeImmutable($period . '-01');
-		} catch (\Throwable $e) {
-			// Defensive fallback; upstream schema validation guards the YYYY-MM shape.
-			return $period . '-28';
+		$firstDay = (new WagePeriod($period))->firstDay();
+		if ($firstDay === null) {
+			throw new InvalidArgumentException('PayrollRun-periode is geen maand in de vorm JJJJ-MM.');
 		}
 
-		$lastDay = $date->modify('last day of this month');
-		return $lastDay === false ? ($period . '-28') : $lastDay->format('Y-m-d');
+		return $firstDay->format('Y-m-t');
 	}//end periodEndDate()
 
 	/**

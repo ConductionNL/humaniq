@@ -49,7 +49,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
-use DateTimeImmutable;
+use InvalidArgumentException;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -189,7 +189,7 @@ class PayrollNetPayService {
 			return $this->outcome($runId, 'skipped-no-shillinq', (string)($batch['errorMessage'] ?? ''), $batch);
 		}
 
-		$collected = $this->collectLines($run);
+		$collected = ((new WagePeriod($period))->month() === null ? $this->collectFailure('PayrollRun-periode is geen maand in de vorm JJJJ-MM; de betaalopdracht heeft een uitvoerdatum nodig. Corrigeer de periode van de loonrun.') : $this->collectLines($run));
 		if ($collected['error'] !== null) {
 			$batch = $this->createBatch(
 				[
@@ -254,9 +254,17 @@ class PayrollNetPayService {
 		$runId = $this->idOf($run);
 		$runNumber = $this->runNumber($run);
 		$claim = $this->createBatch(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'runNumber' => $runNumber]);
-		if ((new PendingClaims(self::ACTIVE_STATUSES))->hasRival($this->batchesWhere('runNumber', $runNumber), $claim) === true) {
-			$withdrawn = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Ingetrokken: een andere verwerking zet deze loonrun al klaar.']);
-			return $this->outcome($runId, 'pending', 'Deze loonrun wordt al door een andere verwerking klaargezet.', $withdrawn);
+		$claims = new PendingClaims(self::ACTIVE_STATUSES);
+		$batches = $this->batchesWhere('runNumber', $runNumber);
+		foreach ($claims->staleOthers($batches, $claim) as $stale) {
+			$this->saveBatch($stale, ['status' => 'failed', 'errorMessage' => 'Verlopen pending-poging met hetzelfde runnummer vervangen.']);
+		}
+
+		$rival = $claims->rival($batches, $claim);
+		if ($rival !== null) {
+			$message = ($claims->isAnotherRun($rival, $claim) === true ? 'Dubbele loonrun: een andere loonrun van deze periode en administratie heeft runnummer ' . $runNumber . ' al.' : 'Deze loonrun wordt al door een andere verwerking klaargezet.');
+			$withdrawn = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Ingetrokken: ' . $message]);
+			return $this->outcome($runId, 'pending', $message, $withdrawn);
 		}
 
 		try {
@@ -489,7 +497,8 @@ class PayrollNetPayService {
 	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
 	 */
 	private function runNumber(array $run): string {
-		return sprintf('HRMQ-NETPAY-%s-%s', trim((string)($run['period'] ?? '')), trim((string)($run['administrationId'] ?? '')));
+		$period = trim((string)($run['period'] ?? ''));
+		return sprintf('HRMQ-NETPAY-%s-%s', ((new WagePeriod($period))->month() ?? $period), trim((string)($run['administrationId'] ?? '')));
 	}//end runNumber()
 
 	/**
@@ -500,13 +509,13 @@ class PayrollNetPayService {
 	 * @param string $period Wage period in YYYY-MM.
 	 *
 	 * @return string The execution date (Y-m-d).
+	 *
+	 * @throws InvalidArgumentException When the period is not a month.
 	 */
 	private function executionDate(string $period): string {
-		try {
-			$date = new DateTimeImmutable($period . '-01');
-		} catch (\Throwable $e) {
-			// Defensive fallback; upstream schema validation guards the YYYY-MM shape.
-			return $period . '-25';
+		$date = (new WagePeriod($period))->firstDay();
+		if ($date === null) {
+			throw new InvalidArgumentException('PayrollRun-periode is geen maand in de vorm JJJJ-MM.');
 		}
 
 		$lastDay = (int)$date->format('t');
