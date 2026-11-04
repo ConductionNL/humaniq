@@ -131,7 +131,7 @@ class ExpenseController extends Controller {
 		// endpoint cannot install anything, and "cannot be resolved" is exactly
 		// the outcome the catch below already collapses to.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			$this->caller->logger->info('ExpenseController: OpenRegister is niet beschikbaar; expense ' . $expenseId . ' kan niet worden opgehaald.');
+			$this->caller->logger->info('ExpenseController: OpenRegister is niet beschikbaar; een expense kan niet worden opgehaald.');
 			return null;
 		}
 
