@@ -68,6 +68,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Support\KeepsReadableRows;
 
 /**
  * Backfills identity caches, synthesizes migration entries, recomputes
@@ -76,6 +77,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
  */
 class MigrateHoursProcess implements IRepairStep {
+
+	use KeepsReadableRows;
 
 	/**
 	 * Upper bound for lookup queries (dev-stage volumes).
@@ -451,19 +454,7 @@ class MigrateHoursProcess implements IRepairStep {
 			return [];
 		}
 
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$out[] = (array)$row->jsonSerialize();
-			}
-		}
-
-		return $out;
+		return $this->normaliseRows($rows);
 	}//end loadAll()
 
 	/**

@@ -35,6 +35,7 @@ namespace OCA\Humaniq\Standards\Checks;
 use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Support\RoundsToCents;
 
 /**
  * Dutch payroll / loonheffingen + global GL-control + EU A1 executable checks.
@@ -43,6 +44,7 @@ use OCA\Humaniq\Payroll\TaxTables;
  */
 final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	use PayrollSampleFields;
+	use RoundsToCents;
 
 	/**
 	 * The 30%-ruling maximum term in months (Belastingdienst beschikking; the
@@ -688,23 +690,6 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	}//end tablesFor()
 
 	/**
-	 * Convert a euro-denominated value to integer cents (`round($euros × 100)`,
-	 * the `NlFleetChecks::cents()` precedent). Non-numeric/null values convert
-	 * to 0.
-	 *
-	 * @param mixed $euros The raw field value.
-	 *
-	 * @return int
-	 */
-	private static function cents(mixed $euros): int {
-		if (is_numeric($euros) === false) {
-			return 0;
-		}
-
-		return (int)round(((float)$euros) * 100);
-	}//end cents()
-
-	/**
 	 * True when the date at $endKey is no more than $months after the date at
 	 * $startKey.
 	 *
@@ -725,5 +710,4 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 		$limit = strtotime('+' . $months . ' months', $start);
 		return $end <= $limit;
 	}//end withinMonths()
-
 }//end class

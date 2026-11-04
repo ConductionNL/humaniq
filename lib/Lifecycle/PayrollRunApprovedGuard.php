@@ -48,7 +48,7 @@ use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
 
 /**
  * Denies the PensionFiling `controleren` transition unless the referenced
@@ -58,6 +58,8 @@ use RuntimeException;
  * loaded, the transition is denied rather than allowed on a guess.
  */
 final class PayrollRunApprovedGuard implements LifecycleGuardInterface {
+
+	use ResolvesObjectServiceByClass;
 
 	/**
 	 * PayrollRun statuses that unblock the `controleren` transition.
@@ -163,25 +165,6 @@ final class PayrollRunApprovedGuard implements LifecycleGuardInterface {
 	}//end toArray()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. class_exists() rather
-		// than SettingsService::isOpenRegisterAvailable(), because this guard
-		// does not inject SettingsService and adding a constructor dependency
-		// to a lifecycle guard purely to ask a yes/no question is the wrong
-		// trade. It answers the same question the container would otherwise
-		// have answered fatally.
-		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * The slug this instance's humaniq register answers to, or null when absent.
 	 *
 	 * This used to end `return $register === '' ? 'hrmq' : $register;` under a
@@ -200,5 +183,4 @@ final class PayrollRunApprovedGuard implements LifecycleGuardInterface {
 	private function registerSlug(): ?string {
 		return (new RegisterSlugLookup($this->container, $this->appConfig))->slugOrNull();
 	}//end registerSlug()
-
 }//end class

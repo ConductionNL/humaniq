@@ -50,11 +50,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Standards\Checks;
 
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Support\RoundsToCents;
 
 /**
  * Administration-level WKR eindheffing-exposure executable check.
  */
 final class NlWkrChecks implements CheckProvider, SeedsObjects {
+
+	use RoundsToCents;
 
 	/**
 	 * Memoised TaxTables instance (construction-time glob precedent —
@@ -242,23 +245,6 @@ final class NlWkrChecks implements CheckProvider, SeedsObjects {
 	}//end reset()
 
 	/**
-	 * Convert a euro-denominated value to integer cents (`round($euros * 100)`,
-	 * the PayrollMutationService read-time boundary). Non-numeric/null values
-	 * convert to 0.
-	 *
-	 * @param mixed $euros The raw field value.
-	 *
-	 * @return int
-	 */
-	private static function cents(mixed $euros): int {
-		if (is_numeric($euros) === false) {
-			return 0;
-		}
-
-		return (int)round(((float)$euros) * 100);
-	}//end cents()
-
-	/**
 	 * Compare two rate percentages at basis-point precision (the
 	 * NlPayrollChecks::ratesEqual precedent).
 	 *
@@ -270,5 +256,4 @@ final class NlWkrChecks implements CheckProvider, SeedsObjects {
 	private static function ratesEqual(float $a, float $b): bool {
 		return (int)round($a * 100) === (int)round($b * 100);
 	}//end ratesEqual()
-
 }//end class

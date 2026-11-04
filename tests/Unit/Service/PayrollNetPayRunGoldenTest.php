@@ -32,6 +32,9 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Humaniq\Service\PayrollNetPayService
  * @uses   \OCA\Humaniq\Support\ConvertsRowsToArrays
  * @uses   \OCA\Humaniq\Service\PendingClaims
+ * @uses   \OCA\Humaniq\Support\ResolvesObjectService
+ * @uses   \OCA\Humaniq\Support\NormalisesRows
+ * @uses   \OCA\Humaniq\Support\ChecksShillinqAvailability
  */
 class PayrollNetPayRunGoldenTest extends TestCase {
 
