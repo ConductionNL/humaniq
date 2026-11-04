@@ -86,6 +86,8 @@ use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
+use OCA\Humaniq\Support\KeepsReadableRows;
 
 /**
  * Rewrites existing Asset/AssetAssignment objects from the old Dutch dialect
@@ -94,6 +96,9 @@ use RuntimeException;
  * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
  */
 class AssetDialectMigrationService {
+
+	use ResolvesObjectServiceByClass;
+	use KeepsReadableRows;
 
 	/**
 	 * Max objects loaded per schema for the migration (RuleAuditService::LIMIT precedent).
@@ -360,40 +365,8 @@ class AssetDialectMigrationService {
 			return [];
 		}
 
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$out[] = (array)$row->jsonSerialize();
-			}
-		}
-
-		return $out;
+		return $this->normaliseRows($rows);
 	}//end loadAll()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 *
-	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. class_exists() rather
-		// than SettingsService::isOpenRegisterAvailable(), because this class
-		// does not inject SettingsService and adding a constructor dependency
-		// purely to ask a yes/no question is the wrong trade. It answers the
-		// same question the container would otherwise have answered fatally.
-		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
 
 	/**
 	 * The slug this instance's humaniq register answers to.
@@ -429,5 +402,4 @@ class AssetDialectMigrationService {
 
 		return $slug;
 	}//end register()
-
 }//end class

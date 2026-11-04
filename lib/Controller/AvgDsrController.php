@@ -64,6 +64,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceThroughCaller;
 
 /**
  * Guarded endpoints for AVG data-subject-rights export/erase/rectify.
@@ -71,6 +72,7 @@ use RuntimeException;
 class AvgDsrController extends Controller {
 
 	use ConvertsRowsToArrays;
+	use ResolvesObjectServiceThroughCaller;
 
 	/**
 	 * The Employee fields a data subject may have corrected through a
@@ -395,24 +397,6 @@ class AvgDsrController extends Controller {
 	}//end authorizeEmployee()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * A trimmed, non-empty string, or null.
 	 *
 	 * @param string|null $value The raw value.
@@ -423,5 +407,4 @@ class AvgDsrController extends Controller {
 		$value = trim((string)$value);
 		return $value === '' ? null : $value;
 	}//end nullableId()
-
 }//end class

@@ -47,7 +47,9 @@ use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\NormalisesRows;
+use OCA\Humaniq\Support\ChecksShillinqAvailability;
 
 /**
  * Builds and posts the balanced payroll-to-GL journal for approved runs.
@@ -57,6 +59,9 @@ use RuntimeException;
 class PayrollGLPostService {
 
 	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use NormalisesRows;
+	use ChecksShillinqAvailability;
 
 	/**
 	 * The app id shillinq registers under (IAppManager::isInstalled probe).
@@ -592,26 +597,6 @@ class PayrollGLPostService {
 	}//end applySuccessToRun()
 
 	/**
-	 * Duck-typed shillinq availability probe (design.md D7): shillinq must be
-	 * installed AND its JournalEntry register/schema must resolve.
-	 *
-	 * @return bool
-	 */
-	private function shillinqAvailable(): bool {
-		if ($this->appManager->isInstalled(self::SHILLINQ_APP_ID) === false) {
-			return false;
-		}
-
-		try {
-			$this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 1]);
-		} catch (\Throwable $e) {
-			return false;
-		}
-
-		return true;
-	}//end shillinqAvailable()
-
-	/**
 	 * Search shillinq for an existing JournalEntry with the given journalNumber
 	 * (the idempotency probe, design.md D6). Never throws — a lookup failure is
 	 * treated as "not found" by the caller's fall-through logic.
@@ -789,44 +774,9 @@ class PayrollGLPostService {
 	}//end outcome()
 
 	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

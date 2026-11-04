@@ -64,7 +64,8 @@ namespace OCA\Humaniq\Service;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\LoadsAllRows;
 
 /**
  * Idempotently settles an approved LeaveTransaction: re-checked sufficiency
@@ -74,6 +75,8 @@ use RuntimeException;
 class LeaveBuySellSettlementService {
 
 	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use LoadsAllRows;
 
 	/**
 	 * Max objects loaded per type when scanning for a balance/run match.
@@ -285,30 +288,6 @@ class LeaveBuySellSettlementService {
 	}//end findById()
 
 	/**
-	 * Load all objects of a schema (capped), as plain arrays. Degrades to an
-	 * empty list when the schema does not exist yet in the register.
-	 *
-	 * @param string $schema The schema name.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function loadAll(string $schema): array {
-		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema($schema)->findAll(['limit' => self::LIMIT]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('LeaveBuySellSettlementService: kon ' . $schema . ' niet laden: ' . $e->getMessage());
-			return [];
-		}
-
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end loadAll()
-
-	/**
 	 * Build the base outcome array.
 	 *
 	 * @param string $transactionId The LeaveTransaction id ('' when unknown).
@@ -338,28 +317,9 @@ class LeaveBuySellSettlementService {
 	}//end idOf()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

@@ -32,11 +32,14 @@ namespace OCA\Humaniq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use Throwable;
+use OCA\Humaniq\Support\ReadsIcsValues;
 
 /**
  * Renders and diffs one Interview's VEVENT text.
  */
 class InterviewIcsRenderer {
+
+	use ReadsIcsValues;
 
 	/**
 	 * Render one timed VEVENT wrapped in a VCALENDAR (design.md D5):
@@ -185,33 +188,4 @@ class InterviewIcsRenderer {
 		$value = str_replace('\\\\', '\\', $value);
 		return $value;
 	}//end unescapeText()
-
-	/**
-	 * Extract a single property's value from a raw ICS text
-	 * (`PROPERTY[;PARAMS]:VALUE`), tolerant of `;` parameters and both CRLF
-	 * and LF line endings. Returns null when the property is absent.
-	 *
-	 * @param string $ics The raw ICS text.
-	 * @param string $property The property name (e.g. `DTSTART`).
-	 *
-	 * @return string|null
-	 */
-	private function extractIcsValue(string $ics, string $property): ?string {
-		$lines = preg_split('/\r\n|\n|\r/', $ics) ?: [];
-		foreach ($lines as $line) {
-			if (str_starts_with($line, $property . ':') === true) {
-				return substr($line, strlen($property) + 1);
-			}
-
-			if (str_starts_with($line, $property . ';') === true) {
-				$colonPos = strpos($line, ':');
-				if ($colonPos !== false) {
-					return substr($line, $colonPos + 1);
-				}
-			}
-		}
-
-		return null;
-	}//end extractIcsValue()
-
 }//end class
