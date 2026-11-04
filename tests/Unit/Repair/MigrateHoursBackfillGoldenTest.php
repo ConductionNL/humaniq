@@ -39,6 +39,7 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\OrgResolutionService
  * @uses   \OCA\Humaniq\Service\TimesheetAggregationService
+ * @uses   \OCA\Humaniq\Support\KeepsReadableRows
  */
 class MigrateHoursBackfillGoldenTest extends TestCase {
 

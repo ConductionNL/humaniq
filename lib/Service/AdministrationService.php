@@ -46,13 +46,17 @@ use OCA\Humaniq\AppInfo\Application;
 use OCP\IConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\KeepsReadableRows;
+use OCA\Humaniq\Support\ResolvesObjectServiceWithReload;
 
 /**
  * Accountant multi-client access resolution + per-user active-administration
  * pointer.
  */
 class AdministrationService {
+
+	use KeepsReadableRows;
+	use ResolvesObjectServiceWithReload;
 
 	/**
 	 * The `IConfig` user-value key the active administratie id is stored
@@ -367,54 +371,4 @@ class AdministrationService {
 
 		return $this->normaliseRows($rows);
 	}//end loadAll()
-
-	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$out[] = (array)$row->jsonSerialize();
-			}
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
-	 * The OpenRegister ObjectService, once availability has been established.
-	 *
-	 * ADR-083: the reach is guarded rather than blind. humaniq owns no database
-	 * tables — every object it manages lives in OpenRegister — so this is not
-	 * an optional capability in the sense of a feature that degrades. What the
-	 * guard buys is the ADR's rule 3 promise: an instance without OpenRegister
-	 * must still reach a start screen that EXPLAINS ITSELF. Unguarded, the
-	 * container raises `NotFoundExceptionInterface` naming a class the admin
-	 * has never heard of; guarded, they are told which app to install.
-	 *
-	 * @return mixed The OpenRegister ObjectService.
-	 *
-	 * @throws \RuntimeException When OpenRegister is not installed.
-	 */
-	private function objectService(): mixed {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance. '
-				. 'Install and enable it, then reload.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
 }//end class

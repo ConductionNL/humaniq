@@ -173,6 +173,15 @@ class OpenRegisterGuardContractTest extends TestCase {
 			}
 
 			$source = (string)file_get_contents($file->getPathname());
+			if (preg_match('/^trait /m', $source) === 1) {
+				continue;
+			}
+
+			if (preg_match('/^\tuse (ResolvesObjectService|ResolvesObjectServiceWithReload|ResolvesObjectServiceThroughCaller);$/m', $source) === 1) {
+				$found[] = $file->getPathname();
+				continue;
+			}
+
 			$start = strpos($source, 'private function objectService()');
 			if ($start === false) {
 				continue;

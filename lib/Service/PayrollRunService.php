@@ -166,28 +166,40 @@ use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\CalculationWage;
 use OCA\Humaniq\Payroll\InsuranceTariffs;
-use OCA\Humaniq\Payroll\WageTaxElection;
-use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
 use OCA\Humaniq\Payroll\SickPayCircumstances;
-use OCA\Humaniq\Payroll\SickPayInput;
 use OCA\Humaniq\Payroll\SickPayHours;
+use OCA\Humaniq\Payroll\SickPayInput;
+use OCA\Humaniq\Payroll\SickPayResult;
 use OCA\Humaniq\Payroll\SickPayTiming;
 use OCA\Humaniq\Payroll\SickPayWage;
-use OCA\Humaniq\Payroll\SickPayResult;
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\WageTaxElection;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\LoadsAllRows;
+use OCA\Humaniq\Support\ChecksPeriodCoverage;
+use OCA\Humaniq\Support\ReadsEmployeeKeys;
+use OCA\Humaniq\Support\FindsCoveringContract;
 
 /**
  * Generates draft payroll runs + engine payslips from the pure calculator.
  */
 class PayrollRunService {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use LoadsAllRows;
+	use ChecksPeriodCoverage;
+	use ReadsEmployeeKeys;
+	use FindsCoveringContract;
 
 	/**
 	 * The default administrationId when the occ command omits
@@ -1528,57 +1540,6 @@ class PayrollRunService {
 	}//end enginePayslipsByEmployeeId()
 
 	/**
-	 * All EmploymentContracts, indexed by every employee-reference key
-	 * (the netpay three-way convention: contracts may reference the employee
-	 * by object id, slug, or employeeNumber). Each key maps to the LIST of
-	 * that employee's contracts.
-	 *
-	 * @return array<string, array<int, array<string, mixed>>>
-	 */
-	private function contractsByEmployeeKey(): array {
-		$out = [];
-		foreach ($this->loadAll('EmploymentContract') as $contract) {
-			$key = trim((string)($contract['employeeId'] ?? ''));
-			if ($key !== '') {
-				$out[$key][] = $contract;
-			}
-		}
-
-		return $out;
-	}//end contractsByEmployeeKey()
-
-	/**
-	 * The employee's contract covering the period, resolved via the id/slug/
-	 * employeeNumber keys, or null when none covers it.
-	 *
-	 * @param array<string, mixed> $employee The Employee.
-	 * @param array<string, array<int, array<string, mixed>>> $contractsByEmployeeKey The contract index.
-	 * @param string $period Wage period (YYYY-MM).
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function coveringContract(array $employee, array $contractsByEmployeeKey, string $period): ?array {
-		$keys = array_filter(
-			[
-				$this->idOf($employee),
-				(string)($employee['@self']['slug'] ?? ''),
-				trim((string)($employee['employeeNumber'] ?? '')),
-			],
-			static fn (string $key): bool => $key !== ''
-		);
-
-		foreach ($keys as $key) {
-			foreach (($contractsByEmployeeKey[$key] ?? []) as $contract) {
-				if ($this->coversPeriod((string)($contract['startDate'] ?? ''), (string)($contract['endDate'] ?? ''), $period) === true) {
-					return $contract;
-				}
-			}
-		}
-
-		return null;
-	}//end coveringContract()
-
-	/**
 	 * All open (gemeld) SickLeaveCases, indexed by every employee-reference
 	 * key (sick-pay-calc design.md D4, the same id/slug/employeeNumber
 	 * convention as `contractsByEmployeeKey()`). Each key maps to the LIST of
@@ -2304,40 +2265,6 @@ class PayrollRunService {
 	}//end loonbeslagFields()
 
 	/**
-	 * Whether a start/end date range covers the wage period: startDate on or
-	 * before the period's last day AND endDate null/blank or on/after the
-	 * period's first day.
-	 *
-	 * @param string $startDate ISO start date.
-	 * @param string $endDate ISO end date, or ''/null-ish while open.
-	 * @param string $period Wage period (YYYY-MM).
-	 *
-	 * @return bool
-	 */
-	private function coversPeriod(string $startDate, string $endDate, string $period): bool {
-		try {
-			$periodStart = new DateTimeImmutable($period . '-01');
-		} catch (\Throwable $e) {
-			return false;
-		}
-
-		$periodEnd = $periodStart->modify('last day of this month');
-
-		$start = strtotime(trim($startDate));
-		if ($start === false || $start > $periodEnd->getTimestamp()) {
-			return false;
-		}
-
-		$endDate = trim($endDate);
-		if ($endDate === '') {
-			return true;
-		}
-
-		$end = strtotime($endDate);
-		return $end === false || $end >= $periodStart->getTimestamp();
-	}//end coversPeriod()
-
-	/**
 	 * The hours paid in the period for the young part-timer test: the
 	 * approved hours of an hourly employee, the contracted hours of a
 	 * salaried one (hours a week x 13/3), plus overtime paid. Null when
@@ -2414,28 +2341,6 @@ class PayrollRunService {
 	}//end employeeContracts()
 
 	/**
-	 * A human label for an Employee in outcome reporting.
-	 *
-	 * @param array<string, mixed> $employee The Employee.
-	 *
-	 * @return string
-	 */
-	private function employeeLabel(array $employee): string {
-		$name = trim(trim((string)($employee['firstName'] ?? '')) . ' ' . trim((string)($employee['lastName'] ?? '')));
-		if ($name !== '') {
-			return $name;
-		}
-
-		$number = trim((string)($employee['employeeNumber'] ?? ''));
-		if ($number !== '') {
-			return $number;
-		}
-
-		$id = $this->idOf($employee);
-		return $id === '' ? 'onbekend' : $id;
-	}//end employeeLabel()
-
-	/**
 	 * Build the base outcome array.
 	 *
 	 * @param string $runId The PayrollRun id ('' when unknown).
@@ -2473,48 +2378,6 @@ class PayrollRunService {
 	}//end euros()
 
 	/**
-	 * Load all objects of a schema (capped), as plain arrays.
-	 *
-	 * @param string $schema The schema name.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function loadAll(string $schema): array {
-		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema($schema)->findAll(['limit' => self::LIMIT]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollRunService: kon ' . $schema . ' niet laden: ' . $e->getMessage());
-			return [];
-		}
-
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end loadAll()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * The object id of a row, falling back to `@self.id`.
 	 *
 	 * @param array<string, mixed> $row The row.
@@ -2526,28 +2389,9 @@ class PayrollRunService {
 	}//end idOf()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

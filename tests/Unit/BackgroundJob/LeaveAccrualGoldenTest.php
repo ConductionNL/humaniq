@@ -33,6 +33,12 @@ use Psr\Log\NullLogger;
  * Golden test for {@see LeaveAccrualJob::runAccrual()}.
  *
  * @covers \OCA\Humaniq\BackgroundJob\LeaveAccrualJob
+ * @uses   \OCA\Humaniq\Support\ConvertsRowsToArrays
+ * @uses   \OCA\Humaniq\Support\ResolvesObjectService
+ * @uses   \OCA\Humaniq\Support\LoadsAllRows
+ * @uses   \OCA\Humaniq\Support\ChecksPeriodCoverage
+ * @uses   \OCA\Humaniq\Support\ReadsEmployeeKeys
+ * @uses   \OCA\Humaniq\Support\FindsCoveringContract
  */
 class LeaveAccrualGoldenTest extends TestCase {
 

@@ -44,13 +44,15 @@ namespace OCA\Humaniq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Resolves a PayrollRun's audit-row range and verifies it via OpenRegister's
  * global hash chain.
  */
 final class PayrollAuditVerificationService {
+
+	use ResolvesObjectService;
 
 	/**
 	 * @var string
@@ -295,35 +297,17 @@ final class PayrollAuditVerificationService {
 	}//end idOf()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return mixed OpenRegister's per-object audit-log read path.
 	 */
 	private function auditHandler(): mixed {
-		return $this->container->get('OCA\OpenRegister\Service\Object\AuditHandler');
+		return $this->openRegisterService('OCA\OpenRegister\Service\Object\AuditHandler');
 	}//end auditHandler()
 
 	/**
 	 * @return mixed OpenRegister's hash-chain verification service.
 	 */
 	private function auditHashService(): mixed {
-		return $this->container->get('OCA\OpenRegister\Service\AuditHashService');
+		return $this->openRegisterService('OCA\OpenRegister\Service\AuditHashService');
 	}//end auditHashService()
 
 	/**
@@ -332,5 +316,4 @@ final class PayrollAuditVerificationService {
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

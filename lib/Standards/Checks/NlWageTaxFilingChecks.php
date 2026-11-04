@@ -37,11 +37,14 @@ namespace OCA\Humaniq\Standards\Checks;
 use DateTimeImmutable;
 use OCA\Humaniq\Payroll\Loonaangifte\MessageDrift;
 use OCA\Humaniq\Standards\RuleCatalogue;
+use OCA\Humaniq\Support\ChecksFilingDeadlines;
 
 /**
  * Dutch loonaangifte filing + payroll-record-retention executable checks.
  */
 final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
+
+	use ChecksFilingDeadlines;
 
 	/**
 	 * Number of days before (and including) the deadline that an unsent filing
@@ -277,31 +280,6 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 	}//end expectedDeadline()
 
 	/**
-	 * True when the filing is already sent, or its deadline is more than 14
-	 * days away — false (a violation) once it is within the alert window or
-	 * already overdue, evaluated against the current date (the audit run date).
-	 *
-	 * @param array<string, mixed> $o The filing.
-	 *
-	 * @return bool
-	 */
-	private static function deadlineNotAlerting(array $o): bool {
-		if ((string)($o['status'] ?? 'concept') === 'verzonden') {
-			return true;
-		}
-
-		$deadline = strtotime((string)($o['deadline'] ?? ''));
-		if ($deadline === false) {
-			return true;
-		}
-
-		$today = (new DateTimeImmutable('today'))->getTimestamp();
-		$daysRemaining = (int)floor((($deadline - $today)) / 86400);
-
-		return $daysRemaining > self::ALERT_WINDOW_DAYS;
-	}//end deadlineNotAlerting()
-
-	/**
 	 * True when the date at $dateKey is present and on or before the date at
 	 * $limitKey.
 	 *
@@ -340,5 +318,4 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 		$required = mktime(0, 0, 0, 12, 31, ((int)$m[1] + $years));
 		return $retain >= $required;
 	}//end retainedYearsAfterPeriod()
-
 }//end class

@@ -41,11 +41,14 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * occ command backing the Art 16 rectificatie pass-through.
  */
 class AvgDsrRectifyCommand extends Command {
+
+	use ResolvesObjectService;
 
 	/**
 	 * @param AvgDsrService $service The DSR orchestration service.
@@ -170,23 +173,4 @@ class AvgDsrRectifyCommand extends Command {
 
 		return $employeeId;
 	}//end resolveEmployeeIdentifier()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
 }//end class

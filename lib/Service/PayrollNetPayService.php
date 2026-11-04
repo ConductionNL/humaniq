@@ -50,10 +50,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\NormalisesRows;
+use OCA\Humaniq\Support\ChecksShillinqAvailability;
 
 /**
  * Collects payslip net-pay lines and hands them off to shillinq as a draft
@@ -62,6 +65,11 @@ use RuntimeException;
  * @spec openspec/specs/payroll-sepa-netpay-shillinq/spec.md
  */
 class PayrollNetPayService {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use NormalisesRows;
+	use ChecksShillinqAvailability;
 
 	/**
 	 * The app id shillinq registers under (IAppManager::isInstalled probe).
@@ -509,26 +517,6 @@ class PayrollNetPayService {
 	}//end executionDate()
 
 	/**
-	 * Duck-typed shillinq availability probe (design.md D7): shillinq must be
-	 * installed AND its PaymentRun register/schema must resolve.
-	 *
-	 * @return bool
-	 */
-	private function shillinqAvailable(): bool {
-		if ($this->appManager->isInstalled(self::SHILLINQ_APP_ID) === false) {
-			return false;
-		}
-
-		try {
-			$this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 1]);
-		} catch (\Throwable $e) {
-			return false;
-		}
-
-		return true;
-	}//end shillinqAvailable()
-
-	/**
 	 * Search shillinq for an existing PaymentRun with the given runNumber
 	 * (the idempotency probe, design.md D6). Never throws -- a lookup failure
 	 * is treated as "not found" by the caller's fall-through logic.
@@ -830,41 +818,6 @@ class PayrollNetPayService {
 	}//end outcome()
 
 	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
-	 * Normalise a single ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * The object id of a row (entity or array), falling back to `@self.id`.
 	 *
 	 * @param array<string, mixed> $row The row.
@@ -887,28 +840,9 @@ class PayrollNetPayService {
 	}//end slugOf()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

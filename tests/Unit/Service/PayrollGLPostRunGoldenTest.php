@@ -31,8 +31,12 @@ use Psr\Log\NullLogger;
  * Golden test for {@see PayrollGLPostService::postRun()}.
  *
  * @covers \OCA\Humaniq\Service\PayrollGLPostService
+ * @uses   \OCA\Humaniq\Support\ConvertsRowsToArrays
  * @uses   \OCA\Humaniq\Service\PayrollJournalTotals
  * @uses   \OCA\Humaniq\Service\PendingClaims
+ * @uses   \OCA\Humaniq\Support\ResolvesObjectService
+ * @uses   \OCA\Humaniq\Support\NormalisesRows
+ * @uses   \OCA\Humaniq\Support\ChecksShillinqAvailability
  */
 class PayrollGLPostRunGoldenTest extends TestCase {
 

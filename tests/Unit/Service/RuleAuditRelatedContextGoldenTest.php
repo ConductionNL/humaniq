@@ -40,6 +40,8 @@ use ReflectionMethod;
  * @covers \OCA\Humaniq\Service\RuleAuditService
  * @uses   \OCA\Humaniq\Service\RelatedContextIndexer
  * @uses   \OCA\Humaniq\Support\RegisterSlugLookup
+ * @uses   \OCA\Humaniq\Support\KeepsReadableRows
+ * @uses   \OCA\Humaniq\Support\ResolvesObjectServiceByClass
  *
  * @spec openspec/specs/mss-team-scope/spec.md#REQ-MSS-005
  */

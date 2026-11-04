@@ -43,10 +43,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Standards\Checks;
 
+use OCA\Humaniq\Support\RoundsToCents;
+
 /**
  * Loonbeslag floor-enforcement + single-active-beslag executable checks.
  */
 final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects {
+
+	use RoundsToCents;
 
 	/**
 	 * {@inheritDoc}
@@ -233,22 +237,4 @@ final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects {
 		];
 
 	}//end rangeBounds()
-
-	/**
-	 * Convert a euro-denominated value to integer cents (`round($euros *
-	 * 100)`, the `NlWkrChecks::cents()` precedent). Non-numeric/null values
-	 * convert to 0.
-	 *
-	 * @param mixed $euros The raw field value.
-	 *
-	 * @return int
-	 */
-	private static function cents(mixed $euros): int {
-		if (is_numeric($euros) === false) {
-			return 0;
-		}
-
-		return (int)round(((float)$euros) * 100);
-	}//end cents()
-
 }//end class
