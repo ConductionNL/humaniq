@@ -151,7 +151,7 @@ class OfferController extends Controller {
 		// endpoint cannot install anything, and "cannot be resolved" is exactly
 		// the outcome the catch below already collapses to.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			$this->caller->logger->info('OfferController: OpenRegister is niet beschikbaar; application ' . $applicationId . ' kan niet worden opgehaald.');
+			$this->caller->logger->info('OfferController: OpenRegister is niet beschikbaar; een application kan niet worden opgehaald.');
 			return null;
 		}
 

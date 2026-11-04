@@ -3,10 +3,10 @@
 /**
  * Controllers keep exception text out of the log
  *
- * Every logger call in lib/Controller is read from the source: none may log
- * an exception's message or the exception object itself. Exception text
- * can carry row content and caller input; a controller logs a fixed
- * sentence and the exception class.
+ * Every logger call in lib/Controller is read from the source: none may
+ * carry a variable other than `$e::class`. Exception text, exception
+ * objects and caller-supplied ids can carry row content and caller input;
+ * a controller logs a fixed sentence and the exception class.
  *
  * @category Test
  * @package  OCA\Humaniq\Tests\Unit\Controller
@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
 class ControllerLogHygieneTest extends TestCase {
 
 	/**
-	 * No controller log call carries an exception message or object.
+	 * No controller log call carries a variable other than `$e::class`.
 	 *
 	 * @return void
 	 */
@@ -43,7 +43,7 @@ class ControllerLogHygieneTest extends TestCase {
 		foreach (glob(dirname(__DIR__, 3) . '/lib/Controller/*.php') as $file) {
 			foreach ($this->logCalls((string)file_get_contents($file)) as $call) {
 				$calls++;
-				if (preg_match('/->getMessage\(\)|=>\s*\$e\s*[,\]]/', $call) === 1) {
+				if ($this->variablesIn($call) !== []) {
 					$offending[] = basename($file) . ': ' . $call;
 				}
 			}
@@ -54,18 +54,35 @@ class ControllerLogHygieneTest extends TestCase {
 	}//end testNoControllerLogsExceptionText()
 
 	/**
-	 * The scan sees a raw message and an exception object in a log call.
+	 * The scan sees a raw message, an exception object, an appended id, a
+	 * cast exception and a property in a log call, and lets the exception
+	 * class through.
 	 *
 	 * @return void
 	 */
-	public function testTheScanFindsARawMessage(): void {
-		$source = "<?php\n\$this->logger->info('x ' . \$e->getMessage());\n\$this->caller->logger->error(\n\t'y',\n\t['exception' => \$e]\n);\n\$this->logger->warning('z', ['exceptionClass' => \$e::class]);\n";
+	public function testTheScanFindsEveryVariableButTheExceptionClass(): void {
+		$source = "<?php\n\$this->logger->info('x ' . \$e->getMessage());\n\$this->caller->logger->error(\n\t'y',\n\t['exception' => \$e]\n);\n"
+			. "\$this->logger->info('run ' . \$runId . ' failed');\n\$this->logger->error('w', ['detail' => (string)\$e]);\n"
+			. "\$this->logger->error('v', ['app' => \$this->appName]);\n\$this->logger->warning('z', ['exceptionClass' => \$e::class]);\n\$this->logger->warning('u', ['class' => \$row::class]);\n";
 
 		$calls = $this->logCalls($source);
 
-		$this->assertCount(3, $calls);
-		$this->assertSame([1, 1, 0], array_map(static fn (string $call): int => preg_match('/->getMessage\(\)|=>\s*\$e\s*[,\]]/', $call), $calls));
-	}//end testTheScanFindsARawMessage()
+		$this->assertCount(7, $calls);
+		$this->assertSame([['$e'], ['$e'], ['$runId'], ['$e'], ['$this'], [], ['$row']], array_map(fn (string $call): array => $this->variablesIn($call), $calls));
+	}//end testTheScanFindsEveryVariableButTheExceptionClass()
+
+	/**
+	 * The variables a log call's arguments use, leaving out `$e::class`.
+	 *
+	 * @param string $call The log call, from `logger->` to its closing parenthesis.
+	 *
+	 * @return list<string>
+	 */
+	private function variablesIn(string $call): array {
+		preg_match_all('/\$(?!e::class\b)\w+/', $call, $matches);
+
+		return array_values(array_unique($matches[0]));
+	}//end variablesIn()
 
 	/**
 	 * The full text of every `logger->level(...)` call in a source.
