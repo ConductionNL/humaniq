@@ -44,7 +44,7 @@ use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Guarded endpoint that runs the on-demand ATW cross-check for one roster.
@@ -54,6 +54,7 @@ use RuntimeException;
 class RosterController extends Controller {
 
 	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
 
 	/**
 	 * @param IRequest $request The request object.
@@ -176,23 +177,4 @@ class RosterController extends Controller {
 
 		return $this->toArray($roster);
 	}//end authorizeRoster()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
 }//end class

@@ -63,7 +63,7 @@ use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
 
 /**
  * Denies self-approval (delegated to NoSelfApprovalGuard) and, for a sell,
@@ -76,6 +76,7 @@ use RuntimeException;
 final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 
 	use ConvertsRowsToArrays;
+	use ResolvesObjectServiceByClass;
 
 	/**
 	 * Max LeaveBalance rows loaded when scanning for a match.
@@ -199,25 +200,6 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 	}//end resolveBalance()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. class_exists() rather
-		// than SettingsService::isOpenRegisterAvailable(), because this guard
-		// does not inject SettingsService and adding a constructor dependency
-		// to a lifecycle guard purely to ask a yes/no question is the wrong
-		// trade. It answers the same question the container would otherwise
-		// have answered fatally.
-		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * The slug this instance's humaniq register answers to, or null when absent.
 	 *
 	 * This used to end `return $register === '' ? 'hrmq' : $register;` under a
@@ -236,5 +218,4 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 	private function registerSlug(): ?string {
 		return (new RegisterSlugLookup($this->container, $this->appConfig))->slugOrNull();
 	}//end registerSlug()
-
 }//end class

@@ -38,6 +38,9 @@ use OCP\Lock\ILockingProvider;
  * @uses   \OCA\Humaniq\Service\PendingClaims
  * @uses   \OCA\Humaniq\Service\HandoffLock
  * @uses   \OCA\Humaniq\Service\WagePeriod
+ * @uses   \OCA\Humaniq\Support\ResolvesObjectService
+ * @uses   \OCA\Humaniq\Support\NormalisesRows
+ * @uses   \OCA\Humaniq\Support\ChecksShillinqAvailability
  */
 class PayrollGLPostRunGoldenTest extends TestCase {
 

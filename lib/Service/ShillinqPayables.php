@@ -30,7 +30,7 @@ namespace OCA\Humaniq\Service;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Reads and writes shillinq's payables, duck-typed (design D5, D6).
@@ -38,6 +38,8 @@ use RuntimeException;
  * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 class ShillinqPayables {
+
+	use ResolvesObjectService;
 
 	/**
 	 * Shillinq's app id, probed duck-typed and never required (design D6).
@@ -201,17 +203,4 @@ class ShillinqPayables {
 
 		return array_map(fn (mixed $row): array => $this->toArray(row: $row), array_values((array)$rows));
 	}//end rows()
-
-	/**
-	 * The ObjectService, after checking OpenRegister is there (ADR-083).
-	 *
-	 * @return mixed
-	 */
-	private function objectService(): mixed {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException('humaniq requires the OpenRegister app, which is not installed on this instance.');
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
 }//end class

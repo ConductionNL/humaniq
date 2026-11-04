@@ -54,6 +54,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCA\Humaniq\Support\ResolvesAgendaWindow;
 
 /**
  * Reads one org unit's leave schedule, and the coverage warning for approving
@@ -62,6 +63,8 @@ use OCP\IRequest;
  * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
  */
 class LeaveScheduleController extends Controller {
+
+	use ResolvesAgendaWindow;
 
 	/**
 	 * @param IRequest $request The request object.
@@ -265,29 +268,4 @@ class LeaveScheduleController extends Controller {
 
 		return $visible;
 	}//end visibleRequestIds()
-
-	/**
-	 * The period asked about, or null when it is unusable.
-	 *
-	 * @param string|null $from First day (ISO date).
-	 * @param string|null $to Last day (ISO date).
-	 *
-	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}|null The window, or null.
-	 *
-	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
-	 */
-	private function window(?string $from, ?string $to): ?array {
-		try {
-			$start = new DateTimeImmutable(substr(trim((string)$from), 0, 10));
-			$end = new DateTimeImmutable(substr(trim((string)$to), 0, 10));
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($end < $start) {
-			return null;
-		}
-
-		return [$start, $end];
-	}//end window()
 }//end class

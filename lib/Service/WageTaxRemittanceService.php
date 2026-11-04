@@ -31,7 +31,7 @@ namespace OCA\Humaniq\Service;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Writes one draft shillinq APTransaction per confirmed wage tax return.
@@ -39,6 +39,8 @@ use RuntimeException;
  * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 class WageTaxRemittanceService {
+
+	use ResolvesObjectService;
 
 	/**
 	 * Humaniq's log of each hand-off.
@@ -282,19 +284,6 @@ class WageTaxRemittanceService {
 	}//end rowsOf()
 
 	/**
-	 * The ObjectService, after checking OpenRegister is there (ADR-083).
-	 *
-	 * @return mixed
-	 */
-	private function objectService(): mixed {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException('humaniq requires the OpenRegister app, which is not installed on this instance.');
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * An outcome array.
 	 *
 	 * @param string                    $runId     The run.
@@ -330,5 +319,4 @@ class WageTaxRemittanceService {
 
 		return $text;
 	}//end nullable()
-
 }//end class
