@@ -32,14 +32,19 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Humaniq\Support\NormalisesRows;
 
 /**
  * Loads/finds/saves the Expense and ReceiptExtraction rows this leaf touches.
  */
 class ReceiptExtractionRepository {
+
+	use ConvertsRowsToArrays;
+	use NormalisesRows;
 
 	/**
 	 * OpenRegister's ObjectService, resolved by string FQCN.
@@ -251,41 +256,6 @@ class ReceiptExtractionRepository {
 	}//end loadAll()
 
 	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
-	 * Normalise a single ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * @return mixed The OpenRegister ObjectService.
 	 */
 	private function objectService(): mixed {
@@ -309,5 +279,4 @@ class ReceiptExtractionRepository {
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\FleetAppId;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -42,6 +43,8 @@ use RuntimeException;
  * stores the resulting PDF via OpenRegister's FileService.
  */
 class OfferLetterService {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * docudesk's rendering service, resolved by string FQCN only (no
@@ -324,25 +327,6 @@ class OfferLetterService {
 	private function fileName(string $applicationId): string {
 		return sprintf('%s-%s-%s.pdf', self::DOCUMENT_TYPE, $applicationId, gmdate('Y-m-d'));
 	}//end fileName()
-
-	/**
-	 * Normalise a docudesk row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * @return mixed The OpenRegister FileService (read-only reuse -- never docudesk).

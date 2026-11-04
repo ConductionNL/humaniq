@@ -54,6 +54,7 @@ use Stringable;
  * @uses   \OCA\Humaniq\Service\WorkingHoursService
  * @uses   \OCA\Humaniq\Service\LeaveProjectionInputs
  * @uses   \OCA\Humaniq\Service\LeaveBalanceScope
+ * @uses   \OCA\Humaniq\Support\ConvertsRowsToArrays
  *
  * @spec openspec/specs/leave-expiry-and-carry-over/spec.md#Requirement:-Leave-taken-SHALL-draw-from-the-hours-that-lapse-first-(REQ-LEX-001)
  */

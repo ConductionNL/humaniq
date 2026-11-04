@@ -52,7 +52,8 @@ namespace OCA\Humaniq\Service;
 use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\KeepsReadableRows;
+use OCA\Humaniq\Support\ResolvesObjectServiceWithReload;
 
 /**
  * Server-side aggregation for the Dashboard's guarded trend endpoint.
@@ -60,6 +61,9 @@ use RuntimeException;
  * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
  */
 class AnalyticsService {
+
+	use KeepsReadableRows;
+	use ResolvesObjectServiceWithReload;
 
 	/**
 	 * Trend metric identifiers `GET /api/analytics/trends?metric=` accepts.
@@ -512,51 +516,4 @@ class AnalyticsService {
 
 		return $this->normaliseRows($rows);
 	}//end loadAll()
-
-	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 *
-	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$out[] = (array)$row->jsonSerialize();
-			}
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
-	 * The OpenRegister ObjectService, once availability has been
-	 * established (ADR-083 — the AdministrationService precedent).
-	 *
-	 * @return mixed The OpenRegister ObjectService.
-	 *
-	 * @throws \RuntimeException When OpenRegister is not installed.
-	 *
-	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
-	 */
-	private function objectService(): mixed {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance. '
-				. 'Install and enable it, then reload.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
 }//end class

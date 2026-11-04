@@ -48,14 +48,17 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
-use DateTimeImmutable;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\LoadsAllRows;
+use OCA\Humaniq\Support\ChecksPeriodCoverage;
+use OCA\Humaniq\Support\ReadsEmployeeKeys;
 
 /**
  * Computes + settles TWK delta corrections against sealed payslips.
@@ -63,6 +66,12 @@ use RuntimeException;
  * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-001
  */
 class RetroAdjustmentService {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use LoadsAllRows;
+	use ChecksPeriodCoverage;
+	use ReadsEmployeeKeys;
 
 	/**
 	 * Max objects loaded per type.
@@ -500,14 +509,7 @@ class RetroAdjustmentService {
 	 * @return array<string, mixed>|null
 	 */
 	private function coveringContract(array $employee, string $originalPeriod): ?array {
-		$keys = array_filter(
-			[
-				$this->idOf($employee),
-				(string)($employee['@self']['slug'] ?? ''),
-				trim((string)($employee['employeeNumber'] ?? '')),
-			],
-			static fn (string $key): bool => $key !== ''
-		);
+		$keys = $this->employeeKeys($employee);
 
 		foreach ($this->loadAll('EmploymentContract') as $contract) {
 			$key = trim((string)($contract['employeeId'] ?? ''));
@@ -522,39 +524,6 @@ class RetroAdjustmentService {
 
 		return null;
 	}//end coveringContract()
-
-	/**
-	 * Whether a start/end date range covers the wage period (the
-	 * PayrollRunService precedent).
-	 *
-	 * @param string $startDate ISO start date.
-	 * @param string $endDate ISO end date, or ''/null-ish while open.
-	 * @param string $period Wage period (YYYY-MM).
-	 *
-	 * @return bool
-	 */
-	private function coversPeriod(string $startDate, string $endDate, string $period): bool {
-		try {
-			$periodStart = new DateTimeImmutable($period . '-01');
-		} catch (\Throwable $e) {
-			return false;
-		}
-
-		$periodEnd = $periodStart->modify('last day of this month');
-
-		$start = strtotime(trim($startDate));
-		if ($start === false || $start > $periodEnd->getTimestamp()) {
-			return false;
-		}
-
-		$endDate = trim($endDate);
-		if ($endDate === '') {
-			return true;
-		}
-
-		$end = strtotime($endDate);
-		return $end === false || $end >= $periodStart->getTimestamp();
-	}//end coversPeriod()
 
 	/**
 	 * The Awf tariff of the corrected period: what the run charged when the
@@ -730,50 +699,6 @@ class RetroAdjustmentService {
 	}//end euros()
 
 	/**
-	 * Load all objects of a schema (capped), as plain arrays. Degrades
-	 * gracefully to an empty list when the schema does not exist yet in the
-	 * register.
-	 *
-	 * @param string $schema The schema name.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function loadAll(string $schema): array {
-		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema($schema)->findAll(['limit' => self::LIMIT]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('RetroAdjustmentService: kon ' . $schema . ' niet laden: ' . $e->getMessage());
-			return [];
-		}
-
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end loadAll()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * The object id of a row, falling back to `@self.id`.
 	 *
 	 * @param array<string, mixed> $row The row.
@@ -785,28 +710,9 @@ class RetroAdjustmentService {
 	}//end idOf()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

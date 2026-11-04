@@ -84,12 +84,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\PayrollRunServices;
-use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WkrService;
 use OCA\Humaniq\Standards\Checks\NlDgaChecks;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -97,7 +98,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceThroughCaller;
 
 /**
  * Guarded endpoint that (re)calculates one draft payroll run, and the
@@ -107,7 +108,10 @@ use RuntimeException;
  * @spec openspec/specs/proforma-payslip/spec.md#REQ-PRO-004
  */
 class PayrollController extends Controller {
+
+	use ConvertsRowsToArrays;
 	use ReadsTypedRequestParameters;
+	use ResolvesObjectServiceThroughCaller;
 
 	/**
 	 * Max Employee rows loaded when resolving the caller's own record for
@@ -652,42 +656,4 @@ class PayrollController extends Controller {
 
 		return $this->toArray($run);
 	}//end authorizeRun()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
 }//end class

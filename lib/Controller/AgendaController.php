@@ -46,6 +46,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCA\Humaniq\Support\ResolvesAgendaWindow;
 
 /**
  * Serves the agenda, the availability answer and the forward capacity read.
@@ -53,6 +54,8 @@ use OCP\IRequest;
  * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
  */
 class AgendaController extends Controller {
+
+	use ResolvesAgendaWindow;
 
 	/**
 	 * The subject kinds an agenda can be asked for.
@@ -301,29 +304,4 @@ class AgendaController extends Controller {
 
 		return array_keys($codes);
 	}//end codes()
-
-	/**
-	 * The period asked about, or null when it is unusable.
-	 *
-	 * @param string|null $from First day (ISO date).
-	 * @param string|null $to Last day (ISO date).
-	 *
-	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}|null The window.
-	 *
-	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
-	 */
-	private function window(?string $from, ?string $to): ?array {
-		try {
-			$start = new DateTimeImmutable(substr(trim((string)$from), 0, 10));
-			$end = new DateTimeImmutable(substr(trim((string)$to), 0, 10));
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($end < $start) {
-			return null;
-		}
-
-		return [$start, $end];
-	}//end window()
 }//end class

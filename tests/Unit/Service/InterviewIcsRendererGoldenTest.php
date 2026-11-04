@@ -38,6 +38,7 @@ use PHPUnit\Framework\TestCase;
  * Golden cases for the interview ICS renderer.
  *
  * @covers \OCA\Humaniq\Service\InterviewIcsRenderer
+ * @uses   \OCA\Humaniq\Support\ReadsIcsValues
  */
 class InterviewIcsRendererGoldenTest extends TestCase {
 

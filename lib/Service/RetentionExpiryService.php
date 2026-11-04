@@ -34,12 +34,14 @@ namespace OCA\Humaniq\Service;
 use DateTimeImmutable;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Walks the retained schemas and releases and marks what has expired.
  */
 class RetentionExpiryService {
+
+	use ResolvesObjectService;
 
 	/**
 	 * The schemas whose records carry a humaniq statutory floor hold.
@@ -309,7 +311,7 @@ class RetentionExpiryService {
 	 * @return mixed OpenRegister's RetentionService.
 	 */
 	private function retentionService(): mixed {
-		return $this->container->get('OCA\OpenRegister\Service\RetentionService');
+		return $this->openRegisterService('OCA\OpenRegister\Service\RetentionService');
 	}//end retentionService()
 
 	/**
@@ -361,20 +363,4 @@ class RetentionExpiryService {
 
 		return array_values(array_filter((is_array($rows) === true ? $rows : []), 'is_object'));
 	}//end loadAll()
-
-	/**
-	 * @return mixed OpenRegister's ObjectService.
-	 *
-	 * @throws RuntimeException When OpenRegister is not installed.
-	 */
-	private function objectService(): mixed {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
 }//end class
