@@ -58,9 +58,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\LoadsAllRows;
 
 /**
  * Effectuates approved, due CompAdjustments: within-band validation, the
@@ -70,6 +72,10 @@ use RuntimeException;
  * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-006
  */
 class CompAdjustmentService {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use LoadsAllRows;
 
 	/**
 	 * Max objects loaded per type.
@@ -383,29 +389,6 @@ class CompAdjustmentService {
 	}//end findById()
 
 	/**
-	 * Load all objects of a schema (capped), as plain arrays.
-	 *
-	 * @param string $schema The schema name.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function loadAll(string $schema): array {
-		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema($schema)->findAll(['limit' => self::LIMIT]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('CompAdjustmentService: kon ' . $schema . ' niet laden: ' . $e->getMessage());
-			return [];
-		}
-
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end loadAll()
-
-	/**
 	 * Build the base outcome array.
 	 *
 	 * @param string $adjustmentId The CompAdjustment id ('' when unknown).
@@ -424,47 +407,9 @@ class CompAdjustmentService {
 	}//end outcome()
 
 	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

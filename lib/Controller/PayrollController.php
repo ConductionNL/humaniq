@@ -85,14 +85,12 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Payroll\TaxTables;
-use OCA\Humaniq\Service\HumaniqRoles;
-use OCA\Humaniq\Service\PayrollMutationService;
-use OCA\Humaniq\Service\PayrollRunService;
-use OCA\Humaniq\Service\ProformaPayslipService;
-use OCA\Humaniq\Service\RetroAdjustmentService;
+use OCA\Humaniq\Service\CallerContext;
+use OCA\Humaniq\Service\PayrollRunServices;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WkrService;
 use OCA\Humaniq\Standards\Checks\NlDgaChecks;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -100,10 +98,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceThroughCaller;
 
 /**
  * Guarded endpoint that (re)calculates one draft payroll run, and the
@@ -113,7 +108,10 @@ use RuntimeException;
  * @spec openspec/specs/proforma-payslip/spec.md#REQ-PRO-004
  */
 class PayrollController extends Controller {
+
+	use ConvertsRowsToArrays;
 	use ReadsTypedRequestParameters;
+	use ResolvesObjectServiceThroughCaller;
 
 	/**
 	 * Max Employee rows loaded when resolving the caller's own record for
@@ -144,29 +142,17 @@ class PayrollController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
-	 * @param PayrollRunService $payrollRunService The draft-run generation service.
-	 * @param PayrollMutationService $payrollMutationService The run-to-run diff service.
-	 * @param ProformaPayslipService $proformaPayslipService The persist-nothing pro-forma simulation service.
-	 * @param RetroAdjustmentService $retroAdjustmentService The TWK delta computation + settlement service.
 	 * @param WkrService $wkrService The WKR vrije-ruimte assessment roll-up service.
 	 * @param SettingsService $settingsService The register-slug source.
-	 * @param IUserSession $userSession The current user session (admin/HR check).
-	 * @param HumaniqRoles $roles Whether the caller is HR, payroll or an administrator.
-	 * @param LoggerInterface $logger Logger.
+	 * @param PayrollRunServices $runs Recalculates runs, diffs and persists mutations, simulates pro-forma payslips and settles retro adjustments.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
-		private readonly PayrollRunService $payrollRunService,
-		private readonly PayrollMutationService $payrollMutationService,
-		private readonly ProformaPayslipService $proformaPayslipService,
-		private readonly RetroAdjustmentService $retroAdjustmentService,
+		private readonly PayrollRunServices $runs,
 		private readonly WkrService $wkrService,
 		private readonly SettingsService $settingsService,
-		private readonly IUserSession $userSession,
-		private readonly HumaniqRoles $roles,
-		private readonly LoggerInterface $logger,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -214,7 +200,7 @@ class PayrollController extends Controller {
 			);
 		}
 
-		$result = $this->payrollRunService->recalculateRun($runId);
+		$result = $this->runs->payrollRunService->recalculateRun($runId);
 
 		if ((string)$result['status'] === 'failed') {
 			return new JSONResponse($result, Http::STATUS_INTERNAL_SERVER_ERROR);
@@ -263,12 +249,12 @@ class PayrollController extends Controller {
 			return new JSONResponse(['error' => 'Loonrun niet gevonden.'], Http::STATUS_NOT_FOUND);
 		}
 
-		$outcome = $this->payrollMutationService->diff($toRunId, ($fromRunId === '' ? null : $fromRunId));
+		$outcome = $this->runs->payrollMutationService->diff($toRunId, ($fromRunId === '' ? null : $fromRunId));
 		if ((string)$outcome['status'] !== 'ok') {
 			return new JSONResponse(['error' => (string)$outcome['message']], Http::STATUS_BAD_REQUEST);
 		}
 
-		$persisted = $this->payrollMutationService->persist($outcome['report']);
+		$persisted = $this->runs->payrollMutationService->persist($outcome['report']);
 		if ((string)$persisted['status'] !== 'ok') {
 			return new JSONResponse(['error' => (string)$persisted['message']], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
@@ -288,12 +274,12 @@ class PayrollController extends Controller {
 	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
 	 */
 	private function isPayrollStaff(): bool {
-		$uid = $this->userSession->getUser()?->getUID();
+		$uid = $this->caller->userSession->getUser()?->getUID();
 		if ($uid === null || $uid === '') {
 			return false;
 		}
 
-		return $this->roles->isPayroll($uid);
+		return $this->caller->roles->isPayroll($uid);
 	}//end isPayrollStaff()
 
 	/**
@@ -338,7 +324,7 @@ class PayrollController extends Controller {
 		}
 
 		try {
-			$breakdown = $this->proformaPayslipService->simulate($input);
+			$breakdown = $this->runs->proformaPayslipService->simulate($input);
 		} catch (\InvalidArgumentException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		}
@@ -365,7 +351,7 @@ class PayrollController extends Controller {
 				->setSchema('PayrollRun')
 				->findAll(['limit' => 1]);
 		} catch (\Throwable $e) {
-			$this->logger->info('PayrollController: proforma-toegang kon niet worden geresolved: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollController: the pro-forma access check failed and is answered as no access.', ['exceptionClass' => $e::class]);
 			return false;
 		}
 
@@ -398,7 +384,7 @@ class PayrollController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function dgaStatus(): JSONResponse {
-		$userId = $this->userSession->getUser()?->getUID();
+		$userId = $this->caller->userSession->getUser()?->getUID();
 		if ($userId === null || $userId === '') {
 			return new JSONResponse(['isDga' => false, 'met' => null]);
 		}
@@ -464,7 +450,7 @@ class PayrollController extends Controller {
 				->setSchema('Employee')
 				->findAll(['limit' => self::EMPLOYEE_LOOKUP_LIMIT]);
 		} catch (\Throwable $e) {
-			$this->logger->info('PayrollController: eigen werknemer kon niet worden geresolved: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollController: the own employee lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -516,7 +502,7 @@ class PayrollController extends Controller {
 			);
 		}
 
-		$result = $this->retroAdjustmentService->recomputeAdjustment($adjustmentId);
+		$result = $this->runs->retroAdjustmentService->recomputeAdjustment($adjustmentId);
 
 		if ((string)$result['status'] === 'failed') {
 			return new JSONResponse($result, Http::STATUS_INTERNAL_SERVER_ERROR);
@@ -547,7 +533,7 @@ class PayrollController extends Controller {
 				schema: 'PayrollAdjustment'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('PayrollController: correctie ' . $adjustmentId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollController: a payroll adjustment lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -628,7 +614,7 @@ class PayrollController extends Controller {
 				schema: 'WkrAssessment'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('PayrollController: WKR-beoordeling ' . $assessmentId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollController: a WKR assessment lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -660,7 +646,7 @@ class PayrollController extends Controller {
 				schema: 'PayrollRun'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('PayrollController: loonrun ' . $runId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollController: a payroll run lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -670,42 +656,4 @@ class PayrollController extends Controller {
 
 		return $this->toArray($run);
 	}//end authorizeRun()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
 }//end class

@@ -119,8 +119,7 @@ class AnalyticsController extends Controller {
 				$metric,
 				$period,
 				$access['administrationId'],
-				($orgUnitId === '') ? null : $orgUnitId,
-				$access['minimumMembers']
+				($orgUnitId === '') ? null : ['id' => $orgUnitId, 'minimumMembers' => $access['minimumMembers']]
 			);
 
 			// The Dashboard's KPI tiles read a headline number from this same
@@ -139,10 +138,7 @@ class AnalyticsController extends Controller {
 			$label = ($e->getMessage() === 'Invalid period') ? 'Invalid period' : 'Unsupported metric';
 			return new JSONResponse(['message' => $label], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[AnalyticsController] trends failed',
-				context: ['error' => $e->getMessage()]
-			);
+			$this->logger->error('AnalyticsController: the trends could not be computed.', ['exceptionClass' => $e::class]);
 			return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}//end try
 	}//end trends()
@@ -172,10 +168,7 @@ class AnalyticsController extends Controller {
 		try {
 			return new JSONResponse(['obligations' => $this->obligationsService->getObligations($administrationId)]);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[AnalyticsController] obligations failed',
-				context: ['error' => $e->getMessage()]
-			);
+			$this->logger->error('AnalyticsController: the obligations could not be computed.', ['exceptionClass' => $e::class]);
 			return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 	}//end obligations()

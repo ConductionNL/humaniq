@@ -40,6 +40,8 @@ use ReflectionMethod;
  * @covers \OCA\Humaniq\Service\RuleAuditService
  * @uses   \OCA\Humaniq\Service\RelatedContextIndexer
  * @uses   \OCA\Humaniq\Support\RegisterSlugLookup
+ * @uses   \OCA\Humaniq\Support\KeepsReadableRows
+ * @uses   \OCA\Humaniq\Support\ResolvesObjectServiceByClass
  *
  * @spec openspec/specs/mss-team-scope/spec.md#REQ-MSS-005
  */
@@ -97,7 +99,7 @@ class RuleAuditRelatedContextGoldenTest extends TestCase {
 				['employeeId' => 'emp-2'],
 			],
 			'OrgUnit' => [
-				['id' => 'unit-1', 'parentUnitId' => 'unit-0', 'active' => false, 'managerId' => 'emp-1'],
+				['id' => 'unit-1', 'parentUnitId' => 'unit-0', 'active' => false, 'managerId' => 'emp-1', 'administrationId' => 'ADM-1'],
 				['@self' => ['id' => 'unit-2']],
 				['parentUnitId' => 'unit-1'],
 			],

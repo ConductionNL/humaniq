@@ -39,38 +39,36 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceThroughCaller;
 
 /**
  * Guarded endpoint that triggers a single HR-document generation attempt.
  */
 class DocumentController extends Controller {
 
+	use ConvertsRowsToArrays;
+	use ResolvesObjectServiceThroughCaller;
+
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param HrDocumentService $hrDocumentService The document-generation service.
 	 * @param SettingsService $settingsService The register-slug source.
-	 * @param IUserSession $userSession The current user session (acting userId).
-	 * @param LoggerInterface $logger Logger.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly HrDocumentService $hrDocumentService,
 		private readonly SettingsService $settingsService,
-		private readonly IUserSession $userSession,
-		private readonly LoggerInterface $logger,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -108,7 +106,7 @@ class DocumentController extends Controller {
 		?string $jaaropgaafId = null,
 	): JSONResponse {
 		$documentType = trim($documentType);
-		$userId = $this->userSession->getUser()?->getUID();
+		$userId = $this->caller->userSession->getUser()?->getUID();
 
 		if ($documentType === 'jaaropgaaf') {
 			return $this->generateStatement(jaaropgaafId: trim((string)$jaaropgaafId), userId: $userId);
@@ -202,7 +200,7 @@ class DocumentController extends Controller {
 				schema: $schema
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('DocumentController: ' . $schema . ' ' . $id . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('DocumentController: a document subject lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -234,7 +232,7 @@ class DocumentController extends Controller {
 				schema: 'EmploymentContract'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('DocumentController: contract ' . $contractId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('DocumentController: a contract lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -267,7 +265,7 @@ class DocumentController extends Controller {
 				schema: 'Payslip'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('DocumentController: payslip ' . $payslipId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('DocumentController: a payslip lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -277,42 +275,4 @@ class DocumentController extends Controller {
 
 		return $this->toArray($payslip);
 	}//end authorizePayslip()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
 }//end class

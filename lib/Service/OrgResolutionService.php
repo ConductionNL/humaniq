@@ -56,10 +56,10 @@ class OrgResolutionService {
 	 * Whether an OrgAssignment is active on the given date.
 	 *
 	 * Active means: `startDate` absent or on/before the date, AND `endDate`
-	 * absent or on/after the date. An unparseable date is treated as absent
-	 * (fail-open on malformed data, matching the audit's historical
-	 * endDate-only leniency — the index the audit feeds carries no
-	 * `startDate`, which this method reads as "started").
+	 * absent or on/after the date. A missing or empty date is no bound (the
+	 * index the audit feeds carries no `startDate`, read as "started"). A
+	 * date that is set but cannot be read makes the placement inactive, so
+	 * no manager, cost centre or approval is resolved through it.
 	 *
 	 * @param array<string, mixed> $assignment The OrgAssignment (index row or full object).
 	 * @param string $onDate The reference date, `YYYY-MM-DD`.
@@ -67,6 +67,7 @@ class OrgResolutionService {
 	 * @return bool True when the placement is active on that date.
 	 *
 	 * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 * @spec openspec/specs/mss-team-scope/spec.md#REQ-MSS-008
 	 */
 	public function isActiveOn(array $assignment, string $onDate): bool {
 		$reference = strtotime($onDate);
@@ -74,24 +75,48 @@ class OrgResolutionService {
 			$reference = (new DateTimeImmutable('today'))->getTimestamp();
 		}
 
-		$start = strtotime(trim((string)($assignment['startDate'] ?? '')));
-		if ($start !== false && $start > $reference) {
+		$start = $this->boundOf($assignment['startDate'] ?? null);
+		$end = $this->boundOf($assignment['endDate'] ?? null);
+		if ($start === false || $end === false) {
 			return false;
 		}
 
-		$end = strtotime(trim((string)($assignment['endDate'] ?? '')));
-		if ($end !== false && $end < $reference) {
-			return false;
-		}
-
-		return true;
+		return ($start ?? PHP_INT_MIN) <= $reference && ($end ?? PHP_INT_MAX) >= $reference;
 	}//end isActiveOn()
+
+	/**
+	 * A placement date as a timestamp: null when it is not set, false when it
+	 * is set but cannot be read.
+	 *
+	 * @param mixed $value The date.
+	 *
+	 * @return int|false|null
+	 *
+	 * @spec openspec/specs/mss-team-scope/spec.md#REQ-MSS-008
+	 */
+	private function boundOf(mixed $value): int|false|null {
+		$text = trim((string)($value ?? ''));
+		if ($text === '') {
+			return null;
+		}
+
+		return strtotime($text);
+	}//end boundOf()
 
 	/**
 	 * Resolve the Nextcloud user ids of every manager reachable through the
 	 * employee's active placements — the full list, distinct, in placement
 	 * order. The nl-mss-manager-consistency audit consumes this list with its
 	 * any-match posture; a stamp reduces it via {@see uniqueOrNull()}.
+	 *
+	 * A placement in a unit the employee manages themself resolves the
+	 * manager of the nearest unit above it managed by someone else
+	 * ({@see managerUserIdFrom()}), so nobody is their own manager. The
+	 * approver belongs to the boundary administration: the placement
+	 * unit's, or the employee's own when the unit has none. A placement in
+	 * a unit of another administration than the employee's resolves
+	 * nothing, and so does a manager whose own Employee record lies outside
+	 * the boundary.
 	 *
 	 * A hop that dead-ends (no unit, unmanaged unit, unresolvable manager
 	 * Employee, manager without a Nextcloud account) contributes nothing —
@@ -114,26 +139,174 @@ class OrgResolutionService {
 		array $employeesById,
 		string $onDate,
 	): array {
+		$employeeId = trim($employeeId);
+		$chain = [
+			'employeeId'    => $employeeId,
+			'ownUserId'     => trim((string)($employeesById[$employeeId]['nextcloudUserId'] ?? '')),
+			'ownAdministrationId' => trim((string)($employeesById[$employeeId]['administrationId'] ?? '')),
+			'unitsById'     => $unitsById,
+			'employeesById' => $employeesById,
+		];
+
 		$resolved = [];
-		foreach ($this->activeUnits($employeeId, $assignmentsByEmployeeId, $unitsById, $onDate) as $unit) {
-			$unitManagerId = trim((string)($unit['managerId'] ?? ''));
-			if ($unitManagerId === '') {
-				continue;
-			}
-
-			$manager = ($employeesById[$unitManagerId] ?? null);
-			if (is_array($manager) === false) {
-				continue;
-			}
-
-			$managerUserId = trim((string)($manager['nextcloudUserId'] ?? ''));
-			if ($managerUserId !== '' && in_array($managerUserId, $resolved, true) === false) {
+		foreach (array_keys($this->activeUnits($employeeId, $assignmentsByEmployeeId, $unitsById, $onDate)) as $unitId) {
+			$managerUserId = $this->managerUserIdFrom(unitId: (string)$unitId, chain: $chain);
+			if ($managerUserId !== null && in_array($managerUserId, $resolved, true) === false) {
 				$resolved[] = $managerUserId;
 			}
 		}
 
 		return $resolved;
 	}//end resolveManagerUserIds()
+
+	/**
+	 * The manager's Nextcloud user id for one placement unit, climbing to
+	 * the parent unit while the unit is managed by the employee themself.
+	 *
+	 * Null when the walk dead-ends: an unmanaged unit, an unresolvable
+	 * manager Employee, a manager without an account, a root or dangling
+	 * parent, a unit already visited (a loop in the tree), a placement
+	 * unit in another administration than the employee's, a unit above the
+	 * placement unit outside the boundary administration, or a manager
+	 * whose own Employee record lies outside it.
+	 *
+	 * @param string $unitId The placement's unit.
+	 * @param array{employeeId: string, ownUserId: string, ownAdministrationId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 *
+	 * @return string|null The manager's Nextcloud user id, or null.
+	 *
+	 * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	private function managerUserIdFrom(string $unitId, array $chain): ?string {
+		$administrationId = $this->boundaryOf(unit: ($chain['unitsById'][$unitId] ?? null), chain: $chain);
+		if ($administrationId === null) {
+			return null;
+		}
+
+		$visited = [];
+		while ($unitId !== '' && isset($visited[$unitId]) === false) {
+			$unit = ($chain['unitsById'][$unitId] ?? null);
+			if (is_array($unit) === false || ($visited !== [] && $this->leavesAdministration(row: $unit, administrationId: $administrationId) === true)) {
+				return null;
+			}
+
+			$visited[$unitId] = true;
+
+			$managerId = trim((string)($unit['managerId'] ?? ''));
+			if ($this->isSelf(managerId: $managerId, chain: $chain) === false) {
+				$manager = ($chain['employeesById'][$managerId] ?? null);
+
+				return $this->leavesAdministration(row: $manager, administrationId: $administrationId) === true ? null : $this->accountOf(employeeId: $managerId, chain: $chain);
+			}
+
+			$unitId = trim((string)($unit['parentUnitId'] ?? ''));
+		}
+
+		return null;
+	}//end managerUserIdFrom()
+
+	/**
+	 * The boundary administration of a placement: the placement unit's, or
+	 * the employee's own when the unit has none ('' when neither has one).
+	 * Null when the unit and the employee name different administrations,
+	 * so that placement resolves no manager.
+	 *
+	 * @param mixed $unit The placement unit row.
+	 * @param array{employeeId: string, ownUserId: string, ownAdministrationId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/approver-in-employee-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	private function boundaryOf(mixed $unit, array $chain): ?string {
+		$unitAdministration = $this->administrationOf($unit);
+		if ($unitAdministration === '') {
+			return $chain['ownAdministrationId'];
+		}
+
+		if ($chain['ownAdministrationId'] !== '' && $chain['ownAdministrationId'] !== $unitAdministration) {
+			return null;
+		}
+
+		return $unitAdministration;
+	}//end boundaryOf()
+
+	/**
+	 * Whether a unit or an Employee lies outside the boundary
+	 * administration. An empty boundary admits every row; otherwise a row
+	 * in another administration, without one, or not resolving is outside
+	 * it.
+	 *
+	 * @param mixed $row The unit the walk reached, or the manager Employee.
+	 * @param string $administrationId The boundary administration, '' for none.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/approver-in-employee-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	public function leavesAdministration(mixed $row, string $administrationId): bool {
+		return $administrationId !== '' && $this->administrationOf($row) !== $administrationId;
+	}//end leavesAdministration()
+
+	/**
+	 * A row's administration, '' when the row does not resolve or has none.
+	 *
+	 * @param mixed $row The unit or Employee row.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/manager-climb-stays-in-administration/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	public function administrationOf(mixed $row): string {
+		if (is_array($row) === false) {
+			return '';
+		}
+
+		return trim((string)($row['administrationId'] ?? ''));
+	}//end administrationOf()
+
+	/**
+	 * Whether a unit manager is the employee themself: the same Employee
+	 * record, or another one with the same Nextcloud account.
+	 *
+	 * @param string $managerId The unit's manager Employee id.
+	 * @param array{employeeId: string, ownUserId: string, ownAdministrationId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	private function isSelf(string $managerId, array $chain): bool {
+		if ($managerId === $chain['employeeId']) {
+			return true;
+		}
+
+		$account = $this->accountOf(employeeId: $managerId, chain: $chain);
+
+		return $account !== null && $account === $chain['ownUserId'];
+	}//end isSelf()
+
+	/**
+	 * The Nextcloud account of an Employee in the index, or null when the
+	 * Employee does not resolve or has no account.
+	 *
+	 * @param string $employeeId The Employee id.
+	 * @param array{employeeId: string, ownUserId: string, ownAdministrationId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 */
+	private function accountOf(string $employeeId, array $chain): ?string {
+		$employee = ($chain['employeesById'][$employeeId] ?? null);
+		if (is_array($employee) === false) {
+			return null;
+		}
+
+		$account = trim((string)($employee['nextcloudUserId'] ?? ''));
+
+		return $account === '' ? null : $account;
+	}//end accountOf()
 
 	/**
 	 * Resolve the cost centres reachable through the employee's active
@@ -191,15 +364,16 @@ class OrgResolutionService {
 	}//end uniqueOrNull()
 
 	/**
-	 * The OrgUnit rows of the employee's active placements, in placement
-	 * order. Dead-end hops (empty/dangling `orgUnitId`) are skipped.
+	 * The OrgUnit rows of the employee's active placements, keyed by unit
+	 * id, in placement order. Dead-end hops (empty/dangling `orgUnitId`)
+	 * are skipped.
 	 *
 	 * @param string $employeeId The employee.
 	 * @param array<string, array<int, array<string, mixed>>> $assignmentsByEmployeeId OrgAssignment index keyed by employeeId.
 	 * @param array<string, array<string, mixed>> $unitsById OrgUnit index keyed by id.
 	 * @param string $onDate The reference date, `YYYY-MM-DD`.
 	 *
-	 * @return array<int, array<string, mixed>> The active placements' units.
+	 * @return array<string, array<string, mixed>> The active placements' units by id.
 	 */
 	private function activeUnits(
 		string $employeeId,
@@ -230,7 +404,7 @@ class OrgResolutionService {
 
 			$unit = ($unitsById[$orgUnitId] ?? null);
 			if (is_array($unit) === true) {
-				$units[] = $unit;
+				$units[$orgUnitId] = $unit;
 			}
 		}
 

@@ -293,6 +293,8 @@ final class RelatedContextIndexer {
 				// 'LeaveRequest']['nl-mss-manager-consistency'] to resolve
 				// the manager for an active placement's unit.
 				'managerId' => (string)($unit['managerId'] ?? ''),
+				// The unit's administration, which bounds the manager climb.
+				'administrationId' => (string)($unit['administrationId'] ?? ''),
 			];
 		}
 

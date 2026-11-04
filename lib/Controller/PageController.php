@@ -160,7 +160,7 @@ class PageController extends Controller {
 				// is in before an administratie has been chosen.
 				$this->logger->debug(
 					'humaniq: active-administratie state not stamped; rendering the shell unscoped.',
-					['exception' => $e]
+					['exceptionClass' => $e::class]
 				);
 			}
 		}

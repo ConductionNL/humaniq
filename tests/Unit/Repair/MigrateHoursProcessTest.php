@@ -569,7 +569,7 @@ class MigrateHoursProcessTest extends TestCase {
 	 * @return void
 	 */
 	public function testManagerChainBackfillsManagerUserId(): void {
-		$this->store->seed('Employee', 'employee-manager', ['nextcloudUserId' => 'manager1']);
+		$this->store->seed('Employee', 'employee-manager', ['nextcloudUserId' => 'manager1', 'administrationId' => 'ADM-001']);
 		$this->store->seed('OrgAssignment', 'assignment-jansen', [
 			'employeeId' => 'employee-jansen',
 			'orgUnitId' => 'unit-dev',

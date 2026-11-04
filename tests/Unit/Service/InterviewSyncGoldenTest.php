@@ -49,10 +49,14 @@ use RuntimeException;
  * @covers \OCA\Humaniq\Service\InterviewSyncEngine
  * @uses   \OCA\Humaniq\Service\InterviewSyncRun
  * @uses   \OCA\Humaniq\Service\InterviewCalendarTarget
+ * @uses   \OCA\Humaniq\Service\CalendarTarget
  * @uses   \OCA\Humaniq\Service\InterviewIcsRenderer
  * @uses   \OCA\Humaniq\Service\InterviewOrphanReconciler
  * @uses   \OCA\Humaniq\Service\InterviewRepository
  * @uses   \OCA\Humaniq\Service\PreparedInterviewEvent
+ * @uses   \OCA\Humaniq\Support\ResolvesObjectService
+ * @uses   \OCA\Humaniq\Support\NormalisesRows
+ * @uses   \OCA\Humaniq\Support\ReadsIcsValues
  *
  * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-003
  */

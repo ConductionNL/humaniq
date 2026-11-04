@@ -28,6 +28,7 @@ namespace OCA\Humaniq\Tests\Unit\Controller;
 use OCA\Humaniq\Controller\CompController;
 use OCA\Humaniq\Controller\ExpenseController;
 use OCA\Humaniq\Service\CompAdjustmentService;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\ReceiptExtractionService;
 use OCA\Humaniq\Service\SettingsService;
@@ -93,12 +94,9 @@ class RequiredIdentifierContractTest extends TestCase {
 
 		$controller = new ExpenseController(
 			$this->createMock(IRequest::class),
-			$this->hostileContainer(),
 			$this->createMock(ReceiptExtractionService::class),
 			$this->settings(),
-			$userSession,
-			new HumaniqRoles($groupManager),
-			$this->createMock(LoggerInterface::class)
+			new CallerContext($userSession, new HumaniqRoles($groupManager), $this->hostileContainer(), $this->createMock(LoggerInterface::class))
 		);
 
 		$response = $controller->extractReceipt('');

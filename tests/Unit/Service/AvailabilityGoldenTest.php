@@ -44,6 +44,8 @@ use PHPUnit\Framework\TestCase;
  * @uses   \OCA\Humaniq\Service\AgendaComposer
  * @uses   \OCA\Humaniq\Service\AgendaBookingEntries
  * @uses   \OCA\Humaniq\Service\AgendaSecondmentEntries
+ * @uses   \OCA\Humaniq\Service\AgendaSubject
+ * @uses   \OCA\Humaniq\Service\AgendaWindow
  * @uses   \OCA\Humaniq\Service\CompetenceCheckService
  * @uses   \OCA\Humaniq\Service\WorkingHoursService
  *

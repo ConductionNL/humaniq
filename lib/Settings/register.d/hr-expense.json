@@ -178,6 +178,14 @@
                                 "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "A manager rejects the claim (with a rejectionReason). The NoSelfApprovalGuard rejects self-rejection. The employee may correct it and re-submit."
                             },
+                            "reopen": {
+                                "from": [
+                                    "approved"
+                                ],
+                                "to": "submitted",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\HrReopenGuard",
+                                "description": "HR sends an approved claim back to approval, for instance when its route was wrong. The HrReopenGuard allows only HR, never the claimant or the approver, and only while no payroll run holds the claim. The approval and the route are cleared; the amounts stay."
+                            },
                             "reimburse": {
                                 "from": [
                                     "approved"

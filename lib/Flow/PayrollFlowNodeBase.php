@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Flow;
 
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -61,6 +62,10 @@ use RuntimeException;
  */
 abstract class PayrollFlowNodeBase implements IFlowNode {
 
+	use ConvertsRowsToArrays {
+		toArray as protected;
+	}
+
 	/**
 	 * Max PayrollRun objects scanned when resolving a run by id — the
 	 * PayrollRunService::LIMIT convention.
@@ -80,19 +85,45 @@ abstract class PayrollFlowNodeBase implements IFlowNode {
 	private const PLACEHOLDER = '/\{\{\s*([A-Za-z0-9_@.]+)\s*\}\}/';
 
 	/**
-	 * @param IL10N $l10n Localisation for palette strings.
-	 * @param IURLGenerator $urls URL generator for the node icon.
-	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
-	 * @param SettingsService $settingsService Register slug + OpenRegister availability.
+	 * Localisation for palette strings.
+	 *
+	 * @var IL10N
+	 */
+	protected readonly IL10N $l10n;
+
+	/**
+	 * URL generator for the node icon.
+	 *
+	 * @var IURLGenerator
+	 */
+	protected readonly IURLGenerator $urls;
+
+	/**
+	 * DI container for lazy ObjectService resolution.
+	 *
+	 * @var ContainerInterface
+	 */
+	protected readonly ContainerInterface $container;
+
+	/**
+	 * Register slug + OpenRegister availability.
+	 *
+	 * @var SettingsService
+	 */
+	protected readonly SettingsService $settingsService;
+
+	/**
+	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		protected readonly IL10N $l10n,
-		protected readonly IURLGenerator $urls,
-		protected readonly ContainerInterface $container,
-		protected readonly SettingsService $settingsService,
+		PayrollFlowNodeServices $services,
 		protected readonly LoggerInterface $logger,
 	) {
+		$this->l10n = $services->l10n;
+		$this->urls = $services->urls;
+		$this->container = $services->container;
+		$this->settingsService = $services->settingsService;
 
 	}//end __construct()
 
@@ -227,28 +258,6 @@ abstract class PayrollFlowNodeBase implements IFlowNode {
 
 		return null;
 	}//end findRun()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array — the
-	 * PayrollRunService convention.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
-	 */
-	protected function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * The object id of a row, falling back to `@self.id`.

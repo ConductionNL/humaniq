@@ -1528,6 +1528,7 @@
         "The agency clause applies, so the contract ends by law as soon as the hirer ends the placement. Only possible in phase A.": "Het uitzendbeding geldt: de overeenkomst eindigt van rechtswege zodra de inlener de terbeschikkingstelling beëindigt. Dit kan alleen in fase A.",
         "The agency phase (A, B or C) of this temporary-work contract. Only for agency contracts; set it by hand.": "De uitzendfase (A, B of C) van deze uitzendovereenkomst. Alleen bij een uitzendcontract; voert u zelf in.",
         "The agenda could not be read.": "De agenda kon niet worden gelezen.",
+        "You cannot see this agenda.": "Je kunt deze agenda niet bekijken.",
         "The agreed euro rate per hour for this transaction. Visible before approval, so a reviewer can spot a wrong rate.": "Het afgesproken uurtarief in euro's. Zichtbaar vóór goedkeuring, zodat een beoordelaar een verkeerd tarief kan opmerken.",
         "The amount claimed, in the currency below.": "Het gedeclareerde bedrag, in de valuta hieronder.",
         "The amount claimed, in the currency below. For a travel claim with a distance, humaniq calculates it.": "Het gedeclareerde bedrag, in de valuta hieronder. Bij een reisdeclaratie met een afstand berekent humaniq het.",
@@ -3712,7 +3713,11 @@
         "this item": "dit item",
         "Start timer": "Timer starten",
         "Week {week} · {from} to {to} · {hours} on {object}": "Week {week} · {from} tot en met {to} · {hours} op {object}",
-        "Hours are recorded through humaniq. Without humaniq this card is left out.": "Uren registreren werkt via humaniq. Zonder humaniq staat dit blok uit."
+        "Hours are recorded through humaniq. Without humaniq this card is left out.": "Uren registreren werkt via humaniq. Zonder humaniq staat dit blok uit.",
+        "Expense categories": "Declaratiecategorieën",
+        "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
+        "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
+        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

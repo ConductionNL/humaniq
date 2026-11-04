@@ -116,7 +116,7 @@ class LoonaangifteMessageService {
 
 		$corrections = $this->carried->forReturn($filing);
 		$parts = array_map(static fn (array $correction): array => ['tree' => (array)$correction['correctionTree'], 'saldo' => (int)($correction['correctionSaldo'] ?? 0)], $corrections);
-		$built = LoonaangifteMessageBuilder::build($current['administration'], $this->header('LA' . $period), [$dates[0], $dates[1]], $current['lines'], $parts);
+		$built = LoonaangifteMessageBuilder::build($current['administration'], $this->header('LA' . $period), ['period' => [$dates[0], $dates[1]], 'lines' => $current['lines'], 'corrections' => $parts]);
 
 		$stored = array_merge($stored, [
 			'messageRunId' => (string)$run['id'],

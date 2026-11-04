@@ -83,6 +83,7 @@ class DemoDataService {
 	 * @param IAppManager        $appManager Resolves this app's path and version.
 	 * @param ContainerInterface $container  Resolves OpenRegister's importer.
 	 * @param LoggerInterface    $logger     Records what was imported.
+	 * @param InternalWriteMarker $marker    Marks the demo import as a shipped import.
 	 *
 	 * @return void
 	 */
@@ -90,6 +91,7 @@ class DemoDataService {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly InternalWriteMarker $marker = new InternalWriteMarker(),
 	) {
 	}//end __construct()
 
@@ -143,11 +145,10 @@ class DemoDataService {
 			$objects = count($components['objects']);
 		}
 
-		$result = $this->configurationService()->importFromApp(
-			appId: self::CONFIG_APP_ID,
-			data: $data,
-			version: $this->appManager->getAppVersion(Application::APP_ID),
-			force: true
+		$importer = $this->configurationService();
+		$version = $this->appManager->getAppVersion(Application::APP_ID);
+		$result = $this->marker->runShippedImport(
+			static fn (): mixed => $importer->importFromApp(appId: self::CONFIG_APP_ID, data: $data, version: $version, force: true)
 		);
 
 		$imported = [

@@ -230,7 +230,6 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
 	 * @param PayrollRetentionGuardService|null $retentionGuard A mocked retention guard, or null for a permissive default (hrmq#99 -- `savePayslip()` places the AWR floor hold on every seal; most tests here are not exercising that behaviour, so a plain mock with no expectations is the default).
-	 *
 	 * @param HoursPayService|null $hoursPay The hours-and-overtime fold, or null for a run without it.
 	 * @param PayrollExpenseFoldService|null $expenses The claims-and-allowances fold, or null for a run without it.
 	 * @param PayrollRunCheckService|null $runCheck The run check, or null for a run without it.
@@ -453,6 +452,57 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertSame(3081.17, $payslip['nettoPay']);
 
 	}//end testNonGrantedRulingPayslipIsByteIdenticalWithNullExemption()
+
+	/**
+	 * A ruling rate on an employee whose ruling is not granted changes
+	 * nothing: the payslip is the plain anchor.
+	 *
+	 * @return void
+	 */
+	public function testARulingRateWithoutTheGrantLeavesNetPayUnchanged(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['thirtyPercentRulingRate' => 30.0])],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$this->assertNull($payslip['thirtyPercentRulingExemption']);
+		$this->assertSame(718.83, $payslip['loonheffing']);
+		$this->assertSame(3081.17, $payslip['nettoPay']);
+
+	}//end testARulingRateWithoutTheGrantLeavesNetPayUnchanged()
+
+	/**
+	 * An employee without the loonheffingskorting election gets it applied,
+	 * the same payslip as an explicit election.
+	 *
+	 * @return void
+	 */
+	public function testAnEmployeeWithoutTheKortingElectionGetsItApplied(): void {
+		$employee = $this->employee();
+		unset($employee['loonheffingskortingToegepast']);
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$employee],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$this->assertSame(718.83, $payslip['loonheffing']);
+		$this->assertSame(3081.17, $payslip['nettoPay']);
+
+	}//end testAnEmployeeWithoutTheKortingElectionGetsItApplied()
 
 	/**
 	 * hrmq#99 regression fix: `savePayslip()` places the AWR art. 52 lid 4

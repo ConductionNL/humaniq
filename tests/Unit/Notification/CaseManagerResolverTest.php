@@ -53,13 +53,16 @@ class CaseManagerResolverTest extends TestCase {
 			],
 			'OrgAssignment' => [
 				['id' => 'as-1', 'employeeId' => 'emp-jansen', 'orgUnitId' => 'unit-ops', 'startDate' => '2024-01-01', 'endDate' => null],
+				['id' => 'as-2', 'employeeId' => 'emp-teamleider', 'orgUnitId' => 'unit-ops', 'startDate' => '2024-01-01', 'endDate' => null],
 			],
 			'OrgUnit' => [
-				['id' => 'unit-ops', 'name' => 'Operations', 'managerId' => 'emp-teamleider'],
+				['id' => 'unit-ops', 'name' => 'Operations', 'managerId' => 'emp-teamleider', 'parentUnitId' => 'unit-board'],
+				['id' => 'unit-board', 'name' => 'Directie', 'managerId' => 'emp-director'],
 			],
 			'Employee' => [
 				['id' => 'emp-jansen', 'nextcloudUserId' => 'sjansen'],
 				['id' => 'emp-teamleider', 'nextcloudUserId' => 'teamleider'],
+				['id' => 'emp-director', 'nextcloudUserId' => 'directeur'],
 			],
 		];
 	}//end rows()
@@ -140,5 +143,15 @@ class CaseManagerResolverTest extends TestCase {
 	public function testNoAdministrationMeansOnlyTheManager(): void {
 		self::assertSame(['teamleider'], $this->resolver()->resolve($this->sickCase(['employeeId' => 'emp-jansen']), []));
 	}//end testNoAdministrationMeansOnlyTheManager()
+
+	/**
+	 * The team leader's own case reaches the manager of the unit above,
+	 * since the team leader manages the unit they are placed in.
+	 *
+	 * @return void
+	 */
+	public function testAUnitManagersCaseReachesTheManagerAboveThem(): void {
+		self::assertSame(['directeur'], $this->resolver()->resolve($this->sickCase(['employeeId' => 'emp-teamleider']), []));
+	}//end testAUnitManagersCaseReachesTheManagerAboveThem()
 
 }//end class

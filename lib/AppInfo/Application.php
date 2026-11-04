@@ -35,6 +35,7 @@ use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
 use OCA\Humaniq\Lifecycle\HandoffCloseGuard;
 use OCA\Humaniq\Lifecycle\HandoffReleaseGuard;
+use OCA\Humaniq\Lifecycle\HrReopenGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Humaniq\Lifecycle\LoonaangifteMessageGuard;
 use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
@@ -64,6 +65,9 @@ use OCA\Humaniq\Listener\ScenarioMutationListener;
 use OCA\Humaniq\Listener\ExitInterviewListener;
 use OCA\Humaniq\Listener\CandidateEvaluationStampListener;
 use OCA\Humaniq\Listener\ReferralListener;
+use OCA\Humaniq\Listener\ExpenseCategoryGuardListener;
+use OCA\Humaniq\Listener\ExpenseManagerStampListener;
+use OCA\Humaniq\Listener\ExpensePayoutFieldsListener;
 use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\PayrollRunApprovedListener;
 use OCA\Humaniq\Listener\CaoComponentOverrideListener;
@@ -155,6 +159,9 @@ class Application extends App implements IBootstrap {
 		// `requires` tag declared on the transitions. The guard has no app
 		// dependencies, so a plain construction closure suffices.
 		$context->registerService(NoSelfApprovalGuard::class, static fn ($c): NoSelfApprovalGuard => new NoSelfApprovalGuard());
+
+		// hr-reopens-an-approved-claim: only HR outside the claim reopens an approved Expense.
+		$context->registerService(HrReopenGuard::class, static fn ($c): HrReopenGuard => new HrReopenGuard($c->get(\OCA\Humaniq\Service\HumaniqRoles::class), $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
 
 		// OpenRegister lifecycle guard for the PensionFiling `controleren` transition
 		// (pension-filing-upa-mvp) — denies review unless the referenced PayrollRun is
@@ -946,6 +953,9 @@ class Application extends App implements IBootstrap {
 	 * payroll-run-checks D5: the reviewer who acknowledges a finding; payroll-cao-components D2: a
 	 * contract's CAO component overrides; payroll-cost-allocation D1: a cost allocation's splits
 	 * and overlap; payroll-external-bureau-handoff D4: the intake check when a handoff is received.
+	 * allowed-expense-categories: a claim in a switched-off category is refused. The expense
+	 * approver stamp and then the payout fields come last of every Expense pre-save listener,
+	 * so the modified data they merge into is complete and a decided claim's amounts win.
 	 *
 	 * @param IEventDispatcher $dispatcher The live event dispatcher.
 	 *
@@ -953,7 +963,7 @@ class Application extends App implements IBootstrap {
 	 */
 	private function registerExpensePayrollListeners(IEventDispatcher $dispatcher): void {
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
-			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG, PayrollRunFindingStampListener::class => PayrollRunFindingStampListener::SLUG, CaoComponentOverrideListener::class => CaoComponentOverrideListener::SLUG, CostAllocationGuardListener::class => CostAllocationGuardListener::COSTALLOCATION_SLUG] as $listener => $slug) {
+			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG, PayrollRunFindingStampListener::class => PayrollRunFindingStampListener::SLUG, CaoComponentOverrideListener::class => CaoComponentOverrideListener::SLUG, CostAllocationGuardListener::class => CostAllocationGuardListener::COSTALLOCATION_SLUG, ExpenseCategoryGuardListener::class => ExpenseCategoryGuardListener::SLUG, ExpenseManagerStampListener::class => ExpenseManagerStampListener::SLUG, ExpensePayoutFieldsListener::class => ExpensePayoutFieldsListener::SLUG] as $listener => $slug) {
 				$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: $listener, registers: null, schemas: [$slug]);
 			}
 		}

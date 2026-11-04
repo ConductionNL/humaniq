@@ -140,7 +140,7 @@ class InterviewSyncEngine {
 
 		$storedUid = trim((string)($interview['calendarEventUid'] ?? ''));
 		$uid = ($storedUid !== '') ? $storedUid : (self::URI_PREFIX . $id);
-		$ics = $this->icsRenderer->render($uid, $dtstart, $dtend, $summary, $location, $interviewers);
+		$ics = $this->icsRenderer->render($uid, ['dtstart' => $dtstart, 'dtend' => $dtend, 'summary' => $summary, 'location' => $location, 'interviewers' => $interviewers]);
 		$prepared = new PreparedInterviewEvent($storedUid, $uid, $uid . '.ics', $ics, $dtstart, $dtend, $summary, $location);
 
 		$this->upsertInterviewEvent($run, $interview, $id, $prepared);
@@ -248,7 +248,7 @@ class InterviewSyncEngine {
 	 */
 	private function updateEventIfChanged(InterviewSyncRun $run, array $interview, string $id, PreparedInterviewEvent $prepared): void {
 		$existingIcs = $this->fetchCalendarData($run->target, $prepared->objectUri);
-		if ($existingIcs !== null && $this->icsRenderer->unchanged($existingIcs, $prepared->dtstart, $prepared->dtend, $prepared->summary, $prepared->location) === true) {
+		if ($existingIcs !== null && $this->icsRenderer->unchanged($existingIcs, ['dtstart' => $prepared->dtstart, 'dtend' => $prepared->dtend, 'summary' => $prepared->summary, 'location' => $prepared->location]) === true) {
 			if ($prepared->storedUid === '') {
 				$this->repository->persistCalendarEventUid($interview, $id, $prepared->uid);
 			}

@@ -94,4 +94,29 @@ class InternalWriteMarkerTest extends TestCase {
 		$this->assertFalse($marker->isInternal());
 	}//end testNestedInternalWritesKeepTheOuterScope()
 
+	/**
+	 * A shipped import is marked only inside runShippedImport(), also after
+	 * a throw, and is not an internal write.
+	 *
+	 * @return void
+	 */
+	public function testAShippedImportIsMarkedOnlyInsideIt(): void {
+		$marker = new InternalWriteMarker();
+		self::assertFalse($marker->isShippedImport());
+
+		$seen = $marker->runShippedImport(fn (): array => [$marker->isShippedImport(), $marker->isInternal(), $marker->runShippedImport(fn (): bool => $marker->isShippedImport()), $marker->isShippedImport()]);
+		self::assertSame([true, false, true, true], $seen);
+		self::assertFalse($marker->isShippedImport());
+
+		try {
+			$marker->runShippedImport(static function (): void {
+				throw new \RuntimeException('boom');
+			});
+		} catch (\RuntimeException $e) {
+			self::assertSame('boom', $e->getMessage());
+		}
+
+		self::assertFalse($marker->isShippedImport());
+	}//end testAShippedImportIsMarkedOnlyInsideIt()
+
 }//end class

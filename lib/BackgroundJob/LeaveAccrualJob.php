@@ -53,18 +53,32 @@ namespace OCA\Humaniq\BackgroundJob;
 use DateTimeImmutable;
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\LoadsAllRows;
+use OCA\Humaniq\Support\ChecksPeriodCoverage;
+use OCA\Humaniq\Support\ReadsEmployeeKeys;
+use OCA\Humaniq\Support\FindsCoveringContract;
 
 /**
  * Monthly statutory + bovenwettelijk leave accrual onto every active
  * employee's holiday LeaveBalance.
+ *
+ * @spec openspec/specs/leave-accrual-job/spec.md
  */
 class LeaveAccrualJob extends TimedJob {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use LoadsAllRows;
+	use ChecksPeriodCoverage;
+	use ReadsEmployeeKeys;
+	use FindsCoveringContract;
 
 	/**
 	 * How often the job fires (~1 day). Correctness is independent of this
@@ -89,6 +103,14 @@ class LeaveAccrualJob extends TimedJob {
 	 * @var string
 	 */
 	private const LEAVE_TYPE = 'holiday';
+
+	/**
+	 * The summary of a run while `leave_accrual_enabled` is off: no period,
+	 * nothing written.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private const DISABLED_SUMMARY = ['period' => '', 'year' => 0, 'enabled' => false, 'provisioned' => [], 'accrued' => [], 'skipped' => [], 'noop' => 0];
 
 	/**
 	 * @param ITimeFactory $time Time factory (also drives `run()`'s period/year).
@@ -161,7 +183,7 @@ class LeaveAccrualJob extends TimedJob {
 	 */
 	public function runAccrual(): array {
 		if ($this->settingsService->isLeaveAccrualEnabled() === false) {
-			return $this->summary('', 0, false, [], [], [], 0);
+			return self::DISABLED_SUMMARY;
 		}
 
 		$now = (new DateTimeImmutable())->setTimestamp($this->time->getTime());
@@ -170,12 +192,9 @@ class LeaveAccrualJob extends TimedJob {
 
 		$contractsByEmployeeKey = $this->contractsByEmployeeKey();
 		$balancesByEmployeeId = $this->holidayBalancesByEmployeeId($year);
-		$deltaBovenwettelijk = $this->round1($this->settingsService->getLeaveBovenwettelijkAnnualHours() / 12);
-
-		$provisioned = [];
-		$accrued = [];
-		$skipped = [];
-		$noop = 0;
+		$month = ['year' => $year, 'period' => $period, 'deltaBovenwettelijk' => $this->round1($this->settingsService->getLeaveBovenwettelijkAnnualHours() / 12)];
+		$summary = ['period' => $period, 'year' => $year] + self::DISABLED_SUMMARY;
+		$summary['enabled'] = true;
 
 		foreach ($this->loadAll('Employee') as $employee) {
 			if ($this->coversPeriod((string)($employee['startDate'] ?? ''), (string)($employee['endDate'] ?? ''), $period) === false) {
@@ -187,40 +206,39 @@ class LeaveAccrualJob extends TimedJob {
 			$employeeLabel = $this->employeeLabel($employee);
 
 			if ($employeeId === '') {
-				$skipped[] = ['employee' => $employeeLabel, 'reason' => 'no-employee-identity'];
+				$summary['skipped'][] = ['employee' => $employeeLabel, 'reason' => 'no-employee-identity'];
 				continue;
 			}
 
 			$contract = $this->coveringContract($employee, $contractsByEmployeeKey, $period);
 			if ($contract === null) {
-				$skipped[] = ['employee' => $employeeLabel, 'reason' => 'no-covering-contract'];
+				$summary['skipped'][] = ['employee' => $employeeLabel, 'reason' => 'no-covering-contract'];
 				continue;
 			}
 
 			$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
 			if (is_numeric($hoursPerWeek) === false || ((float)$hoursPerWeek) <= 0.0) {
-				$skipped[] = ['employee' => $employeeLabel, 'reason' => 'no-hours-per-week'];
+				$summary['skipped'][] = ['employee' => $employeeLabel, 'reason' => 'no-hours-per-week'];
 				continue;
 			}
 
-			$hoursPerWeek = (float)$hoursPerWeek;
 			$existing = ($balancesByEmployeeId[$employeeId] ?? null);
 			// humaniq-personal-dashboard REQ-ACCR-006: the denormalized account
 			// link, resolved from the SAME Employee row this iteration already
 			// selected. Null for an employee with no linked account — never
 			// guessed, never another account (fail-closed for @me surfaces).
-			$userId = $this->nullableTrim($employee['nextcloudUserId'] ?? null);
+			$grant = $month + ['employeeId' => $employeeId, 'hoursPerWeek' => (float)$hoursPerWeek, 'userId' => $this->nullableTrim($employee['nextcloudUserId'] ?? null)];
 
 			if ($existing === null) {
 				try {
-					$saved = $this->provision($employeeId, $year, $period, $hoursPerWeek, $deltaBovenwettelijk, $userId);
+					$saved = $this->provision($grant);
 				} catch (\Throwable $e) {
 					$this->logger->warning('LeaveAccrualJob: kon LeaveBalance niet aanmaken voor ' . $employeeLabel . ': ' . $e->getMessage());
-					$skipped[] = ['employee' => $employeeLabel, 'reason' => 'save-failed'];
+					$summary['skipped'][] = ['employee' => $employeeLabel, 'reason' => 'save-failed'];
 					continue;
 				}
 
-				$provisioned[] = ['employee' => $employeeLabel, 'leaveBalanceId' => $this->idOf($saved)];
+				$summary['provisioned'][] = ['employee' => $employeeLabel, 'leaveBalanceId' => $this->idOf($saved)];
 				continue;
 			}//end if
 
@@ -229,22 +247,22 @@ class LeaveAccrualJob extends TimedJob {
 				// Already accrued this employee-month — a hard no-op, no write
 				// (design.md D5, REQ-ACCR-004): correctness must not depend on
 				// how often the TimedJob fires.
-				$noop++;
+				$summary['noop']++;
 				continue;
 			}
 
 			try {
-				$saved = $this->accrueExisting($existing, $period, $hoursPerWeek, $deltaBovenwettelijk, $userId);
+				$saved = $this->accrueExisting($existing, $grant);
 			} catch (\Throwable $e) {
 				$this->logger->warning('LeaveAccrualJob: kon LeaveBalance niet bijwerken voor ' . $employeeLabel . ': ' . $e->getMessage());
-				$skipped[] = ['employee' => $employeeLabel, 'reason' => 'save-failed'];
+				$summary['skipped'][] = ['employee' => $employeeLabel, 'reason' => 'save-failed'];
 				continue;
 			}
 
-			$accrued[] = ['employee' => $employeeLabel, 'leaveBalanceId' => $this->idOf($saved)];
+			$summary['accrued'][] = ['employee' => $employeeLabel, 'leaveBalanceId' => $this->idOf($saved)];
 		}//end foreach
 
-		return $this->summary($period, $year, true, $provisioned, $accrued, $skipped, $noop);
+		return $summary;
 	}//end runAccrual()
 
 	/**
@@ -252,35 +270,31 @@ class LeaveAccrualJob extends TimedJob {
 	 * figure, one bovenwettelijk slice, the vervaltermijn, and the
 	 * idempotency marker — never a monthly statutory slice.
 	 *
-	 * @param string $employeeId The Employee id.
-	 * @param int $year Calendar year.
-	 * @param string $period Current wage period (YYYY-MM), stamped as `lastAccruedPeriod`.
-	 * @param float $hoursPerWeek The covering contract's `hoursPerWeek`.
-	 * @param float $deltaBovenwettelijk This month's bovenwettelijk slice (`round1(annual/12)`).
-	 * @param string|null $userId The employee's linked Nextcloud account id, or null when unlinked.
+	 * @param array<string, mixed> $grant The month (`year`, `period` stamped as `lastAccruedPeriod`, `deltaBovenwettelijk`) and the
+	 *                                    employee (`employeeId`, the covering contract's `hoursPerWeek`, the linked account `userId` or null).
 	 *
 	 * @return array<string, mixed> The saved LeaveBalance.
 	 *
 	 * @spec openspec/specs/leave-accrual-job/spec.md#REQ-ACCR-002
 	 * @spec openspec/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
-	private function provision(string $employeeId, int $year, string $period, float $hoursPerWeek, float $deltaBovenwettelijk, ?string $userId = null): array {
+	private function provision(array $grant): array {
 		$payload = [
-			'employeeId' => $employeeId,
-			'year' => $year,
+			'employeeId' => $grant['employeeId'],
+			'year' => $grant['year'],
 			'leaveType' => self::LEAVE_TYPE,
-			'entitledHours' => (4 * $hoursPerWeek),
-			'bovenwettelijkHours' => $deltaBovenwettelijk,
+			'entitledHours' => (4 * $grant['hoursPerWeek']),
+			'bovenwettelijkHours' => $grant['deltaBovenwettelijk'],
 			'usedHours' => 0.0,
-			'contractHoursPerWeek' => $hoursPerWeek,
-			'expiryDate' => sprintf('%04d-07-01', ($year + 1)),
-			'lastAccruedPeriod' => $period,
+			'contractHoursPerWeek' => $grant['hoursPerWeek'],
+			'expiryDate' => sprintf('%04d-07-01', ($grant['year'] + 1)),
+			'lastAccruedPeriod' => $grant['period'],
 			// REQ-ACCR-006 / REQ-MHS-002: denormalized copy of the linked
 			// Employee's nextcloudUserId, so the personal dashboard's
 			// verlofsaldo widget can filter with the @me token. Null when the
 			// employee has no account — the row then never appears on a Mijn
 			// surface rather than being mis-attributed.
-			'userId' => $userId,
+			'userId' => $grant['userId'],
 		];
 
 		return $this->toArray(
@@ -303,10 +317,7 @@ class LeaveAccrualJob extends TimedJob {
 	 * lowering — design.md Risks/Trade-offs), and stamps `lastAccruedPeriod`.
 	 *
 	 * @param array<string, mixed> $existing The existing LeaveBalance.
-	 * @param string $period Current wage period (YYYY-MM).
-	 * @param float $hoursPerWeek The covering contract's `hoursPerWeek`.
-	 * @param float $deltaBovenwettelijk This month's bovenwettelijk slice.
-	 * @param string|null $userId The employee's linked Nextcloud account id, or null when unlinked.
+	 * @param array<string, mixed> $grant The month (`period`, `deltaBovenwettelijk`) and the employee (`hoursPerWeek`, `userId`).
 	 *
 	 * @return array<string, mixed> The saved LeaveBalance.
 	 *
@@ -314,7 +325,7 @@ class LeaveAccrualJob extends TimedJob {
 	 * @spec openspec/specs/leave-accrual-job/spec.md#REQ-ACCR-004
 	 * @spec openspec/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
-	private function accrueExisting(array $existing, string $period, float $hoursPerWeek, float $deltaBovenwettelijk, ?string $userId = null): array {
+	private function accrueExisting(array $existing, array $grant): array {
 		$currentEntitled = (float)($existing['entitledHours'] ?? 0);
 		$currentContractHours = (float)($existing['contractHoursPerWeek'] ?? 0);
 		$currentBovenwettelijk = (float)($existing['bovenwettelijkHours'] ?? 0);
@@ -322,10 +333,10 @@ class LeaveAccrualJob extends TimedJob {
 		$payload = array_merge(
 			$existing,
 			[
-				'entitledHours' => max($currentEntitled, (4 * $hoursPerWeek)),
-				'bovenwettelijkHours' => ($currentBovenwettelijk + $deltaBovenwettelijk),
-				'contractHoursPerWeek' => max($currentContractHours, $hoursPerWeek),
-				'lastAccruedPeriod' => $period,
+				'entitledHours' => max($currentEntitled, (4 * $grant['hoursPerWeek'])),
+				'bovenwettelijkHours' => ($currentBovenwettelijk + $grant['deltaBovenwettelijk']),
+				'contractHoursPerWeek' => max($currentContractHours, $grant['hoursPerWeek']),
+				'lastAccruedPeriod' => $grant['period'],
 				// REQ-ACCR-006: re-stamped on EVERY monthly slice, not only on
 				// create, so a balance written before the property existed
 				// self-heals on the next accrual run — no dedicated repair
@@ -333,7 +344,7 @@ class LeaveAccrualJob extends TimedJob {
 				// authority for the link, so a stale copy is corrected and an
 				// unlinked employee is reset to null rather than keeping a
 				// value that no longer names their account.
-				'userId' => $userId,
+				'userId' => $grant['userId'],
 			]
 		);
 		unset($payload['@self']);
@@ -380,92 +391,6 @@ class LeaveAccrualJob extends TimedJob {
 	}//end holidayBalancesByEmployeeId()
 
 	/**
-	 * All EmploymentContracts, indexed by every employee-reference key (the
-	 * PayrollRunService convention: contracts may reference the employee by
-	 * object id, slug, or employeeNumber). Each key maps to the LIST of that
-	 * employee's contracts.
-	 *
-	 * @return array<string, array<int, array<string, mixed>>>
-	 */
-	private function contractsByEmployeeKey(): array {
-		$out = [];
-		foreach ($this->loadAll('EmploymentContract') as $contract) {
-			$key = trim((string)($contract['employeeId'] ?? ''));
-			if ($key !== '') {
-				$out[$key][] = $contract;
-			}
-		}
-
-		return $out;
-	}//end contractsByEmployeeKey()
-
-	/**
-	 * The employee's contract covering the period, resolved via the id/slug/
-	 * employeeNumber keys, or null when none covers it (design.md D4,
-	 * identical to `PayrollRunService::coveringContract()`).
-	 *
-	 * @param array<string, mixed> $employee The Employee.
-	 * @param array<string, array<int, array<string, mixed>>> $contractsByEmployeeKey The contract index.
-	 * @param string $period Wage period (YYYY-MM).
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function coveringContract(array $employee, array $contractsByEmployeeKey, string $period): ?array {
-		$keys = array_filter(
-			[
-				$this->idOf($employee),
-				(string)($employee['@self']['slug'] ?? ''),
-				trim((string)($employee['employeeNumber'] ?? '')),
-			],
-			static fn (string $key): bool => $key !== ''
-		);
-
-		foreach ($keys as $key) {
-			foreach (($contractsByEmployeeKey[$key] ?? []) as $contract) {
-				if ($this->coversPeriod((string)($contract['startDate'] ?? ''), (string)($contract['endDate'] ?? ''), $period) === true) {
-					return $contract;
-				}
-			}
-		}
-
-		return null;
-	}//end coveringContract()
-
-	/**
-	 * Whether a start/end date range covers the wage period: startDate on or
-	 * before the period's last day AND endDate null/blank or on/after the
-	 * period's first day (identical to `PayrollRunService::coversPeriod()`).
-	 *
-	 * @param string $startDate ISO start date.
-	 * @param string $endDate ISO end date, or ''/null-ish while open.
-	 * @param string $period Wage period (YYYY-MM).
-	 *
-	 * @return bool
-	 */
-	private function coversPeriod(string $startDate, string $endDate, string $period): bool {
-		try {
-			$periodStart = new DateTimeImmutable($period . '-01');
-		} catch (\Throwable $e) {
-			return false;
-		}
-
-		$periodEnd = $periodStart->modify('last day of this month');
-
-		$start = strtotime(trim($startDate));
-		if ($start === false || $start > $periodEnd->getTimestamp()) {
-			return false;
-		}
-
-		$endDate = trim($endDate);
-		if ($endDate === '') {
-			return true;
-		}
-
-		$end = strtotime($endDate);
-		return $end === false || $end >= $periodStart->getTimestamp();
-	}//end coversPeriod()
-
-	/**
 	 * One decimal place rounding for the bovenwettelijk slice (design.md D3)
 	 * — keeps the hours figure clean; the residual from integer-twelfths is
 	 * immaterial and self-corrects at the next statutory full-grant.
@@ -478,96 +403,6 @@ class LeaveAccrualJob extends TimedJob {
 		return round($value, 1);
 	}//end round1()
 
-	/**
-	 * A human label for an Employee in the run summary.
-	 *
-	 * @param array<string, mixed> $employee The Employee.
-	 *
-	 * @return string
-	 */
-	private function employeeLabel(array $employee): string {
-		$name = trim(trim((string)($employee['firstName'] ?? '')) . ' ' . trim((string)($employee['lastName'] ?? '')));
-		if ($name !== '') {
-			return $name;
-		}
-
-		$number = trim((string)($employee['employeeNumber'] ?? ''));
-		if ($number !== '') {
-			return $number;
-		}
-
-		$id = $this->idOf($employee);
-		return $id === '' ? 'onbekend' : $id;
-	}//end employeeLabel()
-
-	/**
-	 * Build the run summary array.
-	 *
-	 * @param string $period Wage period (YYYY-MM), '' when the run never started (disabled).
-	 * @param int $year Calendar year, 0 when the run never started.
-	 * @param bool $enabled Whether `leave_accrual_enabled` was true.
-	 * @param array<int, array<string, mixed>> $provisioned Newly-created balances.
-	 * @param array<int, array<string, mixed>> $accrued Existing balances that received a bovenwettelijk slice.
-	 * @param array<int, array<string, mixed>> $skipped Employees skipped, each with a reason.
-	 * @param int $noop Count of balances already accrued this period (no write).
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function summary(string $period, int $year, bool $enabled, array $provisioned, array $accrued, array $skipped, int $noop): array {
-		return [
-			'period' => $period,
-			'year' => $year,
-			'enabled' => $enabled,
-			'provisioned' => $provisioned,
-			'accrued' => $accrued,
-			'skipped' => $skipped,
-			'noop' => $noop,
-		];
-
-	}//end summary()
-
-	/**
-	 * Load all objects of a schema (capped), as plain arrays (identical to
-	 * `PayrollRunService::loadAll()`).
-	 *
-	 * @param string $schema The schema name.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function loadAll(string $schema): array {
-		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema($schema)->findAll(['limit' => self::LIMIT]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('LeaveAccrualJob: kon ' . $schema . ' niet laden: ' . $e->getMessage());
-			return [];
-		}
-
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end loadAll()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * The object id of a row, falling back to `@self.id`.
@@ -601,28 +436,9 @@ class LeaveAccrualJob extends TimedJob {
 	}//end nullableTrim()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

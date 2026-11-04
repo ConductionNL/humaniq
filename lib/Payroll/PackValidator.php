@@ -743,17 +743,11 @@ final class PackValidator {
 	 */
 	private function inputFrom(array $input, JurisdictionPack $pack): CalculationInput {
 		return new CalculationInput(
-			grossMonthlySalaryCents: (int)round(((float)$input['grossMonthly'] * 100)),
-			taxTableColor: (string)$input['taxTableColor'],
-			loonheffingskortingToegepast: (bool)$input['loonheffingskortingToegepast'],
-			dateOfBirth: (string)$input['dateOfBirth'],
-			period: (string)$input['period'],
-			awfTariff: (string)$input['awfTariff'],
-			aofTariff: (string)$input['aofTariff'],
-			whkPercentage: (float)$input['whkPercentage'],
-			verzekeringsplichtig: (bool)($input['verzekeringsplichtig'] ?? true),
-			jurisdiction: $pack->jurisdiction(),
-			thirtyPercentRulingRate: (float)($input['thirtyPercentRulingRate'] ?? 0.0)
+			wage: new CalculationWage(grossMonthlySalaryCents: (int)round(((float)$input['grossMonthly'] * 100)), dateOfBirth: (string)$input['dateOfBirth'], period: (string)$input['period'], jurisdiction: $pack->jurisdiction()),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(taxTableColor: (string)$input['taxTableColor'], loonheffingskortingToegepast: (bool)$input['loonheffingskortingToegepast'], thirtyPercentRulingRate: (float)($input['thirtyPercentRulingRate'] ?? 0.0)),
+				insurance: new InsuranceTariffs(awfTariff: (string)$input['awfTariff'], aofTariff: (string)$input['aofTariff'], whkPercentage: (float)$input['whkPercentage'], verzekeringsplichtig: (bool)($input['verzekeringsplichtig'] ?? true))
+			)
 		);
 
 	}//end inputFrom()

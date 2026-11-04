@@ -30,7 +30,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\AbsenceRateService;
+use OCA\Humaniq\Service\AnalyticsCalculators;
 use OCA\Humaniq\Service\AnalyticsService;
+use OCA\Humaniq\Service\DepartmentFigureCalculators;
 use OCA\Humaniq\Service\DepartmentFigures;
 use OCA\Humaniq\Service\DepartmentFiguresService;
 use OCA\Humaniq\Service\Percentile;
@@ -111,6 +113,19 @@ class DepartmentFiguresServiceTest extends TestCase {
 		$this->assertSame(400000.0, $children['total']['wageCost']);
 		$this->assertSame(400000.0, (array_sum($byName) + $children['notPlaced']['wageCost']));
 	}//end testTheUnitsWageCostsAddUpToTheAdministrationTotal()
+
+	/**
+	 * A named period is the trailing months ending in the current one.
+	 *
+	 * @return void
+	 */
+	public function testAQuarterIsTheTrailingThreeMonths(): void {
+		$result = $this->buildService($this->organisation())->compare('ADM-001', 'quarter', null);
+
+		$thisMonth = new \DateTimeImmutable('first day of this month');
+		$this->assertSame($thisMonth->modify('-2 months')->format('Y-m-d'), $result['from']);
+		$this->assertSame($thisMonth->modify('last day of this month')->format('Y-m-d'), $result['to']);
+	}//end testAQuarterIsTheTrailingThreeMonths()
 
 	/**
 	 * "HR compares two teams": each unit carries its own absence rate and
@@ -268,9 +283,9 @@ class DepartmentFiguresServiceTest extends TestCase {
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 		$settings->method('getDepartmentFiguresMinimumMembers')->willReturn($minimum);
 
-		$analytics = new AnalyticsService($container, $settings, new AbsenceRateService(), new Percentile(), $this->createMock(LoggerInterface::class));
+		$analytics = new AnalyticsService($container, $settings, $this->createMock(LoggerInterface::class), new AnalyticsCalculators(new AbsenceRateService(), new Percentile()));
 
-		return new DepartmentFiguresService($analytics, new UnitMembership(), new DepartmentFigures(), new AbsenceRateService(), $settings);
+		return new DepartmentFiguresService($analytics, new UnitMembership(), $settings, new DepartmentFigureCalculators(new DepartmentFigures(), new AbsenceRateService()));
 	}//end buildService()
 
 }//end class

@@ -17,6 +17,9 @@ return [
         ['name' => 'setup#status',    'url' => '/api/setup/status',            'verb' => 'GET'],
         ['name' => 'setup#saveConfig', 'url' => '/api/setup/config',            'verb' => 'POST'],
         ['name' => 'setup#runAction', 'url' => '/api/setup/action/{actionId}', 'verb' => 'POST', 'requirements' => ['actionId' => '[a-z0-9\\-]+']],
+        // allowed-expense-categories: which categories employees may claim (read: signed-in users, save: admin).
+        ['name' => 'expenseCategory#index', 'url' => '/api/expense-categories', 'verb' => 'GET'],
+        ['name' => 'expenseCategory#update', 'url' => '/api/expense-categories', 'verb' => 'PUT'],
         ['name' => 'page#index',    'url' => '/',             'verb' => 'GET'],
         // ADR-024 §4 — manifest endpoint (bundled blob).
         ['name' => 'page#manifest', 'url' => '/api/manifest', 'verb' => 'GET'],

@@ -43,6 +43,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -53,6 +54,8 @@ use RuntimeException;
  * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-001
  */
 class LeaveBalanceProjectionService {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * Max objects loaded per type when scanning for the requests behind a balance.
@@ -435,26 +438,6 @@ class LeaveBalanceProjectionService {
 		return $out;
 
 	}//end loadAll()
-
-	/**
-	 * Normalise an object-store row to a plain array.
-	 *
-	 * @param mixed $row The row as the object store returned it.
-	 *
-	 * @return array<string, mixed> The row as an array, empty when unusable.
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-
-	}//end toArray()
 
 	/**
 	 * The configured register slug.

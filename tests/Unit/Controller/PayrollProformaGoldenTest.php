@@ -34,6 +34,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
+use OCA\Humaniq\Service\PayrollRunServices;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Controller\PayrollController;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Service\HumaniqRoles;
@@ -233,16 +235,10 @@ class PayrollProformaGoldenTest extends TestCase {
 
 		return new PayrollController(
 			$request,
-			$container,
-			$this->createMock(PayrollRunService::class),
-			$this->createMock(PayrollMutationService::class),
-			new ProformaPayslipService(new PayrollCalculator(), $settings),
-			$this->createMock(RetroAdjustmentService::class),
+			new PayrollRunServices($this->createMock(PayrollRunService::class), $this->createMock(PayrollMutationService::class), new ProformaPayslipService(new PayrollCalculator(), $settings), $this->createMock(RetroAdjustmentService::class)),
 			$this->createMock(WkrService::class),
 			$settings,
-			$session,
-			new HumaniqRoles($this->createMock(IGroupManager::class)),
-			$this->logger()
+			new CallerContext($session, new HumaniqRoles($this->createMock(IGroupManager::class)), $container, $this->logger())
 		);
 
 	}//end controller()

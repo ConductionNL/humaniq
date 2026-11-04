@@ -34,6 +34,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Payroll;
 
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 use PHPUnit\Framework\TestCase;
@@ -219,16 +223,24 @@ class BalancingInvariantTest extends TestCase {
 	 */
 	private static function inputFromFixture(array $input): CalculationInput {
 		return new CalculationInput(
-			grossMonthlySalaryCents: (int)round(((float)$input['grossMonthly']) * 100),
-			taxTableColor: (string)$input['taxTableColor'],
-			loonheffingskortingToegepast: (bool)$input['loonheffingskortingToegepast'],
-			dateOfBirth: (string)$input['dateOfBirth'],
-			period: (string)$input['period'],
-			awfTariff: (string)$input['awfTariff'],
-			aofTariff: (string)$input['aofTariff'],
-			whkPercentage: (float)$input['whkPercentage'],
-			verzekeringsplichtig: (bool)($input['verzekeringsplichtig'] ?? true),
-			thirtyPercentRulingRate: (float)($input['thirtyPercentRulingRate'] ?? 0.0)
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: (int)round(((float)$input['grossMonthly']) * 100),
+				dateOfBirth: (string)$input['dateOfBirth'],
+				period: (string)$input['period']
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: (string)$input['taxTableColor'],
+					loonheffingskortingToegepast: (bool)$input['loonheffingskortingToegepast'],
+					thirtyPercentRulingRate: (float)($input['thirtyPercentRulingRate'] ?? 0.0)
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: (string)$input['awfTariff'],
+					aofTariff: (string)$input['aofTariff'],
+					whkPercentage: (float)$input['whkPercentage'],
+					verzekeringsplichtig: (bool)($input['verzekeringsplichtig'] ?? true)
+				)
+			)
 		);
 
 	}//end inputFromFixture()

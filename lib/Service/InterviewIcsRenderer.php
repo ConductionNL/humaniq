@@ -32,11 +32,14 @@ namespace OCA\Humaniq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use Throwable;
+use OCA\Humaniq\Support\ReadsIcsValues;
 
 /**
  * Renders and diffs one Interview's VEVENT text.
  */
 class InterviewIcsRenderer {
+
+	use ReadsIcsValues;
 
 	/**
 	 * Render one timed VEVENT wrapped in a VCALENDAR (design.md D5):
@@ -47,17 +50,13 @@ class InterviewIcsRenderer {
 	 * per RFC 5545 §3.3.11.
 	 *
 	 * @param string $uid The deterministic VEVENT UID.
-	 * @param string $dtstart Compact UTC DATE-TIME (YYYYMMDDTHHMMSSZ).
-	 * @param string $dtend Compact UTC DATE-TIME (YYYYMMDDTHHMMSSZ).
-	 * @param string $summary The AVG-safe SUMMARY text (unescaped).
-	 * @param string $location The LOCATION text (unescaped, '' means none).
-	 * @param string $interviewers The DESCRIPTION text (unescaped, '' means none).
+	 * @param array{dtstart: string, dtend: string, summary: string, location: string, interviewers: string} $event Compact UTC DATE-TIMEs (YYYYMMDDTHHMMSSZ), the AVG-safe SUMMARY, and the LOCATION and DESCRIPTION (interviewers) texts, all unescaped ('' means none).
 	 *
 	 * @return string
 	 *
 	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-005
 	 */
-	public function render(string $uid, string $dtstart, string $dtend, string $summary, string $location, string $interviewers): string {
+	public function render(string $uid, array $event): string {
 		$dtstamp = gmdate('Ymd\THis\Z');
 
 		$lines = [
@@ -68,17 +67,17 @@ class InterviewIcsRenderer {
 			'BEGIN:VEVENT',
 			'UID:' . $uid,
 			'DTSTAMP:' . $dtstamp,
-			'DTSTART:' . $dtstart,
-			'DTEND:' . $dtend,
-			'SUMMARY:' . $this->escapeText($summary),
+			'DTSTART:' . $event['dtstart'],
+			'DTEND:' . $event['dtend'],
+			'SUMMARY:' . $this->escapeText($event['summary']),
 		];
 
-		if ($location !== '') {
-			$lines[] = 'LOCATION:' . $this->escapeText($location);
+		if ($event['location'] !== '') {
+			$lines[] = 'LOCATION:' . $this->escapeText($event['location']);
 		}
 
-		if ($interviewers !== '') {
-			$lines[] = 'DESCRIPTION:' . $this->escapeText($interviewers);
+		if ($event['interviewers'] !== '') {
+			$lines[] = 'DESCRIPTION:' . $this->escapeText($event['interviewers']);
 		}
 
 		$lines[] = 'TRANSP:OPAQUE';
@@ -98,14 +97,13 @@ class InterviewIcsRenderer {
 	 * scope.
 	 *
 	 * @param string $ics The stored calendar object's raw ICS text.
-	 * @param string $dtstart Desired compact UTC DATE-TIME (YYYYMMDDTHHMMSSZ).
-	 * @param string $dtend Desired compact UTC DATE-TIME (YYYYMMDDTHHMMSSZ).
-	 * @param string $summary Desired SUMMARY text (unescaped).
-	 * @param string $location Desired LOCATION text (unescaped, '' means none).
+	 * @param array{dtstart: string, dtend: string, summary: string, location: string} $event Desired compact UTC DATE-TIMEs (YYYYMMDDTHHMMSSZ), SUMMARY and LOCATION texts (unescaped, '' means no location).
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/specs/interview-scheduling/spec.md#REQ-INTV-003
 	 */
-	public function unchanged(string $ics, string $dtstart, string $dtend, string $summary, string $location): bool {
+	public function unchanged(string $ics, array $event): bool {
 		$existingDtstart = $this->extractIcsValue($ics, 'DTSTART');
 		$existingDtend = $this->extractIcsValue($ics, 'DTEND');
 		$existingSummary = $this->extractIcsValue($ics, 'SUMMARY');
@@ -116,10 +114,10 @@ class InterviewIcsRenderer {
 		}
 
 		$normalisedExistingLocation = ($existingLocation === null) ? '' : $this->unescapeText($existingLocation);
-		$summaryMatches = ($this->unescapeText($existingSummary) === $summary);
-		$datesMatch = ($existingDtstart === $dtstart && $existingDtend === $dtend);
+		$summaryMatches = ($this->unescapeText($existingSummary) === $event['summary']);
+		$datesMatch = ($existingDtstart === $event['dtstart'] && $existingDtend === $event['dtend']);
 
-		return $datesMatch === true && $summaryMatches === true && $normalisedExistingLocation === $location;
+		return $datesMatch === true && $summaryMatches === true && $normalisedExistingLocation === $event['location'];
 	}//end unchanged()
 
 	/**
@@ -190,33 +188,4 @@ class InterviewIcsRenderer {
 		$value = str_replace('\\\\', '\\', $value);
 		return $value;
 	}//end unescapeText()
-
-	/**
-	 * Extract a single property's value from a raw ICS text
-	 * (`PROPERTY[;PARAMS]:VALUE`), tolerant of `;` parameters and both CRLF
-	 * and LF line endings. Returns null when the property is absent.
-	 *
-	 * @param string $ics The raw ICS text.
-	 * @param string $property The property name (e.g. `DTSTART`).
-	 *
-	 * @return string|null
-	 */
-	private function extractIcsValue(string $ics, string $property): ?string {
-		$lines = preg_split('/\r\n|\n|\r/', $ics) ?: [];
-		foreach ($lines as $line) {
-			if (str_starts_with($line, $property . ':') === true) {
-				return substr($line, strlen($property) + 1);
-			}
-
-			if (str_starts_with($line, $property . ';') === true) {
-				$colonPos = strpos($line, ':');
-				if ($colonPos !== false) {
-					return substr($line, $colonPos + 1);
-				}
-			}
-		}
-
-		return null;
-	}//end extractIcsValue()
-
 }//end class

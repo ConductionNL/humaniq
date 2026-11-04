@@ -28,10 +28,16 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DOMDocument;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\Loonaangifte\PayslipRecalculator;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessageBuilder;
+use OCA\Humaniq\Service\CarriedCorrections;
 use OCA\Humaniq\Service\LoonaangifteMessageService;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
@@ -47,10 +53,26 @@ class LoonaangifteMessageServiceTest extends TestCase {
 
 	private const NS = 'http://xml.belastingdienst.nl/schemas/Loonaangifte/2026/01';
 
+	/**
+	 * The register the service reads and writes.
+	 *
+	 * @var FakeObjectStore
+	 */
 	private FakeObjectStore $store;
 
+	/**
+	 * The service under test.
+	 *
+	 * @var LoonaangifteMessageService
+	 */
 	private LoonaangifteMessageService $service;
 
+	/**
+	 * Seed an administration, two employees with contracts, an approved run
+	 * with its payslips and a concept filing for June 2026.
+	 *
+	 * @return void
+	 */
 	protected function setUp(): void {
 		parent::setUp();
 		$this->store = new FakeObjectStore();
@@ -102,6 +124,41 @@ class LoonaangifteMessageServiceTest extends TestCase {
 		unset($filing['id']);
 		self::assertSame([], RegisterSchemaValidator::errors('LoonaangifteFiling', $filing));
 	}//end testAnApprovedRunRendersAValidMessage()
+
+	/**
+	 * A correction the return carries lands in the message: its saldo is
+	 * added to TotGen and listed per corrected period, and its tree goes out
+	 * as a TijdvakCorrectie.
+	 *
+	 * @return void
+	 */
+	public function testACarriedCorrectionTravelsInTheMessage(): void {
+		$stand = LoonaangifteMessageBuilder::collective([]);
+		unset($stand['TotGen']);
+		$tree = [
+			'DatAanvTv' => '2026-05-01',
+			'DatEindTv' => '2026-05-31',
+			'CollectieveAangifte' => array_map(static fn (int $euros): string => (string)$euros, $stand),
+			'InkomstenverhoudingInitieel' => [],
+			'InkomstenverhoudingIntrekking' => [],
+		];
+		$carried = $this->createMock(CarriedCorrections::class);
+		$carried->method('forReturn')->willReturn([['id' => 'corr-05', 'period' => '2026-05', 'correctionTree' => $tree, 'correctionSaldo' => 250]]);
+
+		$outcome = $this->serviceWithRelNr('SWO12345', $carried)->render($this->filing(), 'payroll-1');
+
+		self::assertSame('rendered', $outcome['status']);
+		$filing = $this->filingRow();
+		$totals = $filing['collectiveTotals'];
+		self::assertSame(($totals['TotTeBet'] + 250), $totals['TotGen']);
+		self::assertSame(['corr-05'], $filing['carriedCorrectionIds']);
+
+		$xml = new DOMDocument();
+		$xml->loadXML($filing['messageXml']);
+		self::assertSame(1, $xml->getElementsByTagNameNS(self::NS, 'TijdvakCorrectie')->length);
+		self::assertSame('250', $this->text($xml, 'Saldo'));
+		self::assertSame((string)$totals['TotGen'], $this->text($xml, 'TotGen'));
+	}//end testACarriedCorrectionTravelsInTheMessage()
 
 	/**
 	 * The anchor employee's line carries the engine's own components
@@ -321,14 +378,22 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 */
 	private function snapshot(float $gross, bool $korting, string $awf): array {
 		return (new CalculationInput(
-			grossMonthlySalaryCents: (int)round($gross * 100),
-			taxTableColor: 'wit',
-			loonheffingskortingToegepast: $korting,
-			dateOfBirth: ($gross === 3800.00 ? '1990-04-12' : '1985-09-30'),
-			period: '2026-06',
-			awfTariff: $awf,
-			aofTariff: 'laag',
-			whkPercentage: 1.52
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: (int)round($gross * 100),
+				dateOfBirth: ($gross === 3800.00 ? '1990-04-12' : '1985-09-30'),
+				period: '2026-06'
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'wit',
+					loonheffingskortingToegepast: $korting
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: $awf,
+					aofTariff: 'laag',
+					whkPercentage: 1.52
+				)
+			)
 		))->toArray();
 	}//end snapshot()
 
@@ -367,11 +432,12 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	/**
 	 * The service with a given software relation number.
 	 *
-	 * @param string $relNr The relation number.
+	 * @param string                  $relNr   The relation number.
+	 * @param CarriedCorrections|null $carried The corrections the return carries, or null for the ones over the gateway.
 	 *
 	 * @return LoonaangifteMessageService
 	 */
-	private function serviceWithRelNr(string $relNr): LoonaangifteMessageService {
+	private function serviceWithRelNr(string $relNr, ?CarriedCorrections $carried = null): LoonaangifteMessageService {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$gateway = new HoursRegisterGateway(
@@ -385,7 +451,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn($relNr);
 
-		return new LoonaangifteMessageService(gateway: $gateway, recalculator: new PayslipRecalculator(new PayrollCalculator(), new NullLogger()), appConfig: $appConfig);
+		return new LoonaangifteMessageService(gateway: $gateway, recalculator: new PayslipRecalculator(new PayrollCalculator(), new NullLogger()), appConfig: $appConfig, carried: $carried);
 	}//end serviceWithRelNr()
 
 	/**

@@ -1532,6 +1532,7 @@ OC.L10N.register(
         "The agency clause applies, so the contract ends by law as soon as the hirer ends the placement. Only possible in phase A.": "The agency clause applies, so the contract ends by law as soon as the hirer ends the placement. Only possible in phase A.",
         "The agency phase (A, B or C) of this temporary-work contract. Only for agency contracts; set it by hand.": "The agency phase (A, B or C) of this temporary-work contract. Only for agency contracts; set it by hand.",
         "The agenda could not be read.": "The agenda could not be read.",
+        "You cannot see this agenda.": "You cannot see this agenda.",
         "The agreed euro rate per hour for this transaction. Visible before approval, so a reviewer can spot a wrong rate.": "The agreed euro rate per hour for this transaction. Visible before approval, so a reviewer can spot a wrong rate.",
         "The amount claimed, in the currency below.": "The amount claimed, in the currency below.",
         "The amount claimed, in the currency below. For a travel claim with a distance, humaniq calculates it.": "The amount claimed, in the currency below. For a travel claim with a distance, humaniq calculates it.",
@@ -3713,7 +3714,11 @@ OC.L10N.register(
         "this item": "this item",
         "Start timer": "Start timer",
         "Week {week} · {from} to {to} · {hours} on {object}": "Week {week} · {from} to {to} · {hours} on {object}",
-        "Hours are recorded through humaniq. Without humaniq this card is left out.": "Hours are recorded through humaniq. Without humaniq this card is left out."
+        "Hours are recorded through humaniq. Without humaniq this card is left out.": "Hours are recorded through humaniq. Without humaniq this card is left out.",
+        "Expense categories": "Expense categories",
+        "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.",
+        "The expense categories could not be loaded.": "The expense categories could not be loaded.",
+        "The expense categories could not be saved.": "The expense categories could not be saved."
     },
     "nplurals=2; plural=(n != 1);"
 )

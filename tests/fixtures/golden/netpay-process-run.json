@@ -1,0 +1,2623 @@
+{
+    "create 2026-05 day 25": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2026-05 day 31": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-31",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2026-05 day 1": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-01",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2026-02 day 25": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-02-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-02",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-02-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-02-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-02-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-02",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-02",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-02",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-02",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-02-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2026-02 day 31": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-02-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-02",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-02-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-02-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-02-28",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-02",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-02",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-02",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-02",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-02-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2026-02 day 1": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-02-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-02",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-02-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-02-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-02-01",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-02",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-02",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-02",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-02",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-02-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2028-02 day 25": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2028-02-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2028-02",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2028-02-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2028-02-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2028-02-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2028-02",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2028-02",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2028-02",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2028-02",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2028-02-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2028-02 day 31": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2028-02-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2028-02",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2028-02-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2028-02-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2028-02-29",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2028-02",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2028-02",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2028-02",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2028-02",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2028-02-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2028-02 day 1": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2028-02-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2028-02",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2028-02-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2028-02-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2028-02-01",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2028-02",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2028-02",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2028-02",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2028-02",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2028-02-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2026-12 day 25": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-12-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-12",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-12-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-12-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-12-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-12",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-12",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-12",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-12",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-12-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2026-12 day 31": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-12-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-12",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-12-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-12-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-12-31",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-12",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-12",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-12",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-12",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-12-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2026-12 day 1": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-12-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-12",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-12-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-12-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-12-01",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-12",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-12",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-12",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-12",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-12-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2026-04 day 25": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-04-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-04",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-04-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-04-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-04-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-04",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-04",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-04",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-04",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-04-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2026-04 day 31": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-04-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-04",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-04-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-04-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-04-30",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-04",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-04",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-04",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-04",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-04-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create 2026-04 day 1": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-04-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-04",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-04-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-04-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-04-01",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-04",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-04",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-04",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-04",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-04-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "padded period and administration": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "id only in @self": {
+        "outcome": {
+            "runId": "run-self",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-self",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-self",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "other administration": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-777.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-777"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-777",
+                    "administrationId": "ADM-777",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-777",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "padded unparseable period": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-mei-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-mei-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-mei-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "mei-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris mei",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris mei",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris mei",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-mei-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "unparseable period": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-mei-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-mei-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-mei-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "mei-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris mei",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris mei",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris mei",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "mei",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-mei-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "debtor iban 0": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "debtor iban 1": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ]
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "debtor iban 2": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "debtor iban 3": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "adopts the PaymentRun with the run number": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "pr-9"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "pr-9",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "adopts a PaymentRun whose id is in @self": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "pr-self"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "pr-self",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "does not adopt a near run number": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "create fails": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "Aanmaken van de shillinq PaymentRun is mislukt: shillinq refused the run",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "failed",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "errorMessage": "Aanmaken van de shillinq PaymentRun is mislukt: shillinq refused the run"
+                }
+            }
+        ]
+    },
+    "create answers an entity with its id in @self": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "stale pending then a fresh create": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Klaargezet in shillinq als PaymentRun HRMQ-NETPAY-2026-05-ADM-001.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": "PaymentRun-new-2"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "b-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "b-1",
+                    "payrollRunId": "run-1",
+                    "status": "failed",
+                    "errorMessage": "Verlopen pending-poging vervangen; geen bijbehorende shillinq PaymentRun gevonden."
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "pending",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001"
+                }
+            },
+            {
+                "register": "shillinq",
+                "schema": "PaymentRun",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "administrationId": "ADM-001",
+                    "executionDate": "2026-05-25",
+                    "status": "draft",
+                    "lifecycleState": "draft",
+                    "currency": "EUR",
+                    "totalAmount": 3932.87,
+                    "paymentLines": [
+                        {
+                            "payeeId": "emp-1",
+                            "payeeName": "J. de Vries",
+                            "creditorIban": "NL91ABNA0417164300",
+                            "amount": 2698.0,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-1"
+                        },
+                        {
+                            "payeeId": "emp-2",
+                            "payeeName": "Anna Bakker",
+                            "creditorIban": "NL02RABO0123456789",
+                            "amount": 1234.57,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-2"
+                        },
+                        {
+                            "payeeId": "emp-3",
+                            "payeeName": "Kees",
+                            "creditorIban": "NL20INGB0001234567",
+                            "amount": 0.3,
+                            "remittanceInfo": "Salaris 2026-05",
+                            "apTransactionRef": "ps-3"
+                        }
+                    ],
+                    "debtorAccountIban": "NL69INGB0123456789"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "PayrollPaymentBatch-new-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "id": "PayrollPaymentBatch-new-1",
+                    "shillinqPaymentRunRef": "PaymentRun-new-2",
+                    "totalAmount": 3932.87,
+                    "lineCount": 3,
+                    "createdAt": "<now>"
+                }
+            }
+        ]
+    },
+    "stale pending adopts the PaymentRun": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Bestaande shillinq PaymentRun overgenomen (crash-recovery).",
+            "batchId": "b-1",
+            "paymentRunId": "pr-9"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "b-1",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "b-1",
+                    "payrollRunId": "run-1",
+                    "status": "created",
+                    "shillinqPaymentRunRef": "pr-9",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "createdAt": "<now>",
+                    "errorMessage": null
+                }
+            }
+        ]
+    },
+    "stale pending, run id only in @self, adopts": {
+        "outcome": {
+            "runId": "run-self",
+            "status": "created",
+            "message": "Bestaande shillinq PaymentRun overgenomen (crash-recovery).",
+            "batchId": "b-3",
+            "paymentRunId": "pr-9"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "b-3",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "b-3",
+                    "payrollRunId": "run-self",
+                    "status": "created",
+                    "shillinqPaymentRunRef": "pr-9",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "createdAt": "<now>",
+                    "errorMessage": null
+                }
+            }
+        ]
+    },
+    "stale pending with a different stored runNumber, padded administration, adopts": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Bestaande shillinq PaymentRun overgenomen (crash-recovery).",
+            "batchId": "b-4",
+            "paymentRunId": "pr-9"
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": "b-4",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "b-4",
+                    "payrollRunId": "run-1",
+                    "status": "created",
+                    "runNumber": "HRMQ-NETPAY-2026-05-ADM-001",
+                    "shillinqPaymentRunRef": "pr-9",
+                    "createdAt": "<now>",
+                    "errorMessage": null
+                }
+            }
+        ]
+    },
+    "already created": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "created",
+            "message": "Al klaargezet in shillinq (idempotent no-op).",
+            "batchId": "b-2",
+            "paymentRunId": "pr-1"
+        },
+        "writes": []
+    },
+    "shillinq not installed": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "skipped-no-shillinq",
+            "message": "Shillinq is niet geïnstalleerd of het PaymentRun-register is niet beschikbaar; de loonrun blijft betaalbaar voor een latere poging.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "skipped-no-shillinq",
+                    "errorMessage": "Shillinq is niet geïnstalleerd of het PaymentRun-register is niet beschikbaar; de loonrun blijft betaalbaar voor een latere poging."
+                }
+            }
+        ]
+    },
+    "a line error": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "Loonstrook ps-x: werknemer \"ghost\" niet gevonden.",
+            "batchId": "PayrollPaymentBatch-new-1",
+            "paymentRunId": null
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "PayrollPaymentBatch",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "payrollRunId": "run-1",
+                    "period": "2026-05",
+                    "status": "failed",
+                    "errorMessage": "Loonstrook ps-x: werknemer \"ghost\" niet gevonden."
+                }
+            }
+        ]
+    },
+    "missing administration": {
+        "outcome": {
+            "runId": "run-1",
+            "status": "failed",
+            "message": "PayrollRun mist id/period/administrationId; kan niet worden verwerkt.",
+            "batchId": null,
+            "paymentRunId": null
+        },
+        "writes": []
+    }
+}

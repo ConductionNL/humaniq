@@ -25,6 +25,7 @@ namespace OCA\Humaniq\Tests\Unit\Flow;
 
 use OCA\Humaniq\Flow\PayrollGlPostNode;
 use OCA\Humaniq\Flow\PayrollNetPayNode;
+use OCA\Humaniq\Flow\PayrollFlowNodeServices;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use RuntimeException;
@@ -60,10 +61,7 @@ class PayrollHandoffNodesTest extends FlowNodeTestCase {
 	 */
 	private function glPostNode(PayrollGLPostService $service): PayrollGlPostNode {
 		return new PayrollGlPostNode(
-			$this->l10n(),
-			$this->urls(),
-			$this->container($this->fakeObjectService(['PayrollRun' => [$this->approvedRun()]])),
-			$this->settings(),
+			new PayrollFlowNodeServices($this->l10n(), $this->urls(), $this->container($this->fakeObjectService(['PayrollRun' => [$this->approvedRun()]])), $this->settings()),
 			$this->logger(),
 			$service
 		);
@@ -78,10 +76,7 @@ class PayrollHandoffNodesTest extends FlowNodeTestCase {
 	 */
 	private function netPayNode(PayrollNetPayService $service): PayrollNetPayNode {
 		return new PayrollNetPayNode(
-			$this->l10n(),
-			$this->urls(),
-			$this->container($this->fakeObjectService(['PayrollRun' => [$this->approvedRun()]])),
-			$this->settings(),
+			new PayrollFlowNodeServices($this->l10n(), $this->urls(), $this->container($this->fakeObjectService(['PayrollRun' => [$this->approvedRun()]])), $this->settings()),
 			$this->logger(),
 			$service
 		);

@@ -54,21 +54,25 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\AvgDsrService;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceThroughCaller;
 
 /**
  * Guarded endpoints for AVG data-subject-rights export/erase/rectify.
  */
 class AvgDsrController extends Controller {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectServiceThroughCaller;
 
 	/**
 	 * The Employee fields a data subject may have corrected through a
@@ -79,19 +83,15 @@ class AvgDsrController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param AvgDsrService $avgDsrService The DSR orchestration service.
 	 * @param SettingsService $settingsService The register-slug source.
-	 * @param IUserSession $userSession The current user session (admin gate; ambient session for the guarded OpenRegister service).
-	 * @param IGroupManager $groupManager To check the caller's admin membership (admin gate).
+	 * @param CallerContext $caller The signed-in caller (admin gate; ambient session for the guarded OpenRegister service), their roles and the container.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly AvgDsrService $avgDsrService,
 		private readonly SettingsService $settingsService,
-		private readonly IUserSession $userSession,
-		private readonly IGroupManager $groupManager,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -321,12 +321,12 @@ class AvgDsrController extends Controller {
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
 	 */
 	private function isAdmin(): bool {
-		$uid = $this->userSession->getUser()?->getUID();
+		$uid = $this->caller->userSession->getUser()?->getUID();
 		if ($uid === null || $uid === '') {
 			return false;
 		}
 
-		return $this->groupManager->isAdmin($uid);
+		return $this->caller->roles->isAdmin($uid);
 	}//end isAdmin()
 
 	/**
@@ -397,24 +397,6 @@ class AvgDsrController extends Controller {
 	}//end authorizeEmployee()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * A trimmed, non-empty string, or null.
 	 *
 	 * @param string|null $value The raw value.
@@ -425,24 +407,4 @@ class AvgDsrController extends Controller {
 		$value = trim((string)$value);
 		return $value === '' ? null : $value;
 	}//end nullableId()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
 }//end class

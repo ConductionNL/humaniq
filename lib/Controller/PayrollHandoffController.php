@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\SalaryBureauExchangeService;
 use OCA\Humaniq\Service\SettingsService;
@@ -37,9 +38,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Compile a bureau handoff and check what came back.
@@ -49,28 +47,38 @@ use Psr\Log\LoggerInterface;
 class PayrollHandoffController extends Controller {
 
 	/**
+	 * The signed-in caller, their roles, the container and the logger.
+	 *
+	 * @var CallerContext
+	 */
+	private readonly CallerContext $caller;
+
+	/**
+	 * Whether the caller is HR or payroll.
+	 *
+	 * @var HumaniqRoles
+	 */
+	private readonly HumaniqRoles $roles;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest              $request     The request.
-	 * @param ContainerInterface    $container   Resolves OpenRegister's ObjectService.
 	 * @param SettingsService       $settings    The register slug.
 	 * @param SalaryBureauExchangeService $handoffs    Compile and intake.
-	 * @param IUserSession          $userSession The caller.
-	 * @param HumaniqRoles          $roles       Whether the caller is HR or payroll.
-	 * @param LoggerInterface       $logger      The logger.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 *
 	 * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-002
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly SettingsService $settings,
 		private readonly SalaryBureauExchangeService $handoffs,
-		private readonly IUserSession $userSession,
-		private readonly HumaniqRoles $roles,
-		private readonly LoggerInterface $logger,
+		CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
+		$this->caller = $caller;
+		$this->roles = $caller->roles;
 	}//end __construct()
 
 	/**
@@ -137,7 +145,7 @@ class PayrollHandoffController extends Controller {
 		try {
 			$handoff = $this->objects()->find(id: $handoffId, register: $this->settings->getRegisterSlug(), schema: 'PayrollHandoff');
 		} catch (\Throwable $e) {
-			$this->logger->info('PayrollHandoffController: handoff ' . $handoffId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollHandoffController: a handoff lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			$handoff = null;
 		}
 
@@ -155,7 +163,7 @@ class PayrollHandoffController extends Controller {
 	 * @return string|null
 	 */
 	private function allowedCaller(): ?string {
-		$uid = $this->userSession->getUser()?->getUID();
+		$uid = $this->caller->userSession->getUser()?->getUID();
 		if ($this->roles->isHr($uid) === false && $this->roles->isPayroll($uid) === false) {
 			return null;
 		}
@@ -190,7 +198,7 @@ class PayrollHandoffController extends Controller {
 				->setSchema('hrAdministration')
 				->findAll(['filters' => ['administrationId' => $administrationId], 'limit' => 1]);
 		} catch (\Throwable $e) {
-			$this->logger->info('PayrollHandoffController: administration ' . $administrationId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollHandoffController: an administration lookup failed and is answered as not readable.', ['exceptionClass' => $e::class]);
 			return false;
 		}
 
@@ -203,7 +211,7 @@ class PayrollHandoffController extends Controller {
 	 * @return mixed
 	 */
 	private function objects(): mixed {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objects()
 
 }//end class

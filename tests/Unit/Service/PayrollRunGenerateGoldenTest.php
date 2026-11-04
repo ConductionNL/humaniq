@@ -46,6 +46,7 @@ use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\WorkingCalendarReader;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -84,6 +85,7 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 			'orphan delete fails and the run goes on',
 			'run check and allocation fail',
 			'no employee computes',
+			'cao night premium on a holiday in a part month',
 		];
 		return array_combine($names, array_map(static fn (string $n): array => [$n], $names));
 
@@ -151,6 +153,11 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 			$rows['PayrollRun'][0]['jurisdiction'] = ' nl ';
 		}
 
+		$calendar = ($case === 'cao night premium on a holiday in a part month');
+		if ($calendar === true) {
+			$rows = $this->caoNightRows($rows);
+		}
+
 		$fake = $this->fakeObjectService($rows);
 		if ($case === 'payslip save fails') {
 			$fake->failSave = static fn (string $schema, array $object): bool => ($schema === 'Payslip' && ($object['employeeId'] ?? '') === 'emp-sick');
@@ -164,7 +171,7 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 			$fake->failDelete = static fn (string $uuid): bool => ($uuid === 'ps-orphan');
 		}
 
-		$service = $this->service($fake, $withFolds, ($case === 'run check and allocation fail'));
+		$service = $this->service($fake, $withFolds, ($case === 'run check and allocation fail'), $calendar);
 
 		if ($case === 'recalculateRun by id') {
 			$outcome = $service->recalculateRun('run-1');
@@ -260,10 +267,11 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 	 * @param object $fake       The fake ObjectService.
 	 * @param bool   $withFolds  Whether the optional folds are wired.
 	 * @param bool   $foldsThrow Whether the run check and allocation throw.
+	 * @param bool   $calendar   Whether a working calendar names 16 February 2026 a public holiday.
 	 *
 	 * @return PayrollRunService
 	 */
-	private function service(object $fake, bool $withFolds, bool $foldsThrow): PayrollRunService {
+	private function service(object $fake, bool $withFolds, bool $foldsThrow, bool $calendar = false): PayrollRunService {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($fake);
 
@@ -298,9 +306,39 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 			caoComponents: new CaoComponentPayService(new EmploymentTermsResolver(), new CaoComponentCalculator(), $logger),
 			costAllocation: $this->recorder(CostAllocationService::class, ['allocateRun' => ($foldsThrow === true ? $throw : 7)]),
 			awfReview: $this->recorder(AwfReviewService::class, ['yearToDate' => static fn (string $employeeId, array $contracts, string $period, float $paidHours, bool $low = true): array => ['paid' => $paidHours, 'contract' => count($contracts), 'averageHoursPerWeek' => ($low === true ? 1.5 : 2.5), 'overrunPercent' => strlen($employeeId)]]),
+			calendar: ($calendar === true ? $this->recorder(WorkingCalendarReader::class, ['nonWorkingDates' => ['dates' => ['2026-02-16'], 'source' => 'test']]) : null),
 		);
 
 	}//end service()
+
+	/**
+	 * The CAO employee paid by the hour from 10 February, with the shift
+	 * allowance and the night premium, and an approved timesheet of night
+	 * entries on a public holiday (16 February) and on a weekday.
+	 *
+	 * @param array<string, mixed> $rows The base rows.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function caoNightRows(array $rows): array {
+		foreach ($rows['Employee'] as $i => $employee) {
+			if ($employee['id'] === 'emp-cao') {
+				$rows['Employee'][$i]['grossMonthlySalary'] = null;
+			}
+		}
+
+		foreach ($rows['EmploymentContract'] as $i => $contract) {
+			if ($contract['employeeId'] === 'emp-cao') {
+				$rows['EmploymentContract'][$i] = $this->contract('emp-cao', ['cao' => 'cao-voorbeeld', 'caoComponents' => ['ploegentoeslag', 'nachttoeslag'], 'startDate' => '2026-02-10', 'hoursPerWeek' => 24.0, 'hourlyWage' => 18.5]);
+			}
+		}
+
+		$rows['Timesheet'][] = ['id' => 'ts-cao', 'employeeId' => 'emp-cao', 'period' => '2026-02', 'hours' => 14, 'status' => 'approved'];
+		$rows['TimeEntry'][] = ['id' => 'te-cao-1', 'timesheetId' => 'ts-cao', 'employeeId' => 'emp-cao', 'date' => '2026-02-16', 'startedAt' => '2026-02-16T00:00:00+01:00', 'endedAt' => '2026-02-16T06:00:00+01:00', 'hours' => 6, 'overtime' => false];
+		$rows['TimeEntry'][] = ['id' => 'te-cao-2', 'timesheetId' => 'ts-cao', 'employeeId' => 'emp-cao', 'date' => '2026-02-17', 'startedAt' => '2026-02-16T22:00:00+01:00', 'endedAt' => '2026-02-17T06:00:00+01:00', 'hours' => 8, 'overtime' => false];
+
+		return $rows;
+	}//end caoNightRows()
 
 	/**
 	 * An employee, by id, with the anchor defaults.

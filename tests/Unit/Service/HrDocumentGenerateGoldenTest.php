@@ -73,6 +73,9 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 			'docudesk services missing',
 			'template selection',
 			'render and store failures',
+			'backlog refusals',
+			'saves without an id',
+			'saves with the id only in @self, another acting user',
 		];
 		return array_combine($names, array_map(static fn (string $n): array => [$n], $names));
 
@@ -190,6 +193,31 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 					['generate', 'emp-4', null, 'no-path', null],
 				];
 				break;
+			case 'saves without an id':
+				$config['idless'] = ['Jaaropgaaf', 'HrGeneratedDocument'];
+				$steps = [
+					['generateJaaropgaaf', 'emp-1', 2026, null],
+					['generate', 'emp-1', 'contract-1', 'arbeidsovereenkomst', null],
+				];
+				break;
+			case 'saves with the id only in @self, another acting user':
+				$config['selfIdOnly'] = ['Jaaropgaaf', 'HrGeneratedDocument'];
+				$steps = [
+					['generate', 'emp-1', 'contract-1', 'arbeidsovereenkomst', 'hr-adviser-7'],
+					['generateLoonstrook', 'payslip-1', 'hr-adviser-7'],
+					['generateJaaropgaaf', 'emp-1', 2026, 'hr-adviser-7'],
+				];
+				break;
+			case 'backlog refusals':
+				$steps = [
+					['generateBacklog', 'arbeidsovereenkomst', null, '2026-05', null],
+					['generateBacklog', 'loonstrook', null, null, '2026'],
+					['generateBacklog', 'jaaropgaaf', null, null, null],
+					['generateBacklog', 'werkgeversverklaring', null, null, null],
+					['generateBacklog', 'werkgeversverklaring', 'emp-1', null, null],
+					['generateBacklog', 'jaaropgaaf', 'emp-9', null, '2026'],
+				];
+				break;
 		}//end switch
 
 		$built = $this->service($config, ($case === 'template selection'));
@@ -272,6 +300,20 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 			 * @var int
 			 */
 			private int $nextId = 1;
+
+			/**
+			 * Schemas whose saved object comes back without an id.
+			 *
+			 * @var list<string>
+			 */
+			public array $idless = [];
+
+			/**
+			 * Schemas whose saved object carries its id only in `@self`.
+			 *
+			 * @var list<string>
+			 */
+			public array $selfIdOnly = [];
 
 			/**
 			 * @param array<string, list<array<string, mixed>>> $rows Rows by schema.
@@ -357,9 +399,20 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 				}
 
 				$this->rows[$schema] = $rows;
+				if (in_array($schema, $this->idless, true) === true) {
+					unset($saved['id']);
+				}
+
+				if (in_array($schema, $this->selfIdOnly, true) === true) {
+					unset($saved['id']);
+					$saved['@self'] = ['id' => $id];
+				}
+
 				return $saved;
 			}//end saveObject()
 		};
+		$objects->idless = ($config['idless'] ?? []);
+		$objects->selfIdOnly = ($config['selfIdOnly'] ?? []);
 
 		$documents = new class($test) {
 			/**

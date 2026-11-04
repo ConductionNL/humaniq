@@ -33,40 +33,34 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Guarded endpoint that triggers a single offer-letter + e-signature-request attempt.
  */
 class OfferController extends Controller {
 
+	use ConvertsRowsToArrays;
+
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param OfferEsignService $offerEsignService The offer-letter + e-signature service.
 	 * @param SettingsService $settingsService The register-slug source.
-	 * @param IUserSession $userSession The current user session (acting userId + admin/HR check).
-	 * @param HumaniqRoles $roles Whether the caller is HR, payroll or an administrator.
-	 * @param LoggerInterface $logger Logger.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly OfferEsignService $offerEsignService,
 		private readonly SettingsService $settingsService,
-		private readonly IUserSession $userSession,
-		private readonly HumaniqRoles $roles,
-		private readonly LoggerInterface $logger,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -113,7 +107,7 @@ class OfferController extends Controller {
 			);
 		}
 
-		$userId = $this->userSession->getUser()?->getUID();
+		$userId = $this->caller->userSession->getUser()?->getUID();
 		$result = $this->offerEsignService->requestSignature($applicationId, $userId);
 
 		return new JSONResponse($result);
@@ -128,12 +122,12 @@ class OfferController extends Controller {
 	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
 	 */
 	private function isAdminOrHr(): bool {
-		$uid = $this->userSession->getUser()?->getUID();
+		$uid = $this->caller->userSession->getUser()?->getUID();
 		if ($uid === null || $uid === '') {
 			return false;
 		}
 
-		return $this->roles->isHr($uid);
+		return $this->caller->roles->isHr($uid);
 	}//end isAdminOrHr()
 
 	/**
@@ -157,7 +151,7 @@ class OfferController extends Controller {
 		// endpoint cannot install anything, and "cannot be resolved" is exactly
 		// the outcome the catch below already collapses to.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			$this->logger->info('OfferController: OpenRegister is niet beschikbaar; application ' . $applicationId . ' kan niet worden opgehaald.');
+			$this->caller->logger->info('OfferController: OpenRegister is niet beschikbaar; application ' . $applicationId . ' kan niet worden opgehaald.');
 			return null;
 		}
 
@@ -168,7 +162,7 @@ class OfferController extends Controller {
 				schema: 'job-application'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('OfferController: application ' . $applicationId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('OfferController: an application lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -185,26 +179,7 @@ class OfferController extends Controller {
 	private function objectService(): mixed {
 		// Availability is established by the sole caller,
 		// authorizeApplication(), before it reaches here (ADR-083).
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 }//end class

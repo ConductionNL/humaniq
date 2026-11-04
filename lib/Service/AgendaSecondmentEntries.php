@@ -39,25 +39,23 @@ class AgendaSecondmentEntries {
 	 * hours per week, so availability can commit that share of each working day.
 	 *
 	 * @param array<string, mixed> $sources The source rows.
-	 * @param array<int, string> $employees The subject's employees.
-	 * @param string $from First day (ISO date).
-	 * @param string $to Last day (ISO date).
+	 * @param AgendaWindow $window The subject's employees and the first and last day.
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
 	 * @spec openspec/specs/secondment-and-side-activities/spec.md#REQ-SEC-002
 	 */
-	public function entries(array $sources, array $employees, string $from, string $to): array {
+	public function entries(array $sources, AgendaWindow $window): array {
 		$entries = [];
 		foreach (($sources['secondments'] ?? []) as $secondment) {
 			$employeeId = trim((string)($secondment['employeeId'] ?? ''));
-			if (in_array($employeeId, $employees, true) === false || trim((string)($secondment['status'] ?? '')) !== 'actief') {
+			if (in_array($employeeId, $window->employees, true) === false || trim((string)($secondment['status'] ?? '')) !== 'actief') {
 				continue;
 			}
 
-			$start = max($from, substr(trim((string)($secondment['startDate'] ?? '')), 0, 10));
+			$start = max($window->from, substr(trim((string)($secondment['startDate'] ?? '')), 0, 10));
 			$endDate = substr(trim((string)($secondment['endDate'] ?? '')), 0, 10);
-			$end = ($endDate === '') ? $to : min($to, $endDate);
+			$end = ($endDate === '') ? $window->to : min($window->to, $endDate);
 			if ($start === '' || $start > $end) {
 				continue;
 			}

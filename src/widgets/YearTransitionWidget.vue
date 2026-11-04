@@ -115,35 +115,18 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.year-transition {
-	padding: 20px;
+@use '../css/admin-widget.scss';
 
-	&__intro {
-		color: var(--color-text-maxcontrast);
-		margin-bottom: 16px;
-		max-width: 720px;
-	}
+.year-transition {
+	@include admin-widget.panel;
 
 	&__form {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: flex-end;
-		gap: 12px;
-		margin-bottom: 24px;
+		@include admin-widget.form-row;
 	}
 
 	&__answer {
-		display: grid;
+		@include admin-widget.label-list;
 		grid-template-columns: max-content 1fr;
-		gap: 8px 24px;
-
-		dt {
-			color: var(--color-text-maxcontrast);
-		}
-
-		dd {
-			margin: 0;
-		}
 	}
 }
 </style>

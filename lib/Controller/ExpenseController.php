@@ -35,40 +35,35 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\ReceiptExtractionService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Guarded endpoint that triggers a single receipt-extraction attempt.
  */
 class ExpenseController extends Controller {
 
+	use ConvertsRowsToArrays;
+
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param ReceiptExtractionService $receiptExtractionService The receipt-extraction service.
 	 * @param SettingsService $settingsService The register-slug source.
-	 * @param IUserSession $userSession The current user session (acting/owning userId).
-	 * @param HumaniqRoles $roles Whether the caller is HR, payroll or an administrator.
-	 * @param LoggerInterface $logger Logger.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly ReceiptExtractionService $receiptExtractionService,
 		private readonly SettingsService $settingsService,
-		private readonly IUserSession $userSession,
-		private readonly HumaniqRoles $roles,
-		private readonly LoggerInterface $logger,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -102,7 +97,7 @@ class ExpenseController extends Controller {
 			return new JSONResponse(['error' => 'Declaratie niet gevonden.'], Http::STATUS_NOT_FOUND);
 		}
 
-		$uid = $this->userSession->getUser()?->getUID();
+		$uid = $this->caller->userSession->getUser()?->getUID();
 		if ($this->isAdminOrOwner($uid, $expense) === false) {
 			return new JSONResponse(
 				['error' => 'Alleen HR, beheerders of de indiener mogen de receipt-extractie starten.'],
@@ -136,7 +131,7 @@ class ExpenseController extends Controller {
 		// endpoint cannot install anything, and "cannot be resolved" is exactly
 		// the outcome the catch below already collapses to.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			$this->logger->info('ExpenseController: OpenRegister is niet beschikbaar; expense ' . $expenseId . ' kan niet worden opgehaald.');
+			$this->caller->logger->info('ExpenseController: OpenRegister is niet beschikbaar; expense ' . $expenseId . ' kan niet worden opgehaald.');
 			return null;
 		}
 
@@ -147,7 +142,7 @@ class ExpenseController extends Controller {
 				schema: 'Expense'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('ExpenseController: expense ' . $expenseId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('ExpenseController: an expense lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -175,7 +170,7 @@ class ExpenseController extends Controller {
 			return false;
 		}
 
-		if ($this->roles->isHr($uid) === true) {
+		if ($this->caller->roles->isHr($uid) === true) {
 			return true;
 		}
 
@@ -188,26 +183,7 @@ class ExpenseController extends Controller {
 	private function objectService(): mixed {
 		// Availability is established by the sole caller, authorizeExpense(),
 		// before it reaches here (ADR-083).
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->caller->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 }//end class

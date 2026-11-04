@@ -32,6 +32,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\AwfReviewService;
@@ -133,14 +137,22 @@ class AwfReviewServiceTest extends TestCase {
 	 */
 	private function input(float $gross, string $period): CalculationInput {
 		return new CalculationInput(
-			grossMonthlySalaryCents: (int)round($gross * 100),
-			taxTableColor: 'wit',
-			loonheffingskortingToegepast: true,
-			dateOfBirth: '1990-04-12',
-			period: $period,
-			awfTariff: 'low',
-			aofTariff: 'laag',
-			whkPercentage: 0.52
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: (int)round($gross * 100),
+				dateOfBirth: '1990-04-12',
+				period: $period
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'wit',
+					loonheffingskortingToegepast: true
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: 'low',
+					aofTariff: 'laag',
+					whkPercentage: 0.52
+				)
+			)
 		);
 	}//end input()
 

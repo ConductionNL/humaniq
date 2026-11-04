@@ -50,16 +50,26 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\NormalisesRows;
+use OCA\Humaniq\Support\ChecksShillinqAvailability;
 
 /**
  * Collects payslip net-pay lines and hands them off to shillinq as a draft
  * SEPA PaymentRun, one per payable PayrollRun.
+ *
+ * @spec openspec/specs/payroll-sepa-netpay-shillinq/spec.md
  */
 class PayrollNetPayService {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use NormalisesRows;
+	use ChecksShillinqAvailability;
 
 	/**
 	 * The app id shillinq registers under (IAppManager::isInstalled probe).
@@ -161,19 +171,9 @@ class PayrollNetPayService {
 			return $this->outcome($runId, 'failed', 'PayrollRun mist id/period/administrationId; kan niet worden verwerkt.');
 		}
 
-		$runNumber = sprintf('HRMQ-NETPAY-%s-%s', $period, $administrationId);
-
-		$active = $this->activeBatchForRun($runId);
-		if ($active !== null && (string)($active['status'] ?? '') === 'created') {
-			return $this->outcome($runId, 'created', 'Al klaargezet in shillinq (idempotent no-op).', $active, (string)($active['shillinqPaymentRunRef'] ?? null));
-		}
-
-		if ($active !== null && (string)($active['status'] ?? '') === 'pending') {
-			$recovered = $this->recoverStalePending($active, $runId, $runNumber);
-			if ($recovered !== null) {
-				return $recovered;
-			}
-			// Stale pending record marked failed (superseded); fall through to a fresh attempt.
+		$settled = $this->settledByActiveBatch($run);
+		if ($settled !== null) {
+			return $settled;
 		}
 
 		if ($this->shillinqAvailable() === false) {
@@ -203,28 +203,74 @@ class PayrollNetPayService {
 			return $this->outcome($runId, 'failed', (string)$collected['error'], $batch);
 		}
 
-		try {
-			$paymentRunId = $this->createOrAdoptPaymentRun($runNumber, $period, $administrationId, $collected['lines'], (float)$collected['totalAmount']);
-		} catch (\Throwable $e) {
-			$batch = $this->createBatch(
-				[
-					'payrollRunId' => $runId,
-					'period' => $period,
-					'status' => 'failed',
-					'errorMessage' => 'Aanmaken van de shillinq PaymentRun is mislukt: ' . $e->getMessage(),
-				]
-			);
+		return $this->createUnderClaim($run, $collected);
+	}//end processRun()
 
+	/**
+	 * The outcome an active batch of the run already settles, or null to go
+	 * on: a created batch is an idempotent no-op, a fresh pending batch is
+	 * another process still at work (nothing is written), and a stale one is
+	 * recovered or superseded.
+	 *
+	 * @param array<string, mixed> $run The PayrollRun.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private function settledByActiveBatch(array $run): ?array {
+		$runId = $this->idOf($run);
+		$active = $this->activeBatchForRun($runId);
+		$status = (string)($active['status'] ?? '');
+		if ($status === 'created') {
+			return $this->outcome($runId, 'created', 'Al klaargezet in shillinq (idempotent no-op).', $active, (string)($active['shillinqPaymentRunRef'] ?? null));
+		}
+
+		if ($status !== 'pending') {
+			return null;
+		}
+
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->isFresh($active) === true) {
+			return $this->outcome($runId, 'pending', 'Deze loonrun wordt al door een andere verwerking klaargezet.', $active);
+		}
+
+		return $this->recoverStalePending($active, $run);
+	}//end settledByActiveBatch()
+
+	/**
+	 * Claim the run with a `pending` batch, then create or adopt the shillinq
+	 * PaymentRun and settle the claim. A claim that finds another active
+	 * batch of the run next to it withdraws, so two processes never both
+	 * create a PaymentRun for one run.
+	 *
+	 * @param array<string, mixed> $run       The PayrollRun.
+	 * @param array<string, mixed> $collected The collectLines() result.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private function createUnderClaim(array $run, array $collected): array {
+		$runId = $this->idOf($run);
+		$runNumber = $this->runNumber($run);
+		$claim = $this->createBatch(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'runNumber' => $runNumber]);
+		if ((new PendingClaims(self::ACTIVE_STATUSES))->hasRival($this->batchesWhere('runNumber', $runNumber), $claim) === true) {
+			$withdrawn = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Ingetrokken: een andere verwerking zet deze loonrun al klaar.']);
+			return $this->outcome($runId, 'pending', 'Deze loonrun wordt al door een andere verwerking klaargezet.', $withdrawn);
+		}
+
+		try {
+			$paymentRunId = $this->createOrAdoptPaymentRun($run, $collected);
+		} catch (\Throwable $e) {
+			$batch = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Aanmaken van de shillinq PaymentRun is mislukt: ' . $e->getMessage()]);
 			return $this->outcome($runId, 'failed', (string)$batch['errorMessage'], $batch);
 		}
 
-		$batch = $this->createBatch(
+		$batch = $this->saveBatch(
+			$claim,
 			[
-				'payrollRunId' => $runId,
-				'period' => $period,
 				'status' => 'created',
 				'shillinqPaymentRunRef' => $paymentRunId,
-				'runNumber' => $runNumber,
 				'totalAmount' => $collected['totalAmount'],
 				'lineCount' => $collected['lineCount'],
 				'createdAt' => gmdate('Y-m-d\TH:i:s\Z'),
@@ -232,7 +278,7 @@ class PayrollNetPayService {
 		);
 
 		return $this->outcome($runId, 'created', 'Klaargezet in shillinq als PaymentRun ' . $runNumber . '.', $batch, $paymentRunId);
-	}//end processRun()
+	}//end createUnderClaim()
 
 	/**
 	 * Collect one payment line per payable payslip in the run's period,
@@ -353,14 +399,15 @@ class PayrollNetPayService {
 	 * return null so the caller starts a fresh attempt.
 	 *
 	 * @param array<string, mixed> $stalePending The stale `pending` PayrollPaymentBatch.
-	 * @param string $runId The PayrollRun id being processed.
-	 * @param string $runNumber The deterministic idempotency key.
+	 * @param array<string, mixed> $run The PayrollRun being processed.
 	 *
 	 * @return array<string, mixed>|null The outcome when adopted, or null to retry fresh.
 	 *
 	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
 	 */
-	private function recoverStalePending(array $stalePending, string $runId, string $runNumber): ?array {
+	private function recoverStalePending(array $stalePending, array $run): ?array {
+		$runId = $this->idOf($run);
+		$runNumber = $this->runNumber($run);
 		if ($this->shillinqAvailable() === false) {
 			return null;
 		}
@@ -390,17 +437,15 @@ class PayrollNetPayService {
 	 * Find an existing shillinq PaymentRun by runNumber (idempotency probe,
 	 * design.md D6), or create it when none exists yet.
 	 *
-	 * @param string $runNumber Deterministic idempotency key.
-	 * @param string $period Wage period (YYYY-MM).
-	 * @param string $administrationId Administration/employer id, passed through verbatim.
-	 * @param array<int, mixed> $lines The collected payment lines.
-	 * @param float $totalAmount Sum of the line amounts.
+	 * @param array<string, mixed> $run The PayrollRun object (period and administration).
+	 * @param array<string, mixed> $collected The collectLines() result (lines and totalAmount).
 	 *
 	 * @return string The shillinq PaymentRun id (adopted or newly created).
 	 *
 	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-004
 	 */
-	private function createOrAdoptPaymentRun(string $runNumber, string $period, string $administrationId, array $lines, float $totalAmount): string {
+	private function createOrAdoptPaymentRun(array $run, array $collected): string {
+		$runNumber = $this->runNumber($run);
 		$adopted = $this->findPaymentRunByNumber($runNumber);
 		if ($adopted !== null) {
 			return $this->idOf($adopted);
@@ -408,13 +453,13 @@ class PayrollNetPayService {
 
 		$payload = [
 			'runNumber' => $runNumber,
-			'administrationId' => $administrationId,
-			'executionDate' => $this->executionDate($period),
+			'administrationId' => trim((string)($run['administrationId'] ?? '')),
+			'executionDate' => $this->executionDate(trim((string)($run['period'] ?? ''))),
 			'status' => 'draft',
 			'lifecycleState' => 'draft',
 			'currency' => 'EUR',
-			'totalAmount' => $totalAmount,
-			'paymentLines' => $lines,
+			'totalAmount' => (float)$collected['totalAmount'],
+			'paymentLines' => $collected['lines'],
 		];
 
 		$debtorIban = trim($this->settingsService->getNetPayDebtorIban());
@@ -432,6 +477,20 @@ class PayrollNetPayService {
 
 		return $this->idOf($this->toArray($created));
 	}//end createOrAdoptPaymentRun()
+
+	/**
+	 * The deterministic idempotency key of a run's PaymentRun: its trimmed
+	 * period and administration.
+	 *
+	 * @param array<string, mixed> $run The PayrollRun object.
+	 *
+	 * @return string The run number.
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private function runNumber(array $run): string {
+		return sprintf('HRMQ-NETPAY-%s-%s', trim((string)($run['period'] ?? '')), trim((string)($run['administrationId'] ?? '')));
+	}//end runNumber()
 
 	/**
 	 * The shillinq PaymentRun `executionDate`: the configured
@@ -458,26 +517,6 @@ class PayrollNetPayService {
 	}//end executionDate()
 
 	/**
-	 * Duck-typed shillinq availability probe (design.md D7): shillinq must be
-	 * installed AND its PaymentRun register/schema must resolve.
-	 *
-	 * @return bool
-	 */
-	private function shillinqAvailable(): bool {
-		if ($this->appManager->isInstalled(self::SHILLINQ_APP_ID) === false) {
-			return false;
-		}
-
-		try {
-			$this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 1]);
-		} catch (\Throwable $e) {
-			return false;
-		}
-
-		return true;
-	}//end shillinqAvailable()
-
-	/**
 	 * Search shillinq for an existing PaymentRun with the given runNumber
 	 * (the idempotency probe, design.md D6). Never throws -- a lookup failure
 	 * is treated as "not found" by the caller's fall-through logic.
@@ -488,9 +527,9 @@ class PayrollNetPayService {
 	 */
 	private function findPaymentRunByNumber(string $runNumber): ?array {
 		try {
-			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000]);
+			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000, 'filters' => ['runNumber' => $runNumber]], false, false);
 		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollNetPayService: kon shillinq PaymentRun niet doorzoeken: ' . $e->getMessage());
+			$this->logger->warning('PayrollNetPayService: the shillinq PaymentRun lookup failed.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -504,29 +543,33 @@ class PayrollNetPayService {
 	}//end findPaymentRunByNumber()
 
 	/**
-	 * The PayrollPaymentBatch rows referencing a given PayrollRun.
+	 * The PayrollPaymentBatch rows whose field holds the value: those of one
+	 * run (`payrollRunId`), or every claim on one run number (`runNumber`).
+	 * Read outside the caller's RBAC and organisation, as they are written,
+	 * so a cron run and a user run see each other.
 	 *
-	 * @param string $runId The PayrollRun id.
+	 * @param string $field The field, `payrollRunId` or `runNumber`.
+	 * @param string $value Its value.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function batchesForRun(string $runId): array {
+	private function batchesWhere(string $field, string $value): array {
 		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::BATCH_SCHEMA)->findAll(['limit' => 10000]);
+			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::BATCH_SCHEMA)->findAll(['limit' => 10000, 'filters' => [$field => $value]], false, false);
 		} catch (\Throwable $e) {
-			$this->logger->warning('PayrollNetPayService: kon PayrollPaymentBatch niet laden: ' . $e->getMessage());
+			$this->logger->warning('PayrollNetPayService: the PayrollPaymentBatch lookup failed.', ['exceptionClass' => $e::class]);
 			return [];
 		}
 
 		$out = [];
 		foreach ($this->normaliseRows($rows) as $row) {
-			if ((string)($row['payrollRunId'] ?? '') === $runId) {
+			if ((string)($row[$field] ?? '') === $value) {
 				$out[] = $row;
 			}
 		}
 
 		return $out;
-	}//end batchesForRun()
+	}//end batchesWhere()
 
 	/**
 	 * The active (pending/created) PayrollPaymentBatch for a run, if any --
@@ -537,7 +580,7 @@ class PayrollNetPayService {
 	 * @return array<string, mixed>|null
 	 */
 	private function activeBatchForRun(string $runId): ?array {
-		foreach ($this->batchesForRun($runId) as $row) {
+		foreach ($this->batchesWhere('payrollRunId', $runId) as $row) {
 			if (in_array((string)($row['status'] ?? ''), self::ACTIVE_STATUSES, true) === true) {
 				return $row;
 			}
@@ -775,41 +818,6 @@ class PayrollNetPayService {
 	}//end outcome()
 
 	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
-	 * Normalise a single ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * The object id of a row (entity or array), falling back to `@self.id`.
 	 *
 	 * @param array<string, mixed> $row The row.
@@ -832,28 +840,9 @@ class PayrollNetPayService {
 	}//end slugOf()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

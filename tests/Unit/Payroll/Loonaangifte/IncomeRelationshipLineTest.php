@@ -23,6 +23,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Payroll\Loonaangifte;
 
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\Loonaangifte\IncomeRelationshipLine;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessage;
@@ -189,7 +193,7 @@ class IncomeRelationshipLineTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function snapshot(array $overrides = []): array {
-		$input = (new CalculationInput(grossMonthlySalaryCents: 380000, taxTableColor: 'wit', loonheffingskortingToegepast: true, dateOfBirth: '1990-04-12', period: '2026-06', awfTariff: 'low', aofTariff: 'laag', whkPercentage: 1.52))->toArray();
+		$input = (new CalculationInput(wage: new CalculationWage(grossMonthlySalaryCents: 380000, dateOfBirth: '1990-04-12', period: '2026-06'), levies: new CalculationLevies(wageTax: new WageTaxElection(taxTableColor: 'wit', loonheffingskortingToegepast: true), insurance: new InsuranceTariffs(awfTariff: 'low', aofTariff: 'laag', whkPercentage: 1.52))))->toArray();
 		return array_merge($input, $overrides);
 	}//end snapshot()
 

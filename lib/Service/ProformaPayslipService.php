@@ -37,6 +37,10 @@ namespace OCA\Humaniq\Service;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 
@@ -102,14 +106,11 @@ class ProformaPayslipService {
 		$grossMonthlySalaryCents = (int)round((($gross * $parttimeFactor) + $bijzonder) * 100);
 
 		$input = new CalculationInput(
-			grossMonthlySalaryCents: $grossMonthlySalaryCents,
-			taxTableColor: $table,
-			loonheffingskortingToegepast: $korting,
-			dateOfBirth: $dateOfBirth,
-			period: $period,
-			awfTariff: 'low',
-			aofTariff: $aofTariff,
-			whkPercentage: $whkPercentage
+			wage: new CalculationWage(grossMonthlySalaryCents: $grossMonthlySalaryCents, dateOfBirth: $dateOfBirth, period: $period),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(taxTableColor: $table, loonheffingskortingToegepast: $korting),
+				insurance: new InsuranceTariffs(awfTariff: 'low', aofTariff: $aofTariff, whkPercentage: $whkPercentage)
+			)
 		);
 
 		// The existing, reused-as-is calculator. Zero new tax logic — every
