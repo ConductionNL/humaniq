@@ -1438,7 +1438,7 @@ OC.L10N.register(
         "Steuerklasse": "Steuerklasse",
         "Stop": "Stop",
         "Stop the timer": "Stop the timer",
-        "Store": "Store",
+        "Marketplace": "Marketplace",
         "Strengths": "Strengths",
         "Study programme": "Study programme",
         "Submission reference": "Submission reference",
