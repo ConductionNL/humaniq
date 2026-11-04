@@ -111,6 +111,11 @@ Invariant: at most one `PayrollPaymentBatch` in `{pending, created}` per `payrol
 - **WHEN** the next invocation processes the run
 - **THEN** the existing PaymentRun is adopted — the stale record completes as `created` with its id in `shillinqPaymentRunRef`, and no second PaymentRun is created
 
+#### Scenario: A slow owner keeps the hand-off lock
+- **GIVEN** a process that claimed the run and stalls past the claim window right before it writes shillinq, holding Nextcloud's exclusive lock on the run number
+- **WHEN** a second process processes the run
+- **THEN** the second process is refused with status `pending` and creates no PaymentRun, and exactly one PaymentRun exists once the owner finishes; with file locking off the claim alone guards the run, as before
+
 #### Scenario: A stale claim of another run with the same number is superseded
 - **GIVEN** a stale `pending` `PayrollPaymentBatch` of another PayrollRun with the same `runNumber`
 - **WHEN** this run is processed
