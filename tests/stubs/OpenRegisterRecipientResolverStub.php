@@ -3,7 +3,7 @@
 /**
  * OpenRegister notification recipient-resolver interface test stub
  *
- * TEST-ONLY shape of `OCA\OpenRegister\Service\Notification\RecipientResolverInterface`,
+ * TEST-ONLY shape of `OCA\OpenRegister\Notifications\Service\Notification\RecipientResolverInterface`,
  * a method-for-method mirror of openregister development ac7296b4: the seam an
  * `x-openregister-notifications` recipient of `kind: expression` resolves
  * through. humaniq's CaseManagerResolver implements it. Loaded ONLY from
@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Notification;
+namespace OCA\OpenRegister\Notifications\Service\Notification;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 

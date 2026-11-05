@@ -152,7 +152,7 @@ if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') ==
 // The notification recipient seam (absence-deadlines-and-signals D2): the
 // CaseManagerResolver implements it. It takes an ObjectEntity, so the object
 // events stub (which carries ObjectEntity) is loaded first.
-if (interface_exists('OCA\\OpenRegister\\Service\\Notification\\RecipientResolverInterface') === false) {
+if (interface_exists('OCA\\OpenRegister\\Notifications\\Service\\Notification\\RecipientResolverInterface') === false) {
 	if (class_exists('OCA\\OpenRegister\\Db\\ObjectEntity') === false) {
 		require_once __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
 	}
