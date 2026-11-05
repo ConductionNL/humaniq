@@ -2075,14 +2075,16 @@
 			"type": "dashboard"
 		},
 		{
-			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. Rendered by the shared CnFlowsPage page type over OpenRegister's one native flow store (ADR-065), scoped to this app.",
+			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app. rowRoute names the FlowDetail page (a route name, not a path): a named-source page has no register and schema, so without it a row click opens nothing and Edit falls back to the source's own /flows path.",
 			"config": {
-				"app": "humaniq"
+				"app": "humaniq",
+				"entitySource": "flows",
+				"rowRoute": "FlowDetail"
 			},
 			"id": "Flows",
 			"route": "/flows",
 			"title": "Flows",
-			"type": "flows"
+			"type": "index"
 		},
 		{
 			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors pipelinq#1490.",
@@ -2093,7 +2095,7 @@
 			"route": "/flows/:id",
 			"sidebarComponent": "FlowDetailSidebar",
 			"title": "Flow",
-			"type": "flow-detail"
+			"type": "flow"
 		},
 		{
 			"_note": "ADR-112 / ADR-114 Decision 3. Three declarative type:dashboard pages over humaniq's own register — no bespoke component and no per-app controller. ⚠️ Read the SCHEMAS FROM lib/Settings/register.d/*.json, not from humaniq_mock_register.json: the mock declares the same 54 slugs, and a mock import duplicates every one of them, so reading slugs there is reading the wrong register. Slugs here equal their keys (PascalCase, no overrides).",
