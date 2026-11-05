@@ -34,7 +34,7 @@ namespace OCA\Humaniq\Notification;
 
 use OCA\Humaniq\Service\ManagerDeputies;
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\Notification\RecipientResolverInterface;
+use OCA\OpenRegister\Notifications\Service\Notification\RecipientResolverInterface;
 
 /**
  * The manager of a submitted request and their active deputies.

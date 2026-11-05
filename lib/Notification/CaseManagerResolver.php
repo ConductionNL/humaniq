@@ -37,7 +37,7 @@ namespace OCA\Humaniq\Notification;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\Notification\RecipientResolverInterface;
+use OCA\OpenRegister\Notifications\Service\Notification\RecipientResolverInterface;
 
 /**
  * HR of the administration and the employee's managers.
