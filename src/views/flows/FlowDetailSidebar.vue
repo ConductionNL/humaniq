@@ -3,7 +3,7 @@
 <!--
   The flow controls, in Nextcloud's app sidebar. Shares `useFlowStore` with the
   canvas, which is why neither needs props from the other. Save/Run live on
-  CnFlowDetail's toolbar; the shared `flow-detail` page type handles them.
+  CnFlowDetail's toolbar; the shared `flow` page type handles them.
 
   Without this, `#/flows/:id` (and `#/flows/new`, which is the same route with
   the literal id `new`) renders a bare canvas: the toolbar can save and run a
