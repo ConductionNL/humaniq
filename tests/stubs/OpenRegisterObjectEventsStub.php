@@ -289,6 +289,12 @@ namespace OCA\OpenRegister\Event {
 		}//end class
 
 		/**
+		 * Test-stub mirror of ObjectLeavingEvent: asked before an object moves out of its register and schema.
+		 */
+		class ObjectLeavingEvent extends ObjectDeletingEvent {
+		}//end class
+
+		/**
 		 * Test-stub mirror of ObjectCreatedEvent.
 		 */
 		class ObjectCreatedEvent extends Event {

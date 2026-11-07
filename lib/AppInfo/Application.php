@@ -530,8 +530,10 @@ class Application extends App implements IBootstrap {
 		// guard for TimeEntry writes (employeeId/userId/administrationId/
 		// costCenter stamps, hours derivation, timesheet find-or-create, and
 		// the refusal of writes whose parent timesheet is not draft/rejected —
-		// the delete guard included).
-		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class, ObjectDeletingEvent::class] as $event) {
+		// the delete guard included). A move out of the schema is asked like a
+		// delete; the event is named as a string, so an OpenRegister without
+		// moves never dispatches it.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class, ObjectDeletingEvent::class, 'OCA\\OpenRegister\\Event\\ObjectLeavingEvent'] as $event) {
 			$this->registerFilteredObjectListener(
 				dispatcher: $dispatcher,
 				event: $event,
