@@ -42,6 +42,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletingEvent;
+use OCA\OpenRegister\Event\ObjectLeavingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -418,6 +419,11 @@ class TimeEntryStampListenerTest extends TestCase {
 
 		// Delete under a locked parent.
 		$event = new ObjectDeletingEvent($this->entryEntity($storedEntry, 'entry-1'));
+		$this->listener->handle($event);
+		$this->assertTrue($event->isPropagationStopped());
+
+		// A move out of the schema under a locked parent.
+		$event = new ObjectLeavingEvent($this->entryEntity($storedEntry, 'entry-1'));
 		$this->listener->handle($event);
 		$this->assertTrue($event->isPropagationStopped());
 
