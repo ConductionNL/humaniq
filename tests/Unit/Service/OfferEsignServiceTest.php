@@ -861,7 +861,7 @@ class OfferEsignServiceTest extends TestCase {
 		$this->assertSame(['SES', 'sequential'], [$data['signatureLevel'], $data['signingMode']]);
 		$deadline = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $data['deadline']);
 		$this->assertNotFalse($deadline);
-		$this->assertTrue($deadline >= $before && $deadline <= $after, "14 days ahead");
+		$this->assertTrue($deadline >= $before && $deadline <= $after, '14 days ahead');
 		$this->assertSame(['Sanne Voorbeeld', 'app-1', 'app-1'], [$data['subjectLabel'], $data['externalReference'], $data['correlationId']]);
 		$this->assertSame(['requested', 'Aanbiedingsbrief gegenereerd en e-handtekeningaanvraag aangemaakt.'], [$result['status'], $result['message']]);
 
