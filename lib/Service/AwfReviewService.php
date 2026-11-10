@@ -89,9 +89,11 @@ class AwfReviewService {
 	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
 	public function review(string $period, string $runId): array {
-		$outcome = ['earlyEnd' => 0, 'extraHours' => 0, 'skipped' => []];
-		$sealed  = $this->sealedRunIds();
-		$done    = $this->reviewedPayslipIds();
+		$run         = new AwfReviewRun();
+		$run->period = $period;
+		$run->runId  = $runId;
+		$sealed      = $this->sealedRunIds();
+		$run->done   = $this->reviewedPayslipIds();
 		$slipsByEmployee = $this->payslipsByEmployee();
 		$reviewYear      = (substr($period, 5, 2) === '01' ? (string)((int)substr($period, 0, 4) - 1) : null);
 
@@ -100,7 +102,7 @@ class AwfReviewService {
 				array_filter(
 					($slipsByEmployee[$employeeId] ?? []),
 					static fn (array $slip): bool => isset($sealed[(string)($slip['payrollRunId'] ?? '')]) === true
-						&& isset($done[(string)($slip['id'] ?? '')]) === false
+						&& isset($run->done[(string)($slip['id'] ?? '')]) === false
 				)
 			);
 
@@ -109,27 +111,40 @@ class AwfReviewService {
 				$targets['extraHours'] = $this->extraHoursSlips(contracts: $contracts, slips: ($slipsByEmployee[$employeeId] ?? []), reviewable: $slips, year: $reviewYear);
 			}
 
-			foreach ($targets as $kind => $toReview) {
-				foreach ($toReview as $slip) {
-					if (isset($done[(string)$slip['id']]) === true) {
-						continue;
-					}
-
-					$skip = $this->settle(slip: $slip, kind: $kind, period: $period, runId: $runId);
-					if ($skip !== null) {
-						$outcome['skipped'][] = ['payslipId' => (string)$slip['id'], 'reason' => $skip];
-						continue;
-					}
-
-					$done[(string)$slip['id']] = true;
-					$outcome[$kind]++;
-				}
-			}
+			$this->settleTargets(run: $run, targets: $targets);
 		}//end foreach
 
-		return $outcome;
+		return $run->outcome;
 
 	}//end review()
+
+	/**
+	 * Settle every target payslip not yet reviewed, counting it under its kind
+	 * or recording why it was skipped.
+	 *
+	 * @param AwfReviewRun                                       $run     The run being reviewed.
+	 * @param array<string, array<int, array<string, mixed>>> $targets The target payslips per review kind.
+	 *
+	 * @return void
+	 */
+	private function settleTargets(AwfReviewRun $run, array $targets): void {
+		foreach ($targets as $kind => $toReview) {
+			foreach ($toReview as $slip) {
+				if (isset($run->done[(string)$slip['id']]) === true) {
+					continue;
+				}
+
+				$skip = $this->settle(slip: $slip, kind: $kind, period: $run->period, runId: $run->runId);
+				if ($skip !== null) {
+					$run->outcome['skipped'][] = ['payslipId' => (string)$slip['id'], 'reason' => $skip];
+					continue;
+				}
+
+				$run->done[(string)$slip['id']] = true;
+				$run->outcome[$kind]++;
+			}
+		}
+	}//end settleTargets()
 
 	/**
 	 * The year-to-date figures the signal rule reads, for the payslip of
