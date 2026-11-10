@@ -76,13 +76,35 @@ class ObjectWeekHours {
 		$start  = $monday->format('Y-m-d');
 		$end    = $monday->modify('+6 days')->format('Y-m-d');
 
-		$hours     = [];
-		$employees = [];
-		$entries   = $this->gateway->findFiltered(
+		$entries = $this->gateway->findFiltered(
 			'TimeEntry',
 			['domainObjectType' => $domainObjectType, 'domainObjectRef' => $domainObjectRef],
 			true
 		);
+		$tally   = self::tallied(entries: $entries, week: [$start, $end]);
+
+		return [
+			'week' => (int)$monday->format('W'),
+			'weekStart' => $start,
+			'weekEnd' => $end,
+			'total' => round(array_sum($tally['hours']), 2),
+			'people' => $this->people(tally: $tally, onDate: $end),
+		];
+	}//end forObject()
+
+	/**
+	 * The hours per person inside the week, most first, and each person's
+	 * first non-empty employee link.
+	 *
+	 * @param array<int, array<string, mixed>> $entries The entries on the object.
+	 * @param array{string, string}            $week    The first and last day, Y-m-d.
+	 *
+	 * @return array{hours: array<string, float>, employees: array<string, string>}
+	 */
+	private static function tallied(array $entries, array $week): array {
+		[$start, $end] = $week;
+		$hours         = [];
+		$employees     = [];
 		foreach ($entries as $entry) {
 			$uid  = trim((string)($entry['userId'] ?? ''));
 			$date = substr((string)($entry['date'] ?? ''), 0, 10);
@@ -97,25 +119,32 @@ class ObjectWeekHours {
 		}
 
 		arsort($hours);
+
+		return ['hours' => $hours, 'employees' => $employees];
+	}//end tallied()
+
+	/**
+	 * One line per person, in the tally's order, with their name and team on a date.
+	 *
+	 * @param array{hours: array<string, float>, employees: array<string, string>} $tally  The week's tally.
+	 * @param string                                                               $onDate The day the team is read on.
+	 *
+	 * @return array<int, array{userId: string, displayName: string, team: string, hours: float}>
+	 */
+	private function people(array $tally, string $onDate): array {
 		$people = [];
-		foreach ($hours as $uid => $sum) {
+		foreach ($tally['hours'] as $uid => $sum) {
 			$uid      = (string)$uid;
 			$people[] = [
 				'userId' => $uid,
 				'displayName' => ($this->users->getDisplayName($uid) ?? $uid),
-				'team' => $this->teamOf(employeeId: ($employees[$uid] ?? ''), onDate: $end),
+				'team' => $this->teamOf(employeeId: ($tally['employees'][$uid] ?? ''), onDate: $onDate),
 				'hours' => round($sum, 2),
 			];
 		}
 
-		return [
-			'week' => (int)$monday->format('W'),
-			'weekStart' => $start,
-			'weekEnd' => $end,
-			'total' => round(array_sum($hours), 2),
-			'people' => $people,
-		];
-	}//end forObject()
+		return $people;
+	}//end people()
 
 	/**
 	 * The name of the organisation unit the employee is placed in on a date,
