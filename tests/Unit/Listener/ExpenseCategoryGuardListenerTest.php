@@ -32,6 +32,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\IAppConfig;
@@ -200,5 +201,15 @@ class ExpenseCategoryGuardListenerTest extends TestCase {
 		$this->listener()->handle($other);
 		self::assertFalse($other->isPropagationStopped());
 	}//end testOwnWritesAndOtherSchemasPass()
+
+	/**
+	 * A post-save event is not judged.
+	 *
+	 * @return void
+	 */
+	public function testOtherEventsPass(): void {
+		$this->listener()->handle(new ObjectCreatedEvent($this->entity('Expense', ['category' => 'meals', 'status' => 'draft'])));
+		$this->addToAssertionCount(1);
+	}//end testOtherEventsPass()
 
 }//end class
