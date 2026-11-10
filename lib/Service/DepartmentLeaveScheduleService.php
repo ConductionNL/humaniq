@@ -89,22 +89,9 @@ class DepartmentLeaveScheduleService {
 
 		$entries = [];
 		foreach ($requests as $request) {
-			$employeeId = trim((string)($request['employeeId'] ?? ''));
-			if ($employeeId === '' || isset($members[$employeeId]) === false) {
-				continue;
+			if (self::isMemberRequest(request: $request, members: $members) === true && self::isScheduledIn(request: $request, window: [$windowStart, $windowEnd]) === true) {
+				$entries[] = $this->entry(request: $request, visibleRequestIds: $visibleRequestIds);
 			}
-
-			if (in_array(trim((string)($request['status'] ?? '')), self::SCHEDULED_STATUSES, true) === false) {
-				continue;
-			}
-
-			$start = substr(trim((string)($request['startDate'] ?? '')), 0, 10);
-			$end = substr(trim((string)($request['endDate'] ?? '')), 0, 10);
-			if ($start === '' || $end === '' || $start > $windowEnd || $end < $windowStart) {
-				continue;
-			}
-
-			$entries[] = $this->entry(request: $request, visibleRequestIds: $visibleRequestIds);
 		}
 
 		usort(
@@ -116,6 +103,43 @@ class DepartmentLeaveScheduleService {
 
 		return $entries;
 	}//end compose()
+
+	/**
+	 * Whether a request is one of the unit's members'.
+	 *
+	 * @param array<string, mixed> $request The LeaveRequest.
+	 * @param array<string, int>   $members The members' employee ids, as keys.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
+	 */
+	private static function isMemberRequest(array $request, array $members): bool {
+		$employeeId = trim((string)($request['employeeId'] ?? ''));
+
+		return $employeeId !== '' && isset($members[$employeeId]) === true;
+	}//end isMemberRequest()
+
+	/**
+	 * Whether a request stands on a schedule and overlaps the window.
+	 *
+	 * @param array<string, mixed>        $request The LeaveRequest.
+	 * @param array{0: string, 1: string} $window  The first and last day, Y-m-d.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
+	 */
+	private static function isScheduledIn(array $request, array $window): bool {
+		if (in_array(trim((string)($request['status'] ?? '')), self::SCHEDULED_STATUSES, true) === false) {
+			return false;
+		}
+
+		$start = substr(trim((string)($request['startDate'] ?? '')), 0, 10);
+		$end = substr(trim((string)($request['endDate'] ?? '')), 0, 10);
+
+		return $start !== '' && $end !== '' && $start <= $window[1] && $end >= $window[0];
+	}//end isScheduledIn()
 
 	/**
 	 * How many of a unit's members are at work on one date, given the
