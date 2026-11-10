@@ -137,6 +137,62 @@ class NlEngineChecksTest extends TestCase {
 	}//end testEngineRunWithoutCalculatedAtViolates()
 
 	/**
+	 * The output-consistency verdict for every shape of payslip and run.
+	 *
+	 * @return void
+	 */
+	public function testTheOutputConsistencyVerdictForEveryShape(): void {
+		$check = $this->checks['Payslip']['nl-engine-output-consistency'];
+		$engine = $this->context(['run-1' => ['id' => 'run-1', 'engineVersion' => '1.0'], 'run-2' => ['id' => 'run-2', 'engineVersion' => '  '], 'run-3' => 'not-a-run']);
+		$cases = [
+			'reconciles' => [[], $engine],
+			'net-off-a-cent' => [['nettoPay' => 3081.18], $engine],
+			'pension-deducted' => [['pensionContribution' => '100', 'nettoPay' => 2981.17], $engine],
+			'pension-text' => [['pensionContribution' => 'x'], $engine],
+			'pension-null' => [['pensionContribution' => null], $engine],
+			'zvw-withheld' => [['zvwMode' => 'inhouding', 'nettoPay' => 2849.37], $engine],
+			'zvw-withheld-text' => [['zvwMode' => 'inhouding', 'zvw' => 'x'], $engine],
+			'zvw-not-withheld' => [['zvwMode' => 'inhouding ', 'nettoPay' => 2849.37], $engine],
+			'gross-text' => [['grossPay' => 'x'], $engine],
+			'tax-missing' => [['loonheffing' => null], $engine],
+			'net-missing' => [['nettoPay' => null], $engine],
+			'padded-run' => [['payrollRunId' => ' run-1 ', 'nettoPay' => 1.0], $engine],
+			'blank-run' => [['payrollRunId' => ' ', 'nettoPay' => 1.0], $engine],
+			'hand-run' => [['payrollRunId' => 'run-2', 'nettoPay' => 1.0], $engine],
+			'odd-run' => [['payrollRunId' => 'run-3', 'nettoPay' => 1.0], $engine],
+			'unknown-run' => [['payrollRunId' => 'run-9', 'nettoPay' => 1.0], $engine],
+			'no-context' => [['nettoPay' => 1.0], []],
+		];
+		$got = [];
+		foreach ($cases as $name => [$overrides, $context]) {
+			$got[$name] = $check($this->payslip($overrides), $context);
+		}
+
+		$this->assertSame(
+			[
+				'reconciles' => true,
+				'net-off-a-cent' => false,
+				'pension-deducted' => true,
+				'pension-text' => true,
+				'pension-null' => true,
+				'zvw-withheld' => true,
+				'zvw-withheld-text' => true,
+				'zvw-not-withheld' => false,
+				'gross-text' => false,
+				'tax-missing' => false,
+				'net-missing' => false,
+				'padded-run' => false,
+				'blank-run' => true,
+				'hand-run' => true,
+				'odd-run' => true,
+				'unknown-run' => true,
+				'no-context' => true,
+			],
+			$got
+		);
+	}//end testTheOutputConsistencyVerdictForEveryShape()
+
+	/**
 	 * @return void
 	 */
 	public function testHandEnteredPayslipWithoutPayrollRunIdIsVacuouslyCompliant(): void {
