@@ -149,6 +149,13 @@ if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') ==
 	require __DIR__ . '/stubs/OpenRegisterLifecycleStub.php';
 }
 
+// AvgDsrService builds openregister's SubjectQuery and ErasureRequest for the
+// guarded DataSubjectRequestService (avg-dsr, REQ-DSR-003/005). The stub
+// declares those value objects so the calls load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Service\\Gdpr\\SubjectQuery') === false) {
+	require __DIR__ . '/stubs/OpenRegisterGdprRequestStub.php';
+}
+
 // The notification recipient seam (absence-deadlines-and-signals D2): the
 // CaseManagerResolver implements it. It takes an ObjectEntity, so the object
 // events stub (which carries ObjectEntity) is loaded first.
@@ -168,13 +175,6 @@ if (interface_exists('OCA\\OpenRegister\\Notifications\\Service\\Notification\\R
 // through the container are unchanged.
 if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterObjectServiceStub.php';
-}
-
-// AvgDsrService builds openregister's SubjectQuery and ErasureRequest for the
-// guarded DataSubjectRequestService (avg-dsr, REQ-DSR-003/005). The stub
-// declares those value objects so the calls load in the standalone suite.
-if (class_exists('OCA\\OpenRegister\\Service\\Gdpr\\SubjectQuery') === false) {
-	require __DIR__ . '/stubs/OpenRegisterGdprRequestStub.php';
 }
 
 // Same rule, different class: WorkingCalendarReader asks class_exists() for
