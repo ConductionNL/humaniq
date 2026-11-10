@@ -44,6 +44,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SavePolicy;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -207,10 +210,11 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 				'status' => 'draft',
 				'description' => 'v1-probe-create',
 			],
-			register: self::REGISTER,
-			schema: self::SCHEMA,
-			_rbac: false,
-			_validation: false
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+				policy: new SavePolicy(validation: false)
+			),
+			_rbac: false
 		);
 		$uuid = (string)$saved->getUuid();
 		$this->assertNotSame('', $uuid, 'Probe object did not save.');
@@ -245,11 +249,12 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 				'status' => 'draft',
 				'description' => 'v1-probe-update',
 			],
-			register: self::REGISTER,
-			schema: self::SCHEMA,
-			uuid: $uuid,
-			_rbac: false,
-			_validation: false
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+				uuid: $uuid,
+				policy: new SavePolicy(validation: false)
+			),
+			_rbac: false
 		);
 
 		$persisted = $this->readBack($uuid);
@@ -270,11 +275,12 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 				'status' => 'draft',
 				'description' => 'v1-probe-control',
 			],
-			register: self::REGISTER,
-			schema: self::SCHEMA,
-			uuid: $uuid,
-			_rbac: false,
-			_validation: false
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+				uuid: $uuid,
+				policy: new SavePolicy(validation: false)
+			),
+			_rbac: false
 		);
 
 		$persisted = $this->readBack($uuid);

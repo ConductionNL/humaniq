@@ -42,6 +42,7 @@ use OCA\Humaniq\Service\RuleTestDataEmployeeIndex;
 use OCA\Humaniq\Service\RuleTestDataSeeder;
 use OCA\Humaniq\Standards\CaoRegistry;
 use OCA\Humaniq\Standards\RuleEngine;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUserManager;
@@ -131,16 +132,15 @@ class RuleTestDataSeederEmployeeIdTest extends TestCase {
 
 			/**
 			 * @param mixed $object The object to save.
-			 * @param string $register Register slug (unused).
-			 * @param string $schema Schema name.
-			 * @param string|null $uuid Existing id to update, or null to create.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac RBAC flag (unused).
 			 * @param bool $_multitenancy Multitenancy flag (unused).
-			 * @param mixed $currentUser Acting user (unused).
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(mixed $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, mixed $currentUser = null): array {
+			public function saveObject(mixed $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$schema = (string)($options->target->schema ?? '');
+				$uuid = $options->uuid;
 				$object = (array)$object;
 
 				if ($uuid !== null && $uuid !== '') {

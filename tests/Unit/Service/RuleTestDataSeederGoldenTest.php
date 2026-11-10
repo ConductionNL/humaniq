@@ -38,6 +38,7 @@ use OCA\Humaniq\Standards\Checks\CheckProvider;
 use OCA\Humaniq\Standards\Checks\SeedsObjects;
 use OCA\Humaniq\Standards\Checks\UpsertsObjects;
 use OCA\Humaniq\Standards\RuleEngine;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -384,18 +385,19 @@ class SeederGoldenObjectService {
 	 * Save one object.
 	 *
 	 * @param mixed $object The object.
-	 * @param string $register Register slug.
-	 * @param string $schema Schema name.
-	 * @param string|null $uuid Id to update, or null to create.
+	 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 	 * @param bool $_rbac RBAC flag.
 	 * @param bool $_multitenancy Multitenancy flag.
-	 * @param mixed $currentUser Acting user.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @throws RuntimeException For a failing schema.
 	 */
-	public function saveObject(mixed $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, mixed $currentUser = null): array {
+	public function saveObject(mixed $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = (string)($options->target->register ?? '');
+		$schema = (string)($options->target->schema ?? '');
+		$uuid = $options->uuid;
+		$currentUser = $options->actor->currentUser;
 		$object = (array)$object;
 		$this->calls[] = [
 			'saveObject',

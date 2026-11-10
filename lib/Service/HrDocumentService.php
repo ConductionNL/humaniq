@@ -77,6 +77,8 @@ namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\FleetAppId;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -1224,8 +1226,7 @@ class HrDocumentService {
 	private function createGeneratedDocument(array $fields): array {
 		$created = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->register(),
-			schema: self::GENERATED_DOCUMENT_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::GENERATED_DOCUMENT_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -1249,9 +1250,10 @@ class HrDocumentService {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::GENERATED_DOCUMENT_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::GENERATED_DOCUMENT_SCHEMA),
+				uuid: ($id === '' ? null : $id)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -1269,8 +1271,7 @@ class HrDocumentService {
 	private function createJaaropgaaf(array $fields): array {
 		$created = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->register(),
-			schema: self::JAAROPGAAF_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::JAAROPGAAF_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -1295,9 +1296,10 @@ class HrDocumentService {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::JAAROPGAAF_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::JAAROPGAAF_SCHEMA),
+				uuid: ($id === '' ? null : $id)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

@@ -170,6 +170,13 @@ if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterObjectServiceStub.php';
 }
 
+// ObjectService::saveObject() takes an ObjectSaveOptions with its target,
+// policy and actor. The stub declares them so humaniq's save calls, and the
+// doubles that receive them, load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions') === false) {
+	require __DIR__ . '/stubs/OpenRegisterSaveOptionsStub.php';
+}
+
 // Same rule, different class: WorkingCalendarReader asks class_exists() for
 // openregister's working calendar before reaching for it (working-hours-per-person,
 // REQ-WHP-004). Without the name present the reader can only ever answer

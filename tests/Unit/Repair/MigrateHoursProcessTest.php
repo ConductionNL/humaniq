@@ -39,6 +39,7 @@ use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\TimesheetAggregationService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\BackgroundJob\IJobList;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -132,16 +133,17 @@ class MigrateHoursProcessTest extends TestCase {
 			 */
 			public function saveObject(
 				array|object $object,
-				?array $extend = [],
-				mixed $register = null,
-				mixed $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): \OCA\OpenRegister\Db\ObjectEntity {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$extend = $options->extend;
 				$this->recorder->markerStates[] = $this->marker->isInternal();
 
-				return parent::saveObject($object, $extend, $register, $schema, $uuid, $_rbac, $_multitenancy);
+				return parent::saveObject($object, $options, $_rbac, $_multitenancy);
 			}//end saveObject()
 
 		};

@@ -35,6 +35,7 @@ use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -168,10 +169,7 @@ class ManagerStampRepairTest extends TestCase {
 			 * Record the marker, then save.
 			 *
 			 * @param array<string, mixed>|object $object The payload.
-			 * @param array<int, string>|null $extend Ignored.
-			 * @param mixed $register Ignored.
-			 * @param mixed $schema The schema slug.
-			 * @param string|null $uuid The uuid.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac Ignored.
 			 * @param bool $_multitenancy Ignored.
 			 *
@@ -179,20 +177,21 @@ class ManagerStampRepairTest extends TestCase {
 			 */
 			public function saveObject(
 				array|object $object,
-				?array $extend = [],
-				mixed $register = null,
-				mixed $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): \OCA\OpenRegister\Db\ObjectEntity {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$extend = $options->extend;
 				if ($this->failOn !== null && $uuid === $this->failOn) {
 					throw new \RuntimeException('validation failed');
 				}
 
 				$this->saved[] = $this->marker->isInternal();
 
-				return parent::saveObject($object, $extend, $register, $schema, $uuid, $_rbac, $_multitenancy);
+				return parent::saveObject($object, $options, $_rbac, $_multitenancy);
 			}//end saveObject()
 		};
 

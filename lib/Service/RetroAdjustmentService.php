@@ -53,6 +53,8 @@ use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -217,9 +219,10 @@ class RetroAdjustmentService {
 			$saved = $this->toArray(
 				$this->objectService()->saveObject(
 					object: $payload,
-					register: $this->register(),
-					schema: 'PayrollAdjustment',
-					uuid: ($existing !== null ? ($this->idOf($existing) === '' ? null : $this->idOf($existing)) : null),
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $this->register(), schema: 'PayrollAdjustment'),
+						uuid: ($existing !== null ? ($this->idOf($existing) === '' ? null : $this->idOf($existing)) : null)
+					),
 					_rbac: false,
 					_multitenancy: false
 				)

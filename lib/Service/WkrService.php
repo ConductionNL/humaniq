@@ -48,6 +48,8 @@ namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Standards\Checks\NlWkrChecks;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -156,9 +158,10 @@ class WkrService {
 			$saved = $this->toArray(
 				$this->objectService()->saveObject(
 					object: $payload,
-					register: $this->register(),
-					schema: 'WkrAssessment',
-					uuid: ($existing === null ? null : $this->idOf($existing)),
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $this->register(), schema: 'WkrAssessment'),
+						uuid: ($existing === null ? null : $this->idOf($existing))
+					),
 					_rbac: false,
 					_multitenancy: false
 				)

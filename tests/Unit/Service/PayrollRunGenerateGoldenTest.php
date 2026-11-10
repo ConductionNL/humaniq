@@ -47,6 +47,7 @@ use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WorkingCalendarReader;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -593,15 +594,16 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $object        The object.
-			 * @param string|null          $register      Unused.
-			 * @param string|null          $schema        The schema.
-			 * @param string|null          $uuid          The id when updating.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool                 $_rbac         Recorded.
 			 * @param bool                 $_multitenancy Recorded.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, ?string $register = null, ?string $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$target = ($schema ?? $this->schema);
 				$this->saved[] = ['schema' => $target, 'register' => $register, 'uuid' => $uuid, 'rbac' => $_rbac, 'multitenancy' => $_multitenancy, 'object' => $object];
 				if ($this->failSave !== null && ($this->failSave)($target, $object) === true) {

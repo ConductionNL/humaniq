@@ -64,6 +64,8 @@ use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\TimesheetAggregationService;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
@@ -268,9 +270,10 @@ class MigrateHoursProcess implements IRepairStep {
 			$this->marker->runInternal(function () use ($payload, $timesheetId): void {
 				$this->objects()->saveObject(
 					object: $payload,
-					register: $this->settingsService->getRegisterSlug(),
-					schema: 'Timesheet',
-					uuid: $timesheetId,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: 'Timesheet'),
+						uuid: $timesheetId
+					),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -332,8 +335,9 @@ class MigrateHoursProcess implements IRepairStep {
 		$this->marker->runInternal(function () use ($entry): void {
 			$this->objects()->saveObject(
 				object: $entry,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'TimeEntry',
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: 'TimeEntry')
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

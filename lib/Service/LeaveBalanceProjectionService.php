@@ -44,6 +44,8 @@ namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -396,9 +398,10 @@ class LeaveBalanceProjectionService {
 		try {
 			$this->objectService()->saveObject(
 				object: $payload,
-				register: $this->register(),
-				schema: 'LeaveBalance',
-				uuid: ($uuid === '' ? null : $uuid),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'LeaveBalance'),
+					uuid: ($uuid === '' ? null : $uuid)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

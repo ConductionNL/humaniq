@@ -43,6 +43,7 @@ use OCA\Humaniq\BackgroundJob\LeaveAccrualJob;
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Standards\RuleEngine;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -124,9 +125,7 @@ class LeaveAccrualJobTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $object The object to save.
-			 * @param string|null $register Register slug (unused by the fake).
-			 * @param string|null $schema Schema name.
-			 * @param string|null $uuid Existing id when updating.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac Unused by the fake.
 			 * @param bool $_multitenancy Unused by the fake.
 			 *
@@ -134,12 +133,12 @@ class LeaveAccrualJobTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));

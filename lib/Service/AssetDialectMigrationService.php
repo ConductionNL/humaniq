@@ -82,6 +82,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\RegisterSlugLookup;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -228,9 +230,7 @@ class AssetDialectMigrationService {
 		try {
 			$this->objectService()->saveObject(
 				object: $this->stripSelf($mapped['final']),
-				register: $register,
-				schema: 'Asset',
-				uuid: $id,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: 'Asset'), uuid: $id),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -286,9 +286,7 @@ class AssetDialectMigrationService {
 			try {
 				$this->objectService()->saveObject(
 					object: $this->stripSelf($mapped['row']),
-					register: $register,
-					schema: 'AssetAssignment',
-					uuid: $id,
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: 'AssetAssignment'), uuid: $id),
 					_rbac: false,
 					_multitenancy: false
 				);

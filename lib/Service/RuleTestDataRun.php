@@ -28,6 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 use OCP\IUser;
 use Psr\Log\LoggerInterface;
 
@@ -88,11 +91,28 @@ final class RuleTestDataRun {
 	 */
 	public function write(string $objectType, array $object, string $uuid): void {
 		if ($uuid !== '') {
-			$this->objectService->saveObject(object: $object, register: $this->register, schema: $objectType, uuid: $uuid, _rbac: false, _multitenancy: false, currentUser: $this->admin);
+			$this->objectService->saveObject(
+				object: $object,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register, schema: $objectType),
+					uuid: $uuid,
+					actor: new SaveActor(currentUser: $this->admin)
+				),
+				_rbac: false,
+				_multitenancy: false
+			);
 			return;
 		}
 
-		$this->objectService->saveObject(object: $object, register: $this->register, schema: $objectType, _rbac: false, _multitenancy: false, currentUser: $this->admin);
+		$this->objectService->saveObject(
+			object: $object,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register, schema: $objectType),
+				actor: new SaveActor(currentUser: $this->admin)
+			),
+			_rbac: false,
+			_multitenancy: false
+		);
 
 	}//end write()
 
@@ -127,7 +147,16 @@ final class RuleTestDataRun {
 
 			unset($filled['@self']);
 			try {
-				$this->objectService->saveObject(object: $filled, register: $this->register, schema: $objectType, uuid: $rowId, _rbac: false, _multitenancy: false, currentUser: $this->admin);
+				$this->objectService->saveObject(
+					object: $filled,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $this->register, schema: $objectType),
+						uuid: $rowId,
+						actor: new SaveActor(currentUser: $this->admin)
+					),
+					_rbac: false,
+					_multitenancy: false
+				);
 				$added++;
 			} catch (\Throwable $e) {
 				$this->logger->warning('RuleTestDataSeeder: provider field backfill failed for ' . $objectType . ' ' . $rowId . ': ' . $e->getMessage());
@@ -268,7 +297,15 @@ final class RuleTestDataRun {
 		$created = 0;
 		foreach ($samples as $sample) {
 			try {
-				$this->objectService->saveObject(object: $sample, register: $this->register, schema: $objectType, _rbac: false, _multitenancy: false, currentUser: $this->admin);
+				$this->objectService->saveObject(
+					object: $sample,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $this->register, schema: $objectType),
+						actor: new SaveActor(currentUser: $this->admin)
+					),
+					_rbac: false,
+					_multitenancy: false
+				);
 				$created++;
 			} catch (\Throwable $e) {
 				$this->logger->warning('RuleTestDataSeeder: sample ' . $objectType . ' create failed: ' . $e->getMessage());
