@@ -47,6 +47,7 @@ use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WorkingCalendarReader;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -614,15 +615,16 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 			}//end saveObject()
 
 			/**
-			 * @param string      $uuid          The id.
-			 * @param string|null $register      Unused.
-			 * @param string|null $schema        Unused.
-			 * @param bool        $_rbac         Unused.
-			 * @param bool        $_multitenancy Unused.
+			 * @param ObjectDeletion $deletion        The id and the register and schema it is in.
+			 * @param bool           $_rbac           Recorded.
+			 * @param bool           $_multitenancy   Recorded.
+			 * @param bool           $_retentionSweep Unused.
 			 *
 			 * @return bool
 			 */
-			public function deleteObject(string $uuid, ?string $register = null, ?string $schema = null, bool $_rbac = true, bool $_multitenancy = true): bool {
+			public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool {
+				$uuid = $deletion->uuid;
+				$schema = $deletion->target->schema;
 				$this->deleted[] = $schema . ':' . $uuid . ':' . var_export($_rbac, true) . ':' . var_export($_multitenancy, true);
 				if ($this->failDelete !== null && ($this->failDelete)($uuid) === true) {
 					throw new \RuntimeException('delete refused');

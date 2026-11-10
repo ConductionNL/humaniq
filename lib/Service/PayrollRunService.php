@@ -188,6 +188,8 @@ use OCA\Humaniq\Support\LoadsAllRows;
 use OCA\Humaniq\Support\ChecksPeriodCoverage;
 use OCA\Humaniq\Support\ReadsEmployeeKeys;
 use OCA\Humaniq\Support\FindsCoveringContract;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 
 /**
  * Generates draft payroll runs + engine payslips from the pure calculator.
@@ -997,9 +999,7 @@ class PayrollRunService {
 			$orphanId = $this->idOf($orphan);
 			try {
 				$this->objectService()->deleteObject(
-					uuid: $orphanId,
-					register: $this->register(),
-					schema: 'Payslip',
+					deletion: new ObjectDeletion(uuid: $orphanId, target: new ObjectFindTarget(register: $this->register(), schema: 'Payslip')),
 					_rbac: false,
 					_multitenancy: false
 				);

@@ -45,6 +45,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 
 /**
  * Proves (or disproves) that pre-save event payload mutation persists.
@@ -157,9 +159,7 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 		foreach ($this->createdUuids as $uuid) {
 			try {
 				$this->objectService?->deleteObject(
-					uuid: $uuid,
-					register: self::REGISTER,
-					schema: self::SCHEMA,
+					deletion: new ObjectDeletion(uuid: $uuid, target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)),
 					_rbac: false
 				);
 			} catch (\Throwable $e) {

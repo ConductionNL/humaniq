@@ -170,6 +170,13 @@ if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterObjectServiceStub.php';
 }
 
+// ObjectService::deleteObject() takes an ObjectDeletion with its
+// ObjectFindTarget. The stub declares both so humaniq's delete calls, and
+// the doubles that receive them, load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Service\\Object\\ObjectDeletion') === false) {
+	require __DIR__ . '/stubs/OpenRegisterObjectDeletionStub.php';
+}
+
 // Same rule, different class: WorkingCalendarReader asks class_exists() for
 // openregister's working calendar before reaching for it (working-hours-per-person,
 // REQ-WHP-004). Without the name present the reader can only ever answer
