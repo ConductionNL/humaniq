@@ -95,15 +95,11 @@ final class PiecewiseAccrueOp extends AbstractOp {
 			return 0.0;
 		}
 
-		$segments = ($spec['segments'] ?? null);
-		if (is_array($segments) === false || $segments === []) {
-			throw new DslException('Pack: op "piecewiseAccrue" verwacht een niet-lege "segments"-lijst.');
-		}
-
-		$run = new AccrualRun();
-		$run->value = $value;
+		$segments = $this->segmentsOf(spec: $spec);
+		$run      = new AccrualRun();
+		$run->value     = $value;
 		$run->roundTerm = (int)($spec['roundTerm'] ?? 0);
-		$run->ctx = $ctx;
+		$run->ctx       = $ctx;
 		$this->accrue(run: $run, segments: $segments);
 		$chain = $this->tail(run: $run, tail: ($spec['tail'] ?? null));
 
@@ -114,6 +110,24 @@ final class PiecewiseAccrueOp extends AbstractOp {
 
 		return max(0.0, $chain);
 	}//end evaluate()
+
+	/**
+	 * The declared segment list, refused when it is missing or empty.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @throws DslException When the segment list is malformed.
+	 */
+	private function segmentsOf(array $spec): array {
+		$segments = ($spec['segments'] ?? null);
+		if (is_array($segments) === false || $segments === []) {
+			throw new DslException('Pack: op "piecewiseAccrue" verwacht een niet-lege "segments"-lijst.');
+		}
+
+		return $segments;
+	}//end segmentsOf()
 
 	/**
 	 * Accumulate the segment terms, rounding each term BEFORE capping it.
