@@ -96,6 +96,8 @@ class InterviewRepository {
 	 * @param string $id The Interview id.
 	 *
 	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/interview-scheduling/spec.md#REQ-INTV-003
 	 */
 	public function find(string $id): ?array {
 		try {

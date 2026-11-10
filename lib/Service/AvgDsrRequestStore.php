@@ -69,6 +69,8 @@ final class AvgDsrRequestStore {
 	 * @param string $dsrRequestId The DsrRequest id.
 	 *
 	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-001
 	 */
 	public function load(string $dsrRequestId): ?array {
 		try {

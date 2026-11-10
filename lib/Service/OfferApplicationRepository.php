@@ -78,6 +78,8 @@ class OfferApplicationRepository {
 	 * @param string $applicationId The Application id.
 	 *
 	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/offer-esign/spec.md#REQ-OFFR-002
 	 */
 	public function find(string $applicationId): ?array {
 		try {
