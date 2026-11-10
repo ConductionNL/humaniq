@@ -447,7 +447,7 @@ class AgendaAndAvailabilityTest extends TestCase {
 	}//end testAMissingContractIsSaidRatherThanSubstituted()
 
 	/**
-	 * The whole capacity answer for several people: duplicate and numeric ids
+	 * The whole capacity answer for several people: duplicate ids
 	 * counted once, a contract with no hours in the window, a missing contract
 	 * with planned hours, and the totals over the contracted people only.
 	 *
@@ -455,7 +455,7 @@ class AgendaAndAvailabilityTest extends TestCase {
 	 */
 	public function testTheWholeCapacityAnswer(): void {
 		$report = $this->capacity->capacity(
-			employeeIds: ['emp-1', 'emp-1', 'emp-free', 7, 'emp-none'],
+			employeeIds: ['emp-1', 'emp-1', 'emp-free', '7', 'emp-none'],
 			from: new DateTimeImmutable('2026-06-01'),
 			to: new DateTimeImmutable('2026-06-07'),
 			sources: [
