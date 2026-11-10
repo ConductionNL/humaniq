@@ -80,25 +80,54 @@ class ChangeRequestService {
 	 * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-003
 	 */
 	public function prepare(array $request): array {
-		$uid = $this->currentUid();
-		$employee = $this->employeeFor($request, $uid);
-		if ($employee === null) {
+		$placement = $this->placementFor(request: $request);
+		if ($placement->employee === null) {
 			return $this->refusal('Er is geen medewerker gevonden voor dit wijzigingsverzoek.');
 		}
 
-		$rule = ($this->rules->forAdministration($this->text($employee['administrationId'] ?? null))[(string)($request['changeKind'] ?? '')] ?? null);
+		$rule = $this->ruleFor(employee: $placement->employee, request: $request);
 		if ($rule === null) {
 			return $this->refusal('Er is geen goedkeuringsregel voor dit soort wijziging.');
 		}
 
-		$changes = $this->proposedChanges($request);
-		$error = $this->changesError($changes, $rule['fields']);
+		$placement->changes = $this->proposedChanges($request);
+		$error = $this->changesError($placement->changes, $rule['fields']);
 		if ($error !== null) {
 			return $this->refusal($error);
 		}
 
-		return ['stamps' => $this->placement($request, $employee, $changes, $this->approverFor($rule['approverRole'], $employee, $uid), $uid), 'error' => null];
+		$placement->role = $this->approverFor(placement: $placement, role: $rule['approverRole']);
+
+		return ['stamps' => $this->stampsOf(placement: $placement), 'error' => null];
 	}//end prepare()
+
+	/**
+	 * The request, its requester and the employee it is for.
+	 *
+	 * @param array<string, mixed> $request The request as it will be saved.
+	 *
+	 * @return ChangePlacement
+	 */
+	private function placementFor(array $request): ChangePlacement {
+		$placement = new ChangePlacement();
+		$placement->request = $request;
+		$placement->uid = $this->currentUid();
+		$placement->employee = $this->employeeFor($request, $placement->uid);
+
+		return $placement;
+	}//end placementFor()
+
+	/**
+	 * The employee's administration's rule for the request's kind, or null.
+	 *
+	 * @param array<string, mixed> $employee The employee.
+	 * @param array<string, mixed> $request  The request.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function ruleFor(array $employee, array $request): ?array {
+		return ($this->rules->forAdministration($this->text($employee['administrationId'] ?? null))[(string)($request['changeKind'] ?? '')] ?? null);
+	}//end ruleFor()
 
 	/**
 	 * Why the proposed changes cannot be requested under the rule, or null.
@@ -122,14 +151,14 @@ class ChangeRequestService {
 	 * The approver: a kind without one applies at once only on the
 	 * requester's own record; someone else's record waits for HR.
 	 *
-	 * @param string               $role     The rule's approver role.
-	 * @param array<string, mixed> $employee The employee.
-	 * @param string               $uid      The requester.
+	 * @param ChangePlacement $placement The requester and the employee.
+	 * @param string          $role      The rule's approver role.
 	 *
 	 * @return string
 	 */
-	private function approverFor(string $role, array $employee, string $uid): string {
-		$ownRecord = $uid !== '' && $uid === $this->text($employee['nextcloudUserId'] ?? null);
+	private function approverFor(ChangePlacement $placement, string $role): string {
+		$uid = $placement->uid;
+		$ownRecord = $uid !== '' && $uid === $this->text($placement->employee['nextcloudUserId'] ?? null);
 
 		return ($role === ChangeApprovalRules::NO_APPROVER && $ownRecord === false) ? 'hr' : $role;
 	}//end approverFor()
@@ -137,39 +166,59 @@ class ChangeRequestService {
 	/**
 	 * The stamps that place a request.
 	 *
-	 * @param array<string, mixed> $request  The request.
-	 * @param array<string, mixed> $employee The employee.
-	 * @param array<string, mixed> $changes  The proposed values.
-	 * @param string               $role     The approver role.
-	 * @param string               $uid      The requester.
+	 * @param ChangePlacement $placement The request being placed.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function placement(array $request, array $employee, array $changes, string $role, string $uid): array {
-		$previous = [];
-		foreach (array_keys($changes) as $field) {
-			$previous[$field] = ($employee[$field] ?? null);
-		}
-
+	private function stampsOf(ChangePlacement $placement): array {
+		$employee = (array)$placement->employee;
 		$employeeId = (string)$employee['id'];
 		$stamps = [
 			'employeeId' => $employeeId,
-			'changes' => $changes,
-			'previousValues' => $previous,
-			'approverRole' => $role,
-			'requestedBy' => $uid === '' ? null : $uid,
+			'changes' => $placement->changes,
+			'previousValues' => $this->previousValues(placement: $placement),
+			'approverRole' => $placement->role,
+			'requestedBy' => $placement->uid === '' ? null : $placement->uid,
 			'userId' => $this->text($employee['nextcloudUserId'] ?? null),
 			'managerUserId' => $this->gateway->uniqueManagerUserIdFor($employeeId, $this->now()->format('Y-m-d')),
 			'administrationId' => $this->text($employee['administrationId'] ?? null),
-			'status' => (($request['status'] ?? null) === 'concept') ? 'concept' : 'ingediend',
+			'status' => (($placement->request['status'] ?? null) === 'concept') ? 'concept' : 'ingediend',
 		];
-		if ($role === ChangeApprovalRules::NO_APPROVER && $stamps['status'] === 'ingediend') {
-			$stamps['status'] = 'goedgekeurd';
-			$stamps['decidedAt'] = $this->now()->format(DATE_ATOM);
+
+		return array_merge($stamps, $this->decisionOf(placement: $placement, status: $stamps['status']));
+	}//end stampsOf()
+
+	/**
+	 * The employee's current value of each proposed field.
+	 *
+	 * @param ChangePlacement $placement The request being placed.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function previousValues(ChangePlacement $placement): array {
+		$previous = [];
+		foreach (array_keys($placement->changes) as $field) {
+			$previous[$field] = ($placement->employee[$field] ?? null);
 		}
 
-		return $stamps;
-	}//end placement()
+		return $previous;
+	}//end previousValues()
+
+	/**
+	 * A submitted request without an approver is approved at once.
+	 *
+	 * @param ChangePlacement $placement The request being placed.
+	 * @param string          $status    The placed status.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function decisionOf(ChangePlacement $placement, string $status): array {
+		if ($placement->role === ChangeApprovalRules::NO_APPROVER && $status === 'ingediend') {
+			return ['status' => 'goedgekeurd', 'decidedAt' => $this->now()->format(DATE_ATOM)];
+		}
+
+		return [];
+	}//end decisionOf()
 
 	/**
 	 * The stamps for a decision, or the reason it is refused.
