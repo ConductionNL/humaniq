@@ -437,4 +437,53 @@ class EmploymentTermsResolverTest extends TestCase {
 		}//end foreach
 
 	}//end testEveryShippedCaoHasAWellFormedOrAbsentOvertimeLeaf()
+	/**
+	 * Leave days come from a usable CAO leaf; an unusable or unknown CAO, or none, gives no terms.
+	 *
+	 * @return void
+	 */
+	public function testLeaveDaysFromTheCao(): void {
+		$this->assertSame(
+			['days' => ['vakantiedagenWettelijk' => 20.0, 'vakantiedagenBovenwettelijk' => 5.0], 'source' => 'cao', 'basis' => 'cao-voorbeeld', 'caoId' => 'cao-voorbeeld'],
+			$this->resolver->resolveLeaveEntitlementDays(['cao' => self::EXAMPLE_CAO])
+		);
+		$this->assertNull($this->resolver->resolveLeaveEntitlementDays(['cao' => 'cao-gemeenten']));
+		$this->assertNull($this->resolver->resolveLeaveEntitlementDays(['cao' => 'cao-bestaat-niet']));
+		$this->assertNull($this->resolver->resolveLeaveEntitlementDays([]));
+
+	}//end testLeaveDaysFromTheCao()
+
+	/**
+	 * The exact refusals of an override without a reason, a blank reason included.
+	 *
+	 * @return void
+	 */
+	public function testTheExactRefusalsOfAnUnexplainedOverride(): void {
+		try {
+			$this->resolver->resolveOvertimeToeslag(['cao' => 'cao-gemeenten', 'overtimeToeslagPercentages' => ['zondag' => 100], 'overtimeTermsOverrideReason' => '  ']);
+			$this->fail('A blank reason is no reason.');
+		} catch (InvalidArgumentException $e) {
+			$this->assertSame('overtimeToeslagPercentages is set without overtimeTermsOverrideReason; a contract departing from its CAO must say why', $e->getMessage());
+		}
+
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage('leaveEntitlementOverrideDays is set without leaveTermsOverrideReason; a contract departing from its CAO must say why');
+		$this->resolver->resolveLeaveEntitlementDays(['cao' => 'cao-gemeenten', 'leaveEntitlementOverrideDays' => ['vakantiedagenWettelijk' => 20]]);
+
+	}//end testTheExactRefusalsOfAnUnexplainedOverride()
+
+	/**
+	 * An explained override without a CAO carries no CAO id; a CAO with an unusable overtime leaf gives no overtime terms.
+	 *
+	 * @return void
+	 */
+	public function testOverridesWithoutACao(): void {
+		$terms = $this->resolver->resolveLeaveEntitlementDays(['leaveEntitlementOverrideDays' => ['vakantiedagenWettelijk' => 25], 'leaveTermsOverrideReason' => 'Afspraak']);
+		$this->assertSame(['source' => 'contract-override', 'basis' => 'Afspraak', 'caoId' => null], array_slice($terms, 1));
+
+		$overtime = $this->resolver->resolveOvertimeToeslag(['overtimeToeslagPercentages' => ['zondag' => 150], 'overtimeTermsOverrideReason' => ' Afspraak ']);
+		$this->assertSame(['source' => 'contract-override', 'basis' => 'Afspraak', 'caoId' => null], array_slice($overtime, 1));
+
+	}//end testOverridesWithoutACao()
+
 }//end class
