@@ -106,7 +106,7 @@ class WorkingPatternOverlapListener implements IEventListener {
 		try {
 			$this->guard(payload: $payload, uuid: $uuid);
 		} catch (OverlappingWorkingPatternException $e) {
-			$this->refuse($event, $e->getMessage());
+			PreSaveEvents::refuse($event, $e->getMessage());
 		} catch (\Throwable $e) {
 			// Fail closed: an unchecked pattern is a second answer waiting to
 			// happen, and nothing downstream would report it.
@@ -114,7 +114,7 @@ class WorkingPatternOverlapListener implements IEventListener {
 				'humaniq: WorkingPatternOverlapListener could not check a WorkingPattern write',
 				['exception' => $e->getMessage()]
 			);
-			$this->refuse(
+			PreSaveEvents::refuse(
 				$event,
 				'Het werkpatroon kon niet worden gecontroleerd op overlap; probeer het later opnieuw.'
 			);
@@ -204,22 +204,4 @@ class WorkingPatternOverlapListener implements IEventListener {
 		return (strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) === self::WORKINGPATTERN_SLUG);
 	}//end isWorkingPattern()
 
-	/**
-	 * Stop the write and carry the reason back to the caller.
-	 *
-	 * @param object $event The dispatched event.
-	 * @param string $message The refusal, in the language of the person who sees it.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-001
-	 */
-	private function refuse(object $event, string $message): void {
-		if (method_exists($event, 'setErrors') === false || method_exists($event, 'stopPropagation') === false) {
-			return;
-		}
-
-		$event->setErrors(['message' => $message]);
-		$event->stopPropagation();
-	}//end refuse()
 }//end class

@@ -31,6 +31,7 @@ namespace OCA\Humaniq\Tests\Unit\Listener;
 
 use OCA\Humaniq\Listener\ChangeRequestListener;
 use OCA\Humaniq\Listener\CostAllocationGuardListener;
+use OCA\Humaniq\Listener\PreSaveEvents;
 use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimeEstimateListener;
@@ -44,7 +45,6 @@ use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use ReflectionMethod;
 
 /**
  * The repeated pre-save helpers behave the same in every listener.
@@ -180,7 +180,7 @@ class PreSaveEventHelpersTest extends TestCase {
 	}//end testEntityOf()
 
 	/**
-	 * Call a private helper on a listener built without its collaborators.
+	 * Call the shared helper the listener now uses, after checking the listener no longer carries its own copy.
 	 *
 	 * @param class-string      $listener  The listener.
 	 * @param string            $method    The helper.
@@ -189,9 +189,9 @@ class PreSaveEventHelpersTest extends TestCase {
 	 * @return mixed
 	 */
 	private function call(string $listener, string $method, array $arguments): mixed {
-		$instance = (new ReflectionClass($listener))->newInstanceWithoutConstructor();
+		$this->assertFalse((new ReflectionClass($listener))->hasMethod($method), $listener.' delegates '.$method.' to PreSaveEvents.');
 
-		return (new ReflectionMethod($instance, $method))->invokeArgs($instance, $arguments);
+		return PreSaveEvents::$method(...$arguments);
 
 	}//end call()
 }//end class

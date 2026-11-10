@@ -80,7 +80,7 @@ class CostAllocationGuardListener implements IEventListener {
 
 		$refusal = $this->splitsRefusal($payload);
 		if ($refusal !== null) {
-			$this->refuse($event, $refusal);
+			PreSaveEvents::refuse($event, $refusal);
 			return;
 		}
 
@@ -94,7 +94,7 @@ class CostAllocationGuardListener implements IEventListener {
 		}
 
 		if ($refusal !== null) {
-			$this->refuse($event, $refusal);
+			PreSaveEvents::refuse($event, $refusal);
 		}
 	}//end handle()
 
@@ -210,22 +210,5 @@ class CostAllocationGuardListener implements IEventListener {
 	private function isCostAllocation(object $entity): bool {
 		return (strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) === self::COSTALLOCATION_SLUG);
 	}//end isCostAllocation()
-
-	/**
-	 * Stop the write and carry the reason back to the caller.
-	 *
-	 * @param object $event   The dispatched event.
-	 * @param string $message The refusal.
-	 *
-	 * @return void
-	 */
-	private function refuse(object $event, string $message): void {
-		if (method_exists($event, 'setErrors') === false || method_exists($event, 'stopPropagation') === false) {
-			return;
-		}
-
-		$event->setErrors(['message' => $message]);
-		$event->stopPropagation();
-	}//end refuse()
 
 }//end class

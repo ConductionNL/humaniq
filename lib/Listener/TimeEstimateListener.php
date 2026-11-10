@@ -138,7 +138,7 @@ class TimeEstimateListener implements IEventListener {
 		}//end try
 
 		if ($refusal !== null) {
-			$this->refuse($event, $refusal);
+			PreSaveEvents::refuse($event, $refusal);
 		}
 	}//end handle()
 
@@ -185,22 +185,4 @@ class TimeEstimateListener implements IEventListener {
 		return [$payload, $slug];
 	}//end incoming()
 
-	/**
-	 * Stop the write and carry the reason back to the caller.
-	 *
-	 * @param object $event The dispatched event.
-	 * @param string $message The refusal.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-004
-	 */
-	private function refuse(object $event, string $message): void {
-		if (method_exists($event, 'setErrors') === false || method_exists($event, 'stopPropagation') === false) {
-			return;
-		}
-
-		$event->setErrors(['message' => $message]);
-		$event->stopPropagation();
-	}//end refuse()
 }//end class
