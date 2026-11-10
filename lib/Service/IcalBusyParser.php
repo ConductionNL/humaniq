@@ -66,34 +66,66 @@ class IcalBusyParser {
 	public function busyPeriods(string $ical): array {
 		$periods = [];
 		foreach ($this->events(ical: $ical) as $event) {
-			$status = strtoupper(trim((string)($event['STATUS'] ?? '')));
-			$transparency = strtoupper(trim((string)($event['TRANSP'] ?? '')));
-			if ($status === 'CANCELLED' || $transparency === 'TRANSPARENT') {
-				continue;
+			$period = $this->periodOf(event: $event);
+			if ($period !== null) {
+				$periods[] = $period;
 			}
-
-			$start = $this->instant(value: ($event['DTSTART'] ?? null));
-			if ($start === null) {
-				continue;
-			}
-
-			$end = $this->instant(value: ($event['DTEND'] ?? null));
-			if ($end === null) {
-				$end = $this->endFromDuration(start: $start, duration: ($event['DURATION'] ?? null));
-			}
-
-			if ($end === null || $end <= $start) {
-				continue;
-			}
-
-			$periods[] = [
-				'start' => $start->format('Y-m-d\TH:i:sP'),
-				'end' => $end->format('Y-m-d\TH:i:sP'),
-			];
 		}
 
 		return $periods;
 	}//end busyPeriods()
+
+	/**
+	 * One event's busy period, or null when it is free, cancelled or has no usable span.
+	 *
+	 * @param array<string, string> $event The event's properties.
+	 *
+	 * @return array{start: string, end: string}|null
+	 */
+	private function periodOf(array $event): ?array {
+		$start = $this->isFree(event: $event) === true ? null : $this->instant(value: ($event['DTSTART'] ?? null));
+		if ($start === null) {
+			return null;
+		}
+
+		$end = $this->endAfter(event: $event, start: $start);
+		if ($end === null) {
+			return null;
+		}
+
+		return [
+			'start' => $start->format('Y-m-d\TH:i:sP'),
+			'end' => $end->format('Y-m-d\TH:i:sP'),
+		];
+	}//end periodOf()
+
+	/**
+	 * Whether an event is cancelled or marked transparent, and so blocks nothing.
+	 *
+	 * @param array<string, string> $event The event's properties.
+	 *
+	 * @return bool
+	 */
+	private function isFree(array $event): bool {
+		$status = strtoupper(trim((string)($event['STATUS'] ?? '')));
+		$transparency = strtoupper(trim((string)($event['TRANSP'] ?? '')));
+
+		return $status === 'CANCELLED' || $transparency === 'TRANSPARENT';
+	}//end isFree()
+
+	/**
+	 * The event's end when it lies after its start, else null.
+	 *
+	 * @param array<string, string> $event The event's properties.
+	 * @param DateTimeImmutable $start The event start.
+	 *
+	 * @return DateTimeImmutable|null
+	 */
+	private function endAfter(array $event, DateTimeImmutable $start): ?DateTimeImmutable {
+		$end = ($this->instant(value: ($event['DTEND'] ?? null)) ?? $this->endFromDuration(start: $start, duration: ($event['DURATION'] ?? null)));
+
+		return ($end !== null && $end > $start) ? $end : null;
+	}//end endAfter()
 
 	/**
 	 * The VEVENT blocks of a feed, as property maps holding only the
@@ -106,6 +138,28 @@ class IcalBusyParser {
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-005
 	 */
 	private function events(string $ical): array {
+		$events = [];
+		$current = null;
+		foreach ($this->lines(ical: $ical) as $line) {
+			$line = trim($line);
+			if ($line === 'END:VEVENT' && is_array($current) === true) {
+				$events[] = $current;
+			}
+
+			$current = $this->afterLine(current: $current, line: $line);
+		}
+
+		return $events;
+	}//end events()
+
+	/**
+	 * The unfolded content lines of a feed.
+	 *
+	 * @param string $ical The iCalendar document.
+	 *
+	 * @return array<int, string>
+	 */
+	private function lines(string $ical): array {
 		// Unfold: a long property is continued on the next line, prefixed with
 		// one space or tab (RFC 5545 section 3.1).
 		$unfolded = preg_replace("/\r\n[ \t]|\n[ \t]/", '', $ical);
@@ -113,33 +167,28 @@ class IcalBusyParser {
 			return [];
 		}
 
-		$events = [];
-		$current = null;
-		foreach (preg_split("/\r\n|\n|\r/", $unfolded) ?: [] as $line) {
-			$line = trim($line);
-			if ($line === 'BEGIN:VEVENT') {
-				$current = [];
-				continue;
-			}
+		return (preg_split("/\r\n|\n|\r/", $unfolded) ?: []);
+	}//end lines()
 
-			if ($line === 'END:VEVENT') {
-				if (is_array($current) === true) {
-					$events[] = $current;
-				}
-
-				$current = null;
-				continue;
-			}
-
-			if (is_array($current) === false) {
-				continue;
-			}
-
-			$current = $this->withProperty(event: $current, line: $line);
+	/**
+	 * The event being read after one line: a new one, none, or one more property.
+	 *
+	 * @param array<string, string>|null $current The event being read, or null outside one.
+	 * @param string $line One trimmed content line.
+	 *
+	 * @return array<string, string>|null
+	 */
+	private function afterLine(array|null $current, string $line): array|null {
+		if ($line === 'BEGIN:VEVENT') {
+			return [];
 		}
 
-		return $events;
-	}//end events()
+		if ($line === 'END:VEVENT' || is_array($current) === false) {
+			return null;
+		}
+
+		return $this->withProperty(event: $current, line: $line);
+	}//end afterLine()
 
 	/**
 	 * One content line folded into the event being read.
@@ -193,19 +242,39 @@ class IcalBusyParser {
 			return null;
 		}
 
-		$parameters = '';
-		$raw = $value;
-		if (str_contains($value, ':') === true) {
-			[$parameters, $raw] = explode(':', $value, 2);
-		}
-
-		$raw = trim($raw);
+		[$parameters, $raw] = $this->parametersAndValue(value: $value);
 		if ($raw === '') {
 			return null;
 		}
 
-		$timezone = $this->zone(parameters: $parameters);
+		return $this->parsed(raw: $raw, timezone: $this->zone(parameters: $parameters));
+	}//end instant()
 
+	/**
+	 * A DTSTART or DTEND split into its parameters and its trimmed value.
+	 *
+	 * @param string $value The raw property, parameters and value.
+	 *
+	 * @return array{0: string, 1: string}
+	 */
+	private function parametersAndValue(string $value): array {
+		if (str_contains($value, ':') === true) {
+			[$parameters, $raw] = explode(':', $value, 2);
+			return [$parameters, trim($raw)];
+		}
+
+		return ['', trim($value)];
+	}//end parametersAndValue()
+
+	/**
+	 * A date or date-time value as an instant, or null when it does not parse.
+	 *
+	 * @param string $raw The value.
+	 * @param DateTimeZone $timezone The zone it is written in.
+	 *
+	 * @return DateTimeImmutable|null
+	 */
+	private function parsed(string $raw, DateTimeZone $timezone): ?DateTimeImmutable {
 		try {
 			if (preg_match('/^\d{8}$/', $raw) === 1) {
 				// A whole-day value. Midnight to midnight in the feed's zone.
@@ -220,7 +289,7 @@ class IcalBusyParser {
 		} catch (\Throwable $e) {
 			return null;
 		}
-	}//end instant()
+	}//end parsed()
 
 	/**
 	 * The zone a DTSTART or DTEND is written in.
