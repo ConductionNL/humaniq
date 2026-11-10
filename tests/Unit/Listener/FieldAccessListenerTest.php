@@ -38,6 +38,8 @@ use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCA\OpenRegister\Service\PropertyAccessRequest;
+use OCA\OpenRegister\Service\SchemaProperty;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -128,14 +130,13 @@ class FieldAccessListenerTest extends TestCase {
 				}
 
 				/**
-				 * @param object               $schema   The schema.
-				 * @param string               $property The property.
-				 * @param array<string, mixed> $object   The object.
+				 * @param SchemaProperty        $property The schema and the property.
+				 * @param PropertyAccessRequest $request  The object.
 				 *
 				 * @return bool
 				 */
-				public function canReadProperty(object $schema, string $property, array $object): bool {
-					return in_array($property, $this->hidden, true) === false;
+				public function canReadProperty(SchemaProperty $property, PropertyAccessRequest $request): bool {
+					return in_array($property->name, $this->hidden, true) === false;
 				}
 			};
 		}

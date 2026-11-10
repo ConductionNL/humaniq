@@ -1,26 +1,28 @@
 <?php
 
 /**
- * OpenRegister WorkingCalendarService NAME stub — test-only.
+ * OpenRegister working calendar stubs — test-only.
  *
- * `WorkingCalendarReader` establishes openregister's availability with
- * `class_exists()` before reaching for the working calendar (ADR-083), the way
- * every other duck-typed reach in humaniq does. In the standalone PHPUnit
- * suite the real class is absent, so the guard would refuse every call and the
- * resolved path could never be exercised: the tests would all measure a
- * missing app rather than the reader.
+ * `WorkingCalendarReader` asks the container for openregister's
+ * `Flow\Timer\WorkingCalendarService` by class, resolves the default calendar
+ * and reads its non-working dates per year. In the standalone PHPUnit suite
+ * openregister is absent, so these declare the public shape the reader calls,
+ * matching openregister main:
  *
- * THIS DECLARES A NAME AND NOTHING ELSE. It carries no `nonWorkingDates()`, so
- * a test that wants an answer injects its own double through the container,
- * and a test that wants the method-missing degradation gets it from this class
- * exactly as a real openregister that dropped the method would give it.
+ * - `WorkingCalendarService::resolve(?string $calendarSlug, ?string $organisation): WorkingCalendar`
+ * - `WorkingCalendarInterface::nonWorkingDates(int $year): array` (`Y-m-d` => name)
+ * - `FlowTimerValidationException`, thrown when no calendar resolves
+ *
+ * `WorkingCalendar::fromArray()` is openregister's validating named
+ * constructor; this stand-in reads only a test-only `nonWorkingDates` key
+ * (year => [`Y-m-d` => name]) so a test can build a calendar with known dates.
  *
  * Loaded ONLY from tests/bootstrap.php, behind a class_exists() check, so the
- * real openregister class always wins on a live instance. Never in
+ * real openregister classes always win on a live instance. Never in
  * composer.json's autoload map.
  *
  * @category Test
- * @package  OCA\OpenRegister\Service
+ * @package  OCA\OpenRegister\Service\Flow\Timer
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -34,11 +36,181 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service;
+namespace OCA\OpenRegister\Exception {
 
-/**
- * Name-only stand-in for openregister's working calendar service.
- */
-class WorkingCalendarService {
+	/**
+	 * Stand-in for openregister's timer validation exception.
+	 */
+	class FlowTimerValidationException extends \InvalidArgumentException {
 
-}//end class
+	}//end class
+}
+
+namespace OCA\OpenRegister\Service\Flow\Timer {
+
+	/**
+	 * Openregister's working calendar contract.
+	 */
+	interface WorkingCalendarInterface {
+
+		/**
+		 * The calendar name.
+		 *
+		 * @return string
+		 */
+		public function getSlug(): string;
+
+		/**
+		 * The calendar time zone.
+		 *
+		 * @return string
+		 */
+		public function getTimezone(): string;
+
+		/**
+		 * The ISO weekdays that are working days.
+		 *
+		 * @return array
+		 */
+		public function getWorkingWeekdays(): array;
+
+		/**
+		 * Minute of the day work starts.
+		 *
+		 * @return int
+		 */
+		public function getDayStartsAtMinute(): int;
+
+		/**
+		 * Minute of the day work ends.
+		 *
+		 * @return int
+		 */
+		public function getDayEndsAtMinute(): int;
+
+		/**
+		 * Hours in one working day.
+		 *
+		 * @return float
+		 */
+		public function getHoursPerWorkingDay(): float;
+
+		/**
+		 * The non-working dates of a year.
+		 *
+		 * @param int $year The year.
+		 *
+		 * @return array<string, string> `Y-m-d` => name.
+		 */
+		public function nonWorkingDates(int $year): array;
+	}//end interface
+
+	/**
+	 * Stand-in for openregister's working calendar value object.
+	 */
+	final class WorkingCalendar implements WorkingCalendarInterface {
+
+		/**
+		 * Constructor.
+		 *
+		 * @param array<int, array<string, string>> $byYear Year => [`Y-m-d` => name].
+		 */
+		private function __construct(private readonly array $byYear) {
+
+		}//end __construct()
+
+		/**
+		 * Build a calendar from a definition.
+		 *
+		 * @param array<string, mixed> $definition The definition; the test-only `nonWorkingDates` key is read.
+		 *
+		 * @return self The calendar.
+		 */
+		public static function fromArray(array $definition): self {
+			return new self(byYear: (array)($definition['nonWorkingDates'] ?? []));
+		}//end fromArray()
+
+		/**
+		 * The calendar name.
+		 *
+		 * @return string
+		 */
+		public function getSlug(): string {
+			return 'default';
+		}//end getSlug()
+
+		/**
+		 * The calendar time zone.
+		 *
+		 * @return string
+		 */
+		public function getTimezone(): string {
+			return 'Europe/Amsterdam';
+		}//end getTimezone()
+
+		/**
+		 * The ISO weekdays that are working days.
+		 *
+		 * @return array
+		 */
+		public function getWorkingWeekdays(): array {
+			return [1, 2, 3, 4, 5];
+		}//end getWorkingWeekdays()
+
+		/**
+		 * Minute of the day work starts.
+		 *
+		 * @return int
+		 */
+		public function getDayStartsAtMinute(): int {
+			return 540;
+		}//end getDayStartsAtMinute()
+
+		/**
+		 * Minute of the day work ends.
+		 *
+		 * @return int
+		 */
+		public function getDayEndsAtMinute(): int {
+			return 1020;
+		}//end getDayEndsAtMinute()
+
+		/**
+		 * Hours in one working day.
+		 *
+		 * @return float
+		 */
+		public function getHoursPerWorkingDay(): float {
+			return 8.0;
+		}//end getHoursPerWorkingDay()
+
+		/**
+		 * The non-working dates of a year.
+		 *
+		 * @param int $year The year.
+		 *
+		 * @return array<string, string> `Y-m-d` => name.
+		 */
+		public function nonWorkingDates(int $year): array {
+			return (array)($this->byYear[$year] ?? []);
+		}//end nonWorkingDates()
+	}//end class
+
+	/**
+	 * Stand-in for openregister's working calendar resolver.
+	 */
+	class WorkingCalendarService {
+
+		/**
+		 * Resolve the calendar for a timer.
+		 *
+		 * @param string|null $calendarSlug The calendar named on the timer, when any.
+		 * @param string|null $organisation The subject's organisation, when any.
+		 *
+		 * @return WorkingCalendar The resolved calendar.
+		 */
+		public function resolve(?string $calendarSlug, ?string $organisation): WorkingCalendar {
+			throw new \OCA\OpenRegister\Exception\FlowTimerValidationException('stub: no calendar seeded');
+		}//end resolve()
+	}//end class
+}

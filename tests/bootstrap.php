@@ -170,11 +170,18 @@ if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterObjectServiceStub.php';
 }
 
-// Same rule, different class: WorkingCalendarReader asks class_exists() for
-// openregister's working calendar before reaching for it (working-hours-per-person,
-// REQ-WHP-004). Without the name present the reader can only ever answer
-// "no working calendar on this instance", and the resolved path would be dark.
-if (class_exists('OCA\\OpenRegister\\Service\\WorkingCalendarService') === false) {
+// FieldReadAccess builds openregister's SchemaProperty and PropertyAccessRequest
+// to ask PropertyRbacHandler::canReadProperty() (REQ-RFA-002). Without them the
+// suite could not reach the handler double at all.
+if (class_exists('OCA\\OpenRegister\\Service\\SchemaProperty') === false) {
+	require __DIR__ . '/stubs/OpenRegisterPropertyAccessStub.php';
+}
+
+// WorkingCalendarReader asks the container for openregister's
+// Flow\Timer\WorkingCalendarService by class and reads the resolved calendar
+// (working-hours-per-person, REQ-WHP-004). The stub declares that public shape
+// so the reader's typed calls load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Service\\Flow\\Timer\\WorkingCalendarService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterWorkingCalendarStub.php';
 }
 

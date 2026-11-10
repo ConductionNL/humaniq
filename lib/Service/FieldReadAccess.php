@@ -28,6 +28,10 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\OpenRegister\Db\SchemaMapper;
+use OCA\OpenRegister\Service\PropertyAccessRequest;
+use OCA\OpenRegister\Service\PropertyRbacHandler;
+use OCA\OpenRegister\Service\SchemaProperty;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -64,21 +68,28 @@ class FieldReadAccess {
 	 */
 	public function unreadable(string $schemaId, array $object): ?array {
 		try {
-			$schema = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')->find($schemaId);
-			$handler = $this->container->get('OCA\OpenRegister\Service\PropertyRbacHandler');
-			$unreadable = [];
-			foreach (array_keys($schema->getPropertiesWithAuthorization()) as $property) {
-				$property = strval($property);
-				if ($handler->canReadProperty($schema, $property, $object) === false) {
-					$unreadable[] = $property;
-				}
-			}
-
-			return $unreadable;
-		} catch (\Throwable $e) {
+			$schema = $this->container->get(SchemaMapper::class)->find($schemaId);
+			$handler = $this->container->get(PropertyRbacHandler::class);
+		} catch (\Exception $e) {
 			$this->logger->warning('humaniq: could not ask OpenRegister which fields the caller may read', ['exception' => $e->getMessage()]);
 			return null;
 		}
+
+		// The read is asked the way OpenRegister's own read path asks it: the
+		// schema and property as one SchemaProperty, the stored object as the
+		// PropertyAccessRequest its match rules are evaluated against. A
+		// changed call shape is a type error and is deliberately not caught, so
+		// it cannot quietly turn into "OpenRegister could not be asked".
+		$request = new PropertyAccessRequest(object: $object);
+		$unreadable = [];
+		foreach (array_keys($schema->getPropertiesWithAuthorization()) as $property) {
+			$property = strval($property);
+			if ($handler->canReadProperty(new SchemaProperty(schema: $schema, name: $property), $request) === false) {
+				$unreadable[] = $property;
+			}
+		}
+
+		return $unreadable;
 	}//end unreadable()
 
 	/**

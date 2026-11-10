@@ -19,6 +19,9 @@
         <!-- OpenRegister's lifecycle guard contract, the same stub the tests load (it mirrors
              OpenRegister lib/Lifecycle/LifecycleGuardInterface.php and GuardResult.php). -->
         <file name="tests/stubs/OpenRegisterLifecycleStub.php" />
+        <!-- OpenRegister's working calendar contract (Flow\Timer), the same stub the tests load;
+             it mirrors the public shape WorkingCalendarReader calls. -->
+        <file name="tests/stubs/OpenRegisterWorkingCalendarStub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
@@ -55,6 +58,13 @@
                 <!-- Cross-app classes: OpenRegister and DocuDesk are only available
                      at runtime once those apps are installed alongside humaniq -->
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
+                <referencedClass name="OCA\OpenRegister\Exception\FlowTimerValidationException"/>
+                <referencedClass name="OCA\OpenRegister\Service\Flow\Timer\WorkingCalendarInterface"/>
+                <referencedClass name="OCA\OpenRegister\Service\Flow\Timer\WorkingCalendarService"/>
+                <referencedClass name="OCA\OpenRegister\Service\PropertyAccessRequest"/>
+                <referencedClass name="OCA\OpenRegister\Service\PropertyRbacHandler"/>
+                <referencedClass name="OCA\OpenRegister\Service\SchemaProperty"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletingEvent"/>
