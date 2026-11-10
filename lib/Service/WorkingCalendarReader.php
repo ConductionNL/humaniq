@@ -18,11 +18,14 @@
  *
  * HOW IT REACHES OPENREGISTER
  * ---------------------------
- * Duck-typed and container-resolved behind a `class_exists()` guard, the way
- * `hours-leaf` resolves `ObjectService` and `leave-calendar-nc` resolves
- * `CalDavBackend` (ADR-083: establish availability before reaching). A class
- * that is absent, a method that is missing and a call that throws all land in
- * the same place: no dates, `resolved` false.
+ * Typed: the container is asked for openregister's
+ * {@see WorkingCalendarService} by class, the default calendar is resolved and
+ * asked for the non-working dates of every year the range touches. A service
+ * the container cannot give (openregister not installed) and a calendar that
+ * cannot be resolved (no default seeded) land in the same place: no dates,
+ * `resolved` false. A changed signature is a type error and is NOT caught, so
+ * a move on openregister's side fails loudly instead of answering every date
+ * as a working day.
  *
  * WHAT A MISS MEANS
  * -----------------
@@ -52,6 +55,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Exception\FlowTimerValidationException;
+use OCA\OpenRegister\Service\Flow\Timer\WorkingCalendarInterface;
+use OCA\OpenRegister\Service\Flow\Timer\WorkingCalendarService;
+use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -61,28 +68,6 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-004
  */
 class WorkingCalendarReader {
-
-	/**
-	 * The openregister service that publishes the working calendar, in the
-	 * order it is looked for.
-	 *
-	 * More than one name because the calendar's owning service has moved once
-	 * already, and a hard-coded single name turns a rename into a silent
-	 * no-op: nothing errors, every date simply answers as a working day.
-	 *
-	 * @var array<int, string>
-	 */
-	public const CANDIDATE_SERVICES = [
-		'OCA\OpenRegister\Service\WorkingCalendarService',
-		'OCA\OpenRegister\Service\Calendar\WorkingCalendarService',
-	];
-
-	/**
-	 * The method each candidate is asked for.
-	 *
-	 * @var string
-	 */
-	public const CANDIDATE_METHOD = 'nonWorkingDates';
 
 	/**
 	 * Constructor.
@@ -109,104 +94,67 @@ class WorkingCalendarReader {
 	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-004
 	 */
 	public function nonWorkingDates(DateTimeImmutable $from, DateTimeImmutable $to): array {
-		$resolved = $this->resolveService();
-		$service = $resolved['service'];
-		$name = $resolved['name'];
-
-		if ($service === null) {
+		try {
+			$service = $this->container->get(WorkingCalendarService::class);
+		} catch (ContainerExceptionInterface $e) {
 			return $this->degraded(
 				reason: 'no-working-calendar-service',
-				detail: 'openregister publishes no working calendar on this instance'
+				detail: 'openregister publishes no working calendar on this instance: ' . $e->getMessage()
 			);
 		}
 
-		if (method_exists($service, self::CANDIDATE_METHOD) === false) {
+		if ($service instanceof WorkingCalendarService === false) {
 			return $this->degraded(
-				reason: 'method-missing',
-				detail: ((string)$name) . ' has no ' . self::CANDIDATE_METHOD . '()'
+				reason: 'no-working-calendar-service',
+				detail: 'the container answered something other than ' . WorkingCalendarService::class
 			);
 		}
 
 		try {
-			$raw = $service->{self::CANDIDATE_METHOD}($from->format('Y-m-d'), $to->format('Y-m-d'));
-		} catch (\Throwable $e) {
+			$calendar = $service->resolve(calendarSlug: null, organisation: null);
+		} catch (FlowTimerValidationException $e) {
 			return $this->degraded(reason: 'call-failed', detail: $e->getMessage());
 		}
 
-		if (is_array($raw) === false) {
-			return $this->degraded(
-				reason: 'unreadable-answer',
-				detail: 'the working calendar answered something other than a list of dates'
-			);
-		}
-
 		return [
-			'dates' => $this->isoDates(raw: $raw),
+			'dates' => $this->datesInRange(calendar: $calendar, from: $from, to: $to),
 			'resolved' => true,
 			'reason' => null,
 		];
 	}//end nonWorkingDates()
 
 	/**
-	 * The openregister working-calendar service, if this instance has one.
+	 * The calendar's non-working dates that fall inside the range.
 	 *
-	 * Both names are tried because the service moved namespace; the probe is
-	 * by name on purpose, so an instance without openregister keeps working
-	 * instead of failing to boot.
+	 * The calendar answers per year, keyed `Y-m-d`, so every year the range
+	 * touches is asked and the keys outside the range are dropped.
 	 *
-	 * @return array{service: object|null, name: string|null} The service and the name it answered to.
+	 * @param WorkingCalendarInterface $calendar The resolved calendar.
+	 * @param DateTimeImmutable        $from     First day, inclusive.
+	 * @param DateTimeImmutable        $to       Last day, inclusive.
 	 *
-	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-004
-	 */
-	private function resolveService(): array {
-		$name = null;
-		foreach (self::CANDIDATE_SERVICES as $candidate) {
-			if (class_exists($candidate) === false) {
-				continue;
-			}
-
-			$name = $candidate;
-			try {
-				$service = $this->container->get($candidate);
-			} catch (\Throwable $e) {
-				continue;
-			}
-
-			if ($service !== null) {
-				return [
-					'service' => $service,
-					'name' => $name,
-				];
-			}
-		}
-
-		return [
-			'service' => null,
-			'name' => $name,
-		];
-	}//end resolveService()
-
-	/**
-	 * The answer narrowed to unique ISO dates.
-	 *
-	 * @param array<int|string, mixed> $raw What the working calendar answered.
-	 *
-	 * @return array<int, string> The dates.
+	 * @return array<int, string> The dates, ascending.
 	 *
 	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-004
 	 */
-	private function isoDates(array $raw): array {
+	private function datesInRange(WorkingCalendarInterface $calendar, DateTimeImmutable $from, DateTimeImmutable $to): array {
+		$first = $from->format('Y-m-d');
+		$last = $to->format('Y-m-d');
 		$dates = [];
-		foreach ($raw as $value) {
-			if (is_string($value) === false || trim($value) === '') {
-				continue;
+		for ($year = (int)$from->format('Y'); $year <= (int)$to->format('Y'); $year++) {
+			foreach (array_keys($calendar->nonWorkingDates(year: $year)) as $date) {
+				$date = (string)$date;
+				if ($date >= $first && $date <= $last) {
+					$dates[] = $date;
+				}
 			}
-
-			$dates[] = substr($value, 0, 10);
 		}
 
-		return array_values(array_unique($dates));
-	}//end isoDates()
+		$dates = array_values(array_unique($dates));
+		sort($dates);
+
+		return $dates;
+	}//end datesInRange()
 
 	/**
 	 * Record one degradation and answer with no dates.

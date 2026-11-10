@@ -68,6 +68,7 @@ if (class_exists('OCA\OpenRegister\Service\Integration\LeafDescriptor') === fals
 		 * @param string|null $group The catalogue group.
 		 * @param array<int, string> $surfaces Where the leaf may be placed.
 		 * @param string|null $referenceType The reference type it reads.
+		 * @param string|null $requiresPermission Optional permission string gating visibility.
 		 * @param string|null $renderMode How the client half renders.
 		 */
 		public function __construct(
@@ -79,6 +80,7 @@ if (class_exists('OCA\OpenRegister\Service\Integration\LeafDescriptor') === fals
 			public readonly ?string $group = null,
 			public readonly array $surfaces = [],
 			public readonly ?string $referenceType = null,
+			public readonly ?string $requiresPermission = null,
 			public readonly ?string $renderMode = null,
 		) {
 
