@@ -106,10 +106,7 @@ class LeaveScheduleController extends Controller {
 
 		$window = $this->window(from: $from, to: $to);
 		if ($window === null) {
-			return new JSONResponse(
-				['error' => 'from en to moeten geldige datums zijn, met to op of na from.'],
-				Http::STATUS_BAD_REQUEST
-			);
+			return self::unusableWindow();
 		}
 
 		$members = $this->members(orgUnitId: $orgUnitId, onDate: $window[0]);
