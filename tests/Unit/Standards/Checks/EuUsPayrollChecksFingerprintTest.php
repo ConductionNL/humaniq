@@ -114,13 +114,6 @@ class EuUsPayrollChecksFingerprintTest extends TestCase {
 	];
 
 	/**
-	 * Rules left out because their outcome depends on the current time.
-	 *
-	 * @var list<string>
-	 */
-	private const TIME_DEPENDENT = [];
-
-	/**
 	 * Per object type and rule: the count of passing objects and the outcome hash.
 	 *
 	 * @var array<string, array<string, string>>
@@ -204,9 +197,7 @@ class EuUsPayrollChecksFingerprintTest extends TestCase {
 			$grid = PredicateFingerprint::grid(PredicateFingerprint::rebase($seeds[$type] ?? [], self::SELECTORS), self::FIELDS);
 			$actual[$type] = [];
 			foreach ($rules as $ruleId => $predicate) {
-				if (in_array($ruleId, self::TIME_DEPENDENT, true) === false) {
-					$actual[$type][$ruleId] = PredicateFingerprint::of($predicate, $grid);
-				}
+				$actual[$type][$ruleId] = PredicateFingerprint::of($predicate, $grid);
 			}
 		}
 
