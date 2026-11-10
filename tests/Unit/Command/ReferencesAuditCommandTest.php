@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Command;
 
 use OCA\Humaniq\Command\ReferencesAuditCommand;
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -116,25 +117,19 @@ class ReferencesAuditCommandTest extends TestCase {
 			}
 
 			/**
-			 * @param string $objectId The object id.
-			 * @param array<string, mixed> $data The patch.
-			 * @param string|null $register The register.
-			 * @param string|null $schema The schema.
+			 * @param ObjectPatch $patch The object id, the patch and the register and schema it is in.
 			 * @param bool $_rbac RBAC flag.
 			 * @param bool $_multitenancy Multitenancy flag.
 			 *
 			 * @return array<string, mixed> The patch, echoed.
 			 */
 			public function patchObject(
-				string $objectId,
-				array $data,
-				?string $register = null,
-				?string $schema = null,
+				ObjectPatch $patch,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {
-				$this->test->writes[] = ['id' => $objectId, 'data' => $data];
-				return $data;
+				$this->test->writes[] = ['id' => $patch->objectId, 'data' => $patch->data];
+				return $patch->data;
 			}
 		};
 

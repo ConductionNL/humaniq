@@ -170,6 +170,13 @@ if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterObjectServiceStub.php';
 }
 
+// ObjectService::patchObject() takes an ObjectPatch with its
+// ObjectFindTarget. The stub declares both so humaniq's patch call, and the
+// doubles that receive it, load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Service\\Object\\ObjectPatch') === false) {
+	require __DIR__ . '/stubs/OpenRegisterObjectPatchStub.php';
+}
+
 // Same rule, different class: WorkingCalendarReader asks class_exists() for
 // openregister's working calendar before reaching for it (working-hours-per-person,
 // REQ-WHP-004). Without the name present the reader can only ever answer

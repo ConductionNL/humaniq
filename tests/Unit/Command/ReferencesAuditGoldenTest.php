@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Command;
 
 use OCA\Humaniq\Command\ReferencesAuditCommand;
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -324,10 +325,7 @@ class AuditGoldenObjectService {
 	/**
 	 * Record one patch.
 	 *
-	 * @param string $objectId The object id.
-	 * @param array<string, mixed> $data The patch.
-	 * @param string|null $register The register.
-	 * @param string|null $schema The schema.
+	 * @param ObjectPatch $patch The object id, the patch and the register and schema it is in.
 	 * @param bool $_rbac RBAC flag.
 	 * @param bool $_multitenancy Multitenancy flag.
 	 *
@@ -336,13 +334,14 @@ class AuditGoldenObjectService {
 	 * @throws RuntimeException For a failing id.
 	 */
 	public function patchObject(
-		string $objectId,
-		array $data,
-		?string $register = null,
-		?string $schema = null,
+		ObjectPatch $patch,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 	): array {
+		$objectId = $patch->objectId;
+		$data = $patch->data;
+		$register = $patch->target->register;
+		$schema = $patch->target->schema;
 		$this->calls[] = ['patchObject', ['objectId' => $objectId, 'data' => $data, 'register' => $register, 'schema' => $schema, '_rbac' => $_rbac, '_multitenancy' => $_multitenancy]];
 		if (in_array('patch:' . $objectId, $this->failing, true) === true) {
 			throw new RuntimeException('patch refused');
