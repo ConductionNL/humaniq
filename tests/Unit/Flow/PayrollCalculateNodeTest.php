@@ -26,6 +26,7 @@ namespace OCA\Humaniq\Tests\Unit\Flow;
 use OCA\Humaniq\Flow\PayrollCalculateNode;
 use OCA\Humaniq\Flow\PayrollFlowNodeServices;
 use OCA\Humaniq\Service\PayrollRunService;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use RuntimeException;
 use UnexpectedValueException;
 
@@ -98,11 +99,11 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 			->with('2026-05', 'ADM-002', true)
 			->willReturn($this->outcome('calculated'));
 
-		$out = $this->node($service)->execute(
-			[$this->item(['maand' => '2026-05'])],
-			['period' => '{{ maand }}', 'administrationId' => 'ADM-002'],
-			[]
-		);
+		$out = $this->node($service)->execute(new FlowNodeCall(
+			items: [$this->item(['maand' => '2026-05'])],
+			config: ['period' => '{{ maand }}', 'administrationId' => 'ADM-002'],
+			context: []
+		));
 
 		$this->assertCount(1, $out);
 		$this->assertSame('calculated', $out[0]['json']['payroll']['status']);
@@ -121,7 +122,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 			->with(gmdate('Y-m'), null, true)
 			->willReturn($this->outcome('exists'));
 
-		$out = $this->node($service)->execute([$this->item([])], [], []);
+		$out = $this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: [], context: []));
 
 		$this->assertSame('exists', $out[0]['json']['payroll']['status']);
 	}//end testDefaultPeriodIsCurrentMonth()
@@ -138,7 +139,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 			->with(gmdate('Y-m'), null, false)
 			->willReturn($this->outcome('exists'));
 
-		$this->node($service)->execute([$this->item([])], ['recalculate' => false], []);
+		$this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: ['recalculate' => false], context: []));
 	}//end testRecalculateFalseIsForwarded()
 
 	/**
@@ -152,7 +153,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 		$service->method('runFor')->willReturn($this->outcome('refused-not-draft'));
 
 		$this->expectException(RuntimeException::class);
-		$this->node($service)->execute([$this->item([])], [], []);
+		$this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: [], context: []));
 	}//end testRefusedNotDraftThrows()
 
 	/**
@@ -165,7 +166,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 		$service->method('runFor')->willReturn($this->outcome('failed'));
 
 		$this->expectException(RuntimeException::class);
-		$this->node($service)->execute([$this->item([])], [], []);
+		$this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: [], context: []));
 	}//end testFailedThrows()
 
 	/**
@@ -177,7 +178,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 		$service = $this->createMock(PayrollRunService::class);
 		$service->expects($this->never())->method('runFor');
 
-		$this->assertSame([], $this->node($service)->execute([], [], []));
+		$this->assertSame([], $this->node($service)->execute(new FlowNodeCall(items: [], config: [], context: [])));
 	}//end testEmptyFiringShortCircuits()
 
 	/**
