@@ -170,6 +170,13 @@ if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterObjectServiceStub.php';
 }
 
+// AvgDsrService builds openregister's SubjectQuery and ErasureRequest for the
+// guarded DataSubjectRequestService (avg-dsr, REQ-DSR-003/005). The stub
+// declares those value objects so the calls load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Service\\Gdpr\\SubjectQuery') === false) {
+	require __DIR__ . '/stubs/OpenRegisterGdprRequestStub.php';
+}
+
 // Same rule, different class: WorkingCalendarReader asks class_exists() for
 // openregister's working calendar before reaching for it (working-hours-per-person,
 // REQ-WHP-004). Without the name present the reader can only ever answer

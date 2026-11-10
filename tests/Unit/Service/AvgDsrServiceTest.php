@@ -49,6 +49,8 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\AvgDsrService;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Service\Gdpr\ErasureRequest;
+use OCA\OpenRegister\Service\Gdpr\SubjectQuery;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -215,6 +217,9 @@ class AvgDsrServiceTest extends TestCase {
 
 		$inzage = $service->exportForSubject('emp-1', 'inzage');
 		$this->assertSame(1, $guarded->findCallCount);
+		$this->assertSame(self::SENTINEL_BSN, $guarded->findQueries[0]->subjectId, 'The resolved bsn is the subject of the SubjectQuery.');
+		$this->assertNull($guarded->findQueries[0]->type);
+		$this->assertSame('exact', $guarded->findQueries[0]->mode);
 		$this->assertSame('inzage', $inzage['right']);
 		$this->assertSame(1, $inzage['count']);
 
@@ -518,6 +523,13 @@ class AvgDsrServiceTest extends TestCase {
 			public int $findCallCount = 0;
 
 			/**
+			 * The queries findSubjectData() was asked.
+			 *
+			 * @var array<int, SubjectQuery>
+			 */
+			public array $findQueries = [];
+
+			/**
 			 * @var array<int, array{subjectId: string, type: string|null, eraseMode: string, dryRun: bool}>
 			 */
 			public array $eraseCalls = [];
@@ -547,28 +559,28 @@ class AvgDsrServiceTest extends TestCase {
 			}//end __construct()
 
 			/**
-			 * @param string $subjectId Subject value.
-			 * @param string|null $type Unused by the fake.
-			 * @param string $mode Unused by the fake.
-			 * @param bool $rbac Unused by the fake.
-			 * @param bool $multitenancy Unused by the fake.
+			 * @param SubjectQuery $query        Subject value, type filter and match mode.
+			 * @param bool         $rbac         Unused by the fake.
+			 * @param bool         $multitenancy Unused by the fake.
 			 *
 			 * @return array<int, array<string, mixed>>
 			 */
-			public function findSubjectData(string $subjectId, ?string $type = null, string $mode = 'exact', bool $rbac = true, bool $multitenancy = true): array {
+			public function findSubjectData(SubjectQuery $query, bool $rbac = true, bool $multitenancy = true): array {
 				$this->findCallCount++;
+				$this->findQueries[] = $query;
 				return $this->findSubjectDataResult;
 			}//end findSubjectData()
 
 			/**
-			 * @param string $subjectId Subject value.
-			 * @param string|null $type Type filter.
-			 * @param string $eraseMode Erase mode.
-			 * @param bool $dryRun Dry-run flag.
+			 * @param ErasureRequest $request Subject value, type filter, erase mode and dry-run flag.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function erase(string $subjectId, ?string $type = null, string $eraseMode = 'pseudonymise', bool $dryRun = false): array {
+			public function erase(ErasureRequest $request): array {
+				$subjectId = $request->subjectId;
+				$type = $request->type;
+				$eraseMode = $request->eraseMode;
+				$dryRun = $request->dryRun;
 				$this->eraseCalls[] = ['subjectId' => $subjectId, 'type' => $type, 'eraseMode' => $eraseMode, 'dryRun' => $dryRun];
 
 				return [
