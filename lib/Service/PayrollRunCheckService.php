@@ -225,7 +225,7 @@ class PayrollRunCheckService {
 	private function deviationFindings(string $runId, string $period): array {
 		[$current, $history] = $this->currentAndHistory(runId: $runId, paidRuns: $this->paidRunIds());
 		$raised = $this->raisedEmployees(period: $period);
-		$thresholds = $this->thresholds();
+		$thresholds = $this->detector->thresholdsFrom(setting: $this->config->getValueString(Application::APP_ID, 'payroll_check_thresholds', ''));
 		$findings = [];
 		foreach ($current as $payslip) {
 			$employeeId = (string)($payslip['employeeId'] ?? '');
@@ -275,17 +275,6 @@ class PayrollRunCheckService {
 
 		return [$current, $history];
 	}//end currentAndHistory()
-
-	/**
-	 * The threshold overrides from the `payroll_check_thresholds` setting.
-	 *
-	 * @return array<string, array{relative: float, absolute: float}>
-	 *
-	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-003
-	 */
-	private function thresholds(): array {
-		return $this->detector->thresholdsFrom(setting: $this->config->getValueString(Application::APP_ID, 'payroll_check_thresholds', ''));
-	}//end thresholds()
 
 	/**
 	 * Every CAO component a payslip of this run could not pay is a warning
@@ -345,7 +334,13 @@ class PayrollRunCheckService {
 			$payload = array_merge($finding, ['payrollRunId' => $runId, 'checkedAt' => $checkedAt, 'status' => 'open']);
 			$previous = ($acknowledged[self::keyOf($finding)] ?? null);
 			unset($acknowledged[self::keyOf($finding)]);
-			$this->saveFinding(payload: $payload, previous: $previous);
+			$uuid = null;
+			if ($previous !== null) {
+				$uuid = self::idOf($previous);
+				$payload = array_merge($payload, array_intersect_key($previous, array_flip(['status', 'acknowledgementNote', 'acknowledgedBy'])));
+			}
+
+			$this->marker->runInternal(fn () => $this->gateway->save($payload, 'PayrollRunFinding', $uuid));
 		}
 
 		foreach ($acknowledged as $resolved) {
@@ -377,24 +372,6 @@ class PayrollRunCheckService {
 
 		return $acknowledged;
 	}//end clearOpenFindings()
-
-	/**
-	 * Save a finding; one found again keeps its acknowledgement and record.
-	 *
-	 * @param array<string, mixed>      $payload  The new finding.
-	 * @param array<string, mixed>|null $previous The acknowledged finding it matches, or null.
-	 *
-	 * @return void
-	 */
-	private function saveFinding(array $payload, ?array $previous): void {
-		$uuid = null;
-		if ($previous !== null) {
-			$uuid = self::idOf($previous);
-			$payload = array_merge($payload, array_intersect_key($previous, array_flip(['status', 'acknowledgementNote', 'acknowledgedBy'])));
-		}
-
-		$this->marker->runInternal(fn () => $this->gateway->save($payload, 'PayrollRunFinding', $uuid));
-	}//end saveFinding()
 
 	/**
 	 * A finding.
