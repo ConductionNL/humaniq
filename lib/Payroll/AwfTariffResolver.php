@@ -127,20 +127,47 @@ final class AwfTariffResolver {
 	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-101
 	 */
 	public static function resolve(array $contract, ?string $dateOfBirth, string $period, ?float $paidHours, bool $endsEarly=false): array {
-		$basis  = self::explicitOrContractBasis($contract);
-		$tariff = ($basis === self::BASIS_FLEX || ($basis === self::BASIS_EXPLICIT && trim((string)($contract['awfTariff'] ?? '')) === 'high')) ? 'high' : 'low';
-		if ($tariff === 'low' && $endsEarly === true && in_array($basis, self::REVIEWABLE_BASES, true) === true) {
-			$tariff = 'high';
-			$basis  = self::BASIS_EARLY_END;
+		$resolved = self::contractResolution($contract, $endsEarly);
+		if ($resolved['tariff'] === 'high' && self::youngWithinNorm(dateOfBirth: $dateOfBirth, period: $period, paidHours: $paidHours) === true) {
+			return ['tariff' => 'low', 'basis' => self::BASIS_YOUNG];
 		}
 
-		if ($tariff === 'high' && self::youngWithinNorm(dateOfBirth: $dateOfBirth, period: $period, paidHours: $paidHours) === true) {
-			return ['tariff' => 'low', 'basis' => self::BASIS_YOUNG];
+		return $resolved;
+
+	}//end resolve()
+
+	/**
+	 * The tariff and basis the contract alone gives, raised to high for a
+	 * reviewable low tariff on a contract that ends early.
+	 *
+	 * @param array<string, mixed> $contract  The covering contract.
+	 * @param bool                 $endsEarly Whether the employment ends within two months.
+	 *
+	 * @return array{tariff: string, basis: string}
+	 */
+	private static function contractResolution(array $contract, bool $endsEarly): array {
+		$basis  = self::explicitOrContractBasis($contract);
+		$tariff = self::basisTariff($basis, $contract);
+		if ($tariff === 'low' && $endsEarly === true && in_array($basis, self::REVIEWABLE_BASES, true) === true) {
+			return ['tariff' => 'high', 'basis' => self::BASIS_EARLY_END];
 		}
 
 		return ['tariff' => $tariff, 'basis' => $basis];
 
-	}//end resolve()
+	}//end contractResolution()
+
+	/**
+	 * The tariff a basis gives: high for a flex contract or an explicit high tariff, else low.
+	 *
+	 * @param string               $basis    The basis.
+	 * @param array<string, mixed> $contract The covering contract.
+	 *
+	 * @return string
+	 */
+	private static function basisTariff(string $basis, array $contract): string {
+		return ($basis === self::BASIS_FLEX || ($basis === self::BASIS_EXPLICIT && trim((string)($contract['awfTariff'] ?? '')) === 'high')) ? 'high' : 'low';
+
+	}//end basisTariff()
 
 	/**
 	 * The paid-hours norm of the period's return: 52 a month, 48 a four
@@ -170,7 +197,7 @@ final class AwfTariffResolver {
 	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-101
 	 */
 	public static function endsEarly(array $contract, array $contracts): bool {
-		$end   = self::date((string)($contract['endDate'] ?? ''));
+		$end   = PayrollDate::fromYmd((string)($contract['endDate'] ?? ''));
 		$start = self::employmentStart($contract, $contracts);
 		if ($end === null || $start === null) {
 			return false;
@@ -235,7 +262,7 @@ final class AwfTariffResolver {
 	 * @return bool
 	 */
 	private static function youngWithinNorm(?string $dateOfBirth, string $period, ?float $paidHours): bool {
-		$born  = self::date((string)$dateOfBirth);
+		$born  = PayrollDate::fromYmd((string)$dateOfBirth);
 		$first = self::periodStart($period);
 		if ($born === null || $first === null || $paidHours === null) {
 			return false;
@@ -260,11 +287,11 @@ final class AwfTariffResolver {
 	 */
 	private static function periodStart(string $period): ?DateTimeImmutable {
 		if (preg_match('/^(\d{4})-P(\d{2})$/', $period, $match) === 1) {
-			$year = self::date($match[1] . '-01-01');
+			$year = PayrollDate::fromYmd($match[1] . '-01-01');
 			return $year?->modify('+' . (((int)$match[2] - 1) * 28) . ' days');
 		}
 
-		return self::date($period . '-01');
+		return PayrollDate::fromYmd($period . '-01');
 
 	}//end periodStart()
 
@@ -278,14 +305,14 @@ final class AwfTariffResolver {
 	 * @return DateTimeImmutable|null
 	 */
 	private static function employmentStart(array $contract, array $contracts): ?DateTimeImmutable {
-		$start = self::date((string)($contract['startDate'] ?? ''));
+		$start = PayrollDate::fromYmd((string)($contract['startDate'] ?? ''));
 		$guard = count($contracts);
 		while ($start !== null && $guard-- > 0) {
 			$previous = null;
 			foreach ($contracts as $other) {
-				$otherEnd = self::date((string)($other['endDate'] ?? ''));
+				$otherEnd = PayrollDate::fromYmd((string)($other['endDate'] ?? ''));
 				if ($otherEnd !== null && $otherEnd->modify('+1 day')->format('Y-m-d') === $start->format('Y-m-d')) {
-					$previous = self::date((string)($other['startDate'] ?? ''));
+					$previous = PayrollDate::fromYmd((string)($other['startDate'] ?? ''));
 					break;
 				}
 			}
@@ -312,25 +339,4 @@ final class AwfTariffResolver {
 		return preg_match('/^\d{4}-P\d{2}$/', $period) === 1;
 
 	}//end isFourWeekly()
-
-	/**
-	 * A Y-m-d date (the first ten characters), or null.
-	 *
-	 * @param string $value The value.
-	 *
-	 * @return DateTimeImmutable|null
-	 */
-	private static function date(string $value): ?DateTimeImmutable {
-		$value = substr(trim($value), 0, 10);
-		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception) {
-			return null;
-		}
-
-	}//end date()
 }//end class
