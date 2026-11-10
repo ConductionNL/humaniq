@@ -99,14 +99,34 @@ interface IFlowNode {
 	/**
 	 * Do the work: items in, items out.
 	 *
-	 * @param array $items The input items.
-	 * @param array $config The step's authored configuration.
-	 * @param array $context Run-level metadata — NOT the data channel.
+	 * @param FlowNodeCall $call The input items, the step's authored configuration and
+	 *                           the run-level metadata (NOT the data channel).
 	 *
 	 * @return array The output items.
 	 */
-	public function execute(array $items, array $config, array $context): array;
+	public function execute(FlowNodeCall $call): array;
 }//end interface
+
+/**
+ * Test-stub mirror of OpenRegister's FlowNodeCall: what one node is called with.
+ */
+final class FlowNodeCall {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param array $items   The input items.
+	 * @param array $config  The step's authored configuration.
+	 * @param array $context Run-level metadata.
+	 */
+	public function __construct(
+		public readonly array $items=[],
+		public readonly array $config=[],
+		public readonly array $context=[],
+	) {
+
+	}//end __construct()
+}//end class
 
 /**
  * Test-stub mirror of OpenRegister's FlowNodeRegistry registration surface
