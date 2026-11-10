@@ -643,7 +643,7 @@ class LeaveCalendarService {
 
 		return $existingDtstart === $event->dtstart
 			&& $existingDtend === $event->dtendExclusive
-			&& $this->unescapeText($existingSummary) === $event->summary;
+			&& IcsText::unescape($existingSummary) === $event->summary;
 
 	}//end veventUnchanged()
 
@@ -673,7 +673,7 @@ class LeaveCalendarService {
 			'DTSTAMP:' . $dtstamp,
 			'DTSTART;VALUE=DATE:' . $event->dtstart,
 			'DTEND;VALUE=DATE:' . $event->dtendExclusive,
-			'SUMMARY:' . $this->escapeText($event->summary),
+			'SUMMARY:' . IcsText::escape($event->summary),
 			'TRANSP:TRANSPARENT',
 			'SEQUENCE:0',
 			'END:VEVENT',
@@ -682,35 +682,6 @@ class LeaveCalendarService {
 
 		return implode("\r\n", $lines) . "\r\n";
 	}//end renderIcs()
-
-	/**
-	 * Escape a TEXT property value per RFC 5545 §3.3.11 (backslash,
-	 * semicolon, comma, newline) — employee names are data, not trusted
-	 * literal text.
-	 *
-	 * @param string $value The raw text.
-	 *
-	 * @return string
-	 */
-	private function escapeText(string $value): string {
-		$value = str_replace('\\', '\\\\', $value);
-		$value = str_replace([';', ',', "\n"], ['\\;', '\\,', '\\n'], $value);
-		return $value;
-	}//end escapeText()
-
-	/**
-	 * Reverse `escapeText()`, for comparing a stored SUMMARY back to the
-	 * desired unescaped value in `veventUnchanged()`.
-	 *
-	 * @param string $value The escaped text.
-	 *
-	 * @return string
-	 */
-	private function unescapeText(string $value): string {
-		$value = str_replace(['\\n', '\\,', '\\;'], ["\n", ',', ';'], $value);
-		$value = str_replace('\\\\', '\\', $value);
-		return $value;
-	}//end unescapeText()
 
 	/**
 	 * Parse a `Y-m-d` date strictly: a value that only parses by rolling
