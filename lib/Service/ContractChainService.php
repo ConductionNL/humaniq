@@ -86,13 +86,7 @@ final class ContractChainService {
 	 */
 	public function chainFor(array $contracts, string $contractId): array {
 		$links = $this->links(contracts: $contracts);
-		$index = null;
-		foreach ($links as $at => $link) {
-			if ($link['id'] === $contractId) {
-				$index = $at;
-			}
-		}
-
+		$index = self::indexOf(links: $links, contractId: $contractId);
 		if ($index === null) {
 			return ['position' => 0, 'maxContracts' => self::MAX_CONTRACTS, 'contractIds' => [], 'startsOn' => null, 'monthsCounted' => 0, 'turnsPermanentOn' => null];
 		}
@@ -102,9 +96,39 @@ final class ContractChainService {
 			$first--;
 		}
 
-		$chain = array_slice($links, $first, $index - $first + 1);
+		return self::chainFigures(chain: array_slice($links, $first, $index - $first + 1));
+	}//end chainFor()
+
+	/**
+	 * Where the contract sits among the links; the last match wins, null when absent.
+	 *
+	 * @param array<int, array{id: string, start: DateTimeImmutable, end: DateTimeImmutable}> $links      The links, by start date.
+	 * @param string                                                                         $contractId The contract to place.
+	 *
+	 * @return int|null
+	 */
+	private static function indexOf(array $links, string $contractId): ?int {
+		$index = null;
+		foreach ($links as $at => $link) {
+			if ($link['id'] === $contractId) {
+				$index = $at;
+			}
+		}
+
+		return $index;
+	}//end indexOf()
+
+	/**
+	 * The figures of a chain ending in its last link: its length, start, the
+	 * months it counts and the day it turns permanent.
+	 *
+	 * @param array<int, array{id: string, start: DateTimeImmutable, end: DateTimeImmutable}> $chain The chain, by start date.
+	 *
+	 * @return array{position: int, maxContracts: int, contractIds: array<int, string>, startsOn: string, monthsCounted: int, turnsPermanentOn: string}
+	 */
+	private static function chainFigures(array $chain): array {
 		$startsOn = $chain[0]['start'];
-		$dayAfterEnd = $links[$index]['end']->modify('+1 day');
+		$dayAfterEnd = $chain[count($chain) - 1]['end']->modify('+1 day');
 		$passesMaxMonths = $startsOn->modify('+' . self::MAX_MONTHS . ' months');
 		$turnsPermanentOn = $passesMaxMonths;
 		if (count($chain) >= self::MAX_CONTRACTS && $dayAfterEnd < $passesMaxMonths) {
@@ -121,7 +145,7 @@ final class ContractChainService {
 			'monthsCounted'    => (($span->y * 12) + $span->m),
 			'turnsPermanentOn' => $turnsPermanentOn->format('Y-m-d'),
 		];
-	}//end chainFor()
+	}//end chainFigures()
 
 	/**
 	 * The fixed-term links among the contracts, ordered by start date.
