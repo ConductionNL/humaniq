@@ -219,6 +219,28 @@ class RetentionExpiryTest extends TestCase {
 	}//end testTheWalkReleasesAndMarksWhenSwitchedOn()
 
 	/**
+	 * The whole summary of the walk, switched off and on.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeSummaryOfEachWalk(): void {
+		$got = [];
+		foreach ([false, true] as $enabled) {
+			[$service] = $this->walk(enabled: $enabled);
+			$got[] = $service->run(new DateTimeImmutable(self::TODAY));
+		}
+
+		$this->assertSame(
+			[
+				['enabled' => false, 'released' => 0, 'marked' => 0, 'wouldRelease' => 1, 'wouldMark' => 1],
+				['enabled' => true, 'released' => 1, 'marked' => 1, 'wouldRelease' => 0, 'wouldMark' => 0],
+			],
+			$got
+		);
+
+	}//end testTheWholeSummaryOfEachWalk()
+
+	/**
 	 * The daily job is registered and hands the run to the service.
 	 *
 	 * @return void
