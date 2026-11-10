@@ -86,6 +86,22 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 	private const LIMIT = 10000;
 
 	/**
+	 * The refusal when the humaniq register is not on this instance.
+	 *
+	 * @var string
+	 */
+	private const REGISTER_ABSENT = 'Het humaniq-register is niet gevonden op deze instance, dus het verlofsaldo kan niet worden '
+		. 'gecontroleerd; goedkeuring is geweigerd. Voer de humaniq-reparatiestap uit of stel het '
+		. 'register in bij de humaniq-instellingen.';
+
+	/**
+	 * The refusal when no balance matches the transaction.
+	 *
+	 * @var string
+	 */
+	private const BALANCE_NOT_FOUND = 'Er is geen verlofsaldo gevonden voor deze medewerker/jaar/verloftype; goedkeuring is geweigerd.';
+
+	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppConfig $appConfig App config for the register slug.
 	 */
@@ -125,6 +141,17 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 			return GuardResult::allow();
 		}
 
+		return $this->sellDecision($object);
+	}//end check()
+
+	/**
+	 * The decision on a sell: denied without a register or a balance, else on the bovenwettelijk hours.
+	 *
+	 * @param array<string, mixed> $object The LeaveTransaction.
+	 *
+	 * @return GuardResult
+	 */
+	private function sellDecision(array $object): GuardResult {
 		// An absent register is not "there is no balance". It is this instance
 		// being unable to say where balances live, and a sell is denied rather
 		// than approved on a guess — fail-CLOSED, like every other branch here,
@@ -133,20 +160,27 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 		// hunting a row that exists.
 		$register = $this->registerSlug();
 		if ($register === null) {
-			return GuardResult::deny(
-				'Het humaniq-register is niet gevonden op deze instance, dus het verlofsaldo kan niet worden '
-				. 'gecontroleerd; goedkeuring is geweigerd. Voer de humaniq-reparatiestap uit of stel het '
-				. 'register in bij de humaniq-instellingen.'
-			);
+			return GuardResult::deny(self::REGISTER_ABSENT);
 		}
 
 		$balance = $this->resolveBalance($object, $register);
 		if ($balance === null) {
-			return GuardResult::deny(
-				'Er is geen verlofsaldo gevonden voor deze medewerker/jaar/verloftype; goedkeuring is geweigerd.'
-			);
+			return GuardResult::deny(self::BALANCE_NOT_FOUND);
 		}
 
+		return self::sufficientHours($object, $balance);
+
+	}//end sellDecision()
+
+	/**
+	 * Allow the sell when the balance holds at least the hours sold, else deny naming both.
+	 *
+	 * @param array<string, mixed> $object  The LeaveTransaction.
+	 * @param array<string, mixed> $balance The matching LeaveBalance.
+	 *
+	 * @return GuardResult
+	 */
+	private static function sufficientHours(array $object, array $balance): GuardResult {
 		$hours = (float)($object['hours'] ?? 0);
 		$bovenwettelijkHours = (float)($balance['bovenwettelijkHours'] ?? 0);
 		if ($bovenwettelijkHours < $hours) {
@@ -158,7 +192,8 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 		}
 
 		return GuardResult::allow();
-	}//end check()
+
+	}//end sufficientHours()
 
 	/**
 	 * Resolve the LeaveBalance matching this transaction's
