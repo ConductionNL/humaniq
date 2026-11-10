@@ -29,7 +29,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Payroll\Loonaangifte;
 
-use OCA\Humaniq\Payroll\CalculationResult;
 
 /**
  * One income relationship: its elements, its amounts in cents, its findings.
@@ -56,18 +55,14 @@ final class IncomeRelationshipLine {
 	/**
 	 * Make the line.
 	 *
-	 * @param array<string, mixed>        $employee The Employee (with its id).
-	 * @param array<string, mixed>        $contract The covering EmploymentContract, or empty.
-	 * @param array<string, mixed>        $payslip  The run's Payslip.
-	 * @param CalculationResult|null      $result   The engine's recalculation, or null when it failed.
-	 * @param array{0: string, 1: string} $period   The declaration period's first and last day.
+	 * @param LineFacts $facts The Employee (with its id), the covering contract, the run's payslip, the engine's recalculation and the declaration period.
 	 *
 	 * @return array{employeeId: string, tree: array<string, mixed>, cents: array<string, int>, findings: list<array{kind: string, severity: string, employeeId: string, element: string, problem: string}>}
 	 *
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
-	public static function make(array $employee, array $contract, array $payslip, ?CalculationResult $result, array $period): array {
-		$facts = new LineFacts($employee, $contract, $payslip, $result, $period);
+	public static function make(LineFacts $facts): array {
+		$employee = $facts->employee;
 		$code = PeriodPart::incomeCode($facts);
 		$cents = AmountsPart::cents($facts, $code);
 		$start = self::startDate($facts);

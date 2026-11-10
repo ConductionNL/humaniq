@@ -33,6 +33,7 @@ namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Payroll\Loonaangifte\IncomeRelationshipLine;
+use OCA\Humaniq\Payroll\Loonaangifte\LineFacts;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessage;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessageBuilder;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteYear;
@@ -265,7 +266,7 @@ class LoonaangifteMessageService {
 			$employeeId = (string)($slip['employeeId'] ?? '');
 			$employee = ($this->gateway->findObjectData($employeeId, 'Employee') ?? ['id' => $employeeId]);
 			$employee['id'] = $employeeId;
-			$lines[] = IncomeRelationshipLine::make($employee, $this->contractOf($employeeId, $period), $slip, $this->recalculator->recalculate($slip), $period);
+			$lines[] = IncomeRelationshipLine::make(new LineFacts($employee, $this->contractOf($employeeId, $period), $slip, $this->recalculator->recalculate($slip), $period));
 		}
 
 		return $lines;

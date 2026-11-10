@@ -29,6 +29,7 @@ use OCA\Humaniq\Payroll\InsuranceTariffs;
 use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\Loonaangifte\IncomeRelationshipLine;
+use OCA\Humaniq\Payroll\Loonaangifte\LineFacts;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessage;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessageBuilder;
 use OCA\Humaniq\Payroll\PayrollCalculator;
@@ -50,7 +51,7 @@ class IncomeRelationshipLineTest extends TestCase {
 	 */
 	public function testADgaIsReportedOnCode17(): void {
 		$snapshot = $this->snapshot(['verzekeringsplichtig' => false]);
-		$line = IncomeRelationshipLine::make($this->employee(['isDga' => true]), $this->contract(), $this->slip($snapshot), $this->calc($snapshot), self::JUNE);
+		$line = IncomeRelationshipLine::make(new LineFacts($this->employee(['isDga' => true]), $this->contract(), $this->slip($snapshot), $this->calc($snapshot), self::JUNE));
 		$period = $line['tree']['Inkomstenperiode'][0];
 
 		self::assertSame(['17', null, null, 'N', 'N', 'N'], [$period['SrtIV'], $period['CdAard'], $period['IndArbovOnbepTd'], $period['IndWAO'], $period['IndWW'], $period['IndZW']]);
@@ -67,7 +68,7 @@ class IncomeRelationshipLineTest extends TestCase {
 	 */
 	public function testTheRelationshipKinds(): void {
 		$snapshot = $this->snapshot();
-		$kind = fn (array $employee, array $contract): array => IncomeRelationshipLine::make($this->employee($employee), $this->contract($contract), $this->slip($snapshot), $this->calc($snapshot), self::JUNE);
+		$kind = fn (array $employee, array $contract): array => IncomeRelationshipLine::make(new LineFacts($this->employee($employee), $this->contract($contract), $this->slip($snapshot), $this->calc($snapshot), self::JUNE));
 
 		self::assertSame('83', $kind([], ['type' => 'bbl'])['tree']['Inkomstenperiode'][0]['CdAard']);
 		self::assertSame('11', $kind([], ['type' => 'agency'])['tree']['Inkomstenperiode'][0]['CdAard']);
@@ -90,7 +91,7 @@ class IncomeRelationshipLineTest extends TestCase {
 	public function testCodesAndAmountsFromThePayslip(): void {
 		$snapshot = $this->snapshot(['taxTableColor' => 'groen']);
 		$slip = array_merge($this->slip($snapshot), ['zvwMode' => 'inhouding', 'period' => '2026-P06', 'hoursPaid' => 151.5, 'retroAdjustment' => -12.5]);
-		$line = IncomeRelationshipLine::make($this->employee(['grossMonthlySalary' => null]), $this->contract(['hourlyWage' => 20, 'hoursPerWeek' => 36.5]), $slip, $this->calc($snapshot), self::JUNE);
+		$line = IncomeRelationshipLine::make(new LineFacts($this->employee(['grossMonthlySalary' => null]), $this->contract(['hourlyWage' => 20, 'hoursPerWeek' => 36.5]), $slip, $this->calc($snapshot), self::JUNE));
 		$tree = $line['tree'];
 
 		self::assertSame(['M', '024'], [$tree['Inkomstenperiode'][0]['CdZvw'], $tree['Inkomstenperiode'][0]['LbTab']]);
@@ -108,7 +109,7 @@ class IncomeRelationshipLineTest extends TestCase {
 	public function testThePersonFindings(): void {
 		$snapshot = $this->snapshot();
 		$employee = ['bsn' => '123456789', 'lastName' => '', 'dateOfBirth' => '', 'startDate' => '', 'postcode' => '0123 ab'];
-		$line = IncomeRelationshipLine::make($this->employee($employee), $this->contract(), $this->slip($snapshot), $this->calc($snapshot), self::JUNE);
+		$line = IncomeRelationshipLine::make(new LineFacts($this->employee($employee), $this->contract(), $this->slip($snapshot), $this->calc($snapshot), self::JUNE));
 		$elements = array_column($line['findings'], 'element');
 		sort($elements);
 
@@ -125,13 +126,13 @@ class IncomeRelationshipLineTest extends TestCase {
 	 */
 	public function testReproductionAndEndDates(): void {
 		$snapshot = $this->snapshot();
-		$line = IncomeRelationshipLine::make($this->employee(), $this->contract(), $this->slip([]), null, self::JUNE);
+		$line = IncomeRelationshipLine::make(new LineFacts($this->employee(), $this->contract(), $this->slip([]), null, self::JUNE));
 		self::assertSame('payslip-not-reproducible', $line['findings'][0]['kind']);
 
-		$later = IncomeRelationshipLine::make($this->employee(['endDate' => '2026-07-31']), $this->contract(), $this->slip($snapshot), $this->calc($snapshot), self::JUNE);
+		$later = IncomeRelationshipLine::make(new LineFacts($this->employee(['endDate' => '2026-07-31']), $this->contract(), $this->slip($snapshot), $this->calc($snapshot), self::JUNE));
 		self::assertSame([null, null], [$later['tree']['DatEind'], $later['tree']['CdRdnEindArbov']]);
 
-		$unknown = IncomeRelationshipLine::make($this->employee(['endDate' => '2026-06-15', 'endReason' => '77']), $this->contract(), $this->slip($snapshot), $this->calc($snapshot), self::JUNE);
+		$unknown = IncomeRelationshipLine::make(new LineFacts($this->employee(['endDate' => '2026-06-15', 'endReason' => '77']), $this->contract(), $this->slip($snapshot), $this->calc($snapshot), self::JUNE));
 		self::assertSame('CdRdnEindArbov', $unknown['findings'][0]['element']);
 	}//end testReproductionAndEndDates()
 
