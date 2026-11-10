@@ -80,72 +80,40 @@ class ForwardCapacityService {
 		DateTimeImmutable $to,
 		array $sources,
 	): array {
-		$free = [];
-		foreach ($this->availability->availability(employeeIds: $employeeIds, from: $from, to: $to, sources: $sources) as $row) {
-			$free[(string)$row['employeeId']] = $row;
-		}
+		$free = self::byEmployee($this->availability->availability(employeeIds: $employeeIds, from: $from, to: $to, sources: $sources));
+		$patterns = ($sources['workingPatterns'] ?? []);
+		$tally = new CapacityTally();
 
 		$employees = [];
-		$plannedTotal = 0.0;
-		$contractedTotal = 0.0;
-		$withoutContract = 0;
-
 		foreach (array_values(array_unique(array_map('strval', $employeeIds))) as $employeeId) {
-			$row = ($free[$employeeId] ?? null);
-			$contracted = ($row['contractedHours'] ?? 0.0);
-			$planned = ($row['committedHours'] ?? 0.0);
-
-			$hasPattern = ($this->workingHours->patternInForce(
-				employeeId: $employeeId,
-				date: $from,
-				patterns: ($sources['workingPatterns'] ?? [])
-			) !== null);
-
-			if ($hasPattern === false) {
-				// Said, not guessed.
-				++$withoutContract;
-				$employees[] = [
-					'employeeId' => $employeeId,
-					'plannedHours' => round(num: (float)$planned, precision: 2),
-					'contractedHours' => null,
-					'utilisationPercentage' => null,
-					'hasContractedHours' => false,
-				];
-				continue;
-			}
-
-			$plannedTotal += (float)$planned;
-			$contractedTotal += (float)$contracted;
-
-			$percentage = null;
-			if ((float)$contracted > 0.0) {
-				$percentage = round(num: (((float)$planned / (float)$contracted) * 100.0), precision: 1);
-			}
-
-			$employees[] = [
-				'employeeId' => $employeeId,
-				'plannedHours' => round(num: (float)$planned, precision: 2),
-				'contractedHours' => round(num: (float)$contracted, precision: 2),
-				'utilisationPercentage' => $percentage,
-				'hasContractedHours' => true,
-			];
-		}
-
-		$totalPercentage = null;
-		if ($contractedTotal > 0.0) {
-			$totalPercentage = round(num: (($plannedTotal / $contractedTotal) * 100.0), precision: 1);
+			$hasPattern = ($this->workingHours->patternInForce(employeeId: $employeeId, date: $from, patterns: $patterns) !== null);
+			$employees[] = ($hasPattern === true)
+				? $tally->withContract($employeeId, ($free[$employeeId] ?? null))
+				: $tally->withoutContract($employeeId, ($free[$employeeId] ?? null));
 		}
 
 		return [
 			'from' => $from->format('Y-m-d'),
 			'to' => $to->format('Y-m-d'),
 			'employees' => $employees,
-			'totals' => [
-				'plannedHours' => round(num: $plannedTotal, precision: 2),
-				'contractedHours' => round(num: $contractedTotal, precision: 2),
-				'utilisationPercentage' => $totalPercentage,
-				'employeesWithoutContractedHours' => $withoutContract,
-			],
+			'totals' => $tally->totals(),
 		];
 	}//end capacity()
+
+	/**
+	 * Availability rows keyed by employee id (a later row wins).
+	 *
+	 * @param array<int, array<string, mixed>> $rows The availability rows.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function byEmployee(array $rows): array {
+		$byEmployee = [];
+		foreach ($rows as $row) {
+			$byEmployee[(string)$row['employeeId']] = $row;
+		}
+
+		return $byEmployee;
+
+	}//end byEmployee()
 }//end class
