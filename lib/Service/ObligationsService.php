@@ -209,7 +209,7 @@ class ObligationsService {
 				continue;
 			}
 
-			$endDate = $this->parseDate($contract['endDate'] ?? null);
+			$endDate = DateValues::parse($contract['endDate'] ?? null);
 			if ($endDate === null || $endDate < $today || $endDate > $windowEnd) {
 				continue;
 			}
@@ -241,7 +241,7 @@ class ObligationsService {
 		$rows = [];
 		[$today, $windowEnd] = $this->expiryWindow(self::BHV_EXPIRY_WINDOW_DAYS);
 		foreach ($this->loadFiltered('BhvCertificering', $administrationId) as $certificate) {
-			$validUntil = $this->parseDate($certificate['certificaatGeldigTot'] ?? null);
+			$validUntil = DateValues::parse($certificate['certificaatGeldigTot'] ?? null);
 			if ($validUntil === null || $validUntil < $today || $validUntil > $windowEnd) {
 				continue;
 			}
@@ -285,27 +285,6 @@ class ObligationsService {
 
 		return [$today, $end];
 	}//end expiryWindow()
-
-	/**
-	 * Parse a stored date value.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
-	 *
-	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
-	 */
-	private function parseDate(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception) {
-			return null;
-		}
-	}//end parseDate()
 
 	/**
 	 * Load all objects of a schema, filtered to those denormalized-scoped

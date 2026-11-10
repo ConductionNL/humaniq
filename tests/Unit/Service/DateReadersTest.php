@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\ContractChainService;
+use OCA\Humaniq\Service\DateValues;
 use OCA\Humaniq\Service\EmployeeTimeline;
 use OCA\Humaniq\Service\LeaveCoverageService;
 use OCA\Humaniq\Service\LeaveSubmissionConditionService;
@@ -33,7 +34,6 @@ use OCA\Humaniq\Service\TransitionPaymentCalculator;
 use OCA\Humaniq\Service\TrendPeriods;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use ReflectionMethod;
 
 /**
  * Every copy of a date reader reads the same inputs the same way.
@@ -96,18 +96,28 @@ class DateReadersTest extends TestCase {
 	}//end testReader()
 
 	/**
-	 * Read one value with a service's private (or public) reader.
+	 * Read one value the way the service now does: through DateValues, after
+	 * checking the service no longer carries a private copy (TrendPeriods keeps
+	 * its public parseDate() and delegates).
 	 *
 	 * @param class-string $class  The service.
-	 * @param string       $method Its reader.
+	 * @param string       $method Its former reader.
 	 * @param mixed        $value  The value.
 	 *
 	 * @return \DateTimeImmutable|null
 	 */
 	private function read(string $class, string $method, mixed $value): ?\DateTimeImmutable {
-		$instance = (new ReflectionClass($class))->newInstanceWithoutConstructor();
+		if ($class === TrendPeriods::class) {
+			return (new TrendPeriods())->parseDate($value);
+		}
 
-		return (new ReflectionMethod($instance, $method))->invoke($instance, $value);
+		$this->assertFalse((new ReflectionClass($class))->hasMethod($method), $class.' delegates '.$method.' to DateValues.');
+
+		return match ($class) {
+			EmployeeTimeline::class, ObligationsService::class => DateValues::parse($value),
+			LeaveCoverageService::class, LeaveSubmissionConditionService::class => DateValues::datePart($value),
+			default => is_string($value) === true ? DateValues::leadingDate($value) : null,
+		};
 
 	}//end read()
 }//end class
