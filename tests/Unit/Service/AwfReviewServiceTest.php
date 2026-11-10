@@ -232,6 +232,23 @@ class AwfReviewServiceTest extends TestCase {
 	}//end testALongerOrOpenContractIsNotReviewed()
 
 	/**
+	 * The whole outcome: an empty run, and a January run in which a payslip
+	 * is a target of both reviews and is settled only once.
+	 *
+	 * @return void
+	 */
+	public function testTheOutcomeOfAnEmptyAndADoubleTargetRun(): void {
+		self::assertSame(['earlyEnd' => 0, 'extraHours' => 0, 'skipped' => []], $this->service->review(period: '2027-01', runId: 'run-empty'));
+
+		$this->seedEmployee('emp-1', ['startDate' => '2026-01-01', 'endDate' => '2026-02-11', 'hoursPerWeek' => 24.0], ['2026-01' => 3000.0, '2026-02' => 1500.0], 147.33);
+
+		$outcome = $this->service->review(period: '2027-01', runId: 'run-2027-01');
+
+		self::assertSame(['earlyEnd' => 2, 'extraHours' => 0, 'skipped' => []], $outcome);
+		self::assertCount(2, $this->rowsOf('PayrollAdjustment'));
+	}//end testTheOutcomeOfAnEmptyAndADoubleTargetRun()
+
+	/**
 	 * Handboek 7.2.3: 24 contracted hours a week (104,00 a month, 13/3),
 	 * paid 34 a week (147,33 a month) over 2026: 41% above, so the first
 	 * run of 2027 reviews all twelve months at the high rate (EUR 2.000 a
