@@ -287,6 +287,67 @@ class OrgResolutionServiceTest extends TestCase {
 	}//end testMalformedIndexShapesResolveNothing()
 
 	/**
+	 * The whole answer of both resolutions for every shape of the
+	 * employee's placements: which units count, in which order, once.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeAnswerForEveryPlacementShape(): void {
+		$unitsById = [
+			'unit-a' => ['managerId' => 'm-a', 'costCenter' => 'CC-A'],
+			'unit-b' => ['managerId' => 'm-b', 'costCenter' => ' CC-B '],
+			'unit-c' => ['managerId' => 'm-a', 'costCenter' => 'CC-A'],
+			'unit-d' => 'not-a-unit',
+			'unit-e' => ['managerId' => 'm-e', 'costCenter' => ''],
+			'unit-f' => ['managerId' => 'm-f', 'costCenter' => 'CC-F'],
+		];
+		$employeesById = ['m-a' => ['nextcloudUserId' => 'mgr.a'], 'm-b' => ['nextcloudUserId' => 'mgr.b'], 'm-e' => ['nextcloudUserId' => 'mgr.e'], 'm-f' => ['nextcloudUserId' => 'mgr.f']];
+		$placements = [
+			'not-an-array',
+			['orgUnitId' => 'unit-f', 'endDate' => '2026-01-31'],
+			['orgUnitId' => 'unit-b', 'startDate' => '2026-01-01'],
+			['orgUnitId' => 'unit-x'],
+			['orgUnitId' => ' unit-a ', 'endDate' => '2026-12-31'],
+			['orgUnitId' => 'unit-c', 'startDate' => '2026-09-01'],
+			['orgUnitId' => 'unit-d'],
+			['orgUnitId' => '   '],
+			['orgUnitId' => 'unit-e', 'endDate' => 'gisteren'],
+			['orgUnitId' => 'unit-c'],
+			['orgUnitId' => 'unit-b', 'endDate' => '2026-02-01'],
+			['orgUnitId' => 'unit-e'],
+		];
+		$indexes = [
+			'placed' => ['emp-1' => $placements],
+			'unknown' => ['emp-2' => $placements],
+			'not-a-list' => ['emp-1' => 'nope'],
+		];
+		$got = [];
+		foreach ($indexes as $name => $index) {
+			foreach (['emp-1', ' emp-1 ', ''] as $employeeId) {
+				$got[$name . ':' . $employeeId] = [
+					$this->service->resolveManagerUserIds(employeeId: $employeeId, assignmentsByEmployeeId: $index, unitsById: $unitsById, employeesById: $employeesById, onDate: '2026-08-21'),
+					$this->service->resolveCostCenters(employeeId: $employeeId, assignmentsByEmployeeId: $index, unitsById: $unitsById, onDate: '2026-08-21'),
+				];
+			}
+		}
+
+		$this->assertSame(
+			[
+				'placed:emp-1' => [['mgr.b', 'mgr.a', 'mgr.e'], ['CC-B', 'CC-A']],
+				'placed: emp-1 ' => [['mgr.b', 'mgr.a', 'mgr.e'], ['CC-B', 'CC-A']],
+				'placed:' => [[], []],
+				'unknown:emp-1' => [[], []],
+				'unknown: emp-1 ' => [[], []],
+				'unknown:' => [[], []],
+				'not-a-list:emp-1' => [[], []],
+				'not-a-list: emp-1 ' => [[], []],
+				'not-a-list:' => [[], []],
+			],
+			$got
+		);
+	}//end testTheWholeAnswerForEveryPlacementShape()
+
+	/**
 	 * Sanne manages Consultancy and sits in it; Directie above is managed
 	 * by Pieter. Her manager is Pieter, never herself.
 	 *
