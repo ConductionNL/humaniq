@@ -64,6 +64,8 @@
                 <referencedClass name="OCA\OpenRegister\Notifications\Service\Notification\RecipientResolverInterface"/>
                 <referencedClass name="OCA\OpenRegister\Exception\FolderAccessDeniedException"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatingEvent"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectFindTarget"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectPatch"/>
                 <referencedClass name="OCA\OpenRegister\Service\Flow\IFlowNode"/>
                 <referencedClass name="OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent"/>
                 <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
