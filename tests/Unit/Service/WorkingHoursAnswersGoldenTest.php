@@ -21,7 +21,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Service\EmployeeWorkingTime;
 use OCA\Humaniq\Service\WorkingHoursService;
+use OCA\Humaniq\Service\WorkingTimeSources;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -66,12 +68,9 @@ class WorkingHoursAnswersGoldenTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function on(string $employeeId, string $date, ?array $dates): array {
-		return (new WorkingHoursService())->contractedHoursOn(
-			employeeId: $employeeId,
-			date: new DateTimeImmutable($date),
-			patterns: self::PATTERNS,
-			nonWorkingTimes: self::NON_WORKING,
-			nonWorkingDates: $dates
+		return (new WorkingHoursService())->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: $employeeId, sources: new WorkingTimeSources(workingPatterns: self::PATTERNS, nonWorkingTimes: self::NON_WORKING, nonWorkingDates: $dates)),
+			date: new DateTimeImmutable($date)
 		);
 	}//end on()
 
@@ -85,13 +84,9 @@ class WorkingHoursAnswersGoldenTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function over(string $from, string $to, ?array $dates): array {
-		return (new WorkingHoursService())->contractedHoursOver(
-			employeeId: 'emp-1',
-			from: new DateTimeImmutable($from),
-			to: new DateTimeImmutable($to),
-			patterns: self::PATTERNS,
-			nonWorkingTimes: self::NON_WORKING,
-			nonWorkingDates: $dates
+		return (new WorkingHoursService())->hoursOver(
+			time: new EmployeeWorkingTime(employeeId: 'emp-1', sources: new WorkingTimeSources(workingPatterns: self::PATTERNS, nonWorkingTimes: self::NON_WORKING, nonWorkingDates: $dates)),
+			range: [new DateTimeImmutable($from), new DateTimeImmutable($to)]
 		);
 	}//end over()
 

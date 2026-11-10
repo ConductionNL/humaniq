@@ -31,7 +31,9 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use OCA\Humaniq\Service\OverlappingWorkingPatternException;
+use OCA\Humaniq\Service\EmployeeWorkingTime;
 use OCA\Humaniq\Service\WorkingHoursService;
+use OCA\Humaniq\Service\WorkingTimeSources;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -86,19 +88,13 @@ class WorkingHoursServiceTest extends TestCase {
 		$patterns = [$this->threeDayPattern()];
 
 		// 2026-06-01 is a Monday, 2026-06-04 a Thursday.
-		$monday = $this->service->contractedHoursOn(
-			employeeId: 'emp-fatima',
-			date: new DateTimeImmutable('2026-06-01'),
-			patterns: $patterns,
-			nonWorkingTimes: [],
-			nonWorkingDates: []
+		$monday = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: $patterns, nonWorkingTimes: [], nonWorkingDates: [])),
+			date: new DateTimeImmutable('2026-06-01')
 		);
-		$thursday = $this->service->contractedHoursOn(
-			employeeId: 'emp-fatima',
-			date: new DateTimeImmutable('2026-06-04'),
-			patterns: $patterns,
-			nonWorkingTimes: [],
-			nonWorkingDates: []
+		$thursday = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: $patterns, nonWorkingTimes: [], nonWorkingDates: [])),
+			date: new DateTimeImmutable('2026-06-04')
 		);
 
 		$this->assertSame(8.0, $monday['hours'], 'Monday is a contracted day and must answer its hours');
@@ -113,12 +109,9 @@ class WorkingHoursServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testNoPatternAnswersZeroAndSaysSo(): void {
-		$answer = $this->service->contractedHoursOn(
-			employeeId: 'emp-unknown',
-			date: new DateTimeImmutable('2026-06-01'),
-			patterns: [$this->threeDayPattern()],
-			nonWorkingTimes: [],
-			nonWorkingDates: []
+		$answer = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-unknown', sources: new WorkingTimeSources(workingPatterns: [$this->threeDayPattern()], nonWorkingTimes: [], nonWorkingDates: [])),
+			date: new DateTimeImmutable('2026-06-01')
 		);
 
 		$this->assertSame(0.0, $answer['hours']);
@@ -152,19 +145,13 @@ class WorkingHoursServiceTest extends TestCase {
 		];
 
 		// 2026-06-25 and 2026-07-02 are both Thursdays.
-		$beforeTheChange = $this->service->contractedHoursOn(
-			employeeId: 'emp-jansen',
-			date: new DateTimeImmutable('2026-06-25'),
-			patterns: [$june, $july],
-			nonWorkingTimes: [],
-			nonWorkingDates: []
+		$beforeTheChange = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-jansen', sources: new WorkingTimeSources(workingPatterns: [$june, $july], nonWorkingTimes: [], nonWorkingDates: [])),
+			date: new DateTimeImmutable('2026-06-25')
 		);
-		$afterTheChange = $this->service->contractedHoursOn(
-			employeeId: 'emp-jansen',
-			date: new DateTimeImmutable('2026-07-02'),
-			patterns: [$june, $july],
-			nonWorkingTimes: [],
-			nonWorkingDates: []
+		$afterTheChange = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-jansen', sources: new WorkingTimeSources(workingPatterns: [$june, $july], nonWorkingTimes: [], nonWorkingDates: [])),
+			date: new DateTimeImmutable('2026-07-02')
 		);
 
 		$this->assertSame(0.0, $beforeTheChange['hours'], 'June must still answer the 24-hour contract');
@@ -234,19 +221,13 @@ class WorkingHoursServiceTest extends TestCase {
 		];
 
 		// 2026-06-03 is a Wednesday, 2026-06-02 a Tuesday.
-		$wednesday = $this->service->contractedHoursOn(
-			employeeId: 'emp-fatima',
-			date: new DateTimeImmutable('2026-06-03'),
-			patterns: [$this->threeDayPattern()],
-			nonWorkingTimes: [$nonWorking],
-			nonWorkingDates: []
+		$wednesday = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: [$this->threeDayPattern()], nonWorkingTimes: [$nonWorking], nonWorkingDates: [])),
+			date: new DateTimeImmutable('2026-06-03')
 		);
-		$tuesday = $this->service->contractedHoursOn(
-			employeeId: 'emp-fatima',
-			date: new DateTimeImmutable('2026-06-02'),
-			patterns: [$this->threeDayPattern()],
-			nonWorkingTimes: [$nonWorking],
-			nonWorkingDates: []
+		$tuesday = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: [$this->threeDayPattern()], nonWorkingTimes: [$nonWorking], nonWorkingDates: [])),
+			date: new DateTimeImmutable('2026-06-02')
 		);
 
 		$this->assertSame(0.0, $wednesday['hours']);
@@ -269,19 +250,13 @@ class WorkingHoursServiceTest extends TestCase {
 			'hoursNotWorked' => 4,
 		];
 
-		$inside = $this->service->contractedHoursOn(
-			employeeId: 'emp-fatima',
-			date: new DateTimeImmutable('2026-06-02'),
-			patterns: [$this->threeDayPattern()],
-			nonWorkingTimes: [$reintegration],
-			nonWorkingDates: []
+		$inside = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: [$this->threeDayPattern()], nonWorkingTimes: [$reintegration], nonWorkingDates: [])),
+			date: new DateTimeImmutable('2026-06-02')
 		);
-		$outside = $this->service->contractedHoursOn(
-			employeeId: 'emp-fatima',
-			date: new DateTimeImmutable('2026-06-09'),
-			patterns: [$this->threeDayPattern()],
-			nonWorkingTimes: [$reintegration],
-			nonWorkingDates: []
+		$outside = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: [$this->threeDayPattern()], nonWorkingTimes: [$reintegration], nonWorkingDates: [])),
+			date: new DateTimeImmutable('2026-06-09')
 		);
 
 		$this->assertSame(4.0, $inside['hours'], 'Half the contracted day is worked');
@@ -295,18 +270,15 @@ class WorkingHoursServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnotherPersonsNonWorkingTimeIsIgnored(): void {
-		$answer = $this->service->contractedHoursOn(
-			employeeId: 'emp-fatima',
-			date: new DateTimeImmutable('2026-06-01'),
-			patterns: [$this->threeDayPattern()],
-			nonWorkingTimes: [
+		$answer = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: [$this->threeDayPattern()], nonWorkingTimes: [
 				[
 					'employeeId' => 'emp-jansen',
 					'reason' => 'vaste-vrije-dag',
 					'recurringWeekday' => 'monday',
 				],
-			],
-			nonWorkingDates: []
+			], nonWorkingDates: [])),
+			date: new DateTimeImmutable('2026-06-01')
 		);
 
 		$this->assertSame(8.0, $answer['hours']);
@@ -320,12 +292,9 @@ class WorkingHoursServiceTest extends TestCase {
 	 */
 	public function testAFeestdagOnAContractedDayAnswersZero(): void {
 		// 2026-05-25 is a Monday (second Whitsun).
-		$answer = $this->service->contractedHoursOn(
-			employeeId: 'emp-fatima',
-			date: new DateTimeImmutable('2026-05-25'),
-			patterns: [$this->threeDayPattern()],
-			nonWorkingTimes: [],
-			nonWorkingDates: ['2026-05-25']
+		$answer = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: [$this->threeDayPattern()], nonWorkingTimes: [], nonWorkingDates: ['2026-05-25'])),
+			date: new DateTimeImmutable('2026-05-25')
 		);
 
 		$this->assertSame(0.0, $answer['hours']);
@@ -343,21 +312,13 @@ class WorkingHoursServiceTest extends TestCase {
 	public function testARangeSumsWhatThePatternAndCalendarLeave(): void {
 		$week = [new DateTimeImmutable('2026-05-25'), new DateTimeImmutable('2026-05-31')];
 
-		$control = $this->service->contractedHoursOver(
-			employeeId: 'emp-fatima',
-			from: $week[0],
-			to: $week[1],
-			patterns: [$this->threeDayPattern()],
-			nonWorkingTimes: [],
-			nonWorkingDates: []
+		$control = $this->service->hoursOver(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: [$this->threeDayPattern()], nonWorkingTimes: [], nonWorkingDates: [])),
+			range: [$week[0], $week[1]]
 		);
-		$withFeestdag = $this->service->contractedHoursOver(
-			employeeId: 'emp-fatima',
-			from: $week[0],
-			to: $week[1],
-			patterns: [$this->threeDayPattern()],
-			nonWorkingTimes: [],
-			nonWorkingDates: ['2026-05-25']
+		$withFeestdag = $this->service->hoursOver(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: [$this->threeDayPattern()], nonWorkingTimes: [], nonWorkingDates: ['2026-05-25'])),
+			range: [$week[0], $week[1]]
 		);
 
 		$this->assertSame(24.0, $control['hours'], 'The control: a full contracted week');
@@ -373,20 +334,13 @@ class WorkingHoursServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnAnswerWithoutACalendarIsMarkedPatternOnly(): void {
-		$answer = $this->service->contractedHoursOn(
-			employeeId: 'emp-fatima',
-			date: new DateTimeImmutable('2026-05-25'),
-			patterns: [$this->threeDayPattern()],
-			nonWorkingTimes: [],
-			nonWorkingDates: null
+		$answer = $this->service->hoursOn(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: [$this->threeDayPattern()], nonWorkingTimes: [], nonWorkingDates: null)),
+			date: new DateTimeImmutable('2026-05-25')
 		);
-		$range = $this->service->contractedHoursOver(
-			employeeId: 'emp-fatima',
-			from: new DateTimeImmutable('2026-05-25'),
-			to: new DateTimeImmutable('2026-05-31'),
-			patterns: [$this->threeDayPattern()],
-			nonWorkingTimes: [],
-			nonWorkingDates: null
+		$range = $this->service->hoursOver(
+			time: new EmployeeWorkingTime(employeeId: 'emp-fatima', sources: new WorkingTimeSources(workingPatterns: [$this->threeDayPattern()], nonWorkingTimes: [], nonWorkingDates: null)),
+			range: [new DateTimeImmutable('2026-05-25'), new DateTimeImmutable('2026-05-31')]
 		);
 
 		$this->assertTrue($answer['patternOnly'], 'No calendar means the answer must say so');
