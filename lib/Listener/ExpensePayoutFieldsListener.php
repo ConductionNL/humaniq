@@ -135,18 +135,11 @@ class ExpensePayoutFieldsListener implements IEventListener {
 	 * @spec openspec/changes/approved-claim-keeps-its-amounts/specs/humaniq-expenses/spec.md#Requirement:-An-approved-expense-claim-SHALL-keep-the-amounts-it-was-approved-for
 	 */
 	public function handle(Event $event): void {
-		if ($this->marker->isInternal() === true) {
+		if ((new SchemaWriteFilter($this->gateway, $this->marker))->judges($event, self::SLUG) === false) {
 			return;
 		}
 
-		if (($event instanceof ObjectCreatingEvent) === false && ($event instanceof ObjectUpdatingEvent) === false) {
-			return;
-		}
-
-		$entity = ($event instanceof ObjectCreatingEvent) ? $event->getObject() : $event->getNewObject();
-		if (strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::SLUG) {
-			return;
-		}
+		$entity = SchemaWriteFilter::pendingObject($event);
 
 		if ($event instanceof ObjectCreatingEvent) {
 			$this->onCreate(event: $event, claim: ($entity->getObject() ?? []));
