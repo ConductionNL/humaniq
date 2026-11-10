@@ -33,6 +33,7 @@ use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\ThirdPartyPaymentServices;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -143,7 +144,10 @@ class ThirdPartyReportController extends Controller {
 		}
 
 		try {
-			$report = $this->objects()->find(id: $reportId, register: $this->settings->getRegisterSlug(), schema: 'ThirdPartyReport');
+			$report = $this->objects()->find(
+				id: $reportId,
+				options: new ObjectFindOptions(register: $this->settings->getRegisterSlug(), schema: 'ThirdPartyReport')
+			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('ThirdPartyReportController: a report lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			$report = null;

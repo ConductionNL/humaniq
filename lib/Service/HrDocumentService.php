@@ -77,6 +77,7 @@ namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\FleetAppId;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -874,7 +875,12 @@ class HrDocumentService {
 	 */
 	private function findEntity(string $schema, string $id): mixed {
 		try {
-			return $this->objectService()->find(id: $id, register: $this->register(), schema: $schema, _rbac: false, _multitenancy: false);
+			return $this->objectService()->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $this->register(), schema: $schema),
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (\Throwable $e) {
 			$this->logger->debug('HrDocumentService: kon ' . $schema . ' ' . $id . ' niet opnieuw ophalen als entity: ' . $e->getMessage());
 			return null;

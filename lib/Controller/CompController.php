@@ -39,6 +39,7 @@ use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\CompAdjustmentService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -143,8 +144,7 @@ class CompController extends Controller {
 		try {
 			$adjustment = $this->objectService()->find(
 				id: $adjustmentId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'CompAdjustment'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'CompAdjustment')
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('CompController: a comp adjustment lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);

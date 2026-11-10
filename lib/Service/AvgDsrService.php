@@ -65,6 +65,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -142,8 +143,7 @@ class AvgDsrService {
 		try {
 			$entity = $this->objectService()->find(
 				id: $employeeId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Employee'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Employee')
 			);
 		} catch (\Throwable $e) {
 			$this->logger->info('AvgDsrService: werknemer ' . $employeeId . ' kon niet worden opgehaald: ' . $e->getMessage());

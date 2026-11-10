@@ -38,6 +38,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -225,8 +226,7 @@ class TimesheetAggregationService {
 		try {
 			$entity = $this->objects()->find(
 				id: $timesheetId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Timesheet',
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Timesheet'),
 				_rbac: false,
 				_multitenancy: false
 			);

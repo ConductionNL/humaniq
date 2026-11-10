@@ -33,6 +33,7 @@ use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Controller\DocumentController;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
 use OCP\IUser;
@@ -82,12 +83,12 @@ class DocumentControllerTest extends TestCase {
 
 			/**
 			 * @param string      $id       The object id.
-			 * @param string|null $register The register slug.
-			 * @param string|null $schema   The schema.
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$schema = $options?->schema;
 				$this->finds[] = ['id' => $id, 'schema' => $schema];
 				return $this->row;
 			}//end find()

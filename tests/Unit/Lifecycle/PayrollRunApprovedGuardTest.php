@@ -29,6 +29,7 @@ namespace OCA\Humaniq\Tests\Unit\Lifecycle;
 
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Tests\Unit\Support\FakeSlugResolver;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -63,12 +64,11 @@ class PayrollRunApprovedGuardTest extends TestCase {
 
 			/**
 			 * @param string $id Object id.
-			 * @param string $register Register slug.
-			 * @param string $schema Schema name.
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
 				return $this->runResult;
 			}//end find()
 
@@ -95,14 +95,13 @@ class PayrollRunApprovedGuardTest extends TestCase {
 
 			/**
 			 * @param string $id Object id.
-			 * @param string $register Register slug.
-			 * @param string $schema Schema name.
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 *
 			 * @return mixed
 			 *
 			 * @throws \RuntimeException Always.
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
 				throw new \RuntimeException('register unavailable');
 			}//end find()
 
@@ -264,12 +263,12 @@ class PayrollRunApprovedGuardTest extends TestCase {
 
 			/**
 			 * @param string $id Object id.
-			 * @param string $register Register slug.
-			 * @param string $schema Schema name.
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = (string)($options?->register ?? '');
 				$this->seen->register = $register;
 				return ['status' => 'approved'];
 			}//end find()

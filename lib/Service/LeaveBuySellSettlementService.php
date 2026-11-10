@@ -62,6 +62,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -274,7 +275,7 @@ class LeaveBuySellSettlementService {
 	 */
 	private function findById(string $schema, string $id): ?array {
 		try {
-			$row = $this->objectService()->find(id: $id, register: $this->register(), schema: $schema);
+			$row = $this->objectService()->find(id: $id, options: new ObjectFindOptions(register: $this->register(), schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->info('LeaveBuySellSettlementService: kon ' . $schema . ' ' . $id . ' niet laden: ' . $e->getMessage());
 			return null;

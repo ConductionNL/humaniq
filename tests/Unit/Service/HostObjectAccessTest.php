@@ -27,6 +27,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\HostObjectAccess;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -59,16 +60,15 @@ class HostObjectAccessTest extends TestCase {
 			 * Mirror of ObjectService::find().
 			 *
 			 * @param int|string $id            The id.
-			 * @param array|null $_extend       Ignored.
-			 * @param bool       $files         Ignored.
-			 * @param mixed      $register      The register.
-			 * @param mixed      $schema        The schema.
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 * @param bool       $_rbac         Whether the caller's rules apply.
 			 * @param bool       $_multitenancy Whether tenancy applies.
 			 *
 			 * @return object|null A found object, or null.
 			 */
-			public function find(int|string $id, ?array $_extend = [], bool $files = false, mixed $register = null, mixed $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+			public function find(int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->calls[] = ['id' => $id, 'register' => $register, 'schema' => $schema, 'rbac' => $_rbac, 'multitenancy' => $_multitenancy];
 				if ($this->throws === true) {
 					throw new RuntimeException('no access');

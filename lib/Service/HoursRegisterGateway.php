@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -106,8 +107,7 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 		try {
 			$entity = $this->objects()->find(
 				id: $uuid,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: $schema,
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: $schema),
 				_rbac: false,
 				_multitenancy: false
 			);

@@ -49,6 +49,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\AvgDsrService;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -439,12 +440,11 @@ class AvgDsrServiceTest extends TestCase {
 
 			/**
 			 * @param string $id Object id.
-			 * @param string|null $register Register slug (unused by the fake).
-			 * @param string|null $schema Schema name (unused by the fake).
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 *
 			 * @return object|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): ?object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
 				return $this->entitiesById[$id] ?? null;
 			}//end find()
 

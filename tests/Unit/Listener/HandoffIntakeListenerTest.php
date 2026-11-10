@@ -33,6 +33,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -87,7 +88,7 @@ class HandoffIntakeListenerTest extends TestCase {
 	public function testReceivingRunsTheIntakeCheck(): void {
 		$this->listener->handle(new ObjectUpdatedEvent(self::handoff('ontvangen'), self::handoff('verzonden')));
 
-		$stored = $this->store->find('ho-apr', schema: 'PayrollHandoff')->getObject();
+		$stored = $this->store->find('ho-apr', options: new ObjectFindOptions(schema: 'PayrollHandoff'))->getObject();
 		self::assertSame(1, $stored['blockingFindings']);
 		self::assertSame('missing-payslip', $stored['intakeFindings'][0]['kind']);
 	}//end testReceivingRunsTheIntakeCheck()
@@ -103,12 +104,12 @@ class HandoffIntakeListenerTest extends TestCase {
 		$this->listener->handle(new ObjectUpdatedEvent(self::handoff('ontvangen'), self::handoff('ontvangen')));
 		$this->listener->handle(new ObjectCreatedEvent(self::handoff('ontvangen')));
 
-		self::assertArrayNotHasKey('blockingFindings', $this->store->find('ho-apr', schema: 'PayrollHandoff')->getObject());
+		self::assertArrayNotHasKey('blockingFindings', $this->store->find('ho-apr', options: new ObjectFindOptions(schema: 'PayrollHandoff'))->getObject());
 
 		$failing = $this->createMock(SalaryBureauExchangeService::class);
 		$failing->method('checkIntake')->willThrowException(new \RuntimeException('register down'));
 		(new HandoffIntakeListener(handoffs: $failing, logger: new NullLogger()))->handle(new ObjectUpdatedEvent(self::handoff('ontvangen'), self::handoff('verzonden')));
-		self::assertArrayNotHasKey('blockingFindings', $this->store->find('ho-apr', schema: 'PayrollHandoff')->getObject());
+		self::assertArrayNotHasKey('blockingFindings', $this->store->find('ho-apr', options: new ObjectFindOptions(schema: 'PayrollHandoff'))->getObject());
 	}//end testOtherEdgesDoNothing()
 
 	/**

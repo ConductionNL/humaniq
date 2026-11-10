@@ -33,6 +33,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -141,7 +142,7 @@ class ThirdPartyReportServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPayeeWithoutABsnIsABlockingFinding(): void {
-		$payee = $this->store->find('payee-member', schema: 'ThirdPartyPayee')->getObject();
+		$payee = $this->store->find('payee-member', options: new ObjectFindOptions(schema: 'ThirdPartyPayee'))->getObject();
 		unset($payee['bsn']);
 		$this->store->seed('ThirdPartyPayee', 'payee-member', $payee);
 

@@ -36,6 +36,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\CompAdjustmentService;
 use OCA\Humaniq\Service\CompBandValidator;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -110,12 +111,12 @@ class CompAdjustmentServiceTest extends TestCase {
 
 			/**
 			 * @param string $id Object id.
-			 * @param string $register Register slug (unused by the fake).
-			 * @param string $schema Schema name.
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, string $register, string $schema): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$schema = (string)($options?->schema ?? '');
 				foreach (($this->rowsBySchema[$schema] ?? []) as $row) {
 					if ((string)($row['id'] ?? '') === $id) {
 						return $row;

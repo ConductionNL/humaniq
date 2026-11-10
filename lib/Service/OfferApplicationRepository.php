@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -80,7 +81,10 @@ class OfferApplicationRepository {
 	 */
 	public function find(string $applicationId): ?array {
 		try {
-			$row = $this->objectService()->find(id: $applicationId, register: $this->register(), schema: self::APPLICATION_SCHEMA);
+			$row = $this->objectService()->find(
+				id: $applicationId,
+				options: new ObjectFindOptions(register: $this->register(), schema: self::APPLICATION_SCHEMA)
+			);
 		} catch (\Throwable $e) {
 			$this->logger->info('OfferApplicationRepository: kon Application ' . $applicationId . ' niet laden: ' . $e->getMessage());
 			return null;

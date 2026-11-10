@@ -37,6 +37,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -353,14 +354,15 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 
 			/**
 			 * @param string $id The id.
-			 * @param string|null $register The register.
-			 * @param string|null $schema The schema.
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 * @param bool $_rbac RBAC flag.
 			 * @param bool $_multitenancy Multitenancy flag.
 			 *
 			 * @return object|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->test->calls[] = ['find' => [$id, $register, $schema, $_rbac, $_multitenancy]];
 				foreach (($this->rows[$schema] ?? []) as $row) {
 					if ((string)($row['id'] ?? '') === $id) {

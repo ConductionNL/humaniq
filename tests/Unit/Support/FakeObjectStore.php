@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Support;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * In-memory ObjectService double with clone-surviving shared state.
@@ -159,10 +160,7 @@ class FakeObjectStore {
 	 * signature's, because callers use named arguments.
 	 *
 	 * @param int|string $id The object uuid.
-	 * @param array<int, string>|null $_extend Extend list (ignored).
-	 * @param bool $files Files flag (ignored).
-	 * @param mixed $register The register (ignored).
-	 * @param mixed $schema The schema slug.
+	 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 	 * @param bool $_rbac RBAC flag (ignored).
 	 * @param bool $_multitenancy Multitenancy flag (ignored).
 	 *
@@ -170,13 +168,11 @@ class FakeObjectStore {
 	 */
 	public function find(
 		int|string $id,
-		?array $_extend = [],
-		bool $files = false,
-		mixed $register = null,
-		mixed $schema = null,
+		?ObjectFindOptions $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 	): ?ObjectEntity {
+		$schema = $options?->schema;
 		$schemaKey = (string)($schema ?? $this->contextSchema);
 		$payload = ($this->state->objects[$schemaKey][(string)$id] ?? null);
 		if ($payload === null) {

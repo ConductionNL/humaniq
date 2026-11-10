@@ -170,6 +170,13 @@ if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterObjectServiceStub.php';
 }
 
+// ObjectService::find() and findSilent() take an ObjectFindOptions. The stub
+// declares it so humaniq's find calls, and the doubles that receive them,
+// load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions') === false) {
+	require __DIR__ . '/stubs/OpenRegisterFindOptionsStub.php';
+}
+
 // Same rule, different class: WorkingCalendarReader asks class_exists() for
 // openregister's working calendar before reaching for it (working-hours-per-person,
 // REQ-WHP-004). Without the name present the reader can only ever answer

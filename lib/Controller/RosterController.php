@@ -36,6 +36,7 @@ use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\RosterCheckService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -163,8 +164,7 @@ class RosterController extends Controller {
 		try {
 			$roster = $this->objectService()->find(
 				id: $rosterId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Roster'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Roster')
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('RosterController: a roster lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
