@@ -100,8 +100,12 @@ final class PiecewiseAccrueOp extends AbstractOp {
 			throw new DslException('Pack: op "piecewiseAccrue" verwacht een niet-lege "segments"-lijst.');
 		}
 
-		$chain = $this->accrue($segments, $value, (int)($spec['roundTerm'] ?? 0), $ctx);
-		$chain = $this->tail(($spec['tail'] ?? null), $chain, $value, (int)($spec['roundTerm'] ?? 0), $ctx);
+		$run = new AccrualRun();
+		$run->value = $value;
+		$run->roundTerm = (int)($spec['roundTerm'] ?? 0);
+		$run->ctx = $ctx;
+		$this->accrue(run: $run, segments: $segments);
+		$chain = $this->tail(run: $run, tail: ($spec['tail'] ?? null));
 
 		$zeroAbove = $this->optionalNum($spec, 'zeroAbove', $ctx);
 		if ($zeroAbove !== null && $value > $zeroAbove) {
@@ -114,60 +118,51 @@ final class PiecewiseAccrueOp extends AbstractOp {
 	/**
 	 * Accumulate the segment terms, rounding each term BEFORE capping it.
 	 *
+	 * @param AccrualRun                       $run      The value, rounding and context; its chain is built.
 	 * @param array<int, array<string, mixed>> $segments The declared segments.
-	 * @param int|float $value The subject value.
-	 * @param int $roundTerm The per-term decimal rounding.
-	 * @param StepContext $ctx The run context.
 	 *
-	 * @return float
+	 * @return void
 	 */
-	private function accrue(array $segments, int|float $value, int $roundTerm, StepContext $ctx): float {
-		$chain = 0.0;
+	private function accrue(AccrualRun $run, array $segments): void {
 		$previous = 0;
-
 		foreach ($segments as $index => $segment) {
-			if ($index > 0 && $value <= $previous) {
-				return $chain;
+			if ($index > 0 && $run->value <= $previous) {
+				return;
 			}
 
-			$upTo = $this->num($segment, 'upTo', $ctx);
-			$rate = $this->num($segment, 'rate', $ctx);
-			$cap = $this->num($segment, 'cap', $ctx);
+			$upTo = $this->num($segment, 'upTo', $run->ctx);
+			$rate = $this->num($segment, 'rate', $run->ctx);
+			$cap = $this->num($segment, 'cap', $run->ctx);
 
-			$span = (min($value, $upTo) - $previous);
-			$term = $this->round(($chain + ($span * $rate)), $roundTerm);
-			$chain = min($term, (float)$cap);
+			$span = (min($run->value, $upTo) - $previous);
+			$term = $this->round(($run->chain + ($span * $rate)), $run->roundTerm);
+			$run->chain = min($term, (float)$cap);
 
 			$previous = $upTo;
 		}
-
-		return $chain;
 	}//end accrue()
 
 	/**
 	 * Apply the descending tail above its `from` boundary.
 	 *
+	 * @param AccrualRun                $run  The value, rounding, context and accrued chain.
 	 * @param array<string, mixed>|null $tail The declared tail, or null.
-	 * @param float $chain The accrued chain.
-	 * @param int|float $value The subject value.
-	 * @param int $roundTerm The per-term decimal rounding.
-	 * @param StepContext $ctx The run context.
 	 *
 	 * @return float
 	 */
-	private function tail(?array $tail, float $chain, int|float $value, int $roundTerm, StepContext $ctx): float {
+	private function tail(AccrualRun $run, ?array $tail): float {
 		if ($tail === null) {
-			return $chain;
+			return $run->chain;
 		}
 
-		$from = $this->num($tail, 'from', $ctx);
-		if ($value <= $from) {
-			return $chain;
+		$from = $this->num($tail, 'from', $run->ctx);
+		if ($run->value <= $from) {
+			return $run->chain;
 		}
 
-		$rate = $this->num($tail, 'rate', $ctx);
+		$rate = $this->num($tail, 'rate', $run->ctx);
 
-		return $this->round(($chain - (($value - $from) * $rate)), $roundTerm);
+		return $this->round(($run->chain - (($run->value - $from) * $rate)), $run->roundTerm);
 	}//end tail()
 
 	/**
