@@ -110,10 +110,7 @@ class ExpenseExtractReceiptCommand extends Command {
 			return 1;
 		}
 
-		$expenseOption = $input->getOption('expense');
-		$expenseId = (is_string($expenseOption) === true && trim($expenseOption) !== '') ? trim($expenseOption) : null;
-
-		$results = $this->service->backlog($expenseId, $asUser);
+		$results = $this->service->backlog(CommandOptions::trimmed($input, 'expense'), $asUser);
 
 		$output->writeln('<info>Humaniq receipt-extractie</info>');
 
@@ -122,28 +119,25 @@ class ExpenseExtractReceiptCommand extends Command {
 			return 0;
 		}
 
-		$failed = 0;
-		foreach ($results as $result) {
-			$status = (string)$result['status'];
-			$line = sprintf(
-				'  expense %s: %s — %s',
-				(string)$result['expenseId'],
-				$status,
-				(string)$result['message']
-			);
-
-			if (in_array($status, self::FAILURE_STATUSES, true) === true) {
-				$failed++;
-				$output->writeln('<error>' . $line . '</error>');
-				continue;
-			}
-
-			$output->writeln($line);
-		}
-
-		$output->writeln(sprintf('  %d poging(en) verwerkt, %d mislukt.', count($results), $failed));
-
-		return $failed > 0 ? 1 : 0;
+		return (new BacklogReport($output, self::FAILURE_STATUSES))->exitCode($results, self::describeAttempt(...));
 	}//end execute()
+
+	/**
+	 * The report line for one extraction attempt.
+	 *
+	 * @param array<string, mixed> $result The attempt.
+	 * @param string               $status The attempt's status.
+	 *
+	 * @return string
+	 */
+	private static function describeAttempt(array $result, string $status): string {
+		return sprintf(
+			'  expense %s: %s — %s',
+			(string)$result['expenseId'],
+			$status,
+			(string)$result['message']
+		);
+
+	}//end describeAttempt()
 
 }//end class
