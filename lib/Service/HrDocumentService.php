@@ -75,9 +75,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\BuildsFindOptions;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\FleetAppId;
-use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -93,6 +93,7 @@ use OCA\Humaniq\Support\NormalisesRows;
  */
 class HrDocumentService {
 
+	use BuildsFindOptions;
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;
 	use NormalisesRows;
@@ -877,7 +878,7 @@ class HrDocumentService {
 		try {
 			return $this->objectService()->find(
 				id: $id,
-				options: new ObjectFindOptions(register: $this->register(), schema: $schema),
+				options: $this->findOptions(register: $this->register(), schema: $schema),
 				_rbac: false,
 				_multitenancy: false
 			);
