@@ -210,7 +210,13 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 	 */
 	public function delete(string $uuid, string $schema): void {
 		$this->objects()->deleteObject(
-			deletion: new ObjectDeletion(uuid: $uuid, target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: $schema)),
+			deletion: new ObjectDeletion(
+				uuid: $uuid,
+				target: new ObjectFindTarget(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: $schema
+				)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

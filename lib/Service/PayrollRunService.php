@@ -999,7 +999,13 @@ class PayrollRunService {
 			$orphanId = $this->idOf($orphan);
 			try {
 				$this->objectService()->deleteObject(
-					deletion: new ObjectDeletion(uuid: $orphanId, target: new ObjectFindTarget(register: $this->register(), schema: 'Payslip')),
+					deletion: new ObjectDeletion(
+						uuid: $orphanId,
+						target: new ObjectFindTarget(
+							register: $this->register(),
+							schema: 'Payslip'
+						)
+					),
 					_rbac: false,
 					_multitenancy: false
 				);
