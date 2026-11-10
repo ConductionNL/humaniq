@@ -172,32 +172,66 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 	 * @return array<string, mixed>|null
 	 */
 	private function resolveBalance(array $object, string $register): ?array {
-		$employeeId = (string)($object['employeeId'] ?? '');
-		$year = (int)($object['year'] ?? 0);
-		$leaveType = (string)($object['leaveType'] ?? '');
-
-		if ($employeeId === '' || $year <= 0 || $leaveType === '') {
+		if (self::hasBalanceKey($object) === false) {
 			return null;
 		}
 
-		try {
-			$rows = $this->objectService()->setRegister($register)->setSchema('LeaveBalance')->findAll(['limit' => self::LIMIT]);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
+		foreach ($this->loadBalances($register) as $row) {
 			$balance = $this->toArray($row);
-			if ((string)($balance['employeeId'] ?? '') === $employeeId
-				&& (int)($balance['year'] ?? 0) === $year
-				&& (string)($balance['leaveType'] ?? '') === $leaveType
-			) {
+			if (self::sameBalanceKey($balance, $object) === true) {
 				return $balance;
 			}
 		}
 
 		return null;
 	}//end resolveBalance()
+
+	/**
+	 * Whether the transaction names an employee, a positive year and a leave type.
+	 *
+	 * @param array<string, mixed> $object The LeaveTransaction.
+	 *
+	 * @return bool
+	 */
+	private static function hasBalanceKey(array $object): bool {
+		return (string)($object['employeeId'] ?? '') !== ''
+			&& (int)($object['year'] ?? 0) > 0
+			&& (string)($object['leaveType'] ?? '') !== '';
+
+	}//end hasBalanceKey()
+
+	/**
+	 * Whether a balance row carries the transaction's employee, year and leave type.
+	 *
+	 * @param array<string, mixed> $balance The LeaveBalance row.
+	 * @param array<string, mixed> $object  The LeaveTransaction.
+	 *
+	 * @return bool
+	 */
+	private static function sameBalanceKey(array $balance, array $object): bool {
+		return (string)($balance['employeeId'] ?? '') === (string)($object['employeeId'] ?? '')
+			&& (int)($balance['year'] ?? 0) === (int)($object['year'] ?? 0)
+			&& (string)($balance['leaveType'] ?? '') === (string)($object['leaveType'] ?? '');
+
+	}//end sameBalanceKey()
+
+	/**
+	 * Every LeaveBalance row of the register, or none when the read fails.
+	 *
+	 * @param string $register The register slug.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function loadBalances(string $register): array {
+		try {
+			$rows = $this->objectService()->setRegister($register)->setSchema('LeaveBalance')->findAll(['limit' => self::LIMIT]);
+		} catch (\Throwable $e) {
+			return [];
+		}
+
+		return (is_array($rows) === true ? $rows : []);
+
+	}//end loadBalances()
 
 	/**
 	 * The slug this instance's humaniq register answers to, or null when absent.
