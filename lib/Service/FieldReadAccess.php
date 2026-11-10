@@ -78,7 +78,7 @@ class FieldReadAccess {
 		// The read is asked the way OpenRegister's own read path asks it: the
 		// schema and property as one SchemaProperty, the stored object as the
 		// PropertyAccessRequest its match rules are evaluated against. A
-		// changed signature is a type error and is deliberately not caught, so
+		// changed call shape is a type error and is deliberately not caught, so
 		// it cannot quietly turn into "OpenRegister could not be asked".
 		$request = new PropertyAccessRequest(object: $object);
 		$unreadable = [];

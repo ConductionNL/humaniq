@@ -23,7 +23,7 @@
  * asked for the non-working dates of every year the range touches. A service
  * the container cannot give (openregister not installed) and a calendar that
  * cannot be resolved (no default seeded) land in the same place: no dates,
- * `resolved` false. A changed signature is a type error and is NOT caught, so
+ * `resolved` false. A changed call shape is a type error and is NOT caught, so
  * a move on openregister's side fails loudly instead of answering every date
  * as a working day.
  *
