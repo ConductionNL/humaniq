@@ -90,7 +90,6 @@ if (class_exists('OCA\OpenRegister\Service\Integration\LeafDescriptor') === fals
 
 namespace OCA\OpenRegister\Event;
 
-use OCP\EventDispatcher\Event;
 
 if (class_exists('OCA\OpenRegister\Event\RegisterLeafProvidersEvent') === false) {
 	/**
@@ -98,7 +97,7 @@ if (class_exists('OCA\OpenRegister\Event\RegisterLeafProvidersEvent') === false)
 	 *
 	 * @spec openspec/specs/hours-leaf/spec.md#requirement-both-halves-of-the-leaf-agree
 	 */
-	class RegisterLeafProvidersEvent extends Event {
+	class RegisterLeafProvidersEvent extends \OCP\EventDispatcher\Event {
 
 		/**
 		 * The leaves contributed so far.
