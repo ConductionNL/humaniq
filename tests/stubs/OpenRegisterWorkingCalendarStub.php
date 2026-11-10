@@ -49,9 +49,51 @@ namespace OCA\OpenRegister\Exception {
 namespace OCA\OpenRegister\Service\Flow\Timer {
 
 	/**
-	 * The part of openregister's working calendar contract the reader uses.
+	 * Openregister's working calendar contract.
 	 */
 	interface WorkingCalendarInterface {
+
+		/**
+		 * The calendar name.
+		 *
+		 * @return string
+		 */
+		public function getSlug(): string;
+
+		/**
+		 * The calendar time zone.
+		 *
+		 * @return string
+		 */
+		public function getTimezone(): string;
+
+		/**
+		 * The ISO weekdays that are working days.
+		 *
+		 * @return array
+		 */
+		public function getWorkingWeekdays(): array;
+
+		/**
+		 * Minute of the day work starts.
+		 *
+		 * @return int
+		 */
+		public function getDayStartsAtMinute(): int;
+
+		/**
+		 * Minute of the day work ends.
+		 *
+		 * @return int
+		 */
+		public function getDayEndsAtMinute(): int;
+
+		/**
+		 * Hours in one working day.
+		 *
+		 * @return float
+		 */
+		public function getHoursPerWorkingDay(): float;
 
 		/**
 		 * The non-working dates of a year.
@@ -87,6 +129,60 @@ namespace OCA\OpenRegister\Service\Flow\Timer {
 		public static function fromArray(array $definition): self {
 			return new self(byYear: (array)($definition['nonWorkingDates'] ?? []));
 		}//end fromArray()
+
+		/**
+		 * The calendar name.
+		 *
+		 * @return string
+		 */
+		public function getSlug(): string {
+			return 'default';
+		}//end getSlug()
+
+		/**
+		 * The calendar time zone.
+		 *
+		 * @return string
+		 */
+		public function getTimezone(): string {
+			return 'Europe/Amsterdam';
+		}//end getTimezone()
+
+		/**
+		 * The ISO weekdays that are working days.
+		 *
+		 * @return array
+		 */
+		public function getWorkingWeekdays(): array {
+			return [1, 2, 3, 4, 5];
+		}//end getWorkingWeekdays()
+
+		/**
+		 * Minute of the day work starts.
+		 *
+		 * @return int
+		 */
+		public function getDayStartsAtMinute(): int {
+			return 540;
+		}//end getDayStartsAtMinute()
+
+		/**
+		 * Minute of the day work ends.
+		 *
+		 * @return int
+		 */
+		public function getDayEndsAtMinute(): int {
+			return 1020;
+		}//end getDayEndsAtMinute()
+
+		/**
+		 * Hours in one working day.
+		 *
+		 * @return float
+		 */
+		public function getHoursPerWorkingDay(): float {
+			return 8.0;
+		}//end getHoursPerWorkingDay()
 
 		/**
 		 * The non-working dates of a year.
