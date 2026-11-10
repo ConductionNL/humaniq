@@ -38,6 +38,7 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\CalculationWage;
 use OCA\Humaniq\Payroll\InsuranceTariffs;
 use OCA\Humaniq\Payroll\WageTaxElection;
@@ -49,6 +50,20 @@ use OCA\Humaniq\Payroll\TaxTables;
  * nothing persisted.
  */
 class ProformaPayslipService {
+
+	/**
+	 * Why the simulation always assumes the low Awf premium.
+	 *
+	 * @var string
+	 */
+	private const AWF_TARIFF_NOTE = 'Geen contract om van te lezen — de proforma-simulatie gaat altijd uit van de lage Awf-premie; werkgeverslasten zijn hierdoor mogelijk optimistisch. Dit raakt het netto salaris van de werknemer niet.';
+
+	/**
+	 * How a bijzondere beloning is folded into the estimate.
+	 *
+	 * @var string
+	 */
+	private const BIJZONDERE_BELONING_NOTE = 'Een eenmalige bijzondere beloning wordt bij het periodesalaris opgeteld en via de reguliere maandtabel doorgerekend (combinedLoon-schatting) — dit is NIET het wettelijke bijzonder tarief, dat is een fast-follow van de payroll-core-engine.';
 
 	/**
 	 * @param PayrollCalculator $calculator The existing, reused-as-is pure calculator.
@@ -78,61 +93,120 @@ class ProformaPayslipService {
 	 * @spec openspec/specs/proforma-payslip/spec.md#REQ-PRO-006
 	 */
 	public function simulate(array $params): array {
-		$gross = self::requireNumeric($params['gross'] ?? null, 'Bruto maandsalaris');
-		$table = self::requireTableColor($params['table'] ?? null);
-		$korting = self::toBool($params['loonheffingskorting'] ?? null, true);
-		$dateOfBirth = self::nullableString($params['dateOfBirth'] ?? null);
-		$period = self::requirePeriod($params['period'] ?? null);
-		$parttimeFactor = self::requirePositiveFloat($params['parttime'] ?? null, 1.0, 'Deeltijdfactor');
-		$bijzonder = self::requireNonNegativeFloat($params['bijzonder'] ?? null, 0.0, 'Bijzondere beloning');
+		$input = self::wageInput($params);
+		$tables = self::tablesFor($input['period']);
+		$input += $this->levyInput(params: $params, tables: $tables);
 
+		// The existing, reused-as-is calculator. Zero new tax logic — every
+		// figure in the returned breakdown originates here.
+		$result = $this->calculator->calculate(self::calculationInput($input), $tables);
+
+		return [
+			'input' => $input + [
+				'awfTariff' => 'low',
+				'awfTariffNote' => self::AWF_TARIFF_NOTE,
+				'engineVersion' => $tables->id(),
+			],
+			'bijzondereBeloningNote' => self::BIJZONDERE_BELONING_NOTE,
+		] + $this->employeeFigures($result) + $this->employerFigures($result);
+
+	}//end simulate()
+
+	/**
+	 * The validated wage parameters, in the order they are checked and echoed.
+	 *
+	 * @param array<string, mixed> $params The raw request parameters.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws InvalidArgumentException On a missing/malformed parameter.
+	 */
+	private static function wageInput(array $params): array {
+		return [
+			'gross' => self::requireNumeric($params['gross'] ?? null, 'Bruto maandsalaris'),
+			'table' => self::requireTableColor($params['table'] ?? null),
+			'loonheffingskorting' => self::toBool($params['loonheffingskorting'] ?? null, true),
+			'dateOfBirth' => self::nullableString($params['dateOfBirth'] ?? null),
+			'period' => self::requirePeriod($params['period'] ?? null),
+			'parttime' => self::requirePositiveFloat($params['parttime'] ?? null, 1.0, 'Deeltijdfactor'),
+			'bijzonder' => self::requireNonNegativeFloat($params['bijzonder'] ?? null, 0.0, 'Bijzondere beloning'),
+		];
+
+	}//end wageInput()
+
+	/**
+	 * The tax tables of the period's year.
+	 *
+	 * @param string $period The wage period (YYYY-MM).
+	 *
+	 * @return TaxTables
+	 *
+	 * @throws InvalidArgumentException When the year has no tables.
+	 */
+	private static function tablesFor(string $period): TaxTables {
 		$tableId = 'nl-' . substr($period, 0, 4);
 
 		try {
-			$tables = TaxTables::load($tableId);
+			return TaxTables::load($tableId);
 		} catch (\RuntimeException $e) {
 			throw new InvalidArgumentException('Belastingtabel voor periode ' . $period . ' is niet beschikbaar: ' . $e->getMessage());
 		}
 
+	}//end tablesFor()
+
+	/**
+	 * The validated Aof tariff and whk percentage, defaulting to the configured ones.
+	 *
+	 * @param array<string, mixed> $params The raw request parameters.
+	 * @param TaxTables            $tables The period's tax tables, for the default whk percentage.
+	 *
+	 * @return array{aof: string, whk: float}
+	 *
+	 * @throws InvalidArgumentException On a malformed parameter.
+	 */
+	private function levyInput(array $params, TaxTables $tables): array {
 		$whkDefault = (float)$tables->werknemersverzekeringen()['whkDefault'];
 
-		$aofTariff = self::requireAofTariff($params['aof'] ?? null, $this->settingsService->getPayrollAofTariff());
-		$whkPercentage = self::requireNonNegativeFloat($params['whk'] ?? null, $this->settingsService->getPayrollWhkPercentage($whkDefault), 'Whk-percentage');
+		return [
+			'aof' => self::requireAofTariff($params['aof'] ?? null, $this->settingsService->getPayrollAofTariff()),
+			'whk' => self::requireNonNegativeFloat($params['whk'] ?? null, $this->settingsService->getPayrollWhkPercentage($whkDefault), 'Whk-percentage'),
+		];
 
+	}//end levyInput()
+
+	/**
+	 * The calculator input for the validated parameters.
+	 *
+	 * @param array<string, mixed> $input The validated wage and levy parameters.
+	 *
+	 * @return CalculationInput
+	 */
+	private static function calculationInput(array $input): CalculationInput {
 		// design.md D2: gross fed to the calculator = (gross x parttimeFactor) +
 		// the one-off bijzondere beloning, folded in as a combined-loon
 		// estimate (design.md D3) — no new tax logic, the sum simply runs
 		// through the existing regular maandtabel chain.
-		$grossMonthlySalaryCents = (int)round((($gross * $parttimeFactor) + $bijzonder) * 100);
+		$grossMonthlySalaryCents = (int)round((($input['gross'] * $input['parttime']) + $input['bijzonder']) * 100);
 
-		$input = new CalculationInput(
-			wage: new CalculationWage(grossMonthlySalaryCents: $grossMonthlySalaryCents, dateOfBirth: $dateOfBirth, period: $period),
+		return new CalculationInput(
+			wage: new CalculationWage(grossMonthlySalaryCents: $grossMonthlySalaryCents, dateOfBirth: $input['dateOfBirth'], period: $input['period']),
 			levies: new CalculationLevies(
-				wageTax: new WageTaxElection(taxTableColor: $table, loonheffingskortingToegepast: $korting),
-				insurance: new InsuranceTariffs(awfTariff: 'low', aofTariff: $aofTariff, whkPercentage: $whkPercentage)
+				wageTax: new WageTaxElection(taxTableColor: $input['table'], loonheffingskortingToegepast: $input['loonheffingskorting']),
+				insurance: new InsuranceTariffs(awfTariff: 'low', aofTariff: $input['aof'], whkPercentage: $input['whk'])
 			)
 		);
 
-		// The existing, reused-as-is calculator. Zero new tax logic — every
-		// figure in the returned breakdown originates here.
-		$result = $this->calculator->calculate($input, $tables);
+	}//end calculationInput()
 
+	/**
+	 * The employee-side figures of the calculation, in euros.
+	 *
+	 * @param CalculationResult $result The calculation.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function employeeFigures(CalculationResult $result): array {
 		return [
-			'input' => [
-				'gross' => $gross,
-				'table' => $table,
-				'loonheffingskorting' => $korting,
-				'dateOfBirth' => $dateOfBirth,
-				'period' => $period,
-				'parttime' => $parttimeFactor,
-				'bijzonder' => $bijzonder,
-				'aof' => $aofTariff,
-				'whk' => $whkPercentage,
-				'awfTariff' => 'low',
-				'awfTariffNote' => 'Geen contract om van te lezen — de proforma-simulatie gaat altijd uit van de lage Awf-premie; werkgeverslasten zijn hierdoor mogelijk optimistisch. Dit raakt het netto salaris van de werknemer niet.',
-				'engineVersion' => $tables->id(),
-			],
-			'bijzondereBeloningNote' => 'Een eenmalige bijzondere beloning wordt bij het periodesalaris opgeteld en via de reguliere maandtabel doorgerekend (combinedLoon-schatting) — dit is NIET het wettelijke bijzonder tarief, dat is een fast-follow van de payroll-core-engine.',
 			'grossPay' => $this->euros($result->grossPayCents),
 			'loonheffing' => $this->euros($result->loonheffingCents),
 			'arbeidskorting' => $this->euros($result->arbeidskortingCents),
@@ -144,6 +218,19 @@ class ProformaPayslipService {
 			'nettoPay' => $this->euros($result->nettoPayCents),
 			'vakantiegeldReserved' => $this->euros($result->vakantiegeldReservedCents),
 			'vakantiegeldRate' => $result->vakantiegeldRate,
+		];
+
+	}//end employeeFigures()
+
+	/**
+	 * The employer-side figures of the calculation, in euros.
+	 *
+	 * @param CalculationResult $result The calculation.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function employerFigures(CalculationResult $result): array {
+		return [
 			'awf' => $this->euros($result->awfCents),
 			'aof' => $this->euros($result->aofCents),
 			'wko' => $this->euros($result->wkoCents),
@@ -153,7 +240,7 @@ class ProformaPayslipService {
 			'aboveLmax' => $result->aboveLmax,
 		];
 
-	}//end simulate()
+	}//end employerFigures()
 
 	/**
 	 * Convert integer cents to a euro float rounded to 2 decimals.
