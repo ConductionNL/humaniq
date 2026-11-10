@@ -321,14 +321,7 @@ class ObligationsService {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadFiltered(string $schema, string $administrationId): array {
-		$rows = [];
-		foreach ($this->loadAll($schema) as $row) {
-			if ((string)($row['administrationId'] ?? '') === $administrationId) {
-				$rows[] = $row;
-			}
-		}
-
-		return $rows;
+		return AdministrationRows::scopedTo($this->loadAll($schema), $administrationId);
 	}//end loadFiltered()
 
 	/**
