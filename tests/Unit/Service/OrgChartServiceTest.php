@@ -185,4 +185,46 @@ class OrgChartServiceTest extends TestCase {
 		self::assertSame(3, $chart['width']);
 		self::assertSame(3, $chart['depth']);
 	}//end testTheLayoutPlacesChildrenBelowTheirParent()
+
+	/**
+	 * The whole chart, recorded once: with people listed for some readable
+	 * employees, a cycle between two units, an inactive unit, a unit without
+	 * a name and a root that does not exist.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeChartMatchesTheRecordedAnswer(): void {
+		$units = array_merge(
+			$this->units(),
+			[
+				['id' => 'loop-a', 'parentUnitId' => 'loop-b'],
+				['id' => 'loop-b', 'name' => 'Lus B', 'parentUnitId' => 'loop-a', 'managerId' => 'e-ghost'],
+				['id' => 'self', 'name' => 'Zelf', 'parentUnitId' => 'self'],
+				['id' => 'gone', 'name' => 'Opgeheven', 'active' => false],
+				['name' => 'Zonder id'],
+			]
+		);
+		$cases = [
+			'people' => $this->chartOf(units: $units, view: ['readable' => ['e-1', 'e-3', 'e-x']]),
+			'no people' => $this->chartOf(units: $units, view: []),
+			'root' => $this->chartOf(units: $units, view: ['rootId' => 'dir-b', 'readable' => []]),
+			'unknown root' => $this->chartOf(units: $units, view: ['rootId' => 'nope']),
+			'empty root' => $this->chartOf(units: $units, view: ['rootId' => '']),
+		];
+
+		$fixture = dirname(__DIR__, 2) . '/fixtures/golden/org-chart.json';
+		self::assertSame(json_decode((string)file_get_contents($fixture), true), json_decode((string)json_encode($cases), true));
+	}//end testTheWholeChartMatchesTheRecordedAnswer()
+
+	/**
+	 * The chart of the units on 1 June 2026.
+	 *
+	 * @param array<int, array<string, mixed>> $units The units.
+	 * @param array<string, mixed>             $view  rootId and readable, when set.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function chartOf(array $units, array $view): array {
+		return $this->service()->chart(units: $units, assignments: $this->assignments(), employeesById: $this->employees(), date: '2026-06-01', rootId: ($view['rootId'] ?? null), readableEmployeeIds: ($view['readable'] ?? null));
+	}//end chartOf()
 }//end class
