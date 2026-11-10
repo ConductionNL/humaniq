@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Flow;
 
 use OCA\Humaniq\Service\ExitInterviewService;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -131,16 +132,15 @@ class AnonymiseExitInterviewsNode implements IFlowNode {
 	/**
 	 * Run the step once and pass the outcome on.
 	 *
-	 * @param array<int, mixed>    $items   The items in.
-	 * @param array<string, mixed> $config  The step config.
-	 * @param array<string, mixed> $context The run context.
+	 * @param FlowNodeCall $call The input items, the step configuration and the run-level metadata.
 	 *
 	 * @return array<int, mixed> The items out, each carrying the outcome.
 	 *
 	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-002
 	 */
-	public function execute(array $items, array $config, array $context): array {
-		unset($context);
+	public function execute(FlowNodeCall $call): array {
+		$items = $call->items;
+		$config = $call->config;
 		$today = ($this->today ?? gmdate('Y-m-d'));
 		$now = ($today === gmdate('Y-m-d') ? gmdate('c') : $today . 'T00:00:00+00:00');
 		$done = $this->interviews->anonymiseDue(today: $today, now: $now, afterDays: (int)($config['afterDays'] ?? 90));

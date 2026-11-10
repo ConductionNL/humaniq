@@ -27,6 +27,7 @@ use OCA\Humaniq\Flow\HumaniqFlowNodeListener;
 use OCA\Humaniq\Flow\RevokeAccessNode;
 use OCA\Humaniq\Service\AccessRevocationService;
 use OCA\Humaniq\Service\ExitInterviewService;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
@@ -57,7 +58,7 @@ class OffboardingFlowNodesTest extends TestCase {
 		$service->expects(self::once())->method('revokeDue')->with('2026-09-29', '2026-09-29T00:00:00+00:00')->willReturn(['case-1']);
 		$node = new RevokeAccessNode($this->l10n(), $this->createMock(IURLGenerator::class), $service, '2026-09-29');
 
-		$out = $node->execute([], [], []);
+		$out = $node->execute(new FlowNodeCall(items: [], config: [], context: []));
 
 		self::assertSame('humaniq.revoke-access', $node->getId());
 		self::assertSame(['ids' => ['case-1'], 'count' => 1], $out[0]['json']['revoked']);
@@ -73,7 +74,7 @@ class OffboardingFlowNodesTest extends TestCase {
 		$service->expects(self::once())->method('anonymiseDue')->with('2026-09-29', '2026-09-29T00:00:00+00:00', 90)->willReturn([]);
 		$node = new AnonymiseExitInterviewsNode($this->l10n(), $this->createMock(IURLGenerator::class), $service, '2026-09-29');
 
-		$out = $node->execute([], ['afterDays' => 90], []);
+		$out = $node->execute(new FlowNodeCall(items: [], config: ['afterDays' => 90], context: []));
 
 		self::assertSame('humaniq.anonymise-exit-interviews', $node->getId());
 		self::assertSame(0, $out[0]['json']['anonymised']['count']);
