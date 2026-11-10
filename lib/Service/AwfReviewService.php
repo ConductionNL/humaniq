@@ -43,6 +43,7 @@ use DateTimeImmutable;
 use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
@@ -134,7 +135,7 @@ class AwfReviewService {
 					continue;
 				}
 
-				$skip = $this->settle(slip: $slip, kind: $kind, period: $run->period, runId: $run->runId);
+				$skip = $this->settle(run: $run, target: new AwfReviewTarget(kind: $kind, slip: $slip));
 				if ($skip !== null) {
 					$run->outcome['skipped'][] = ['payslipId' => (string)$slip['id'], 'reason' => $skip];
 					continue;
@@ -241,60 +242,117 @@ class AwfReviewService {
 	 * Recompute one payslip at the high rate and write the applied
 	 * adjustment. Returns the reason when it cannot be done.
 	 *
-	 * @param array<string, mixed> $slip   The payslip.
-	 * @param string               $kind   `earlyEnd` or `extraHours`.
-	 * @param string               $period The settlement period.
-	 * @param string               $runId  The settlement run.
+	 * @param AwfReviewRun    $run    The run being reviewed.
+	 * @param AwfReviewTarget $target The payslip and its review kind.
 	 *
 	 * @return string|null
 	 */
-	private function settle(array $slip, string $kind, string $period, string $runId): ?string {
+	private function settle(AwfReviewRun $run, AwfReviewTarget $target): ?string {
+		$snapshot = self::snapshotOf(slip: $target->slip);
+		if ($snapshot === null) {
+			return 'no-engine-snapshot';
+		}
+
+		$recomputed = $this->recomputedAtHighRate(slip: $target->slip, snapshot: $snapshot);
+		if ($recomputed === null) {
+			return 'tables-missing';
+		}
+
+		[$tables, $result] = $recomputed;
+		$delta = round(($result->werknemersverzekeringenCents - (int)round(((float)($target->slip['werknemersverzekeringen'] ?? 0.0)) * 100)) / 100, 2);
+		$this->gateway->save(self::adjustmentOf(target: $target, delta: $delta) + self::settlementOf(run: $run, engineVersion: $tables->id()), 'PayrollAdjustment');
+
+		return null;
+
+	}//end settle()
+
+	/**
+	 * The decoded engine snapshot of a payslip; null when it has none.
+	 *
+	 * @param array<string, mixed> $slip The payslip.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function snapshotOf(array $slip): ?array {
 		$snapshot = ($slip['engineInputSnapshot'] ?? null);
 		if (is_string($snapshot) === true) {
 			$snapshot = json_decode($snapshot, true);
 		}
 
 		if (is_array($snapshot) === false || $snapshot === []) {
-			return 'no-engine-snapshot';
+			return null;
 		}
 
-		$slipPeriod = (string)($slip['period'] ?? '');
+		return $snapshot;
+	}//end snapshotOf()
+
+	/**
+	 * The payslip's period tables and its result at the high AWF rate; null,
+	 * logged, when it cannot be recomputed.
+	 *
+	 * @param array<string, mixed> $slip     The payslip.
+	 * @param array<string, mixed> $snapshot Its engine snapshot.
+	 *
+	 * @return array{TaxTables, CalculationResult}|null
+	 */
+	private function recomputedAtHighRate(array $slip, array $snapshot): ?array {
 		try {
-			$tables = TaxTables::load($this->packs->resolve((string)($snapshot['jurisdiction'] ?? 'NL'), $slipPeriod)->tablesId());
+			$tables = TaxTables::load($this->packs->resolve((string)($snapshot['jurisdiction'] ?? 'NL'), (string)($slip['period'] ?? ''))->tablesId());
 			$result = $this->calculator->calculate(CalculationInput::fromDecoded(array_merge($snapshot, ['awfTariff' => 'high'])), $tables);
 		} catch (\Throwable $e) {
 			$this->logger->warning('AwfReviewService: payslip ' . (string)$slip['id'] . ' could not be recomputed: ' . $e->getMessage());
-			return 'tables-missing';
+			return null;
 		}
 
-		$delta = round(($result->werknemersverzekeringenCents - (int)round(((float)($slip['werknemersverzekeringen'] ?? 0.0)) * 100)) / 100, 2);
-		$this->gateway->save(
-			[
-				'employeeId' => (string)($slip['employeeId'] ?? ''),
-				'originalPayrollRunId' => (string)($slip['payrollRunId'] ?? ''),
-				'originalPayslipId' => (string)$slip['id'],
-				'originalPeriod' => $slipPeriod,
-				'correctionType' => self::CORRECTION_TYPE,
-				'correctionRef' => self::CORRECTION_TYPE . '-' . ($kind === 'earlyEnd' ? 'early-end' : 'extra-hours') . '-' . (string)$slip['id'],
-				'deltaGross' => 0.0,
-				'deltaLoonheffing' => 0.0,
-				'deltaNet' => 0.0,
-				'deltaWerknemersverzekeringen' => $delta,
-				'deltaZvw' => 0.0,
-				'deltaVolksverzekeringen' => 0.0,
-				'deltaVakantiegeldReserved' => 0.0,
-				'engineVersion' => $tables->id(),
-				'settlementPeriod' => $period,
-				'settlementPayrollRunId' => $runId,
-				'status' => 'applied',
-				'calculatedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
-			],
-			'PayrollAdjustment'
-		);
+		return [$tables, $result];
+	}//end recomputedAtHighRate()
 
-		return null;
+	/**
+	 * The adjustment's reference to the payslip and its deltas: only the
+	 * employee insurance charges change.
+	 *
+	 * @param AwfReviewTarget $target The payslip and its review kind.
+	 * @param float           $delta  The change in employee insurance charges.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function adjustmentOf(AwfReviewTarget $target, float $delta): array {
+		$slip = $target->slip;
 
-	}//end settle()
+		return [
+			'employeeId' => (string)($slip['employeeId'] ?? ''),
+			'originalPayrollRunId' => (string)($slip['payrollRunId'] ?? ''),
+			'originalPayslipId' => (string)$slip['id'],
+			'originalPeriod' => (string)($slip['period'] ?? ''),
+			'correctionType' => self::CORRECTION_TYPE,
+			'correctionRef' => self::CORRECTION_TYPE . '-' . ($target->kind === 'earlyEnd' ? 'early-end' : 'extra-hours') . '-' . (string)$slip['id'],
+			'deltaGross' => 0.0,
+			'deltaLoonheffing' => 0.0,
+			'deltaNet' => 0.0,
+			'deltaWerknemersverzekeringen' => $delta,
+			'deltaZvw' => 0.0,
+			'deltaVolksverzekeringen' => 0.0,
+			'deltaVakantiegeldReserved' => 0.0,
+		];
+	}//end adjustmentOf()
+
+	/**
+	 * Where and when the adjustment is settled.
+	 *
+	 * @param AwfReviewRun $run           The run being reviewed.
+	 * @param string       $engineVersion The tables the payslip was recomputed with.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function settlementOf(AwfReviewRun $run, string $engineVersion): array {
+		return [
+			'engineVersion' => $engineVersion,
+			'settlementPeriod' => $run->period,
+			'settlementPayrollRunId' => $run->runId,
+			'status' => 'applied',
+			'calculatedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+		];
+	}//end settlementOf()
 
 	/**
 	 * Every employee's contracts, keyed by the employee's object id (a
