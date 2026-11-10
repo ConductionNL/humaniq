@@ -1,0 +1,86 @@
+{
+    "passport": {
+        "error": null,
+        "documentType": "paspoort",
+        "nationality": "NLD",
+        "documentExpiry": "2031-03-09"
+    },
+    "permit": {
+        "error": null,
+        "documentType": "verblijfsdocument",
+        "nationality": "SYR",
+        "documentExpiry": "2029-05-01"
+    },
+    "identity-card": {
+        "error": null,
+        "documentType": "identiteitskaart",
+        "nationality": "SYR",
+        "documentExpiry": "2029-05-01"
+    },
+    "other-card": {
+        "error": null,
+        "documentType": "identiteitskaart",
+        "nationality": "SYR",
+        "documentExpiry": "2029-05-01"
+    },
+    "bad-number": {
+        "error": "A check digit in the machine-readable zone is wrong (document number).",
+        "documentType": "",
+        "nationality": "",
+        "documentExpiry": ""
+    },
+    "bad-birth": {
+        "error": "A check digit in the machine-readable zone is wrong (birth date).",
+        "documentType": "",
+        "nationality": "",
+        "documentExpiry": ""
+    },
+    "bad-expiry": {
+        "error": "A check digit in the machine-readable zone is wrong (expiry date).",
+        "documentType": "",
+        "nationality": "",
+        "documentExpiry": ""
+    },
+    "one-line": {
+        "error": "The machine-readable zone could not be read: expected two lines of 44 or three lines of 30 characters.",
+        "documentType": "",
+        "nationality": "",
+        "documentExpiry": ""
+    },
+    "short-second": {
+        "error": "The machine-readable zone could not be read: expected two lines of 44 or three lines of 30 characters.",
+        "documentType": "",
+        "nationality": "",
+        "documentExpiry": ""
+    },
+    "short-first": {
+        "error": "The machine-readable zone could not be read: expected two lines of 44 or three lines of 30 characters.",
+        "documentType": "",
+        "nationality": "",
+        "documentExpiry": ""
+    },
+    "three-of-44": {
+        "error": "The machine-readable zone could not be read: expected two lines of 44 or three lines of 30 characters.",
+        "documentType": "",
+        "nationality": "",
+        "documentExpiry": ""
+    },
+    "permit-short-second": {
+        "error": "The machine-readable zone could not be read: expected two lines of 44 or three lines of 30 characters.",
+        "documentType": "",
+        "nationality": "",
+        "documentExpiry": ""
+    },
+    "permit-short-third": {
+        "error": null,
+        "documentType": "verblijfsdocument",
+        "nationality": "SYR",
+        "documentExpiry": "2029-05-01"
+    },
+    "none": {
+        "error": "The machine-readable zone could not be read: expected two lines of 44 or three lines of 30 characters.",
+        "documentType": "",
+        "nationality": "",
+        "documentExpiry": ""
+    }
+}
