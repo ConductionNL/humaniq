@@ -159,13 +159,7 @@ class PayrollRunCheckService {
 	 * @return list<array<string, mixed>>
 	 */
 	private function ruleFindings(array $run, string $runId): array {
-		$employeeByPayslip = [$runId => ''];
-		foreach ($this->rows('Payslip') as $payslip) {
-			if ((string)($payslip['payrollRunId'] ?? '') === $runId) {
-				$employeeByPayslip[self::idOf($payslip)] = (string)($payslip['employeeId'] ?? '');
-			}
-		}
-
+		$employeeByPayslip = $this->employeeByPayslip(runId: $runId);
 		try {
 			$report = $this->audit->auditPayrollRunScope((string)($run['period'] ?? ''), ((string)($run['administrationId'] ?? '') === '' ? null : (string)$run['administrationId']));
 		} catch (\Throwable $e) {
@@ -176,21 +170,49 @@ class PayrollRunCheckService {
 		$findings = [];
 		foreach ((array)($report['violations'] ?? []) as $violation) {
 			$objectId = (string)($violation['objectId'] ?? '');
-			if (array_key_exists($objectId, $employeeByPayslip) === false) {
-				continue;
+			if (array_key_exists($objectId, $employeeByPayslip) === true) {
+				$findings[] = self::violationFinding(violation: $violation, employeeId: $employeeByPayslip[$objectId]);
 			}
-
-			$findings[] = self::finding(
-				employeeId: $employeeByPayslip[$objectId],
-				kind: 'rule-violation',
-				severity: ((string)($violation['severity'] ?? '') === 'mandatory' ? 'blocking' : 'warning'),
-				message: (string)($violation['statement'] ?? ''),
-				ruleId: (string)($violation['ruleId'] ?? '')
-			);
-		}//end foreach
+		}
 
 		return $findings;
 	}//end ruleFindings()
+
+	/**
+	 * The employee of each payslip of the run, and '' for the run itself.
+	 *
+	 * @param string $runId The run.
+	 *
+	 * @return array<string, string>
+	 */
+	private function employeeByPayslip(string $runId): array {
+		$employeeByPayslip = [$runId => ''];
+		foreach ($this->rows('Payslip') as $payslip) {
+			if ((string)($payslip['payrollRunId'] ?? '') === $runId) {
+				$employeeByPayslip[self::idOf($payslip)] = (string)($payslip['employeeId'] ?? '');
+			}
+		}
+
+		return $employeeByPayslip;
+	}//end employeeByPayslip()
+
+	/**
+	 * A rule violation as a finding: blocking when the rule is mandatory.
+	 *
+	 * @param array<string, mixed> $violation  The violation.
+	 * @param string               $employeeId The payslip's employee, or ''.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function violationFinding(array $violation, string $employeeId): array {
+		return self::finding(
+			employeeId: $employeeId,
+			kind: 'rule-violation',
+			severity: ((string)($violation['severity'] ?? '') === 'mandatory' ? 'blocking' : 'warning'),
+			message: (string)($violation['statement'] ?? ''),
+			ruleId: (string)($violation['ruleId'] ?? '')
+		);
+	}//end violationFinding()
 
 	/**
 	 * Deviations of this run's payslips from each employee's paid history.
@@ -201,24 +223,7 @@ class PayrollRunCheckService {
 	 * @return list<array<string, mixed>>
 	 */
 	private function deviationFindings(string $runId, string $period): array {
-		$paidRuns = [];
-		foreach ($this->rows('PayrollRun') as $run) {
-			if (in_array((string)($run['status'] ?? ''), self::PAID_STATUSES, true) === true) {
-				$paidRuns[self::idOf($run)] = true;
-			}
-		}
-
-		$current = [];
-		$history = [];
-		foreach ($this->rows('Payslip') as $payslip) {
-			$heldBy = (string)($payslip['payrollRunId'] ?? '');
-			if ($heldBy === $runId) {
-				$current[] = $payslip;
-			} else if ($heldBy === '' || isset($paidRuns[$heldBy]) === true) {
-				$history[(string)($payslip['employeeId'] ?? '')][] = $payslip;
-			}
-		}
-
+		[$current, $history] = $this->currentAndHistory(runId: $runId, paidRuns: $this->paidRunIds());
 		$raised = $this->raisedEmployees(period: $period);
 		$thresholds = $this->thresholds();
 		$findings = [];
@@ -231,6 +236,45 @@ class PayrollRunCheckService {
 
 		return $findings;
 	}//end deviationFindings()
+
+	/**
+	 * The runs that were paid, as keys.
+	 *
+	 * @return array<string, bool>
+	 */
+	private function paidRunIds(): array {
+		$paidRuns = [];
+		foreach ($this->rows('PayrollRun') as $run) {
+			if (in_array((string)($run['status'] ?? ''), self::PAID_STATUSES, true) === true) {
+				$paidRuns[self::idOf($run)] = true;
+			}
+		}
+
+		return $paidRuns;
+	}//end paidRunIds()
+
+	/**
+	 * The run's own payslips, and the paid (or unattached) payslips per employee.
+	 *
+	 * @param string              $runId    The run.
+	 * @param array<string, bool> $paidRuns The paid runs, as keys.
+	 *
+	 * @return array{0: list<array<string, mixed>>, 1: array<string, list<array<string, mixed>>>}
+	 */
+	private function currentAndHistory(string $runId, array $paidRuns): array {
+		$current = [];
+		$history = [];
+		foreach ($this->rows('Payslip') as $payslip) {
+			$heldBy = (string)($payslip['payrollRunId'] ?? '');
+			if ($heldBy === $runId) {
+				$current[] = $payslip;
+			} else if ($heldBy === '' || isset($paidRuns[$heldBy]) === true) {
+				$history[(string)($payslip['employeeId'] ?? '')][] = $payslip;
+			}
+		}
+
+		return [$current, $history];
+	}//end currentAndHistory()
 
 	/**
 	 * The threshold overrides from the `payroll_check_thresholds` setting.
@@ -296,6 +340,27 @@ class PayrollRunCheckService {
 	 * @return void
 	 */
 	private function store(string $runId, array $findings, string $checkedAt): void {
+		$acknowledged = $this->clearOpenFindings(runId: $runId);
+		foreach ($findings as $finding) {
+			$payload = array_merge($finding, ['payrollRunId' => $runId, 'checkedAt' => $checkedAt, 'status' => 'open']);
+			$previous = ($acknowledged[self::keyOf($finding)] ?? null);
+			unset($acknowledged[self::keyOf($finding)]);
+			$this->saveFinding(payload: $payload, previous: $previous);
+		}
+
+		foreach ($acknowledged as $resolved) {
+			$this->marker->runInternal(fn () => $this->gateway->delete(self::idOf($resolved), 'PayrollRunFinding'));
+		}
+	}//end store()
+
+	/**
+	 * Delete the run's open findings; answer its acknowledged ones by key.
+	 *
+	 * @param string $runId The run.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function clearOpenFindings(string $runId): array {
 		$acknowledged = [];
 		foreach ($this->rows('PayrollRunFinding') as $existing) {
 			if ((string)($existing['payrollRunId'] ?? '') !== $runId) {
@@ -310,23 +375,26 @@ class PayrollRunCheckService {
 			$this->marker->runInternal(fn () => $this->gateway->delete(self::idOf($existing), 'PayrollRunFinding'));
 		}
 
-		foreach ($findings as $finding) {
-			$payload = array_merge($finding, ['payrollRunId' => $runId, 'checkedAt' => $checkedAt, 'status' => 'open']);
-			$previous = ($acknowledged[self::keyOf($finding)] ?? null);
-			$uuid = null;
-			if ($previous !== null) {
-				unset($acknowledged[self::keyOf($finding)]);
-				$uuid = self::idOf($previous);
-				$payload = array_merge($payload, array_intersect_key($previous, array_flip(['status', 'acknowledgementNote', 'acknowledgedBy'])));
-			}
+		return $acknowledged;
+	}//end clearOpenFindings()
 
-			$this->marker->runInternal(fn () => $this->gateway->save($payload, 'PayrollRunFinding', $uuid));
+	/**
+	 * Save a finding; one found again keeps its acknowledgement and record.
+	 *
+	 * @param array<string, mixed>      $payload  The new finding.
+	 * @param array<string, mixed>|null $previous The acknowledged finding it matches, or null.
+	 *
+	 * @return void
+	 */
+	private function saveFinding(array $payload, ?array $previous): void {
+		$uuid = null;
+		if ($previous !== null) {
+			$uuid = self::idOf($previous);
+			$payload = array_merge($payload, array_intersect_key($previous, array_flip(['status', 'acknowledgementNote', 'acknowledgedBy'])));
 		}
 
-		foreach ($acknowledged as $resolved) {
-			$this->marker->runInternal(fn () => $this->gateway->delete(self::idOf($resolved), 'PayrollRunFinding'));
-		}
-	}//end store()
+		$this->marker->runInternal(fn () => $this->gateway->save($payload, 'PayrollRunFinding', $uuid));
+	}//end saveFinding()
 
 	/**
 	 * A finding.
