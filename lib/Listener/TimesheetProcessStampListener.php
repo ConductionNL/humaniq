@@ -137,37 +137,13 @@ class TimesheetProcessStampListener implements IEventListener {
 	public function handle(Event $event): void {
 		try {
 			if ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent) {
-				$entity = $event->getObject();
-				if ($this->isTimesheet($entity) === true) {
-					$event->setModifiedData($this->stampCreate($entity->getObject() ?? []));
-				}
-
+				$this->stampCreating(event: $event);
 				return;
 			}
 
-			if (($event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) === false) {
-				return;
+			if ($event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) {
+				$this->stampUpdating(event: $event);
 			}
-
-			$entity = $event->getNewObject();
-			if ($this->isTimesheet($entity) === false) {
-				return;
-			}
-
-			$stored = $event->getOldObject()?->getObject();
-			if (is_array($stored) === false) {
-				$stored = $this->gateway->findObjectData((string)$entity->getUuid(), 'Timesheet');
-			}
-
-			if ($stored === null) {
-				// Without the stored values the inertness guarantee cannot
-				// be established — refuse rather than let a possibly
-				// tampered write through (fail closed).
-				$this->refuse($event, 'De urenstaat kon niet worden geladen; de wijziging is niet opgeslagen.');
-				return;
-			}
-
-			$event->setModifiedData($this->stampUpdate(($entity->getObject() ?? []), $stored));
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'humaniq: TimesheetProcessStampListener could not stamp a Timesheet write',
@@ -177,6 +153,50 @@ class TimesheetProcessStampListener implements IEventListener {
 		}//end try
 
 	}//end handle()
+
+	/**
+	 * A Timesheet create starts at draft with the caches derived.
+	 *
+	 * @param \OCA\OpenRegister\Event\ObjectCreatingEvent $event The pre-save event.
+	 *
+	 * @return void
+	 */
+	private function stampCreating(\OCA\OpenRegister\Event\ObjectCreatingEvent $event): void {
+		$entity = $event->getObject();
+		if ($this->isTimesheet($entity) === true) {
+			$event->setModifiedData($this->stampCreate($entity->getObject() ?? []));
+		}
+	}//end stampCreating()
+
+	/**
+	 * A Timesheet update is judged against its stored values: the old object
+	 * on the event, else the register's row by uuid; without either it is refused.
+	 *
+	 * @param \OCA\OpenRegister\Event\ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return void
+	 */
+	private function stampUpdating(\OCA\OpenRegister\Event\ObjectUpdatingEvent $event): void {
+		$entity = $event->getNewObject();
+		if ($this->isTimesheet($entity) === false) {
+			return;
+		}
+
+		$stored = $event->getOldObject()?->getObject();
+		if (is_array($stored) === false) {
+			$stored = $this->gateway->findObjectData((string)$entity->getUuid(), 'Timesheet');
+		}
+
+		if ($stored === null) {
+			// Without the stored values the inertness guarantee cannot
+			// be established — refuse rather than let a possibly
+			// tampered write through (fail closed).
+			$this->refuse($event, 'De urenstaat kon niet worden geladen; de wijziging is niet opgeslagen.');
+			return;
+		}
+
+		$event->setModifiedData($this->stampUpdate(($entity->getObject() ?? []), $stored));
+	}//end stampUpdating()
 
 	/**
 	 * Whether the entity is a Timesheet (slug gate, defence in depth under
