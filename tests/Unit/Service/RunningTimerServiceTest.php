@@ -78,6 +78,27 @@ class RunningTimerServiceTest extends TestCase {
 	}//end testAFinishedTimerEntryIsNotRunning()
 
 	/**
+	 * A blank caller reads nothing, an end of only spaces is no end, and
+	 * a row without a start sorts last.
+	 *
+	 * @return void
+	 */
+	public function testABlankCallerAndABlankEnd(): void {
+		$this->gateway->expects($this->once())->method('findFiltered')
+			->with($this->anything(), $this->callback(static fn (array $filters): bool => $filters['userId'] === 'alice'))
+			->willReturn(
+				[
+					['id' => 'no-start'],
+					['id' => 'spaces', 'startedAt' => '2026-09-10T08:00:00+00:00', 'endedAt' => '  '],
+					['id' => 'done', 'startedAt' => '2026-09-10T11:00:00+00:00', 'endedAt' => '2026-09-10T12:00:00+00:00'],
+				]
+			);
+
+		$this->assertNull($this->timers->running('   '));
+		$this->assertSame('spaces', $this->timers->running(' alice ')['id']);
+	}//end testABlankCallerAndABlankEnd()
+
+	/**
 	 * An entry with no end is the running one.
 	 *
 	 * @return void
