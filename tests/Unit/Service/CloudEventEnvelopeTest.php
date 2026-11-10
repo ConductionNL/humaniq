@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\CloudEventEnvelope;
+use OCA\Humaniq\Service\CloudEventHeader;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -38,14 +39,14 @@ class CloudEventEnvelopeTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function envelope(?string $subject): array {
-		return (new CloudEventEnvelope())->build(
-			type: 'nl.conduction.hrmq.employee.joined',
-			source: '/humaniq/employees',
-			eventId: 'evt-1',
-			time: '2026-06-01T08:00:00Z',
-			data: ['employeeId' => 'emp-1'],
-			subject: $subject
-		);
+		$header = new CloudEventHeader();
+		$header->type = 'nl.conduction.hrmq.employee.joined';
+		$header->source = '/humaniq/employees';
+		$header->eventId = 'evt-1';
+		$header->time = '2026-06-01T08:00:00Z';
+		$header->subject = $subject;
+
+		return (new CloudEventEnvelope())->build(header: $header, data: ['employeeId' => 'emp-1']);
 	}//end envelope()
 
 	/**
