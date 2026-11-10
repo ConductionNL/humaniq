@@ -83,11 +83,8 @@ class CompEffectuateCommand extends Command {
 			return 1;
 		}
 
-		$dateOption = $input->getOption('date');
-		$date = (is_string($dateOption) === true && trim($dateOption) !== '') ? trim($dateOption) : null;
 		$dryRun = ((bool)$input->getOption('dry-run')) === true;
-
-		$results = $this->service->effectuateCycle($cycle, $date, $dryRun);
+		$results = $this->service->effectuateCycle($cycle, CommandOptions::trimmed($input, 'date'), $dryRun);
 
 		$output->writeln('<info>Humaniq compensation-cycle effectuation</info>' . ($dryRun === true ? ' <comment>(dry-run)</comment>' : ''));
 
@@ -96,23 +93,20 @@ class CompEffectuateCommand extends Command {
 			return 0;
 		}
 
-		$failed = 0;
-		foreach ($results as $result) {
-			$status = (string)$result['status'];
-			$line = sprintf('  aanpassing %s: %s — %s', (string)($result['adjustmentId'] ?? 'onbekend'), $status, (string)$result['message']);
-
-			if ($status === 'failed') {
-				$failed++;
-				$output->writeln('<error>' . $line . '</error>');
-				continue;
-			}
-
-			$output->writeln($line);
-		}
-
-		$output->writeln(sprintf('  %d aanpassing(en) verwerkt, %d mislukt.', count($results), $failed));
-
-		return $failed > 0 ? 1 : 0;
+		return (new OutcomeReport($output, '  %d aanpassing(en) verwerkt, %d mislukt.'))->exitCode($results, self::describeOutcome(...));
 	}//end execute()
+
+	/**
+	 * The report line for one adjustment's outcome.
+	 *
+	 * @param array<string, mixed> $result The outcome.
+	 * @param string               $status The outcome's status.
+	 *
+	 * @return string
+	 */
+	private static function describeOutcome(array $result, string $status): string {
+		return sprintf('  aanpassing %s: %s — %s', (string)($result['adjustmentId'] ?? 'onbekend'), $status, (string)$result['message']);
+
+	}//end describeOutcome()
 
 }//end class
