@@ -610,9 +610,14 @@ final class PackValidator {
 			throw new DslException('Pack: "selfTest" moet ten minste één golden vector bevatten — een pack dat zijn eigen rekenwerk niet kan reproduceren activeert nooit.');
 		}
 
+		$run = new PackSelfTestRun();
+		$run->pack = $pack;
+		$run->tables = $tables;
+		$run->map = (array)($block['fixtureMap'] ?? []);
 		$provenance = [];
 		foreach ($vectors as $index => $vector) {
-			$result = $this->vector($pack, $tables, (array)$vector, (int)$index, (array)($block['fixtureMap'] ?? []));
+			$run->index = (int)$index;
+			$result = $this->vector(run: $run, vector: (array)$vector);
 			$provenance = array_merge($provenance, $result->unverifiedProvenance());
 		}
 
@@ -622,30 +627,27 @@ final class PackValidator {
 	/**
 	 * Run one golden vector.
 	 *
-	 * @param JurisdictionPack $pack The pack.
-	 * @param TaxTables $tables The tables.
+	 * @param PackSelfTestRun      $run    The pack, its tables, the fixture map and the vector's position.
 	 * @param array<string, mixed> $vector The declared vector.
-	 * @param int $index The vector's position (for errors).
-	 * @param array<string, string> $map The fixture component map.
 	 *
 	 * @return PackRunResult
 	 *
 	 * @throws DslException When the vector is malformed or mismatches.
 	 */
-	private function vector(JurisdictionPack $pack, TaxTables $tables, array $vector, int $index, array $map): PackRunResult {
+	private function vector(PackSelfTestRun $run, array $vector): PackRunResult {
 		if (array_key_exists('$fixture', $vector) === true) {
-			return $this->fixtureVector($pack, $tables, (string)$vector['$fixture'], $map);
+			return $this->fixtureVector(run: $run, name: (string)$vector['$fixture']);
 		}
 
 		$period = (string)($vector['period'] ?? '');
 		if ($period === '') {
-			throw new DslException('Pack: golden vector #' . $index . ' mist "period".');
+			throw new DslException('Pack: golden vector #' . $run->index . ' mist "period".');
 		}
 
-		$result = $this->interpreter->run((array)($vector['input'] ?? []), $pack, $tables, $period);
+		$result = $this->interpreter->run((array)($vector['input'] ?? []), $run->pack, $run->tables, $period);
 
 		foreach ((array)($vector['expected'] ?? []) as $ref => $expected) {
-			$this->assert($result, (string)$ref, (int)$expected, 'golden vector #' . $index);
+			$this->assert($result, (string)$ref, (int)$expected, 'golden vector #' . $run->index);
 		}
 
 		return $result;
@@ -666,16 +668,16 @@ final class PackValidator {
 	 * `CalculationInput` -> pack inputs -> interpreter -> components — and the
 	 * two can never drift.
 	 *
-	 * @param JurisdictionPack $pack The pack.
-	 * @param TaxTables $tables The tables.
-	 * @param string $name The fixture path, e.g. `payroll-2026/anchor.json`.
-	 * @param array<string, string> $map The fixture component map.
+	 * @param PackSelfTestRun $run  The pack, its tables and the fixture map.
+	 * @param string          $name The fixture path, e.g. `payroll-2026/anchor.json`.
 	 *
 	 * @return PackRunResult
 	 *
 	 * @throws DslException When the fixture is unusable or the vector mismatches.
 	 */
-	private function fixtureVector(JurisdictionPack $pack, TaxTables $tables, string $name, array $map): PackRunResult {
+	private function fixtureVector(PackSelfTestRun $run, string $name): PackRunResult {
+		$pack = $run->pack;
+		$map = $run->map;
 		if ($pack->isBundled() === false) {
 			throw new DslException('Pack: alleen een meegeleverd pack mag naar een fixture verwijzen ("' . $name . '"); een geüpload pack moet zijn golden vectors zelf meedragen.');
 		}
@@ -686,7 +688,7 @@ final class PackValidator {
 
 		$fixture = $this->fixture($name);
 		$input = $this->inputFrom((array)$fixture['input'], $pack);
-		$result = $this->interpreter->run($this->mapper->toPackInputs($input), $pack, $tables, $input->period);
+		$result = $this->interpreter->run($this->mapper->toPackInputs($input), $pack, $run->tables, $input->period);
 
 		foreach ((array)$fixture['expected'] as $component => $euros) {
 			$ref = ($map[$component] ?? null);
