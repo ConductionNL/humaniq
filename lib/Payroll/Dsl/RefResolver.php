@@ -128,42 +128,44 @@ final class RefResolver {
 			throw new DslException('Pack: het ":cents"-achtervoegsel geldt alleen voor @table-verwijzingen, niet voor "' . $ref . '".');
 		}
 
-		$path = [];
+		$parsed = new ParsedRef();
+		$parsed->ref = $ref;
+		$parsed->namespace = $namespace;
+		$parsed->cents = $cents;
 		foreach ($segments as $segment) {
-			$path[] = $this->segmentKey($segment, $ctx);
+			$parsed->path[] = $this->segmentKey($segment, $ctx);
 		}
 
-		return $this->inNamespace($namespace, $path, $cents, $ctx, $ref);
+		return $this->inNamespace(parsed: $parsed, ctx: $ctx);
 	}//end resolve()
 
 	/**
 	 * Dispatch a parsed reference to its namespace.
 	 *
-	 * @param string $namespace The reference namespace.
-	 * @param array<int, string> $path The resolved path segments.
-	 * @param bool $cents Whether the `:cents` cast was declared.
-	 * @param StepContext $ctx The run context.
-	 * @param string $ref The original reference (for errors).
+	 * @param ParsedRef   $parsed The reference, its namespace, path and cast.
+	 * @param StepContext $ctx    The run context.
 	 *
 	 * @return mixed
 	 *
 	 * @throws DslException When the reference is unresolvable.
 	 */
-	private function inNamespace(string $namespace, array $path, bool $cents, StepContext $ctx, string $ref): mixed {
-		if ($namespace === 'table') {
-			return $this->table($path, $cents, $ctx, $ref);
+	private function inNamespace(ParsedRef $parsed, StepContext $ctx): mixed {
+		if ($parsed->namespace === 'table') {
+			return $this->table(parsed: $parsed, ctx: $ctx);
 		}
 
-		if (count($path) !== 1) {
-			throw new DslException('Pack: verwijzing "' . $ref . '" moet precies één segment na @' . $namespace . ' hebben.');
+		if (count($parsed->path) !== 1) {
+			throw new DslException('Pack: verwijzing "' . $parsed->ref . '" moet precies één segment na @' . $parsed->namespace . ' hebben.');
 		}
 
-		return match ($namespace) {
-			'input' => $ctx->input($path[0]),
-			'step' => $ctx->step($path[0]),
-			'binding' => $ctx->binding($path[0]),
-			'pack' => $ctx->meta($path[0]),
-			default => $this->period($path[0], $ctx, $ref),
+		$field = $parsed->path[0];
+
+		return match ($parsed->namespace) {
+			'input' => $ctx->input($field),
+			'step' => $ctx->step($field),
+			'binding' => $ctx->binding($field),
+			'pack' => $ctx->meta($field),
+			default => $this->period($field, $ctx, $parsed->ref),
 		};
 
 	}//end inNamespace()
@@ -171,20 +173,18 @@ final class RefResolver {
 	/**
 	 * Resolve an `@table.*` reference, recording the leaf's provenance.
 	 *
-	 * @param array<int, string> $path The resolved path segments.
-	 * @param bool $cents Whether the `:cents` cast was declared.
-	 * @param StepContext $ctx The run context.
-	 * @param string $ref The original reference (for errors).
+	 * @param ParsedRef   $parsed The reference, its path and cast.
+	 * @param StepContext $ctx    The run context.
 	 *
 	 * @return mixed
 	 *
 	 * @throws DslException When the leaf does not exist.
 	 */
-	private function table(array $path, bool $cents, StepContext $ctx, string $ref): mixed {
+	private function table(ParsedRef $parsed, StepContext $ctx): mixed {
 		try {
-			$leaf = $ctx->tables()->resolveLeaf($path, $cents);
+			$leaf = $ctx->tables()->resolveLeaf($parsed->path, $parsed->cents);
 		} catch (RuntimeException $e) {
-			throw new DslException('Pack: onbekende tabelverwijzing "' . $ref . '" (' . $e->getMessage() . ').', 0, $e);
+			throw new DslException('Pack: onbekende tabelverwijzing "' . $parsed->ref . '" (' . $e->getMessage() . ').', 0, $e);
 		}
 
 		if ($leaf['provenance'] !== null) {
@@ -296,11 +296,7 @@ final class RefResolver {
 			if ($char === '[') {
 				$segments = $this->flush($segments, $buffer);
 				$buffer = '';
-				$close = strpos($body, ']', $index);
-				if ($close === false) {
-					throw new DslException('Pack: ongebalanceerde "[" in verwijzing "' . $ref . '".');
-				}
-
+				$close = self::closingBracket(body: $body, open: [$index, $ref]);
 				$segments[] = ['index' => substr($body, ($index + 1), ($close - $index - 1))];
 				$index = ($close + 1);
 				continue;
@@ -312,6 +308,25 @@ final class RefResolver {
 
 		return $this->flush($segments, $buffer);
 	}//end segments()
+
+	/**
+	 * Where the `[` group opened at an offset closes.
+	 *
+	 * @param string                  $body The reference body.
+	 * @param array{0: int, 1: string} $open The offset of the `[` and the original reference (for errors).
+	 *
+	 * @return int
+	 *
+	 * @throws DslException When the group is not closed.
+	 */
+	private static function closingBracket(string $body, array $open): int {
+		$close = strpos($body, ']', $open[0]);
+		if ($close === false) {
+			throw new DslException('Pack: ongebalanceerde "[" in verwijzing "' . $open[1] . '".');
+		}
+
+		return $close;
+	}//end closingBracket()
 
 	/**
 	 * Append a non-empty literal buffer as a segment.
