@@ -19,6 +19,9 @@
         <!-- OpenRegister's lifecycle guard contract, the same stub the tests load (it mirrors
              OpenRegister lib/Lifecycle/LifecycleGuardInterface.php and GuardResult.php). -->
         <file name="tests/stubs/OpenRegisterLifecycleStub.php" />
+        <!-- OpenRegister's working calendar contract (Flow\Timer), the same stub the tests load;
+             it mirrors the public shape WorkingCalendarReader calls. -->
+        <file name="tests/stubs/OpenRegisterWorkingCalendarStub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
