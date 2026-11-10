@@ -201,6 +201,8 @@ class ReceiptExtractionRepository {
 	 * @param array<string, mixed> $fields The object fields.
 	 *
 	 * @return array<string, mixed> The created object, normalised to an array.
+	 *
+	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-004
 	 */
 	public function createReceiptExtraction(array $fields): array {
 		$created = $this->objectService()->saveObject(
@@ -220,6 +222,8 @@ class ReceiptExtractionRepository {
 	 * @param array<string, mixed> $fields The fields to overwrite.
 	 *
 	 * @return array<string, mixed> The saved object, normalised to an array.
+	 *
+	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-004
 	 */
 	public function saveReceiptExtraction(array $existing, array $fields): array {
 		$id = (string)($existing['id'] ?? $existing['@self']['id'] ?? '');

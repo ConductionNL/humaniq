@@ -101,6 +101,8 @@ class OfferApplicationRepository {
 	 * @param array<string, mixed> $writes The field values to write (never `status`).
 	 *
 	 * @return array<string, mixed> The saved Application, normalised to an array.
+	 *
+	 * @spec openspec/specs/offer-esign/spec.md#REQ-OFFR-002
 	 */
 	public function save(array $existing, array $writes): array {
 		$id = (string)($existing['id'] ?? $existing['@self']['id'] ?? '');
