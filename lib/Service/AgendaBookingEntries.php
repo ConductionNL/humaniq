@@ -50,42 +50,61 @@ class AgendaBookingEntries {
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-003
 	 */
 	public function bookingEntries(array $sources, AgendaWindow $window): array {
-		$subjectType = $window->subject->type;
 		$entries = [];
 		foreach (($sources['bookings'] ?? []) as $booking) {
-			$start = $this->stringOrNull(($booking['start'] ?? null));
-			$end = $this->stringOrNull(($booking['end'] ?? null));
-			if ($start === null || $end === null) {
-				continue;
+			if ($this->bookingShows(booking: $booking, window: $window) === true) {
+				$entries[] = $this->bookingEntry(booking: $booking, window: $window);
 			}
-
-			if (substr($start, 0, 10) > $window->to || substr($end, 0, 10) < $window->from) {
-				continue;
-			}
-
-			$employeeId = trim((string)($booking['employeeId'] ?? ''));
-			$resourceId = trim((string)($booking['resourceId'] ?? ''));
-
-			if ($this->holdsSubject(holder: ['employeeId' => $employeeId, 'resourceId' => $resourceId], window: $window) === false) {
-				continue;
-			}
-
-			$entries[] = [
-				'kind' => 'booking',
-				'subjectType' => ($subjectType === 'resource' ? 'resource' : 'employee'),
-				'subjectId' => ($subjectType === 'resource' ? $resourceId : $employeeId),
-				'start' => $start,
-				'end' => $end,
-				'label' => trim((string)($booking['purpose'] ?? 'Reservering')),
-				'sourceType' => 'ResourceBooking',
-				'sourceId' => trim((string)($booking['id'] ?? '')),
-				'domainObjectType' => $this->stringOrNull(($booking['domainObjectType'] ?? null)),
-				'domainObjectRef' => $this->stringOrNull(($booking['domainObjectRef'] ?? null)),
-			];
 		}
 
 		return $entries;
 	}//end bookingEntries()
+
+	/**
+	 * Whether a booking has a start and an end, touches the window, and is
+	 * held by the subject.
+	 *
+	 * @param array<string, mixed> $booking The ResourceBooking.
+	 * @param AgendaWindow         $window  The subject, its employees and the first and last day.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-003
+	 */
+	private function bookingShows(array $booking, AgendaWindow $window): bool {
+		if ($this->spanIn(row: $booking, window: $window) === null) {
+			return false;
+		}
+
+		return $this->holdsSubject(holder: ['employeeId' => trim((string)($booking['employeeId'] ?? '')), 'resourceId' => trim((string)($booking['resourceId'] ?? ''))], window: $window);
+	}//end bookingShows()
+
+	/**
+	 * The agenda entry of a booking, on the person or on the resource.
+	 *
+	 * @param array<string, mixed> $booking The ResourceBooking.
+	 * @param AgendaWindow         $window  The subject.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-003
+	 */
+	private function bookingEntry(array $booking, AgendaWindow $window): array {
+		$onResource = ($window->subject->type === 'resource');
+
+		return [
+			'kind' => 'booking',
+			'subjectType' => ($onResource === true ? 'resource' : 'employee'),
+			'subjectId' => ($onResource === true ? trim((string)($booking['resourceId'] ?? '')) : trim((string)($booking['employeeId'] ?? ''))),
+			'start' => $this->stringOrNull(($booking['start'] ?? null)),
+			'end' => $this->stringOrNull(($booking['end'] ?? null)),
+			'label' => trim((string)($booking['purpose'] ?? 'Reservering')),
+			'sourceType' => 'ResourceBooking',
+			'sourceId' => trim((string)($booking['id'] ?? '')),
+			'domainObjectType' => $this->stringOrNull(($booking['domainObjectType'] ?? null)),
+			'domainObjectRef' => $this->stringOrNull(($booking['domainObjectRef'] ?? null)),
+		];
+	}//end bookingEntry()
 
 	/**
 	 * Cached external busy time as agenda entries.
@@ -164,13 +183,8 @@ class AgendaBookingEntries {
 				continue;
 			}
 
-			$start = $this->stringOrNull(($period['start'] ?? null));
-			$end = $this->stringOrNull(($period['end'] ?? null));
-			if ($start === null || $end === null) {
-				continue;
-			}
-
-			if (substr($start, 0, 10) > $window->to || substr($end, 0, 10) < $window->from) {
+			$span = $this->spanIn(row: $period, window: $window);
+			if ($span === null) {
 				continue;
 			}
 
@@ -178,8 +192,8 @@ class AgendaBookingEntries {
 				'kind' => 'busy',
 				'subjectType' => 'employee',
 				'subjectId' => $subscription['employeeId'],
-				'start' => $start,
-				'end' => $end,
+				'start' => $span[0],
+				'end' => $span[1],
 				'label' => 'Bezet',
 				'sourceType' => 'CalendarSubscription',
 				'sourceId' => $subscription['id'],
@@ -188,6 +202,31 @@ class AgendaBookingEntries {
 
 		return $entries;
 	}//end busyPeriodEntries()
+
+	/**
+	 * A row's start and end when it has both and touches the window; null
+	 * otherwise.
+	 *
+	 * @param array<string, mixed> $row    A booking or a cached busy period.
+	 * @param AgendaWindow         $window The first and last day.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-003
+	 */
+	private function spanIn(array $row, AgendaWindow $window): ?array {
+		$start = $this->stringOrNull(($row['start'] ?? null));
+		$end = $this->stringOrNull(($row['end'] ?? null));
+		if ($start === null || $end === null) {
+			return null;
+		}
+
+		if (substr($start, 0, 10) > $window->to || substr($end, 0, 10) < $window->from) {
+			return null;
+		}
+
+		return [$start, $end];
+	}//end spanIn()
 
 	/**
 	 * Narrow a raw value to a non-empty string.
