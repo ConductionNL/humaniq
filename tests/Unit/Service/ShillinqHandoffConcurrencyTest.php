@@ -23,6 +23,7 @@ use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Service\Support\InMemoryLocks;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\Lock\ILockingProvider;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
@@ -761,15 +762,15 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $object The object.
-			 * @param string|null $register The register.
-			 * @param string|null $schema The schema.
-			 * @param string|null $uuid The uuid.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac RBAC flag.
 			 * @param bool $_multitenancy Multitenancy flag.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, ?string $register = null, ?string $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($this->beforeSave !== null) {
 					($this->beforeSave)((string)$schema);
 				}

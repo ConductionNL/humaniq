@@ -49,6 +49,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\AvgDsrService;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -450,9 +451,7 @@ class AvgDsrServiceTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $object Object to save.
-			 * @param string|null $register Register slug (unused).
-			 * @param string|null $schema Schema name (unused).
-			 * @param string|null $uuid Existing id when updating.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac Unused.
 			 * @param bool $_multitenancy Unused.
 			 *
@@ -460,12 +459,11 @@ class AvgDsrServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {
+				$uuid = $options->uuid;
 				$id = ($uuid ?? ('generated-' . (count($this->saved) + 1)));
 				$saved = array_merge($object, ['id' => $id]);
 				$this->saved[] = $saved;

@@ -60,6 +60,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -206,9 +208,10 @@ class PayrollMutationService {
 			$saved = $this->toArray(
 				$this->objectService()->saveObject(
 					object: $payload,
-					register: $this->register(),
-					schema: 'PayrollMutationReport',
-					uuid: ($existing === null ? null : $this->idOf($existing)),
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $this->register(), schema: 'PayrollMutationReport'),
+						uuid: ($existing === null ? null : $this->idOf($existing))
+					),
 					_rbac: false,
 					_multitenancy: false
 				)

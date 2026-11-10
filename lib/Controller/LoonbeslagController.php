@@ -42,6 +42,8 @@ use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -276,9 +278,10 @@ class LoonbeslagController extends Controller {
 
 		$saved = $this->objectService()->saveObject(
 			object: $object,
-			register: $this->settingsService->getRegisterSlug(),
-			schema: 'Loonbeslag',
-			uuid: ($id === '' ? null : $id)
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: 'Loonbeslag'),
+				uuid: ($id === '' ? null : $id)
+			)
 		);
 
 		return $this->toArray($saved);

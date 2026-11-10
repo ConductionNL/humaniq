@@ -41,6 +41,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use RuntimeException;
 
 /**
@@ -140,9 +142,7 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 			try {
 				$this->objectService()->saveObject(
 					object: $runUpdate,
-					register: $this->register(),
-					schema: 'PayrollRun',
-					uuid: $runId,
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: 'PayrollRun'), uuid: $runId),
 					_rbac: false,
 					_multitenancy: false
 				);

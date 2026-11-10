@@ -24,6 +24,7 @@ namespace OCA\Humaniq\Tests\Unit\BackgroundJob;
 use OCA\Humaniq\BackgroundJob\LeaveAccrualJob;
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -199,9 +200,7 @@ class LeaveAccrualGoldenTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $object The object.
-			 * @param string|null $register The register.
-			 * @param string|null $schema The schema.
-			 * @param string|null $uuid The uuid.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac RBAC flag.
 			 * @param bool $_multitenancy Multitenancy flag.
 			 *
@@ -209,12 +208,13 @@ class LeaveAccrualGoldenTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): mixed {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$recorded = $object;
 				$this->writes[] = ['register' => $register, 'schema' => $schema, 'uuid' => $uuid, 'rbac' => $_rbac, 'multitenancy' => $_multitenancy, 'object' => $recorded];
 				if ($this->saveThrows !== '' && ($object['employeeId'] ?? null) === $this->saveThrows) {

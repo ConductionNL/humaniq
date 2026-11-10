@@ -76,6 +76,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\AssetDialectMigrationService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -248,24 +249,21 @@ class AssetDialectMigrationServiceTest extends TestCase {
 			 * holding. Every other write succeeds.
 			 *
 			 * @param array<string, mixed> $object The object to save.
-			 * @param string|null $register Register slug, recorded with the save.
-			 * @param string|null $schema Schema name.
-			 * @param string|null $uuid Existing id when updating.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac Unused by the fake.
 			 * @param bool $_multitenancy Unused by the fake.
-			 * @param bool $_validation Deliberately UNUSED by the fake, matching the real API (measured).
 			 *
 			 * @return array<string, mixed> The saved object (with its id).
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
-				bool $_validation = true,
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
 

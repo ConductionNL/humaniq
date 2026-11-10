@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Support;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * In-memory ObjectService double with clone-surviving shared state.
@@ -223,10 +224,7 @@ class FakeObjectStore {
 	 * logs the call.
 	 *
 	 * @param array<string, mixed>|object $object The payload.
-	 * @param array<int, string>|null $extend Extend list (ignored).
-	 * @param mixed $register The register (ignored).
-	 * @param mixed $schema The schema slug.
-	 * @param string|null $uuid The uuid (generated when null).
+	 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 	 * @param bool $_rbac RBAC flag (ignored).
 	 * @param bool $_multitenancy Multitenancy flag (ignored).
 	 *
@@ -234,13 +232,12 @@ class FakeObjectStore {
 	 */
 	public function saveObject(
 		array|object $object,
-		?array $extend = [],
-		mixed $register = null,
-		mixed $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 	): ObjectEntity {
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$payload = (is_array($object) === true ? $object : (array)$object);
 		$schemaKey = (string)($schema ?? $this->contextSchema);
 		if ($uuid === null || $uuid === '') {

@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -137,8 +139,7 @@ class ShillinqPayables {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: self::SHILLINQ_REGISTER,
-			schema: self::PAYABLE_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::SHILLINQ_REGISTER, schema: self::PAYABLE_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);

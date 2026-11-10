@@ -40,6 +40,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -188,9 +190,10 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 	public function save(array $payload, string $schema, ?string $uuid = null): object {
 		return $this->objects()->saveObject(
 			object: $payload,
-			register: $this->settingsService->getRegisterSlug(),
-			schema: $schema,
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: $schema),
+				uuid: $uuid
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

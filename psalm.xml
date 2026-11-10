@@ -78,6 +78,10 @@
                 <referencedClass name="OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent"/>
                 <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
                 <referencedClass name="OCA\OpenRegister\Service\FileService"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectFindTarget"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectSaveOptions"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\SaveActor"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\SavePolicy"/>
                 <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
                 <referencedClass name="OCA\DocuDesk\Service\DocumentService"/>
                 <referencedClass name="OCA\DocuDesk\Service\TemplateService"/>

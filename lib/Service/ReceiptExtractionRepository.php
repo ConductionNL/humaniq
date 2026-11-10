@@ -33,6 +33,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -182,9 +184,10 @@ class ReceiptExtractionRepository {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::EXPENSE_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::EXPENSE_SCHEMA),
+				uuid: ($id === '' ? null : $id)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -198,12 +201,13 @@ class ReceiptExtractionRepository {
 	 * @param array<string, mixed> $fields The object fields.
 	 *
 	 * @return array<string, mixed> The created object, normalised to an array.
+	 *
+	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-004
 	 */
 	public function createReceiptExtraction(array $fields): array {
 		$created = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->register(),
-			schema: self::RECEIPT_EXTRACTION_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::RECEIPT_EXTRACTION_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -218,6 +222,8 @@ class ReceiptExtractionRepository {
 	 * @param array<string, mixed> $fields The fields to overwrite.
 	 *
 	 * @return array<string, mixed> The saved object, normalised to an array.
+	 *
+	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-004
 	 */
 	public function saveReceiptExtraction(array $existing, array $fields): array {
 		$id = (string)($existing['id'] ?? $existing['@self']['id'] ?? '');
@@ -227,9 +233,10 @@ class ReceiptExtractionRepository {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::RECEIPT_EXTRACTION_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::RECEIPT_EXTRACTION_SCHEMA),
+				uuid: ($id === '' ? null : $id)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

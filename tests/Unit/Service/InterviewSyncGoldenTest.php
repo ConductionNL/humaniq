@@ -36,6 +36,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\InterviewCalendarService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\AppFramework\Db\DoesNotExistException;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -222,15 +223,16 @@ class InterviewSyncGoldenTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $object The object.
-			 * @param string $register The register.
-			 * @param string $schema The schema.
-			 * @param string|null $uuid The id.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac Unused.
 			 * @param bool $_multitenancy Unused.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, string $register, string $schema, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = (string)($options->target->register ?? '');
+				$schema = (string)($options->target->schema ?? '');
+				$uuid = $options->uuid;
 				$this->test->calls[] = ['saveObject', $register, $schema, $uuid, $_rbac, $_multitenancy, $object];
 				if ($this->failSave === true) {
 					throw new RuntimeException('save refused');

@@ -33,6 +33,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -99,6 +101,8 @@ class OfferApplicationRepository {
 	 * @param array<string, mixed> $writes The field values to write (never `status`).
 	 *
 	 * @return array<string, mixed> The saved Application, normalised to an array.
+	 *
+	 * @spec openspec/specs/offer-esign/spec.md#REQ-OFFR-002
 	 */
 	public function save(array $existing, array $writes): array {
 		$id = (string)($existing['id'] ?? $existing['@self']['id'] ?? '');
@@ -108,9 +112,10 @@ class OfferApplicationRepository {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::APPLICATION_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::APPLICATION_SCHEMA),
+				uuid: ($id === '' ? null : $id)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

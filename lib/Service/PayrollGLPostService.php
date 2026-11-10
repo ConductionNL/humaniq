@@ -44,6 +44,8 @@ namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -515,8 +517,7 @@ class PayrollGLPostService {
 
 		$created = $this->objectService()->saveObject(
 			object: $payload,
-			register: self::SHILLINQ_REGISTER,
-			schema: self::SHILLINQ_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::SHILLINQ_REGISTER, schema: self::SHILLINQ_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -586,9 +587,7 @@ class PayrollGLPostService {
 		try {
 			$this->objectService()->saveObject(
 				object: $payload,
-				register: $this->register(),
-				schema: 'PayrollRun',
-				uuid: $runId,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: 'PayrollRun'), uuid: $runId),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -681,8 +680,7 @@ class PayrollGLPostService {
 	private function createGlPost(array $fields): array {
 		$created = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->register(),
-			schema: self::GLPOST_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::GLPOST_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -706,9 +704,10 @@ class PayrollGLPostService {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::GLPOST_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::GLPOST_SCHEMA),
+				uuid: ($id === '' ? null : $id)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

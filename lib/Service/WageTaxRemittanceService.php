@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -254,8 +256,9 @@ class WageTaxRemittanceService {
 	private function finish(string $runId, array $fields, ?string $payableId=null): array {
 		$saved = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->settingsService->getRegisterSlug(),
-			schema: self::RECORD_SCHEMA,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: self::RECORD_SCHEMA)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

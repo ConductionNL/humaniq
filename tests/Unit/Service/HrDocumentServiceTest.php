@@ -43,6 +43,8 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -155,9 +157,7 @@ class HrDocumentServiceTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $object The object to save.
-			 * @param string|null $register Register slug (unused by the fake).
-			 * @param string|null $schema Schema name.
-			 * @param string|null $uuid Existing id when updating.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac Unused by the fake.
 			 * @param bool $_multitenancy Unused by the fake.
 			 *
@@ -165,12 +165,12 @@ class HrDocumentServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
 				$saved = array_merge($object, ['id' => $id]);
@@ -1061,7 +1061,10 @@ class HrDocumentServiceTest extends TestCase {
 		$this->assertSame('generated', $first['status']);
 
 		// A new 2026 payslip lands after the first jaaropgaaf was generated.
-		$fake->saveObject($this->payslip(['id' => 'ps-2', 'period' => '2026-02', 'grossPay' => 4000.0]), null, 'Payslip', 'ps-2');
+		$fake->saveObject(
+			$this->payslip(['id' => 'ps-2', 'period' => '2026-02', 'grossPay' => 4000.0]),
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(schema: 'Payslip'), uuid: 'ps-2')
+		);
 
 		$second = $service->generateJaaropgaaf('emp-1', 2026);
 		// The document itself no-ops (same jaaropgaafId, already generated,

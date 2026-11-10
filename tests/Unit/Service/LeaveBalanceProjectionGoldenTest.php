@@ -37,6 +37,7 @@ use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\LeaveTypeResolver;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WorkingCalendarReader;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
@@ -246,15 +247,16 @@ class LeaveBalanceProjectionGoldenTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $object The object.
-			 * @param string|null $register The register.
-			 * @param string|null $schema The schema.
-			 * @param string|null $uuid The id.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac Unused.
 			 * @param bool $_multitenancy Unused.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, ?string $register = null, ?string $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->test->events[] = ['save' => [$register, $schema, $uuid, $_rbac, $_multitenancy, $object]];
 				if ($uuid === $this->failWrite) {
 					throw new RuntimeException('write refused');

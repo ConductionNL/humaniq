@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Flow;
 
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
@@ -168,9 +169,7 @@ abstract class FlowNodeTestCase extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $object The payload.
-			 * @param string|null $register Register slug.
-			 * @param string|null $schema Schema name.
-			 * @param string|null $uuid Existing object id.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac Unused by the fake.
 			 * @param bool $_multitenancy Unused by the fake.
 			 *
@@ -178,12 +177,12 @@ abstract class FlowNodeTestCase extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saved[] = [
 					'schema' => (string)$schema,
 					'uuid' => $uuid,

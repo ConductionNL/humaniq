@@ -37,6 +37,7 @@ use OCA\Humaniq\Controller\LoonbeslagController;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -471,9 +472,7 @@ class LoonbeslagControllerTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $object The object to save.
-			 * @param string|null $register Register slug (unused by the fake).
-			 * @param string|null $schema Schema name (unused by the fake).
-			 * @param string|null $uuid Existing id when updating.
+			 * @param ObjectSaveOptions $options The register, schema, uuid and the rest of the save settings.
 			 * @param bool $_rbac Unused by the fake.
 			 * @param bool $_multitenancy Unused by the fake.
 			 *
@@ -481,12 +480,11 @@ class LoonbeslagControllerTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {
+				$uuid = $options->uuid;
 				$this->savedUuids[] = $uuid;
 				$id = ($uuid ?? ('generated-' . $this->nextId++));
 				$saved = array_merge($object, ['id' => $id]);
