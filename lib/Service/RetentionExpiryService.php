@@ -326,8 +326,8 @@ class RetentionExpiryService {
 	 * under `released`, a marked employee under `marked`, and a dry run under
 	 * the matching `would` counter.
 	 *
-	 * @param array<string, bool|int> $summary The running summary.
-	 * @param array<string, mixed>    $result  The record's outcome.
+	 * @param array{enabled: bool, released: int, marked: int, wouldRelease: int, wouldMark: int} $summary The running summary.
+	 * @param array{eligible: bool, released?: bool, marked?: bool, floor: string|null} $result  The record's outcome.
 	 *
 	 * @return array{enabled: bool, released: int, marked: int, wouldRelease: int, wouldMark: int}
 	 */
