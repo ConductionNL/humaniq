@@ -43,9 +43,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Support\BuildsSaveOptions;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -58,6 +57,7 @@ use RuntimeException;
 class LeaveBalanceProjectionService {
 
 	use ConvertsRowsToArrays;
+	use BuildsSaveOptions;
 
 	/**
 	 * Max objects loaded per type when scanning for the requests behind a balance.
@@ -398,10 +398,7 @@ class LeaveBalanceProjectionService {
 		try {
 			$this->objectService()->saveObject(
 				object: $payload,
-				options: new ObjectSaveOptions(
-					target: new ObjectFindTarget(register: $this->register(), schema: 'LeaveBalance'),
-					uuid: ($uuid === '' ? null : $uuid)
-				),
+				options: $this->saveOptions(register: $this->register(), schema: 'LeaveBalance', uuid: ($uuid === '' ? null : $uuid)),
 				_rbac: false,
 				_multitenancy: false
 			);

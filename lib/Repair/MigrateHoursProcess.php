@@ -64,8 +64,7 @@ use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\TimesheetAggregationService;
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\Humaniq\Support\BuildsSaveOptions;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
@@ -81,6 +80,7 @@ use OCA\Humaniq\Support\KeepsReadableRows;
 class MigrateHoursProcess implements IRepairStep {
 
 	use KeepsReadableRows;
+	use BuildsSaveOptions;
 
 	/**
 	 * Upper bound for lookup queries (dev-stage volumes).
@@ -270,10 +270,7 @@ class MigrateHoursProcess implements IRepairStep {
 			$this->marker->runInternal(function () use ($payload, $timesheetId): void {
 				$this->objects()->saveObject(
 					object: $payload,
-					options: new ObjectSaveOptions(
-						target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: 'Timesheet'),
-						uuid: $timesheetId
-					),
+					options: $this->saveOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Timesheet', uuid: $timesheetId),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -335,9 +332,7 @@ class MigrateHoursProcess implements IRepairStep {
 		$this->marker->runInternal(function () use ($entry): void {
 			$this->objects()->saveObject(
 				object: $entry,
-				options: new ObjectSaveOptions(
-					target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: 'TimeEntry')
-				),
+				options: $this->saveOptions(register: $this->settingsService->getRegisterSlug(), schema: 'TimeEntry'),
 				_rbac: false,
 				_multitenancy: false
 			);
