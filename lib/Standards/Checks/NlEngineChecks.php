@@ -256,35 +256,64 @@ final class NlEngineChecks implements CheckProvider {
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-007
 	 */
 	private static function isOutputConsistent(array $o, array $context): bool {
-		$runId = trim((string)($o['payrollRunId'] ?? ''));
-		if ($runId === '') {
-			// Hand-entered payslip — out of scope (vacuous pass).
+		if (self::isOfEngineRun(o: $o, context: $context) === false) {
+			// Hand-entered payslip, or an unresolvable or hand-entered run — out of scope (vacuous pass).
 			return true;
 		}
 
-		$run = ($context['payroll']['runsById'][$runId] ?? null);
-		if (is_array($run) === false || trim((string)($run['engineVersion'] ?? '')) === '') {
-			// Unresolvable or hand-entered run — out of scope (vacuous pass).
-			return true;
-		}
-
-		if (self::numeric($o, 'grossPay') === false
-			|| self::numeric($o, 'loonheffing') === false
-			|| self::numeric($o, 'nettoPay') === false
-		) {
+		if (self::hasAmounts(o: $o) === false) {
 			return false;
 		}
 
+		$expectedNet = (((float)$o['grossPay']) - ((float)$o['loonheffing']) - self::deductions(o: $o));
+
+		return self::centsEqual((float)$o['nettoPay'], $expectedNet);
+	}//end isOutputConsistent()
+
+	/**
+	 * Whether a payslip belongs to a resolvable run the engine calculated.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 * @param array<string, mixed> $context The evaluation context, with `payroll.runsById`.
+	 *
+	 * @return bool
+	 */
+	private static function isOfEngineRun(array $o, array $context): bool {
+		$runId = trim((string)($o['payrollRunId'] ?? ''));
+		$run = ($runId === '') ? null : ($context['payroll']['runsById'][$runId] ?? null);
+
+		return is_array($run) === true && trim((string)($run['engineVersion'] ?? '')) !== '';
+	}//end isOfEngineRun()
+
+	/**
+	 * Whether the gross, the wage tax and the net are numeric.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function hasAmounts(array $o): bool {
+		return self::numeric($o, 'grossPay') === true
+			&& self::numeric($o, 'loonheffing') === true
+			&& self::numeric($o, 'nettoPay') === true;
+	}//end hasAmounts()
+
+	/**
+	 * The pension contribution (null counts as zero) plus the Zvw when it is withheld.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return float
+	 */
+	private static function deductions(array $o): float {
 		$pension = is_numeric($o['pensionContribution'] ?? null) === true ? (float)$o['pensionContribution'] : 0.0;
 		$zvw = 0.0;
 		if ((string)($o['zvwMode'] ?? '') === 'inhouding' && is_numeric($o['zvw'] ?? null) === true) {
 			$zvw = (float)$o['zvw'];
 		}
 
-		$expectedNet = (((float)$o['grossPay']) - ((float)$o['loonheffing']) - $pension - $zvw);
-
-		return self::centsEqual((float)$o['nettoPay'], $expectedNet);
-	}//end isOutputConsistent()
+		return ($pension + $zvw);
+	}//end deductions()
 
 	/**
 	 * The `nl-engine-provenance-complete` predicate (audit-trail-payroll
