@@ -155,18 +155,56 @@ class SurveyResults {
 	private function summary(array $question, array $values, bool $withText): array {
 		$type = (string)($question['type'] ?? 'textarea');
 		$summary = ['key' => (string)$question['key'], 'label' => (string)($question['label'] ?? ''), 'type' => $type, 'count' => count($values)];
-		if ($type === 'textarea' || $type === 'text') {
-			if ($withText === true) {
-				$texts = array_map('strval', $values);
-				shuffle($texts);
-				$summary['texts'] = $texts;
-			}
+		if (self::isFreeText(type: $type) === true) {
+			return $summary + ($withText === true ? ['texts' => self::shuffledTexts(values: $values)] : []);
+		}
 
+		$summary['distribution'] = $this->distribution(question: $question, values: $values);
+		if ($type === 'enum' || $values === []) {
 			return $summary;
 		}
 
+		return $summary + self::scores(type: $type, numbers: array_map('intval', $values));
+	}//end summary()
+
+	/**
+	 * Whether a question takes free text.
+	 *
+	 * @param string $type The question type.
+	 *
+	 * @return bool
+	 */
+	private static function isFreeText(string $type): bool {
+		return $type === 'textarea' || $type === 'text';
+	}//end isFreeText()
+
+	/**
+	 * The free-text answers in a random order, so the order says nothing
+	 * about who wrote what.
+	 *
+	 * @param list<mixed> $values The answers given.
+	 *
+	 * @return list<string>
+	 */
+	private static function shuffledTexts(array $values): array {
+		$texts = array_map('strval', $values);
+		shuffle($texts);
+
+		return $texts;
+	}//end shuffledTexts()
+
+	/**
+	 * How often each answer was given; a scale lists every point of its
+	 * range, a choice only the answers given.
+	 *
+	 * @param array<string, mixed> $question The question.
+	 * @param list<mixed>          $values   The answers given.
+	 *
+	 * @return array<string, int>
+	 */
+	private function distribution(array $question, array $values): array {
 		$distribution = [];
-		if ($type !== 'enum') {
+		if ((string)($question['type'] ?? 'textarea') !== 'enum') {
 			[$low, $high] = $this->answers->range($question);
 			$distribution = array_fill_keys(array_map('strval', range($low, $high)), 0);
 		}
@@ -175,21 +213,27 @@ class SurveyResults {
 			$distribution[(string)$value] = (($distribution[(string)$value] ?? 0) + 1);
 		}
 
-		$summary['distribution'] = $distribution;
-		if ($type === 'enum' || $values === []) {
-			return $summary;
-		}
+		return $distribution;
+	}//end distribution()
 
-		$numbers = array_map('intval', $values);
-		$summary['average'] = round(array_sum($numbers) / count($numbers), 2);
+	/**
+	 * The average of the scores and, for a recommendation, the eNPS.
+	 *
+	 * @param string    $type    The question type.
+	 * @param list<int> $numbers The scores, at least one.
+	 *
+	 * @return array{average: float, enps?: int}
+	 */
+	private static function scores(string $type, array $numbers): array {
+		$scores = ['average' => round(array_sum($numbers) / count($numbers), 2)];
 		if ($type === 'recommend') {
 			$promoters = count(array_filter($numbers, static fn (int $score): bool => $score >= 9));
 			$detractors = count(array_filter($numbers, static fn (int $score): bool => $score <= 6));
-			$summary['enps'] = (int)round(($promoters - $detractors) / count($numbers) * 100);
+			$scores['enps'] = (int)round(($promoters - $detractors) / count($numbers) * 100);
 		}
 
-		return $summary;
-	}//end summary()
+		return $scores;
+	}//end scores()
 
 	/**
 	 * Flat rows for a table: one per question, overall and per department.
