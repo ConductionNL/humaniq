@@ -110,8 +110,40 @@ class HrDocumentSigningService {
 	 * @spec openspec/specs/hr-document-signing/spec.md#REQ-HDS-002
 	 */
 	public function requestSignature(array $document, string $actingUserId): array {
-		$type = (string)($document['documentType'] ?? '');
-		if (isset(self::SIGNABLE[$type]) === false || ($document['status'] ?? '') !== 'generated') {
+		$refusal = $this->stateRefusal(document: $document);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		if ($this->signing->available() === false) {
+			$document = $this->saveDocument($document, ['signingStatus' => 'skipped-no-docudesk']);
+			return $this->outcome($document, 'skipped-no-docudesk', 'De documentenapp is niet beschikbaar; er is niets verstuurd.');
+		}
+
+		$employee = ($this->register->findObjectData((string)($document['employeeId'] ?? ''), 'Employee') ?? []);
+		$signers = $this->signers((string)$document['documentType'], $employee, $actingUserId);
+		if ($signers === null) {
+			return $this->failed(document: $document, message: 'no-nextcloud-user-for-employee: de medewerker heeft geen Nextcloud-account en kan daarom niet ondertekenen.');
+		}
+
+		$fileId = $this->fileId($document);
+		if ($fileId === null) {
+			return $this->failed(document: $document, message: 'Het opgeslagen PDF-bestand van dit document is niet gevonden. Genereer het document opnieuw.');
+		}
+
+		return $this->raise($document, $signers, $fileId, trim((string)($employee['firstName'] ?? '') . ' ' . (string)($employee['lastName'] ?? '')));
+	}//end requestSignature()
+
+	/**
+	 * Why the document cannot go out for signing in its state: not a signable
+	 * generated document, already signed, or a request already running.
+	 *
+	 * @param array<string, mixed> $document The document.
+	 *
+	 * @return array{status: string, message: string, signingRequestId: string|null, signingStatus: string|null}|null
+	 */
+	private function stateRefusal(array $document): ?array {
+		if (isset(self::SIGNABLE[(string)($document['documentType'] ?? '')]) === false || ($document['status'] ?? '') !== 'generated') {
 			return $this->outcome($document, 'refused', 'Alleen een gegenereerde arbeidsovereenkomst, werkgeversverklaring of getuigschrift kan worden ondertekend.');
 		}
 
@@ -124,26 +156,22 @@ class HrDocumentSigningService {
 			return $this->outcome($document, 'existing', 'Er loopt al een ondertekenverzoek voor dit document.');
 		}
 
-		if ($this->signing->available() === false) {
-			$document = $this->saveDocument($document, ['signingStatus' => 'skipped-no-docudesk']);
-			return $this->outcome($document, 'skipped-no-docudesk', 'De documentenapp is niet beschikbaar; er is niets verstuurd.');
-		}
+		return null;
+	}//end stateRefusal()
 
-		$employee = ($this->register->findObjectData((string)($document['employeeId'] ?? ''), 'Employee') ?? []);
-		$signers = $this->signers($type, $employee, $actingUserId);
-		if ($signers === null) {
-			$document = $this->saveDocument($document, ['signingStatus' => 'failed', 'errorMessage' => 'no-nextcloud-user-for-employee: de medewerker heeft geen Nextcloud-account en kan daarom niet ondertekenen.']);
-			return $this->outcome($document, 'failed', (string)$document['errorMessage']);
-		}
+	/**
+	 * Store the failure on the document and answer it.
+	 *
+	 * @param array<string, mixed> $document The document.
+	 * @param string               $message  Why it failed.
+	 *
+	 * @return array{status: string, message: string, signingRequestId: string|null, signingStatus: string|null}
+	 */
+	private function failed(array $document, string $message): array {
+		$document = $this->saveDocument($document, ['signingStatus' => 'failed', 'errorMessage' => $message]);
 
-		$fileId = $this->fileId($document);
-		if ($fileId === null) {
-			$document = $this->saveDocument($document, ['signingStatus' => 'failed', 'errorMessage' => 'Het opgeslagen PDF-bestand van dit document is niet gevonden. Genereer het document opnieuw.']);
-			return $this->outcome($document, 'failed', (string)$document['errorMessage']);
-		}
-
-		return $this->raise($document, $signers, $fileId, trim((string)($employee['firstName'] ?? '') . ' ' . (string)($employee['lastName'] ?? '')));
-	}//end requestSignature()
+		return $this->outcome($document, 'failed', (string)$document['errorMessage']);
+	}//end failed()
 
 	/**
 	 * Read the status of running requests and write it back.
@@ -183,23 +211,7 @@ class HrDocumentSigningService {
 	 * @return array{status: string, message: string, signingRequestId: string|null, signingStatus: string|null}
 	 */
 	private function raise(array $document, array $signers, int $fileId, string $subject): array {
-		$documentId = (string)($document['id'] ?? '');
-		$created = $this->signing->create([
-			'documentFileId' => (string)$fileId,
-			'documentName' => basename((string)($document['filePath'] ?? 'document.pdf')),
-			'signatureLevel' => 'SES',
-			'signingMode' => 'sequential',
-			'deadline' => (new DateTimeImmutable())->modify('+' . $this->settings->getOfferSigningDeadlineDays() . ' days')->format(DateTimeInterface::ATOM),
-			'signers' => $signers,
-			// Frozen provenance value, the recovery key of requests already raised (D1).
-			'sourceApp' => 'hrmq',
-			'subjectRegister' => $this->settings->getRegisterSlug(),
-			'subjectSchema' => self::DOCUMENT_SCHEMA,
-			'subjectId' => $documentId,
-			'subjectLabel' => $subject,
-			'externalReference' => $documentId,
-			'correlationId' => $documentId,
-		]);
+		$created = $this->signing->create($this->requestFields(document: $document, signing: ['fileId' => $fileId, 'signers' => $signers, 'subject' => $subject]));
 
 		$document = $this->saveDocument(
 			$document,
@@ -215,6 +227,39 @@ class HrDocumentSigningService {
 
 		return $this->outcome($document, 'requested', 'Het ondertekenverzoek is verstuurd.');
 	}//end raise()
+
+	/**
+	 * The signing request of a document: its PDF, signers in order, deadline
+	 * and the provenance that recovers it.
+	 *
+	 * @param array<string, mixed>                                                            $document The document.
+	 * @param array{fileId: int, signers: list<array<string, string|int>>, subject: string} $signing  The stored PDF, the signers and the employee's name.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function requestFields(array $document, array $signing): array {
+		$documentId = (string)($document['id'] ?? '');
+		$fileId = $signing['fileId'];
+		$signers = $signing['signers'];
+		$subject = $signing['subject'];
+
+		return [
+			'documentFileId' => (string)$fileId,
+			'documentName' => basename((string)($document['filePath'] ?? 'document.pdf')),
+			'signatureLevel' => 'SES',
+			'signingMode' => 'sequential',
+			'deadline' => (new DateTimeImmutable())->modify('+' . $this->settings->getOfferSigningDeadlineDays() . ' days')->format(DateTimeInterface::ATOM),
+			'signers' => $signers,
+			// Frozen provenance value, the recovery key of requests already raised (D1).
+			'sourceApp' => 'hrmq',
+			'subjectRegister' => $this->settings->getRegisterSlug(),
+			'subjectSchema' => self::DOCUMENT_SCHEMA,
+			'subjectId' => $documentId,
+			'subjectLabel' => $subject,
+			'externalReference' => $documentId,
+			'correlationId' => $documentId,
+		];
+	}//end requestFields()
 
 	/**
 	 * The signers for a document type, or null when the employee must sign and has no account.
