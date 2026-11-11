@@ -70,19 +70,25 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * @return array<string, callable>
 	 */
 	private static function payslipChecks(): array {
+		return [...self::germanPayslipChecks(), ...self::usPayslipChecks(), ...self::frenchPayslipChecks()];
+
+	}//end payslipChecks()
+
+	/**
+	 * German Payslip checks: Lohnsteuer, Soli, Kirchensteuer and the SV rates and caps.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function germanPayslipChecks(): array {
 		return [
 			// EStG §38 — Lohnsteuer is withheld at each payment.
-			'de-lohnsteuer-einbehalt' => static fn (array $o): bool => self::numeric($o, 'lohnsteuer') && ((float)$o['lohnsteuer']) >= 0.0,
+			'de-lohnsteuer-einbehalt' => self::lohnsteuerWithheld(...),
 			// SolzG §3-4 — Soli is 5,5% of the Lohnsteuer where the Freigrenze is exceeded.
-			'de-solidaritaetszuschlag' => static fn (array $o): bool => (($o['solzApplicable'] ?? false) !== true)
-				|| self::centsEqual((float)($o['solidaritaetszuschlag'] ?? 0), (((float)($o['lohnsteuer'] ?? 0)) * 0.055)),
+			'de-solidaritaetszuschlag' => self::solidaritaetszuschlagMatches(...),
 			// KiStG / EStG §51a — Kirchensteuer is 8% or 9% of the Lohnsteuer for members.
-			'de-kirchensteuer' => static fn (array $o): bool => (($o['churchMember'] ?? false) !== true)
-				|| (self::numeric($o, 'kirchensteuerRate')
-				&& in_array((int)round((float)$o['kirchensteuerRate']), [8, 9], true)
-				&& self::centsEqual((float)($o['kirchensteuer'] ?? 0), (((float)($o['lohnsteuer'] ?? 0)) * ((float)$o['kirchensteuerRate']) / 100))),
+			'de-kirchensteuer' => self::kirchensteuerMatches(...),
 			// SGB VI §158 — RV 2026 rate 18,6% shared 9,3% / 9,3%.
-			'de-rv-beitragssatz-2026' => static fn (array $o): bool => self::rate($o, 'rvEmployeeRate', 9.3) && self::rate($o, 'rvEmployerRate', 9.3),
+			'de-rv-beitragssatz-2026' => self::rentenversicherungRatesMatch(...),
 			// SGB V §241 — KV 2026 general base rate 14,6%.
 			'de-kv-beitragssatz-2026' => static fn (array $o): bool => self::rate($o, 'kvBaseRate', 14.6),
 			// SGB III §341 — AV 2026 rate 2,6%.
@@ -90,38 +96,54 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 			// SGB XI §55 — PV 2026 base rate 3,6%.
 			'de-pv-beitragssatz-2026' => static fn (array $o): bool => self::rate($o, 'pvBaseRate', 3.6),
 			// SVRechGrößen 2026 — RV/AV BBG EUR 8.450/month: contribution base is capped.
-			'de-bbg-rv-av-2026' => static fn (array $o): bool => self::numeric($o, 'svContributionBase') && ((float)$o['svContributionBase']) <= 8450.0,
+			'de-bbg-rv-av-2026' => self::rvAvBaseCapped(...),
 			// SVRechGrößen 2026 — KV/PV BBG EUR 5.812,50/month: KV/PV base is capped.
-			'de-bbg-kv-pv-2026' => static fn (array $o): bool => self::numeric($o, 'kvPvContributionBase') && ((float)$o['kvPvContributionBase']) <= 5812.50,
+			'de-bbg-kv-pv-2026' => self::kvPvBaseCapped(...),
+		];
+
+	}//end germanPayslipChecks()
+
+	/**
+	 * US Payslip checks: FICA, Medicare and federal income-tax withholding.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function usPayslipChecks(): array {
+		return [
 			// IRC §3101(a) — employee Social Security (OASDI) rate 6,2%.
 			'us-fica-social-security' => static fn (array $o): bool => self::rate($o, 'ficaSsRate', 6.2),
 			// SSA 2026 wage base USD 184.500 — OASDI taxable wage is capped.
-			'us-social-security-wage-base-2026' => static fn (array $o): bool => self::numeric($o, 'ficaSsWageBaseApplied') && ((float)$o['ficaSsWageBaseApplied']) <= 184500.0,
+			'us-social-security-wage-base-2026' => self::socialSecurityWageBaseCapped(...),
 			// IRC §3101(b)(1) — employee Medicare rate 1,45%.
 			'us-fica-medicare' => static fn (array $o): bool => self::rate($o, 'medicareRate', 1.45),
 			// IRC §3101(b)(2) — additional 0,9% Medicare is a boolean applicability flag.
-			'us-additional-medicare-tax' => static fn (array $o): bool => array_key_exists('additionalMedicareApplied', $o) && is_bool($o['additionalMedicareApplied']),
+			'us-additional-medicare-tax' => self::additionalMedicareFlagged(...),
 			// IRC §3402 — federal income tax is withheld (a non-negative amount present).
-			'us-federal-income-tax-withholding' => static fn (array $o): bool => self::numeric($o, 'federalIncomeTaxWithheld') && ((float)$o['federalIncomeTaxWithheld']) >= 0.0,
+			'us-federal-income-tax-withholding' => self::federalIncomeTaxWithheld(...),
+		];
+
+	}//end usPayslipChecks()
+
+	/**
+	 * French Payslip checks: cotisations, PAS, réduction générale and the bulletin mentions.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function frenchPayslipChecks(): array {
+		return [
 			// CSS art. L241-1 — URSSAF cotisations on the gross assiette.
-			'fr-urssaf-cotisations' => static fn (array $o): bool => self::numeric($o, 'cotisations') && ((float)$o['cotisations']) >= 0.0,
+			'fr-urssaf-cotisations' => self::cotisationsPresent(...),
 			// CGI art. 204A — PAS applied at the administration-transmitted rate.
-			'fr-prelevement-a-la-source' => static fn (array $o): bool => self::numeric($o, 'pasRate')
-				&& self::centsEqual((float)($o['prelevementSource'] ?? 0), (((float)($o['netImposable'] ?? 0)) * ((float)$o['pasRate']) / 100)),
+			'fr-prelevement-a-la-source' => self::prelevementMatchesRate(...),
 			// CSS art. L241-13 — réduction générale is a boolean applicability flag.
-			'fr-reduction-generale' => static fn (array $o): bool => array_key_exists('reductionGeneraleApplied', $o) && is_bool($o['reductionGeneraleApplied']),
+			'fr-reduction-generale' => self::reductionGeneraleFlagged(...),
 			// Code du travail art. R3243-1 — mandatory bulletin mentions present.
-			'fr-bulletin-de-paie-mentions' => static fn (array $o): bool => (($o['showsGrossWage'] ?? false) === true)
-				&& self::numeric($o, 'cotisations')
-				&& self::numeric($o, 'netImposable')
-				&& self::numeric($o, 'netAPayer')
-				&& self::numeric($o, 'montantNetSocial')
-				&& self::present($o, 'conventionCollective'),
+			'fr-bulletin-de-paie-mentions' => self::bulletinMentionsComplete(...),
 			// Arrêté 31/01/2023 — the montant net social is displayed.
 			'fr-montant-net-social' => static fn (array $o): bool => self::numeric($o, 'montantNetSocial'),
 		];
 
-	}//end payslipChecks()
+	}//end frenchPayslipChecks()
 
 	/**
 	 * DE/US Employee-level checks (ELStAM, W-4, I-9, new-hire reporting).
@@ -131,14 +153,13 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	private static function employeeChecks(): array {
 		return [
 			// EStG §39e — ELStAM retrieved and a Steuerklasse applied.
-			'de-elstam-abruf' => static fn (array $o): bool => (($o['elstamRetrieved'] ?? false) === true) && self::present($o, 'steuerklasse'),
+			'de-elstam-abruf' => self::elstamRetrieved(...),
 			// IRS Form W-4 — a W-4 is on file (or the default highest withholding applies).
 			'us-w4-on-file' => static fn (array $o): bool => (($o['w4OnFile'] ?? false) === true),
 			// IRCA / Form I-9 — work eligibility verified within 3 business days of start.
 			'us-i9-verification' => static fn (array $o): bool => (($o['i9VerifiedWithinThreeDays'] ?? false) === true),
 			// PRWORA — the new hire is reported to the state Directory within 20 days of hire.
-			'us-new-hire-reporting' => static fn (array $o): bool => self::present($o, 'newHireReportedDate')
-				&& self::withinDaysOf($o, 'startDate', 'newHireReportedDate', 20),
+			'us-new-hire-reporting' => self::newHireReportedInTime(...),
 		];
 
 	}//end employeeChecks()
@@ -152,19 +173,17 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	private static function contractChecks(): array {
 		return [
 			// MiLoG §1 — DE minimum wage 2026 EUR 13,90/hour shall not be undercut.
-			'de-mindestlohn-2026' => static fn (array $o): bool => self::numeric($o, 'hourlyWage') && ((float)$o['hourlyWage']) >= 13.90,
+			'de-mindestlohn-2026' => self::hourlyWageAtLeast(13.90),
 			// MiLoG §17 — daily working time documented for §17 sectors/Minijobs.
-			'de-mindestlohn-arbeitszeit-doku' => static fn (array $o): bool => (in_array((string)($o['type'] ?? ''), ['minijob', 'agency'], true) === false)
-				|| (($o['workingTimeDocumented'] ?? false) === true),
+			'de-mindestlohn-arbeitszeit-doku' => self::workingTimeDocumentedWhereRequired(...),
 			// SGB IV §8 — a Minijob uses flat-rate contributions; the flag must be consistent.
-			'de-minijob-pauschale' => static fn (array $o): bool => ((string)($o['type'] ?? '') !== 'minijob')
-				|| (($o['ftePartOfYearMinijob'] ?? false) === true),
+			'de-minijob-pauschale' => self::minijobFlatRateFlagged(...),
 			// Code du travail art. L3231-2 — FR SMIC 2026 ~EUR 11,88/hour minimum.
-			'fr-smic-2026' => static fn (array $o): bool => self::numeric($o, 'hourlyWage') && ((float)$o['hourlyWage']) >= 11.88,
+			'fr-smic-2026' => self::hourlyWageAtLeast(11.88),
 			// FLSA §206 — US federal minimum wage USD 7,25/hour (or higher state minimum).
-			'us-flsa-minimum-wage' => static fn (array $o): bool => self::numeric($o, 'hourlyWage') && ((float)$o['hourlyWage']) >= 7.25,
+			'us-flsa-minimum-wage' => self::hourlyWageAtLeast(7.25),
 			// FLSA §207 — non-exempt overtime at ≥1,5× the regular rate.
-			'us-flsa-overtime' => static fn (array $o): bool => self::numeric($o, 'overtimeMultiplier') && ((float)$o['overtimeMultiplier']) >= 1.5,
+			'us-flsa-overtime' => self::overtimeMultiplierMet(...),
 			// Code du travail art. L1221-10 — DPAE filed in the 8 days before the hire.
 			'fr-dpae' => static fn (array $o): bool => (($o['dpaeFiledBeforeStart'] ?? false) === true),
 		];
@@ -179,93 +198,597 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 */
 	private static function filingChecks(): array {
 		return [
-			// EStG §41a Abs. 1 — Lohnsteuer-Anmeldung filed electronically by the deadline.
-			'de-lohnsteuer-anmeldung' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'lohnsteuer-anmeldung')
-				|| ((($o['electronicallyFiled'] ?? false) === true) && self::onOrBefore($o, 'submittedDate', 'deadline')),
-			// EStG §41a Abs. 2 — Anmeldungszeitraum derived from prior-year liability thresholds.
-			'de-lohnsteuer-anmeldungszeitraum' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'lohnsteuer-anmeldung')
-				|| ((string)($o['tijdvak'] ?? '') === self::expectedDeAnmeldungszeitraum($o)),
-			// LStDV §4 Abs. 2 Nr. 8 / AO §147 — Lohnkonto retained until end of the 6th year.
-			'de-lohnkonto-aufbewahrung' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'lohnsteuer-anmeldung')
-				|| self::retainedYearsAfterPeriod($o, 6),
-			// EStG §41b — Lohnsteuerbescheinigung transmitted after year-end / on termination.
-			'de-lohnsteuerbescheinigung' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'lohnsteuerbescheinigung')
-				|| self::present($o, 'furnishedToRecipientDate'),
-			// SGB IV §28a — DEÜV-Meldung transmitted electronically.
-			'de-sozialversicherung-meldepflicht' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'deuv-meldung')
-				|| (($o['electronicallyFiled'] ?? false) === true),
-			// SGB IV §28e — full Gesamtsozialversicherungsbeitrag paid (a paid date present).
-			'de-sv-gesamtbeitrag-abfuehren' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'beitragsnachweis')
-				|| self::present($o, 'paidDate'),
-			// SGB IV §23 Abs. 1 — contributions paid on or before the due date.
-			'de-sv-faelligkeit' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'beitragsnachweis')
-				|| self::onOrBefore($o, 'paidDate', 'deadline'),
-			// SGB IV §28f Abs. 3 — Beitragsnachweis transmitted by the deadline.
-			'de-beitragsnachweis' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'beitragsnachweis')
-				|| ((($o['electronicallyFiled'] ?? false) === true) && self::onOrBefore($o, 'submittedDate', 'deadline')),
-			// CSS art. L133-5-3 — monthly DSN transmitted electronically.
-			'fr-dsn-mensuelle' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'dsn')
-				|| ((($o['electronicallyFiled'] ?? false) === true) && ((string)($o['tijdvak'] ?? '') === 'month')),
-			// CSS art. R243-6 — DSN + payment by the deadline.
-			'fr-dsn-echeance' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'dsn')
-				|| self::onOrBefore($o, 'submittedDate', 'deadline'),
-			// DSN signalements — event signals within 5 working days.
-			'fr-dsn-evenementielle' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'dsn')
-				|| (($o['eventSignalDays'] ?? null) === null)
-				|| (is_numeric($o['eventSignalDays']) && ((float)$o['eventSignalDays']) <= 5.0),
-			// Code du travail art. L3243-4 — bulletin duplicate retained 5 years.
-			'fr-bulletin-conservation' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'dsn')
-				|| self::retainedYearsAfterPeriod($o, 5),
-			// IRS Form 941 — quarterly return filed by the deadline for a quarterly tijdvak.
-			'us-form-941-quarterly' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'form-941')
-				|| (((string)($o['tijdvak'] ?? '') === 'quarter') && self::onOrBefore($o, 'submittedDate', 'deadline')),
-			// IRS Pub. 15 — deposit schedule is monthly ≤USD 50.000 lookback, else semiweekly.
-			'us-deposit-schedule-lookback' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'deposit')
-				|| ((string)($o['depositSchedule'] ?? '') === self::expectedUsDepositSchedule($o)),
-			// Treas. Reg. §31.6302-1 (monthly) — monthly depositor deposits by the deadline.
-			'us-deposit-monthly' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'deposit')
-				|| ((string)($o['depositSchedule'] ?? '') !== 'monthly')
-				|| self::onOrBefore($o, 'paidDate', 'deadline'),
-			// Treas. Reg. §31.6302-1 (semiweekly) — semiweekly depositor uses the semiweekly tijdvak.
-			'us-deposit-semiweekly' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'deposit')
-				|| ((string)($o['depositSchedule'] ?? '') !== 'semiweekly')
-				|| ((string)($o['tijdvak'] ?? '') === 'semiweekly'),
-			// Treas. Reg. §31.6302-1 (one-day) — ≥USD 100.000 liability deposited next day.
-			'us-deposit-100k-next-day' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'deposit')
-				|| (((float)($o['accumulatedLiability'] ?? 0)) < 100000.0)
-				|| (($o['nextDayDepositMade'] ?? false) === true),
-			// Treas. Reg. §31.6302-1(h) — federal deposits made via EFTPS (electronic).
-			'us-eftps-deposit' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'deposit')
-				|| (($o['electronicallyFiled'] ?? false) === true),
-			// IRC §3301 / Form 940 — FUTA reported annually (a yearly filing by the deadline).
-			'us-futa-form-940' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'form-940')
-				|| (((string)($o['tijdvak'] ?? '') === 'year') && self::onOrBefore($o, 'submittedDate', 'deadline')),
-			// IRC §3302 — FUTA state-credit is a numeric accumulated-liability driven filing.
-			'us-futa-state-credit' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'form-940')
-				|| self::numeric($o, 'accumulatedLiability'),
-			// Form 940 instructions — FUTA deposited quarterly once liability exceeds USD 500.
-			'us-futa-deposit-500' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'form-940')
-				|| (((float)($o['accumulatedLiability'] ?? 0)) <= 500.0)
-				|| self::present($o, 'paidDate'),
-			// IRC §6051 / W-2 — furnished to the employee by the deadline (Jan 31).
-			'us-form-w2-to-employee' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'form-w2')
-				|| (self::present($o, 'furnishedToRecipientDate') && self::onOrBefore($o, 'furnishedToRecipientDate', 'deadline')),
-			// IRC §6051 / W-3 — Copy A + W-3 filed with the SSA by the deadline.
-			'us-form-w2-w3-to-ssa' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'form-w2')
-				|| (self::present($o, 'filedWithAuthorityDate') && self::onOrBefore($o, 'filedWithAuthorityDate', 'deadline')),
-			// Treas. Reg. §301.6011-2 — ≥10 returns must be e-filed.
-			'us-w2-efile-threshold' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'form-w2')
-				|| (((float)($o['returnCountInYear'] ?? 0)) < 10.0)
-				|| (($o['electronicallyFiled'] ?? false) === true),
-			// Treas. Reg. §31.6001-1 — employment-tax records retained at least 4 years.
-			'us-payroll-record-retention-irc' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'form-941')
-				|| self::retainedYearsAfterPeriod($o, 4),
-			// 29 CFR §516.5 (FLSA) — payroll records retained at least 3 years.
-			'us-flsa-record-retention' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'form-941')
-				|| self::retainedYearsAfterPeriod($o, 3),
+			...self::germanFilingChecks(),
+			...self::frenchFilingChecks(),
+			...self::usQuarterlyAndDepositChecks(),
+			...self::usYearEndChecks(),
 		];
 
 	}//end filingChecks()
+
+	/**
+	 * German filing checks: Lohnsteuer-Anmeldung, Bescheinigung, DEÜV and Beitragsnachweis.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function germanFilingChecks(): array {
+		return [
+			// EStG §41a Abs. 1 — Lohnsteuer-Anmeldung filed electronically by the deadline.
+			'de-lohnsteuer-anmeldung' => self::forFilingType('lohnsteuer-anmeldung', self::filedElectronicallyByDeadline(...)),
+			// EStG §41a Abs. 2 — Anmeldungszeitraum derived from prior-year liability thresholds.
+			'de-lohnsteuer-anmeldungszeitraum' => self::forFilingType('lohnsteuer-anmeldung', self::anmeldungszeitraumMatches(...)),
+			// LStDV §4 Abs. 2 Nr. 8 / AO §147 — Lohnkonto retained until end of the 6th year.
+			'de-lohnkonto-aufbewahrung' => self::forFilingType('lohnsteuer-anmeldung', self::retainedFor(6)),
+			// EStG §41b — Lohnsteuerbescheinigung transmitted after year-end / on termination.
+			'de-lohnsteuerbescheinigung' => self::forFilingType('lohnsteuerbescheinigung', self::furnishedToRecipient(...)),
+			// SGB IV §28a — DEÜV-Meldung transmitted electronically.
+			'de-sozialversicherung-meldepflicht' => self::forFilingType('deuv-meldung', self::filedElectronically(...)),
+			// SGB IV §28e — full Gesamtsozialversicherungsbeitrag paid (a paid date present).
+			'de-sv-gesamtbeitrag-abfuehren' => self::forFilingType('beitragsnachweis', self::paid(...)),
+			// SGB IV §23 Abs. 1 — contributions paid on or before the due date.
+			'de-sv-faelligkeit' => self::forFilingType('beitragsnachweis', self::paidByDeadline(...)),
+			// SGB IV §28f Abs. 3 — Beitragsnachweis transmitted by the deadline.
+			'de-beitragsnachweis' => self::forFilingType('beitragsnachweis', self::filedElectronicallyByDeadline(...)),
+		];
+
+	}//end germanFilingChecks()
+
+	/**
+	 * French filing checks: the monthly and event DSN and the bulletin retention.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function frenchFilingChecks(): array {
+		return [
+			// CSS art. L133-5-3 — monthly DSN transmitted electronically.
+			'fr-dsn-mensuelle' => self::forFilingType('dsn', self::filedElectronicallyForMonth(...)),
+			// CSS art. R243-6 — DSN + payment by the deadline.
+			'fr-dsn-echeance' => self::forFilingType('dsn', self::submittedByDeadline(...)),
+			// DSN signalements — event signals within 5 working days.
+			'fr-dsn-evenementielle' => self::forFilingType('dsn', self::eventSignalledInTime(...)),
+			// Code du travail art. L3243-4 — bulletin duplicate retained 5 years.
+			'fr-bulletin-conservation' => self::forFilingType('dsn', self::retainedFor(5)),
+		];
+
+	}//end frenchFilingChecks()
+
+	/**
+	 * US filing checks: the quarterly Form 941 and the deposit schedules.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function usQuarterlyAndDepositChecks(): array {
+		return [
+			// IRS Form 941 — quarterly return filed by the deadline for a quarterly tijdvak.
+			'us-form-941-quarterly' => self::forFilingType('form-941', self::submittedOnTimeForTijdvak('quarter')),
+			// IRS Pub. 15 — deposit schedule is monthly ≤USD 50.000 lookback, else semiweekly.
+			'us-deposit-schedule-lookback' => self::forFilingType('deposit', self::depositScheduleMatches(...)),
+			// Treas. Reg. §31.6302-1 (monthly) — monthly depositor deposits by the deadline.
+			'us-deposit-monthly' => self::forFilingType('deposit', self::monthlyDepositOnTime(...)),
+			// Treas. Reg. §31.6302-1 (semiweekly) — semiweekly depositor uses the semiweekly tijdvak.
+			'us-deposit-semiweekly' => self::forFilingType('deposit', self::semiweeklyDepositPeriod(...)),
+			// Treas. Reg. §31.6302-1 (one-day) — ≥USD 100.000 liability deposited next day.
+			'us-deposit-100k-next-day' => self::forFilingType('deposit', self::largeLiabilityDepositedNextDay(...)),
+			// Treas. Reg. §31.6302-1(h) — federal deposits made via EFTPS (electronic).
+			'us-eftps-deposit' => self::forFilingType('deposit', self::filedElectronically(...)),
+		];
+
+	}//end usQuarterlyAndDepositChecks()
+
+	/**
+	 * US filing checks: FUTA, the W-2/W-3 statements and the record retention.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function usYearEndChecks(): array {
+		return [
+			// IRC §3301 / Form 940 — FUTA reported annually (a yearly filing by the deadline).
+			'us-futa-form-940' => self::forFilingType('form-940', self::submittedOnTimeForTijdvak('year')),
+			// IRC §3302 — FUTA state-credit is a numeric accumulated-liability driven filing.
+			'us-futa-state-credit' => self::forFilingType('form-940', self::accumulatedLiabilityNumeric(...)),
+			// Form 940 instructions — FUTA deposited quarterly once liability exceeds USD 500.
+			'us-futa-deposit-500' => self::forFilingType('form-940', self::futaLiabilityDeposited(...)),
+			// IRC §6051 / W-2 — furnished to the employee by the deadline (Jan 31).
+			'us-form-w2-to-employee' => self::forFilingType('form-w2', self::datedByDeadline('furnishedToRecipientDate')),
+			// IRC §6051 / W-3 — Copy A + W-3 filed with the SSA by the deadline.
+			'us-form-w2-w3-to-ssa' => self::forFilingType('form-w2', self::datedByDeadline('filedWithAuthorityDate')),
+			// Treas. Reg. §301.6011-2 — ≥10 returns must be e-filed.
+			'us-w2-efile-threshold' => self::forFilingType('form-w2', self::manyReturnsFiledElectronically(...)),
+			// Treas. Reg. §31.6001-1 — employment-tax records retained at least 4 years.
+			'us-payroll-record-retention-irc' => self::forFilingType('form-941', self::retainedFor(4)),
+			// 29 CFR §516.5 (FLSA) — payroll records retained at least 3 years.
+			'us-flsa-record-retention' => self::forFilingType('form-941', self::retainedFor(3)),
+		];
+
+	}//end usYearEndChecks()
+
+	/**
+	 * Whether a non-negative Lohnsteuer is withheld.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function lohnsteuerWithheld(array $o): bool {
+		return self::numeric($o, 'lohnsteuer') && ((float)$o['lohnsteuer']) >= 0.0;
+
+	}//end lohnsteuerWithheld()
+
+	/**
+	 * Whether an applicable Soli is 5,5% of the Lohnsteuer.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function solidaritaetszuschlagMatches(array $o): bool {
+		return (($o['solzApplicable'] ?? false) !== true)
+			|| self::centsEqual((float)($o['solidaritaetszuschlag'] ?? 0), (((float)($o['lohnsteuer'] ?? 0)) * 0.055));
+
+	}//end solidaritaetszuschlagMatches()
+
+	/**
+	 * Whether a church member's Kirchensteuer is 8% or 9% of the Lohnsteuer.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function kirchensteuerMatches(array $o): bool {
+		return (($o['churchMember'] ?? false) !== true)
+			|| (self::numeric($o, 'kirchensteuerRate')
+			&& in_array((int)round((float)$o['kirchensteuerRate']), [8, 9], true)
+			&& self::centsEqual((float)($o['kirchensteuer'] ?? 0), (((float)($o['lohnsteuer'] ?? 0)) * ((float)$o['kirchensteuerRate']) / 100)));
+
+	}//end kirchensteuerMatches()
+
+	/**
+	 * Whether the employee and employer RV rates are both 9,3%.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function rentenversicherungRatesMatch(array $o): bool {
+		return self::rate($o, 'rvEmployeeRate', 9.3) && self::rate($o, 'rvEmployerRate', 9.3);
+
+	}//end rentenversicherungRatesMatch()
+
+	/**
+	 * Whether the RV/AV contribution base is within the 2026 BBG.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function rvAvBaseCapped(array $o): bool {
+		return self::numeric($o, 'svContributionBase') && ((float)$o['svContributionBase']) <= 8450.0;
+
+	}//end rvAvBaseCapped()
+
+	/**
+	 * Whether the KV/PV contribution base is within the 2026 BBG.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function kvPvBaseCapped(array $o): bool {
+		return self::numeric($o, 'kvPvContributionBase') && ((float)$o['kvPvContributionBase']) <= 5812.50;
+
+	}//end kvPvBaseCapped()
+
+	/**
+	 * Whether the OASDI taxable wage is within the 2026 wage base.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function socialSecurityWageBaseCapped(array $o): bool {
+		return self::numeric($o, 'ficaSsWageBaseApplied') && ((float)$o['ficaSsWageBaseApplied']) <= 184500.0;
+
+	}//end socialSecurityWageBaseCapped()
+
+	/**
+	 * Whether the additional Medicare applicability is a recorded boolean.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function additionalMedicareFlagged(array $o): bool {
+		return array_key_exists('additionalMedicareApplied', $o) && is_bool($o['additionalMedicareApplied']);
+
+	}//end additionalMedicareFlagged()
+
+	/**
+	 * Whether a non-negative federal income tax is withheld.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function federalIncomeTaxWithheld(array $o): bool {
+		return self::numeric($o, 'federalIncomeTaxWithheld') && ((float)$o['federalIncomeTaxWithheld']) >= 0.0;
+
+	}//end federalIncomeTaxWithheld()
+
+	/**
+	 * Whether non-negative URSSAF cotisations are present.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function cotisationsPresent(array $o): bool {
+		return self::numeric($o, 'cotisations') && ((float)$o['cotisations']) >= 0.0;
+
+	}//end cotisationsPresent()
+
+	/**
+	 * Whether the prélèvement à la source matches the PAS rate on the net imposable.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function prelevementMatchesRate(array $o): bool {
+		return self::numeric($o, 'pasRate')
+			&& self::centsEqual((float)($o['prelevementSource'] ?? 0), (((float)($o['netImposable'] ?? 0)) * ((float)$o['pasRate']) / 100));
+
+	}//end prelevementMatchesRate()
+
+	/**
+	 * Whether the réduction générale applicability is a recorded boolean.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function reductionGeneraleFlagged(array $o): bool {
+		return array_key_exists('reductionGeneraleApplied', $o) && is_bool($o['reductionGeneraleApplied']);
+
+	}//end reductionGeneraleFlagged()
+
+	/**
+	 * Whether the bulletin de paie carries every mandatory mention.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function bulletinMentionsComplete(array $o): bool {
+		return (($o['showsGrossWage'] ?? false) === true)
+			&& self::numeric($o, 'cotisations')
+			&& self::numeric($o, 'netImposable')
+			&& self::numeric($o, 'netAPayer')
+			&& self::numeric($o, 'montantNetSocial')
+			&& self::present($o, 'conventionCollective');
+
+	}//end bulletinMentionsComplete()
+
+	/**
+	 * Whether ELStAM is retrieved and a Steuerklasse applied.
+	 *
+	 * @param array<string, mixed> $o The Employee.
+	 *
+	 * @return bool
+	 */
+	private static function elstamRetrieved(array $o): bool {
+		return (($o['elstamRetrieved'] ?? false) === true) && self::present($o, 'steuerklasse');
+
+	}//end elstamRetrieved()
+
+	/**
+	 * Whether the new hire is reported within 20 days of the start.
+	 *
+	 * @param array<string, mixed> $o The Employee.
+	 *
+	 * @return bool
+	 */
+	private static function newHireReportedInTime(array $o): bool {
+		return self::present($o, 'newHireReportedDate')
+			&& self::withinDaysOf($o, 'startDate', 'newHireReportedDate', 20);
+
+	}//end newHireReportedInTime()
+
+	/**
+	 * A predicate: the contract hourly wage is a number at or above a minimum.
+	 *
+	 * @param float $minimum The minimum hourly wage.
+	 *
+	 * @return \Closure(array<string, mixed>): bool
+	 */
+	private static function hourlyWageAtLeast(float $minimum): \Closure {
+		return static fn (array $o): bool => self::numeric($o, 'hourlyWage') && ((float)$o['hourlyWage']) >= $minimum;
+
+	}//end hourlyWageAtLeast()
+
+	/**
+	 * Whether a Minijob or agency contract documents the working time.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return bool
+	 */
+	private static function workingTimeDocumentedWhereRequired(array $o): bool {
+		return (in_array((string)($o['type'] ?? ''), ['minijob', 'agency'], true) === false)
+			|| (($o['workingTimeDocumented'] ?? false) === true);
+
+	}//end workingTimeDocumentedWhereRequired()
+
+	/**
+	 * Whether a Minijob carries the flat-rate flag.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return bool
+	 */
+	private static function minijobFlatRateFlagged(array $o): bool {
+		return ((string)($o['type'] ?? '') !== 'minijob')
+			|| (($o['ftePartOfYearMinijob'] ?? false) === true);
+
+	}//end minijobFlatRateFlagged()
+
+	/**
+	 * Whether overtime is paid at 1,5 times the regular rate or more.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return bool
+	 */
+	private static function overtimeMultiplierMet(array $o): bool {
+		return self::numeric($o, 'overtimeMultiplier') && ((float)$o['overtimeMultiplier']) >= 1.5;
+
+	}//end overtimeMultiplierMet()
+
+	/**
+	 * A predicate that holds for every filing of another type and applies the rule to this type.
+	 *
+	 * @param string   $filingType The filing type the rule covers.
+	 * @param callable $rule       The rule for a filing of that type.
+	 *
+	 * @return \Closure(array<string, mixed>): bool
+	 */
+	private static function forFilingType(string $filingType, callable $rule): \Closure {
+		return static fn (array $o): bool => (($o['filingType'] ?? '') !== $filingType) || $rule($o);
+
+	}//end forFilingType()
+
+	/**
+	 * A predicate: the filing is retained a number of years after its period.
+	 *
+	 * @param int $years Minimum retention years.
+	 *
+	 * @return \Closure(array<string, mixed>): bool
+	 */
+	private static function retainedFor(int $years): \Closure {
+		return static fn (array $o): bool => self::retainedYearsAfterPeriod($o, $years);
+
+	}//end retainedFor()
+
+	/**
+	 * A predicate: the filing covers a tijdvak and was submitted by the deadline.
+	 *
+	 * @param string $tijdvak The tijdvak the filing must cover.
+	 *
+	 * @return \Closure(array<string, mixed>): bool
+	 */
+	private static function submittedOnTimeForTijdvak(string $tijdvak): \Closure {
+		return static fn (array $o): bool => ((string)($o['tijdvak'] ?? '') === $tijdvak) && self::onOrBefore($o, 'submittedDate', 'deadline');
+
+	}//end submittedOnTimeForTijdvak()
+
+	/**
+	 * A predicate: a date field is present and on or before the deadline.
+	 *
+	 * @param string $dateKey The date field.
+	 *
+	 * @return \Closure(array<string, mixed>): bool
+	 */
+	private static function datedByDeadline(string $dateKey): \Closure {
+		return static fn (array $o): bool => self::present($o, $dateKey) && self::onOrBefore($o, $dateKey, 'deadline');
+
+	}//end datedByDeadline()
+
+	/**
+	 * Whether the filing was transmitted electronically.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function filedElectronically(array $o): bool {
+		return (($o['electronicallyFiled'] ?? false) === true);
+
+	}//end filedElectronically()
+
+	/**
+	 * Whether the filing was transmitted electronically and submitted by the deadline.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function filedElectronicallyByDeadline(array $o): bool {
+		return (($o['electronicallyFiled'] ?? false) === true) && self::onOrBefore($o, 'submittedDate', 'deadline');
+
+	}//end filedElectronicallyByDeadline()
+
+	/**
+	 * Whether the filing was transmitted electronically for a monthly tijdvak.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function filedElectronicallyForMonth(array $o): bool {
+		return (($o['electronicallyFiled'] ?? false) === true) && ((string)($o['tijdvak'] ?? '') === 'month');
+
+	}//end filedElectronicallyForMonth()
+
+	/**
+	 * Whether the Anmeldungszeitraum follows from the prior-year liability.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function anmeldungszeitraumMatches(array $o): bool {
+		return (string)($o['tijdvak'] ?? '') === self::expectedDeAnmeldungszeitraum($o);
+
+	}//end anmeldungszeitraumMatches()
+
+	/**
+	 * Whether the statement was furnished to its recipient.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function furnishedToRecipient(array $o): bool {
+		return self::present($o, 'furnishedToRecipientDate');
+
+	}//end furnishedToRecipient()
+
+	/**
+	 * Whether the filing carries a paid date.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function paid(array $o): bool {
+		return self::present($o, 'paidDate');
+
+	}//end paid()
+
+	/**
+	 * Whether the filing was paid on or before the deadline.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function paidByDeadline(array $o): bool {
+		return self::onOrBefore($o, 'paidDate', 'deadline');
+
+	}//end paidByDeadline()
+
+	/**
+	 * Whether the filing was submitted on or before the deadline.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function submittedByDeadline(array $o): bool {
+		return self::onOrBefore($o, 'submittedDate', 'deadline');
+
+	}//end submittedByDeadline()
+
+	/**
+	 * Whether an event signal, when recorded, came within 5 working days.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function eventSignalledInTime(array $o): bool {
+		return (($o['eventSignalDays'] ?? null) === null)
+			|| (is_numeric($o['eventSignalDays']) && ((float)$o['eventSignalDays']) <= 5.0);
+
+	}//end eventSignalledInTime()
+
+	/**
+	 * Whether the deposit schedule follows from the lookback liability.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function depositScheduleMatches(array $o): bool {
+		return (string)($o['depositSchedule'] ?? '') === self::expectedUsDepositSchedule($o);
+
+	}//end depositScheduleMatches()
+
+	/**
+	 * Whether a monthly depositor paid by the deadline.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function monthlyDepositOnTime(array $o): bool {
+		return ((string)($o['depositSchedule'] ?? '') !== 'monthly')
+			|| self::onOrBefore($o, 'paidDate', 'deadline');
+
+	}//end monthlyDepositOnTime()
+
+	/**
+	 * Whether a semiweekly depositor uses the semiweekly tijdvak.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function semiweeklyDepositPeriod(array $o): bool {
+		return ((string)($o['depositSchedule'] ?? '') !== 'semiweekly')
+			|| ((string)($o['tijdvak'] ?? '') === 'semiweekly');
+
+	}//end semiweeklyDepositPeriod()
+
+	/**
+	 * Whether a liability of USD 100.000 or more was deposited the next day.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function largeLiabilityDepositedNextDay(array $o): bool {
+		return (((float)($o['accumulatedLiability'] ?? 0)) < 100000.0)
+			|| (($o['nextDayDepositMade'] ?? false) === true);
+
+	}//end largeLiabilityDepositedNextDay()
+
+	/**
+	 * Whether the accumulated liability is a number.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function accumulatedLiabilityNumeric(array $o): bool {
+		return self::numeric($o, 'accumulatedLiability');
+
+	}//end accumulatedLiabilityNumeric()
+
+	/**
+	 * Whether a FUTA liability over USD 500 carries a paid date.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function futaLiabilityDeposited(array $o): bool {
+		return (((float)($o['accumulatedLiability'] ?? 0)) <= 500.0)
+			|| self::present($o, 'paidDate');
+
+	}//end futaLiabilityDeposited()
+
+	/**
+	 * Whether ten or more returns in the year were filed electronically.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function manyReturnsFiledElectronically(array $o): bool {
+		return (((float)($o['returnCountInYear'] ?? 0)) < 10.0)
+			|| (($o['electronicallyFiled'] ?? false) === true);
+
+	}//end manyReturnsFiledElectronically()
 
 	/**
 	 * {@inheritDoc}
