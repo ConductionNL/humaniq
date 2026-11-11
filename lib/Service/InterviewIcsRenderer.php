@@ -69,15 +69,15 @@ class InterviewIcsRenderer {
 			'DTSTAMP:' . $dtstamp,
 			'DTSTART:' . $event['dtstart'],
 			'DTEND:' . $event['dtend'],
-			'SUMMARY:' . $this->escapeText($event['summary']),
+			'SUMMARY:' . IcsText::escape($event['summary']),
 		];
 
 		if ($event['location'] !== '') {
-			$lines[] = 'LOCATION:' . $this->escapeText($event['location']);
+			$lines[] = 'LOCATION:' . IcsText::escape($event['location']);
 		}
 
 		if ($event['interviewers'] !== '') {
-			$lines[] = 'DESCRIPTION:' . $this->escapeText($event['interviewers']);
+			$lines[] = 'DESCRIPTION:' . IcsText::escape($event['interviewers']);
 		}
 
 		$lines[] = 'TRANSP:OPAQUE';
@@ -113,8 +113,8 @@ class InterviewIcsRenderer {
 			return false;
 		}
 
-		$normalisedExistingLocation = ($existingLocation === null) ? '' : $this->unescapeText($existingLocation);
-		$summaryMatches = ($this->unescapeText($existingSummary) === $event['summary']);
+		$normalisedExistingLocation = ($existingLocation === null) ? '' : IcsText::unescape($existingLocation);
+		$summaryMatches = (IcsText::unescape($existingSummary) === $event['summary']);
 		$datesMatch = ($existingDtstart === $event['dtstart'] && $existingDtend === $event['dtend']);
 
 		return $datesMatch === true && $summaryMatches === true && $normalisedExistingLocation === $event['location'];
@@ -160,32 +160,4 @@ class InterviewIcsRenderer {
 		return $parsedStart >= $parsedBound;
 	}//end scheduledStartOnOrAfter()
 
-	/**
-	 * Escape a TEXT property value per RFC 5545 §3.3.11 (backslash,
-	 * semicolon, comma, newline) — candidate/vacancy/location/interviewer
-	 * text is data, not trusted literal text.
-	 *
-	 * @param string $value The raw text.
-	 *
-	 * @return string
-	 */
-	private function escapeText(string $value): string {
-		$value = str_replace('\\', '\\\\', $value);
-		$value = str_replace([';', ',', "\n"], ['\\;', '\\,', '\\n'], $value);
-		return $value;
-	}//end escapeText()
-
-	/**
-	 * Reverse `escapeText()`, for comparing a stored SUMMARY/LOCATION back
-	 * to the desired unescaped value in `unchanged()`.
-	 *
-	 * @param string $value The escaped text.
-	 *
-	 * @return string
-	 */
-	private function unescapeText(string $value): string {
-		$value = str_replace(['\\n', '\\,', '\\;'], ["\n", ',', ';'], $value);
-		$value = str_replace('\\\\', '\\', $value);
-		return $value;
-	}//end unescapeText()
 }//end class
