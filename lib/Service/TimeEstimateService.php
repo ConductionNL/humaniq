@@ -417,8 +417,8 @@ class TimeEstimateService {
 	 * The estimate governing one object and role, preferring the role's own
 	 * estimate over the object-wide one.
 	 *
-	 * @param array<array<string, mixed>>               $estimates Every stored TimeEstimate.
-	 * @param array{type: string, ref: string, role: string} $target    The `<app>:<schema>` literal, the object's uuid and the role (or {@see NO_ROLE}).
+	 * @param array<array<string, mixed>> $estimates Every stored TimeEstimate.
+	 * @param array<string, string>       $target    The `<app>:<schema>` literal, the object's uuid and the role (or {@see NO_ROLE}).
 	 *
 	 * @return array<string, mixed>|null The estimate, or null.
 	 *
@@ -441,8 +441,8 @@ class TimeEstimateService {
 	/**
 	 * The rows belonging to one host object.
 	 *
-	 * @param array<array<string, mixed>>    $rows   The rows.
-	 * @param array{type: string, ref: string} $target The `<app>:<schema>` literal and the object's uuid.
+	 * @param array<array<string, mixed>> $rows   The rows.
+	 * @param array<string, string>       $target The `<app>:<schema>` literal and the object's uuid.
 	 *
 	 * @return array<int, array<string, mixed>> The matching rows.
 	 *
