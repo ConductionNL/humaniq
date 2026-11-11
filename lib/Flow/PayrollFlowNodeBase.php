@@ -327,6 +327,31 @@ abstract class PayrollFlowNodeBase implements IFlowNode {
 	}//end stampEachItem()
 
 	/**
+	 * Load each item's approved run and hand it to the step; an empty firing
+	 * returns empty without loading anything.
+	 *
+	 * @param FlowNodeCall $call The input items and the step configuration.
+	 * @param Closure      $step The step: the loaded run in, the service outcome out.
+	 *
+	 * @return array<int, array<string, mixed>> The items, each carrying its outcome.
+	 *
+	 * @throws RuntimeException When an item's run cannot be resolved.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+	 */
+	protected function stampEachRun(FlowNodeCall $call, Closure $step): array {
+		$config = $call->config;
+		if ($call->items === []) {
+			return [];
+		}
+
+		return $this->stampEachItem(
+			$call,
+			fn (array $json): array => $step($this->requireRun(config: $config, json: $json))
+		);
+	}//end stampEachRun()
+
+	/**
 	 * Let an outcome through when the service reported an accepted status;
 	 * throw otherwise, so the step's onError policy decides.
 	 *
