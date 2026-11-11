@@ -70,6 +70,49 @@ class ObjectHoursControllerTest extends TestCase {
 	}//end controller()
 
 	/**
+	 * The whole answer, and what is read, for every combination of session,
+	 * access, arguments and read outcome: the order of the refusals is pinned
+	 * by requests that fail more than one of them.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeAnswerOfEveryRequest(): void {
+		$cases = [
+			'ok' => ['pieter', true, false, [' dossiq:case ', ' case-1 ', ' 2026-10-08 ']],
+			'today' => ['pieter', true, false, ['dossiq:case', 'case-1', null]],
+			'blank-day' => ['pieter', true, false, ['dossiq:case', 'case-1', '  ']],
+			'no-session-and-no-type' => [null, true, false, [null, null, 'nope']],
+			'no-type-and-no-access' => ['anouk', false, false, ['', 'case-1', 'nope']],
+			'no-ref' => ['pieter', true, false, ['dossiq:case', ' ', null]],
+			'no-access-and-bad-day' => ['anouk', false, false, ['dossiq:case', 'case-1', 'nope']],
+			'other-object' => ['pieter', true, false, ['dossiq:case', 'case-2', null]],
+			'bad-day' => ['pieter', true, false, ['dossiq:case', 'case-1', '2026-02-30']],
+			'bad-format' => ['pieter', true, false, ['dossiq:case', 'case-1', '8-10-2026']],
+			'read-fails-and-bad-day' => ['pieter', true, true, ['dossiq:case', 'case-1', '2026-13-01']],
+			'read-fails' => ['pieter', true, true, ['dossiq:case', 'case-1', '2026-10-08']],
+		];
+		$got = [];
+		foreach ($cases as $name => [$uid, $readable, $throws, $arguments]) {
+			$reads = [];
+			$weekHours = $this->createMock(ObjectWeekHours::class);
+			$weekHours->method('forObject')->willReturnCallback(
+				static function (string $type, string $ref, \DateTimeImmutable $day) use (&$reads, $throws): array {
+					$reads[] = [$type, $ref, $day->format('Y-m-d') === (new \DateTimeImmutable('today'))->format('Y-m-d') ? 'today' : $day->format('Y-m-d')];
+					if ($throws === true) {
+						throw new RuntimeException('register down');
+					}
+
+					return ['week' => 41];
+				}
+			);
+			$response = $this->controller($weekHours, $uid, $readable)->week(...$arguments);
+			$got[$name] = ['status' => $response->getStatus(), 'data' => $response->getData(), 'reads' => $reads];
+		}
+
+		$this->assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/object-hours-week.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeAnswerOfEveryRequest()
+
+	/**
 	 * A signed-in caller gets the week of the day asked for.
 	 *
 	 * @return void
