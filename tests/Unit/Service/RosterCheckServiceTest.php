@@ -32,7 +32,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\CompetenceCheckService;
 use OCA\Humaniq\Service\RosterCheckService;
+use OCA\Humaniq\Service\RosterCrossChecks;
 use OCA\Humaniq\Tests\Unit\Support\FakeSlugResolver;
 use OCA\Humaniq\Standards\RuleEngine;
 use OCP\IAppConfig;
@@ -388,5 +390,144 @@ class RosterCheckServiceTest extends TestCase {
 		$this->assertArrayNotHasKey('error', $report);
 		$this->assertSame(0, $report['rostersChecked']);
 	}//end testAGenuinelyEmptyResultIsStillMarkedAsRead()
+
+	/**
+	 * The period is trimmed; the administration filter applies only when one is given.
+	 *
+	 * @return void
+	 */
+	public function testCheckPeriodTrimsAndFiltersByAdministration(): void {
+		$service = $this->serviceWithRows(
+			[
+				'Roster' => [
+					['id' => 'r-1', 'period' => '2026-W28', 'administrationId' => 'ADM-1'],
+					['id' => 'r-2', 'period' => '2026-W28', 'administrationId' => 'ADM-2'],
+					['id' => 'r-3', 'period' => '2026-W28'],
+					['id' => 'r-4', 'period' => '2026-W29', 'administrationId' => 'ADM-1'],
+				],
+				'RosterAssignment' => [],
+				'Shift' => [],
+			]
+		);
+
+		$this->assertSame(1, $service->checkPeriod(' 2026-W28 ', 'ADM-1')['rostersChecked']);
+		$this->assertSame(3, $service->checkPeriod('2026-W28', null)['rostersChecked']);
+		$this->assertSame(3, $service->checkPeriod('2026-W28', '')['rostersChecked']);
+		$this->assertSame(0, $service->checkPeriod('2026-W30', null)['rostersChecked']);
+		$this->assertSame(0, $service->checkPeriod('  ')['rostersChecked']);
+
+	}//end testCheckPeriodTrimsAndFiltersByAdministration()
+
+	/**
+	 * Every working-time violation row names its kind, the assignment (by `id` or `@self.id`) and the rule; mandatory ones are counted.
+	 *
+	 * @return void
+	 */
+	public function testViolationRowsAndTheMandatoryCount(): void {
+		$service = $this->serviceWithRows(
+			[
+				'Roster' => [['id' => 'roster-w28', 'period' => '2026-W28']],
+				'RosterAssignment' => [
+					['@self' => ['id' => 'ra-1'], 'rosterId' => 'roster-w28', 'employeeId' => 'emp-1', 'shiftId' => 'shift-late', 'date' => '2026-07-13', 'plannedStart' => '2026-07-13T15:00:00', 'plannedEnd' => '2026-07-13T23:00:00', 'plannedBreakMinutes' => 30],
+					['@self' => ['id' => 'ra-2'], 'rosterId' => 'roster-w28', 'employeeId' => 'emp-1', 'shiftId' => 'shift-early', 'date' => '2026-07-14', 'plannedStart' => '2026-07-14T06:00:00', 'plannedEnd' => '2026-07-14T14:00:00', 'plannedBreakMinutes' => 30],
+				],
+				'Shift' => [['@self' => ['id' => 'shift-late']]],
+			]
+		);
+
+		$report = $service->checkRoster('roster-w28');
+
+		$mandatory = 0;
+		foreach ($report['violations'] as $row) {
+			if (($row['kind'] ?? '') === 'working-time') {
+				$this->assertSame(['kind', 'objectType', 'objectId', 'ruleId', 'severity', 'statement'], array_keys($row));
+				$this->assertSame('RosterAssignment', $row['objectType']);
+				$this->assertContains($row['objectId'], ['ra-1', 'ra-2']);
+			}
+
+			$mandatory += (($row['severity'] ?? '') === 'mandatory') ? 1 : 0;
+		}
+
+		$this->assertGreaterThan(0, $mandatory);
+		$this->assertSame($mandatory, $report['mandatoryViolations']);
+
+	}//end testViolationRowsAndTheMandatoryCount()
+
+	/**
+	 * A competence cross-check that throws costs only its own findings and is logged.
+	 *
+	 * @return void
+	 */
+	public function testAFailingCompetenceCheckCostsOnlyItsFindings(): void {
+		$rows = [
+			'Roster' => [['id' => 'roster-w28', 'period' => '2026-W28']],
+			'RosterAssignment' => [
+				['id' => 'ra-1', 'rosterId' => 'roster-w28', 'employeeId' => 'emp-1', 'shiftId' => 's', 'date' => '2026-07-13', 'plannedStart' => '2026-07-13T15:00:00', 'plannedEnd' => '2026-07-13T23:00:00', 'plannedBreakMinutes' => 30],
+				['id' => 'ra-2', 'rosterId' => 'roster-w28', 'employeeId' => 'emp-1', 'shiftId' => 's', 'date' => '2026-07-14', 'plannedStart' => '2026-07-14T06:00:00', 'plannedEnd' => '2026-07-14T14:00:00', 'plannedBreakMinutes' => 30],
+			],
+			'Shift' => [],
+		];
+		$objectService = new class($rows) {
+
+			/**
+			 * The schema of the next findAll().
+			 *
+			 * @var string
+			 */
+			private string $schema = '';
+
+			/**
+			 * @param array<string, list<array<string, mixed>>> $rowsBySchema Rows by schema.
+			 */
+			public function __construct(
+				private readonly array $rowsBySchema,
+			) {
+
+			}//end __construct()
+
+			/**
+			 * @param string $register The register.
+			 *
+			 * @return self
+			 */
+			public function setRegister(string $register): self {
+				return $this;
+			}//end setRegister()
+
+			/**
+			 * @param string $schema The schema.
+			 *
+			 * @return self
+			 */
+			public function setSchema(string $schema): self {
+				$this->schema = $schema;
+				return $this;
+			}//end setSchema()
+
+			/**
+			 * @param array<string, mixed> $options Ignored.
+			 *
+			 * @return list<array<string, mixed>>
+			 */
+			public function findAll(array $options = []): array {
+				return $this->rowsBySchema[$this->schema] ?? [];
+			}//end findAll()
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('humaniq');
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with('humaniq: the competence cross-check could not run: kapot');
+		$competences = $this->createMock(CompetenceCheckService::class);
+		$competences->method('findings')->willThrowException(new \RuntimeException('kapot'));
+
+		$report = (new RosterCheckService($container, $appConfig, $logger, new RosterCrossChecks(competences: $competences)))->checkRoster('roster-w28');
+
+		$this->assertSame(0, $report['competenceFindings']);
+		$this->assertGreaterThan(0, $report['mandatoryViolations']);
+		$this->assertContains('nl-atw-dagelijkse-rust', array_column($report['violations'], 'ruleId'));
+
+	}//end testAFailingCompetenceCheckCostsOnlyItsFindings()
 
 }//end class
