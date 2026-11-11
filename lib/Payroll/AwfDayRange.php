@@ -55,6 +55,8 @@ final class AwfDayRange {
 	 * @param DateTimeImmutable $until The last day.
 	 *
 	 * @return self
+	 *
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
 	public static function of(DateTimeImmutable $from, DateTimeImmutable $until): self {
 		$range = new self();
