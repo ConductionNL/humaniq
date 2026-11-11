@@ -227,6 +227,20 @@ class TimeEntryHoursDeriver {
 	 * @spec openspec/specs/time-entry-capture/spec.md#requirement-humaniq-captures-time-entries-under-a-submit-approve-lifecycle-req-tec-001
 	 */
 	private function fromDay(array $incoming, ?array $stored): array {
+		return [$this->dayOf(incoming: $incoming, stored: $stored), $this->dayHoursOf(incoming: $incoming, stored: $stored)];
+	}//end fromDay()
+
+	/**
+	 * The booked day, from the write or else the stored entry.
+	 *
+	 * @param array<string, mixed>      $incoming The write.
+	 * @param array<string, mixed>|null $stored   The stored entry, if any.
+	 *
+	 * @return int
+	 *
+	 * @throws HoursWriteRefusedException When there is no readable day.
+	 */
+	private function dayOf(array $incoming, ?array $stored): int {
 		$date = strtotime((string)($incoming['date'] ?? ($stored['date'] ?? '')));
 		if ($date === false) {
 			throw new HoursWriteRefusedException(
@@ -234,11 +248,24 @@ class TimeEntryHoursDeriver {
 			);
 		}
 
+		return $date;
+	}//end dayOf()
+
+	/**
+	 * The booked hours, rounded to two decimals, more than zero and at most
+	 * a day.
+	 *
+	 * @param array<string, mixed>      $incoming The write.
+	 * @param array<string, mixed>|null $stored   The stored entry, if any.
+	 *
+	 * @return float
+	 *
+	 * @throws HoursWriteRefusedException When the hours are missing or out of range.
+	 */
+	private function dayHoursOf(array $incoming, ?array $stored): float {
 		$raw = ($incoming['hours'] ?? ($stored['hours'] ?? null));
 		if (is_numeric($raw) === false) {
-			throw new HoursWriteRefusedException(
-				'Een urenboeking zonder start- en eindtijd heeft een aantal uren nodig.'
-			);
+			throw new HoursWriteRefusedException('Een urenboeking zonder start- en eindtijd heeft een aantal uren nodig.');
 		}
 
 		$hours = round((float)$raw, 2);
@@ -250,7 +277,7 @@ class TimeEntryHoursDeriver {
 			throw new HoursWriteRefusedException('Een urenboeking kan niet meer dan 24 uur op één dag beslaan.');
 		}
 
-		return [$date, $hours];
-	}//end fromDay()
+		return $hours;
+	}//end dayHoursOf()
 
 }//end class
