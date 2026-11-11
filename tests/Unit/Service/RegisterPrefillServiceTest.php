@@ -236,6 +236,39 @@ class RegisterPrefillServiceTest extends TestCase {
 	}//end testANewLeaseCarIsFilledFromItsPlate()
 
 	/**
+	 * Every call to the registers, exactly as integriq receives it, plus every
+	 * refusal: the RDW lookups write a CallLog, the BRP lookup does not, and
+	 * without integriq or a source nothing is called.
+	 *
+	 * @return void
+	 */
+	public function testEveryRegisterCallAndRefusal(): void {
+		$asset = ['category' => 'vehicle', 'licencePlate' => 'gz-s78-z'];
+		$employee = ['bsn' => '999993653', 'lastName' => 'Dijk'];
+		$this->service(true, ['rdw' => 'src-rdw'], $this->rdwAnswers())->vehicle($asset);
+		$this->service(true, ['brp' => 'src-brp'], [RegisterPrefillService::BRP_ENDPOINT => self::BRP_ANSWER])->employee($employee);
+		$got = ['calls' => $this->calls, 'refusals' => []];
+		$refusals = [
+			'no-integriq' => [false, ['rdw' => 'src-rdw', 'brp' => 'src-brp']],
+			'no-source' => [true, []],
+		];
+		foreach ($refusals as $name => [$installed, $sources]) {
+			foreach (['vehicle' => $asset, 'employee' => $employee] as $kind => $subject) {
+				try {
+					$this->service($installed, $sources, [])->$kind($subject);
+				} catch (RegisterPrefillUnavailableException $e) {
+					$got['refusals'][$name . ':' . $kind] = [$e->getReason(), $e->getMessage()];
+				}
+			}
+		}
+
+		$got['callsAfterRefusals'] = count($this->calls);
+		$golden = json_decode((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/register-lookup-calls.json'), true);
+		self::assertSame($golden, $got);
+
+	}//end testEveryRegisterCallAndRefusal()
+
+	/**
 	 * Scenario: a stored catalogue value is not overwritten.
 	 *
 	 * @return void
