@@ -411,6 +411,19 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 	}//end testAMissingBalanceIsNeverCreated()
 
 	/**
+	 * The whole answer of each basis: explicit hours in their own year and
+	 * in another, no contract, and the contract average.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeRequestHoursAnswers(): void {
+		self::assertSame(['hours' => 6.5, 'derivable' => true, 'basis' => 'explicit', 'days' => []], LeaveHoursCalculator::requestHours(['hours' => '6.5', 'startDate' => '2026-12-31'], null, 2026));
+		self::assertSame(['hours' => 0.0, 'derivable' => true, 'basis' => 'explicit', 'days' => []], LeaveHoursCalculator::requestHours(['hours' => 6.5, 'startDate' => '2026-12-31'], 40.0, 2027));
+		self::assertSame(['hours' => 0.0, 'derivable' => false, 'basis' => 'contract-average', 'days' => []], LeaveHoursCalculator::requestHours(['startDate' => '2026-06-01', 'endDate' => '2026-06-05'], 0.0, 2026));
+		self::assertSame(['hours' => 16.0, 'derivable' => true, 'basis' => 'contract-average', 'days' => []], LeaveHoursCalculator::requestHours(['hours' => 0, 'startDate' => '2026-12-30', 'endDate' => '2027-01-04'], 40.0, 2027));
+	}//end testTheWholeRequestHoursAnswers()
+
+	/**
 	 * A full working week with no explicit hours derives from the contract.
 	 *
 	 * @return void

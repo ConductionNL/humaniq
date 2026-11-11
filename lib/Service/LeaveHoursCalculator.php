@@ -166,22 +166,53 @@ final class LeaveHoursCalculator {
 	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-002
 	 */
 	public static function requestHours(array $request, ?float $contractHoursPerWeek, int $year, ?array $workingTime = null): array {
-		$explicit = (float)($request['hours'] ?? 0);
-		if ($explicit > 0) {
-			$startYear = (int)substr((string)($request['startDate'] ?? ''), 0, 4);
-			return [
-				'hours' => ($startYear === $year ? $explicit : 0.0),
-				'derivable' => true,
-				'basis' => 'explicit',
-				'days' => [],
-			];
+		if ((float)($request['hours'] ?? 0) > 0) {
+			return self::explicitHours(request: $request, year: $year);
 		}
 
 		if ($workingTime !== null) {
 			return (new LeaveDayCosts())->cost(request: $request, contractHoursPerWeek: $contractHoursPerWeek, year: $year, workingTime: $workingTime);
 		}
 
-		if ($contractHoursPerWeek === null || $contractHoursPerWeek <= 0) {
+		return self::contractAverageHours(request: $request, balance: ['hoursPerWeek' => $contractHoursPerWeek, 'year' => $year]);
+
+	}//end requestHours()
+
+	/**
+	 * An explicit hours value, wholly in the calendar year of the start date.
+	 *
+	 * @param array<string, mixed> $request The LeaveRequest row, with hours above zero.
+	 * @param int                  $year    The calendar year of the balance.
+	 *
+	 * @return array{hours: float, derivable: bool, basis: string, days: list<array{date: string, hours: float, reason: string}>}
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-002
+	 */
+	private static function explicitHours(array $request, int $year): array {
+		$startYear = (int)substr((string)($request['startDate'] ?? ''), 0, 4);
+
+		return [
+			'hours' => ($startYear === $year ? (float)$request['hours'] : 0.0),
+			'derivable' => true,
+			'basis' => 'explicit',
+			'days' => [],
+		];
+	}//end explicitHours()
+
+	/**
+	 * The contract hours divided by five for every weekday of the request
+	 * inside the year; not derivable without contract hours.
+	 *
+	 * @param array<string, mixed>                     $request The LeaveRequest row.
+	 * @param array{hoursPerWeek: float|null, year: int} $balance The balance's contract hours snapshot and year.
+	 *
+	 * @return array{hours: float, derivable: bool, basis: string, days: list<array{date: string, hours: float, reason: string}>}
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-002
+	 */
+	private static function contractAverageHours(array $request, array $balance): array {
+		$hoursPerWeek = $balance['hoursPerWeek'];
+		if ($hoursPerWeek === null || $hoursPerWeek <= 0) {
 			return [
 				'hours' => 0.0,
 				'derivable' => false,
@@ -193,17 +224,16 @@ final class LeaveHoursCalculator {
 		$workingDays = self::workingDaysBetween(
 			(string)($request['startDate'] ?? ''),
 			(string)($request['endDate'] ?? ''),
-			$year
+			$balance['year']
 		);
 
 		return [
-			'hours' => ($workingDays * ($contractHoursPerWeek / 5)),
+			'hours' => ($workingDays * ($hoursPerWeek / 5)),
 			'derivable' => true,
 			'basis' => 'contract-average',
 			'days' => [],
 		];
-
-	}//end requestHours()
+	}//end contractAverageHours()
 
 
 	/**
