@@ -26,6 +26,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\MatchCandidate;
 use OCA\Humaniq\Service\VacancyMatchService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
@@ -75,9 +76,7 @@ class VacancyMatchServiceTest extends TestCase {
 	public function testAFullMatchScoresOneHundred(): void {
 		$result = VacancyMatchService::score(
 			requirements: $this->requirements(),
-			educationLevel: 6,
-			experienceYears: 5.0,
-			competences: ['loonheffing', 'excel-gevorderd', 'afas']
+			candidate: $this->candidate(educationLevel: 6, experienceYears: 5.0, competences: ['loonheffing', 'excel-gevorderd', 'afas'])
 		);
 
 		self::assertSame(100, $result['total']);
@@ -92,9 +91,7 @@ class VacancyMatchServiceTest extends TestCase {
 	public function testAMissingRequiredCompetenceCostsItsShare(): void {
 		$result = VacancyMatchService::score(
 			requirements: $this->requirements(),
-			educationLevel: 5,
-			experienceYears: 2.0,
-			competences: ['loonheffing']
+			candidate: $this->candidate(educationLevel: 5, experienceYears: 2.0, competences: ['loonheffing'])
 		);
 
 		self::assertSame(25.0, $result['points']['education']);
@@ -200,6 +197,24 @@ class VacancyMatchServiceTest extends TestCase {
 			$this->service()->matchesFor(vacancyId: 'vac-open', today: '2026-09-30')
 		);
 	}//end testTheRowsBelowTheMinimumAndWithoutRequirements()
+
+	/**
+	 * A candidate with a profile to score.
+	 *
+	 * @param int          $educationLevel  The education level.
+	 * @param float        $experienceYears The years of experience.
+	 * @param list<string> $competences     The competence codes held.
+	 *
+	 * @return MatchCandidate
+	 */
+	private function candidate(int $educationLevel, float $experienceYears, array $competences): MatchCandidate {
+		$candidate = new MatchCandidate();
+		$candidate->educationLevel = $educationLevel;
+		$candidate->experienceYears = $experienceYears;
+		$candidate->competences = $competences;
+
+		return $candidate;
+	}//end candidate()
 
 	/**
 	 * The requirements as the service reads them from the vacancy.
