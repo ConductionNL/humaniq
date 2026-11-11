@@ -391,40 +391,74 @@ class PayrollRetentionGuardService {
 	 * @return array{0: DateTimeImmutable|null, 1: string|null}
 	 */
 	private function resolveCeiling(mixed $object): array {
-		// See syncLegalHold()'s docblock note: a real ObjectEntity's
-		// getObject()/getRetention() are magic methods, invisible to
-		// `method_exists()` -- a try/catch around the actual call is the
-		// correct defensive guard, not a `method_exists` pre-check.
-		try {
-			$payload = ($object->getObject() ?? []);
-		} catch (\Throwable $e) {
-			$payload = [];
+		$retainedUntil = $this->moment(text: (string)($this->payloadOf($object)['retainedUntil'] ?? ''));
+		if ($retainedUntil !== null) {
+			return [$retainedUntil, 'retainedUntil'];
 		}
 
-		$retainedUntil = trim((string)($payload['retainedUntil'] ?? ''));
-		if ($retainedUntil !== '') {
-			$timestamp = strtotime($retainedUntil);
-			if ($timestamp !== false) {
-				return [(new DateTimeImmutable())->setTimestamp($timestamp), 'retainedUntil'];
-			}
-		}
-
-		try {
-			$retention = ($object->getRetention() ?? []);
-		} catch (\Throwable $e) {
-			$retention = [];
-		}
-
-		$archiefactiedatum = trim((string)($retention['archiefactiedatum'] ?? ''));
-		if ($archiefactiedatum !== '') {
-			$timestamp = strtotime($archiefactiedatum);
-			if ($timestamp !== false) {
-				return [(new DateTimeImmutable())->setTimestamp($timestamp), 'retention.archiefactiedatum'];
-			}
+		$archiefactiedatum = $this->moment(text: (string)($this->retentionOf($object)['archiefactiedatum'] ?? ''));
+		if ($archiefactiedatum !== null) {
+			return [$archiefactiedatum, 'retention.archiefactiedatum'];
 		}
 
 		return [null, null];
 	}//end resolveCeiling()
+
+	/**
+	 * The object's payload; empty when it cannot be read.
+	 *
+	 * See syncLegalHold()'s docblock note: a real ObjectEntity's
+	 * getObject()/getRetention() are magic methods, invisible to
+	 * `method_exists()` -- a try/catch around the actual call is the
+	 * correct defensive guard, not a `method_exists` pre-check.
+	 *
+	 * @param mixed $object The OpenRegister ObjectEntity.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function payloadOf(mixed $object): array {
+		try {
+			return ($object->getObject() ?? []);
+		} catch (\Throwable $e) {
+			return [];
+		}
+	}//end payloadOf()
+
+	/**
+	 * The object's retention block; empty when it cannot be read.
+	 *
+	 * @param mixed $object The OpenRegister ObjectEntity.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function retentionOf(mixed $object): array {
+		try {
+			return ($object->getRetention() ?? []);
+		} catch (\Throwable $e) {
+			return [];
+		}
+	}//end retentionOf()
+
+	/**
+	 * The moment a date text names; null when it is blank or unreadable.
+	 *
+	 * @param string $text The date text.
+	 *
+	 * @return DateTimeImmutable|null
+	 */
+	private function moment(string $text): ?DateTimeImmutable {
+		$text = trim($text);
+		$timestamp = false;
+		if ($text !== '') {
+			$timestamp = strtotime($text);
+		}
+
+		if ($timestamp === false) {
+			return null;
+		}
+
+		return (new DateTimeImmutable())->setTimestamp($timestamp);
+	}//end moment()
 
 	/**
 	 * Persist a mutated (held) entity via `MagicMapper::update()` -- shared
