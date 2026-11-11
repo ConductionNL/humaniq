@@ -121,6 +121,12 @@ class SurveyResultsTest extends TestCase {
 		}
 
 		self::assertNotContains('Anything else', array_column($results['rows'], 'question'));
+		self::assertSame(['key', 'label', 'type', 'count', 'distribution', 'average', 'enps'], array_keys($overall['beveel']));
+		self::assertSame(['0' => 0, '1' => 0, '2' => 1, '3' => 0, '4' => 0, '5' => 0, '6' => 0, '7' => 1, '8' => 1, '9' => 1, '10' => 2], $overall['beveel']['distribution']);
+		self::assertSame(7.67, $overall['beveel']['average']);
+		self::assertSame(['key', 'label', 'type', 'count', 'distribution'], array_keys($overall['druk']));
+		self::assertSame(['key', 'label', 'type', 'count', 'texts'], array_keys($overall['tekst']));
+		self::assertSame(['key', 'label', 'type', 'count'], array_keys(array_column($results['units'][0]['questions'], null, 'key')['tekst']));
 	}//end testTheEdgesOfTheBreakdown()
 
 }//end class
