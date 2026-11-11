@@ -22,15 +22,16 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Humaniq\Service\SettingsService;
-use OCP\App\IAppManager;
-use OCP\IAppConfig;
+use OCA\Humaniq\Service\ExpenseSettings;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 
 /**
  * What the expense settings read from app config.
  *
- * @covers \OCA\Humaniq\Service\SettingsService
+ * @covers \OCA\Humaniq\Service\ExpenseSettings
+ * @uses   \OCA\Humaniq\Tests\Unit\Support\AppConfigValues
  */
 class ExpenseSettingsTest extends TestCase {
 
@@ -77,15 +78,10 @@ class ExpenseSettingsTest extends TestCase {
 	 *
 	 * @param array<string, string> $values The stored app config values by key.
 	 *
-	 * @return SettingsService
+	 * @return ExpenseSettings
 	 */
-	private function settings(array $values): SettingsService {
-		$config = $this->createMock(IAppConfig::class);
-		$config->method('getValueString')->willReturnCallback(
-			static fn (string $app, string $key, string $default): string => ($app === 'humaniq' ? ($values[$key] ?? $default) : $default)
-		);
-
-		return new SettingsService($config, $this->createMock(IAppManager::class), $this->createMock(\Psr\Container\ContainerInterface::class), new \Psr\Log\NullLogger());
+	private function settings(array $values): ExpenseSettings {
+		return new ExpenseSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), $values));
 	}//end settings()
 
 }//end class
