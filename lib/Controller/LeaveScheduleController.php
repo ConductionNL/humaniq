@@ -44,6 +44,7 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\AgendaReadAccess;
 use OCA\Humaniq\Service\DepartmentLeaveScheduleService;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\LeaveCoverageService;
@@ -73,6 +74,7 @@ class LeaveScheduleController extends Controller {
 	 * @param LeaveCoverageService $coverage Computes the coverage warning.
 	 * @param OrgResolutionService $orgResolution The shared org-chain rules (assignment validity).
 	 * @param RbacObjectReader $rbac Reads one object under the caller's own ambient RBAC.
+	 * @param AgendaReadAccess $access Who may read an org unit's agenda.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -81,6 +83,7 @@ class LeaveScheduleController extends Controller {
 		private readonly LeaveCoverageService $coverage,
 		private readonly OrgResolutionService $orgResolution,
 		private readonly RbacObjectReader $rbac,
+		private readonly AgendaReadAccess $access,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -93,7 +96,10 @@ class LeaveScheduleController extends Controller {
 	 * @param string|null $from First day of the period (ISO date).
 	 * @param string|null $to Last day of the period (ISO date).
 	 *
-	 * @return JSONResponse The entries, or 400 when the parameters are unusable.
+	 * Open to whoever may read the unit's agenda: its members, its managers
+	 * and their deputies, and HR.
+	 *
+	 * @return JSONResponse The entries, 400 when the parameters are unusable, 403 when the caller may not read the unit.
 	 *
 	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
 	 */
@@ -109,7 +115,12 @@ class LeaveScheduleController extends Controller {
 			return self::unusableWindow();
 		}
 
-		$members = $this->members(orgUnitId: $orgUnitId, onDate: $window[0]);
+		$scope = $this->access->employeeScope(orgUnitId: $orgUnitId, onDate: $window[0]);
+		if ($scope === null) {
+			return new JSONResponse(['error' => 'Je hebt geen toegang tot het verlofrooster van deze afdeling.'], Http::STATUS_FORBIDDEN);
+		}
+
+		$members = $scope['ids'];
 		$requests = $this->gateway->loadAll('LeaveRequest');
 
 		return new JSONResponse([
