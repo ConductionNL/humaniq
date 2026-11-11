@@ -104,6 +104,18 @@ final class RosterCompetenceGuard implements LifecycleGuardInterface {
 			return GuardResult::allow();
 		}
 
+		return GuardResult::deny($this->blockingMessage(competence: $competence, leave: $leave));
+	}//end check()
+
+	/**
+	 * The refusal naming the first shifts without a valid competence and on approved leave, pointing to the full list when more are found.
+	 *
+	 * @param list<string> $competence The competence statements.
+	 * @param list<string> $leave The leave statements.
+	 *
+	 * @return string
+	 */
+	private function blockingMessage(array $competence, array $leave): string {
 		$message = 'Dit rooster kan niet worden gepubliceerd.'
 			. $this->named(label: 'Diensten zonder geldige bevoegdheid', statements: $competence)
 			. $this->named(label: 'Diensten op een dag met goedgekeurd verlof', statements: $leave);
@@ -111,8 +123,8 @@ final class RosterCompetenceGuard implements LifecycleGuardInterface {
 			$message .= ' Voer occ humaniq:roster:check uit voor de volledige lijst.';
 		}
 
-		return GuardResult::deny($message);
-	}//end check()
+		return $message;
+	}//end blockingMessage()
 
 	/**
 	 * Why the roster could not be checked, or null when it was.
