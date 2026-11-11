@@ -1,0 +1,84 @@
+{
+    "own": {
+        "stamps": {
+            "employeeId": "emp-1",
+            "userId": "ingrid",
+            "managerUserId": "manager.2026-06-01",
+            "administrationId": "ADM-001"
+        },
+        "error": null
+    },
+    "own-named": {
+        "stamps": {
+            "employeeId": "emp-1",
+            "userId": "ingrid",
+            "managerUserId": "manager.2026-06-01",
+            "administrationId": "ADM-X"
+        },
+        "error": null
+    },
+    "nil-report": {
+        "stamps": {
+            "employeeId": "emp-1",
+            "userId": "ingrid",
+            "managerUserId": "manager.2026-06-01",
+            "administrationId": "ADM-001"
+        },
+        "error": null
+    },
+    "nil-not-true": {
+        "stamps": [],
+        "error": "Describe the activity, or tick Nothing to report."
+    },
+    "empty": {
+        "stamps": [],
+        "error": "Describe the activity, or tick Nothing to report."
+    },
+    "someone-else": {
+        "stamps": [],
+        "error": "You can only report your own side activities."
+    },
+    "someone-else-empty": {
+        "stamps": [],
+        "error": "You can only report your own side activities."
+    },
+    "hr": {
+        "stamps": {
+            "employeeId": "emp-1",
+            "userId": "ingrid",
+            "managerUserId": "manager.2026-06-01",
+            "administrationId": "ADM-001"
+        },
+        "error": null
+    },
+    "system": {
+        "stamps": {
+            "employeeId": "emp-1",
+            "userId": "ingrid",
+            "managerUserId": "manager.2026-06-01",
+            "administrationId": "ADM-001"
+        },
+        "error": null
+    },
+    "no-account-employee": {
+        "stamps": {
+            "employeeId": "emp-2",
+            "userId": null,
+            "managerUserId": null,
+            "administrationId": "ADM-002"
+        },
+        "error": null
+    },
+    "unknown-employee": {
+        "stamps": [],
+        "error": "There is no employee record for this side activity."
+    },
+    "no-employee-for-caller": {
+        "stamps": [],
+        "error": "There is no employee record for this side activity."
+    },
+    "caller-record-without-id": {
+        "stamps": [],
+        "error": "There is no employee record for this side activity."
+    }
+}
