@@ -78,33 +78,55 @@ final class RightToWorkGuard implements LifecycleGuardInterface {
 	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-004
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
+		$refusal = $this->refusal(object: $object);
+
+		return ($refusal === null) ? GuardResult::allow() : GuardResult::deny($refusal);
+	}//end check()
+
+	/**
+	 * Why the onboarding may not move on: no employee or start date, no check yet, or a check that does not hold; null when it may.
+	 *
+	 * @param array<string, mixed> $object The onboarding.
+	 *
+	 * @return string|null
+	 */
+	private function refusal(array $object): string|null {
 		$employeeId = trim((string)($object['employeeId'] ?? ''));
 		$startDate = substr(trim((string)($object['startDate'] ?? '')), 0, 10);
 		if ($employeeId === '' || preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate) !== 1) {
-			return GuardResult::deny('Deze onboarding heeft geen medewerker of geen geldige startdatum, dus de right-to-work-controle kan niet worden beoordeeld.');
+			return 'Deze onboarding heeft geen medewerker of geen geldige startdatum, dus de right-to-work-controle kan niet worden beoordeeld.';
 		}
 
 		$latest = $this->latest(checks: $this->gateway->findFiltered('RightToWorkCheck', ['employeeId' => $employeeId]));
 		if ($latest === null) {
-			return GuardResult::deny('Er is nog geen right-to-work-controle (identiteit en recht op arbeid) voor deze medewerker. Voer de controle uit op de onboarding.');
+			return 'Er is nog geen right-to-work-controle (identiteit en recht op arbeid) voor deze medewerker. Voer de controle uit op de onboarding.';
 		}
 
+		return $this->checkRefusal(latest: $latest, startDate: $startDate);
+	}//end refusal()
+
+	/**
+	 * Why the latest check does not hold: done after the start, failed, or a pass the rule itself refuses; null when it holds.
+	 *
+	 * @param array<string, mixed> $latest The newest RightToWorkCheck.
+	 * @param string $startDate The start date, `YYYY-MM-DD`.
+	 *
+	 * @return string|null
+	 */
+	private function checkRefusal(array $latest, string $startDate): string|null {
 		$checkedOn = substr((string)($latest['checkedOn'] ?? ''), 0, 10);
 		if ($checkedOn === '' || $checkedOn > $startDate) {
-			return GuardResult::deny(sprintf('De right-to-work-controle moet op of voor de startdatum (%s) zijn gedaan.', $startDate));
+			return sprintf('De right-to-work-controle moet op of voor de startdatum (%s) zijn gedaan.', $startDate);
 		}
 
 		if (($latest['result'] ?? '') !== RightToWorkService::RESULT_PASS) {
-			return GuardResult::deny('De laatste right-to-work-controle is mislukt: ' . (string)($latest['reason'] ?? '') . ' Alleen een nieuwe controle met nieuw bewijs heft dit op.');
+			return 'De laatste right-to-work-controle is mislukt: ' . (string)($latest['reason'] ?? '') . ' Alleen een nieuwe controle met nieuw bewijs heft dit op.';
 		}
 
 		$again = $this->rule->decide(array_merge($latest, ['startDate' => $startDate, 'mrz' => null]));
-		if ($again['result'] !== RightToWorkService::RESULT_PASS) {
-			return GuardResult::deny('De right-to-work-controle staat als geslaagd, maar de gegevens voldoen niet aan de regel: ' . (string)$again['reason']);
-		}
 
-		return GuardResult::allow();
-	}//end check()
+		return ($again['result'] !== RightToWorkService::RESULT_PASS) ? 'De right-to-work-controle staat als geslaagd, maar de gegevens voldoen niet aan de regel: ' . (string)$again['reason'] : null;
+	}//end checkRefusal()
 
 	/**
 	 * The newest check by checkedOn.
