@@ -204,6 +204,27 @@ class WkrService {
 	 * @return array<string, array<int, array<string, float>>>
 	 */
 	private function buildAggregate(): array {
+		$runsById = $this->administrationIdsByRun();
+		$aggregate = new WkrAggregate();
+
+		foreach ($this->loadAll('Payslip') as $payslip) {
+			$aggregate->addPayslip($this->payslipAdministrationId($payslip, $runsById), $payslip);
+		}
+
+		foreach ($this->loadAll('WkrDeclaration') as $declaration) {
+			$aggregate->addDeclaration($declaration);
+		}
+
+		return $aggregate->toArray();
+	}//end buildAggregate()
+
+	/**
+	 * Each PayrollRun's administrationId, keyed by run id (runs without an id
+	 * are left out).
+	 *
+	 * @return array<string, string>
+	 */
+	private function administrationIdsByRun(): array {
 		$runsById = [];
 		foreach ($this->loadAll('PayrollRun') as $run) {
 			$id = $this->idOf($run);
@@ -212,74 +233,27 @@ class WkrService {
 			}
 		}
 
-		$aggregate = [];
-
-		foreach ($this->loadAll('Payslip') as $payslip) {
-			$administrationId = trim((string)($payslip['administrationId'] ?? ''));
-			if ($administrationId === '') {
-				$runId = (string)($payslip['payrollRunId'] ?? '');
-				$administrationId = trim((string)($runsById[$runId] ?? ''));
-			}
-
-			if ($administrationId === '') {
-				continue;
-			}
-
-			$year = self::yearFromPeriod((string)($payslip['period'] ?? ''));
-			if ($year === null) {
-				continue;
-			}
-
-			$bucket = &$aggregate[$administrationId][$year];
-			$bucket['loonsom'] = (($bucket['loonsom'] ?? 0.0) + ((float)($payslip['grossPay'] ?? 0)));
-			$bucket['payslipWkrUsed'] = (($bucket['payslipWkrUsed'] ?? 0.0) + ((float)($payslip['wkrUsed'] ?? 0)));
-			$bucket['vrijeRuimteDeclared'] = ($bucket['vrijeRuimteDeclared'] ?? 0.0);
-			$bucket['eindheffingDeclared'] = ($bucket['eindheffingDeclared'] ?? 0.0);
-			unset($bucket);
-		}//end foreach
-
-		foreach ($this->loadAll('WkrDeclaration') as $declaration) {
-			$administrationId = trim((string)($declaration['administrationId'] ?? ''));
-			$year = (int)($declaration['year'] ?? 0);
-			$category = (string)($declaration['wkrCategory'] ?? '');
-			if ($administrationId === '' || $year === 0 || $category === 'gericht-vrijgesteld') {
-				continue;
-			}
-
-			$bucket = &$aggregate[$administrationId][$year];
-			$bucket['loonsom'] = ($bucket['loonsom'] ?? 0.0);
-			$bucket['payslipWkrUsed'] = ($bucket['payslipWkrUsed'] ?? 0.0);
-			$bucket['vrijeRuimteDeclared'] = ($bucket['vrijeRuimteDeclared'] ?? 0.0);
-			$bucket['eindheffingDeclared'] = ($bucket['eindheffingDeclared'] ?? 0.0);
-
-			if ($category === 'vrije-ruimte') {
-				$bucket['vrijeRuimteDeclared'] += ((float)($declaration['amount'] ?? 0));
-			} elseif ($category === 'eindheffing') {
-				$bucket['eindheffingDeclared'] += ((float)($declaration['amount'] ?? 0));
-			}
-
-			unset($bucket);
-		}//end foreach
-
-		return $aggregate;
-	}//end buildAggregate()
+		return $runsById;
+	}//end administrationIdsByRun()
 
 	/**
-	 * Derive a calendar year from a wage period (`YYYY-MM`/`YYYY-Pnn`) — the
-	 * leading four-digit year prefix (the `RuleAuditService::yearFromPeriod`
-	 * precedent). Returns null when unparseable.
+	 * A Payslip's effective administrationId: its own field, else its
+	 * `payrollRunId` -> PayrollRun.administrationId; '' when neither is set.
 	 *
-	 * @param string $period Wage period string.
+	 * @param array<string, mixed> $payslip The payslip row.
+	 * @param array<string, string> $runsById Run administrationIds keyed by run id.
 	 *
-	 * @return int|null
+	 * @return string
 	 */
-	private static function yearFromPeriod(string $period): ?int {
-		if (preg_match('/^(\d{4})/', $period, $matches) !== 1) {
-			return null;
+	private function payslipAdministrationId(array $payslip, array $runsById): string {
+		$administrationId = trim((string)($payslip['administrationId'] ?? ''));
+		if ($administrationId !== '') {
+			return $administrationId;
 		}
 
-		return (int)$matches[1];
-	}//end yearFromPeriod()
+		$runId = (string)($payslip['payrollRunId'] ?? '');
+		return trim((string)($runsById[$runId] ?? ''));
+	}//end payslipAdministrationId()
 
 	/**
 	 * The existing WkrAssessment for (administrationId, year), or null — the
