@@ -207,6 +207,36 @@ class PayrollHandoffNodesTest extends FlowNodeTestCase {
 	}//end testNetPayOutcomeRouting()
 
 	/**
+	 * Each refusal names the run, the status and the service's message.
+	 *
+	 * @return void
+	 */
+	public function testTheRefusalMessagesNameRunStatusAndReason(): void {
+		$glpost = $this->createMock(PayrollGLPostService::class);
+		$glpost->method('postRun')->willReturn(['runId' => 'run-1', 'status' => 'failed', 'message' => 'onbalans']);
+		$netpay = $this->createMock(PayrollNetPayService::class);
+		$netpay->method('processRun')->willReturn(['status' => 'refused']);
+		$call = new FlowNodeCall(items: [$this->item(['payroll' => ['runId' => 'run-1']])], config: [], context: []);
+
+		$messages = [];
+		foreach ([fn () => $this->glPostNode($glpost)->execute($call), fn () => $this->netPayNode($netpay)->execute($call)] as $run) {
+			try {
+				$run();
+			} catch (RuntimeException $e) {
+				$messages[] = $e->getMessage();
+			}
+		}
+
+		$this->assertSame(
+			[
+				'Loonjournaalpost voor loonrun run-1 is mislukt (failed): onbalans',
+				'Netto-loonbatch voor loonrun run-1 is mislukt (refused): ',
+			],
+			$messages
+		);
+	}//end testTheRefusalMessagesNameRunStatusAndReason()
+
+	/**
 	 * Empty firings return empty without touching either service.
 	 *
 	 * @return void
