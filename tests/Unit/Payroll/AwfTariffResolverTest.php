@@ -171,6 +171,25 @@ class AwfTariffResolverTest extends TestCase {
 	}//end testAContractEndingWithinTwoMonthsEndsEarly()
 
 	/**
+	 * An early end raises only a reviewable low tariff, and the young exception still applies after it.
+	 *
+	 * @return void
+	 */
+	public function testAnEarlyEndRaisesOnlyAReviewableLowTariff(): void {
+		$bbl = $this->contract(['type' => 'bbl', 'writtenContract' => false, 'bpvOvereenkomstOndertekend' => true]);
+
+		$this->assertSame(['tariff' => 'high', 'basis' => 'flex'], AwfTariffResolver::resolve($this->contract(['type' => 'temporary']), '1990-04-12', '2026-06', 156.0, true));
+		$this->assertSame(['tariff' => 'low', 'basis' => 'bbl'], AwfTariffResolver::resolve($bbl, '1990-04-12', '2026-06', 156.0, true));
+		$this->assertSame(['tariff' => 'high', 'basis' => 'early-end'], AwfTariffResolver::resolve($this->contract(['awfTariff' => 'low']), '1990-04-12', '2026-06', 156.0, true));
+		$this->assertSame(['tariff' => 'high', 'basis' => 'early-end'], AwfTariffResolver::resolve($this->contract(['type' => 'temporary', 'awfTariff' => 'low']), '1990-04-12', '2026-06', 156.0, true));
+		$this->assertSame(['tariff' => 'high', 'basis' => 'explicit'], AwfTariffResolver::resolve($this->contract(['awfTariff' => ' high ']), '1990-04-12', '2026-06', 156.0, true));
+		$this->assertSame(['tariff' => 'low', 'basis' => 'young-part-time'], AwfTariffResolver::resolve($this->contract(), '2008-01-01', '2026-06', 30.0, true));
+		$this->assertSame(['tariff' => 'low', 'basis' => 'contract'], AwfTariffResolver::resolve($this->contract(), '2008-01-01', '2026-06', 30.0, false));
+		$this->assertSame(['tariff' => 'low', 'basis' => 'explicit'], AwfTariffResolver::resolve($this->contract(['type' => 'temporary', 'awfTariff' => 'low']), 'geen datum', '2026-06', 30.0));
+
+	}//end testAnEarlyEndRaisesOnlyAReviewableLowTariff()
+
+	/**
 	 * Handboek 7.2.2 voorbeeld 2: a temporary contract from 1 January,
 	 * followed without a gap by a permanent one from 1 February ending
 	 * 15 March, is one employment of more than two months: no review.
