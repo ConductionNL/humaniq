@@ -227,6 +227,27 @@ class HrDocumentSigningServiceTest extends TestCase {
 	}//end testANewContractGoesOutForSigning()
 
 	/**
+	 * Every outcome keeps its message, and the raised request its fields.
+	 *
+	 * @return void
+	 */
+	public function testTheOutcomesAndTheRequestFields(): void {
+		$message = static fn (array $outcome): array => [$outcome['status'], $outcome['message']];
+		self::assertSame(['refused', 'Alleen een gegenereerde arbeidsovereenkomst, werkgeversverklaring of getuigschrift kan worden ondertekend.'], $message($this->service()->requestSignature($this->document('getuigschrift', ['status' => 'concept']), 'hr.adviseur')));
+		self::assertSame(['already-signed', 'Dit document is al ondertekend.'], $message($this->service()->requestSignature($this->document('getuigschrift', ['signingStatus' => 'COMPLETED']), 'hr.adviseur')));
+		self::assertSame(['existing', 'Er loopt al een ondertekenverzoek voor dit document.'], $message($this->service()->requestSignature($this->document('getuigschrift', ['signingStatus' => 'PENDING']), 'hr.adviseur')));
+		self::assertSame(['skipped-no-docudesk', 'De documentenapp is niet beschikbaar; er is niets verstuurd.'], $message($this->service(false)->requestSignature($this->document('getuigschrift'), 'hr.adviseur')));
+		self::assertSame(['failed', 'Het opgeslagen PDF-bestand van dit document is niet gevonden. Genereer het document opnieuw.'], $message($this->service()->requestSignature($this->document('getuigschrift', ['filePath' => 'humaniq/doc-1/getuigschrift.docx']), 'hr.adviseur')));
+		self::assertSame([], $this->signing->created);
+
+		$outcome = $this->service()->requestSignature($this->document('getuigschrift'), 'hr.adviseur');
+		self::assertSame(['requested', 'Het ondertekenverzoek is verstuurd.'], $message($outcome));
+		$request = $this->signing->created[0];
+		self::assertSame(['documentFileId', 'documentName', 'signatureLevel', 'signingMode', 'deadline', 'signers', 'sourceApp', 'subjectRegister', 'subjectSchema', 'subjectId', 'subjectLabel', 'externalReference', 'correlationId'], array_keys(array_intersect_key($request, array_flip(['documentFileId', 'documentName', 'signatureLevel', 'signingMode', 'deadline', 'signers', 'sourceApp', 'subjectRegister', 'subjectSchema', 'subjectId', 'subjectLabel', 'externalReference', 'correlationId']))));
+		self::assertSame(['4711', 'getuigschrift.pdf', 'SES', 'sequential', 'hrmq', 'humaniq', 'HrGeneratedDocument', 'doc-1', 'doc-1', 'doc-1'], [$request['documentFileId'], $request['documentName'], $request['signatureLevel'], $request['signingMode'], $request['sourceApp'], $request['subjectRegister'], $request['subjectSchema'], $request['subjectId'], $request['externalReference'], $request['correlationId']]);
+	}//end testTheOutcomesAndTheRequestFields()
+
+	/**
 	 * Scenario: a werkgeversverklaring needs only the employer; without a
 	 * signatory the acting HR user signs for the employer.
 	 *
