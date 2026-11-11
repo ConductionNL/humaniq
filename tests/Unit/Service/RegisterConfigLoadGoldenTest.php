@@ -31,11 +31,10 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Service\RegisterConfigReader;
 use OCA\Humaniq\Service\RegisterImporter;
-use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
-use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
@@ -47,7 +46,7 @@ use RuntimeException;
  *
  * @covers \OCA\Humaniq\Service\RegisterImporter
  * @covers \OCA\Humaniq\Service\RegisterConfigReader
- * @uses   \OCA\Humaniq\Service\SettingsService
+ * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  *
  * @spec openspec/specs/hrm-rule-engine/spec.md
@@ -215,7 +214,7 @@ class RegisterConfigLoadGoldenTest extends TestCase {
 			return $importer;
 		});
 
-		$service = new RegisterImporter(new SettingsService($this->createMock(IAppConfig::class), $appManager), $container, $logger);
+		$service = new RegisterImporter(new OpenRegisterAvailability($appManager), $container, $logger);
 		$answer = (($s['forced'] ?? false) === true) ? $service->loadConfigurationForced() : $service->loadConfiguration();
 
 		return ['answer' => $answer, 'log' => $logger->lines, 'asked' => $asked, 'calls' => $importer->calls];

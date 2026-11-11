@@ -23,10 +23,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Repair;
 
 use OCA\Humaniq\Repair\InitializeRegister;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Service\RegisterImporter;
-use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
-use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -37,7 +36,7 @@ use Psr\Log\NullLogger;
  * What the repair step reports for each answer of the register import.
  *
  * @covers \OCA\Humaniq\Repair\InitializeRegister
- * @uses   \OCA\Humaniq\Service\SettingsService
+ * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
  * @uses   \OCA\Humaniq\Service\RegisterImporter
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\RegisterConfigReader
@@ -154,8 +153,8 @@ class InitializeRegisterTest extends TestCase {
 			$output[] = ['warning', $message];
 		});
 
-		$settings = new SettingsService($this->createMock(IAppConfig::class), $appManager);
-		(new InitializeRegister($settings, new RegisterImporter($settings, $container, new NullLogger()), $logger))->run($io);
+		$openRegister = new OpenRegisterAvailability($appManager);
+		(new InitializeRegister($openRegister, new RegisterImporter($openRegister, $container, new NullLogger()), $logger))->run($io);
 
 		return ['output' => $output, 'log' => $logger->lines, 'forced' => $importer->forced];
 

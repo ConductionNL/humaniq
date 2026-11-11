@@ -23,10 +23,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Service\RegisterImporter;
-use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
-use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -35,7 +34,7 @@ use Psr\Log\NullLogger;
  * The register import runs as a shipped import.
  *
  * @covers \OCA\Humaniq\Service\RegisterImporter
- * @uses   \OCA\Humaniq\Service\SettingsService
+ * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\RegisterConfigReader
  */
@@ -82,7 +81,7 @@ class RegisterImporterShippedImportTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($importer);
 
-		$service = new RegisterImporter(new SettingsService($this->createMock(IAppConfig::class), $appManager), $container, new NullLogger(), $marker);
+		$service = new RegisterImporter(new OpenRegisterAvailability($appManager), $container, new NullLogger(), $marker);
 		$service->loadConfigurationForced();
 
 		self::assertSame([true], $importer->seen);

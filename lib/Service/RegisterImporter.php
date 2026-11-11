@@ -49,13 +49,13 @@ final class RegisterImporter {
 	];
 
 	/**
-	 * @param SettingsService $settingsService Tells whether OpenRegister is available.
+	 * @param OpenRegisterAvailability $openRegister Tells whether OpenRegister is available.
 	 * @param ContainerInterface $container The DI container.
 	 * @param LoggerInterface $logger The logger.
 	 * @param InternalWriteMarker $marker Marks the register import as a shipped import.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly OpenRegisterAvailability $openRegister,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 		private readonly InternalWriteMarker $marker = new InternalWriteMarker(),
@@ -93,7 +93,7 @@ final class RegisterImporter {
 	 * @return array<string, mixed>
 	 */
 	private function runLoadConfiguration(bool $force): array {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+		if ($this->openRegister->isAvailable() === false) {
 			$this->logger->warning('Humaniq: OpenRegister not available, skipping register initialization');
 			return self::failedImport('OpenRegister is not installed or enabled.');
 		}

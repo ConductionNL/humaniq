@@ -31,8 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Repair;
 
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Service\RegisterImporter;
-use OCA\Humaniq\Service\SettingsService;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -43,12 +43,12 @@ use Psr\Log\LoggerInterface;
 class InitializeRegister implements IRepairStep {
 
 	/**
-	 * @param SettingsService $settingsService Tells whether OpenRegister is available.
+	 * @param OpenRegisterAvailability $openRegister Tells whether OpenRegister is available.
 	 * @param RegisterImporter $registerImporter The register importer.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly OpenRegisterAvailability $openRegister,
 		private readonly RegisterImporter $registerImporter,
 		private readonly LoggerInterface $logger,
 	) {
@@ -76,7 +76,7 @@ class InitializeRegister implements IRepairStep {
 	public function run(IOutput $output): void {
 		$output->info('Initializing humaniq register...');
 
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+		if ($this->openRegister->isAvailable() === false) {
 			$output->warning('OpenRegister is not installed or enabled. Skipping humaniq register import.');
 			$this->logger->warning('Humaniq: OpenRegister not available, skipping register initialization');
 			return;
