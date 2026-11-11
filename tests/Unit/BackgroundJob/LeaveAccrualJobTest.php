@@ -40,9 +40,12 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\BackgroundJob;
 
 use OCA\Humaniq\BackgroundJob\LeaveAccrualJob;
+use OCA\Humaniq\Service\LeaveAccrualSettings;
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Standards\RuleEngine;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
+use OCP\AppFramework\Services\IAppConfig;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -195,15 +198,14 @@ class LeaveAccrualJobTest extends TestCase {
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('isLeaveAccrualEnabled')->willReturn($enabled);
-		$settings->method('getLeaveBovenwettelijkAnnualHours')->willReturn($annualBovenwettelijk);
+		$accrual = new LeaveAccrualSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), ['leave_accrual_enabled' => $enabled, 'leave_bovenwettelijk_annual_hours' => (string)$annualBovenwettelijk]));
 
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn((new \DateTimeImmutable($now))->getTimestamp());
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new LeaveAccrualJob($time, $container, $settings, $logger, ($projection ?? $this->createMock(LeaveBalanceProjectionService::class))), $fake];
+		return [new LeaveAccrualJob($time, $container, $settings, $accrual, $logger, ($projection ?? $this->createMock(LeaveBalanceProjectionService::class))), $fake];
 	}//end job()
 
 	/**

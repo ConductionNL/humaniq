@@ -22,17 +22,16 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Humaniq\Service\SettingsService;
-use OCP\App\IAppManager;
-use OCP\IAppConfig;
+use OCA\Humaniq\Service\LeaveAccrualSettings;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * Whether the leave accrual job runs, and the above-statutory hours it accrues.
  *
- * @covers \OCA\Humaniq\Service\SettingsService
+ * @covers \OCA\Humaniq\Service\LeaveAccrualSettings
+ * @uses   \OCA\Humaniq\Tests\Unit\Support\AppConfigValues
  */
 class LeaveAccrualSettingsTest extends TestCase {
 
@@ -64,14 +63,12 @@ class LeaveAccrualSettingsTest extends TestCase {
 	 *
 	 * @param array<string, string|bool> $values The stored app config values by key.
 	 *
-	 * @return SettingsService
+	 * @return LeaveAccrualSettings
 	 */
-	private function settings(array $values): SettingsService {
-		$config = $this->createMock(IAppConfig::class);
-		$config->method('getValueBool')->willReturnCallback(static fn (string $app, string $key, bool $default): bool => (bool)($values[$key] ?? $default));
-		$config->method('getValueString')->willReturnCallback(static fn (string $app, string $key, string $default): string => (string)($values[$key] ?? $default));
+	private function settings(array $values): LeaveAccrualSettings {
+		$config = AppConfigValues::answer($this->createMock(IAppConfig::class), $values);
 
-		return new SettingsService($config, $this->createMock(IAppManager::class), $this->createMock(ContainerInterface::class), new NullLogger());
+		return new LeaveAccrualSettings($config);
 	}//end settings()
 
 }//end class

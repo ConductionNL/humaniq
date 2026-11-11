@@ -51,6 +51,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\BackgroundJob;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Service\LeaveAccrualSettings;
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
@@ -115,7 +116,8 @@ class LeaveAccrualJob extends TimedJob {
 	/**
 	 * @param ITimeFactory $time Time factory (also drives `run()`'s period/year).
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
-	 * @param SettingsService $settingsService Register slug + `leave_accrual_enabled`/`leave_bovenwettelijk_annual_hours` config.
+	 * @param SettingsService $settingsService Register slug.
+	 * @param LeaveAccrualSettings $accrual The `leave_accrual_enabled`/`leave_bovenwettelijk_annual_hours` config.
 	 * @param LoggerInterface $logger Logger.
 	 * @param LeaveBalanceProjectionService $projection Recomputes every balance, applying the lapses due today.
 	 */
@@ -123,6 +125,7 @@ class LeaveAccrualJob extends TimedJob {
 		ITimeFactory $time,
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
+		private readonly LeaveAccrualSettings $accrual,
 		private readonly LoggerInterface $logger,
 		private readonly LeaveBalanceProjectionService $projection,
 	) {
@@ -182,7 +185,7 @@ class LeaveAccrualJob extends TimedJob {
 	 * @spec openspec/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
 	public function runAccrual(): array {
-		if ($this->settingsService->isLeaveAccrualEnabled() === false) {
+		if ($this->accrual->isLeaveAccrualEnabled() === false) {
 			return self::DISABLED_SUMMARY;
 		}
 
@@ -192,7 +195,7 @@ class LeaveAccrualJob extends TimedJob {
 
 		$contractsByEmployeeKey = $this->contractsByEmployeeKey();
 		$balancesByEmployeeId = $this->holidayBalancesByEmployeeId($year);
-		$month = ['year' => $year, 'period' => $period, 'deltaBovenwettelijk' => $this->round1($this->settingsService->getLeaveBovenwettelijkAnnualHours() / 12)];
+		$month = ['year' => $year, 'period' => $period, 'deltaBovenwettelijk' => $this->round1($this->accrual->getLeaveBovenwettelijkAnnualHours() / 12)];
 		$summary = ['period' => $period, 'year' => $year] + self::DISABLED_SUMMARY;
 		$summary['enabled'] = true;
 

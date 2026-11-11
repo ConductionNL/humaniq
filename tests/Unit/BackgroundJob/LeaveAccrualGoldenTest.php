@@ -22,8 +22,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\BackgroundJob;
 
 use OCA\Humaniq\BackgroundJob\LeaveAccrualJob;
+use OCA\Humaniq\Service\LeaveAccrualSettings;
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
+use OCP\AppFramework\Services\IAppConfig;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -255,12 +258,11 @@ class LeaveAccrualGoldenTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('isLeaveAccrualEnabled')->willReturn((bool)($case['enabled'] ?? true));
-		$settings->method('getLeaveBovenwettelijkAnnualHours')->willReturn((float)$case['annual']);
+		$accrual = new LeaveAccrualSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), ['leave_accrual_enabled' => (bool)($case['enabled'] ?? true), 'leave_bovenwettelijk_annual_hours' => (string)(float)$case['annual']]));
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn((new \DateTimeImmutable($case['now'] . ' 12:00:00'))->getTimestamp());
 
-		$job = new LeaveAccrualJob($time, $container, $settings, new NullLogger(), $this->createMock(LeaveBalanceProjectionService::class));
+		$job = new LeaveAccrualJob($time, $container, $settings, $accrual, new NullLogger(), $this->createMock(LeaveBalanceProjectionService::class));
 
 		return ['summary' => $job->runAccrual(), 'writes' => $store->writes];
 	}//end runCase()
