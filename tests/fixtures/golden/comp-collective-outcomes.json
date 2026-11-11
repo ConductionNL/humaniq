@@ -1,0 +1,215 @@
+{
+    "dry": {
+        "status": "ok",
+        "cycleId": "00819670-996a-467a-8fa4-588432141afb",
+        "kind": "collective",
+        "dryRun": true,
+        "created": 0,
+        "wouldCreate": 3,
+        "alreadyPresent": 0,
+        "failed": 0,
+        "skipped": [
+            {
+                "employeeId": "9486920e-5547-4abc-8ca4-51c6a84cdcd2",
+                "name": "Vertrokken",
+                "reason": "no-contract-on-effective-date"
+            }
+        ],
+        "rows": [
+            {
+                "employeeId": "ea2e65ed-a509-440c-8fb2-d6d00ecc22d1",
+                "name": "Jansen",
+                "currentSalary": 380000,
+                "proposedSalary": 387600,
+                "fromStep": null,
+                "toStep": null,
+                "effectiveDate": "2026-07-01"
+            },
+            {
+                "employeeId": "5f5694e4-7a8f-4e0f-8f32-6d13dca15b54",
+                "name": "de Vries",
+                "currentSalary": 291200,
+                "proposedSalary": 297024,
+                "fromStep": null,
+                "toStep": null,
+                "effectiveDate": "2026-07-01"
+            },
+            {
+                "employeeId": "75d83dad-177d-46d9-8824-f0f38724641e",
+                "name": "Bakker",
+                "currentSalary": 260000,
+                "proposedSalary": 265200,
+                "fromStep": null,
+                "toStep": null,
+                "effectiveDate": "2026-07-01"
+            }
+        ]
+    },
+    "collective": {
+        "status": "ok",
+        "cycleId": "00819670-996a-467a-8fa4-588432141afb",
+        "kind": "collective",
+        "dryRun": false,
+        "created": 3,
+        "wouldCreate": 3,
+        "alreadyPresent": 0,
+        "failed": 0,
+        "skipped": [
+            {
+                "employeeId": "9486920e-5547-4abc-8ca4-51c6a84cdcd2",
+                "name": "Vertrokken",
+                "reason": "no-contract-on-effective-date"
+            }
+        ],
+        "rows": [
+            {
+                "employeeId": "ea2e65ed-a509-440c-8fb2-d6d00ecc22d1",
+                "name": "Jansen",
+                "currentSalary": 380000,
+                "proposedSalary": 387600,
+                "fromStep": null,
+                "toStep": null,
+                "effectiveDate": "2026-07-01"
+            },
+            {
+                "employeeId": "5f5694e4-7a8f-4e0f-8f32-6d13dca15b54",
+                "name": "de Vries",
+                "currentSalary": 291200,
+                "proposedSalary": 297024,
+                "fromStep": null,
+                "toStep": null,
+                "effectiveDate": "2026-07-01"
+            },
+            {
+                "employeeId": "75d83dad-177d-46d9-8824-f0f38724641e",
+                "name": "Bakker",
+                "currentSalary": 260000,
+                "proposedSalary": 265200,
+                "fromStep": null,
+                "toStep": null,
+                "effectiveDate": "2026-07-01"
+            }
+        ]
+    },
+    "rerun": {
+        "status": "ok",
+        "cycleId": "00819670-996a-467a-8fa4-588432141afb",
+        "kind": "collective",
+        "dryRun": false,
+        "created": 1,
+        "wouldCreate": 1,
+        "alreadyPresent": 1,
+        "failed": 0,
+        "skipped": [],
+        "rows": [
+            {
+                "employeeId": "6d440828-2595-418d-8f7a-79569bf8ab83",
+                "name": "Elders",
+                "currentSalary": 410000,
+                "proposedSalary": 418200,
+                "fromStep": null,
+                "toStep": null,
+                "effectiveDate": "2026-07-01"
+            }
+        ]
+    },
+    "steps": {
+        "status": "ok",
+        "cycleId": "a600f55e-ba4b-4eea-82e5-e78a658b1a74",
+        "kind": "step-increase",
+        "dryRun": false,
+        "created": 0,
+        "wouldCreate": 0,
+        "alreadyPresent": 0,
+        "failed": 1,
+        "skipped": [
+            {
+                "employeeId": "ea2e65ed-a509-440c-8fb2-d6d00ecc22d1",
+                "name": "Jansen",
+                "reason": "failed"
+            },
+            {
+                "employeeId": "5f5694e4-7a8f-4e0f-8f32-6d13dca15b54",
+                "name": "de Vries",
+                "reason": "top-of-band"
+            },
+            {
+                "employeeId": "75d83dad-177d-46d9-8824-f0f38724641e",
+                "name": "Bakker",
+                "reason": "step-not-due"
+            }
+        ],
+        "rows": []
+    },
+    "missing": {
+        "status": "refused-cycle-not-found",
+        "message": "Beloningsronde niet gevonden."
+    },
+    "saved": [
+        {
+            "schema": "CompAdjustment",
+            "object": {
+                "cycleId": "00819670-996a-467a-8fa4-588432141afb",
+                "employeeId": "ea2e65ed-a509-440c-8fb2-d6d00ecc22d1",
+                "currentSalary": 380000,
+                "status": "proposed",
+                "proposedBy": "salarisadmin",
+                "employeeUserId": "sjansen",
+                "contractId": "9b56be16-904e-4f3c-8a35-94752433944b",
+                "effectiveDate": "2026-07-01",
+                "adjustmentKind": "collective",
+                "proposedSalary": 387600,
+                "rationale": "Collectieve verhoging van 2% (Collectieve verhoging 2026).",
+                "proposedHourlyWage": 24.85
+            }
+        },
+        {
+            "schema": "CompAdjustment",
+            "object": {
+                "cycleId": "00819670-996a-467a-8fa4-588432141afb",
+                "employeeId": "5f5694e4-7a8f-4e0f-8f32-6d13dca15b54",
+                "currentSalary": 291200,
+                "status": "proposed",
+                "proposedBy": "salarisadmin",
+                "employeeUserId": null,
+                "contractId": "4a750821-38e3-47ee-8ac6-fe853e01b917",
+                "effectiveDate": "2026-07-01",
+                "adjustmentKind": "collective",
+                "proposedSalary": 297024,
+                "rationale": "Collectieve verhoging van 2% (Collectieve verhoging 2026)."
+            }
+        },
+        {
+            "schema": "CompAdjustment",
+            "object": {
+                "cycleId": "00819670-996a-467a-8fa4-588432141afb",
+                "employeeId": "75d83dad-177d-46d9-8824-f0f38724641e",
+                "currentSalary": 260000,
+                "status": "proposed",
+                "proposedBy": "salarisadmin",
+                "employeeUserId": "mbakker",
+                "contractId": "4d24aa52-7345-4734-8644-ad1e55bb4b1a",
+                "effectiveDate": "2026-07-01",
+                "adjustmentKind": "collective",
+                "proposedSalary": 265200,
+                "rationale": "Collectieve verhoging van 2% (Collectieve verhoging 2026)."
+            }
+        },
+        {
+            "schema": "CompAdjustment",
+            "object": {
+                "cycleId": "00819670-996a-467a-8fa4-588432141afb",
+                "employeeId": "6d440828-2595-418d-8f7a-79569bf8ab83",
+                "currentSalary": 410000,
+                "status": "proposed",
+                "proposedBy": "salarisadmin",
+                "employeeUserId": "eelders",
+                "contractId": "e8101a73-9a41-4b4a-8bd2-ee6d8efb7e9b",
+                "effectiveDate": "2026-07-01",
+                "adjustmentKind": "collective",
+                "proposedSalary": 418200,
+                "rationale": "Collectieve verhoging van 2% (Collectieve verhoging 2026)."
+            }
+        }
+    ]
+}

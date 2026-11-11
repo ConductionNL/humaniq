@@ -48,6 +48,13 @@ use Psr\Log\LoggerInterface;
 class CompCollectiveServiceTest extends TestCase {
 
 	/**
+	 * The employee whose proposal the register refuses to save, if any.
+	 *
+	 * @var string|null
+	 */
+	private ?string $failSaveFor = null;
+
+	/**
 	 * A stable uuid for a readable fixture name: the schema's relations are
 	 * `format: uuid`, and a payload with a made-up id would not validate.
 	 *
@@ -277,6 +284,10 @@ class CompCollectiveServiceTest extends TestCase {
 		);
 		$gateway->method('save')->willReturnCallback(
 			function (array $payload, string $schema, ?string $uuid = null): object {
+				if (($payload['employeeId'] ?? null) === $this->failSaveFor) {
+					throw new \RuntimeException('register unavailable');
+				}
+
 				$id = ($uuid ?? ('adj-' . (count($this->rows[$schema] ?? []) + 1)));
 				$this->saved[] = ['schema' => $schema, 'object' => $payload];
 				$this->rows[$schema][] = array_merge($payload, ['id' => $id]);
@@ -349,6 +360,27 @@ class CompCollectiveServiceTest extends TestCase {
 		self::assertSame('sjansen', $jansen['employeeUserId']);
 		self::assertSame(self::id('ctr-jansen'), $jansen['contractId']);
 	}//end testATwoPercentRaiseProposesOnePerEmployeeInScope()
+
+	/**
+	 * The whole outcome and every saved proposal of each kind of run,
+	 * recorded once: a collective raise, a dry run, a rerun, a selection, a
+	 * step run and a run where one save fails.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeOutcomesMatchTheRecordedAnswers(): void {
+		$runs = [];
+		$runs['dry'] = $this->service()->proposeForCycle(self::id('cycle-collective'), 'salarisadmin', true);
+		$runs['collective'] = $this->service()->proposeForCycle(self::id('cycle-collective'), 'salarisadmin');
+		$runs['rerun'] = $this->service()->proposeForCycle(self::id('cycle-collective'), 'salarisadmin', false, [' ', self::id('emp-elders'), self::id('emp-jansen')]);
+		$this->failSaveFor = self::id('emp-jansen');
+		$runs['steps'] = $this->service()->proposeForCycle(self::id('cycle-steps'), 'hr-adviseur', false, [self::id('emp-devries'), self::id('emp-jansen'), self::id('emp-bakker')]);
+		$runs['missing'] = $this->service()->proposeForCycle('nope', 'salarisadmin');
+		$runs['saved'] = $this->saved;
+
+		$fixture = dirname(__DIR__, 2) . '/fixtures/golden/comp-collective-outcomes.json';
+		self::assertSame(json_decode((string)file_get_contents($fixture), true), json_decode((string)json_encode($runs), true));
+	}//end testTheWholeOutcomesMatchTheRecordedAnswers()
 
 	/**
 	 * Running the proposal twice changes nothing.
