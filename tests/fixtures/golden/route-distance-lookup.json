@@ -1,0 +1,61 @@
+{
+    "answered": {
+        "result": {
+            "distanceKm": 7.4,
+            "provider": "ANWB Routeplanner"
+        },
+        "calls": [
+            {
+                "source": "src-route",
+                "endpoint": "/route",
+                "method": "GET",
+                "config": {
+                    "query": {
+                        "from": "2611AB",
+                        "to": "2628CD"
+                    }
+                }
+            }
+        ]
+    },
+    "not-installed": {
+        "refused": "Er is geen routeplanner beschikbaar: integriq is niet geïnstalleerd. Vul de afstand zelf in.",
+        "calls": []
+    },
+    "no-source": {
+        "refused": "Er is geen routeplanner ingesteld. Vul de afstand zelf in, of vraag de beheerder een routeplanner te koppelen.",
+        "calls": []
+    },
+    "unknown-source": {
+        "refused": "Er is geen routeplanner ingesteld. Vul de afstand zelf in, of vraag de beheerder een routeplanner te koppelen.",
+        "calls": []
+    },
+    "no-environment": {
+        "refused": "Er is geen routeplanner ingesteld. Vul de afstand zelf in, of vraag de beheerder een routeplanner te koppelen.",
+        "calls": []
+    },
+    "no-caller": {
+        "refused": "Er is geen routeplanner ingesteld. Vul de afstand zelf in, of vraag de beheerder een routeplanner te koppelen.",
+        "calls": []
+    },
+    "no-services": {
+        "refused": "Er is geen routeplanner ingesteld. Vul de afstand zelf in, of vraag de beheerder een routeplanner te koppelen.",
+        "calls": []
+    },
+    "bad-answer": {
+        "refused": "De routeplanner gaf geen afstand terug. Vul de afstand zelf in.",
+        "calls": [
+            {
+                "source": "src-route",
+                "endpoint": "/route",
+                "method": "GET",
+                "config": {
+                    "query": {
+                        "from": "2611AB",
+                        "to": "2628CD"
+                    }
+                }
+            }
+        ]
+    }
+}

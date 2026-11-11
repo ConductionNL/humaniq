@@ -54,10 +54,11 @@ class RouteDistanceServiceTest extends TestCase {
 	 * @param bool   $installed Whether integriq is installed.
 	 * @param string $sourceId  The configured source.
 	 * @param array<string, mixed> $response The CallLog response.
+	 * @param list<string>         $missing  Integriq services left out of the container.
 	 *
 	 * @return RouteDistanceService
 	 */
-	private function service(bool $installed, string $sourceId, array $response=[]): RouteDistanceService {
+	private function service(bool $installed, string $sourceId, array $response=[], array $missing=[]): RouteDistanceService {
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('isInstalled')->willReturnCallback(static fn (string $app): bool => $installed === true && $app === 'integriq');
 		$settings = $this->createMock(SettingsService::class);
@@ -116,7 +117,7 @@ class RouteDistanceServiceTest extends TestCase {
 		};
 
 		return new RouteDistanceService(
-			container: new FakeContainer(['OCA\Integriq\Service\EnvironmentService' => $environment, 'OCA\Integriq\Service\CallService' => $call]),
+			container: new FakeContainer(array_diff_key(['OCA\Integriq\Service\EnvironmentService' => $environment, 'OCA\Integriq\Service\CallService' => $call], array_flip($missing))),
 			appManager: $apps,
 			settings: $settings
 		);
@@ -177,5 +178,38 @@ class RouteDistanceServiceTest extends TestCase {
 			}
 		}
 	}//end testAnAnswerWithoutADistanceIsRefused()
+
+	/**
+	 * The whole lookup outcome, answered and refused: the distance or the
+	 * refusal, and the calls made.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeLookupOutcome(): void {
+		$ok = ['statusCode' => 200, 'body' => json_encode(['distanceKm' => 7.4])];
+		$cases = [
+			'answered'        => [true, 'src-route', $ok, []],
+			'not-installed'   => [false, 'src-route', $ok, []],
+			'no-source'       => [true, '', $ok, []],
+			'unknown-source'  => [true, 'src-gone', $ok, []],
+			'no-environment'  => [true, 'src-route', $ok, ['OCA\Integriq\Service\EnvironmentService']],
+			'no-caller'       => [true, 'src-route', $ok, ['OCA\Integriq\Service\CallService']],
+			'no-services'     => [true, 'src-route', $ok, ['OCA\Integriq\Service\EnvironmentService', 'OCA\Integriq\Service\CallService']],
+			'bad-answer'      => [true, 'src-route', ['statusCode' => 502, 'body' => '{"distanceKm": 7}'], []],
+		];
+		$got = [];
+		foreach ($cases as $name => [$installed, $sourceId, $response, $missing]) {
+			$this->calls = [];
+			try {
+				$got[$name] = ['result' => $this->service($installed, $sourceId, $response, $missing)->lookup(' 2611 ab ', '2628CD')];
+			} catch (RouteDistanceUnavailableException $e) {
+				$got[$name] = ['refused' => $e->getMessage()];
+			}
+
+			$got[$name]['calls'] = $this->calls;
+		}
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/route-distance-lookup.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeLookupOutcome()
 
 }//end class
