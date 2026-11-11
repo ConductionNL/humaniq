@@ -97,25 +97,7 @@ class AvailabilityService {
 				continue;
 			}
 
-			$contracted = $this->workingHours->contractedHoursOver(
-				employeeId: $employeeId,
-				from: $from,
-				to: $to,
-				patterns: ($sources['workingPatterns'] ?? []),
-				nonWorkingTimes: ($sources['nonWorkingTimes'] ?? []),
-				nonWorkingDates: ($sources['nonWorkingDates'] ?? null)
-			);
-
-			$committed = $this->committedHours(window: $window, contractedPerDay: $this->contractedPerDay(window: $window));
-
-			$answers[] = [
-				'employeeId' => $employeeId,
-				'contractedHours' => $contracted['hours'],
-				'committedHours' => round(num: $committed, precision: 2),
-				'freeHours' => round(num: max(0.0, ($contracted['hours'] - $committed)), precision: 2),
-				'patternOnly' => $contracted['patternOnly'],
-				'hasContractedHours' => ($contracted['hours'] > 0.0),
-			];
+			$answers[] = $this->freeHoursOf(window: $window);
 		}
 
 		usort(
@@ -127,6 +109,30 @@ class AvailabilityService {
 
 		return $answers;
 	}//end availability()
+
+	/**
+	 * One employee's contracted, committed and free hours over the window.
+	 *
+	 * @param EmployeeWindow $window The employee, the days and the source rows.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
+	 */
+	private function freeHoursOf(EmployeeWindow $window): array {
+		$contracted = $this->workingHours->hoursOver(time: self::workingTimeOf(window: $window), range: [$window->from, $window->to]);
+
+		$committed = $this->committedHours(window: $window, contractedPerDay: $this->contractedPerDay(window: $window));
+
+		return [
+			'employeeId' => $window->employeeId,
+			'contractedHours' => $contracted['hours'],
+			'committedHours' => round(num: $committed, precision: 2),
+			'freeHours' => round(num: max(0.0, ($contracted['hours'] - $committed)), precision: 2),
+			'patternOnly' => $contracted['patternOnly'],
+			'hasContractedHours' => ($contracted['hours'] > 0.0),
+		];
+	}//end freeHoursOf()
 
 	/**
 	 * The contracted hours of each day in the window, for turning a whole-day
@@ -143,19 +149,34 @@ class AvailabilityService {
 		$cursor = $window->from->setTime(hour: 0, minute: 0);
 		$last = $window->to->setTime(hour: 0, minute: 0);
 		while ($cursor <= $last) {
-			$perDay[$cursor->format('Y-m-d')] = $this->workingHours->contractedHoursOn(
-				employeeId: $window->employeeId,
-				date: $cursor,
-				patterns: ($window->sources['workingPatterns'] ?? []),
-				nonWorkingTimes: ($window->sources['nonWorkingTimes'] ?? []),
-				nonWorkingDates: ($window->sources['nonWorkingDates'] ?? null)
-			)['hours'];
+			$perDay[$cursor->format('Y-m-d')] = $this->workingHours->hoursOn(time: self::workingTimeOf(window: $window), date: $cursor)['hours'];
 
 			$cursor = $cursor->modify('+1 day');
 		}
 
 		return $perDay;
 	}//end contractedPerDay()
+
+	/**
+	 * The employee of a window and its working patterns, non-working times
+	 * and calendar dates.
+	 *
+	 * @param EmployeeWindow $window The employee, the days and the source rows.
+	 *
+	 * @return EmployeeWorkingTime
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
+	 */
+	private static function workingTimeOf(EmployeeWindow $window): EmployeeWorkingTime {
+		return new EmployeeWorkingTime(
+			employeeId: $window->employeeId,
+			sources: new WorkingTimeSources(
+				workingPatterns: ($window->sources['workingPatterns'] ?? []),
+				nonWorkingTimes: ($window->sources['nonWorkingTimes'] ?? []),
+				nonWorkingDates: ($window->sources['nonWorkingDates'] ?? null)
+			)
+		);
+	}//end workingTimeOf()
 
 	/**
 	 * The hours already committed on one employee in the window.
@@ -297,15 +318,14 @@ class AvailabilityService {
 			return null;
 		}
 
+		// The contracted week of the pattern alone: no non-working times, no calendar.
+		$patternsOnly = new EmployeeWorkingTime(
+			employeeId: $window->employeeId,
+			sources: new WorkingTimeSources(workingPatterns: ($window->sources['workingPatterns'] ?? []), nonWorkingTimes: [], nonWorkingDates: [])
+		);
 		$week = 0.0;
 		for ($day = 0; $day < 7; $day++) {
-			$week += $this->workingHours->contractedHoursOn(
-				employeeId: $window->employeeId,
-				date: $window->from->modify('+' . $day . ' days'),
-				patterns: ($window->sources['workingPatterns'] ?? []),
-				nonWorkingTimes: [],
-				nonWorkingDates: []
-			)['hours'];
+			$week += $this->workingHours->hoursOn(time: $patternsOnly, date: $window->from->modify('+' . $day . ' days'))['hours'];
 		}
 
 		if ($week <= 0.0) {
