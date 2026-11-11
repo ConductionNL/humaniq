@@ -96,18 +96,51 @@ class CompCollectiveService {
 			return $refusal;
 		}
 
-		$kind = (string)$cycle['kind'];
+		$run = new CompProposalRun();
+		$run->cycleId = $cycleId;
+		$run->cycle = $cycle;
+		$run->callerUid = $callerUid;
+		$run->dryRun = $dryRun;
+		$run->existing = $this->existingEmployeeIds(cycleId: $cycleId);
+		$run->selection = array_values(array_filter(array_map('strval', $employeeIds), static fn (string $id): bool => trim($id) !== ''));
+		$run->outcome = self::emptyOutcome(run: $run);
+		$run->contracts = $this->contractsByEmployee();
+		foreach ($this->candidates(run: $run) as $employee) {
+			$this->proposeFor(run: $run, employee: $employee);
+		}
+
+		return $run->outcome;
+	}//end proposeForCycle()
+
+	/**
+	 * The employees that already have an adjustment in the cycle, as keys.
+	 *
+	 * @param string $cycleId The CompReviewCycle id.
+	 *
+	 * @return array<string, bool>
+	 */
+	private function existingEmployeeIds(string $cycleId): array {
 		$existing = [];
 		foreach ($this->gateway->findFiltered('CompAdjustment', ['cycleId' => $cycleId]) as $adjustment) {
 			$existing[(string)($adjustment['employeeId'] ?? '')] = true;
 		}
 
-		$selection = array_values(array_filter(array_map('strval', $employeeIds), static fn (string $id): bool => trim($id) !== ''));
-		$outcome = [
+		return $existing;
+	}//end existingEmployeeIds()
+
+	/**
+	 * The outcome before any employee is proposed for.
+	 *
+	 * @param CompProposalRun $run The run.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function emptyOutcome(CompProposalRun $run): array {
+		return [
 			'status' => 'ok',
-			'cycleId' => $cycleId,
-			'kind' => $kind,
-			'dryRun' => $dryRun,
+			'cycleId' => $run->cycleId,
+			'kind' => (string)$run->cycle['kind'],
+			'dryRun' => $run->dryRun,
 			'created' => 0,
 			'wouldCreate' => 0,
 			'alreadyPresent' => 0,
@@ -115,26 +148,32 @@ class CompCollectiveService {
 			'skipped' => [],
 			'rows' => [],
 		];
+	}//end emptyOutcome()
 
-		$contracts = $this->contractsByEmployee();
-		foreach ($this->candidates($cycle, $selection, $contracts) as $employee) {
-			$employeeId = (string)$employee['id'];
-			if (isset($existing[$employeeId]) === true) {
-				$outcome['alreadyPresent']++;
-				continue;
-			}
+	/**
+	 * Propose for one candidate: counted when already present, skipped with
+	 * a reason, or recorded.
+	 *
+	 * @param CompProposalRun      $run      The run.
+	 * @param array<string, mixed> $employee The candidate.
+	 *
+	 * @return void
+	 */
+	private function proposeFor(CompProposalRun $run, array $employee): void {
+		$employeeId = (string)$employee['id'];
+		if (isset($run->existing[$employeeId]) === true) {
+			$run->outcome['alreadyPresent']++;
+			return;
+		}
 
-			$proposal = $this->buildProposal($cycle, $employee, ($contracts[$employeeId] ?? []), $callerUid);
-			if (isset($proposal['skip']) === true) {
-				$outcome['skipped'][] = ['employeeId' => $employeeId, 'name' => $this->nameOf($employee), 'reason' => $proposal['skip']];
-				continue;
-			}
+		$proposal = $this->buildProposal(run: $run, employee: $employee);
+		if (isset($proposal['skip']) === true) {
+			$run->outcome['skipped'][] = ['employeeId' => $employeeId, 'name' => $this->nameOf($employee), 'reason' => $proposal['skip']];
+			return;
+		}
 
-			$outcome = $this->record($outcome, $proposal, $employee, $dryRun);
-		}//end foreach
-
-		return $outcome;
-	}//end proposeForCycle()
+		$this->record(run: $run, proposal: new CompProposal(employee: $employee, payload: $proposal));
+	}//end proposeFor()
 
 	/**
 	 * Why a cycle cannot take bulk proposals, or null when it can.
@@ -168,75 +207,93 @@ class CompCollectiveService {
 	 * The employees a run covers: the hand-picked selection, or everyone the
 	 * cycle's scope matches.
 	 *
-	 * @param array<string, mixed> $cycle The cycle.
-	 * @param array<int, string> $selection Hand-picked employee ids, or empty.
-	 * @param array<string, array<int, array<string, mixed>>> $contracts Contracts by employee id.
+	 * @param CompProposalRun $run The cycle, the selection and the contracts.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function candidates(array $cycle, array $selection, array $contracts): array {
+	private function candidates(CompProposalRun $run): array {
 		$employees = $this->gateway->loadAll('Employee');
-		if ($selection !== []) {
-			return array_values(array_filter($employees, static fn (array $e): bool => in_array((string)($e['id'] ?? ''), $selection, true)));
+		if ($run->selection !== []) {
+			return array_values(array_filter($employees, static fn (array $e): bool => in_array((string)($e['id'] ?? ''), $run->selection, true)));
 		}
 
-		$scope = (is_array($cycle['scope'] ?? null) === true ? $cycle['scope'] : []);
-		$scope = array_map(static fn ($value): string => trim((string)$value), $scope);
-		$onDate = (string)$cycle['effectiveDate'];
-		$orgUnitId = ($scope['orgUnitId'] ?? '');
-		$placed = ($orgUnitId === '' ? null : $this->placedIn($orgUnitId, $onDate));
+		$scope = $this->scopeOf(run: $run);
 
-		return array_values(
-			array_filter(
-				$employees,
-				fn (array $employee): bool => $this->inScope($employee, $scope, $placed, ($contracts[(string)($employee['id'] ?? '')] ?? []), $onDate)
-			)
-		);
+		return array_values(array_filter($employees, fn (array $employee): bool => $this->inScope(employee: $employee, scope: $scope)));
 	}//end candidates()
+
+	/**
+	 * The cycle's scope as the candidates are matched on it.
+	 *
+	 * @param CompProposalRun $run The cycle and the contracts.
+	 *
+	 * @return CompScope
+	 */
+	private function scopeOf(CompProposalRun $run): CompScope {
+		$keys = (is_array($run->cycle['scope'] ?? null) === true ? $run->cycle['scope'] : []);
+		$scope = new CompScope();
+		$scope->keys = array_map(static fn ($value): string => trim((string)$value), $keys);
+		$scope->onDate = (string)$run->cycle['effectiveDate'];
+		$orgUnitId = ($scope->keys['orgUnitId'] ?? '');
+		$scope->placed = ($orgUnitId === '' ? null : $this->placedIn($orgUnitId, $scope->onDate));
+		$scope->contracts = $run->contracts;
+
+		return $scope;
+	}//end scopeOf()
 
 	/**
 	 * Whether one employee matches every scope key that is set.
 	 *
 	 * @param array<string, mixed> $employee The employee.
-	 * @param array<string, string> $scope The cycle's scope, trimmed.
-	 * @param array<string, true>|null $placed Employees placed in the scope's unit, or null for no unit.
-	 * @param array<int, array<string, mixed>> $contracts The employee's contracts.
-	 * @param string $onDate The cycle's effective date.
+	 * @param CompScope            $scope    The cycle's scope.
 	 *
 	 * @return bool
 	 *
 	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 	 */
-	private function inScope(array $employee, array $scope, ?array $placed, array $contracts, string $onDate): bool {
-		$administrationId = ($scope['administrationId'] ?? '');
+	private function inScope(array $employee, CompScope $scope): bool {
+		$administrationId = ($scope->keys['administrationId'] ?? '');
 		if ($administrationId !== '' && trim((string)($employee['administrationId'] ?? '')) !== $administrationId) {
 			return false;
 		}
 
-		if ($placed !== null && isset($placed[(string)($employee['id'] ?? '')]) === false) {
+		if ($scope->placed !== null && isset($scope->placed[(string)($employee['id'] ?? '')]) === false) {
 			return false;
 		}
 
-		$cao = ($scope['cao'] ?? '');
+		return $this->coveredByCao(employee: $employee, scope: $scope);
+	}//end inScope()
+
+	/**
+	 * Whether the employee's contract on the effective date has the scope's
+	 * CAO; true when the scope names none.
+	 *
+	 * @param array<string, mixed> $employee The employee.
+	 * @param CompScope            $scope    The cycle's scope.
+	 *
+	 * @return bool
+	 */
+	private function coveredByCao(array $employee, CompScope $scope): bool {
+		$cao = ($scope->keys['cao'] ?? '');
 		if ($cao === '') {
 			return true;
 		}
 
-		$covering = $this->builder->covering($contracts, $onDate);
+		$covering = $this->builder->covering(($scope->contracts[(string)($employee['id'] ?? '')] ?? []), $scope->onDate);
 		return $covering !== null && trim((string)($covering['cao'] ?? '')) === $cao;
-	}//end inScope()
+	}//end coveredByCao()
 
 	/**
 	 * The proposal for one employee, or ['skip' => reason].
 	 *
-	 * @param array<string, mixed> $cycle The cycle.
+	 * @param CompProposalRun      $run      The cycle, who proposes and the contracts.
 	 * @param array<string, mixed> $employee The employee.
-	 * @param array<int, array<string, mixed>> $contracts The employee's contracts.
-	 * @param string $callerUid Who proposes.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function buildProposal(array $cycle, array $employee, array $contracts, string $callerUid): array {
+	private function buildProposal(CompProposalRun $run, array $employee): array {
+		$cycle = $run->cycle;
+		$contracts = ($run->contracts[(string)$employee['id']] ?? []);
 		$gross = ($employee['grossMonthlySalary'] ?? null);
 		$current = (is_numeric($gross) === true ? (int)round(((float)$gross) * 100) : null);
 
@@ -254,7 +311,7 @@ class CompCollectiveService {
 				'employeeId' => (string)$employee['id'],
 				'currentSalary' => $current,
 				'status' => 'proposed',
-				'proposedBy' => $callerUid,
+				'proposedBy' => $run->callerUid,
 				'employeeUserId' => ($userId === '' ? null : $userId),
 			],
 			$proposal
@@ -285,44 +342,52 @@ class CompCollectiveService {
 	}//end stepFor()
 
 	/**
-	 * Save (or, on a dry run, count) one proposal and add it to the outcome.
+	 * Save (or, on a dry run, count) one proposal and add it to the outcome;
+	 * a save that fails is counted and named.
 	 *
-	 * @param array<string, mixed> $outcome The running outcome.
-	 * @param array<string, mixed> $proposal The CompAdjustment payload.
-	 * @param array<string, mixed> $employee The employee.
-	 * @param bool $dryRun Write nothing.
+	 * @param CompProposalRun $run      The run.
+	 * @param CompProposal    $proposal The employee and the CompAdjustment payload.
 	 *
-	 * @return array<string, mixed> The outcome.
+	 * @return void
 	 */
-	private function record(array $outcome, array $proposal, array $employee, bool $dryRun): array {
-		if ($dryRun === false) {
+	private function record(CompProposalRun $run, CompProposal $proposal): void {
+		if ($run->dryRun === false) {
 			try {
-				$this->gateway->save($proposal, 'CompAdjustment');
+				$this->gateway->save($proposal->payload, 'CompAdjustment');
 			} catch (\Throwable $e) {
-				$this->logger->warning('CompCollectiveService: voorstel voor ' . (string)$employee['id'] . ' niet opgeslagen: ' . $e->getMessage());
-				$outcome['failed']++;
-				$outcome['skipped'][] = ['employeeId' => (string)$employee['id'], 'name' => $this->nameOf($employee), 'reason' => 'failed'];
-				return $outcome;
+				$this->logger->warning('CompCollectiveService: voorstel voor ' . (string)$proposal->employee['id'] . ' niet opgeslagen: ' . $e->getMessage());
+				$run->outcome['failed']++;
+				$run->outcome['skipped'][] = ['employeeId' => (string)$proposal->employee['id'], 'name' => $this->nameOf($proposal->employee), 'reason' => 'failed'];
+				return;
 			}
 
-			$outcome['created']++;
+			$run->outcome['created']++;
 		}
 
-		$outcome['wouldCreate']++;
-		if (count($outcome['rows']) < self::PREVIEW_ROWS) {
-			$outcome['rows'][] = [
-				'employeeId' => (string)$employee['id'],
-				'name' => $this->nameOf($employee),
-				'currentSalary' => $proposal['currentSalary'],
-				'proposedSalary' => $proposal['proposedSalary'],
-				'fromStep' => ($proposal['fromStep'] ?? null),
-				'toStep' => ($proposal['toStep'] ?? null),
-				'effectiveDate' => $proposal['effectiveDate'],
-			];
+		$run->outcome['wouldCreate']++;
+		if (count($run->outcome['rows']) < self::PREVIEW_ROWS) {
+			$run->outcome['rows'][] = $this->previewRow(proposal: $proposal);
 		}
-
-		return $outcome;
 	}//end record()
+
+	/**
+	 * The preview row of one proposal.
+	 *
+	 * @param CompProposal $proposal The employee and the CompAdjustment payload.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function previewRow(CompProposal $proposal): array {
+		return [
+			'employeeId' => (string)$proposal->employee['id'],
+			'name' => $this->nameOf($proposal->employee),
+			'currentSalary' => $proposal->payload['currentSalary'],
+			'proposedSalary' => $proposal->payload['proposedSalary'],
+			'fromStep' => ($proposal->payload['fromStep'] ?? null),
+			'toStep' => ($proposal->payload['toStep'] ?? null),
+			'effectiveDate' => $proposal->payload['effectiveDate'],
+		];
+	}//end previewRow()
 
 	/**
 	 * Contracts grouped by employee id.

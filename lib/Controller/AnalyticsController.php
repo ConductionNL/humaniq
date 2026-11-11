@@ -111,6 +111,19 @@ class AnalyticsController extends Controller {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
+		return $this->trendsWithin(access: $access, orgUnitId: $orgUnitId);
+	}//end trends()
+
+	/**
+	 * The trend the caller asked for, inside the administration and unit
+	 * their access allows; service refusals and failures answer a static label.
+	 *
+	 * @param array{administrationId: string, minimumMembers: int} $access    The caller's administration and the small-unit rule.
+	 * @param string                                                $orgUnitId The unit asked about, or ''.
+	 *
+	 * @return JSONResponse
+	 */
+	private function trendsWithin(array $access, string $orgUnitId): JSONResponse {
 		$metric = (string)$this->request->getParam('metric', '');
 		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
 
@@ -141,7 +154,7 @@ class AnalyticsController extends Controller {
 			$this->logger->error('AnalyticsController: the trends could not be computed.', ['exceptionClass' => $e::class]);
 			return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}//end try
-	}//end trends()
+	}//end trendsWithin()
 
 	/**
 	 * `GET /api/analytics/obligations` — the merged, rule-badged Obligations

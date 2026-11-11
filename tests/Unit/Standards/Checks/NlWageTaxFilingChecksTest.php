@@ -252,4 +252,23 @@ class NlWageTaxFilingChecksTest extends TestCase {
 		$this->assertFalse($rule($filing, ['payroll' => ['runsById' => []]]), 'the run is gone');
 	}//end testTheMessageDriftRule()
 
+	/**
+	 * Vierweken periods map by index; undecidable period shapes and tijdvakken are not flagged.
+	 *
+	 * @return void
+	 */
+	public function testTijdvakcodeForVierwekenAndUndecidableShapes(): void {
+		$check = $this->checks['nl-loonaangifte-tijdvakcode'];
+
+		$this->assertTrue($check($this->filing(['tijdvak' => 'vierweken', 'period' => '2026-P01', 'tijdvakcode' => '6710'])));
+		$this->assertTrue($check($this->filing(['tijdvak' => 'vierweken', 'period' => '2026-P13', 'tijdvakcode' => '7190'])));
+		$this->assertFalse($check($this->filing(['tijdvak' => 'vierweken', 'period' => '2026-P02', 'tijdvakcode' => '6710'])));
+		$this->assertTrue($check($this->filing(['tijdvak' => 'vierweken', 'period' => '2026-P14', 'tijdvakcode' => '9999'])), 'No code at that index.');
+		$this->assertTrue($check($this->filing(['tijdvak' => 'vierweken', 'period' => '2026-04', 'tijdvakcode' => '9999'])), 'Not a P## period.');
+		$this->assertTrue($check($this->filing(['tijdvak' => 'maand', 'period' => '2026-4', 'tijdvakcode' => '9999'])), 'Not a YYYY-MM period.');
+		$this->assertTrue($check($this->filing(['tijdvak' => 'maand', 'period' => '2026-13', 'tijdvakcode' => '9999'])), 'No code for that month.');
+		$this->assertTrue($check($this->filing(['tijdvak' => 'week', 'period' => '2026-04', 'tijdvakcode' => '9999'])), 'An unmapped tijdvak.');
+		$this->assertTrue($check($this->filing(['tijdvak' => null, 'period' => null, 'tijdvakcode' => '9999'])), 'No tijdvak at all.');
+
+	}//end testTijdvakcodeForVierwekenAndUndecidableShapes()
 }//end class

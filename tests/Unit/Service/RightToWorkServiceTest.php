@@ -240,6 +240,38 @@ class RightToWorkServiceTest extends TestCase {
 	}//end testTheGermanZoneAliasIsEea()
 
 	/**
+	 * The whole decision for every branch, passed and failed, against one start date.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeDecisionOfEveryBranch(): void {
+		$base = ['documentType' => 'verblijfsdocument', 'nationality' => 'syr', 'documentExpiry' => '2030-01-01', 'startDate' => '2026-09-01'];
+		$cases = [
+			'no-type' => array_merge($base, ['documentType' => '']),
+			'type-none' => array_merge($base, ['documentType' => 'geen']),
+			'no-expiry' => array_merge($base, ['documentExpiry' => '2030-02-30']),
+			'expired' => array_merge($base, ['documentExpiry' => '2026-08-31']),
+			'expires-on-start' => array_merge($base, ['documentType' => 'paspoort', 'nationality' => 'NLD', 'documentExpiry' => '2026-09-01']),
+			'eea' => array_merge($base, ['documentType' => 'paspoort', 'nationality' => ' nld ']),
+			'eea-alias' => array_merge($base, ['documentType' => 'paspoort', 'nationality' => 'D']),
+			'free-work' => array_merge($base, ['endorsement' => 'Arbeid VRIJ toegestaan. TWV niet vereist']),
+			'twv-covers' => array_merge($base, ['endorsement' => 'Arbeid alleen toegestaan met TWV', 'twvValidUntil' => '2026-09-01']),
+			'twv-short' => array_merge($base, ['twvValidUntil' => '2026-08-31']),
+			'no-permission' => $base,
+			'not-scalar' => array_merge($base, ['nationality' => ['NLD'], 'endorsement' => 12]),
+			'bad-zone' => array_merge($base, ['mrz' => [self::PASSPORT_LINE_1, substr_replace(self::PASSPORT_LINE_2, '5', 27, 1)]]),
+			'zone' => array_merge($base, ['mrz' => ' ' . strtolower(self::PERMIT_LINE_1) . "\n\n" . self::PERMIT_LINE_2 . "\r\n" . self::PERMIT_LINE_3]),
+			'empty-zone' => array_merge($base, ['mrz' => ['  ', '']]),
+		];
+		$got = [];
+		foreach ($cases as $name => $input) {
+			$got[$name] = $this->service()->decide($input);
+		}
+
+		$this->assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/right-to-work-decisions.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeDecisionOfEveryBranch()
+
+	/**
 	 * The service under test.
 	 *
 	 * @return RightToWorkService

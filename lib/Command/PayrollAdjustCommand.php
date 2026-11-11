@@ -45,6 +45,17 @@ use Symfony\Component\Console\Output\OutputInterface;
 class PayrollAdjustCommand extends Command {
 
 	/**
+	 * The required options, in the order they are checked, with the refusal for a blank one.
+	 *
+	 * @var array<string, string>
+	 */
+	private const REQUIRED_OPTIONS = [
+		'original-period' => '--original-period is verplicht (JJJJ-MM).',
+		'employee' => '--employee is verplicht.',
+		'correction-ref' => '--correction-ref is verplicht.',
+	];
+
+	/**
 	 * @param RetroAdjustmentService $service The delta-computation + settlement service.
 	 */
 	public function __construct(
@@ -81,40 +92,82 @@ class PayrollAdjustCommand extends Command {
 	 * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-007
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$originalPeriod = trim((string)$input->getOption('original-period'));
-		if ($originalPeriod === '') {
-			$output->writeln('<error>--original-period is verplicht (JJJJ-MM).</error>');
+		$missing = self::missingRequiredOption($input);
+		if ($missing !== null) {
+			$output->writeln('<error>' . $missing . '</error>');
 			return 1;
 		}
-
-		$employeeId = trim((string)$input->getOption('employee'));
-		if ($employeeId === '') {
-			$output->writeln('<error>--employee is verplicht.</error>');
-			return 1;
-		}
-
-		$correctionRef = trim((string)$input->getOption('correction-ref'));
-		if ($correctionRef === '') {
-			$output->writeln('<error>--correction-ref is verplicht.</error>');
-			return 1;
-		}
-
-		$grossOption = $input->getOption('gross');
-		$gross = (is_string($grossOption) === true && trim($grossOption) !== '' && is_numeric($grossOption) === true) ? (float)$grossOption : null;
-
-		$correctionTypeOption = $input->getOption('correction-type');
-		$correctionType = (is_string($correctionTypeOption) === true && trim($correctionTypeOption) !== '') ? trim($correctionTypeOption) : null;
-
-		$settlementPeriodOption = $input->getOption('settlement-period');
-		$settlementPeriod = (is_string($settlementPeriodOption) === true && trim($settlementPeriodOption) !== '') ? trim($settlementPeriodOption) : null;
 
 		$result = $this->service->adjustFor(
-			new RetroCorrection($originalPeriod, $employeeId, $correctionRef, $gross),
-			$correctionType,
-			$settlementPeriod,
+			self::correction($input),
+			CommandOptions::trimmed($input, 'correction-type'),
+			CommandOptions::trimmed($input, 'settlement-period'),
 			(bool)$input->getOption('apply')
 		);
 
+		self::writeResult($output, $result);
+
+		return in_array((string)$result['status'], ['computed', 'applied'], true) === true ? 0 : 1;
+	}//end execute()
+
+	/**
+	 * The correction the options describe: the trimmed required options and the --gross value.
+	 *
+	 * @param InputInterface $input Console input.
+	 *
+	 * @return RetroCorrection
+	 */
+	private static function correction(InputInterface $input): RetroCorrection {
+		return new RetroCorrection(
+			trim((string)$input->getOption('original-period')),
+			trim((string)$input->getOption('employee')),
+			trim((string)$input->getOption('correction-ref')),
+			self::grossOption($input)
+		);
+
+	}//end correction()
+
+	/**
+	 * The refusal for the first blank required option, or null when all are given.
+	 *
+	 * @param InputInterface $input Console input.
+	 *
+	 * @return string|null
+	 */
+	private static function missingRequiredOption(InputInterface $input): ?string {
+		foreach (self::REQUIRED_OPTIONS as $name => $refusal) {
+			if (trim((string)$input->getOption($name)) === '') {
+				return $refusal;
+			}
+		}
+
+		return null;
+
+	}//end missingRequiredOption()
+
+	/**
+	 * The --gross value as a number, or null when it is blank or not numeric.
+	 *
+	 * @param InputInterface $input Console input.
+	 *
+	 * @return float|null
+	 */
+	private static function grossOption(InputInterface $input): ?float {
+		$grossOption = $input->getOption('gross');
+
+		return (is_string($grossOption) === true && trim($grossOption) !== '' && is_numeric($grossOption) === true) ? (float)$grossOption : null;
+
+	}//end grossOption()
+
+	/**
+	 * Write the correction's outcome, and its delta when one was computed.
+	 *
+	 * @param OutputInterface      $output Console output.
+	 * @param array<string, mixed> $result The adjustFor() outcome.
+	 *
+	 * @return void
+	 */
+	private static function writeResult(OutputInterface $output, array $result): void {
 		$output->writeln('<info>Humaniq TWK-correctie</info>');
 		$output->writeln(sprintf('  originele periode : %s', (string)$result['originalPeriod']));
 		$output->writeln(sprintf('  medewerker        : %s', (string)$result['employeeId']));
@@ -124,23 +177,34 @@ class PayrollAdjustCommand extends Command {
 		$output->writeln(sprintf('  idempotent        : %s', ($result['idempotent'] === true ? 'ja (bestaande correctie bijgewerkt)' : 'nee (nieuwe correctie)')));
 
 		if (is_array($result['delta']) === true) {
-			$delta = $result['delta'];
-			$output->writeln(sprintf(
-				'  delta             : bruto %.2f / loonheffing %.2f / netto %.2f / werkgeverslasten-wnv %.2f / zvw %.2f / vv %.2f / vakantiegeld %.2f',
-				(float)$delta['gross'],
-				(float)$delta['loonheffing'],
-				(float)$delta['net'],
-				(float)$delta['werknemersverzekeringen'],
-				(float)$delta['zvw'],
-				(float)$delta['volksverzekeringen'],
-				(float)$delta['vakantiegeldReserved']
-			));
-			$output->writeln(sprintf('  engineVersion     : %s', (string)$result['engineVersion']));
-			$output->writeln(sprintf('  settlementPeriod  : %s (%s)', (string)$result['settlementPeriod'], (string)$result['settlementLine']));
+			self::writeDelta($output, $result);
 		}
 
-		$status = (string)$result['status'];
-		return in_array($status, ['computed', 'applied'], true) === true ? 0 : 1;
-	}//end execute()
+	}//end writeResult()
+
+	/**
+	 * Write the computed delta, the engine version and the settlement period.
+	 *
+	 * @param OutputInterface      $output Console output.
+	 * @param array<string, mixed> $result The adjustFor() outcome, with a delta.
+	 *
+	 * @return void
+	 */
+	private static function writeDelta(OutputInterface $output, array $result): void {
+		$delta = $result['delta'];
+		$output->writeln(sprintf(
+			'  delta             : bruto %.2f / loonheffing %.2f / netto %.2f / werkgeverslasten-wnv %.2f / zvw %.2f / vv %.2f / vakantiegeld %.2f',
+			(float)$delta['gross'],
+			(float)$delta['loonheffing'],
+			(float)$delta['net'],
+			(float)$delta['werknemersverzekeringen'],
+			(float)$delta['zvw'],
+			(float)$delta['volksverzekeringen'],
+			(float)$delta['vakantiegeldReserved']
+		));
+		$output->writeln(sprintf('  engineVersion     : %s', (string)$result['engineVersion']));
+		$output->writeln(sprintf('  settlementPeriod  : %s (%s)', (string)$result['settlementPeriod'], (string)$result['settlementLine']));
+
+	}//end writeDelta()
 
 }//end class

@@ -149,7 +149,7 @@ class OrgResolutionService {
 		];
 
 		$resolved = [];
-		foreach (array_keys($this->activeUnits($employeeId, $assignmentsByEmployeeId, $unitsById, $onDate)) as $unitId) {
+		foreach (array_keys($this->unitsOf(unitIds: $this->activeUnitIds(assignments: $this->assignmentsOf(employeeId: $employeeId, index: $assignmentsByEmployeeId), onDate: $onDate), unitsById: $unitsById)) as $unitId) {
 			$managerUserId = $this->managerUserIdFrom(unitId: (string)$unitId, chain: $chain);
 			if ($managerUserId !== null && in_array($managerUserId, $resolved, true) === false) {
 				$resolved[] = $managerUserId;
@@ -330,7 +330,7 @@ class OrgResolutionService {
 		string $onDate,
 	): array {
 		$resolved = [];
-		foreach ($this->activeUnits($employeeId, $assignmentsByEmployeeId, $unitsById, $onDate) as $unit) {
+		foreach ($this->unitsOf(unitIds: $this->activeUnitIds(assignments: $this->assignmentsOf(employeeId: $employeeId, index: $assignmentsByEmployeeId), onDate: $onDate), unitsById: $unitsById) as $unit) {
 			$costCenter = trim((string)($unit['costCenter'] ?? ''));
 			if ($costCenter !== '' && in_array($costCenter, $resolved, true) === false) {
 				$resolved[] = $costCenter;
@@ -364,51 +364,70 @@ class OrgResolutionService {
 	}//end uniqueOrNull()
 
 	/**
-	 * The OrgUnit rows of the employee's active placements, keyed by unit
-	 * id, in placement order. Dead-end hops (empty/dangling `orgUnitId`)
-	 * are skipped.
+	 * The employee's placements from the index, or none when the employee or the entry is unusable.
 	 *
 	 * @param string $employeeId The employee.
-	 * @param array<string, array<int, array<string, mixed>>> $assignmentsByEmployeeId OrgAssignment index keyed by employeeId.
-	 * @param array<string, array<string, mixed>> $unitsById OrgUnit index keyed by id.
-	 * @param string $onDate The reference date, `YYYY-MM-DD`.
+	 * @param array<string, mixed> $index OrgAssignment index keyed by employeeId.
 	 *
-	 * @return array<string, array<string, mixed>> The active placements' units by id.
+	 * @return array<int|string, mixed>
 	 */
-	private function activeUnits(
-		string $employeeId,
-		array $assignmentsByEmployeeId,
-		array $unitsById,
-		string $onDate,
-	): array {
+	private function assignmentsOf(string $employeeId, array $index): array {
 		$employeeId = trim($employeeId);
 		if ($employeeId === '') {
 			return [];
 		}
 
-		$assignments = ($assignmentsByEmployeeId[$employeeId] ?? []);
-		if (is_array($assignments) === false) {
-			return [];
+		$assignments = ($index[$employeeId] ?? []);
+
+		return is_array($assignments) === true ? $assignments : [];
+	}//end assignmentsOf()
+
+	/**
+	 * The units of the placements active on the date, as keys, in placement order.
+	 *
+	 * @param array<int|string, mixed> $assignments The employee's placements.
+	 * @param string $onDate The reference date, `YYYY-MM-DD`.
+	 *
+	 * @return array<string, true>
+	 */
+	private function activeUnitIds(array $assignments, string $onDate): array {
+		$unitIds = [];
+		foreach (array_filter($assignments, 'is_array') as $assignment) {
+			$orgUnitId = $this->activeUnitIdOf(assignment: $assignment, onDate: $onDate);
+			if ($orgUnitId !== '') {
+				$unitIds[$orgUnitId] = true;
+			}
 		}
 
-		$units = [];
-		foreach ($assignments as $assignment) {
-			if (is_array($assignment) === false || $this->isActiveOn($assignment, $onDate) === false) {
-				continue;
-			}
+		return $unitIds;
+	}//end activeUnitIds()
 
-			$orgUnitId = trim((string)($assignment['orgUnitId'] ?? ''));
-			if ($orgUnitId === '') {
-				continue;
-			}
-
-			$unit = ($unitsById[$orgUnitId] ?? null);
-			if (is_array($unit) === true) {
-				$units[$orgUnitId] = $unit;
-			}
+	/**
+	 * A placement's unit id when the placement is active on the date, else ''.
+	 *
+	 * @param array<string, mixed> $assignment One placement.
+	 * @param string $onDate The reference date, `YYYY-MM-DD`.
+	 *
+	 * @return string
+	 */
+	private function activeUnitIdOf(array $assignment, string $onDate): string {
+		if ($this->isActiveOn($assignment, $onDate) === false) {
+			return '';
 		}
 
-		return $units;
-	}//end activeUnits()
+		return trim((string)($assignment['orgUnitId'] ?? ''));
+	}//end activeUnitIdOf()
+
+	/**
+	 * The known units among the ids, keyed by id.
+	 *
+	 * @param array<string, true> $unitIds The unit ids, as keys.
+	 * @param array<string, array<string, mixed>> $unitsById OrgUnit index keyed by id.
+	 *
+	 * @return array<string, mixed> Each a unit row.
+	 */
+	private function unitsOf(array $unitIds, array $unitsById): array {
+		return array_filter(array_replace($unitIds, array_intersect_key($unitsById, $unitIds)), 'is_array');
+	}//end unitsOf()
 
 }//end class

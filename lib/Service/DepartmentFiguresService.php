@@ -128,35 +128,61 @@ class DepartmentFiguresService {
 	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
 	 */
 	public function compare(string $administrationId, string $period, ?string $parentUnitId): array {
-		$window = $this->window($period);
-		$data = $this->load($administrationId);
+		$run = new DepartmentComparison();
+		$run->period = $period;
+		$run->window = $this->window($period);
+		$run->data = $this->load($administrationId);
+		$run->parent = $this->comparedParent($run->data['OrgUnit'], trim((string)$parentUnitId));
+		$run->rows = $this->childRows(run: $run);
+		$run->total = $this->sumMonths($run->window['months'], fn (string $month): ?float => $this->calculators->figures->wageCost($run->data['PayrollRun'], $run->data['Payslip'], null, $month));
+		(new UnitWageCostSplit(membership: $this->membership, figures: $this->calculators->figures))->fill(run: $run);
 
-		$parent = $this->comparedParent($data['OrgUnit'], trim((string)$parentUnitId));
+		return $this->comparison(run: $run);
+	}//end compare()
+
+	/**
+	 * The rows of the units directly under the compared parent.
+	 *
+	 * @param DepartmentComparison $run The comparison being built.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function childRows(DepartmentComparison $run): array {
 		$rows = [];
-		foreach ($data['OrgUnit'] as $unit) {
-			if (trim((string)($unit['parentUnitId'] ?? '')) === $parent) {
-				$rows[] = $this->unitRow($data, $this->membership->rowId($unit), $window, 0);
+		foreach ($run->data['OrgUnit'] as $unit) {
+			if (trim((string)($unit['parentUnitId'] ?? '')) === $run->parent) {
+				$rows[] = $this->unitRow($run->data, $this->membership->rowId($unit), $run->window, 0);
 			}
 		}
 
-		$total = $this->sumMonths($window['months'], fn (string $month): ?float => $this->calculators->figures->wageCost($data['PayrollRun'], $data['Payslip'], null, $month));
-		$costs = $this->comparedWageCosts($data, $rows, $window['months']);
+		return $rows;
+	}//end childRows()
+
+	/**
+	 * The comparison answer: each unit with its wage cost, the cost of people placed in none of them, and the total.
+	 *
+	 * @param DepartmentComparison $run The comparison, with its costs.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function comparison(DepartmentComparison $run): array {
+		$rows = $run->rows;
 		foreach (array_keys($rows) as $index) {
-			$rows[$index]['wageCost'] = $costs[$index];
+			$rows[$index]['wageCost'] = $run->costs[$index];
 		}
 
-		$placed = array_sum(array_map(fn (?float $cost): float => ($cost ?? 0.0), $costs));
+		$placed = array_sum(array_map(fn (?float $cost): float => ($cost ?? 0.0), $run->costs));
 
 		return [
-			'period' => $period,
-			'parentUnitId' => ($parent === '') ? null : $parent,
-			'from' => $window['from']->format('Y-m-d'),
-			'to' => $window['to']->format('Y-m-d'),
+			'period' => $run->period,
+			'parentUnitId' => ($run->parent === '') ? null : $run->parent,
+			'from' => $run->window['from']->format('Y-m-d'),
+			'to' => $run->window['to']->format('Y-m-d'),
 			'units' => $rows,
-			'notPlaced' => ['wageCost' => ($total === null) ? null : round(($total - $placed), 2)],
-			'total' => ['wageCost' => $total],
+			'notPlaced' => ['wageCost' => ($run->total === null) ? null : round(($run->total - $placed), 2)],
+			'total' => ['wageCost' => $run->total],
 		];
-	}//end compare()
+	}//end comparison()
 
 	/**
 	 * The unit whose children are compared. Without one, the top of the
@@ -276,45 +302,6 @@ class DepartmentFiguresService {
 			),
 		]);
 	}//end unitRow()
-
-	/**
-	 * The wage cost of each compared unit, with a person placed in several of
-	 * them in a month split between them so no cost counts twice.
-	 *
-	 * @param array<string, list<array<string, mixed>>> $data   Rows per schema.
-	 * @param list<array<string, mixed>>                $rows   The compared unit rows.
-	 * @param list<string>                              $months The window's months.
-	 *
-	 * @return list<float|null> Per row, in the same order.
-	 */
-	private function comparedWageCosts(array $data, array $rows, array $months): array {
-		$costs = array_fill(0, count($rows), null);
-		foreach ($months as $month) {
-			$shares = [];
-			$placed = [];
-			foreach ($rows as $index => $row) {
-				$subtree = $this->membership->subtree((string)$row['id'], $data['OrgUnit']);
-				$shares[$index] = $this->monthShares($subtree, $data['OrgAssignment'], $month);
-				foreach ($shares[$index] as $employeeId => $share) {
-					$placed[$employeeId] = (($placed[$employeeId] ?? 0.0) + $share);
-				}
-			}
-
-			foreach ($shares as $index => $unitShares) {
-				$weights = [];
-				foreach ($unitShares as $employeeId => $share) {
-					$weights[$employeeId] = ($share / max(1.0, $placed[$employeeId]));
-				}
-
-				$cost = $this->calculators->figures->wageCost($data['PayrollRun'], $data['Payslip'], $weights, $month);
-				if ($cost !== null) {
-					$costs[$index] = round((($costs[$index] ?? 0.0) + $cost), 2);
-				}
-			}
-		}//end foreach
-
-		return $costs;
-	}//end comparedWageCosts()
 
 	/**
 	 * Shares of the people placed in a subtree during one month.

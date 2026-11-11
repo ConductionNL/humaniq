@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCP\IGroupManager;
+use OCP\IUser;
 use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 
@@ -89,17 +90,47 @@ class AccessRevocationService {
 			return ['status' => 404, 'message' => 'Offboarding case not found.', 'offboarding' => null];
 		}
 
-		$employee = $this->gateway->findObjectData((string)($case['employeeId'] ?? ''), 'Employee');
+		$run = new AccessRevocationRun();
+		$run->offboardingId = $offboardingId;
+		$run->case = $case;
+		$run->actorUid = $actorUid;
+		$run->now = $now;
+
+		return $this->revokeAccountOf(run: $run);
+	}//end revoke()
+
+	/**
+	 * Disable the account of the employee the case names, or say why not.
+	 *
+	 * @param AccessRevocationRun $run The case being revoked.
+	 *
+	 * @return array{status: int, message: ?string, offboarding: ?array<string, mixed>}
+	 */
+	private function revokeAccountOf(AccessRevocationRun $run): array {
+		$employee = $this->gateway->findObjectData((string)($run->case['employeeId'] ?? ''), 'Employee');
 		if ($employee === null) {
 			return ['status' => 409, 'message' => 'The case names no employee record.', 'offboarding' => null];
 		}
 
 		$uid = trim((string)($employee['nextcloudUserId'] ?? ''));
 		if ($uid === '') {
-			return $this->stamp(offboardingId: $offboardingId, case: $case, actorUid: $actorUid, now: $now, note: 'No Nextcloud account');
+			return $this->stamp(run: $run, note: 'No Nextcloud account');
 		}
 
-		if ($uid === $actorUid) {
+		return ($this->refusalFor(run: $run, uid: $uid) ?? $this->disable(run: $run, uid: $uid));
+	}//end revokeAccountOf()
+
+	/**
+	 * Why the account may not be disabled from humaniq: it is the actor's own
+	 * or an administrator's; null when neither.
+	 *
+	 * @param AccessRevocationRun $run The case being revoked.
+	 * @param string              $uid The leaver's account.
+	 *
+	 * @return array{status: int, message: string, offboarding: null}|null
+	 */
+	private function refusalFor(AccessRevocationRun $run, string $uid): ?array {
+		if ($uid === $run->actorUid) {
 			return ['status' => 409, 'message' => 'You cannot disable your own account.', 'offboarding' => null];
 		}
 
@@ -107,20 +138,45 @@ class AccessRevocationService {
 			return ['status' => 409, 'message' => 'The account ' . $uid . ' is an administrator and is not disabled from humaniq. Disable it in Nextcloud user management.', 'offboarding' => null];
 		}
 
+		return null;
+	}//end refusalFor()
+
+	/**
+	 * Disable the account and stamp the case; a case already stamped whose
+	 * account is disabled is answered as it is.
+	 *
+	 * @param AccessRevocationRun $run The case being revoked.
+	 * @param string              $uid The leaver's account.
+	 *
+	 * @return array{status: int, message: ?string, offboarding: ?array<string, mixed>}
+	 */
+	private function disable(AccessRevocationRun $run, string $uid): array {
 		$user = $this->users->get($uid);
 		if ($user === null) {
 			return ['status' => 409, 'message' => 'Nextcloud has no account ' . $uid . '. Correct the employee\'s Nextcloud account first.', 'offboarding' => null];
 		}
 
-		if ($user->isEnabled() === false && ($case['toegangIngetrokken'] ?? false) === true) {
-			return ['status' => 200, 'message' => null, 'offboarding' => $case];
+		if (self::isAlreadyRevoked(run: $run, user: $user) === true) {
+			return ['status' => 200, 'message' => null, 'offboarding' => $run->case];
 		}
 
 		$user->setEnabled(false);
-		$this->logger->info('humaniq: disabled the account ' . $uid . ' of offboarding case ' . $offboardingId . ' for ' . $actorUid);
+		$this->logger->info('humaniq: disabled the account ' . $uid . ' of offboarding case ' . $run->offboardingId . ' for ' . $run->actorUid);
 
-		return $this->stamp(offboardingId: $offboardingId, case: $case, actorUid: $actorUid, now: $now, note: null);
-	}//end revoke()
+		return $this->stamp(run: $run, note: null);
+	}//end disable()
+
+	/**
+	 * Whether the account is disabled and the case already says so.
+	 *
+	 * @param AccessRevocationRun $run  The case being revoked.
+	 * @param IUser               $user The leaver's account.
+	 *
+	 * @return bool
+	 */
+	private static function isAlreadyRevoked(AccessRevocationRun $run, IUser $user): bool {
+		return $user->isEnabled() === false && ($run->case['toegangIngetrokken'] ?? false) === true;
+	}//end isAlreadyRevoked()
 
 	/**
 	 * Revoke every open case whose last working day has passed and whose
@@ -136,12 +192,7 @@ class AccessRevocationService {
 	public function revokeDue(string $today, string $now): array {
 		$done = [];
 		foreach ($this->gateway->loadAll(self::SCHEMA) as $case) {
-			$lastDay = (string)($case['lastWorkingDay'] ?? '');
-			if (in_array((string)($case['status'] ?? ''), self::OPEN_STATES, true) === false
-				|| ($case['toegangIngetrokken'] ?? false) === true
-				|| $lastDay === ''
-				|| $lastDay >= $today
-			) {
+			if (self::isDue(case: $case, today: $today) === false) {
 				continue;
 			}
 
@@ -159,24 +210,39 @@ class AccessRevocationService {
 	}//end revokeDue()
 
 	/**
+	 * Whether a case is open, not revoked yet, and past its last working day.
+	 *
+	 * @param array<string, mixed> $case  The stored case.
+	 * @param string               $today The day, `YYYY-MM-DD`.
+	 *
+	 * @return bool
+	 */
+	private static function isDue(array $case, string $today): bool {
+		$lastDay = (string)($case['lastWorkingDay'] ?? '');
+
+		return in_array((string)($case['status'] ?? ''), self::OPEN_STATES, true) === true
+			&& ($case['toegangIngetrokken'] ?? false) !== true
+			&& $lastDay !== ''
+			&& $lastDay < $today;
+	}//end isDue()
+
+	/**
 	 * Save the whole case with the stamp: OpenRegister replaces the object, so
 	 * the stamp goes on top of what is stored.
 	 *
-	 * @param string               $offboardingId The case.
-	 * @param array<string, mixed> $case          The stored case.
-	 * @param string               $actorUid      Who revoked.
-	 * @param string               $now           When.
-	 * @param string|null          $note          Why there was nothing to disable.
+	 * @param AccessRevocationRun $run  The case being revoked.
+	 * @param string|null         $note Why there was nothing to disable.
 	 *
 	 * @return array{status: int, message: ?string, offboarding: ?array<string, mixed>}
 	 */
-	private function stamp(string $offboardingId, array $case, string $actorUid, string $now, ?string $note): array {
+	private function stamp(AccessRevocationRun $run, ?string $note): array {
+		$case = $run->case;
 		unset($case['id'], $case['@self']);
 		$case['toegangIngetrokken'] = true;
-		$case['toegangIngetrokkenDoor'] = $actorUid;
-		$case['toegangIngetrokkenOp'] = $now;
+		$case['toegangIngetrokkenDoor'] = $run->actorUid;
+		$case['toegangIngetrokkenOp'] = $run->now;
 		$case['toegangIngetrokkenToelichting'] = $note;
-		$this->gateway->save($case, self::SCHEMA, $offboardingId);
+		$this->gateway->save($case, self::SCHEMA, $run->offboardingId);
 
 		return ['status' => 200, 'message' => $note, 'offboarding' => $case];
 	}//end stamp()

@@ -74,31 +74,53 @@ class WkrAssessCommand extends Command {
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		if ((bool)$input->getOption('all') === true) {
-			$outcomes = $this->service->assessAll();
-			if ($outcomes === []) {
-				$output->writeln('<comment>Geen (administratie, jaar)-paren gevonden in de loonstroken.</comment>');
-				return 0;
+			return $this->assessAll($output);
+		}
+
+		return $this->assessOne($input, $output);
+	}//end execute()
+
+	/**
+	 * Assess every (administration, year) pair; 1 when any assessment failed.
+	 *
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int
+	 */
+	private function assessAll(OutputInterface $output): int {
+		$outcomes = $this->service->assessAll();
+		if ($outcomes === []) {
+			$output->writeln('<comment>Geen (administratie, jaar)-paren gevonden in de loonstroken.</comment>');
+			return 0;
+		}
+
+		$failed = 0;
+		foreach ($outcomes as $outcome) {
+			if ($this->printOutcome($output, $outcome) === false) {
+				$failed++;
 			}
+		}
 
-			$failed = 0;
-			foreach ($outcomes as $outcome) {
-				if ($this->printOutcome($output, $outcome) === false) {
-					$failed++;
-				}
-			}
+		return ($failed > 0) ? 1 : 0;
 
-			return ($failed > 0) ? 1 : 0;
-		}//end if
+	}//end assessAll()
 
-		$administrationOption = $input->getOption('administration');
-		$administrationId = (is_string($administrationOption) === true) ? trim($administrationOption) : '';
+	/**
+	 * Assess the one --administration / --year pair.
+	 *
+	 * @param InputInterface  $input  Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int
+	 */
+	private function assessOne(InputInterface $input, OutputInterface $output): int {
+		$administrationId = self::administrationOption($input);
 		if ($administrationId === '') {
 			$output->writeln('<error>--administration is verplicht (of gebruik --all).</error>');
 			return 1;
 		}
 
-		$yearOption = $input->getOption('year');
-		$year = (is_numeric($yearOption) === true) ? (int)$yearOption : 0;
+		$year = self::yearOption($input);
 		if ($year <= 0) {
 			$output->writeln('<error>--year is verplicht en moet een geldig jaartal zijn.</error>');
 			return 1;
@@ -107,7 +129,36 @@ class WkrAssessCommand extends Command {
 		$outcome = $this->service->assess($administrationId, $year);
 
 		return ($this->printOutcome($output, $outcome) === true) ? 0 : 1;
-	}//end execute()
+
+	}//end assessOne()
+
+	/**
+	 * The trimmed --administration value, '' when it is not given.
+	 *
+	 * @param InputInterface $input Console input.
+	 *
+	 * @return string
+	 */
+	private static function administrationOption(InputInterface $input): string {
+		$administrationOption = $input->getOption('administration');
+
+		return (is_string($administrationOption) === true) ? trim($administrationOption) : '';
+
+	}//end administrationOption()
+
+	/**
+	 * The --year value as an integer, 0 when it is not numeric.
+	 *
+	 * @param InputInterface $input Console input.
+	 *
+	 * @return int
+	 */
+	private static function yearOption(InputInterface $input): int {
+		$yearOption = $input->getOption('year');
+
+		return (is_numeric($yearOption) === true) ? (int)$yearOption : 0;
+
+	}//end yearOption()
 
 	/**
 	 * Print one assessment outcome, returning whether it succeeded.
@@ -123,8 +174,20 @@ class WkrAssessCommand extends Command {
 			return false;
 		}
 
-		$assessment = (array)$outcome['assessment'];
+		self::writeAssessment($output, (array)$outcome['assessment']);
 
+		return true;
+	}//end printOutcome()
+
+	/**
+	 * Write one WKR assessment.
+	 *
+	 * @param OutputInterface      $output     Console output.
+	 * @param array<string, mixed> $assessment The assessment.
+	 *
+	 * @return void
+	 */
+	private static function writeAssessment(OutputInterface $output, array $assessment): void {
 		$output->writeln('<info>Humaniq WKR-beoordeling</info>');
 		$output->writeln(sprintf('  administratie      : %s', (string)$assessment['administrationId']));
 		$output->writeln(sprintf('  jaar               : %d', (int)$assessment['year']));
@@ -137,7 +200,6 @@ class WkrAssessCommand extends Command {
 		$output->writeln(sprintf('  status             : %s', (string)$assessment['status']));
 		$output->writeln('');
 
-		return true;
-	}//end printOutcome()
+	}//end writeAssessment()
 
 }//end class

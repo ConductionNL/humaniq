@@ -36,6 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\Humaniq\Service\PayrollRunService;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -140,22 +141,17 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	/**
 	 * Run the existing service once per item and let the outcome travel.
 	 *
-	 * @param array $items The input items.
-	 * @param array $config The step configuration.
-	 * @param array $context Run-level metadata.
+	 * @param FlowNodeCall $call The input items, the step configuration and the run-level metadata.
 	 *
 	 * @return array The items, each carrying the outcome under `payroll`.
 	 *
 	 * @throws RuntimeException When the service reports `failed` or `refused-not-draft`.
 	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $context is part of the
-	 *     IFlowNode::execute() contract; this adapter reads no run-level
-	 *     metadata (the acting identity is applied by the dispatcher).
-	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
-	public function execute(array $items, array $config, array $context): array {
-		if ($items === []) {
+	public function execute(FlowNodeCall $call): array {
+		$config = $call->config;
+		if ($call->items === []) {
 			return [];
 		}
 
@@ -163,36 +159,43 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 		// reaches execute() unvalidated (the DossiqFlowNodeBase guard).
 		$this->validateConfig(config: $config);
 
-		$out = [];
-		foreach ($items as $item) {
-			$json = (array)(((array)$item)['json'] ?? []);
-
-			$period = $this->render((string)($config['period'] ?? ''), $json);
-			if ($period === '') {
-				$period = gmdate('Y-m');
-			}
-
-			$administrationId = $this->render((string)($config['administrationId'] ?? ''), $json);
-			$recalculate = (($config['recalculate'] ?? true) !== false);
-
-			$outcome = $this->payrollRunService->runFor(
-				$period,
-				($administrationId === '' ? null : $administrationId),
-				$recalculate
-			);
-
-			$status = (string)($outcome['status'] ?? '');
-			if (in_array($status, ['calculated', 'exists'], true) === false) {
-				throw new RuntimeException(
-					'Loonrun berekenen voor ' . $period . ' is geweigerd (' . $status . '): '
-					. (string)($outcome['message'] ?? '')
-				);
-			}
-
-			$out[] = $this->withOutcome((array)$item, self::OUTCOME_KEY, $outcome);
-		}//end foreach
-
-		return $out;
+		return $this->stampEachItem(
+			$call,
+			fn (array $json): array => $this->calculateFor(json: $json, config: $config)
+		);
 	}//end execute()
+
+	/**
+	 * Calculate the run of the item's period and administration.
+	 *
+	 * @param array<string, mixed> $json   The item's record, for the placeholders.
+	 * @param array<string, mixed> $config The step configuration.
+	 *
+	 * @return array<string, mixed> The service outcome.
+	 *
+	 * @throws RuntimeException When the service reports `failed` or `refused-not-draft`.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 */
+	private function calculateFor(array $json, array $config): array {
+		$period = $this->render((string)($config['period'] ?? ''), $json);
+		if ($period === '') {
+			$period = gmdate('Y-m');
+		}
+
+		$administrationId = $this->render((string)($config['administrationId'] ?? ''), $json);
+		$recalculate = (($config['recalculate'] ?? true) !== false);
+
+		$outcome = $this->payrollRunService->runFor(
+			$period,
+			($administrationId === '' ? null : $administrationId),
+			$recalculate
+		);
+
+		return $this->requireStatus(
+			$outcome,
+			new ExpectedStatus(['calculated', 'exists'], 'Loonrun berekenen voor ' . $period . ' is geweigerd')
+		);
+	}//end calculateFor()
 
 }//end class

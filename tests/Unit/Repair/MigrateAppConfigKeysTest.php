@@ -316,6 +316,39 @@ class MigrateAppConfigKeysTest extends TestCase {
 	}//end testAThrowingWriteIsLoggedAndTheLoopContinues()
 
 	/**
+	 * The report names all four counts, and a failed write is logged with its key.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/app-identity/spec.md#REQ-AID-001
+	 */
+	public function testTheReportAndTheWarningOfAMixedRun(): void {
+		$writes = [];
+		$output = $this->outputDouble();
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'Humaniq: could not migrate one app config key; leaving it under the old namespace',
+			['key' => 'bad', 'exception' => 'write refused']
+		);
+
+		(new MigrateAppConfigKeys(
+			$this->appConfig(
+				['enabled' => 'yes', 'types' => 'x', 'blank' => '', 'kept' => 'old', 'bad' => 'x', 'good' => 'y', 'also' => 'z'],
+				['kept' => 'new'],
+				$writes,
+				throwsOn: 'bad'
+			),
+			$logger
+		))->run($output);
+
+		$this->assertSame(['humaniq:good=y', 'humaniq:also=z'], $writes);
+		$this->assertSame(
+			['MigrateAppConfigKeys: 2 key(s) migrated, 1 already present, 1 had no value to migrate, 2 skipped as Nextcloud-reserved.'],
+			$output->infos
+		);
+	}//end testTheReportAndTheWarningOfAMixedRun()
+
+	/**
 	 * An unreadable old namespace degrades to "nothing to do", never a throw.
 	 *
 	 * @return void

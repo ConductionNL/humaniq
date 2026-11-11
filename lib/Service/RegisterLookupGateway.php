@@ -59,11 +59,7 @@ class RegisterLookupGateway {
 	/**
 	 * Call a register's source and answer the decoded JSON body.
 	 *
-	 * @param string               $register   The register key: `rdw` or `brp`.
-	 * @param string               $endpoint   The path on the source.
-	 * @param string               $method     The verb.
-	 * @param array<string, mixed> $config     The request config (query, body, headers).
-	 * @param bool                 $persistLog Whether integriq keeps a CallLog of the call.
+	 * @param RegisterCall $call The register, the path, the verb, the request config and whether a CallLog is kept.
 	 *
 	 * @return array<mixed>
 	 *
@@ -72,29 +68,40 @@ class RegisterLookupGateway {
 	 * @spec openspec/specs/register-prefill/spec.md#REQ-RPF-001
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess)         FleetAppId is the fleet's static resolver for renamed apps.
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Mirrors integriq's own persistLog flag.
 	 */
-	public function call(string $register, string $endpoint, string $method, array $config, bool $persistLog=true): array {
+	public function call(RegisterCall $call): array {
 		if (FleetAppId::isInstalled(appManager: $this->appManager, canonical: 'integriq') === false) {
 			throw new RegisterPrefillUnavailableException('Integriq is niet geïnstalleerd, dus het register kan niet worden geraadpleegd.', 'skipped-no-integriq');
 		}
 
-		$sourceRef = $this->settings->getRegisterPrefillSource($register);
+		$sourceRef = $this->settings->getRegisterPrefillSource($call->register);
 		$environment = FleetAppId::getService(container: $this->container, canonical: 'integriq', relative: 'Service\EnvironmentService');
 		$caller = FleetAppId::getService(container: $this->container, canonical: 'integriq', relative: 'Service\CallService');
-		$source = null;
-		if ($sourceRef !== '' && $environment !== null) {
-			$source = $environment->resolveSource($sourceRef);
-		}
-
+		$source = $this->sourceFor(sourceRef: $sourceRef, environment: $environment);
 		if ($source === null || $caller === null) {
 			throw new RegisterPrefillUnavailableException('Er is geen koppeling met dit register ingesteld. Vraag de beheerder de bron in integriq te koppelen.', 'no-source');
 		}
 
-		$log = $caller->call(source: $source, endpoint: $endpoint, method: $method, config: $config, persistLog: $persistLog);
+		$log = $caller->call(source: $source, endpoint: $call->endpoint, method: $call->method, config: $call->config, persistLog: $call->persistLog);
 
 		return $this->bodyOf($log);
 	}//end call()
+
+	/**
+	 * The configured integriq source, or null when none is set or integriq cannot resolve one.
+	 *
+	 * @param string      $sourceRef   The configured source uuid, or ''.
+	 * @param object|null $environment Integriq's EnvironmentService, or null.
+	 *
+	 * @return mixed
+	 */
+	private function sourceFor(string $sourceRef, ?object $environment): mixed {
+		if ($sourceRef !== '' && $environment !== null) {
+			return $environment->resolveSource($sourceRef);
+		}
+
+		return null;
+	}//end sourceFor()
 
 	/**
 	 * The decoded body of a CallLog's response.

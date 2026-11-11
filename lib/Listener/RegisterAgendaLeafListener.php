@@ -49,7 +49,10 @@ namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\OpenRegister\Event\RegisterLeafProvidersEvent;
+use OCA\OpenRegister\Service\Integration\LeafAvailability;
 use OCA\OpenRegister\Service\Integration\LeafDescriptor;
+use OCA\OpenRegister\Service\Integration\LeafIdentity;
+use OCA\OpenRegister\Service\Integration\LeafRendering;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IL10N;
@@ -147,13 +150,7 @@ class RegisterAgendaLeafListener implements IEventListener {
 		}
 
 		try {
-			$arguments = [
-				'id' => self::LEAF_ID,
-				'label' => $this->l10n->t(self::LABEL_SOURCE),
-				'icon' => self::ICON,
-				'kinds' => [LeafDescriptor::KIND_RENDER_SURFACE],
-				'requiredApp' => Application::APP_ID,
-				'group' => self::GROUP,
+			$rendering = [
 				'surfaces' => self::SURFACES,
 				'referenceType' => self::REFERENCE_TYPE,
 				// Vue 3 leaf under a possibly-Vue-2.7 host: the JS half renders
@@ -172,10 +169,20 @@ class RegisterAgendaLeafListener implements IEventListener {
 				// and ships no bundle, which is exactly the failure that left
 				// `humaniq-hours` dark on dossiq case pages before the entry
 				// existed.
-				$arguments['loadStrategy'] = LeafDescriptor::LOADS_VIA_SHARED_ENTRY;
+				$rendering['loadStrategy'] = LeafDescriptor::LOADS_VIA_SHARED_ENTRY;
 			}
 
-			$descriptor = new LeafDescriptor(...$arguments);
+			$descriptor = new LeafDescriptor(
+				identity: new LeafIdentity(
+					id: self::LEAF_ID,
+					label: $this->l10n->t(self::LABEL_SOURCE),
+					icon: self::ICON,
+					group: self::GROUP,
+				),
+				kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
+				availability: new LeafAvailability(requiredApp: Application::APP_ID),
+				rendering: new LeafRendering(...$rendering),
+			);
 
 			// Render-only leaf: no IntegrationProvider. The widget reads the
 			// agenda through humaniq's own endpoint, so there is no app-local
@@ -205,8 +212,8 @@ class RegisterAgendaLeafListener implements IEventListener {
 	 * that never registered.
 	 *
 	 * Both halves are checked rather than one standing in for the other: the
-	 * constant is what this listener reads, the parameter is what it passes, and
-	 * a stub or a partial backport can carry one without the other.
+	 * constant is what this listener reads, the `LeafRendering` parameter is what
+	 * it passes, and a stub or a partial backport can carry one without the other.
 	 *
 	 * @return bool Whether the descriptor accepts a load strategy.
 	 *
@@ -217,7 +224,7 @@ class RegisterAgendaLeafListener implements IEventListener {
 			return false;
 		}
 
-		$constructor = (new ReflectionClass(LeafDescriptor::class))->getConstructor();
+		$constructor = (new ReflectionClass(LeafRendering::class))->getConstructor();
 		if ($constructor === null) {
 			return false;
 		}

@@ -188,6 +188,9 @@ class PayrollExpenseFoldServiceTest extends TestCase {
 		$this->assertSame(69.60, $fields['allowancesUntaxed']);
 		$this->assertSame(0.0, $fields['reimbursements']);
 		$this->assertCount(4, $fields['allowanceLines']);
+
+		$fixture = dirname(__DIR__, 2) . '/fixtures/golden/expense-fold.json';
+		$this->assertSame(json_decode((string)file_get_contents($fixture), true), json_decode((string)json_encode($fold), true), 'The whole fold, recorded once.');
 	}//end testAllowancesAreSplitListedAndProduceWkrRows()
 
 	/**

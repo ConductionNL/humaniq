@@ -300,6 +300,34 @@ class LeaveTypeAndScheduleTest extends TestCase {
 	}//end testAWithdrawnRequestIsGoneFromTheNextRead()
 
 	/**
+	 * The window's edges count, a request without dates or employee does
+	 * not, and the entries sort by start date, then employee.
+	 *
+	 * @return void
+	 */
+	public function testTheScheduleWindowEdgesAndOrder(): void {
+		$request = static fn (string $id, string $employee, string $start, string $end, string $status = 'approved'): array => ['id' => $id, 'employeeId' => $employee, 'status' => $status, 'startDate' => $start, 'endDate' => $end, 'leaveType' => ' holiday '];
+		$entries = $this->schedule->compose(
+			requests: [
+				$request('ends-on-first', 'emp-2', '2026-07-20', '2026-08-01T00:00:00Z'),
+				$request('starts-on-last', 'emp-1', '2026-08-31', '2026-09-04'),
+				$request('after', 'emp-1', '2026-09-01', '2026-09-02'),
+				$request('before', 'emp-1', '2026-07-01', '2026-07-31'),
+				$request('no-end', 'emp-1', '2026-08-10', ''),
+				$request('no-employee', ' ', '2026-08-10', '2026-08-11'),
+				$request('stranger', 'emp-9', '2026-08-10', '2026-08-11'),
+				$request('same-day-b', 'emp-2', '2026-08-31', '2026-08-31', ' submitted '),
+			],
+			memberEmployeeIds: ['emp-1', 'emp-2'],
+			from: new DateTimeImmutable('2026-08-01'),
+			to: new DateTimeImmutable('2026-08-31')
+		);
+
+		$this->assertSame(['ends-on-first', 'starts-on-last', 'same-day-b'], array_column($entries, 'requestId'));
+		$this->assertSame(['requestId' => 'same-day-b', 'employeeId' => 'emp-2', 'startDate' => '2026-08-31', 'endDate' => '2026-08-31', 'redacted' => false, 'status' => 'submitted', 'leaveType' => 'holiday'], $entries[2]);
+	}//end testTheScheduleWindowEdgesAndOrder()
+
+	/**
 	 * A reader who may not see a request sees that the person is unavailable
 	 * and nothing further: no type, no status, no reason.
 	 *

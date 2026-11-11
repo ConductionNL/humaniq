@@ -36,6 +36,17 @@ use DateTimeImmutable;
 class EmployeeHistoryService {
 
 	/**
+	 * The event kind and the start and end fields of each period schema.
+	 *
+	 * @var array<string, array{0: string, 1: string, 2: string}>
+	 */
+	private const PERIOD_FIELDS = [
+		'LeaveRequest' => ['leave', 'startDate', 'endDate'],
+		'SickLeaveCase' => ['sickness', 'firstSickDay', 'recoveredDate'],
+		'PerformanceReview' => ['review', 'besprokenOp', ''],
+	];
+
+	/**
 	 * The schemas a history reads, with the detail page each event links to.
 	 *
 	 * @var array<string, string>
@@ -113,18 +124,9 @@ class EmployeeHistoryService {
 				continue;
 			}
 
-			$perWeek = is_numeric($contract['hoursPerWeek'] ?? null) ? (float)$contract['hoursPerWeek'] : 0.0;
-			$hours += $perWeek;
-			$active[] = [
-				'id' => (string)($contract['id'] ?? ($contract['uuid'] ?? '')),
-				'type' => $contract['type'] ?? null,
-				'cao' => $contract['cao'] ?? null,
-				'caoSchaal' => $contract['caoSchaal'] ?? null,
-				'hoursPerWeek' => $perWeek,
-				'startDate' => $contract['startDate'] ?? null,
-				'endDate' => $contract['endDate'] ?? null,
-				'fte' => ($fullTimeHoursWeek > 0.0) ? round(($perWeek / $fullTimeHoursWeek), 4) : 0.0,
-			];
+			$row = self::contractRow(contract: $contract, fullTimeHoursWeek: $fullTimeHoursWeek);
+			$hours += $row['hoursPerWeek'];
+			$active[] = $row;
 		}
 
 		return [
@@ -135,6 +137,29 @@ class EmployeeHistoryService {
 			'concurrent' => count($active) > 1,
 		];
 	}//end activeEmploymentsOn()
+
+	/**
+	 * One active contract with its weekly hours and FTE.
+	 *
+	 * @param array<string, mixed> $contract          The EmploymentContract.
+	 * @param float                $fullTimeHoursWeek Hours of one FTE.
+	 *
+	 * @return array{id: string, type: mixed, cao: mixed, caoSchaal: mixed, hoursPerWeek: float, startDate: mixed, endDate: mixed, fte: float}
+	 */
+	private static function contractRow(array $contract, float $fullTimeHoursWeek): array {
+		$perWeek = is_numeric($contract['hoursPerWeek'] ?? null) ? (float)$contract['hoursPerWeek'] : 0.0;
+
+		return [
+			'id' => (string)($contract['id'] ?? ($contract['uuid'] ?? '')),
+			'type' => $contract['type'] ?? null,
+			'cao' => $contract['cao'] ?? null,
+			'caoSchaal' => $contract['caoSchaal'] ?? null,
+			'hoursPerWeek' => $perWeek,
+			'startDate' => $contract['startDate'] ?? null,
+			'endDate' => $contract['endDate'] ?? null,
+			'fte' => ($fullTimeHoursWeek > 0.0) ? round(($perWeek / $fullTimeHoursWeek), 4) : 0.0,
+		];
+	}//end contractRow()
 
 	/**
 	 * The events one row contributes.
@@ -149,9 +174,7 @@ class EmployeeHistoryService {
 			'EmploymentContract' => $this->span(row: $row, startKind: 'contract-start', endKind: 'contract-end', detail: (string)($row['type'] ?? '')),
 			'OrgAssignment' => $this->span(row: $row, startKind: 'placement-start', endKind: 'placement-end', detail: (string)($row['role'] ?? '')),
 			'CompAdjustment' => $this->payChange(row: $row),
-			'LeaveRequest' => $this->period(row: $row, kind: 'leave', start: 'startDate', end: 'endDate', include: ($row['status'] ?? '') === 'approved', detail: (string)($row['leaveType'] ?? '')),
-			'SickLeaveCase' => $this->period(row: $row, kind: 'sickness', start: 'firstSickDay', end: 'recoveredDate', include: true, detail: ''),
-			'PerformanceReview' => $this->period(row: $row, kind: 'review', start: 'besprokenOp', end: '', include: ($row['status'] ?? '') === 'vastgesteld', detail: (string)($row['rating'] ?? '')),
+			'LeaveRequest', 'SickLeaveCase', 'PerformanceReview' => $this->period(schema: $schema, row: $row),
 			default => [],
 		};
 	}//end eventsOf()
@@ -207,27 +230,57 @@ class EmployeeHistoryService {
 	}//end payChange()
 
 	/**
-	 * One event over a period, when `$include` holds and it has a start.
+	 * One event over a period, when the row counts and has a start: approved
+	 * leave, any sickness, a settled review.
 	 *
-	 * @param array<string, mixed> $row     The row.
-	 * @param string               $kind    Event kind.
-	 * @param string               $start   Start field.
-	 * @param string               $end     End field, or ''.
-	 * @param bool                 $include Whether the row counts.
-	 * @param string               $detail  Short detail.
+	 * @param string               $schema LeaveRequest, SickLeaveCase or PerformanceReview.
+	 * @param array<string, mixed> $row    The row.
 	 *
 	 * @return list<array{kind: string, start: string, end: string|null, detail: string}>
 	 */
-	private function period(array $row, string $kind, string $start, string $end, bool $include, string $detail): array {
+	private function period(string $schema, array $row): array {
+		[$kind, $start, $end] = self::PERIOD_FIELDS[$schema];
 		$from = $this->day(value: ($row[$start] ?? null));
-		if ($include === false || $from === null) {
+		if (self::counts(schema: $schema, row: $row) === false || $from === null) {
 			return [];
 		}
 
 		$until = ($end === '') ? null : $this->day(value: ($row[$end] ?? null));
 
-		return [['kind' => $kind, 'start' => $from, 'end' => $until, 'detail' => $detail]];
+		return [['kind' => $kind, 'start' => $from, 'end' => $until, 'detail' => self::detailOf(schema: $schema, row: $row)]];
 	}//end period()
+
+	/**
+	 * Whether a period row counts: approved leave, a settled review, any sickness.
+	 *
+	 * @param string               $schema The source schema.
+	 * @param array<string, mixed> $row    The row.
+	 *
+	 * @return bool
+	 */
+	private static function counts(string $schema, array $row): bool {
+		return match ($schema) {
+			'LeaveRequest' => ($row['status'] ?? '') === 'approved',
+			'PerformanceReview' => ($row['status'] ?? '') === 'vastgesteld',
+			default => true,
+		};
+	}//end counts()
+
+	/**
+	 * The short detail of a period event: the leave type or the rating.
+	 *
+	 * @param string               $schema The source schema.
+	 * @param array<string, mixed> $row    The row.
+	 *
+	 * @return string
+	 */
+	private static function detailOf(string $schema, array $row): string {
+		return match ($schema) {
+			'LeaveRequest' => (string)($row['leaveType'] ?? ''),
+			'PerformanceReview' => (string)($row['rating'] ?? ''),
+			default => '',
+		};
+	}//end detailOf()
 
 	/**
 	 * Whether a row with startDate/endDate runs on a day.

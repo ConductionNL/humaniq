@@ -173,6 +173,75 @@ class PackInterpreterTest extends TestCase {
 	}//end testPiecewiseAccrueRoundsEachTermBeforeCappingIt()
 
 	/**
+	 * REQ-JP-002 scenario: `piecewiseAccrue` above the tail boundary descends
+	 * from the accrued chain, a value above `zeroAbove` yields nothing, and a
+	 * non-positive value yields nothing.
+	 *
+	 * @return void
+	 */
+	public function testPiecewiseAccrueTailZeroAboveAndNonPositiveValue(): void {
+		$step = static function (string $id, int $value): array {
+			return [
+				'id' => $id,
+				'op' => 'piecewiseAccrue',
+				'incidence' => 'informative',
+				'value' => $value,
+				'roundTerm' => 3,
+				'segments' => [
+					[
+						'upTo' => 1000,
+						'rate' => 0.5,
+						'cap' => 400,
+					],
+					[
+						'upTo' => 2000,
+						'rate' => 0.25,
+						'cap' => 600,
+					],
+				],
+				'tail' => [
+					'from' => 3000,
+					'rate' => 0.1,
+				],
+				'zeroAbove' => 8000,
+				'round' => [
+					'mode' => 'ceil',
+					'unit' => 'euro',
+				],
+			];
+		};
+
+		$result = $this->execute(
+			[
+				$step('inside', 1500),
+				$step('flat', 2500),
+				$step('tail', 4000),
+				$step('floor', 7999),
+				$step('above', 8001),
+				$step('none', 0),
+			]
+		);
+
+		$got = [];
+		foreach (['inside', 'flat', 'tail', 'floor', 'above', 'none'] as $id) {
+			$got[$id] = $result->cents($id);
+		}
+
+		$this->assertSame(
+			[
+				'inside' => 600,
+				'flat'   => 600,
+				'tail'   => 500,
+				'floor'  => 200,
+				'above'  => 0,
+				'none'   => 0,
+			],
+			$got
+		);
+
+	}//end testPiecewiseAccrueTailZeroAboveAndNonPositiveValue()
+
+	/**
 	 * A step gated off by `when` yields 0 WITHOUT resolving its params — which
 	 * is what lets NL's OUK reference an AOW-only table column safely.
 	 *

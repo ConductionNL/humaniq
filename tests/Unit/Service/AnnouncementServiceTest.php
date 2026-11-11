@@ -163,6 +163,32 @@ class AnnouncementServiceTest extends TestCase {
 	}//end testHrSeesWhoHasNotConfirmed()
 
 	/**
+	 * A confirmation counts by its presence, even without a time; the row
+	 * and the overview carry their fields in a fixed order.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-002
+	 */
+	public function testAConfirmationCountsByItsPresence(): void {
+		$this->store->seed('AnnouncementConfirmation', 'conf-cor', ['announcementId' => 'ann-all', 'employeeId' => 'emp-cor', 'confirmedAt' => null]);
+		$this->store->seed('AnnouncementConfirmation', 'conf-other', ['announcementId' => 'ann-bz', 'employeeId' => 'emp-anna', 'confirmedAt' => '2026-10-01T08:00:00+00:00']);
+
+		$overview = $this->service()->overview('ann-all', self::TODAY);
+
+		self::assertSame(['announcementId', 'total', 'confirmed', 'rows'], array_keys($overview));
+		self::assertSame(['ann-all', 3, 1], [$overview['announcementId'], $overview['total'], $overview['confirmed']]);
+		self::assertSame(
+			[
+				['id' => 'emp-anna', 'name' => 'Anna Bakker', 'confirmed' => false, 'confirmedAt' => null],
+				['id' => 'emp-bram', 'name' => 'Bram Visser', 'confirmed' => false, 'confirmedAt' => null],
+				['id' => 'emp-cor', 'name' => 'Cor Smit', 'confirmed' => true, 'confirmedAt' => null],
+			],
+			$overview['rows']
+		);
+	}//end testAConfirmationCountsByItsPresence()
+
+	/**
 	 * A confirmation created past the endpoint is placed on the caller, and a
 	 * second one for the same employee and announcement is refused.
 	 *

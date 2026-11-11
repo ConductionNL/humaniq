@@ -74,27 +74,63 @@ class PayrollVerifyCommand extends Command {
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-006
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$periodOption = $input->getOption('period');
-		$period = (is_string($periodOption) === true) ? trim($periodOption) : '';
+		$period = self::periodOption($input);
 		if ($period === '') {
 			$output->writeln('<error>--period is verplicht (JJJJ-MM).</error>');
 			return 1;
 		}
 
-		$administrationOption = $input->getOption('administration');
-		$administration = (is_string($administrationOption) === true && trim($administrationOption) !== '') ? trim($administrationOption) : null;
-
 		$report = $this->auditService->auditPayrollRunScope(
 			$period,
-			$administration,
+			CommandOptions::trimmed($input, 'administration'),
 			['jurisdiction' => (string)$input->getOption('jurisdiction')]
 		);
 
 		$output->writeln('<info>Humaniq payroll verify</info>');
 		$output->writeln(sprintf('  periode           : %s', $period));
+
+		return self::writeReport($output, $report);
+	}//end execute()
+
+	/**
+	 * The trimmed --period value, '' when it is not given.
+	 *
+	 * @param InputInterface $input Console input.
+	 *
+	 * @return string
+	 */
+	private static function periodOption(InputInterface $input): string {
+		$periodOption = $input->getOption('period');
+
+		return (is_string($periodOption) === true) ? trim($periodOption) : '';
+
+	}//end periodOption()
+
+	/**
+	 * Write the counts and the verdict of the audit and return the exit code.
+	 *
+	 * @param OutputInterface      $output Console output.
+	 * @param array<string, mixed> $report The payroll-run scope audit.
+	 *
+	 * @return int
+	 */
+	private static function writeReport(OutputInterface $output, array $report): int {
 		$output->writeln(sprintf('  runs gecontroleerd: %d', $report['runsChecked']));
 		$output->writeln(sprintf('  loonstroken       : %d', $report['payslipsChecked']));
 
+		return self::writeVerdict($output, $report);
+
+	}//end writeReport()
+
+	/**
+	 * Write the verdict on the audited runs and return the exit code.
+	 *
+	 * @param OutputInterface      $output Console output.
+	 * @param array<string, mixed> $report The payroll-run scope audit.
+	 *
+	 * @return int 1 when no run was found or a mandatory rule is violated, else 0.
+	 */
+	private static function writeVerdict(OutputInterface $output, array $report): int {
 		if ($report['runsChecked'] === 0) {
 			$output->writeln('  <comment>geen loonruns gevonden voor deze periode.</comment>');
 			return 1;
@@ -106,26 +142,36 @@ class PayrollVerifyCommand extends Command {
 		}
 
 		foreach ($report['violations'] as $violation) {
-			$line = sprintf(
-				'    %s %s [%s] %s: %s',
-				(string)$violation['objectType'],
-				(string)$violation['objectId'],
-				(string)$violation['severity'],
-				(string)$violation['ruleId'],
-				(string)$violation['statement']
-			);
-
-			if ((string)$violation['severity'] === 'mandatory') {
-				$output->writeln('<error>' . $line . '</error>');
-				continue;
-			}
-
-			$output->writeln('<comment>' . $line . '</comment>');
+			self::writeViolation($output, $violation);
 		}
 
 		$output->writeln(sprintf('  %d overtreding(en), waarvan %d verplicht.', count($report['violations']), $report['mandatoryViolations']));
 
 		return $report['mandatoryViolations'] > 0 ? 1 : 0;
-	}//end execute()
+
+	}//end writeVerdict()
+
+	/**
+	 * Write one violation: mandatory ones as errors, the others as comments.
+	 *
+	 * @param OutputInterface      $output    Console output.
+	 * @param array<string, mixed> $violation The violation row.
+	 *
+	 * @return void
+	 */
+	private static function writeViolation(OutputInterface $output, array $violation): void {
+		$line = sprintf(
+			'    %s %s [%s] %s: %s',
+			(string)$violation['objectType'],
+			(string)$violation['objectId'],
+			(string)$violation['severity'],
+			(string)$violation['ruleId'],
+			(string)$violation['statement']
+		);
+
+		$tag = ((string)$violation['severity'] === 'mandatory') ? 'error' : 'comment';
+		$output->writeln('<' . $tag . '>' . $line . '</' . $tag . '>');
+
+	}//end writeViolation()
 
 }//end class

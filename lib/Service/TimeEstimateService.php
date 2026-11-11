@@ -98,37 +98,47 @@ class TimeEstimateService {
 		$mine = $this->forObject(rows: $estimates, type: $domainObjectType, ref: $domainObjectRef);
 		$booked = $this->forObject(rows: $entries, type: $domainObjectType, ref: $domainObjectRef);
 
-		[$spent, $spentByRole] = $this->spent(booked: $booked);
-
-		$roles = [];
-		$estimatedTotal = 0.0;
-		$hasEstimate = false;
-		foreach ($mine as $estimate) {
-			$hasEstimate = true;
-			$estimatedTotal += $this->estimatedHours($estimate);
-			$roles[] = $this->roleRow(estimate: $estimate, spentByRole: $spentByRole);
-		}
-
-		if ($hasEstimate === false) {
+		$spent = $this->spent(booked: $booked);
+		if ($mine === []) {
 			// No estimate is not an estimate of zero. The spent total still
 			// answers; the remainder does not exist.
 			return [
 				'hasEstimate' => false,
 				'estimatedHours' => null,
-				'spentHours' => round(num: $spent, precision: 2),
+				'spentHours' => round(num: $spent[0], precision: 2),
 				'remainingHours' => null,
 				'roles' => [],
 			];
 		}
 
+		return $this->estimatedSummary(estimates: $mine, spent: $spent);
+	}//end summary()
+
+	/**
+	 * The summary of an object with estimates: their total, the spent hours,
+	 * the remainder, and one row per estimate.
+	 *
+	 * @param array<array<string, mixed>>             $estimates The object's TimeEstimate rows, at least one.
+	 * @param array{0: float, 1: array<string, float>} $spent     The hours booked in total and per role.
+	 *
+	 * @return array{hasEstimate: bool, estimatedHours: float, spentHours: float, remainingHours: float, roles: array<int, array<string, mixed>>}
+	 */
+	private function estimatedSummary(array $estimates, array $spent): array {
+		$roles = [];
+		$estimatedTotal = 0.0;
+		foreach ($estimates as $estimate) {
+			$estimatedTotal += $this->estimatedHours($estimate);
+			$roles[] = $this->roleRow(estimate: $estimate, spentByRole: $spent[1]);
+		}
+
 		return [
 			'hasEstimate' => true,
 			'estimatedHours' => round(num: $estimatedTotal, precision: 2),
-			'spentHours' => round(num: $spent, precision: 2),
-			'remainingHours' => round(num: ($estimatedTotal - $spent), precision: 2),
+			'spentHours' => round(num: $spent[0], precision: 2),
+			'remainingHours' => round(num: ($estimatedTotal - $spent[0]), precision: 2),
 			'roles' => $roles,
 		];
-	}//end summary()
+	}//end estimatedSummary()
 
 	/**
 	 * The hours booked in total and per role.
@@ -227,6 +237,39 @@ class TimeEstimateService {
 	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-004
 	 */
 	public function refusalForEntry(array $entry, array $estimates, array $entries): ?string {
+		$target = $this->bookingTarget(entry: $entry);
+		if ($target === null) {
+			return null;
+		}
+
+		$estimate = $this->estimateFor(estimates: $estimates, type: $target['type'], ref: $target['ref'], role: $target['role']);
+		if ($estimate === null || ($estimate['enforced'] ?? false) !== true) {
+			// An estimate that is not enforced refuses nothing, and an object
+			// with no estimate for this role has no ceiling at all.
+			return null;
+		}
+
+		$ceiling = $this->estimatedHours($estimate);
+		$booked = $this->bookedAgainst(entries: $entries, target: $target);
+		$incoming = $this->hours($entry);
+		if (($booked + $incoming) <= $ceiling) {
+			return null;
+		}
+
+		return $this->ceilingRefusal(role: $target['role'], hours: ['ceiling' => $ceiling, 'booked' => $booked, 'incoming' => $incoming]);
+	}//end refusalForEntry()
+
+	/**
+	 * The object and role an entry books against, and the entry's own id;
+	 * null for an entry against no object and for a stopped timer.
+	 *
+	 * @param array<string, mixed> $entry The incoming TimeEntry.
+	 *
+	 * @return array{type: string, ref: string, role: string, entryId: string}|null
+	 *
+	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-004
+	 */
+	private function bookingTarget(array $entry): ?array {
 		$type = trim((string)($entry['domainObjectType'] ?? ''));
 		$ref = trim((string)($entry['domainObjectRef'] ?? ''));
 		if ($type === '' || $ref === '') {
@@ -241,34 +284,27 @@ class TimeEstimateService {
 			return null;
 		}
 
-		$role = $this->role($entry);
-		$estimate = $this->estimateFor(estimates: $estimates, type: $type, ref: $ref, role: $role);
-		if ($estimate === null || ($estimate['enforced'] ?? false) !== true) {
-			// An estimate that is not enforced refuses nothing, and an object
-			// with no estimate for this role has no ceiling at all.
-			return null;
-		}
+		return ['type' => $type, 'ref' => $ref, 'role' => $this->role($entry), 'entryId' => trim((string)($entry['id'] ?? ''))];
+	}//end bookingTarget()
 
-		$ceiling = $this->estimatedHours($estimate);
-		$entryId = trim((string)($entry['id'] ?? ''));
-
-		$booked = $this->bookedAgainst(
-			entries: $entries,
-			target: ['type' => $type, 'ref' => $ref, 'role' => $role, 'entryId' => $entryId]
-		);
-
-		$incoming = $this->hours($entry);
-		if (($booked + $incoming) <= $ceiling) {
-			return null;
-		}
-
-		$left = round(num: max(0.0, ($ceiling - $booked)), precision: 2);
+	/**
+	 * The refusal naming the ceiling, what is left and the booking.
+	 *
+	 * @param string                                              $role  The role, or {@see NO_ROLE}.
+	 * @param array{ceiling: float, booked: float, incoming: float} $hours The ceiling, the hours booked and the incoming hours.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-004
+	 */
+	private function ceilingRefusal(string $role, array $hours): string {
+		$left = round(num: max(0.0, ($hours['ceiling'] - $hours['booked'])), precision: 2);
 
 		return 'De schatting voor dit object'
 			. ($role === self::NO_ROLE ? '' : ' voor de rol ' . $role)
-			. ' is ' . $this->number($ceiling) . ' uur en staat als plafond aan. Er is nog '
-			. $this->number($left) . ' uur over, en deze boeking is ' . $this->number($incoming) . ' uur.';
-	}//end refusalForEntry()
+			. ' is ' . $this->number($hours['ceiling']) . ' uur en staat als plafond aan. Er is nog '
+			. $this->number($left) . ' uur over, en deze boeking is ' . $this->number($hours['incoming']) . ' uur.';
+	}//end ceilingRefusal()
 
 	/**
 	 * The hours already booked against one object and role.

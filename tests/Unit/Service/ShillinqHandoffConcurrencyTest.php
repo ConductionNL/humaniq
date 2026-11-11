@@ -240,7 +240,7 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 		$number = ($kind === 'netpay' ? 'runNumber' : 'journalNumber');
 		$value = ($kind === 'netpay' ? 'HRMQ-NETPAY-2026-05-ADM-001' : 'HRMQ-LOON-2026-05-ADM-001');
 		$store = $this->store();
-		$store->rows[$target] = [['id' => 'by-cron', $number => $value, '_org' => 'default']];
+		$store->rows[$target] = [(['id' => 'by-cron', $number => $value, '_org' => 'default'] + $this->totalsOf($kind))];
 		$store->organisation = 'other-org';
 
 		$adopted = $this->service($kind, $store)->$handOff($this->payrollRun());
@@ -282,7 +282,7 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 			$store->rows[$target][] = ['id' => 'old-' . $i, $number => 'OLD-' . $i];
 		}
 
-		$store->rows[$target][] = ['id' => 'mine', $number => $value];
+		$store->rows[$target][] = (['id' => 'mine', $number => $value] + $this->totalsOf($kind));
 		$adopted = $this->service($kind, $store)->$handOff($this->payrollRun());
 
 		$this->assertContains($adopted['status'], ['created', 'posted']);
@@ -372,7 +372,7 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 
 		$store = $this->store();
 		$store->rows[$ownSchema] = [$stale];
-		$store->rows[$target] = [['id' => 'by-crash', $number => $value]];
+		$store->rows[$target] = [(['id' => 'by-crash', $number => $value] + $this->totalsOf($kind))];
 
 		$adopted = $this->service($kind, $store)->$handOff($this->payrollRun());
 
@@ -471,7 +471,7 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 		$this->assertCount(1, $store->savesOf($target), 'One record reaches shillinq.');
 
 		$store = $this->store();
-		$store->rows[$target] = [['id' => 'by-cron', $number => $value, '_org' => 'default']];
+		$store->rows[$target] = [(['id' => 'by-cron', $number => $value, '_org' => 'default'] + $this->totalsOf($kind))];
 		$store->organisation = 'default';
 		$store->unreadable = [$target, $ownSchema];
 
@@ -572,6 +572,21 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 
 		return ['journalNumber', 'HRMQ-LOON-2026-05-ADM-001'];
 	}//end numberOf()
+
+	/**
+	 * The totals a shillinq record written for this test's payroll run carries.
+	 *
+	 * @param string $kind Which service.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function totalsOf(string $kind): array {
+		if ($kind === 'netpay') {
+			return ['totalAmount' => 2698.0];
+		}
+
+		return ['lines' => [['side' => 'debit', 'amount' => 4449.80], ['side' => 'credit', 'amount' => 4449.80]]];
+	}//end totalsOf()
 
 	/**
 	 * The saves of one record of a schema, in order.

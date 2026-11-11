@@ -106,12 +106,12 @@ class ResourceBookingOverlapListener implements IEventListener {
 				'humaniq: ResourceBookingOverlapListener could not check a booking',
 				['exception' => $e->getMessage()]
 			);
-			$this->refuse($event, 'De reservering kon niet worden gecontroleerd; probeer het later opnieuw.');
+			PreSaveEvents::refuse($event, 'De reservering kon niet worden gecontroleerd; probeer het later opnieuw.');
 			return;
 		}
 
 		if ($refusal !== null) {
-			$this->refuse($event, $refusal);
+			PreSaveEvents::refuse($event, $refusal);
 		}
 	}//end handle()
 
@@ -166,22 +166,4 @@ class ResourceBookingOverlapListener implements IEventListener {
 		return (strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) === self::RESOURCEBOOKING_SLUG);
 	}//end isBooking()
 
-	/**
-	 * Stop the write and carry the reason back to the caller.
-	 *
-	 * @param object $event The dispatched event.
-	 * @param string $message The refusal.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-004
-	 */
-	private function refuse(object $event, string $message): void {
-		if (method_exists($event, 'setErrors') === false || method_exists($event, 'stopPropagation') === false) {
-			return;
-		}
-
-		$event->setErrors(['message' => $message]);
-		$event->stopPropagation();
-	}//end refuse()
 }//end class

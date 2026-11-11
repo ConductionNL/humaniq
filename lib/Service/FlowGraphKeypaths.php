@@ -275,24 +275,50 @@ class FlowGraphKeypaths {
 		}
 
 		foreach ($logic as $operator => $arguments) {
-			if ($operator === 'var') {
-				$path = (is_array($arguments) === true) ? (string)($arguments[0] ?? '') : (string)$arguments;
-				$logic[$operator] = (is_array($arguments) === true)
-					? array_replace($arguments, [0 => $map($path)])
-					: $map($path);
-				continue;
-			}
-
-			if (is_array($arguments) === true) {
-				foreach ($arguments as $argumentIndex => $argument) {
-					$logic[$operator][$argumentIndex] = $this->rewriteLogicVars($argument, $map);
-				}
-			}
+			$logic[$operator] = ($operator === 'var')
+				? $this->mappedVar(arguments: $arguments, map: $map)
+				: $this->rewrittenArguments(arguments: $arguments, map: $map);
 		}
 
 		return $logic;
 
 	}//end rewriteLogicVars()
+
+	/**
+	 * A `var` operand with its path mapped: the path itself, or the first element of `[path, default]`.
+	 *
+	 * @param mixed $arguments The `var` operand.
+	 * @param callable(string): string $map The path mapping.
+	 *
+	 * @return mixed
+	 */
+	private function mappedVar(mixed $arguments, callable $map): mixed {
+		if (is_array($arguments) === false) {
+			return $map((string)$arguments);
+		}
+
+		return array_replace($arguments, [0 => $map((string)($arguments[0] ?? ''))]);
+	}//end mappedVar()
+
+	/**
+	 * An operator's operands, each rewritten; a scalar operand stays as it is.
+	 *
+	 * @param mixed $arguments The operands.
+	 * @param callable(string): string $map The path mapping.
+	 *
+	 * @return mixed
+	 */
+	private function rewrittenArguments(mixed $arguments, callable $map): mixed {
+		if (is_array($arguments) === false) {
+			return $arguments;
+		}
+
+		foreach ($arguments as $argumentIndex => $argument) {
+			$arguments[$argumentIndex] = $this->rewriteLogicVars($argument, $map);
+		}
+
+		return $arguments;
+	}//end rewrittenArguments()
 
 	/**
 	 * Sort associative keys recursively so encoding is order-independent.

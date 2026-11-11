@@ -107,34 +107,53 @@ final class NlAssetChecks implements CheckProvider {
 		$returnedOn = trim((string)($o['returnedOn'] ?? ''));
 
 		if ($returnedOn !== '') {
-			$issued = strtotime($issuedOn);
-			$returned = strtotime($returnedOn);
-			if ($issued !== false && $returned !== false && $returned < $issued) {
-				return false;
-			}
-
 			// A closed uitgifte with coherent dates -- historical uitgiftes
 			// may reference a re-stocked or written-off asset.
-			return true;
+			return self::datesInOrder(from: $issuedOn, to: $returnedOn);
 		}
 
+		if (self::holdsIssuedAsset(o: $o, c: $c) === false) {
+			return false;
+		}
+
+		$employeeId = trim((string)($o['employeeId'] ?? ''));
+
+		return $employeeId !== '' && array_key_exists($employeeId, self::relatedEmployeesById($c)) === true;
+	}//end assignmentConsistent()
+
+	/**
+	 * Whether two dates are in order; an unreadable date passes.
+	 *
+	 * @param string $from The first date.
+	 * @param string $to The second date.
+	 *
+	 * @return bool
+	 */
+	private static function datesInOrder(string $from, string $to): bool {
+		$first = strtotime($from);
+		$second = strtotime($to);
+
+		return $first === false || $second === false || $second >= $first;
+	}//end datesInOrder()
+
+	/**
+	 * Whether an open uitgifte names an asset that is marked issued.
+	 *
+	 * @param array<string, mixed> $o The uitgifte.
+	 * @param array<string, mixed> $c The evaluation context.
+	 *
+	 * @return bool
+	 */
+	private static function holdsIssuedAsset(array $o, array $c): bool {
 		$assetId = trim((string)($o['assetId'] ?? ''));
 		if ($assetId === '') {
 			return false;
 		}
 
 		$asset = (self::relatedAssetsById($c)[$assetId] ?? null);
-		if (is_array($asset) === false || ($asset['status'] ?? '') !== 'issued') {
-			return false;
-		}
 
-		$employeeId = trim((string)($o['employeeId'] ?? ''));
-		if ($employeeId === '') {
-			return false;
-		}
-
-		return array_key_exists($employeeId, self::relatedEmployeesById($c)) === true;
-	}//end assignmentConsistent()
+		return is_array($asset) === true && ($asset['status'] ?? '') === 'issued';
+	}//end holdsIssuedAsset()
 
 	/**
 	 * True unless the assignment is open (no returnedOn) AND its

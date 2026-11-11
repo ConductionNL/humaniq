@@ -32,7 +32,6 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
-use Exception;
 use InvalidArgumentException;
 
 /**
@@ -79,7 +78,7 @@ class TransitionPaymentCalculator {
 			throw new InvalidArgumentException('The transition payment rule carries no cap (capEur); it is not invented here.');
 		}
 
-		$end = $this->date(value: $departure['endDate']);
+		$end = DateValues::leadingDate(value: $departure['endDate']);
 		if ($end === null) {
 			throw new InvalidArgumentException('The last working day is not a date.');
 		}
@@ -154,17 +153,17 @@ class TransitionPaymentCalculator {
 	private function service(array $employee, array $contracts, DateTimeImmutable $end): array {
 		$spans = [];
 		foreach ($contracts as $contract) {
-			$start = $this->date(value: (string)($contract['startDate'] ?? ''));
+			$start = DateValues::leadingDate(value: (string)($contract['startDate'] ?? ''));
 			if ($start === null || $start > $end) {
 				continue;
 			}
 
-			$until = ($this->date(value: (string)($contract['endDate'] ?? '')) ?? $end);
+			$until = (DateValues::leadingDate(value: (string)($contract['endDate'] ?? '')) ?? $end);
 			$spans[] = ['start' => $start, 'end' => min($until, $end)];
 		}
 
 		if ($spans === []) {
-			$start = ($this->date(value: (string)($employee['startDate'] ?? '')) ?? $end);
+			$start = (DateValues::leadingDate(value: (string)($employee['startDate'] ?? '')) ?? $end);
 			$spans[] = ['start' => $start, 'end' => $end];
 		}
 
@@ -246,22 +245,4 @@ class TransitionPaymentCalculator {
 		return round($cents / 100, 2);
 	}//end euro()
 
-	/**
-	 * A Y-m-d date, or null.
-	 *
-	 * @param string $value The value.
-	 *
-	 * @return DateTimeImmutable|null
-	 */
-	private function date(string $value): ?DateTimeImmutable {
-		if (preg_match('/^\d{4}-\d{2}-\d{2}/', $value) !== 1) {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable(substr($value, 0, 10));
-		} catch (Exception) {
-			return null;
-		}
-	}//end date()
 }//end class

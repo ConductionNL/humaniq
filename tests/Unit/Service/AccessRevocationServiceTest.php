@@ -196,6 +196,65 @@ class AccessRevocationServiceTest extends TestCase {
 	}//end testAnUnknownAccountIsRefused()
 
 	/**
+	 * The refusals: the case, the employee on it, the uid on that employee, and the answer.
+	 *
+	 * @return array<string, array{string, ?string, ?string, int, string}>
+	 */
+	public static function refusals(): array {
+		return [
+			'no case' => ['missing', null, null, 404, 'Offboarding case not found.'],
+			'no employee' => ['case-1', 'emp-gone', null, 409, 'The case names no employee record.'],
+			'own account' => ['case-1', 'emp-hr', null, 409, 'You cannot disable your own account.'],
+			'administrator' => ['case-1', 'emp-admin', null, 409, 'The account boss is an administrator and is not disabled from humaniq. Disable it in Nextcloud user management.'],
+			'unknown account' => ['case-1', 'emp-1', 'typo', 409, 'Nextcloud has no account typo. Correct the employee\'s Nextcloud account first.'],
+		];
+	}//end refusals()
+
+	/**
+	 * Every refusal keeps its status and message, and nothing is disabled or saved.
+	 *
+	 * @param string      $caseId   The case asked for.
+	 * @param string|null $employee The employee the case names, when changed.
+	 * @param string|null $uid      The uid of emp-1, when changed.
+	 * @param int         $status   The status expected.
+	 * @param string      $message  The message expected.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider refusals
+	 */
+	public function testEveryRefusalKeepsItsStatusAndMessage(string $caseId, ?string $employee, ?string $uid, int $status, string $message): void {
+		if ($employee !== null) {
+			$this->store['case-1']['employeeId'] = $employee;
+		}
+
+		if ($uid !== null) {
+			$this->store['emp-1']['nextcloudUserId'] = $uid;
+		}
+
+		$result = $this->service()->revoke(offboardingId: $caseId, actorUid: 'hr-demo', now: self::NOW);
+
+		self::assertSame(['status' => $status, 'message' => $message, 'offboarding' => null], $result);
+		self::assertSame([], $this->saved);
+		self::assertSame(['j.jansen' => true, 'boss' => true, 'hr-demo' => true], $this->enabled);
+	}//end testEveryRefusalKeepsItsStatusAndMessage()
+
+	/**
+	 * An account disabled elsewhere on a case not yet stamped is stamped, not skipped.
+	 *
+	 * @return void
+	 */
+	public function testAnAccountDisabledElsewhereIsStillStamped(): void {
+		$this->enabled['j.jansen'] = false;
+		$result = $this->service()->revoke(offboardingId: 'case-1', actorUid: 'hr-demo', now: self::NOW);
+
+		self::assertSame(200, $result['status']);
+		self::assertNull($result['message']);
+		self::assertCount(1, $this->saved);
+		self::assertTrue($result['offboarding']['toegangIngetrokken']);
+	}//end testAnAccountDisabledElsewhereIsStillStamped()
+
+	/**
 	 * The daily run revokes open cases whose last working day has passed, and
 	 * leaves the rest.
 	 *

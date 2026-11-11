@@ -86,6 +86,22 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 	private const LIMIT = 10000;
 
 	/**
+	 * The refusal when the humaniq register is not on this instance.
+	 *
+	 * @var string
+	 */
+	private const REGISTER_ABSENT = 'Het humaniq-register is niet gevonden op deze instance, dus het verlofsaldo kan niet worden '
+		. 'gecontroleerd; goedkeuring is geweigerd. Voer de humaniq-reparatiestap uit of stel het '
+		. 'register in bij de humaniq-instellingen.';
+
+	/**
+	 * The refusal when no balance matches the transaction.
+	 *
+	 * @var string
+	 */
+	private const BALANCE_NOT_FOUND = 'Er is geen verlofsaldo gevonden voor deze medewerker/jaar/verloftype; goedkeuring is geweigerd.';
+
+	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppConfig $appConfig App config for the register slug.
 	 */
@@ -125,6 +141,17 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 			return GuardResult::allow();
 		}
 
+		return $this->sellDecision($object);
+	}//end check()
+
+	/**
+	 * The decision on a sell: denied without a register or a balance, else on the bovenwettelijk hours.
+	 *
+	 * @param array<string, mixed> $object The LeaveTransaction.
+	 *
+	 * @return GuardResult
+	 */
+	private function sellDecision(array $object): GuardResult {
 		// An absent register is not "there is no balance". It is this instance
 		// being unable to say where balances live, and a sell is denied rather
 		// than approved on a guess — fail-CLOSED, like every other branch here,
@@ -133,20 +160,27 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 		// hunting a row that exists.
 		$register = $this->registerSlug();
 		if ($register === null) {
-			return GuardResult::deny(
-				'Het humaniq-register is niet gevonden op deze instance, dus het verlofsaldo kan niet worden '
-				. 'gecontroleerd; goedkeuring is geweigerd. Voer de humaniq-reparatiestap uit of stel het '
-				. 'register in bij de humaniq-instellingen.'
-			);
+			return GuardResult::deny(self::REGISTER_ABSENT);
 		}
 
 		$balance = $this->resolveBalance($object, $register);
 		if ($balance === null) {
-			return GuardResult::deny(
-				'Er is geen verlofsaldo gevonden voor deze medewerker/jaar/verloftype; goedkeuring is geweigerd.'
-			);
+			return GuardResult::deny(self::BALANCE_NOT_FOUND);
 		}
 
+		return self::sufficientHours($object, $balance);
+
+	}//end sellDecision()
+
+	/**
+	 * Allow the sell when the balance holds at least the hours sold, else deny naming both.
+	 *
+	 * @param array<string, mixed> $object  The LeaveTransaction.
+	 * @param array<string, mixed> $balance The matching LeaveBalance.
+	 *
+	 * @return GuardResult
+	 */
+	private static function sufficientHours(array $object, array $balance): GuardResult {
 		$hours = (float)($object['hours'] ?? 0);
 		$bovenwettelijkHours = (float)($balance['bovenwettelijkHours'] ?? 0);
 		if ($bovenwettelijkHours < $hours) {
@@ -158,7 +192,8 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 		}
 
 		return GuardResult::allow();
-	}//end check()
+
+	}//end sufficientHours()
 
 	/**
 	 * Resolve the LeaveBalance matching this transaction's
@@ -172,32 +207,66 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 	 * @return array<string, mixed>|null
 	 */
 	private function resolveBalance(array $object, string $register): ?array {
-		$employeeId = (string)($object['employeeId'] ?? '');
-		$year = (int)($object['year'] ?? 0);
-		$leaveType = (string)($object['leaveType'] ?? '');
-
-		if ($employeeId === '' || $year <= 0 || $leaveType === '') {
+		if (self::hasBalanceKey($object) === false) {
 			return null;
 		}
 
-		try {
-			$rows = $this->objectService()->setRegister($register)->setSchema('LeaveBalance')->findAll(['limit' => self::LIMIT]);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
+		foreach ($this->loadBalances($register) as $row) {
 			$balance = $this->toArray($row);
-			if ((string)($balance['employeeId'] ?? '') === $employeeId
-				&& (int)($balance['year'] ?? 0) === $year
-				&& (string)($balance['leaveType'] ?? '') === $leaveType
-			) {
+			if (self::sameBalanceKey($balance, $object) === true) {
 				return $balance;
 			}
 		}
 
 		return null;
 	}//end resolveBalance()
+
+	/**
+	 * Whether the transaction names an employee, a positive year and a leave type.
+	 *
+	 * @param array<string, mixed> $object The LeaveTransaction.
+	 *
+	 * @return bool
+	 */
+	private static function hasBalanceKey(array $object): bool {
+		return (string)($object['employeeId'] ?? '') !== ''
+			&& (int)($object['year'] ?? 0) > 0
+			&& (string)($object['leaveType'] ?? '') !== '';
+
+	}//end hasBalanceKey()
+
+	/**
+	 * Whether a balance row carries the transaction's employee, year and leave type.
+	 *
+	 * @param array<string, mixed> $balance The LeaveBalance row.
+	 * @param array<string, mixed> $object  The LeaveTransaction.
+	 *
+	 * @return bool
+	 */
+	private static function sameBalanceKey(array $balance, array $object): bool {
+		return (string)($balance['employeeId'] ?? '') === (string)($object['employeeId'] ?? '')
+			&& (int)($balance['year'] ?? 0) === (int)($object['year'] ?? 0)
+			&& (string)($balance['leaveType'] ?? '') === (string)($object['leaveType'] ?? '');
+
+	}//end sameBalanceKey()
+
+	/**
+	 * Every LeaveBalance row of the register, or none when the read fails.
+	 *
+	 * @param string $register The register slug.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function loadBalances(string $register): array {
+		try {
+			$rows = $this->objectService()->setRegister($register)->setSchema('LeaveBalance')->findAll(['limit' => self::LIMIT]);
+		} catch (\Throwable $e) {
+			return [];
+		}
+
+		return (is_array($rows) === true ? $rows : []);
+
+	}//end loadBalances()
 
 	/**
 	 * The slug this instance's humaniq register answers to, or null when absent.

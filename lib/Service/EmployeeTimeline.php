@@ -66,13 +66,13 @@ class EmployeeTimeline {
 		$placed = [];
 		$excluded = 0;
 		foreach ($rows as $row) {
-			$start = $this->date($row['startDate'] ?? null);
+			$start = DateValues::parse($row['startDate'] ?? null);
 			if ($start === null) {
 				$excluded++;
 				continue;
 			}
 
-			$placed[] = ['start' => $start, 'end' => $this->date($row['endDate'] ?? null)];
+			$placed[] = ['start' => $start, 'end' => DateValues::parse($row['endDate'] ?? null)];
 		}
 
 		return ['placed' => $placed, 'excluded' => $excluded];
@@ -141,24 +141,4 @@ class EmployeeTimeline {
 		return ($moment >= $start && $moment <= $end);
 	}//end within()
 
-	/**
-	 * Parse a stored date value.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
-	 *
-	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
-	 */
-	private function date(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception) {
-			return null;
-		}
-	}//end date()
 }//end class

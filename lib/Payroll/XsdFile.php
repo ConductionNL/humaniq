@@ -61,4 +61,48 @@ final class XsdFile {
 
 		return $doc->schemaValidateSource($source);
 	}//end validates()
+
+	/**
+	 * The validation errors of a message against the XSD at the given path;
+	 * empty when it is valid. Each libxml error carries its line; a message
+	 * that is not valid without a libxml error is named as not valid XML.
+	 * The caller's libxml error mode is restored.
+	 *
+	 * @param string $xml The message.
+	 * @param string $xsd The path of a shipped XSD.
+	 *
+	 * @return list<string>
+	 *
+	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-001
+	 */
+	public function errors(string $xml, string $xsd): array {
+		$previous = libxml_use_internal_errors(true);
+		libxml_clear_errors();
+		$doc = new DOMDocument();
+		$valid = ($xml !== '' && $doc->loadXML($xml) === true && $this->validates(doc: $doc, xsd: $xsd) === true);
+		$errors = self::bufferedErrors();
+		libxml_clear_errors();
+		libxml_use_internal_errors($previous);
+
+		if ($valid === false && $errors === []) {
+			$errors[] = 'Het bericht is geen geldige XML.';
+		}
+
+		return $errors;
+	}//end errors()
+
+	/**
+	 * The errors in libxml's buffer, each with its line.
+	 *
+	 * @return list<string>
+	 */
+	private static function bufferedErrors(): array {
+		$errors = [];
+		foreach (libxml_get_errors() as $error) {
+			$errors[] = trim($error->message) . ' (regel ' . $error->line . ')';
+		}
+
+		return $errors;
+	}//end bufferedErrors()
 }//end class

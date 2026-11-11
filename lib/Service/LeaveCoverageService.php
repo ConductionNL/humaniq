@@ -96,8 +96,8 @@ class LeaveCoverageService {
 		array $memberEmployeeIds,
 		array $otherRequests,
 	): array {
-		$start = $this->date(value: ($request['startDate'] ?? null));
-		$end = $this->date(value: ($request['endDate'] ?? null));
+		$start = DateValues::datePart(value: ($request['startDate'] ?? null));
+		$end = DateValues::datePart(value: ($request['endDate'] ?? null));
 		if ($start === null || $end === null || $start > $end) {
 			return $this->noWarning();
 		}
@@ -290,24 +290,4 @@ class LeaveCoverageService {
 		];
 	}//end noWarning()
 
-	/**
-	 * Narrow a raw value to a date.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return DateTimeImmutable|null The date, or null when unusable.
-	 *
-	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
-	 */
-	private function date(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable(substr(trim($value), 0, 10));
-		} catch (\Throwable $e) {
-			return null;
-		}
-	}//end date()
 }//end class

@@ -137,6 +137,51 @@ class ExpenseExtractReceiptCommandTest extends TestCase {
 	}//end testExpenseOptionNarrowsBacklogCall()
 
 	/**
+	 * Every outcome is reported on its own line, failures as errors, followed by the totals.
+	 *
+	 * @return void
+	 */
+	public function testOutcomesReportedWithTotals(): void {
+		$service = $this->createMock(ReceiptExtractionService::class);
+		$service->method('backlog')->willReturn([
+			['expenseId' => 'exp-1', 'status' => 'extracted', 'message' => 'ok', 'receiptExtractionId' => 're-1'],
+			['expenseId' => 'exp-2', 'status' => 'failed', 'message' => 'kapot', 'receiptExtractionId' => 're-2'],
+		]);
+
+		$command = new ExpenseExtractReceiptCommand($service, $this->succeedingSessionResolver());
+		$output  = new BufferedOutput();
+		$exit    = $command->run(new ArrayInput(['--as-user' => 'admin', '--expense' => '  '], $command->getDefinition()), $output);
+
+		$this->assertSame(1, $exit);
+		$this->assertSame(
+			"Humaniq receipt-extractie\n"
+			."  expense exp-1: extracted — ok\n"
+			."  expense exp-2: failed — kapot\n"
+			."  2 poging(en) verwerkt, 1 mislukt.\n",
+			$output->fetch()
+		);
+
+	}//end testOutcomesReportedWithTotals()
+
+	/**
+	 * An empty backlog is reported and exits 0.
+	 *
+	 * @return void
+	 */
+	public function testEmptyBacklogReportedAndExitsZero(): void {
+		$service = $this->createMock(ReceiptExtractionService::class);
+		$service->expects($this->once())->method('backlog')->with(null, 'admin')->willReturn([]);
+
+		$command = new ExpenseExtractReceiptCommand($service, $this->succeedingSessionResolver());
+		$output  = new BufferedOutput();
+		$exit    = $command->run(new ArrayInput(['--as-user' => 'admin'], $command->getDefinition()), $output);
+
+		$this->assertSame(0, $exit);
+		$this->assertSame("Humaniq receipt-extractie\n  geen declaraties geselecteerd voor de backlog.\n", $output->fetch());
+
+	}//end testEmptyBacklogReportedAndExitsZero()
+
+	/**
 	 * A REAL PrivilegedSessionResolver whose establish() always fails
 	 * (unknown/non-admin uid) -- `IGroupManager::isAdmin()` returns false.
 	 *

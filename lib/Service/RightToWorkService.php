@@ -122,6 +122,18 @@ class RightToWorkService {
 	 * @return array<string, mixed> The answer.
 	 */
 	private function apply(array $facts, DateTimeImmutable $start): array {
+		return ($this->documentRefusal(facts: $facts, start: $start) ?? $this->permission(facts: $facts, start: $start));
+	}//end apply()
+
+	/**
+	 * The failure when no usable document was recorded or it expires before the start, else null.
+	 *
+	 * @param array<string, string> $facts The document facts.
+	 * @param DateTimeImmutable $start The first working day.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function documentRefusal(array $facts, DateTimeImmutable $start): array|null {
 		$expiry = $this->date(value: $facts['documentExpiry']);
 		if ($facts['documentType'] === '' || $facts['documentType'] === 'geen' || $expiry === null) {
 			return $this->answer(facts: $facts, result: self::RESULT_FAIL, code: 'geen-document', reason: 'No identity document with an expiry date was recorded.');
@@ -136,6 +148,18 @@ class RightToWorkService {
 			);
 		}
 
+		return null;
+	}//end documentRefusal()
+
+	/**
+	 * Whether a holder of a valid document may work: an EEA national, a document that allows work, or a work permit covering the start.
+	 *
+	 * @param array<string, string> $facts The document facts.
+	 * @param DateTimeImmutable $start The first working day.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function permission(array $facts, DateTimeImmutable $start): array {
 		if (in_array($facts['nationality'], $this->eeaTable()['codes'], true) === true) {
 			return $this->answer(facts: $facts, result: self::RESULT_PASS, code: 'eer-onderdaan', reason: 'EU, EEA or Swiss national with a valid document.');
 		}
@@ -155,7 +179,7 @@ class RightToWorkService {
 			code: 'geen-arbeidstoestemming',
 			reason: 'No permission to work: the residence document does not allow work and there is no work permit covering the start date.'
 		);
-	}//end apply()
+	}//end permission()
 
 	/**
 	 * Whether the endorsement allows work without a work permit.

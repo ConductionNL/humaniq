@@ -68,15 +68,6 @@ use Throwable;
 class InterviewCalendarService {
 
 	/**
-	 * The duck-typed CalDAV backend's FQCN, resolved from the container by
-	 * string (design.md D1) — never a `use` import, so humaniq carries no
-	 * composer/info.xml dependency on the dav app.
-	 *
-	 * @var string
-	 */
-	private const CALDAV_BACKEND_CLASS = 'OCA\DAV\CalDAV\CalDavBackend';
-
-	/**
 	 * @var InterviewRepository
 	 */
 	private readonly InterviewRepository $repository;
@@ -230,35 +221,7 @@ class InterviewCalendarService {
 	 * @return mixed The resolved backend, or null when unavailable.
 	 */
 	private function resolveBackend(): mixed {
-		try {
-			$backend = $this->container->get(self::CALDAV_BACKEND_CLASS);
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if (is_object($backend) === false) {
-			return null;
-		}
-
-		$requiredMethods = [
-			'getCalendarByUri',
-			'getCalendarObjectByUID',
-			'createCalendarObject',
-			'updateCalendarObject',
-			'deleteCalendarObject',
-			'getCalendarObjects',
-		];
-		foreach ($requiredMethods as $method) {
-			if (method_exists($backend, $method) === false) {
-				// REQ-INTV-006: a resolution miss degrades to
-				// skipped-no-calendar and SHALL log nothing above INFO --
-				// this is an expected, healthy degradation path.
-				$this->logger->info('InterviewCalendarService: CalDavBackend mist methode ' . $method . '; kalendersync overgeslagen.');
-				return null;
-			}
-		}
-
-		return $backend;
+		return (new CalDavBackendResolver($this->container, $this->logger))->resolve('InterviewCalendarService');
 	}//end resolveBackend()
 
 	/**

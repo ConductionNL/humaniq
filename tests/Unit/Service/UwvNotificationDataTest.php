@@ -89,6 +89,25 @@ class UwvNotificationDataTest extends TestCase {
 	}//end testTheNotificationHoldsTheD3FieldsAndNothingElse()
 
 	/**
+	 * Without a contract or a progression the fields are still there, empty.
+	 *
+	 * @return void
+	 */
+	public function testNoContractAndNoProgression(): void {
+		$data = (new UwvNotificationData())->build(['firstSickDay' => '2026-01-05', 'absenceProgression' => 'n/a'], [], null, []);
+
+		self::assertSame(
+			[
+				'employer' => ['name' => null, 'loonheffingennummer' => null, 'kvkNumber' => null],
+				'employee' => ['name' => '', 'bsn' => null, 'dateOfBirth' => null],
+				'case' => ['firstSickDay' => '2026-01-05', 'currentAbsencePercentage' => null, 'resumption' => []],
+				'contract' => ['hoursPerWeek' => null, 'type' => null, 'endDate' => null],
+			],
+			$data
+		);
+	}//end testNoContractAndNoProgression()
+
+	/**
 	 * A recovered case, a done notification and a case without an employee
 	 * are refused.
 	 *

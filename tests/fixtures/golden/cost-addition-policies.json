@@ -1,0 +1,74 @@
+{
+    "ick-1-july": [
+        {
+            "key": "overhead",
+            "source": "manual",
+            "basis": "",
+            "percentageOfWage": 12.5
+        },
+        {
+            "key": "insurance",
+            "source": "manual",
+            "basis": "gross"
+        }
+    ],
+    "ick-1-august": [
+        {
+            "key": "overhead",
+            "source": "cao",
+            "basis": "",
+            "centsPerHour": 2500
+        },
+        {
+            "key": "insurance",
+            "source": "manual",
+            "basis": "gross"
+        }
+    ],
+    "none-2-august": [
+        {
+            "key": "overhead",
+            "source": "manual",
+            "basis": "",
+            "centsPerHour": 1500
+        },
+        {
+            "key": "insurance",
+            "source": "manual",
+            "basis": "gross"
+        },
+        {
+            "key": "leasing",
+            "source": "manual",
+            "basis": "",
+            "percentageOfWage": 4.0
+        }
+    ],
+    "other-2-june": [
+        {
+            "key": "overhead",
+            "source": "manual",
+            "basis": "",
+            "centsPerHour": 1500
+        },
+        {
+            "key": "insurance",
+            "source": "manual",
+            "basis": "gross"
+        }
+    ],
+    "no-date": [],
+    "no-contract": [
+        {
+            "key": "overhead",
+            "source": "manual",
+            "basis": "",
+            "centsPerHour": 1500
+        },
+        {
+            "key": "insurance",
+            "source": "manual",
+            "basis": "gross"
+        }
+    ]
+}

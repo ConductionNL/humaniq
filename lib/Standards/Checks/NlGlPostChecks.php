@@ -122,32 +122,32 @@ final class NlGlPostChecks implements CheckProvider {
 			return false;
 		}
 
-		$debitCents = 0;
-		$creditCents = 0;
+		$totalCents = ['debit' => 0, 'credit' => 0];
 		foreach ($lines as $line) {
-			if (is_array($line) === false
-				|| isset($line['side'], $line['amount']) === false
-				|| is_numeric($line['amount']) === false
-			) {
+			if (self::isWellFormedLine($line) === false) {
 				return false;
 			}
 
-			if ($line['side'] !== 'debit' && $line['side'] !== 'credit') {
-				return false;
-			}
-
-			$cents = (int)round(((float)$line['amount']) * 100);
-			if ($line['side'] === 'debit') {
-				$debitCents += $cents;
-			}
-
-			if ($line['side'] === 'credit') {
-				$creditCents += $cents;
-			}
+			$totalCents[$line['side']] += (int)round(((float)$line['amount']) * 100);
 		}
 
-		return $debitCents === $creditCents && $debitCents > 0;
+		return $totalCents['debit'] === $totalCents['credit'] && $totalCents['debit'] > 0;
 	}//end linesBalance()
+
+	/**
+	 * True when a `lines` entry is a row with a numeric amount on the debit or credit side.
+	 *
+	 * @param mixed $line One `lines` entry.
+	 *
+	 * @return bool
+	 */
+	private static function isWellFormedLine(mixed $line): bool {
+		return is_array($line) === true
+			&& isset($line['side'], $line['amount']) === true
+			&& is_numeric($line['amount']) === true
+			&& ($line['side'] === 'debit' || $line['side'] === 'credit');
+
+	}//end isWellFormedLine()
 
 	/**
 	 * True when an object field holds a non-empty value.

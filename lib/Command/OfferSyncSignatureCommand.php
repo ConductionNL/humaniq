@@ -85,10 +85,7 @@ class OfferSyncSignatureCommand extends Command {
 	 * @spec openspec/specs/offer-esign/spec.md#REQ-OFFR-006
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$applicationOption = $input->getOption('application');
-		$applicationId = (is_string($applicationOption) === true && trim($applicationOption) !== '') ? trim($applicationOption) : null;
-
-		$results = $this->service->syncSignatureStatus($applicationId);
+		$results = $this->service->syncSignatureStatus(CommandOptions::trimmed($input, 'application'));
 
 		$output->writeln('<info>Humaniq offer-signature sync</info>');
 
@@ -97,28 +94,27 @@ class OfferSyncSignatureCommand extends Command {
 			return 0;
 		}
 
-		$failed = 0;
-		foreach ($results as $result) {
-			$status = (string)$result['status'];
-			$line = sprintf(
-				'  application %s: %s — %s',
-				(string)$result['applicationId'],
-				$status,
-				(string)$result['message']
-			);
-
-			if (in_array($status, self::FAILURE_STATUSES, true) === true) {
-				$failed++;
-				$output->writeln('<error>' . $line . '</error>');
-				continue;
-			}
-
-			$output->writeln($line);
-		}
-
-		$output->writeln(sprintf('  %d sollicitatie(s) verwerkt, %d mislukt.', count($results), $failed));
-
-		return $failed > 0 ? 1 : 0;
+		return (new OutcomeReport($output, '  %d sollicitatie(s) verwerkt, %d mislukt.'))
+			->failingOn(self::FAILURE_STATUSES)
+			->exitCode($results, self::describeOutcome(...));
 	}//end execute()
+
+	/**
+	 * The report line for one application's outcome.
+	 *
+	 * @param array<string, mixed> $result The outcome.
+	 * @param string               $status The outcome's status.
+	 *
+	 * @return string
+	 */
+	private static function describeOutcome(array $result, string $status): string {
+		return sprintf(
+			'  application %s: %s — %s',
+			(string)$result['applicationId'],
+			$status,
+			(string)$result['message']
+		);
+
+	}//end describeOutcome()
 
 }//end class

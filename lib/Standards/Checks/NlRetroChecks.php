@@ -43,13 +43,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Standards\Checks;
 
-use OCA\Humaniq\Payroll\CalculationInput;
-use OCA\Humaniq\Payroll\CalculationLevies;
-use OCA\Humaniq\Payroll\CalculationWage;
-use OCA\Humaniq\Payroll\InsuranceTariffs;
-use OCA\Humaniq\Payroll\WageTaxElection;
-use OCA\Humaniq\Payroll\PayrollCalculator;
-use OCA\Humaniq\Payroll\TaxTables;
 
 /**
  * The retro-adjustment delta's self-check: recompute, then compare.
@@ -123,95 +116,43 @@ final class NlRetroChecks implements CheckProvider {
 			return true;
 		}
 
-		$originalPeriod = trim((string)($o['originalPeriod'] ?? ''));
-		$employeeId = trim((string)($o['employeeId'] ?? ''));
-		$payslipId = trim((string)($o['originalPayslipId'] ?? ''));
-		$correctedGross = ($o['correctedGrossMonthlySalary'] ?? null);
-
-		if ($originalPeriod === '' || $employeeId === '' || $payslipId === '' || is_numeric($correctedGross) === false) {
+		$recompute = new RetroRecompute($o, $context);
+		if ($recompute->lacksInput() === true) {
 			// engineVersion is present but the data it depends on is not --
 			// an inconsistent/tampered record, not vacuous.
 			return false;
 		}
 
-		$stored = ($context['retro']['payslipsById'][$payslipId] ?? null);
-		if (is_array($stored) === false) {
-			// Unresolvable original payslip -- cannot verify, never a false
-			// violation (the `nl-engine-output-consistency` precedent).
+		if ($recompute->isVerifiable() === false) {
+			// Unresolvable original payslip or employee -- cannot verify, never
+			// a false violation (the `nl-engine-output-consistency` precedent).
 			return true;
 		}
 
-		$employee = ($context['retro']['employeesById'][$employeeId] ?? null);
-		if (is_array($employee) === false) {
-			return true;
-		}
+		// Null when the recorded engineVersion no longer resolves to a real
+		// table file -- stale/tampered, not vacuous.
+		$expectedCents = $recompute->expectedDeltaCents($engineVersion);
+		return $expectedCents !== null && self::deltasMatch($o, $expectedCents);
+	}//end isDeltaConsistent()
 
-		try {
-			$tables = TaxTables::load($engineVersion);
-		} catch (\Throwable $e) {
-			// The recorded engineVersion no longer resolves to a real table
-			// file -- stale/tampered, not vacuous.
-			return false;
-		}
-
-		$contract = ($context['retro']['contractsByEmployeeId'][$employeeId] ?? null);
-		$aofTariff = (string)($context['retro']['aofTariff'] ?? 'laag');
-		$whkOverride = ($context['retro']['whkPercentageOverride'] ?? null);
-		$whkPercentage = is_numeric($whkOverride) === true ? (float)$whkOverride : (float)($tables->werknemersverzekeringen()['whkDefault'] ?? 0.0);
-
-		$input = new CalculationInput(
-			wage: new CalculationWage(grossMonthlySalaryCents: (int)round(((float)$correctedGross) * 100), dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null), period: $originalPeriod),
-			levies: new CalculationLevies(
-				wageTax: new WageTaxElection(taxTableColor: ((string)($employee['taxTableColor'] ?? '') !== '' ? (string)$employee['taxTableColor'] : 'wit'), loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true)),
-				insurance: new InsuranceTariffs(awfTariff: self::awfTariffFor($contract), aofTariff: $aofTariff, whkPercentage: $whkPercentage)
-			)
-		);
-
-		$result = (new PayrollCalculator())->calculate($input, $tables);
-
-		$recomputedCents = [
-			'grossPay' => $result->grossPayCents,
-			'loonheffing' => $result->loonheffingCents,
-			'nettoPay' => $result->nettoPayCents,
-			'werknemersverzekeringen' => $result->werknemersverzekeringenCents,
-			'zvw' => $result->zvwCents,
-			'volksverzekeringen' => $result->volksverzekeringenCents,
-			'vakantiegeldReserved' => $result->vakantiegeldReservedCents,
-		];
-
+	/**
+	 * Whether every delta field is numeric and equals the expected cents of its component.
+	 *
+	 * @param array<string, mixed> $o             The PayrollAdjustment object.
+	 * @param array<string, int>   $expectedCents Per component: recomputed minus stored cents.
+	 *
+	 * @return bool
+	 */
+	private static function deltasMatch(array $o, array $expectedCents): bool {
 		foreach (self::DELTA_FIELDS as $deltaField => $component) {
-			$expectedCents = ($recomputedCents[$component] - self::centsOf($stored, $component));
-			if (self::numeric($o, $deltaField) === false || self::centsOf($o, $deltaField) !== $expectedCents) {
+			if (self::numeric($o, $deltaField) === false || RetroRecompute::cents($o, $deltaField) !== $expectedCents[$component]) {
 				return false;
 			}
 		}
 
 		return true;
-	}//end isDeltaConsistent()
 
-	/**
-	 * The contract's Awf tariff (`low`/`high`), the PayrollRunService
-	 * Wab-derived fallback precedent -- defaults to `high` when no contract
-	 * resolves.
-	 *
-	 * @param array<string, mixed>|null $contract The employee's contract row, or null.
-	 *
-	 * @return string
-	 */
-	private static function awfTariffFor(?array $contract): string {
-		if ($contract === null) {
-			return 'high';
-		}
-
-		$tariff = trim((string)($contract['awfTariff'] ?? ''));
-		if (in_array($tariff, ['low', 'high'], true) === true) {
-			return $tariff;
-		}
-
-		$permanent = ((string)($contract['type'] ?? '') === 'permanent');
-		$written = (($contract['writtenContract'] ?? false) === true);
-		return ($permanent === true && $written === true) ? 'low' : 'high';
-	}//end awfTariffFor()
+	}//end deltasMatch()
 
 	/**
 	 * True when an object field holds a present, numeric value.
@@ -224,19 +165,5 @@ final class NlRetroChecks implements CheckProvider {
 	private static function numeric(array $o, string $key): bool {
 		return isset($o[$key]) === true && $o[$key] !== '' && is_numeric($o[$key]) === true;
 	}//end numeric()
-
-	/**
-	 * A field's value converted to integer cents (round-half-away-from-zero),
-	 * defensively 0 for a missing/non-numeric value.
-	 *
-	 * @param array<string, mixed> $o Object.
-	 * @param string $key Field.
-	 *
-	 * @return int
-	 */
-	private static function centsOf(array $o, string $key): int {
-		$value = ($o[$key] ?? null);
-		return is_numeric($value) === true ? (int)round(((float)$value) * 100) : 0;
-	}//end centsOf()
 
 }//end class

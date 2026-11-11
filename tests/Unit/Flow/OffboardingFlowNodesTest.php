@@ -27,8 +27,10 @@ use OCA\Humaniq\Flow\HumaniqFlowNodeListener;
 use OCA\Humaniq\Flow\RevokeAccessNode;
 use OCA\Humaniq\Service\AccessRevocationService;
 use OCA\Humaniq\Service\ExitInterviewService;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCP\IL10N;
 use OCP\IURLGenerator;
+use OCP\WorkflowEngine\IManager;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -57,7 +59,7 @@ class OffboardingFlowNodesTest extends TestCase {
 		$service->expects(self::once())->method('revokeDue')->with('2026-09-29', '2026-09-29T00:00:00+00:00')->willReturn(['case-1']);
 		$node = new RevokeAccessNode($this->l10n(), $this->createMock(IURLGenerator::class), $service, '2026-09-29');
 
-		$out = $node->execute([], [], []);
+		$out = $node->execute(new FlowNodeCall(items: [], config: [], context: []));
 
 		self::assertSame('humaniq.revoke-access', $node->getId());
 		self::assertSame(['ids' => ['case-1'], 'count' => 1], $out[0]['json']['revoked']);
@@ -73,11 +75,68 @@ class OffboardingFlowNodesTest extends TestCase {
 		$service->expects(self::once())->method('anonymiseDue')->with('2026-09-29', '2026-09-29T00:00:00+00:00', 90)->willReturn([]);
 		$node = new AnonymiseExitInterviewsNode($this->l10n(), $this->createMock(IURLGenerator::class), $service, '2026-09-29');
 
-		$out = $node->execute([], ['afterDays' => 90], []);
+		$out = $node->execute(new FlowNodeCall(items: [], config: ['afterDays' => 90], context: []));
 
 		self::assertSame('humaniq.anonymise-exit-interviews', $node->getId());
 		self::assertSame(0, $out[0]['json']['anonymised']['count']);
 	}//end testTheAnonymiseStepPassesTheDays()
+
+	/**
+	 * Each incoming item keeps its record and gains the outcome; an object
+	 * item is read as an array. Both steps are admin-only, validate nothing
+	 * and show the app icon.
+	 *
+	 * @return void
+	 */
+	public function testEveryItemCarriesTheOutcomeAndTheStepsAreAdminOnly(): void {
+		$service = $this->createMock(AccessRevocationService::class);
+		$service->expects(self::once())->method('revokeDue')->willReturn(['case-1', 'case-2']);
+		$urls = $this->createMock(IURLGenerator::class);
+		$urls->method('imagePath')->with('humaniq', 'app-dark.svg')->willReturn('/icon.svg');
+		$revoke = new RevokeAccessNode($this->l10n(), $urls, $service, '2026-09-29');
+		$anonymise = new AnonymiseExitInterviewsNode($this->l10n(), $urls, $this->createMock(ExitInterviewService::class), '2026-09-29');
+
+		$out = $revoke->execute(new FlowNodeCall(items: [['json' => ['keep' => 1], 'binary' => 'b'], (object)['json' => ['other' => 2]]], config: [], context: []));
+
+		self::assertSame(
+			[
+				['json' => ['keep' => 1, 'revoked' => ['ids' => ['case-1', 'case-2'], 'count' => 2]], 'binary' => 'b'],
+				['json' => ['other' => 2, 'revoked' => ['ids' => ['case-1', 'case-2'], 'count' => 2]]],
+			],
+			$out
+		);
+		foreach ([$revoke, $anonymise] as $node) {
+			self::assertTrue($node->isAvailableForScope(IManager::SCOPE_ADMIN));
+			self::assertFalse($node->isAvailableForScope(IManager::SCOPE_USER));
+			$node->validateConfig(['anything' => true]);
+			self::assertSame('/icon.svg', $node->getIcon());
+		}
+	}//end testEveryItemCarriesTheOutcomeAndTheStepsAreAdminOnly()
+
+	/**
+	 * Without a pinned day the step runs on today, stamped with the current time.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAPinnedDayTheStepRunsNow(): void {
+		$service = $this->createMock(ExitInterviewService::class);
+		$seen = [];
+		$service->expects(self::once())->method('anonymiseDue')->willReturnCallback(
+			static function (string $today, string $now, int $afterDays) use (&$seen): array {
+				$seen = [$today, $now, $afterDays];
+				return ['x'];
+			}
+		);
+		$node = new AnonymiseExitInterviewsNode($this->l10n(), $this->createMock(IURLGenerator::class), $service);
+
+		$out = $node->execute(new FlowNodeCall(items: [], config: [], context: []));
+
+		self::assertSame([['json' => ['anonymised' => ['ids' => ['x'], 'count' => 1]]]], $out);
+		self::assertMatchesRegularExpression('/^\\d{4}-\\d{2}-\\d{2}$/', $seen[0]);
+		self::assertStringStartsWith(substr($seen[0], 0, 10), $seen[1]);
+		self::assertNotFalse(\DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $seen[1]));
+		self::assertSame(90, $seen[2]);
+	}//end testWithoutAPinnedDayTheStepRunsNow()
 
 	/**
 	 * Both steps are registered with OpenRegister's flow engine.
