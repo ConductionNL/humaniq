@@ -196,27 +196,41 @@ class TimeEntryEventService {
 			$time = $this->now();
 		}
 
-		return (new CloudEventEnvelope())->build(
-			type: self::EVENT_TYPE,
-			source: self::EVENT_SOURCE,
-			eventId: $uuid,
-			time: $time,
-			data: [
-				'timesheetId' => $uuid,
-				'employeeId' => (string)($timeEntry['employeeId'] ?? ''),
-				'period' => (string)($timeEntry['period'] ?? ''),
-				'hours' => (float)($timeEntry['hours'] ?? 0),
-				'billable' => (bool)($timeEntry['billable'] ?? false),
-				'projectId' => (string)($timeEntry['projectId'] ?? ''),
-				'costCenter' => (string)($timeEntry['costCenter'] ?? ''),
-				'clientRef' => (string)($timeEntry['clientRef'] ?? ''),
-				'description' => (string)($timeEntry['description'] ?? ''),
-				'approvedBy' => (string)($timeEntry['approvedBy'] ?? ''),
-				'approvedAt' => $approvedAt,
-			]
-		);
+		$header = new CloudEventHeader();
+		$header->type = self::EVENT_TYPE;
+		$header->source = self::EVENT_SOURCE;
+		$header->eventId = $uuid;
+		$header->time = $time;
+
+		return (new CloudEventEnvelope())->build(header: $header, data: self::approvedData(timeEntry: $timeEntry, approvedAt: $approvedAt));
 
 	}//end buildApprovedEvent()
+
+	/**
+	 * The approved event's data: the timesheet's figures and references.
+	 *
+	 * @param array<string, mixed> $timeEntry  The approved timesheet.
+	 * @param string               $approvedAt When it was approved, or ''.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function approvedData(array $timeEntry, string $approvedAt): array {
+		$uuid = (string)($timeEntry['id'] ?? $timeEntry['uuid'] ?? '');
+
+		return [
+			'timesheetId' => $uuid,
+			'employeeId' => (string)($timeEntry['employeeId'] ?? ''),
+			'period' => (string)($timeEntry['period'] ?? ''),
+			'hours' => (float)($timeEntry['hours'] ?? 0),
+			'billable' => (bool)($timeEntry['billable'] ?? false),
+			'projectId' => (string)($timeEntry['projectId'] ?? ''),
+			'costCenter' => (string)($timeEntry['costCenter'] ?? ''),
+			'clientRef' => (string)($timeEntry['clientRef'] ?? ''),
+			'description' => (string)($timeEntry['description'] ?? ''),
+			'approvedBy' => (string)($timeEntry['approvedBy'] ?? ''),
+			'approvedAt' => $approvedAt,
+		];
+	}//end approvedData()
 
 	/**
 	 * Build the typed {@see TimesheetApprovedEvent} for an approved timesheet.
