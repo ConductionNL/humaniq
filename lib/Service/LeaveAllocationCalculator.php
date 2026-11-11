@@ -190,20 +190,11 @@ class LeaveAllocationCalculator {
 	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-001
 	 */
 	public function usesFrom(array $requests, array $balances, string $employeeId, string $leaveType, ?array $workingTime = null): array {
-		$contractHours = [];
-		foreach ($balances as $balance) {
-			if (($balance['contractHoursPerWeek'] ?? null) !== null) {
-				$contractHours[(int)($balance['year'] ?? 0)] = (float)$balance['contractHoursPerWeek'];
-			}
-		}
-
+		$contractHours = self::contractHoursByYear(balances: $balances);
 		$uses = [];
 		$underivable = [];
 		foreach ($requests as $request) {
-			if ((string)($request['status'] ?? '') !== 'approved'
-				|| (string)($request['employeeId'] ?? '') !== $employeeId
-				|| (string)($request['leaveType'] ?? '') !== $leaveType
-			) {
+			if (self::isApprovedRequestOf(request: $request, balance: ['employeeId' => $employeeId, 'leaveType' => $leaveType]) === false) {
 				continue;
 			}
 
@@ -219,6 +210,38 @@ class LeaveAllocationCalculator {
 
 		return ['uses' => $uses, 'underivable' => array_values(array_unique($underivable))];
 	}//end usesFrom()
+
+	/**
+	 * The contract hours per week of each balance year that records them.
+	 *
+	 * @param array<int, array<string, mixed>> $balances The employee's balances of this type.
+	 *
+	 * @return array<int, float>
+	 */
+	private static function contractHoursByYear(array $balances): array {
+		$contractHours = [];
+		foreach ($balances as $balance) {
+			if (($balance['contractHoursPerWeek'] ?? null) !== null) {
+				$contractHours[(int)($balance['year'] ?? 0)] = (float)$balance['contractHoursPerWeek'];
+			}
+		}
+
+		return $contractHours;
+	}//end contractHoursByYear()
+
+	/**
+	 * Whether a request is an approved one of the balance's employee and type.
+	 *
+	 * @param array<string, mixed>                          $request The LeaveRequest.
+	 * @param array{employeeId: string, leaveType: string} $balance The employee and leave type.
+	 *
+	 * @return bool
+	 */
+	private static function isApprovedRequestOf(array $request, array $balance): bool {
+		return (string)($request['status'] ?? '') === 'approved'
+			&& (string)($request['employeeId'] ?? '') === $balance['employeeId']
+			&& (string)($request['leaveType'] ?? '') === $balance['leaveType'];
+	}//end isApprovedRequestOf()
 
 	/**
 	 * The uses of one request, one per year it touches; null for a year whose hours cannot be derived.
@@ -264,27 +287,11 @@ class LeaveAllocationCalculator {
 	 */
 	private function bucketsOf(array $balance, string $id, ?array $leaveType): array {
 		$year = (int)($balance['year'] ?? 0);
-		$waived = (($balance['expiryWaived'] ?? false) === true);
-		$expiry = trim((string)($balance['expiryDate'] ?? ''));
-		$bucket = ['balance' => $id, 'year' => $year, 'used' => 0.0, 'waived' => $waived];
-
-		$out = [
-			$bucket + [
-				'statutory' => true,
-				'hours' => (float)($balance['entitledHours'] ?? 0),
-				'lapses' => ($expiry !== '' ? substr($expiry, 0, 10) : ($year + 1) . '-07-01'),
-			],
-		];
+		$bucket = ['balance' => $id, 'year' => $year, 'used' => 0.0, 'waived' => (($balance['expiryWaived'] ?? false) === true)];
+		$out = [$bucket + self::statutoryHours(balance: $balance)];
 
 		$bovenwettelijk = (float)($balance['bovenwettelijkHours'] ?? 0);
-		$rule = (string)($leaveType['carryOverRule'] ?? 'all');
-		$carried = $bovenwettelijk;
-		if ($rule === 'none') {
-			$carried = 0.0;
-		} else if ($rule === 'capped') {
-			$carried = min($bovenwettelijk, max(0.0, (float)($leaveType['carryOverCapHours'] ?? 0)));
-		}
-
+		$carried = self::carriedHours(bovenwettelijk: $bovenwettelijk, leaveType: $leaveType);
 		if ($bovenwettelijk - $carried > 0.0) {
 			$out[] = $bucket + ['statutory' => false, 'hours' => $bovenwettelijk - $carried, 'lapses' => $year . '-12-31'];
 		}
@@ -299,6 +306,41 @@ class LeaveAllocationCalculator {
 
 		return $out;
 	}//end bucketsOf()
+
+	/**
+	 * The statutory hours of a balance and when they lapse: the stored
+	 * expiry date, else 1 July of the next year.
+	 *
+	 * @param array<string, mixed> $balance The balance.
+	 *
+	 * @return array{statutory: bool, hours: float, lapses: string}
+	 */
+	private static function statutoryHours(array $balance): array {
+		$expiry = trim((string)($balance['expiryDate'] ?? ''));
+
+		return [
+			'statutory' => true,
+			'hours' => (float)($balance['entitledHours'] ?? 0),
+			'lapses' => ($expiry !== '' ? substr($expiry, 0, 10) : ((int)($balance['year'] ?? 0) + 1) . '-07-01'),
+		];
+	}//end statutoryHours()
+
+	/**
+	 * The bovenwettelijk hours the leave type carries over: none, up to its
+	 * cap, or all.
+	 *
+	 * @param float                     $bovenwettelijk The balance's bovenwettelijk hours.
+	 * @param array<string, mixed>|null $leaveType      The leave type.
+	 *
+	 * @return float
+	 */
+	private static function carriedHours(float $bovenwettelijk, ?array $leaveType): float {
+		return match ((string)($leaveType['carryOverRule'] ?? 'all')) {
+			'none' => 0.0,
+			'capped' => min($bovenwettelijk, max(0.0, (float)($leaveType['carryOverCapHours'] ?? 0))),
+			default => $bovenwettelijk,
+		};
+	}//end carriedHours()
 
 	/**
 	 * When the carried bovenwettelijk hours of a balance lapse: the stored
