@@ -436,51 +436,82 @@ final class ExprEvaluator {
 		$length = strlen($expression);
 
 		while ($index < $length) {
-			$char = $expression[$index];
-
-			if (trim($char) === '') {
-				$index++;
-				continue;
+			$token = $this->nextToken($expression, $index);
+			if ($token !== null) {
+				$tokens[] = $token;
 			}
-
-			if (str_contains('+-*/(),', $char) === true) {
-				$tokens[] = [
-					't' => 'op',
-					'v' => $char,
-				];
-				$index++;
-				continue;
-			}
-
-			if ($char === '@') {
-				$tokens[] = [
-					't' => 'ref',
-					'v' => $this->readRef($expression, $index),
-				];
-				continue;
-			}
-
-			if (ctype_digit($char) === true) {
-				$tokens[] = [
-					't' => 'num',
-					'v' => $this->readNumber($expression, $index),
-				];
-				continue;
-			}
-
-			if (ctype_alpha($char) === true) {
-				$tokens[] = [
-					't' => 'ident',
-					'v' => $this->readIdent($expression, $index),
-				];
-				continue;
-			}
-
-			throw new DslException('Pack: onverwacht teken "' . $char . '" in expressie "' . $expression . '".');
-		}//end while
+		}
 
 		return $tokens;
 	}//end tokenize()
+
+	/**
+	 * The token starting at the index, which it advances past; null for whitespace.
+	 *
+	 * @param string $expression The source.
+	 * @param int    $index      The read position (advanced past the token).
+	 *
+	 * @return array{t: string, v: mixed}|null
+	 *
+	 * @throws DslException On an unexpected character.
+	 */
+	private function nextToken(string $expression, int &$index): ?array {
+		$char = $expression[$index];
+
+		if (trim($char) === '') {
+			$index++;
+			return null;
+		}
+
+		if (str_contains('+-*/(),', $char) === true) {
+			$index++;
+			return [
+				't' => 'op',
+				'v' => $char,
+			];
+		}
+
+		return $this->readValueToken($expression, $index);
+
+	}//end nextToken()
+
+	/**
+	 * A ref, number or identifier token starting at the index, which it advances past.
+	 *
+	 * @param string $expression The source.
+	 * @param int    $index      The read position (advanced past the token).
+	 *
+	 * @return array{t: string, v: mixed}
+	 *
+	 * @throws DslException On an unexpected character.
+	 */
+	private function readValueToken(string $expression, int &$index): array {
+		$char = $expression[$index];
+
+		if ($char === '@') {
+			return [
+				't' => 'ref',
+				'v' => $this->readRef($expression, $index),
+			];
+		}
+
+		if (ctype_digit($char) === true) {
+			return [
+				't' => 'num',
+				'v' => $this->readNumber($expression, $index),
+			];
+		}
+
+		if (ctype_alpha($char) === true) {
+			return [
+				't' => 'ident',
+				'v' => $this->readIdent($expression, $index),
+			];
+		}
+
+		throw new DslException('Pack: onverwacht teken "' . $char . '" in expressie "' . $expression . '".');
+
+	}//end readValueToken()
 
 	/**
 	 * Read a reference token, including any `[...]` index groups and the

@@ -174,4 +174,48 @@ class ExprEvaluatorTest extends TestCase {
 		return $expr->evaluate($expr->parse($expression), $ctx, new RefResolver());
 	}//end eval()
 
+	/**
+	 * The tokens of a few expressions, and the exact refusal of an unexpected character.
+	 *
+	 * @return void
+	 */
+	public function testTheTokensOfAFewExpressions(): void {
+		$evaluator = new ExprEvaluator();
+		$tokenize  = new \ReflectionMethod($evaluator, 'tokenize');
+
+		$this->assertSame(
+			[
+				['t' => 'ref', 'v' => '@gross.monthly'],
+				['t' => 'op', 'v' => '+'],
+				['t' => 'num', 'v' => 12.5],
+				['t' => 'op', 'v' => '*'],
+				['t' => 'op', 'v' => '('],
+				['t' => 'ident', 'v' => 'x'],
+				['t' => 'op', 'v' => ','],
+				['t' => 'op', 'v' => '-'],
+				['t' => 'num', 'v' => 3],
+				['t' => 'op', 'v' => ')'],
+			],
+			$tokenize->invoke($evaluator, "  @gross.monthly + 12.5*(x, -3)\t")
+		);
+		$this->assertSame(
+			[
+				['t' => 'ident', 'v' => 'round'],
+				['t' => 'op', 'v' => '('],
+				['t' => 'ref', 'v' => '@a'],
+				['t' => 'op', 'v' => ','],
+				['t' => 'num', 'v' => 2],
+				['t' => 'op', 'v' => ')'],
+				['t' => 'op', 'v' => '/'],
+			],
+			$tokenize->invoke($evaluator, 'round(@a,2)/')
+		);
+		$this->assertSame([], $tokenize->invoke($evaluator, '   '));
+
+		$this->expectException(DslException::class);
+		$this->expectExceptionMessage('Pack: onverwacht teken ";" in expressie "1 ; 2".');
+		$tokenize->invoke($evaluator, '1 ; 2');
+
+	}//end testTheTokensOfAFewExpressions()
+
 }//end class

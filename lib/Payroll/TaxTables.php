@@ -624,45 +624,86 @@ final class TaxTables {
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-006
 	 */
 	public function resolveLeaf(array $segments, bool $toCents = false): array {
-		$node = $this->parameters;
+		$current = [
+			'value' => $this->parameters,
+			'provenance' => null,
+		];
 		$walked = [];
-		$provenance = null;
 
 		foreach ($segments as $segment) {
-			$unwrapped = $this->unwrapLeaf($node, $walked);
-			if ($unwrapped !== null) {
-				$node = $unwrapped['value'];
-				$provenance = $unwrapped['provenance'];
-			}
-
+			$current = $this->unwrapped(current: $current, walked: $walked);
 			$walked[] = $segment;
-			if (is_array($node) === false || array_key_exists($segment, $node) === false) {
-				throw new RuntimeException('TaxTables (' . $this->id . '): ontbrekende parameter "' . implode('.', $walked) . '".');
-			}
-
-			$node = $node[$segment];
+			$current['value'] = $this->childAt(node: $current['value'], walked: $walked);
 		}
 
-		$unwrapped = $this->unwrapLeaf($node, $walked);
-		if ($unwrapped !== null) {
-			$node = $unwrapped['value'];
-			$provenance = $unwrapped['provenance'];
-		}
-
+		$current = $this->unwrapped(current: $current, walked: $walked);
 		if ($toCents === true) {
-			if (is_int($node) === false && is_float($node) === false) {
-				throw new RuntimeException('TaxTables (' . $this->id . '): parameter "' . implode('.', $walked) . '" is geen bedrag en kan niet naar centen worden omgezet.');
-			}
+			$current['value'] = $this->inCents(node: $current['value'], walked: $walked);
+		}
 
-			$node = self::euroToCents((float)$node);
+		return $current;
+
+	}//end resolveLeaf()
+
+	/**
+	 * The resolution with its value unwrapped when it is a provenance leaf.
+	 *
+	 * @param array{value: mixed, provenance: array<string, mixed>|null} $current The resolution so far.
+	 * @param array<int, string>                                          $walked  The path walked so far.
+	 *
+	 * @return array{value: mixed, provenance: array<string, mixed>|null}
+	 */
+	private function unwrapped(array $current, array $walked): array {
+		$unwrapped = $this->unwrapLeaf($current['value'], $walked);
+		if ($unwrapped === null) {
+			return $current;
 		}
 
 		return [
-			'value' => $node,
-			'provenance' => $provenance,
+			'value' => $unwrapped['value'],
+			'provenance' => $unwrapped['provenance'],
 		];
 
-	}//end resolveLeaf()
+	}//end unwrapped()
+
+	/**
+	 * The child at the last walked segment.
+	 *
+	 * @param mixed              $node   The node.
+	 * @param array<int, string> $walked The path walked, ending with the segment.
+	 *
+	 * @return mixed
+	 *
+	 * @throws RuntimeException When the node has no such child.
+	 */
+	private function childAt(mixed $node, array $walked): mixed {
+		$segment = $walked[(count($walked) - 1)];
+		if (is_array($node) === false || array_key_exists($segment, $node) === false) {
+			throw new RuntimeException('TaxTables (' . $this->id . '): ontbrekende parameter "' . implode('.', $walked) . '".');
+		}
+
+		return $node[$segment];
+
+	}//end childAt()
+
+	/**
+	 * An amount leaf in cents.
+	 *
+	 * @param mixed              $node   The leaf value.
+	 * @param array<int, string> $walked The path walked.
+	 *
+	 * @return int
+	 *
+	 * @throws RuntimeException When the leaf is not an amount.
+	 */
+	private function inCents(mixed $node, array $walked): int {
+		if (is_int($node) === false && is_float($node) === false) {
+			throw new RuntimeException('TaxTables (' . $this->id . '): parameter "' . implode('.', $walked) . '" is geen bedrag en kan niet naar centen worden omgezet.');
+		}
+
+		return self::euroToCents((float)$node);
+
+	}//end inCents()
 
 	/**
 	 * Unwrap a `{value, source, verified}` provenance leaf, returning its
