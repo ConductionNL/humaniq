@@ -1,0 +1,53 @@
+{
+    "plain": {
+        "day": "2026-09-10 00:00",
+        "hours": 2.5
+    },
+    "rounded": {
+        "day": "2026-09-10 00:00",
+        "hours": 7.46
+    },
+    "from-stored": {
+        "day": "2026-09-11 00:00",
+        "hours": 8
+    },
+    "date-stored": {
+        "day": "2026-09-12 00:00",
+        "hours": 4
+    },
+    "full-day": {
+        "day": "2026-09-10 00:00",
+        "hours": 24
+    },
+    "too-many": {
+        "day": "2026-09-10 00:00",
+        "hours": 24
+    },
+    "just-over": {
+        "refused": "Een urenboeking kan niet meer dan 24 uur op één dag beslaan."
+    },
+    "zero": {
+        "refused": "Het aantal uren van een urenboeking moet groter dan nul zijn."
+    },
+    "rounds-to-zero": {
+        "refused": "Het aantal uren van een urenboeking moet groter dan nul zijn."
+    },
+    "negative": {
+        "refused": "Het aantal uren van een urenboeking moet groter dan nul zijn."
+    },
+    "no-hours": {
+        "refused": "Een urenboeking zonder start- en eindtijd heeft een aantal uren nodig."
+    },
+    "text-hours": {
+        "refused": "Een urenboeking zonder start- en eindtijd heeft een aantal uren nodig."
+    },
+    "no-date": {
+        "refused": "Een urenboeking zonder start- en eindtijd heeft een geldige datum nodig."
+    },
+    "bad-date": {
+        "refused": "Een urenboeking zonder start- en eindtijd heeft een geldige datum nodig."
+    },
+    "bad-both": {
+        "refused": "Een urenboeking zonder start- en eindtijd heeft een geldige datum nodig."
+    }
+}

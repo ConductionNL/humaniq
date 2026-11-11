@@ -229,4 +229,41 @@ class TimeEntryHoursDeriverTest extends TestCase {
 		);
 	}//end testTheRunningTimerPredicateAnswersBothWays()
 
+	/**
+	 * The whole outcome of a day booking without clock times, accepted and
+	 * refused: the day and hours, or the refusal.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeDayBookingOutcome(): void {
+		$cases = [
+			'plain'           => [['date' => '2026-09-10', 'hours' => 2.5], null],
+			'rounded'         => [['date' => '2026-09-10', 'hours' => '7.456'], null],
+			'from-stored'     => [[], ['date' => '2026-09-11', 'hours' => 8]],
+			'date-stored'     => [['hours' => 4], ['date' => '2026-09-12', 'hours' => 8]],
+			'full-day'        => [['date' => '2026-09-10', 'hours' => 24], null],
+			'too-many'        => [['date' => '2026-09-10', 'hours' => 24.004], null],
+			'just-over'       => [['date' => '2026-09-10', 'hours' => 24.01], null],
+			'zero'            => [['date' => '2026-09-10', 'hours' => 0], null],
+			'rounds-to-zero'  => [['date' => '2026-09-10', 'hours' => 0.004], null],
+			'negative'        => [['date' => '2026-09-10', 'hours' => -1], null],
+			'no-hours'        => [['date' => '2026-09-10'], null],
+			'text-hours'      => [['date' => '2026-09-10', 'hours' => 'acht'], null],
+			'no-date'         => [['hours' => 2], null],
+			'bad-date'        => [['date' => 'gisteren', 'hours' => 2], null],
+			'bad-both'        => [['date' => 'gisteren', 'hours' => 'acht'], null],
+		];
+		$got = [];
+		foreach ($cases as $name => [$incoming, $stored]) {
+			try {
+				[$day, $hours] = $this->deriver->derive($incoming, $stored);
+				$got[$name] = ['day' => date('Y-m-d H:i', $day), 'hours' => $hours];
+			} catch (HoursWriteRefusedException $e) {
+				$got[$name] = ['refused' => $e->getMessage()];
+			}
+		}
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/time-entry-day-booking.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeDayBookingOutcome()
+
 }//end class
