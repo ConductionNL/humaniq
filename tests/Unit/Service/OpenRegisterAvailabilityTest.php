@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -30,6 +31,7 @@ use Psr\Log\NullLogger;
 /**
  * OpenRegister is available exactly when the openregister app is installed.
  *
+ * @covers \OCA\Humaniq\Service\OpenRegisterAvailability
  * @covers \OCA\Humaniq\Service\SettingsService
  */
 class OpenRegisterAvailabilityTest extends TestCase {
@@ -44,8 +46,22 @@ class OpenRegisterAvailabilityTest extends TestCase {
 			$apps = $this->createMock(IAppManager::class);
 			$apps->expects($this->once())->method('isInstalled')->with('openregister')->willReturn($installed);
 
-			self::assertSame($installed, (new SettingsService($this->createMock(IAppConfig::class), $apps, $this->createMock(ContainerInterface::class), new NullLogger()))->isOpenRegisterAvailable());
+			self::assertSame($installed, (new OpenRegisterAvailability($apps))->isAvailable());
 		}
 	}//end testItAsksTheAppManagerForOpenRegister()
+
+	/**
+	 * SettingsService answers the same, for the callers that still ask it.
+	 *
+	 * @return void
+	 */
+	public function testSettingsServiceDelegatesToIt(): void {
+		foreach ([true, false] as $installed) {
+			$apps = $this->createMock(IAppManager::class);
+			$apps->expects($this->once())->method('isInstalled')->with('openregister')->willReturn($installed);
+
+			self::assertSame($installed, (new SettingsService($this->createMock(IAppConfig::class), $apps, $this->createMock(ContainerInterface::class), new NullLogger()))->isOpenRegisterAvailable());
+		}
+	}//end testSettingsServiceDelegatesToIt()
 
 }//end class

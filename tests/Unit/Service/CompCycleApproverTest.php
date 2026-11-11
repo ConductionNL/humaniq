@@ -21,20 +21,18 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\CompCycleApprover;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Service\RecordStoreInterface;
-use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
-use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * Approving a cycle without OpenRegister fails every proposed adjustment.
  *
  * @covers \OCA\Humaniq\Service\CompCycleApprover
- * @uses   \OCA\Humaniq\Service\SettingsService
+ * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
  * @uses   \OCA\Humaniq\Service\CycleApproval
  */
 class CompCycleApproverTest extends TestCase {
@@ -68,10 +66,10 @@ class CompCycleApproverTest extends TestCase {
 	 *
 	 * @param IAppManager $apps The app manager.
 	 *
-	 * @return SettingsService
+	 * @return OpenRegisterAvailability
 	 */
-	private function availability(IAppManager $apps): SettingsService {
-		return new SettingsService($this->createMock(IAppConfig::class), $apps, $this->createMock(ContainerInterface::class), new NullLogger());
+	private function availability(IAppManager $apps): OpenRegisterAvailability {
+		return new OpenRegisterAvailability($apps);
 	}//end availability()
 
 }//end class

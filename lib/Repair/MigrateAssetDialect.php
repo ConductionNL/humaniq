@@ -45,7 +45,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Repair;
 
 use OCA\Humaniq\Service\AssetDialectMigrationService;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -59,14 +59,14 @@ class MigrateAssetDialect implements IRepairStep {
 
 	/**
 	 * @param AssetDialectMigrationService $migrationService The migration.
-	 * @param SettingsService $settingsService Availability check.
+	 * @param OpenRegisterAvailability $openRegister Availability check.
 	 * @param LoggerInterface $logger The logger.
 	 *
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function __construct(
 		private readonly AssetDialectMigrationService $migrationService,
-		private readonly SettingsService $settingsService,
+		private readonly OpenRegisterAvailability $openRegister,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -93,7 +93,7 @@ class MigrateAssetDialect implements IRepairStep {
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function run(IOutput $output): void {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+		if ($this->openRegister->isAvailable() === false) {
 			$output->warning('OpenRegister is not installed or enabled. Skipping Asset dialect migration.');
 			return;
 		}

@@ -25,6 +25,7 @@ namespace OCA\Humaniq\Tests\Unit\Repair;
 use OCA\Humaniq\Repair\SettleShippedExampleClaim;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\PayrollExpenseFoldService;
 use OCA\Humaniq\Service\RecordStoreInterface;
@@ -32,6 +33,7 @@ use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
+use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -174,7 +176,8 @@ class SettleShippedExampleClaimTest extends TestCase {
 	private function runStep(bool $available = true): array {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
-		$settings->method('isOpenRegisterAvailable')->willReturn($available);
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('isInstalled')->willReturnCallback(static fn (string $app): bool => $app === 'openregister' && $available);
 		$gateway = new HoursRegisterGateway(
 			container: new FakeContainer([
 				'OCA\OpenRegister\Service\ObjectService' => $this->store,
@@ -254,7 +257,7 @@ class SettleShippedExampleClaimTest extends TestCase {
 			}//end finishProgress()
 		};
 
-		(new SettleShippedExampleClaim(gateway: $gateway, marker: $this->marker, settingsService: $settings, logger: $logger))->run($output);
+		(new SettleShippedExampleClaim(gateway: $gateway, marker: $this->marker, openRegister: new OpenRegisterAvailability($apps), logger: $logger))->run($output);
 
 		return ['infos' => $output->infos, 'warnings' => $output->warnings];
 	}//end runStep()
