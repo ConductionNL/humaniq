@@ -27,6 +27,8 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\ManagerAccessStamps;
+use OCA\Humaniq\Service\OrgLookups;
+use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Tests\Unit\Support\ApprovalsFixture;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use PHPUnit\Framework\TestCase;
@@ -69,7 +71,7 @@ class ManagerAccessStampsTest extends TestCase {
 		return new ManagerAccessStamps(
 			gateway: $this->gateway(),
 			marker: new InternalWriteMarker(),
-			deputies: $this->deputies(),
+			org: new OrgLookups($this->gateway(), new OrgResolutionService(), $this->deputies()),
 			logger: new NullLogger()
 		);
 	}//end stamps()

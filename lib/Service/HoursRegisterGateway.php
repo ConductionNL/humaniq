@@ -264,55 +264,6 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 	}//end uniqueCostCenterFor()
 
 	/**
-	 * The org lookups the manager resolution needs, read once, and whether
-	 * every read reached the end.
-	 *
-	 * @return array{assignments: array<string, array<int, array<string, mixed>>>, units: array<string, array<string, mixed>>, employees: array<string, array<string, mixed>>, complete: bool}
-	 *
-	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
-	 */
-	public function orgLookups(): array {
-		$assignments = $this->loadAll('OrgAssignment');
-		$units = $this->loadAll('OrgUnit');
-		$employees = $this->loadAll('Employee');
-		$byEmployee = [];
-		foreach ($assignments as $assignment) {
-			$byEmployee[trim((string)($assignment['employeeId'] ?? ''))][] = $assignment;
-		}
-
-		return [
-			'assignments' => $byEmployee,
-			'units' => $this->indexById($units),
-			'employees' => $this->indexById($employees),
-			'complete' => (max(count($assignments), count($units), count($employees)) < self::MAX_ROWS),
-		];
-	}//end orgLookups()
-
-	/**
-	 * The employee's UNIQUE resolved manager on a date, from lookups read
-	 * with {@see orgLookups()}, or null.
-	 *
-	 * @param array{assignments: array<string, array<int, array<string, mixed>>>, units: array<string, array<string, mixed>>, employees: array<string, array<string, mixed>>, complete: bool} $lookups The org lookups.
-	 * @param string $employeeId The employee id.
-	 * @param string $onDate The reference date, `YYYY-MM-DD`.
-	 *
-	 * @return string|null The manager's Nextcloud user id, or null.
-	 *
-	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
-	 */
-	public function uniqueManagerUserIdIn(array $lookups, string $employeeId, string $onDate): ?string {
-		return $this->orgResolution->uniqueOrNull(
-			$this->orgResolution->resolveManagerUserIds(
-				employeeId: $employeeId,
-				assignmentsByEmployeeId: $lookups['assignments'],
-				unitsById: $lookups['units'],
-				employeesById: $lookups['employees'],
-				onDate: $onDate
-			)
-		);
-	}//end uniqueManagerUserIdIn()
-
-	/**
 	 * The employee's OrgAssignment rows, in the shared byEmployeeId shape.
 	 *
 	 * @param string $employeeId The employee id.

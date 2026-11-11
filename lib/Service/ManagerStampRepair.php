@@ -85,7 +85,7 @@ class ManagerStampRepair {
 	 * @param HoursRegisterGateway $gateway The register.
 	 * @param InternalWriteMarker $marker Marks the writes as humaniq's own.
 	 * @param LoggerInterface $logger Records every rewritten stamp and every failure.
-	 * @param OrgResolutionService $orgResolution The shared manager resolution.
+	 * @param OrgLookups $org The read-once org lookups and the manager resolution.
 	 *
 	 * @spec openspec/changes/restamp-open-manager-records/specs/mss-team-scope/spec.md#Requirement:-Open-records-SHALL-be-restamped-with-the-manager-the-shared-resolution-gives-today-(REQ-MSS-007)
 	 */
@@ -93,7 +93,7 @@ class ManagerStampRepair {
 		private readonly HoursRegisterGateway $gateway,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,
-		private readonly OrgResolutionService $orgResolution,
+		private readonly OrgLookups $org,
 	) {
 
 	}//end __construct()
@@ -109,7 +109,7 @@ class ManagerStampRepair {
 	 */
 	public function run(bool $dryRun): array {
 		$this->dryRun = $dryRun;
-		$this->lookups = $this->gateway->orgLookups();
+		$this->lookups = $this->org->read();
 		$report = [];
 		foreach (array_keys(self::SCHEMAS) as $schema) {
 			$report[$schema] = $this->restampSchema(schema: $schema);
@@ -243,15 +243,7 @@ class ManagerStampRepair {
 			return null;
 		}
 
-		$new = $this->orgResolution->uniqueOrNull(
-			$this->orgResolution->resolveManagerUserIds(
-				employeeId: $employeeId,
-				assignmentsByEmployeeId: $this->lookups['assignments'],
-				unitsById: $this->lookups['units'],
-				employeesById: $this->lookups['employees'],
-				onDate: $this->referenceDate(row: $row, field: self::SCHEMAS[$schema]['date'])
-			)
-		);
+		$new = $this->org->managerOf($this->lookups, $employeeId, $this->referenceDate(row: $row, field: self::SCHEMAS[$schema]['date']));
 		if ($new === $old) {
 			return null;
 		}

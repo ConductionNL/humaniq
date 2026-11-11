@@ -29,6 +29,8 @@ use OCA\Humaniq\Listener\ManagerAccessOrgChangeListener;
 use OCA\Humaniq\Listener\ManagerAccessStampListener;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\ManagerAccessStamps;
+use OCA\Humaniq\Service\OrgLookups;
+use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Tests\Unit\Support\ApprovalsFixture;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
@@ -69,7 +71,7 @@ class ManagerAccessStampListenerTest extends TestCase {
 	 */
 	private function listener(?ManagerAccessStamps $stamps = null): ManagerAccessStampListener {
 		return new ManagerAccessStampListener(
-			stamps: $stamps ?? new ManagerAccessStamps(gateway: $this->gateway(), marker: $this->marker, deputies: $this->deputies(), logger: new NullLogger()),
+			stamps: $stamps ?? new ManagerAccessStamps(gateway: $this->gateway(), marker: $this->marker, org: new OrgLookups($this->gateway(), new OrgResolutionService(), $this->deputies()), logger: new NullLogger()),
 			logger: new NullLogger(),
 			marker: $this->marker
 		);

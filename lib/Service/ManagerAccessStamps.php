@@ -54,7 +54,7 @@ class ManagerAccessStamps {
 	 *
 	 * @param HoursRegisterGateway $gateway The register.
 	 * @param InternalWriteMarker $marker Marks the pass's writes as humaniq's own.
-	 * @param ManagerDeputies $deputies The active deputies of a manager.
+	 * @param OrgLookups $org The org lookups, managers and deputies.
 	 * @param LoggerInterface $logger Records every failure.
 	 *
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
@@ -62,7 +62,7 @@ class ManagerAccessStamps {
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly InternalWriteMarker $marker,
-		private readonly ManagerDeputies $deputies,
+		private readonly OrgLookups $org,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -81,7 +81,7 @@ class ManagerAccessStamps {
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
 	public function stampsFor(array $record, string $schema, string $uuid, string $today): array {
-		return $this->resolve(employeeId: $this->employeeIdOf(record: $record, schema: $schema, uuid: $uuid), lookups: $this->gateway->orgLookups(), today: $today);
+		return $this->resolve(employeeId: $this->employeeIdOf(record: $record, schema: $schema, uuid: $uuid), lookups: $this->org->read(), today: $today);
 	}//end stampsFor()
 
 	/**
@@ -132,7 +132,7 @@ class ManagerAccessStamps {
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
 	public function run(bool $dryRun, string $today): array {
-		$lookups = $this->gateway->orgLookups();
+		$lookups = $this->org->read();
 		$report = [];
 		foreach (self::SCHEMAS as $schema) {
 			$counts = ['inspected' => 0, 'changed' => 0, 'failed' => 0];
@@ -223,13 +223,13 @@ class ManagerAccessStamps {
 			return ['managerUserId' => null, 'deputyUserIds' => []];
 		}
 
-		$manager = $this->gateway->uniqueManagerUserIdIn($lookups, $employeeId, $today);
+		$manager = $this->org->managerOf($lookups, $employeeId, $today);
 		if ($manager === null || $manager === '') {
 			return ['managerUserId' => null, 'deputyUserIds' => []];
 		}
 
 		$own = trim((string)($lookups['employees'][$employeeId]['nextcloudUserId'] ?? ''));
-		$deputies = array_values(array_filter($this->deputies->activeDeputiesOf(managerUserId: $manager, today: $today), static fn (string $uid): bool => $uid !== $own && $uid !== $manager));
+		$deputies = array_values(array_filter($this->org->deputiesOf(managerUserId: $manager, today: $today), static fn (string $uid): bool => $uid !== $own && $uid !== $manager));
 		sort($deputies);
 
 		return ['managerUserId' => $manager, 'deputyUserIds' => $deputies];
