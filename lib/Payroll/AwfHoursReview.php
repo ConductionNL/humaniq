@@ -68,40 +68,74 @@ final class AwfHoursReview {
 	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
 	public static function figures(array $contracts, array $slips, string $lastPeriod): array {
-		$year = substr($lastPeriod, 0, 4);
-		$lowPeriods = [];
-		$paid = 0.0;
+		$year = new AwfReviewYear();
+		$year->contracts = $contracts;
+		$year->lastPeriod = $lastPeriod;
+		self::addSlips(year: $year, slips: $slips);
+		self::addContracts(year: $year);
+
+		return self::figuresOf(year: $year);
+
+	}//end figures()
+
+	/**
+	 * Add up the paid hours of the year's payslips and note the periods
+	 * charged the low rate.
+	 *
+	 * @param AwfReviewYear                    $year  The year so far.
+	 * @param array<int, array<string, mixed>> $slips The year's payslips as {period, hours, low}.
+	 *
+	 * @return void
+	 */
+	private static function addSlips(AwfReviewYear $year, array $slips): void {
 		foreach ($slips as $slip) {
-			$paid += (float)($slip['hours'] ?? 0.0);
+			$year->paid += (float)($slip['hours'] ?? 0.0);
 			if (($slip['low'] ?? false) === true) {
-				$lowPeriods[(string)$slip['period']] = true;
+				$year->lowPeriods[(string)$slip['period']] = true;
 			}
 		}
+	}//end addSlips()
 
-		$contractAll = 0.0;
-		$contractLow = 0.0;
-		foreach (self::periods($lastPeriod) as $period) {
-			foreach ($contracts as $contract) {
+	/**
+	 * Add up the contracted hours of every period up to the last, and of the
+	 * low periods.
+	 *
+	 * @param AwfReviewYear $year The year so far: its contracts, last period and low periods.
+	 *
+	 * @return void
+	 */
+	private static function addContracts(AwfReviewYear $year): void {
+		foreach (self::periods($year->lastPeriod) as $period) {
+			foreach ($year->contracts as $contract) {
 				$hours = self::contractHoursIn($contract, $period);
-				$contractAll += $hours;
-				$contractLow += (isset($lowPeriods[$period]) === true ? $hours : 0.0);
+				$year->contractAll += $hours;
+				$year->contractLow += (isset($year->lowPeriods[$period]) === true ? $hours : 0.0);
 			}
 		}
+	}//end addContracts()
 
-		$first = new DateTimeImmutable($year . '-01-01');
-		$last  = (new DateTimeImmutable($lastPeriod . '-01'))->modify('last day of this month');
-		$weeks = round(self::employedDays(contracts: $contracts, from: $first, until: $last) / 7, 2);
-		$paid  = round($paid, 2);
-		$contractAll = round($contractAll, 2);
+	/**
+	 * The review figures of the year so far: the average contracted week of
+	 * the low periods over the weeks employed, and the overrun.
+	 *
+	 * @param AwfReviewYear $year The year, added up.
+	 *
+	 * @return array{paid: float, contract: float, averageHoursPerWeek: int, overrunPercent: int}
+	 */
+	private static function figuresOf(AwfReviewYear $year): array {
+		$first = new DateTimeImmutable(substr($year->lastPeriod, 0, 4) . '-01-01');
+		$last  = (new DateTimeImmutable($year->lastPeriod . '-01'))->modify('last day of this month');
+		$weeks = round(self::employedDays(contracts: $year->contracts, range: AwfDayRange::of(from: $first, until: $last)) / 7, 2);
+		$paid  = round($year->paid, 2);
+		$contractAll = round($year->contractAll, 2);
 
 		return [
 			'paid' => $paid,
 			'contract' => $contractAll,
-			'averageHoursPerWeek' => ($weeks > 0.0 ? (int)ceil(round($contractLow / $weeks, 6)) : 0),
+			'averageHoursPerWeek' => ($weeks > 0.0 ? (int)ceil(round($year->contractLow / $weeks, 6)) : 0),
 			'overrunPercent' => ($contractAll > 0.0 ? (int)floor(round(($paid - $contractAll) / $contractAll * 100, 6)) : 0),
 		];
-
-	}//end figures()
+	}//end figuresOf()
 
 	/**
 	 * Whether the figures call for a review (or, during the year, a
@@ -133,7 +167,7 @@ final class AwfHoursReview {
 	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
 	public static function contractHoursIn(array $contract, string $period): float {
-		$perWeek = (is_numeric($contract['hoursPerWeek'] ?? null) === true ? (float)$contract['hoursPerWeek'] : 0.0);
+		$perWeek = self::hoursPerWeek(contract: $contract);
 		if ($perWeek <= 0.0) {
 			return 0.0;
 		}
@@ -142,20 +176,42 @@ final class AwfHoursReview {
 			return round($perWeek * 4, 2);
 		}
 
+		return self::monthHours(contract: $contract, period: $period);
+
+	}//end contractHoursIn()
+
+	/**
+	 * A contract's hours a week; 0 when it states none.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 *
+	 * @return float
+	 */
+	private static function hoursPerWeek(array $contract): float {
+		return (is_numeric($contract['hoursPerWeek'] ?? null) === true ? (float)$contract['hoursPerWeek'] : 0.0);
+	}//end hoursPerWeek()
+
+	/**
+	 * The contracted hours of a contract in a month: hours a week x 13/3 for
+	 * a whole month, x the calendar days it ran / 7 for part of one.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract, with hours a week.
+	 * @param string               $period   The month, `YYYY-MM`.
+	 *
+	 * @return float
+	 */
+	private static function monthHours(array $contract, string $period): float {
 		$first = PayrollDate::fromYmd($period . '-01');
 		if ($first === null) {
 			return 0.0;
 		}
 
 		$last = $first->modify('last day of this month');
-		$days = self::overlapDays(contract: $contract, from: $first, until: $last);
-		if ($days === (int)$last->format('j')) {
-			return round($perWeek * 13 / 3, 2);
-		}
+		$days = self::overlapDays(contract: $contract, range: AwfDayRange::of(from: $first, until: $last));
+		$perWeek = self::hoursPerWeek(contract: $contract);
 
-		return round($perWeek * $days / 7, 2);
-
-	}//end contractHoursIn()
+		return ($days === (int)$last->format('j')) ? round($perWeek * 13 / 3, 2) : round($perWeek * $days / 7, 2);
+	}//end monthHours()
 
 	/**
 	 * Whether a contract runs on at least one day of a month period.
@@ -172,26 +228,24 @@ final class AwfHoursReview {
 			return false;
 		}
 
-		return self::overlapDays(contract: $contract, from: $first, until: $first->modify('last day of this month')) > 0;
+		return self::overlapDays(contract: $contract, range: AwfDayRange::of(from: $first, until: $first->modify('last day of this month'))) > 0;
 
 	}//end coversPeriod()
 
 	/**
-	 * The number of calendar days a contract runs between two dates,
-	 * inclusive.
+	 * The number of calendar days a contract runs in a range, inclusive.
 	 *
 	 * @param array<string, mixed> $contract The EmploymentContract.
-	 * @param DateTimeImmutable    $from     The first day.
-	 * @param DateTimeImmutable    $until    The last day.
+	 * @param AwfDayRange          $range    The first and the last day.
 	 *
 	 * @return int
 	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
-	public static function overlapDays(array $contract, DateTimeImmutable $from, DateTimeImmutable $until): int {
-		$start = (PayrollDate::fromYmd((string)($contract['startDate'] ?? '')) ?? $from);
-		$end   = (PayrollDate::fromYmd((string)($contract['endDate'] ?? '')) ?? $until);
-		$start = max($start, $from);
-		$end   = min($end, $until);
+	public static function overlapDays(array $contract, AwfDayRange $range): int {
+		$start = (PayrollDate::fromYmd((string)($contract['startDate'] ?? '')) ?? $range->from);
+		$end   = (PayrollDate::fromYmd((string)($contract['endDate'] ?? '')) ?? $range->until);
+		$start = max($start, $range->from);
+		$end   = min($end, $range->until);
 		if ($end < $start) {
 			return 0;
 		}
@@ -261,24 +315,23 @@ final class AwfHoursReview {
 	}//end periods()
 
 	/**
-	 * The calendar days between two dates on which any contract ran.
+	 * The calendar days of a range on which any contract ran.
 	 *
 	 * @param array<int, array<string, mixed>> $contracts The contracts.
-	 * @param DateTimeImmutable                $from      The first day.
-	 * @param DateTimeImmutable                $until     The last day.
+	 * @param AwfDayRange                      $range     The first and the last day.
 	 *
 	 * @return int
 	 */
-	private static function employedDays(array $contracts, DateTimeImmutable $from, DateTimeImmutable $until): int {
+	private static function employedDays(array $contracts, AwfDayRange $range): int {
 		$covered = [];
 		foreach ($contracts as $contract) {
-			$days = self::overlapDays(contract: $contract, from: $from, until: $until);
+			$days = self::overlapDays(contract: $contract, range: $range);
 			if ($days === 0) {
 				continue;
 			}
 
 			$raw   = substr(trim((string)($contract['startDate'] ?? '')), 0, 10);
-			$start = (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw) === 1 ? max(new DateTimeImmutable($raw), $from) : $from);
+			$start = (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw) === 1 ? max(new DateTimeImmutable($raw), $range->from) : $range->from);
 			for ($i = 0; $i < $days; $i++) {
 				$covered[$start->modify('+' . $i . ' days')->format('Y-m-d')] = true;
 			}
