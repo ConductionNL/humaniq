@@ -182,6 +182,26 @@ class VacancyMatchServiceTest extends TestCase {
 	}//end testARejectedApplicantWithoutConsentIsNotProposed()
 
 	/**
+	 * The whole row for an applicant below the education minimum and one
+	 * for a vacancy that asks nothing, which gives every pool in full.
+	 *
+	 * @return void
+	 */
+	public function testTheRowsBelowTheMinimumAndWithoutRequirements(): void {
+		$this->store->seed('job-application', 'a-1', ['candidateName' => 'Laag', 'status' => 'nieuw', 'educationLevel' => 3, 'experienceYears' => 6, 'competenceCodes' => ['afas', ' loonheffing ']]);
+		$this->store->seed('Vacancy', 'vac-open', ['title' => 'Open', 'status' => 'gepubliceerd', 'minExperienceYears' => 0]);
+
+		self::assertSame(
+			[['kind' => 'applicant', 'id' => 'a-1', 'name' => 'Laag', 'total' => 55, 'educationPoints' => 0.0, 'experiencePoints' => 25.0, 'requiredPoints' => 20.0, 'preferredPoints' => 10.0, 'missing' => 'education level 5, excel-gevorderd']],
+			$this->service()->matchesFor(vacancyId: self::VACANCY, today: '2026-09-30')
+		);
+		self::assertSame(
+			[['kind' => 'applicant', 'id' => 'a-1', 'name' => 'Laag', 'total' => 100, 'educationPoints' => 25.0, 'experiencePoints' => 25.0, 'requiredPoints' => 40.0, 'preferredPoints' => 10.0, 'missing' => '']],
+			$this->service()->matchesFor(vacancyId: 'vac-open', today: '2026-09-30')
+		);
+	}//end testTheRowsBelowTheMinimumAndWithoutRequirements()
+
+	/**
 	 * The requirements as the service reads them from the vacancy.
 	 *
 	 * @return array<string, mixed>
