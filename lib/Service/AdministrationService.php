@@ -100,12 +100,14 @@ class AdministrationService {
 	 * @param IConfig $config Per-user config store for the active-administration pointer.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param LoggerInterface $logger Logger.
+	 * @param AdministrationAccessTrust $trust Keeps only the access rows granted with standing.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IConfig $config,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly AdministrationAccessTrust $trust,
 	) {
 
 	}//end __construct()
@@ -292,9 +294,11 @@ class AdministrationService {
 	}//end context()
 
 	/**
-	 * Every `AdministrationAccess` row belonging to `$userId`, as plain
-	 * arrays. Degrades to an empty list when the schema does not exist yet
-	 * in the register (fresh install before the fragment is imported).
+	 * Every believed `AdministrationAccess` row belonging to `$userId`, as
+	 * plain arrays. The whole schema is read so the trust check can see who
+	 * granted each row; a row without standing is dropped. Degrades to an
+	 * empty list when the schema does not exist yet in the register (fresh
+	 * install before the fragment is imported).
 	 *
 	 * @param string $userId The Nextcloud user id.
 	 *
@@ -302,7 +306,7 @@ class AdministrationService {
 	 */
 	private function accessRowsForUser(string $userId): array {
 		$rows = [];
-		foreach ($this->loadAll('AdministrationAccess') as $row) {
+		foreach ($this->trust->trusted($this->loadAll(schema: 'AdministrationAccess', asSystem: true)) as $row) {
 			if ((string)($row['userId'] ?? '') === $userId) {
 				$rows[] = $row;
 			}
@@ -354,16 +358,17 @@ class AdministrationService {
 	 * Load all objects of a schema (capped), as plain arrays — the
 	 * RuleAuditService::loadAll() precedent.
 	 *
-	 * @param string $schema The schema name.
+	 * @param string $schema   The schema name.
+	 * @param bool   $asSystem Read every row, not only what the caller may see.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function loadAll(string $schema): array {
+	private function loadAll(string $schema, bool $asSystem = false): array {
 		try {
 			$rows = $this->objectService()
 				->setRegister($this->settingsService->getRegisterSlug())
 				->setSchema($schema)
-				->findAll(['limit' => self::LIMIT]);
+				->findAll(['limit' => self::LIMIT], !$asSystem, !$asSystem);
 		} catch (\Throwable $e) {
 			$this->logger->warning('AdministrationService: could not load ' . $schema . ': ' . $e->getMessage());
 			return [];
