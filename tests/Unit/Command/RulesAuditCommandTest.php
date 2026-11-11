@@ -173,4 +173,46 @@ class RulesAuditCommandTest extends TestCase {
 		$this->assertStringContainsString('3 mandatory', $out);
 	}
 
+	/**
+	 * The whole report text, with per-type lines and the top violated rules; the jurisdiction reaches the audit.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeReportText(): void {
+		$report = $this->report(mandatory: 2, conditional: 1, recommended: 0);
+		$report['types'] = [
+			'Payslip' => ['checked' => 6, 'compliant' => 5, 'withViolations' => 1, 'violations' => 3],
+			'Employee' => ['checked' => 4, 'compliant' => 4, 'withViolations' => 0, 'violations' => 0],
+		];
+		$report['topViolatedRules'] = [['ruleId' => 'nl-loonheffingen-inhouding', 'count' => 2], ['ruleId' => 'nl-zvw-inhouding', 'count' => 1]];
+
+		$service = $this->createMock(RuleAuditService::class);
+		$service->expects($this->once())->method('audit')->with(['jurisdiction' => 'DE'])->willReturn($report);
+		$command = new RulesAuditCommand($service);
+		$output  = new BufferedOutput();
+
+		$this->assertSame(1, $command->run(new ArrayInput(['--jurisdiction' => 'DE']), $output));
+		$this->assertSame(
+			"Humaniq rule-compliance audit\n"
+			."  catalogue version : 2026-07\n"
+			."  corpus rules      : 40 (machine-checkable: 30)\n"
+			."  enforceable today : 20 (66.7% of machine-checkable)\n"
+			."\n"
+			."  objects checked   : 10\n"
+			."  compliant         : 9\n"
+			."  with violations   : 1\n"
+			."  violations        : 2 mandatory / 1 conditional / 0 recommended\n"
+			."    Payslip          checked=6 compliant=5 withViolations=1\n"
+			."    Employee         checked=4 compliant=4 withViolations=0\n"
+			."\n"
+			."  top violated rules:\n"
+			."    nl-loonheffingen-inhouding         2\n"
+			."    nl-zvw-inhouding                   1\n"
+			."\n"
+			."2 mandatory violation(s): exiting 1.\n",
+			$output->fetch()
+		);
+
+	}//end testTheWholeReportText()
+
 }//end class
