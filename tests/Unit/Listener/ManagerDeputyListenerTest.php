@@ -71,6 +71,37 @@ class ManagerDeputyListenerTest extends TestCase {
 		self::assertNotSame([], $event->getErrors());
 	}//end testSomeoneCannotMakeThemselvesAnotherManagersDeputy()
 
+	/**
+	 * The whole outcome of every kind of write, allowed and refused, including
+	 * an update that takes over another manager's record.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeOutcomeOfEveryWrite(): void {
+		$own = ['managerUserId' => 'mila', 'deputyUserId' => 'dirk', 'from' => '2026-07-14', 'until' => '2026-08-01'];
+		$cases = [
+			'create-unnamed' => ['mila', new ObjectCreatingEvent($this->entity(array_diff_key($own, ['managerUserId' => 1])))],
+			'create-own' => ['mila', new ObjectCreatingEvent($this->entity($own))],
+			'create-for-another' => ['dirk', new ObjectCreatingEvent($this->entity($own))],
+			'update-own' => ['mila', new ObjectUpdatingEvent($this->entity(array_merge($own, ['until' => '2026-08-15'])), $this->entity($own))],
+			'take-over' => ['dirk', new ObjectUpdatingEvent($this->entity(array_merge($own, ['managerUserId' => 'dirk', 'deputyUserId' => 'mila'])), $this->entity($own))],
+			'clear-manager' => ['dirk', new ObjectUpdatingEvent($this->entity(array_merge($own, ['managerUserId' => '', 'deputyUserId' => 'mila'])), $this->entity($own))],
+			'self-deputy' => ['mila', new ObjectCreatingEvent($this->entity(array_merge($own, ['deputyUserId' => 'mila'])))],
+			'deleted' => ['mila', new \OCA\OpenRegister\Event\ObjectDeletedEvent($this->entity($own))],
+		];
+		$got = [];
+		foreach ($cases as $name => [$uid, $event]) {
+			$this->listener($uid)->handle($event);
+			$got[$name] = [
+				'errors' => method_exists($event, 'getErrors') === true ? $event->getErrors() : null,
+				'modified' => method_exists($event, 'getModifiedData') === true ? $event->getModifiedData() : null,
+				'stopped' => $event->isPropagationStopped(),
+			];
+		}
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/manager-deputy-writes.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeOutcomeOfEveryWrite()
+
 	private function entity(array $data): ObjectEntity {
 		$entity = new ObjectEntity();
 		$entity->setUuid('dep-x');

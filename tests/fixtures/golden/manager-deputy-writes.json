@@ -1,0 +1,52 @@
+{
+    "create-unnamed": {
+        "errors": [],
+        "modified": {
+            "managerUserId": "mila"
+        },
+        "stopped": false
+    },
+    "create-own": {
+        "errors": [],
+        "modified": [],
+        "stopped": false
+    },
+    "create-for-another": {
+        "errors": {
+            "message": "You can only name a deputy for yourself. HR can name one for another manager."
+        },
+        "modified": [],
+        "stopped": true
+    },
+    "update-own": {
+        "errors": [],
+        "modified": [],
+        "stopped": false
+    },
+    "take-over": {
+        "errors": {
+            "message": "You can only name a deputy for yourself. HR can name one for another manager."
+        },
+        "modified": [],
+        "stopped": true
+    },
+    "clear-manager": {
+        "errors": {
+            "message": "You can only name a deputy for yourself. HR can name one for another manager."
+        },
+        "modified": [],
+        "stopped": true
+    },
+    "self-deputy": {
+        "errors": {
+            "message": "A manager cannot be their own deputy."
+        },
+        "modified": [],
+        "stopped": true
+    },
+    "deleted": {
+        "errors": null,
+        "modified": null,
+        "stopped": false
+    }
+}
