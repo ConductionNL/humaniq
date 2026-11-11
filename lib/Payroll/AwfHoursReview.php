@@ -125,7 +125,7 @@ final class AwfHoursReview {
 	private static function figuresOf(AwfReviewYear $year): array {
 		$first = new DateTimeImmutable(substr($year->lastPeriod, 0, 4) . '-01-01');
 		$last  = (new DateTimeImmutable($year->lastPeriod . '-01'))->modify('last day of this month');
-		$weeks = round(self::employedDays(contracts: $year->contracts, range: AwfDayRange::of(from: $first, until: $last)) / 7, 2);
+		$weeks = round(self::employedDays(contracts: $year->contracts, range: AwfDayRange::between(from: $first, until: $last)) / 7, 2);
 		$paid  = round($year->paid, 2);
 		$contractAll = round($year->contractAll, 2);
 
@@ -207,7 +207,7 @@ final class AwfHoursReview {
 		}
 
 		$last = $first->modify('last day of this month');
-		$days = self::overlapDays(contract: $contract, range: AwfDayRange::of(from: $first, until: $last));
+		$days = self::overlapDays(contract: $contract, range: AwfDayRange::between(from: $first, until: $last));
 		$perWeek = self::hoursPerWeek(contract: $contract);
 
 		return ($days === (int)$last->format('j')) ? round($perWeek * 13 / 3, 2) : round($perWeek * $days / 7, 2);
@@ -228,7 +228,7 @@ final class AwfHoursReview {
 			return false;
 		}
 
-		return self::overlapDays(contract: $contract, range: AwfDayRange::of(from: $first, until: $first->modify('last day of this month'))) > 0;
+		return self::overlapDays(contract: $contract, range: AwfDayRange::between(from: $first, until: $first->modify('last day of this month'))) > 0;
 
 	}//end coversPeriod()
 

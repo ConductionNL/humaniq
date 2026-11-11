@@ -58,11 +58,11 @@ final class AwfDayRange {
 	 *
 	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
-	public static function of(DateTimeImmutable $from, DateTimeImmutable $until): self {
+	public static function between(DateTimeImmutable $from, DateTimeImmutable $until): self {
 		$range = new self();
 		$range->from = $from;
 		$range->until = $until;
 
 		return $range;
-	}//end of()
+	}//end between()
 }//end class
