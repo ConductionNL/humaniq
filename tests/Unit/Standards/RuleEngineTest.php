@@ -89,6 +89,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Humaniq\Standards\Checks\NlWntChecks
  * @uses \OCA\Humaniq\Standards\Checks\WorkingTimeRules
  * @uses \OCA\Humaniq\Standards\Checks\PayrollSampleFields
+ * @uses \OCA\Humaniq\Standards\Checks\RetroRecompute
  * @uses \OCA\Humaniq\Standards\RuleCatalogue
  * @uses \OCA\Humaniq\Standards\TableCheckRegistry
  * @uses \OCA\Humaniq\Standards\Violation

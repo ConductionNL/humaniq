@@ -64,37 +64,90 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 			'LoonaangifteFiling' => [
 				// Wet LB 1964 art. 28 / AWR art. 19 — the loonaangifte is filed
 				// electronically for each wage period (a recognised NL tijdvak).
-				'nl-loonaangifte-tijdvak' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'loonaangifte')
-					|| ((($o['electronicallyFiled'] ?? false) === true)
-					&& in_array((string)($o['tijdvak'] ?? ''), ['maand', 'vierweken', 'kwartaal', 'jaar'], true)),
+				'nl-loonaangifte-tijdvak' => self::forLoonaangifte(self::filedElectronicallyForNlTijdvak(...)),
 				// AWR art. 19 — the loonaangifte is filed and paid no later than the
 				// deadline (last working day of the month following the wage period).
-				'nl-loonaangifte-termijn' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'loonaangifte')
-					|| self::onOrBefore($o, 'submittedDate', 'deadline'),
+				'nl-loonaangifte-termijn' => self::forLoonaangifte(self::submittedByDeadline(...)),
 				// AWR art. 52 lid 4 — payroll administration is retained at least 7 years
 				// after the end of the relevant financial year of the period.
-				'nl-loonadministratie-bewaarplicht' => static fn (array $o): bool => (($o['filingType'] ?? '') !== 'loonaangifte')
-					|| self::retainedYearsAfterPeriod($o, 7),
+				'nl-loonadministratie-bewaarplicht' => self::forLoonaangifte(self::retainedSevenYears(...)),
 				// Belastingdienst LH 210 (2026) — the tijdvakcode matches the period + tijdvak.
-				'nl-loonaangifte-tijdvakcode' => static fn (array $o): bool => self::isNlLoonaangifte($o) === false
-					|| self::tijdvakcodeConsistent($o),
+				'nl-loonaangifte-tijdvakcode' => self::forNlLoonaangifte(self::tijdvakcodeConsistent(...)),
 				// AWR art. 19 / LH 210 — the deadline is period end + 1 calendar month, no
 				// weekend/holiday extension.
-				'nl-loonaangifte-deadline-derivation' => static fn (array $o): bool => self::isNlLoonaangifte($o) === false
-					|| self::deadlineDerivationCorrect($o),
+				'nl-loonaangifte-deadline-derivation' => self::forNlLoonaangifte(self::deadlineDerivationCorrect(...)),
 				// AWR art. 19 — an unsent filing does not sit within 14 days of, or past, its deadline.
-				'nl-loonaangifte-deadline-alert' => static fn (array $o): bool => self::isNlLoonaangifte($o) === false
-					|| self::deadlineNotAlerting($o),
+				'nl-loonaangifte-deadline-alert' => self::forNlLoonaangifte(self::deadlineNotAlerting(...)),
 				// Gegevensspecificaties 2026 p39-55 (0001, 0002, 2315): the message reports
 				// the run's figures, so a run recalculated after the message was made, or
 				// whose wage tax changed, leaves a message that no longer matches it
 				// (filings-wage-tax-message D4).
-				'nl-loonaangifte-message-drift' => static fn (array $o, array $context = []): bool => self::isNlLoonaangifte($o) === false
-					|| MessageDrift::matchesRun($o, $context),
+				'nl-loonaangifte-message-drift' => self::forNlLoonaangifte(MessageDrift::matchesRun(...)),
 			],
 		];
 
 	}//end checks()
+
+	/**
+	 * A predicate that holds for every filing that is not a loonaangifte and applies the rule to one.
+	 *
+	 * @param callable $rule The rule for a loonaangifte filing.
+	 *
+	 * @return \Closure(array<string, mixed>): bool
+	 */
+	private static function forLoonaangifte(callable $rule): \Closure {
+		return static fn (array $o): bool => (($o['filingType'] ?? '') !== 'loonaangifte') || $rule($o);
+
+	}//end forLoonaangifte()
+
+	/**
+	 * A predicate that holds for every filing that is not a Dutch loonaangifte and applies the rule to one.
+	 *
+	 * @param callable $rule The rule for a Dutch loonaangifte, given the filing and the context.
+	 *
+	 * @return \Closure(array<string, mixed>, array<string, mixed>=): bool
+	 */
+	private static function forNlLoonaangifte(callable $rule): \Closure {
+		return static fn (array $o, array $context = []): bool => self::isNlLoonaangifte($o) === false || $rule($o, $context);
+
+	}//end forNlLoonaangifte()
+
+	/**
+	 * Whether the filing was transmitted electronically for a recognised NL tijdvak.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function filedElectronicallyForNlTijdvak(array $o): bool {
+		return (($o['electronicallyFiled'] ?? false) === true)
+			&& in_array((string)($o['tijdvak'] ?? ''), ['maand', 'vierweken', 'kwartaal', 'jaar'], true);
+
+	}//end filedElectronicallyForNlTijdvak()
+
+	/**
+	 * Whether the filing was submitted on or before its deadline.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function submittedByDeadline(array $o): bool {
+		return self::onOrBefore($o, 'submittedDate', 'deadline');
+
+	}//end submittedByDeadline()
+
+	/**
+	 * Whether the payroll administration is retained at least 7 years after the period.
+	 *
+	 * @param array<string, mixed> $o The filing.
+	 *
+	 * @return bool
+	 */
+	private static function retainedSevenYears(array $o): bool {
+		return self::retainedYearsAfterPeriod($o, 7);
+
+	}//end retainedSevenYears()
 
 	/**
 	 * {@inheritDoc}
@@ -171,11 +224,7 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 			return true;
 		}
 
-		$expected = self::expectedTijdvakcode(
-			(string)($o['tijdvak'] ?? ''),
-			(string)($o['period'] ?? ''),
-			$parameters
-		);
+		$expected = self::expectedTijdvakcode($o, $parameters);
 
 		return $expected === null || $tijdvakcode === $expected;
 	}//end tijdvakcodeConsistent()
@@ -200,37 +249,77 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 	}//end tijdvakcodeParameters()
 
 	/**
-	 * The expected tijdvakcode for a period + tijdvak, per the rule's code
-	 * tables. Returns null when the tijdvak/period shape has no deterministic
-	 * mapping (e.g. `jaar` needs only the year, `maand` needs YYYY-MM, and
-	 * `vierweken` needs a YYYY-P## period-index convention not otherwise
-	 * modelled on this schema).
+	 * The expected tijdvakcode for a filing's period + tijdvak, per the rule's
+	 * code tables. Returns null when the tijdvak/period shape has no
+	 * deterministic mapping (e.g. `jaar` needs only the year, `maand` needs
+	 * YYYY-MM, and `vierweken` needs a YYYY-P## period-index convention not
+	 * otherwise modelled on this schema).
 	 *
-	 * @param string $tijdvak The filing's tijdvak.
-	 * @param string $period The filing's period.
+	 * @param array<string, mixed> $o          The filing.
 	 * @param array<string, mixed> $parameters The rule's parameters.
 	 *
 	 * @return string|null
 	 */
-	private static function expectedTijdvakcode(string $tijdvak, string $period, array $parameters): ?string {
-		if ($tijdvak === 'jaar') {
-			$jaarCode = ($parameters['jaarCode'] ?? null);
-			return $jaarCode !== null ? (string)$jaarCode : null;
-		}
+	private static function expectedTijdvakcode(array $o, array $parameters): ?string {
+		$period = (string)($o['period'] ?? '');
 
-		if ($tijdvak === 'maand' && preg_match('/^\d{4}-(\d{2})$/', $period, $m) === 1) {
-			$maandCodes = (is_array($parameters['maandCodes'] ?? null) === true) ? $parameters['maandCodes'] : [];
-			return isset($maandCodes[$m[1]]) === true ? (string)$maandCodes[$m[1]] : null;
-		}
-
-		if ($tijdvak === 'vierweken' && preg_match('/^\d{4}-P(\d{2})$/', $period, $m) === 1) {
-			$codes = (is_array($parameters['vierwekenCodes'] ?? null) === true) ? $parameters['vierwekenCodes'] : [];
-			$index = ((int)$m[1] - 1);
-			return isset($codes[$index]) === true ? (string)$codes[$index] : null;
-		}
-
-		return null;
+		return match ((string)($o['tijdvak'] ?? '')) {
+			'jaar' => self::jaarCode($parameters),
+			'maand' => self::maandCode($period, $parameters),
+			'vierweken' => self::vierwekenCode($period, $parameters),
+			default => null,
+		};
 	}//end expectedTijdvakcode()
+
+	/**
+	 * The rule's code for a `jaar` filing.
+	 *
+	 * @param array<string, mixed> $parameters The rule's parameters.
+	 *
+	 * @return string|null
+	 */
+	private static function jaarCode(array $parameters): ?string {
+		$jaarCode = ($parameters['jaarCode'] ?? null);
+		return $jaarCode !== null ? (string)$jaarCode : null;
+
+	}//end jaarCode()
+
+	/**
+	 * The rule's code for a `maand` filing's YYYY-MM period.
+	 *
+	 * @param string               $period     The filing's period.
+	 * @param array<string, mixed> $parameters The rule's parameters.
+	 *
+	 * @return string|null
+	 */
+	private static function maandCode(string $period, array $parameters): ?string {
+		if (preg_match('/^\d{4}-(\d{2})$/', $period, $m) !== 1) {
+			return null;
+		}
+
+		$maandCodes = (is_array($parameters['maandCodes'] ?? null) === true) ? $parameters['maandCodes'] : [];
+		return isset($maandCodes[$m[1]]) === true ? (string)$maandCodes[$m[1]] : null;
+
+	}//end maandCode()
+
+	/**
+	 * The rule's code for a `vierweken` filing's YYYY-P## period.
+	 *
+	 * @param string               $period     The filing's period.
+	 * @param array<string, mixed> $parameters The rule's parameters.
+	 *
+	 * @return string|null
+	 */
+	private static function vierwekenCode(string $period, array $parameters): ?string {
+		if (preg_match('/^\d{4}-P(\d{2})$/', $period, $m) !== 1) {
+			return null;
+		}
+
+		$codes = (is_array($parameters['vierwekenCodes'] ?? null) === true) ? $parameters['vierwekenCodes'] : [];
+		$index = ((int)$m[1] - 1);
+		return isset($codes[$index]) === true ? (string)$codes[$index] : null;
+
+	}//end vierwekenCode()
 
 	/**
 	 * True when the filing's deadline equals period end + 1 calendar month, with
