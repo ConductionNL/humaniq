@@ -6,6 +6,12 @@ Status: specs pending. See [openspec/](openspec/) for the change log.
 
 Part of the Conduction ecosystem alongside [shillinq](https://github.com/ConductionNL/shillinq) (bookkeeping), [pipelinq](https://github.com/ConductionNL/pipelinq) (CRM), and [openregister](https://github.com/ConductionNL/openregister) (data layer).
 
+## Test coverage
+
+<!-- coverage:start -->
+Measured test coverage: 91.7% of statements (PHP 91.7% of 25,386 statements), at commit `ce8394ca` on 2026-11-11. The JavaScript frontend is not in this figure, because it has no coverage measurement yet. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
+<!-- coverage:end -->
+
 ## Payroll engine — NOT certified (read this before production use)
 
 humaniq ships an open-source Dutch payroll calculation engine implementing the
