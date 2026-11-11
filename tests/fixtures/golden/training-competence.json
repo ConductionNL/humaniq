@@ -1,0 +1,177 @@
+{
+    "apply": {
+        "grant-new": {
+            "result": "new-competence",
+            "writes": [
+                {
+                    "read": "EmployeeCompetence",
+                    "filters": {
+                        "employeeId": "emp-1",
+                        "competenceCode": "VCA"
+                    }
+                },
+                {
+                    "schema": "EmployeeCompetence",
+                    "uuid": null,
+                    "payload": {
+                        "employeeId": "emp-1",
+                        "competenceCode": "VCA",
+                        "label": "VCA basis",
+                        "issuedOn": "2026-03-01",
+                        "validUntil": "2031-03-01"
+                    }
+                }
+            ]
+        },
+        "grant-new-bare": {
+            "result": "new-competence",
+            "writes": [
+                {
+                    "read": "EmployeeCompetence",
+                    "filters": {
+                        "employeeId": "emp-1",
+                        "competenceCode": "BHV"
+                    }
+                },
+                {
+                    "schema": "EmployeeCompetence",
+                    "uuid": null,
+                    "payload": {
+                        "employeeId": "emp-1",
+                        "competenceCode": "BHV",
+                        "label": "BHV",
+                        "issuedOn": "2026-02-01",
+                        "validUntil": null
+                    }
+                }
+            ]
+        },
+        "not-done": {
+            "result": null,
+            "writes": []
+        },
+        "no-employee": {
+            "result": null,
+            "writes": []
+        },
+        "no-code": {
+            "result": null,
+            "writes": []
+        },
+        "extend": {
+            "result": "c-1",
+            "writes": [
+                {
+                    "read": "EmployeeCompetence",
+                    "filters": {
+                        "employeeId": "emp-1",
+                        "competenceCode": "VCA"
+                    }
+                },
+                {
+                    "schema": "EmployeeCompetence",
+                    "uuid": "c-1",
+                    "payload": {
+                        "employeeId": "emp-1",
+                        "competenceCode": "VCA",
+                        "validUntil": "2031-03-01"
+                    }
+                }
+            ]
+        },
+        "shorter": {
+            "result": null,
+            "writes": [
+                {
+                    "read": "EmployeeCompetence",
+                    "filters": {
+                        "employeeId": "emp-1",
+                        "competenceCode": "VCA"
+                    }
+                }
+            ]
+        },
+        "held-forever": {
+            "result": null,
+            "writes": [
+                {
+                    "read": "EmployeeCompetence",
+                    "filters": {
+                        "employeeId": "emp-1",
+                        "competenceCode": "VCA"
+                    }
+                }
+            ]
+        },
+        "open-ended-grant": {
+            "result": "c-1",
+            "writes": [
+                {
+                    "read": "EmployeeCompetence",
+                    "filters": {
+                        "employeeId": "emp-1",
+                        "competenceCode": "VCA"
+                    }
+                },
+                {
+                    "schema": "EmployeeCompetence",
+                    "uuid": "c-1",
+                    "payload": {
+                        "validUntil": null
+                    }
+                }
+            ]
+        },
+        "best-of-two": {
+            "result": "c-2",
+            "writes": [
+                {
+                    "read": "EmployeeCompetence",
+                    "filters": {
+                        "employeeId": "emp-1",
+                        "competenceCode": "VCA"
+                    }
+                },
+                {
+                    "schema": "EmployeeCompetence",
+                    "uuid": "c-2",
+                    "payload": {
+                        "validUntil": "2031-03-01"
+                    }
+                }
+            ]
+        },
+        "best-is-forever": {
+            "result": null,
+            "writes": [
+                {
+                    "read": "EmployeeCompetence",
+                    "filters": {
+                        "employeeId": "emp-1",
+                        "competenceCode": "VCA"
+                    }
+                }
+            ]
+        }
+    },
+    "stamps": {
+        "done-stamped": {
+            "administrationId": "ADM-001"
+        },
+        "done-no-date": {
+            "completedOn": "2026-02-01",
+            "validUntil": "2028-02-01"
+        },
+        "done-today": {
+            "completedOn": "2026-09-29",
+            "validUntil": "2027-03-29"
+        },
+        "done-no-months": [],
+        "done-has-until": [],
+        "planned": {
+            "administrationId": "ADM-001"
+        },
+        "admin-given": [],
+        "admin-unknown": []
+    }
+}
