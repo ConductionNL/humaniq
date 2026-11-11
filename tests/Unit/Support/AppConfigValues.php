@@ -1,12 +1,12 @@
 <?php
 
 /**
- * AppConfigValues — answers an IAppConfig mock from a map of stored values.
+ * AppConfigValues — answers an app config mock from a map of stored values.
  *
- * The settings classes read app config through getValueString, getValueInt and
- * getValueBool with a default. This wires a mock so each read answers the
- * stored value for its key, or the caller's default when the key is unset, the
- * way IAppConfig does.
+ * The settings classes read humaniq's app config through getAppValueString,
+ * getAppValueInt and getAppValueBool with a default. This wires a mock so each
+ * read answers the stored value for its key, or the caller's default when the
+ * key is unset, the way the app config does.
  *
  * @category Test
  * @package  OCA\Humaniq\Tests\Unit\Support
@@ -27,8 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Support;
 
-use OCA\Humaniq\AppInfo\Application;
-use OCP\IAppConfig;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 
 /**
@@ -37,7 +36,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 final class AppConfigValues {
 
 	/**
-	 * Make the mock answer the stored values for humaniq's keys.
+	 * Make the mock answer the stored values by key.
 	 *
 	 * @param IAppConfig&MockObject $config The mock to wire.
 	 * @param array<string, string|int|bool> $values The stored values by key.
@@ -45,10 +44,10 @@ final class AppConfigValues {
 	 * @return IAppConfig
 	 */
 	public static function answer(IAppConfig&MockObject $config, array $values): IAppConfig {
-		$read = static fn (string $app, string $key, mixed $default): mixed => ($app === Application::APP_ID && array_key_exists($key, $values) === true) ? $values[$key] : $default;
-		$config->method('getValueString')->willReturnCallback(static fn (string $app, string $key, string $default = ''): string => (string)$read($app, $key, $default));
-		$config->method('getValueInt')->willReturnCallback(static fn (string $app, string $key, int $default = 0): int => (int)$read($app, $key, $default));
-		$config->method('getValueBool')->willReturnCallback(static fn (string $app, string $key, bool $default = false): bool => (bool)$read($app, $key, $default));
+		$read = static fn (string $key, mixed $default): mixed => array_key_exists($key, $values) === true ? $values[$key] : $default;
+		$config->method('getAppValueString')->willReturnCallback(static fn (string $key, string $default = ''): string => (string)$read($key, $default));
+		$config->method('getAppValueInt')->willReturnCallback(static fn (string $key, int $default = 0): int => (int)$read($key, $default));
+		$config->method('getAppValueBool')->willReturnCallback(static fn (string $key, bool $default = false): bool => (bool)$read($key, $default));
 
 		return $config;
 	}//end answer()

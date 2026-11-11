@@ -22,18 +22,15 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\PayTransparencySettings;
 use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
-use OCP\App\IAppManager;
-use OCP\IAppConfig;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * The smallest group the pay transparency report shows figures of.
  *
- * @covers \OCA\Humaniq\Service\SettingsService
+ * @covers \OCA\Humaniq\Service\PayTransparencySettings
  * @uses   \OCA\Humaniq\Tests\Unit\Support\AppConfigValues
  */
 class PayTransparencySettingsTest extends TestCase {
@@ -54,12 +51,12 @@ class PayTransparencySettingsTest extends TestCase {
 	 *
 	 * @param array<string, int> $values The stored app config values by key.
 	 *
-	 * @return SettingsService
+	 * @return PayTransparencySettings
 	 */
-	private function settings(array $values): SettingsService {
+	private function settings(array $values): PayTransparencySettings {
 		$config = AppConfigValues::answer($this->createMock(IAppConfig::class), $values);
 
-		return new SettingsService($config, $this->createMock(IAppManager::class), $this->createMock(ContainerInterface::class), new NullLogger());
+		return new PayTransparencySettings($config);
 	}//end settings()
 
 }//end class
