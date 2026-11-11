@@ -548,6 +548,36 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 	}//end testAnUnderivableRequestIsNamed()
 
 	/**
+	 * Only the balance's own approved requests touching its year count, a
+	 * request without an id is named "unknown", and the total is rounded.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-001
+	 */
+	public function testOnlyTheBalancesOwnApprovedRequestsCount(): void {
+		$request = ['employeeId' => 'emp-1', 'leaveType' => 'holiday', 'status' => 'approved', 'startDate' => '2026-03-02', 'endDate' => '2026-03-02'];
+		$projection = LeaveHoursCalculator::usedHoursFor(
+			[
+				['id' => 'r-1', 'hours' => 2.333] + $request,
+				['id' => 'r-2', 'hours' => 1.111] + $request,
+				['id' => 'r-other', 'hours' => 8, 'employeeId' => 'emp-2'] + $request,
+				['id' => 'r-type', 'hours' => 8, 'leaveType' => 'unpaid'] + $request,
+				['id' => 'r-draft', 'hours' => 8, 'status' => 'submitted'] + $request,
+				['id' => 'r-2025', 'hours' => 8, 'startDate' => '2025-03-02', 'endDate' => '2025-03-02'] + $request,
+				['hours' => 0, 'startDate' => '2026-03-02', 'endDate' => '2026-03-03'] + $request,
+			],
+			'emp-1',
+			2026,
+			'holiday',
+			null
+		);
+
+		$this->assertSame(['usedHours' => 3.44, 'underivable' => ['unknown']], $projection);
+
+	}//end testOnlyTheBalancesOwnApprovedRequestsCount()
+
+	/**
 	 * A derived request spanning New Year splits across both years.
 	 *
 	 * @return void
