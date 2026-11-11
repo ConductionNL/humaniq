@@ -26,16 +26,17 @@ use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\PayrollRunApprovedListener;
 use OCA\Humaniq\Listener\RecurringAllowanceStampListener;
 use OCA\Humaniq\Service\AllowanceSplitter;
+use OCA\Humaniq\Service\ExpenseSettings;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OvertimeCreditService;
 use OCA\Humaniq\Service\PayrollExpenseFoldService;
-use OCA\Humaniq\Service\SettingsService;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
+use OCP\IAppConfig;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -124,9 +125,9 @@ class PayrollExpenseEdgePathsTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheRouteListenerOnCreateAndOtherEvents(): void {
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getExpenseReimbursementRoute')->willReturn('payroll');
-		$listener = new ExpenseRouteListener(settings: $settings, marker: new InternalWriteMarker());
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturn('payroll');
+		$listener = new ExpenseRouteListener(settings: new ExpenseSettings($config), marker: new InternalWriteMarker());
 
 		$created = new ObjectCreatingEvent($this->entity('Expense', ['status' => 'approved', 'amount' => 10]));
 		$listener->handle($created);
