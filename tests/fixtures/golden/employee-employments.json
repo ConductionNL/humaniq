@@ -1,0 +1,38 @@
+{
+    "date": "2026-06-01",
+    "contracts": [
+        {
+            "id": "ct-1",
+            "type": null,
+            "cao": null,
+            "caoSchaal": null,
+            "hoursPerWeek": 32,
+            "startDate": "2025-01-01",
+            "endDate": null,
+            "fte": 0.8
+        },
+        {
+            "id": "ct-2",
+            "type": null,
+            "cao": null,
+            "caoSchaal": null,
+            "hoursPerWeek": 8,
+            "startDate": "2026-03-01",
+            "endDate": null,
+            "fte": 0.2
+        }
+    ],
+    "totalHoursPerWeek": 40,
+    "totalFte": 1,
+    "concurrent": true,
+    "fullTimeHoursPerWeek": 40,
+    "normSource": "AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK",
+    "leaveBalances": [
+        {
+            "id": "lb-2026",
+            "employeeId": "emp-1",
+            "year": 2026,
+            "leaveType": "holiday"
+        }
+    ]
+}
