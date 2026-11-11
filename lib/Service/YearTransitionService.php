@@ -72,18 +72,7 @@ class YearTransitionService {
 			return $answer + ['message' => 'No pack resolves for ' . $jurisdiction . ' ' . $year . '.'];
 		}
 
-		$answer = array_merge(
-			$answer,
-			[
-				'resolves' => true,
-				'packId' => $pack->id(),
-				'packVersion' => $pack->packVersion(),
-				'engineVersion' => $pack->engineVersion(),
-				'packOrigin' => $pack->origin(),
-				'tablesId' => $pack->tablesId(),
-				'tablesOrigin' => (TaxTables::isBundled($pack->tablesId()) === true ? JurisdictionPack::ORIGIN_BUNDLED : JurisdictionPack::ORIGIN_UPLOADED),
-			]
-		);
+		$answer = array_merge($answer, self::packFacts(pack: $pack, bundled: TaxTables::isBundled($pack->tablesId())));
 
 		try {
 			$tables = TaxTables::load($pack->tablesId());
@@ -96,6 +85,26 @@ class YearTransitionService {
 
 		return $answer + $this->selfTest($pack, $tables);
 	}//end resolution()
+
+	/**
+	 * What a resolved pack is: its id, versions, origin and tables.
+	 *
+	 * @param JurisdictionPack $pack    The pack.
+	 * @param bool             $bundled Whether its tables ship with humaniq.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function packFacts(JurisdictionPack $pack, bool $bundled): array {
+		return [
+			'resolves' => true,
+			'packId' => $pack->id(),
+			'packVersion' => $pack->packVersion(),
+			'engineVersion' => $pack->engineVersion(),
+			'packOrigin' => $pack->origin(),
+			'tablesId' => $pack->tablesId(),
+			'tablesOrigin' => ($bundled === true ? JurisdictionPack::ORIGIN_BUNDLED : JurisdictionPack::ORIGIN_UPLOADED),
+		];
+	}//end packFacts()
 
 	/**
 	 * Re-run the pack's own golden vectors against its tables.
