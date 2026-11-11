@@ -88,31 +88,58 @@ final class CompChecks implements CheckProvider {
 	 * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-007
 	 */
 	private static function withinBandSatisfied(array $o, array $context): bool {
-		if (in_array((string)($o['status'] ?? ''), self::APPLICABLE_STATUSES, true) === false) {
-			// Still draft -- nothing proposed yet, out of scope.
+		$band = self::targetBand(o: $o, context: $context);
+		if ($band === null) {
+			// Still draft, no band targeted, or an unresolvable band -- out of
+			// scope or not decidable from this object alone (vacuous).
 			return true;
+		}
+
+		$salaries = self::salaries(o: $o, band: $band);
+
+		return $salaries === null || ($salaries[0] >= $salaries[1] && $salaries[0] <= $salaries[2]);
+	}//end withinBandSatisfied()
+
+	/**
+	 * The band a proposed or later adjustment targets, or null when it is still draft, targets none, or the band is unresolvable.
+	 *
+	 * @param array<string, mixed> $o The CompAdjustment.
+	 * @param array<string, mixed> $context The evaluation context.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function targetBand(array $o, array $context): array|null {
+		if (in_array((string)($o['status'] ?? ''), self::APPLICABLE_STATUSES, true) === false) {
+			return null;
 		}
 
 		$bandId = trim((string)($o['targetBandId'] ?? ''));
 		if ($bandId === '') {
-			// No band targeted -- vacuous (the payScalesVerified precedent).
-			return true;
+			return null;
 		}
 
 		$band = ($context['comp']['salaryBandsById'][$bandId] ?? null);
-		if (is_array($band) === false) {
-			// Unresolvable band -- nothing decidable from this object alone.
-			return true;
-		}
 
+		return is_array($band) === true ? $band : null;
+	}//end targetBand()
+
+	/**
+	 * The proposed salary and the band's minimum and maximum, or null when any is not numeric.
+	 *
+	 * @param array<string, mixed> $o The CompAdjustment.
+	 * @param array<string, mixed> $band The targeted band.
+	 *
+	 * @return array{0: float, 1: float, 2: float}|null
+	 */
+	private static function salaries(array $o, array $band): array|null {
 		$proposedSalary = ($o['proposedSalary'] ?? null);
 		$minSalary = ($band['minSalary'] ?? null);
 		$maxSalary = ($band['maxSalary'] ?? null);
 		if (is_numeric($proposedSalary) === false || is_numeric($minSalary) === false || is_numeric($maxSalary) === false) {
-			return true;
+			return null;
 		}
 
-		return ((float)$proposedSalary) >= ((float)$minSalary) && ((float)$proposedSalary) <= ((float)$maxSalary);
-	}//end withinBandSatisfied()
+		return [(float)$proposedSalary, (float)$minSalary, (float)$maxSalary];
+	}//end salaries()
 
 }//end class
