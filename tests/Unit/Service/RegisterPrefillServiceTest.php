@@ -32,12 +32,13 @@ use OCA\Humaniq\Service\BrpPersonMapper;
 use OCA\Humaniq\Service\RdwVehicleMapper;
 use OCA\Humaniq\Service\RegisterLookupGateway;
 use OCA\Humaniq\Service\RegisterPrefillService;
+use OCA\Humaniq\Service\RegisterPrefillSettings;
 use OCA\Humaniq\Service\RegisterPrefillUnavailableException;
-use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCP\App\IAppManager;
+use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -116,8 +117,14 @@ class RegisterPrefillServiceTest extends TestCase {
 	private function service(bool $installed, array $sources, array $answers=[]): RegisterPrefillService {
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('isInstalled')->willReturnCallback(static fn (string $app): bool => $installed === true && $app === 'integriq');
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterPrefillSource')->willReturnCallback(static fn (string $register): string => ($sources[$register] ?? ''));
+		$stored = [];
+		foreach ($sources as $register => $source) {
+			$stored['prefill_' . $register . '_source'] = $source;
+		}
+
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(static fn (string $app, string $key, string $default): string => ($stored[$key] ?? $default));
+		$settings = new RegisterPrefillSettings($config);
 
 		$environment = new class {
 

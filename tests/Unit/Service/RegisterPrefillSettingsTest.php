@@ -22,17 +22,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Humaniq\Service\SettingsService;
-use OCP\App\IAppManager;
+use OCA\Humaniq\Service\RegisterPrefillSettings;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * Which integriq source a base register is called through.
  *
- * @covers \OCA\Humaniq\Service\SettingsService
+ * @covers \OCA\Humaniq\Service\RegisterPrefillSettings
  */
 class RegisterPrefillSettingsTest extends TestCase {
 
@@ -57,10 +54,10 @@ class RegisterPrefillSettingsTest extends TestCase {
 	 *
 	 * @param IAppConfig $config The app config.
 	 *
-	 * @return SettingsService
+	 * @return RegisterPrefillSettings
 	 */
-	private function settings(IAppConfig $config): SettingsService {
-		return new SettingsService($config, $this->createMock(IAppManager::class), $this->createMock(ContainerInterface::class), new NullLogger());
+	private function settings(IAppConfig $config): RegisterPrefillSettings {
+		return new RegisterPrefillSettings($config);
 	}//end settings()
 
 }//end class
