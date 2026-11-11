@@ -38,6 +38,9 @@ use OCA\Humaniq\Service\DepartmentFiguresService;
 use OCA\Humaniq\Service\Percentile;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\UnitMembership;
+use OCA\Humaniq\Service\WorkforceReportSettings;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
+use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -318,11 +321,10 @@ class DepartmentFiguresServiceTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getDepartmentFiguresMinimumMembers')->willReturn($minimum);
 
 		$analytics = new AnalyticsService($container, $settings, $this->createMock(LoggerInterface::class), new AnalyticsCalculators(new AbsenceRateService(), new Percentile()));
 
-		return new DepartmentFiguresService($analytics, new UnitMembership(), $settings, new DepartmentFigureCalculators(new DepartmentFigures(), new AbsenceRateService()));
+		return new DepartmentFiguresService($analytics, new UnitMembership(), new WorkforceReportSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), ['department_figures_minimum_members' => $minimum])), new DepartmentFigureCalculators(new DepartmentFigures(), new AbsenceRateService()));
 	}//end buildService()
 
 }//end class

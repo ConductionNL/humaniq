@@ -22,18 +22,15 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\WorkforceReportSettings;
 use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
-use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * What the formation and department figure settings read from app config.
  *
- * @covers \OCA\Humaniq\Service\SettingsService
+ * @covers \OCA\Humaniq\Service\WorkforceReportSettings
  * @uses   \OCA\Humaniq\Tests\Unit\Support\AppConfigValues
  */
 class WorkforceReportSettingsTest extends TestCase {
@@ -76,12 +73,12 @@ class WorkforceReportSettingsTest extends TestCase {
 	 *
 	 * @param array<string, string|int> $values The stored app config values by key.
 	 *
-	 * @return SettingsService
+	 * @return WorkforceReportSettings
 	 */
-	private function settings(array $values): SettingsService {
+	private function settings(array $values): WorkforceReportSettings {
 		$config = AppConfigValues::answer($this->createMock(IAppConfig::class), $values);
 
-		return new SettingsService($config, $this->createMock(IAppManager::class), $this->createMock(ContainerInterface::class), new NullLogger());
+		return new WorkforceReportSettings($config);
 	}//end settings()
 
 }//end class

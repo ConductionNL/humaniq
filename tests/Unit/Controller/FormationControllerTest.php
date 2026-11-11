@@ -28,8 +28,10 @@ use OCA\Humaniq\Service\FormationAbsenceSources;
 use OCA\Humaniq\Service\FormationOccupancyService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\RbacObjectReader;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\WorkforceReportSettings;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
 use OCP\AppFramework\Http;
+use OCP\IAppConfig;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 
@@ -76,9 +78,9 @@ class FormationControllerTest extends TestCase {
 			$this->asked[] = ['places' => array_column($places, 'id'), 'contracts' => $contracts, 'leave' => $absences->leaveRequests, 'sick' => $absences->sickCases, 'types' => $absences->netLeaveTypes, 'weeks' => $absences->longTermSickWeeks, 'period' => [$period->start->format('Y-m-d'), $period->end->format('Y-m-d')]];
 			return ['fte' => 1.5];
 		});
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getFormationLongTermSickWeeks')->willReturn(6);
-		$settings->method('getFormationNetFteLeaveTypes')->willReturn(['ouderschapsverlof']);
+		$settings = new WorkforceReportSettings(
+			AppConfigValues::answer($this->createMock(IAppConfig::class), ['formation_long_term_sick_weeks' => 6, 'formation_net_fte_leave_types' => 'ouderschapsverlof'])
+		);
 
 		return new FormationController($this->createMock(IRequest::class), $gateway, $occupancy, $rbac, $settings);
 	}//end controller()
