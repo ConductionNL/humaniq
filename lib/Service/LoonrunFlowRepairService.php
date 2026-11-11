@@ -91,7 +91,7 @@ class LoonrunFlowRepairService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService OpenRegister availability.
+	 * @param OpenRegisterAvailability $openRegister OpenRegister availability.
 	 * @param ContainerInterface $container Resolves OpenRegister's flow store lazily.
 	 * @param FlowGraphKeypaths $keypaths The graph arithmetic.
 	 * @param LoggerInterface $logger The logger.
@@ -99,7 +99,7 @@ class LoonrunFlowRepairService {
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly OpenRegisterAvailability $openRegister,
 		private readonly ContainerInterface $container,
 		private readonly FlowGraphKeypaths $keypaths,
 		private readonly LoggerInterface $logger,
@@ -115,7 +115,7 @@ class LoonrunFlowRepairService {
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function repair(): array {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+		if ($this->openRegister->isAvailable() === false) {
 			return ['status' => 'skipped', 'detail' => 'OpenRegister is not installed or enabled.'];
 		}
 

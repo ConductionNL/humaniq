@@ -47,12 +47,14 @@ class SettingsService {
 	}//end __construct()
 
 	/**
-	 * Whether OpenRegister is installed and available.
+	 * Whether OpenRegister is installed and available. Delegates to
+	 * OpenRegisterAvailability, which callers that need nothing else from
+	 * this class inject directly.
 	 *
 	 * @return bool
 	 */
 	public function isOpenRegisterAvailable(): bool {
-		return $this->appManager->isInstalled('openregister');
+		return (new OpenRegisterAvailability($this->appManager))->isAvailable();
 	}//end isOpenRegisterAvailable()
 
 	/**

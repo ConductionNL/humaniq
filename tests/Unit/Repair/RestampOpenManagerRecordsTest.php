@@ -24,7 +24,8 @@ namespace OCA\Humaniq\Tests\Unit\Repair;
 
 use OCA\Humaniq\Repair\RestampOpenManagerRecords;
 use OCA\Humaniq\Service\ManagerStampRepair;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
+use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
@@ -125,16 +126,16 @@ class RestampOpenManagerRecordsTest extends TestCase {
 	}//end appConfig()
 
 	/**
-	 * A SettingsService double reporting OpenRegister's availability.
+	 * The availability check over an app manager reporting whether OpenRegister is installed.
 	 *
-	 * @param bool $available What `isOpenRegisterAvailable()` returns.
+	 * @param bool $available Whether the openregister app is installed.
 	 *
-	 * @return SettingsService The double.
+	 * @return OpenRegisterAvailability
 	 */
-	private function settings(bool $available): SettingsService {
-		$double = $this->createMock(SettingsService::class);
-		$double->method('isOpenRegisterAvailable')->willReturn($available);
-		return $double;
+	private function settings(bool $available): OpenRegisterAvailability {
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('isInstalled')->willReturnCallback(static fn (string $app): bool => $app === 'openregister' && $available);
+		return new OpenRegisterAvailability($apps);
 	}//end settings()
 
 	/**
