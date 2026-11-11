@@ -763,6 +763,74 @@ class HrDocumentServiceTest extends TestCase {
 	}//end testGenerateSelectsTheSingleDiscoveredTemplateByCategory()
 
 	/**
+	 * Every fail-closed discovery outcome, with its exact recorded message.
+	 *
+	 * @return array<string, array{0: array<int, mixed>|null, 1: string}>
+	 */
+	public static function failClosedDiscoveryCases(): array {
+		return [
+			'lookup throws' => [null, 'Kon docudesk-sjablonen niet opzoeken: template register unavailable'],
+			'no match' => [
+				[['id' => 'x', 'category' => 'arbeidsovereenkomst']],
+				'Geen docudesk-sjabloon gevonden voor "getuigschrift" in namespace "hrmq"; genereren is geweigerd.',
+			],
+			'several matches' => [
+				[['name' => 'A', 'category' => 'getuigschrift'], ['id' => 'b', 'category' => 'getuigschrift'], ['@self' => ['id' => 'c'], 'category' => 'getuigschrift'], ['category' => 'getuigschrift']],
+				'Meerdere docudesk-sjablonen (A, b, c, ?) voor "getuigschrift" in namespace "hrmq"; genereren is geweigerd (nooit gokken tussen sjablonen die officiële documenten opleveren).',
+			],
+			'match without id' => [[['name' => 'G', 'category' => 'getuigschrift']], 'Het gevonden docudesk-sjabloon heeft geen id.'],
+		];
+
+	}//end failClosedDiscoveryCases()
+
+	/**
+	 * @param array<int, mixed>|null $templates The discovered templates, null when the lookup throws.
+	 * @param string                 $error     The expected recorded message.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider failClosedDiscoveryCases
+	 */
+	public function testGenerateRecordsTheExactDiscoveryFailure(?array $templates, string $error): void {
+		$documentService = $this->fakeDocumentService();
+		[$service, $fake] = $this->service(
+			['Employee' => [$this->employee()]],
+			documentService: $documentService,
+			templateService: $this->fakeTemplateService($templates ?? [], $templates === null)
+		);
+
+		$result = $service->generate('emp-1', null, 'getuigschrift', null);
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertSame([], $documentService->calls);
+		$this->assertSame($error, $this->savedFor($fake, 'HrGeneratedDocument')[0]['errorMessage']);
+
+	}//end testGenerateRecordsTheExactDiscoveryFailure()
+
+	/**
+	 * The render options carry the format, the acting user and only the
+	 * employer block plus generation metadata.
+	 *
+	 * @return void
+	 */
+	public function testGeneratePassesTheExactRenderOptions(): void {
+		$documentService = $this->fakeDocumentService();
+		[$service] = $this->service(['Employee' => [$this->employee()]], documentService: $documentService, configuredTemplateId: 'T1');
+
+		$service->generate('emp-1', 'contract-1', 'arbeidsovereenkomst', 'hr-1');
+
+		$options = $documentService->calls[0]['options'];
+		$this->assertSame(['format', 'userId', 'adHocData'], array_keys($options));
+		$this->assertSame('pdf', $options['format']);
+		$this->assertSame('hr-1', $options['userId']);
+		$this->assertSame('Voorbeeld Werkgever B.V.', $options['adHocData']['employer']['name']);
+		$this->assertSame(['type', 'requestedAt'], array_keys($options['adHocData']['document']));
+		$this->assertSame('arbeidsovereenkomst', $options['adHocData']['document']['type']);
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $options['adHocData']['document']['requestedAt']);
+
+	}//end testGeneratePassesTheExactRenderOptions()
+
+	/**
 	 * @return void
 	 */
 	public function testGenerateIsIdempotentOnDoubleInvocation(): void {
