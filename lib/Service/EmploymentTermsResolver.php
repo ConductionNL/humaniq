@@ -70,6 +70,16 @@ class EmploymentTermsResolver {
 	public const SOURCE_CONTRACT = 'contract-override';
 
 	/**
+	 * The field that must explain each CAO override.
+	 *
+	 * @var array<string, string>
+	 */
+	private const OVERRIDE_REASON_FIELDS = [
+		'overtimeToeslagPercentages' => 'overtimeTermsOverrideReason',
+		'leaveEntitlementOverrideDays' => 'leaveTermsOverrideReason',
+	];
+
+	/**
 	 * The term was inherited from the CAO the contract names.
 	 *
 	 * @var string
@@ -115,27 +125,8 @@ class EmploymentTermsResolver {
 	public function resolveOvertimeToeslag(array $contract): ?array {
 		$override = $this->normalisePercentages(raw: ($contract['overtimeToeslagPercentages'] ?? null));
 		if ($override !== null) {
-			$reason = trim((string)($contract['overtimeTermsOverrideReason'] ?? ''));
-			if ($reason === '') {
-				throw new InvalidArgumentException(
-					'overtimeToeslagPercentages is set without overtimeTermsOverrideReason; '
-					. 'a contract departing from its CAO must say why'
-				);
-			}
-
-			$caoId = $this->caoId(contract: $contract);
-			$this->assertOvertimeNotWorse(
-				override: $override,
-				collective: ($caoId === null ? null : CaoRegistry::overtimeToeslagPercentages($caoId))
-			);
-
-			return [
-				'percentages' => $override,
-				'source' => self::SOURCE_CONTRACT,
-				'basis' => $reason,
-				'caoId' => $caoId,
-			];
-		}//end if
+			return $this->overtimeOverride(contract: $contract, override: $override);
+		}
 
 		$caoId = $this->caoId(contract: $contract);
 		if ($caoId === null) {
@@ -155,6 +146,58 @@ class EmploymentTermsResolver {
 		];
 
 	}//end resolveOvertimeToeslag()
+
+	/**
+	 * The contract's explained overtime override, refused when it is worse than the CAO.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param array<string, float> $override The normalised override percentages.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws InvalidArgumentException When the override is unexplained or worse than the CAO.
+	 */
+	private function overtimeOverride(array $contract, array $override): array {
+		$reason = self::overrideReason(contract: $contract, overrideField: 'overtimeToeslagPercentages');
+
+		$caoId = $this->caoId(contract: $contract);
+		$this->assertOvertimeNotWorse(
+			override: $override,
+			collective: ($caoId === null ? null : CaoRegistry::overtimeToeslagPercentages($caoId))
+		);
+
+		return [
+			'percentages' => $override,
+			'source' => self::SOURCE_CONTRACT,
+			'basis' => $reason,
+			'caoId' => $caoId,
+		];
+
+	}//end overtimeOverride()
+
+	/**
+	 * The trimmed reason a contract gives for departing from its CAO.
+	 *
+	 * @param array<string, mixed> $contract      The EmploymentContract.
+	 * @param string               $overrideField The override field the reason explains.
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException When the contract gives none.
+	 */
+	private static function overrideReason(array $contract, string $overrideField): string {
+		$reasonField = self::OVERRIDE_REASON_FIELDS[$overrideField];
+		$reason = trim((string)($contract[$reasonField] ?? ''));
+		if ($reason === '') {
+			throw new InvalidArgumentException(
+				$overrideField . ' is set without ' . $reasonField . '; '
+				. 'a contract departing from its CAO must say why'
+			);
+		}
+
+		return $reason;
+
+	}//end overrideReason()
 
 	/**
 	 * The CAO components a contract names, resolved (payroll-cao-components
@@ -190,13 +233,7 @@ class EmploymentTermsResolver {
 	public function resolveLeaveEntitlementDays(array $contract): ?array {
 		$override = $this->normaliseLeaveDays(raw: ($contract['leaveEntitlementOverrideDays'] ?? null));
 		if ($override !== null) {
-			$reason = trim((string)($contract['leaveTermsOverrideReason'] ?? ''));
-			if ($reason === '') {
-				throw new InvalidArgumentException(
-					'leaveEntitlementOverrideDays is set without leaveTermsOverrideReason; '
-					. 'a contract departing from its CAO must say why'
-				);
-			}
+			$reason = self::overrideReason(contract: $contract, overrideField: 'leaveEntitlementOverrideDays');
 
 			$caoId = $this->caoId(contract: $contract);
 			$this->assertLeaveNotWorse(override: $override, caoId: $caoId);
@@ -207,13 +244,31 @@ class EmploymentTermsResolver {
 				'basis' => $reason,
 				'caoId' => $caoId,
 			];
-		}//end if
+		}
 
 		$caoId = $this->caoId(contract: $contract);
-		if ($caoId === null) {
+		$days = ($caoId === null ? null : self::caoLeaveDays($caoId));
+		if ($days === null) {
 			return null;
 		}
 
+		return [
+			'days' => $days,
+			'source' => self::SOURCE_CAO,
+			'basis' => $caoId,
+			'caoId' => $caoId,
+		];
+
+	}//end resolveLeaveEntitlementDays()
+
+	/**
+	 * The statutory and extra leave days of a CAO's usable leave leaf, or null.
+	 *
+	 * @param string $caoId The CAO id.
+	 *
+	 * @return array<string, float>|null
+	 */
+	private static function caoLeaveDays(string $caoId): ?array {
 		$cao = CaoRegistry::get($caoId);
 		$leaf = ($cao['leaveEntitlement'] ?? null);
 		// Re-uses CaoRegistry's own usability lever indirectly: minLeaveHours
@@ -225,19 +280,12 @@ class EmploymentTermsResolver {
 		}
 
 		$value = (array)($leaf['value'] ?? []);
-		$days = [
+		return [
 			'vakantiedagenWettelijk' => (float)($value['vakantiedagenWettelijk'] ?? 0),
 			'vakantiedagenBovenwettelijk' => (float)($value['vakantiedagenBovenwettelijk'] ?? 0),
 		];
 
-		return [
-			'days' => $days,
-			'source' => self::SOURCE_CAO,
-			'basis' => $caoId,
-			'caoId' => $caoId,
-		];
-
-	}//end resolveLeaveEntitlementDays()
+	}//end caoLeaveDays()
 
 	/**
 	 * Project a contract's overtime terms into the cost ADDITION shape
