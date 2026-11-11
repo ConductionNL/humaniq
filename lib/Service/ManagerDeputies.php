@@ -133,14 +133,29 @@ class ManagerDeputies {
 			return [];
 		}
 
+		return $this->orgManagerOf(employeeId: $employeeId, today: $today);
+	}//end managersOf()
+
+	/**
+	 * The employee's manager from the org chain, read once per employee.
+	 *
+	 * @param string $employeeId The employee.
+	 * @param string $today      The day, YYYY-MM-DD.
+	 *
+	 * @return list<string>
+	 */
+	private function orgManagerOf(string $employeeId, string $today): array {
 		if (array_key_exists($employeeId, $this->orgManagers) === false) {
 			$this->orgManagers[$employeeId] = $this->gateway->uniqueManagerUserIdFor($employeeId, $today);
 		}
 
 		$manager = $this->orgManagers[$employeeId];
+		if ($manager === null || $manager === '') {
+			return [];
+		}
 
-		return ($manager === null || $manager === '') ? [] : [$manager];
-	}//end managersOf()
+		return [$manager];
+	}//end orgManagerOf()
 
 	/**
 	 * Everyone who may decide on a waiting request today: its managers and
@@ -177,6 +192,17 @@ class ManagerDeputies {
 	 * @spec openspec/specs/approvals-inbox/spec.md#REQ-API-002
 	 */
 	public function refusal(array $record): ?string {
+		return ($this->partiesRefusal(record: $record) ?? $this->periodRefusal(record: $record));
+	}//end refusal()
+
+	/**
+	 * Why the manager and deputy named cannot stand, or null.
+	 *
+	 * @param array<string, mixed> $record The record.
+	 *
+	 * @return string|null
+	 */
+	private function partiesRefusal(array $record): ?string {
 		$manager = trim((string)($record['managerUserId'] ?? ''));
 		$deputy = trim((string)($record['deputyUserId'] ?? ''));
 		if ($manager === '' || $deputy === '') {
@@ -187,6 +213,17 @@ class ManagerDeputies {
 			return 'A manager cannot be their own deputy.';
 		}
 
+		return null;
+	}//end partiesRefusal()
+
+	/**
+	 * Why the period cannot stand, or null.
+	 *
+	 * @param array<string, mixed> $record The record.
+	 *
+	 * @return string|null
+	 */
+	private function periodRefusal(array $record): ?string {
 		$from = $this->day(value: $record['from'] ?? null);
 		$until = $this->day(value: $record['until'] ?? null);
 		if ($from === null || $until === null) {
@@ -198,7 +235,7 @@ class ManagerDeputies {
 		}
 
 		return null;
-	}//end refusal()
+	}//end periodRefusal()
 
 	/**
 	 * Why this account may not write this deputy record, or null when it may.
