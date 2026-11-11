@@ -39,6 +39,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
@@ -100,20 +101,7 @@ class LeaveApprovalListener implements IEventListener {
 		}
 
 		try {
-			$entity = ($event instanceof ObjectUpdatedEvent)
-				? $event->getNewObject()
-				: $event->getObject();
-
-			if ($entity === null) {
-				return;
-			}
-
-			$schemaSlug = $this->resolveSchemaSlug((string)$entity->getSchema());
-			if (strtolower($schemaSlug) !== self::LEAVEREQUEST_SLUG) {
-				return;
-			}
-
-			$this->projection->projectForRequest($entity->getObject());
+			$this->project(entity: $this->entityOf($event));
 		} catch (\Throwable $e) {
 			// Never break the save path: a failure to resolve or project is
 			// logged and swallowed, exactly as TimesheetApprovalListener does.
@@ -124,4 +112,35 @@ class LeaveApprovalListener implements IEventListener {
 		}//end try
 
 	}//end handle()
+
+	/**
+	 * The object as saved.
+	 *
+	 * @param ObjectCreatedEvent|ObjectUpdatedEvent $event The post-save event.
+	 *
+	 * @return ObjectEntity|null
+	 */
+	private function entityOf(ObjectCreatedEvent|ObjectUpdatedEvent $event): ?ObjectEntity {
+		if ($event instanceof ObjectUpdatedEvent) {
+			return $event->getNewObject();
+		}
+
+		return $event->getObject();
+	}//end entityOf()
+
+	/**
+	 * Project a saved leave request onto its balance; other objects are
+	 * left alone.
+	 *
+	 * @param ObjectEntity|null $entity The object as saved.
+	 *
+	 * @return void
+	 */
+	private function project(?ObjectEntity $entity): void {
+		if ($entity === null || strtolower($this->resolveSchemaSlug((string)$entity->getSchema())) !== self::LEAVEREQUEST_SLUG) {
+			return;
+		}
+
+		$this->projection->projectForRequest($entity->getObject());
+	}//end project()
 }//end class
