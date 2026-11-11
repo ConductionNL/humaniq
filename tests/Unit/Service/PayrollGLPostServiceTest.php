@@ -81,6 +81,13 @@ class PayrollGLPostServiceTest extends TestCase {
 			public array $saved = [];
 
 			/**
+			 * Schemas whose filtered lookups fail; the availability probe is unfiltered.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $lookupFails = [];
+
+			/**
 			 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
 			 * @param bool $shillinqThrows Whether JournalEntry access throws.
 			 */
@@ -120,6 +127,10 @@ class PayrollGLPostServiceTest extends TestCase {
 			public function findAll(array $options = []): array {
 				if ($this->schema === 'JournalEntry' && $this->shillinqThrows === true) {
 					throw new \RuntimeException('shillinq register unavailable');
+				}
+
+				if (isset($options['filters']) === true && in_array($this->schema, $this->lookupFails, true) === true) {
+					throw new \RuntimeException('lookup failed');
 				}
 
 				return $this->rowsBySchema[$this->schema] ?? [];
@@ -572,9 +583,10 @@ class PayrollGLPostServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testPostRunAdoptsExistingJournalEntryByNumberInsteadOfDuplicating(): void {
+		[$builder] = $this->service();
 		$rows = [
 			'JournalEntry' => [
-				['id' => 'je-existing', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001'],
+				['id' => 'je-existing', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001', 'lines' => $builder->buildLines($this->payrollRun())['lines']],
 			],
 		];
 		[$service, $fake] = $this->service($rows);
@@ -586,6 +598,65 @@ class PayrollGLPostServiceTest extends TestCase {
 		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
 
 	}//end testPostRunAdoptsExistingJournalEntryByNumberInsteadOfDuplicating()
+
+	/**
+	 * An existing JournalEntry with other totals is not adopted.
+	 *
+	 * @return void
+	 */
+	public function testAJournalEntryWithOtherTotalsIsNotAdopted(): void {
+		[$builder] = $this->service();
+		$lines = $builder->buildLines($this->payrollRun())['lines'];
+		$lines[0]['amount'] = ((float)$lines[0]['amount'] + 1);
+		[$service, $fake] = $this->service(['JournalEntry' => [['id' => 'je-other', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001', 'lines' => $lines]]]);
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertStringContainsString('niet overgenomen', (string)$result['message']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+	}//end testAJournalEntryWithOtherTotalsIsNotAdopted()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedJournalEntryLookupCreatesNoJournalEntry(): void {
+		[$service, $fake] = $this->service();
+		$fake->lookupFails = ['JournalEntry'];
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+	}//end testAFailedJournalEntryLookupCreatesNoJournalEntry()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedJournalEntryLookupLeavesAStalePendingGlPostAlone(): void {
+		[$service, $fake] = $this->service(['PayrollGLPost' => [['id' => 'gp-1', 'payrollRunId' => 'run-1', 'period' => '2026-05', 'status' => 'pending']]]);
+		$fake->lookupFails = ['JournalEntry'];
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('pending', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+		$this->assertCount(0, $this->savedFor($fake, 'PayrollGLPost'));
+	}//end testAFailedJournalEntryLookupLeavesAStalePendingGlPostAlone()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedGlPostLookupWritesNothing(): void {
+		[$service, $fake] = $this->service();
+		$fake->lookupFails = ['PayrollGLPost'];
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('pending', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+		$this->assertCount(0, $this->savedFor($fake, 'PayrollGLPost'));
+	}//end testAFailedGlPostLookupWritesNothing()
 
 	/**
 	 * @return void

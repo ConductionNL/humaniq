@@ -145,4 +145,16 @@ class PayrollRunFindingStampListenerTest extends TestCase {
 		$this->assertSame(self::FINDING, $created->getObject()->getObject());
 	}//end testNothingIsStampedWithoutAnAcknowledgement()
 
+	/**
+	 * Any other event is ignored without reading the session.
+	 *
+	 * @return void
+	 */
+	public function testAnotherEventIsIgnored(): void {
+		$session = $this->createMock(IUserSession::class);
+		$session->expects(self::never())->method('getUser');
+
+		(new PayrollRunFindingStampListener($session))->handle(new \OCP\EventDispatcher\Event());
+	}//end testAnotherEventIsIgnored()
+
 }//end class

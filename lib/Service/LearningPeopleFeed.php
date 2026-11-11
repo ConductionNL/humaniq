@@ -60,6 +60,27 @@ class LearningPeopleFeed {
 	 * @spec openspec/specs/training-and-lms-sync/spec.md#REQ-TRN-002
 	 */
 	public function people(string $today, ?string $modifiedSince=null): array {
+		$indexes = $this->indexes(today: $today);
+		$since = $this->timestamp($modifiedSince);
+		$rows = [];
+		foreach (array_keys($indexes->employeesById) as $employeeId) {
+			$subject = $this->subjectOf(indexes: $indexes, employeeId: $employeeId);
+			if ($subject !== null && $this->changedSince(subject: $subject, since: $since) === true) {
+				$rows[] = $this->row(subject: $subject, indexes: $indexes);
+			}
+		}
+
+		return $rows;
+	}//end people()
+
+	/**
+	 * The employees, units and placements by id, read in that order, for one day.
+	 *
+	 * @param string $today The day, `YYYY-MM-DD`.
+	 *
+	 * @return PeopleFeedIndexes
+	 */
+	private function indexes(string $today): PeopleFeedIndexes {
 		$employeesById = $this->indexById($this->gateway->loadAll('Employee'));
 		$unitsById = $this->indexById($this->gateway->loadAll('OrgUnit'));
 		$assignmentsByEmployeeId = [];
@@ -67,27 +88,42 @@ class LearningPeopleFeed {
 			$assignmentsByEmployeeId[trim((string)($assignment['employeeId'] ?? ''))][] = $assignment;
 		}
 
-		$indexes = new PeopleFeedIndexes(employeesById: $employeesById, unitsById: $unitsById, assignmentsByEmployeeId: $assignmentsByEmployeeId, today: $today);
-		$since = $this->timestamp($modifiedSince);
-		$rows = [];
-		foreach ($employeesById as $employeeId => $employee) {
-			if ($this->orgResolution->isActiveOn($employee, $today) === false) {
-				continue;
-			}
+		return new PeopleFeedIndexes(employeesById: $employeesById, unitsById: $unitsById, assignmentsByEmployeeId: $assignmentsByEmployeeId, today: $today);
+	}//end indexes()
 
-			$placement = $this->currentPlacement(($assignmentsByEmployeeId[$employeeId] ?? []), $today);
-			$unit = $placement === null ? null : ($unitsById[trim((string)($placement['orgUnitId'] ?? ''))] ?? null);
-			$subject = new PeopleFeedSubject(employeeId: $employeeId, employee: $employee, placement: $placement, unit: $unit);
-			$modified = $this->latest($subject->records());
-			if ($since !== null && $modified !== null && ($this->timestamp($modified) ?? 0) <= $since) {
-				continue;
-			}
-
-			$rows[] = $this->row(subject: $subject, indexes: $indexes);
+	/**
+	 * An active employee with their current placement and its unit, or null for someone not active that day.
+	 *
+	 * @param PeopleFeedIndexes $indexes The indexes and the day.
+	 * @param string $employeeId The employee.
+	 *
+	 * @return PeopleFeedSubject|null
+	 */
+	private function subjectOf(PeopleFeedIndexes $indexes, string $employeeId): PeopleFeedSubject|null {
+		$employee = $indexes->employeesById[$employeeId];
+		if ($this->orgResolution->isActiveOn($employee, $indexes->today) === false) {
+			return null;
 		}
 
-		return $rows;
-	}//end people()
+		$placement = $this->currentPlacement(($indexes->assignmentsByEmployeeId[$employeeId] ?? []), $indexes->today);
+		$unit = $placement === null ? null : ($indexes->unitsById[trim((string)($placement['orgUnitId'] ?? ''))] ?? null);
+
+		return new PeopleFeedSubject(employeeId: $employeeId, employee: $employee, placement: $placement, unit: $unit);
+	}//end subjectOf()
+
+	/**
+	 * Whether the subject's records changed after the cut-off; always true without one, or without a modified time.
+	 *
+	 * @param PeopleFeedSubject $subject The employee, placement and unit.
+	 * @param int|null $since The cut-off, as a timestamp.
+	 *
+	 * @return bool
+	 */
+	private function changedSince(PeopleFeedSubject $subject, int|null $since): bool {
+		$modified = $this->latest($subject->records());
+
+		return $since === null || $modified === null || ($this->timestamp($modified) ?? 0) > $since;
+	}//end changedSince()
 
 	/**
 	 * One feed row.
