@@ -163,4 +163,44 @@ class NlFlexContractSignalsTest extends TestCase {
 		self::assertSame(['months' => 12], $rules['nl-signaal-oproep-vaste-uren']['parameters']);
 		self::assertSame('recommended', $rules['nl-signaal-oproep-vaste-uren']['severity']);
 	}//end testBothRulesAreInTheCorpusWithTheirParameters()
+
+	/**
+	 * The whole chain rule outcome, flagged and not flagged, over every
+	 * branch: not running, own id missing, first in a chain, a chain at the
+	 * limit, a chain turning permanent inside, before and after the window,
+	 * and a sibling list that carries the contract under another shape.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeChainRuleOutcome(): void {
+		$live = ['employeeId' => 'emp-1', 'type' => 'temporary', 'startDate' => $this->day('-2 months'), 'endDate' => $this->day('+8 months')];
+		$c1 = ['id' => 'c1', 'type' => 'temporary', 'startDate' => $this->day('-26 months'), 'endDate' => $this->day('-16 months')];
+		$c2 = ['id' => 'c2', 'type' => 'temporary', 'startDate' => $this->day('-15 months'), 'endDate' => $this->day('-3 months')];
+		$long = ['id' => 'c1', 'type' => 'temporary', 'startDate' => $this->day('-35 months'), 'endDate' => $this->day('-11 months -1 day')];
+		$second = ['id' => 'c2', 'employeeId' => 'emp-1', 'type' => 'temporary', 'startDate' => $this->day('-11 months'), 'endDate' => $this->day('+6 months')];
+		$cases = [
+			'third-live'         => [array_merge($live, ['id' => 'c3']), [$c1, $c2]],
+			'third-no-id'        => [$live, [$c1, $c2]],
+			'third-self-id'      => [array_merge($live, ['@self' => ['id' => 'c3']]), [$c1, $c2]],
+			'first'              => [array_merge($live, ['id' => 'c3']), []],
+			'second-short'       => [array_merge($live, ['id' => 'c3']), [$c2]],
+			'second-in-window'   => [$second, [$long]],
+			'second-past-window' => [array_merge($second, ['endDate' => $this->day('+9 months')]), [array_merge($long, ['startDate' => $this->day('-32 months')])]],
+			'not-started'        => [array_merge($live, ['id' => 'c3', 'startDate' => $this->day('+1 month')]), [$c1, $c2]],
+			'ended'              => [array_merge($live, ['id' => 'c3', 'endDate' => $this->day('-1 day')]), [$c1, $c2]],
+			'no-dates'           => [['id' => 'c3', 'employeeId' => 'emp-1'], [$c1, $c2]],
+			'other-employee'     => [array_merge($live, ['id' => 'c3', 'employeeId' => 'emp-2']), [$c1, $c2]],
+			'self-in-siblings'   => [array_merge($live, ['id' => 'c3']), [$c1, $c2, array_merge($live, ['id' => 'c3', 'startDate' => $this->day('-30 months')])]],
+		];
+		$check = NlFlexContractChecks::checks()['EmploymentContract']['nl-signaal-ketenregeling'];
+		$got = [];
+		foreach ($cases as $name => [$contract, $siblings]) {
+			$got[$name] = $check($contract, ['signals' => ['contractsByEmployeeId' => ['emp-1' => $siblings]]]);
+		}
+
+		$got['no-context'] = $check(array_merge($live, ['id' => 'c3']), []);
+		$got['bad-context'] = $check(array_merge($live, ['id' => 'c3']), ['signals' => ['contractsByEmployeeId' => 'none']]);
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 3) . '/fixtures/golden/flex-chain-rule.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeChainRuleOutcome()
 }//end class

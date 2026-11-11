@@ -1,0 +1,16 @@
+{
+    "third-live": false,
+    "third-no-id": false,
+    "third-self-id": false,
+    "first": true,
+    "second-short": true,
+    "second-in-window": false,
+    "second-past-window": true,
+    "not-started": true,
+    "ended": true,
+    "no-dates": true,
+    "other-employee": true,
+    "self-in-siblings": false,
+    "no-context": true,
+    "bad-context": true
+}
