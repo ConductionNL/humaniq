@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\ManagerDeputies;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
@@ -70,30 +71,93 @@ class ManagerDeputyListener implements IEventListener {
 			return;
 		}
 
-		$stored = [];
-		$entity = ($event instanceof ObjectUpdatingEvent) ? $event->getNewObject() : $event->getObject();
-		if ($event instanceof ObjectUpdatingEvent) {
-			$stored = ($event->getOldObject()?->getObject() ?? []);
-		}
-
-		$record = ($entity->getObject() ?? []);
+		$record = ($this->entityOf($event)->getObject() ?? []);
 		$writer = trim((string)($this->userSession->getUser()?->getUID() ?? ''));
-		$stamps = [];
-		if (trim((string)($record['managerUserId'] ?? '')) === '' && $writer !== '') {
-			$stamps['managerUserId'] = $writer;
-			$record['managerUserId'] = $writer;
-		}
+		$stamps = $this->stampsFor(record: $record, writer: $writer);
+		$record = array_merge($record, $stamps);
 
-		$refusal = ($this->deputies->authorityRefusal(writer: $writer, record: $record, stored: $stored) ?? $this->deputies->refusal(record: $record));
+		$refusal = ($this->deputies->authorityRefusal(writer: $writer, record: $record, stored: $this->storedOf($event)) ?? $this->deputies->refusal(record: $record));
 		if ($refusal !== null) {
-			$event->setErrors(['message' => $refusal]);
-			$event->stopPropagation();
+			$this->refuse(event: $event, message: $refusal);
 			return;
 		}
 
-		if ($stamps !== []) {
-			$event->setModifiedData($stamps);
-		}
+		$this->applyStamps(event: $event, stamps: $stamps);
 	}//end handle()
+
+	/**
+	 * The object being written.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return ObjectEntity
+	 */
+	private function entityOf(ObjectCreatingEvent|ObjectUpdatingEvent $event): ObjectEntity {
+		if ($event instanceof ObjectUpdatingEvent) {
+			return $event->getNewObject();
+		}
+
+		return $event->getObject();
+	}//end entityOf()
+
+	/**
+	 * The record as stored before this write; empty on a create.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function storedOf(ObjectCreatingEvent|ObjectUpdatingEvent $event): array {
+		if (($event instanceof ObjectUpdatingEvent) === false) {
+			return [];
+		}
+
+		return ($event->getOldObject()?->getObject() ?? []);
+	}//end storedOf()
+
+	/**
+	 * The writer becomes the manager when the record names none.
+	 *
+	 * @param array<string, mixed> $record The record being written.
+	 * @param string               $writer The writer's user id.
+	 *
+	 * @return array<string, string>
+	 */
+	private function stampsFor(array $record, string $writer): array {
+		if (trim((string)($record['managerUserId'] ?? '')) !== '' || $writer === '') {
+			return [];
+		}
+
+		return ['managerUserId' => $writer];
+	}//end stampsFor()
+
+	/**
+	 * Stop the save with the refusal message.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event   The pre-save event.
+	 * @param string                                  $message The refusal.
+	 *
+	 * @return void
+	 */
+	private function refuse(ObjectCreatingEvent|ObjectUpdatingEvent $event, string $message): void {
+		$event->setErrors(['message' => $message]);
+		$event->stopPropagation();
+	}//end refuse()
+
+	/**
+	 * Write the stamped fields into the save.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event  The pre-save event.
+	 * @param array<string, string>                   $stamps The fields to add.
+	 *
+	 * @return void
+	 */
+	private function applyStamps(ObjectCreatingEvent|ObjectUpdatingEvent $event, array $stamps): void {
+		if ($stamps === []) {
+			return;
+		}
+
+		$event->setModifiedData($stamps);
+	}//end applyStamps()
 
 }//end class
