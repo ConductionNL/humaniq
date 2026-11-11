@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Golden test for the register import of SettingsService.
+ * Golden test for the register import of RegisterImporter.
  *
  * Runs loadConfiguration() and loadConfigurationForced() over every answer
  * OpenRegister's importFromApp can give (errors, warnings, a clean import,
@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\RegisterConfigReader;
+use OCA\Humaniq\Service\RegisterImporter;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -44,8 +45,9 @@ use RuntimeException;
 /**
  * Golden cases for the register import and the fragment merge.
  *
- * @covers \OCA\Humaniq\Service\SettingsService
+ * @covers \OCA\Humaniq\Service\RegisterImporter
  * @covers \OCA\Humaniq\Service\RegisterConfigReader
+ * @uses   \OCA\Humaniq\Service\SettingsService
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  *
  * @spec openspec/specs/hrm-rule-engine/spec.md
@@ -213,7 +215,7 @@ class RegisterConfigLoadGoldenTest extends TestCase {
 			return $importer;
 		});
 
-		$service = new SettingsService($this->createMock(IAppConfig::class), $appManager, $container, $logger);
+		$service = new RegisterImporter(new SettingsService($this->createMock(IAppConfig::class), $appManager), $container, $logger);
 		$answer = (($s['forced'] ?? false) === true) ? $service->loadConfigurationForced() : $service->loadConfiguration();
 
 		return ['answer' => $answer, 'log' => $logger->lines, 'asked' => $asked, 'calls' => $importer->calls];

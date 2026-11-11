@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Repair;
 
 use OCA\Humaniq\Repair\InitializeRegister;
+use OCA\Humaniq\Service\RegisterImporter;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -37,6 +38,7 @@ use Psr\Log\NullLogger;
  *
  * @covers \OCA\Humaniq\Repair\InitializeRegister
  * @uses   \OCA\Humaniq\Service\SettingsService
+ * @uses   \OCA\Humaniq\Service\RegisterImporter
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\RegisterConfigReader
  */
@@ -152,8 +154,8 @@ class InitializeRegisterTest extends TestCase {
 			$output[] = ['warning', $message];
 		});
 
-		$settings = new SettingsService($this->createMock(IAppConfig::class), $appManager, $container, new NullLogger());
-		(new InitializeRegister($settings, $logger))->run($io);
+		$settings = new SettingsService($this->createMock(IAppConfig::class), $appManager);
+		(new InitializeRegister($settings, new RegisterImporter($settings, $container, new NullLogger()), $logger))->run($io);
 
 		return ['output' => $output, 'log' => $logger->lines, 'forced' => $importer->forced];
 
