@@ -314,6 +314,34 @@ class MigrateUserPreferencesTest extends TestCase {
 	}//end testAThrowingWriteIsLoggedAndTheWalkContinues()
 
 	/**
+	 * The report names both counts, and a failed write is logged with its key
+	 * and the new app id.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/app-identity/spec.md#REQ-AID-002
+	 */
+	public function testTheReportAndTheWarningOfAMixedWalk(): void {
+		$writes = [];
+		$output = $this->outputDouble();
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'MigrateUserPreferences: could not migrate one preference; leaving it under the old app id.',
+			['exception' => 'write refused', 'key' => 'active_administration_id', 'app' => 'humaniq']
+		);
+
+		(new MigrateUserPreferences(
+			$this->config(['alice' => 'ADM-001', 'bob' => 'ADM-002', 'dave' => 'ADM-004'], ['bob' => 'ADM-009'], $writes, throwsOn: 'dave'),
+			$this->userManager(['alice', 'bob', 'carol', 'dave']),
+			$logger
+		))->run($output);
+
+		$this->assertSame(['humaniq:alice=ADM-001'], $writes);
+		$this->assertSame(['MigrateUserPreferences: migrated 1 preference(s); 1 already set under humaniq.'], $output->infos);
+		$this->assertSame([], $output->warnings);
+	}//end testTheReportAndTheWarningOfAMixedWalk()
+
+	/**
 	 * An unusable user enumeration warns the operator and never throws.
 	 *
 	 * The operator has to learn that the preferences were left behind — a

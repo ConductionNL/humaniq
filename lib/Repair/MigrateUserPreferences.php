@@ -153,34 +153,17 @@ class MigrateUserPreferences implements IRepairStep {
 	 * @spec openspec/specs/app-identity/spec.md#REQ-AID-002
 	 */
 	public function run(IOutput $output): void {
-		$migrated = 0;
-		$alreadyPresent = 0;
+		$counts = ['migrated' => 0, 'present' => 0];
 
 		$walked = $this->walkSeenUsers(
-			function (IUser $user) use (&$migrated, &$alreadyPresent): void {
+			function (IUser $user) use (&$counts): void {
 				$userId = $user->getUID();
 				foreach (self::MIGRATED_KEYS as $key) {
-					try {
-						$old = $this->config->getUserValue($userId, self::OLD_APP_ID, $key, '');
-						if ($old === '') {
-							continue;
-						}
-
-						$existing = $this->config->getUserValue($userId, self::NEW_APP_ID, $key, '');
-						if ($existing !== '') {
-							$alreadyPresent++;
-							continue;
-						}
-
-						$this->config->setUserValue($userId, self::NEW_APP_ID, $key, $old);
-						$migrated++;
-					} catch (\Throwable $e) {
-						$this->logger->warning(
-							'MigrateUserPreferences: could not migrate one preference; leaving it under the old app id.',
-							['exception' => $e->getMessage(), 'key' => $key, 'app' => self::NEW_APP_ID]
-						);
-					}//end try
-				}//end foreach
+					$outcome = $this->migrateKey(userId: $userId, key: $key);
+					if ($outcome !== null) {
+						$counts[$outcome]++;
+					}
+				}
 			}
 		);
 
@@ -191,7 +174,19 @@ class MigrateUserPreferences implements IRepairStep {
 			return;
 		}
 
-		if ($migrated === 0 && $alreadyPresent === 0) {
+		$this->report(output: $output, counts: $counts);
+	}//end run()
+
+	/**
+	 * Tell the operator what the walk did.
+	 *
+	 * @param IOutput                              $output The repair output.
+	 * @param array{migrated: int, present: int} $counts What the walk counted.
+	 *
+	 * @return void
+	 */
+	private function report(IOutput $output, array $counts): void {
+		if ($counts['migrated'] === 0 && $counts['present'] === 0) {
 			$output->info('MigrateUserPreferences: no stored hrmq user preferences on this install; nothing to do.');
 			return;
 		}
@@ -199,12 +194,44 @@ class MigrateUserPreferences implements IRepairStep {
 		$output->info(
 			sprintf(
 				'MigrateUserPreferences: migrated %d preference(s); %d already set under humaniq.',
-				$migrated,
-				$alreadyPresent
+				$counts['migrated'],
+				$counts['present']
 			)
 		);
+	}//end report()
 
-	}//end run()
+	/**
+	 * Copy one preference of one user to the new app id.
+	 *
+	 * @param string $userId The user.
+	 * @param string $key    The preference key.
+	 *
+	 * @return 'migrated'|'present'|null What happened; null when there was nothing to copy or the copy failed.
+	 */
+	private function migrateKey(string $userId, string $key): ?string {
+		try {
+			$old = $this->config->getUserValue($userId, self::OLD_APP_ID, $key, '');
+			if ($old === '') {
+				return null;
+			}
+
+			$existing = $this->config->getUserValue($userId, self::NEW_APP_ID, $key, '');
+			if ($existing !== '') {
+				return 'present';
+			}
+
+			$this->config->setUserValue($userId, self::NEW_APP_ID, $key, $old);
+
+			return 'migrated';
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'MigrateUserPreferences: could not migrate one preference; leaving it under the old app id.',
+				['exception' => $e->getMessage(), 'key' => $key, 'app' => self::NEW_APP_ID]
+			);
+
+			return null;
+		}//end try
+	}//end migrateKey()
 
 	/**
 	 * Walk every user who has logged in at least once.
