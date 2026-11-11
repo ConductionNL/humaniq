@@ -1,0 +1,268 @@
+{
+    "applied": {
+        "applied": true,
+        "writes": [
+            {
+                "schema": "Employee",
+                "uuid": "emp-1",
+                "internal": true,
+                "payload": {
+                    "iban": "NL02",
+                    "grossMonthlySalary": 3800,
+                    "straat": "Oudegracht"
+                }
+            },
+            {
+                "schema": "EmployeeChangeRequest",
+                "uuid": "req-1",
+                "internal": true,
+                "payload": {
+                    "status": "goedgekeurd",
+                    "employeeId": "emp-1",
+                    "changes": {
+                        "iban": "NL02"
+                    },
+                    "previousValues": {
+                        "iban": "NL01"
+                    },
+                    "appliedAt": "2026-09-29T10:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "not-approved": {
+        "applied": false,
+        "writes": []
+    },
+    "no-status": {
+        "applied": false,
+        "writes": []
+    },
+    "already-applied": {
+        "applied": false,
+        "writes": []
+    },
+    "blank-applied": {
+        "applied": true,
+        "writes": [
+            {
+                "schema": "Employee",
+                "uuid": "emp-1",
+                "internal": true,
+                "payload": {
+                    "iban": "NL02",
+                    "grossMonthlySalary": 3800,
+                    "straat": "Oudegracht"
+                }
+            },
+            {
+                "schema": "EmployeeChangeRequest",
+                "uuid": "req-1",
+                "internal": true,
+                "payload": {
+                    "status": "goedgekeurd",
+                    "employeeId": "emp-1",
+                    "changes": {
+                        "iban": "NL02"
+                    },
+                    "previousValues": {
+                        "iban": "NL01"
+                    },
+                    "appliedAt": "2026-09-29T10:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "earlier-error": {
+        "applied": false,
+        "writes": []
+    },
+    "array-error": {
+        "applied": true,
+        "writes": [
+            {
+                "schema": "Employee",
+                "uuid": "emp-1",
+                "internal": true,
+                "payload": {
+                    "iban": "NL02",
+                    "grossMonthlySalary": 3800,
+                    "straat": "Oudegracht"
+                }
+            },
+            {
+                "schema": "EmployeeChangeRequest",
+                "uuid": "req-1",
+                "internal": true,
+                "payload": {
+                    "status": "goedgekeurd",
+                    "employeeId": "emp-1",
+                    "changes": {
+                        "iban": "NL02"
+                    },
+                    "previousValues": {
+                        "iban": "NL01"
+                    },
+                    "applyError": [
+                        "x"
+                    ],
+                    "appliedAt": "2026-09-29T10:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "stale": {
+        "applied": false,
+        "writes": [
+            {
+                "schema": "EmployeeChangeRequest",
+                "uuid": "req-1",
+                "internal": true,
+                "payload": {
+                    "status": "goedgekeurd",
+                    "employeeId": "emp-1",
+                    "changes": {
+                        "iban": "NL02"
+                    },
+                    "previousValues": {
+                        "iban": "NL99"
+                    },
+                    "applyError": "Niet doorgevoerd: iban is gewijzigd nadat het verzoek werd gedaan. Doe een nieuw verzoek."
+                }
+            }
+        ]
+    },
+    "stale-two": {
+        "applied": false,
+        "writes": [
+            {
+                "schema": "EmployeeChangeRequest",
+                "uuid": "req-1",
+                "internal": true,
+                "payload": {
+                    "status": "goedgekeurd",
+                    "employeeId": "emp-1",
+                    "changes": {
+                        "iban": "NL02",
+                        "straat": "Laan"
+                    },
+                    "previousValues": {
+                        "iban": "NL99"
+                    },
+                    "applyError": "Niet doorgevoerd: iban, straat is gewijzigd nadat het verzoek werd gedaan. Doe een nieuw verzoek."
+                }
+            }
+        ]
+    },
+    "numeric-same": {
+        "applied": true,
+        "writes": [
+            {
+                "schema": "Employee",
+                "uuid": "emp-1",
+                "internal": true,
+                "payload": {
+                    "iban": "NL01",
+                    "grossMonthlySalary": 4000,
+                    "straat": "Oudegracht"
+                }
+            },
+            {
+                "schema": "EmployeeChangeRequest",
+                "uuid": "req-1",
+                "internal": true,
+                "payload": {
+                    "status": "goedgekeurd",
+                    "employeeId": "emp-1",
+                    "changes": {
+                        "grossMonthlySalary": 4000
+                    },
+                    "previousValues": {
+                        "grossMonthlySalary": "3800.00"
+                    },
+                    "appliedAt": "2026-09-29T10:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "unknown-employee": {
+        "applied": false,
+        "writes": [
+            {
+                "schema": "EmployeeChangeRequest",
+                "uuid": "req-1",
+                "internal": true,
+                "payload": {
+                    "status": "goedgekeurd",
+                    "employeeId": "emp-gone",
+                    "changes": {
+                        "iban": "NL02"
+                    },
+                    "previousValues": {
+                        "iban": "NL01"
+                    },
+                    "applyError": "Niet doorgevoerd: iban is gewijzigd nadat het verzoek werd gedaan. Doe een nieuw verzoek."
+                }
+            }
+        ]
+    },
+    "no-changes": {
+        "applied": true,
+        "writes": [
+            {
+                "schema": "Employee",
+                "uuid": "emp-1",
+                "internal": true,
+                "payload": {
+                    "iban": "NL01",
+                    "grossMonthlySalary": 3800,
+                    "straat": "Oudegracht"
+                }
+            },
+            {
+                "schema": "EmployeeChangeRequest",
+                "uuid": "req-1",
+                "internal": true,
+                "payload": {
+                    "status": "goedgekeurd",
+                    "employeeId": "emp-1",
+                    "changes": "iban",
+                    "previousValues": {
+                        "iban": "NL01"
+                    },
+                    "appliedAt": "2026-09-29T10:00:00+00:00"
+                }
+            }
+        ]
+    },
+    "no-previous": {
+        "applied": true,
+        "writes": [
+            {
+                "schema": "Employee",
+                "uuid": "emp-1",
+                "internal": true,
+                "payload": {
+                    "iban": "NL01",
+                    "grossMonthlySalary": 3800,
+                    "straat": "Oudegracht",
+                    "nickname": "Jo"
+                }
+            },
+            {
+                "schema": "EmployeeChangeRequest",
+                "uuid": "req-1",
+                "internal": true,
+                "payload": {
+                    "status": "goedgekeurd",
+                    "employeeId": "emp-1",
+                    "changes": {
+                        "nickname": "Jo"
+                    },
+                    "previousValues": null,
+                    "appliedAt": "2026-09-29T10:00:00+00:00"
+                }
+            }
+        ]
+    }
+}
