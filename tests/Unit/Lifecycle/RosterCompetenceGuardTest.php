@@ -232,6 +232,30 @@ class RosterCompetenceGuardTest extends TestCase {
 	}//end testACompetenceAndALeaveRefusalAreBothNamed()
 
 	/**
+	 * The whole answer for a qualified roster, one refusal of each kind, and
+	 * more refusals than are named.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeAnswerOfEveryRoster(): void {
+		$qualified = $this->boaRoster([['id' => 'ec-1', 'employeeId' => 'emp-jan', 'competenceCode' => 'boa-domein-1', 'issuedOn' => '2026-01-01', 'validUntil' => '2027-01-01']]);
+		$both = $this->boaRoster([]);
+		$both['LeaveRequest'] = [['id' => 'lr-1', 'employeeId' => 'emp-jan', 'status' => 'approved', 'startDate' => '2026-07-13', 'endDate' => '2026-07-13']];
+		$many = $this->boaRoster([]);
+		foreach (['14', '15', '16'] as $day) {
+			$many['RosterAssignment'][] = ['id' => 'ra-' . $day, 'rosterId' => 'roster-w28', 'employeeId' => 'emp-jan', 'shiftId' => 'shift-boa', 'date' => '2026-07-' . $day, 'plannedStart' => '2026-07-' . $day . 'T22:00:00', 'plannedEnd' => '2026-07-' . $day . 'T23:00:00', 'plannedBreakMinutes' => 0];
+		}
+
+		$got = [];
+		foreach (['qualified' => $qualified, 'competence' => $this->boaRoster([]), 'both' => $both, 'many' => $many] as $name => $rows) {
+			$result = $this->guardWithRows($rows)->check(['id' => 'roster-w28'], 'publiceren', 'planner');
+			$got[$name] = [$result->isAllowed(), $result->getMessage()];
+		}
+
+		$this->assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/roster-competence-guard.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeAnswerOfEveryRoster()
+
+	/**
 	 * Fail closed: no id, an unknown roster and an unresolved register all
 	 * deny rather than publish unchecked.
 	 *

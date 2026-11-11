@@ -1,0 +1,18 @@
+{
+    "qualified": [
+        true,
+        null
+    ],
+    "competence": [
+        false,
+        "Dit rooster kan niet worden gepubliceerd. Diensten zonder geldige bevoegdheid: 1. Medewerker emp-jan heeft op 2026-07-13 geen geldige bevoegdheid boa-domein-1 voor deze dienst."
+    ],
+    "both": [
+        false,
+        "Dit rooster kan niet worden gepubliceerd. Diensten zonder geldige bevoegdheid: 1. Medewerker emp-jan heeft op 2026-07-13 geen geldige bevoegdheid boa-domein-1 voor deze dienst. Diensten op een dag met goedgekeurd verlof: 1. Medewerker emp-jan is op 2026-07-13 ingeroosterd maar heeft goedgekeurd verlof."
+    ],
+    "many": [
+        false,
+        "Dit rooster kan niet worden gepubliceerd. Diensten zonder geldige bevoegdheid: 4. Medewerker emp-jan heeft op 2026-07-13 geen geldige bevoegdheid boa-domein-1 voor deze dienst. Medewerker emp-jan heeft op 2026-07-14 geen geldige bevoegdheid boa-domein-1 voor deze dienst. Medewerker emp-jan heeft op 2026-07-15 geen geldige bevoegdheid boa-domein-1 voor deze dienst. Voer occ humaniq:roster:check uit voor de volledige lijst."
+    ]
+}
