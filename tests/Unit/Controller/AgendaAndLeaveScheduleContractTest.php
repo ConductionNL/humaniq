@@ -205,6 +205,19 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 	}//end testTheScheduleRefusesWithoutAnOrgUnit()
 
 	/**
+	 * `GET /api/leave/schedule` refuses an unusable window with the window sentence.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
+	 */
+	public function testTheScheduleRefusesAnUnusableWindowWithItsSentence(): void {
+		$response = $this->leaveController()->schedule(orgUnitId: 'unit-1', from: '2026-09-07', to: '2026-09-01');
+
+		$this->assertSame([Http::STATUS_BAD_REQUEST, ['error' => 'from en to moeten geldige datums zijn, met to op of na from.']], [$response->getStatus(), $response->getData()]);
+	}//end testTheScheduleRefusesAnUnusableWindowWithItsSentence()
+
+	/**
 	 * `GET /api/leave/schedule` answers the member count beside the entries.
 	 *
 	 * @return void
