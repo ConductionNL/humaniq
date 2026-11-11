@@ -74,30 +74,12 @@ class ExpenseRouteListener implements IEventListener {
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
 	 */
 	public function handle(Event $event): void {
-		if ($this->marker->isInternal() === true) {
+		if ($this->applies($event) === false) {
 			return;
 		}
 
-		if ($event instanceof ObjectCreatingEvent) {
-			$this->judge(event: $event, claim: ($event->getObject()->getObject() ?? []), old: []);
-			return;
-		}
-
-		if ($event instanceof ObjectUpdatingEvent) {
-			$this->judge(event: $event, claim: ($event->getNewObject()->getObject() ?? []), old: ($event->getOldObject()?->getObject() ?? []));
-		}
-	}//end handle()
-
-	/**
-	 * Refuse a wrong route or stamp the default one.
-	 *
-	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The event.
-	 * @param array<string, mixed>                    $claim The claim as it will be saved.
-	 * @param array<string, mixed>                    $old   The claim before, or none.
-	 *
-	 * @return void
-	 */
-	private function judge(ObjectCreatingEvent|ObjectUpdatingEvent $event, array $claim, array $old): void {
+		$claim   = $this->claimOf($event);
+		$old     = $this->storedOf($event);
 		$refusal = $this->refusal(claim: $claim, old: $old);
 		if ($refusal !== null) {
 			$event->setErrors(['message' => $refusal]);
@@ -105,13 +87,100 @@ class ExpenseRouteListener implements IEventListener {
 			return;
 		}
 
-		$route = (string)($claim['reimbursementRoute'] ?? '');
-		if ($route !== '' || (string)($claim['status'] ?? '') !== 'approved' || (string)($old['status'] ?? '') === 'approved') {
+		$this->stampRoute(event: $event, route: $this->routeFor(claim: $claim, old: $old));
+	}//end handle()
+
+	/**
+	 * Whether this is a claim write from outside the app's own writers.
+	 *
+	 * @param Event $event The event.
+	 *
+	 * @psalm-assert-if-true ObjectCreatingEvent|ObjectUpdatingEvent $event
+	 *
+	 * @return bool
+	 */
+	private function applies(Event $event): bool {
+		return $this->marker->isInternal() === false && ($event instanceof ObjectCreatingEvent || $event instanceof ObjectUpdatingEvent);
+	}//end applies()
+
+	/**
+	 * Whether the claim is approved by this write and carries no route yet.
+	 *
+	 * @param array<string, mixed> $claim The incoming claim.
+	 * @param array<string, mixed> $old   The stored claim; empty on create.
+	 *
+	 * @return bool
+	 */
+	private function approvedNow(array $claim, array $old): bool {
+		return (string)($claim['reimbursementRoute'] ?? '') === '' && (string)($claim['status'] ?? '') === 'approved' && (string)($old['status'] ?? '') !== 'approved';
+	}//end approvedNow()
+
+	/**
+	 * The incoming claim.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function claimOf(ObjectCreatingEvent|ObjectUpdatingEvent $event): array {
+		if ($event instanceof ObjectUpdatingEvent) {
+			return ($event->getNewObject()->getObject() ?? []);
+		}
+
+		return ($event->getObject()->getObject() ?? []);
+	}//end claimOf()
+
+	/**
+	 * The stored claim; empty on a create.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function storedOf(ObjectCreatingEvent|ObjectUpdatingEvent $event): array {
+		if (($event instanceof ObjectUpdatingEvent) === false) {
+			return [];
+		}
+
+		return ($event->getOldObject()?->getObject() ?? []);
+	}//end storedOf()
+
+	/**
+	 * Add the route to the save, when there is one.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The pre-save event.
+	 * @param string|null                             $route The route to stamp.
+	 *
+	 * @return void
+	 */
+	private function stampRoute(ObjectCreatingEvent|ObjectUpdatingEvent $event, ?string $route): void {
+		if ($route === null) {
 			return;
 		}
 
-		$event->setModifiedData(array_merge($event->getModifiedData(), ['reimbursementRoute' => (self::isTaxable(claim: $claim) === true ? 'direct' : $this->settings->getExpenseReimbursementRoute())]));
-	}//end judge()
+		$event->setModifiedData(array_merge($event->getModifiedData(), ['reimbursementRoute' => $route]));
+	}//end stampRoute()
+
+	/**
+	 * The route to stamp on a claim that is approved now without one.
+	 *
+	 * @param array<string, mixed> $claim The incoming claim.
+	 * @param array<string, mixed> $old   The stored claim; empty on create.
+	 *
+	 * @return string|null
+	 */
+	private function routeFor(array $claim, array $old): ?string {
+		if ($this->approvedNow(claim: $claim, old: $old) === false) {
+			return null;
+		}
+
+		if (self::isTaxable(claim: $claim) === true) {
+			return 'direct';
+		}
+
+		return $this->settings->getExpenseReimbursementRoute();
+	}//end routeFor()
+
 
 	/**
 	 * Why the save is refused, or null.
@@ -122,23 +191,57 @@ class ExpenseRouteListener implements IEventListener {
 	 * @return string|null
 	 */
 	private function refusal(array $claim, array $old): ?string {
-		$route = (string)($claim['reimbursementRoute'] ?? '');
-		$oldRoute = (string)($old['reimbursementRoute'] ?? '');
-		if ($route === 'payroll' && self::isTaxable(claim: $claim) === true) {
-			return 'Deze declaratie heeft een belaste deel en kan nog niet via de salarisrun worden uitbetaald. Kies de directe route.';
-		}
-
-		if ((string)($old['payrollRunId'] ?? '') !== '' && $route !== $oldRoute) {
-			return 'Deze declaratie zit in een salarisrun; de route kan niet meer worden gewijzigd.';
-		}
-
-		$reimbursedByHand = ((string)($claim['status'] ?? '') === 'reimbursed' && (string)($old['status'] ?? '') !== 'reimbursed');
-		if ($reimbursedByHand === true && ($route === 'payroll' || $oldRoute === 'payroll')) {
-			return 'Deze declaratie wordt via de salarisrun uitbetaald en wordt vergoed zodra die run is goedgekeurd.';
-		}
-
-		return null;
+		return ($this->taxableRefusal(claim: $claim) ?? $this->lockedRefusal(claim: $claim, old: $old) ?? $this->handPaidRefusal(claim: $claim, old: $old));
 	}//end refusal()
+
+	/**
+	 * A claim with a taxed part cannot go through the payroll run yet.
+	 *
+	 * @param array<string, mixed> $claim The incoming claim.
+	 *
+	 * @return string|null
+	 */
+	private function taxableRefusal(array $claim): ?string {
+		if ((string)($claim['reimbursementRoute'] ?? '') !== 'payroll' || self::isTaxable(claim: $claim) === false) {
+			return null;
+		}
+
+		return 'Deze declaratie heeft een belaste deel en kan nog niet via de salarisrun worden uitbetaald. Kies de directe route.';
+	}//end taxableRefusal()
+
+	/**
+	 * A claim inside a payroll run keeps its route.
+	 *
+	 * @param array<string, mixed> $claim The incoming claim.
+	 * @param array<string, mixed> $old   The stored claim; empty on create.
+	 *
+	 * @return string|null
+	 */
+	private function lockedRefusal(array $claim, array $old): ?string {
+		if ((string)($old['payrollRunId'] ?? '') === '' || (string)($claim['reimbursementRoute'] ?? '') === (string)($old['reimbursementRoute'] ?? '')) {
+			return null;
+		}
+
+		return 'Deze declaratie zit in een salarisrun; de route kan niet meer worden gewijzigd.';
+	}//end lockedRefusal()
+
+	/**
+	 * A payroll-route claim is not marked reimbursed by hand.
+	 *
+	 * @param array<string, mixed> $claim The incoming claim.
+	 * @param array<string, mixed> $old   The stored claim; empty on create.
+	 *
+	 * @return string|null
+	 */
+	private function handPaidRefusal(array $claim, array $old): ?string {
+		$reimbursedByHand = ((string)($claim['status'] ?? '') === 'reimbursed' && (string)($old['status'] ?? '') !== 'reimbursed');
+		$payroll = in_array('payroll', [(string)($claim['reimbursementRoute'] ?? ''), (string)($old['reimbursementRoute'] ?? '')], true);
+		if ($reimbursedByHand === false || $payroll === false) {
+			return null;
+		}
+
+		return 'Deze declaratie wordt via de salarisrun uitbetaald en wordt vergoed zodra die run is goedgekeurd.';
+	}//end handPaidRefusal()
 
 	/**
 	 * Whether a claim has a taxable part.
