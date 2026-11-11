@@ -83,4 +83,48 @@ class ManagerDeputiesTest extends TestCase {
 		self::assertSame(['dirk'], $deputies->approversOf(['employeeId' => 'emp-mila', 'userId' => 'mila', 'managerUserId' => 'mila'], '2026-07-20'));
 	}//end testTheApproversAreTheManagerAndTheActiveDeputyNeverTheRequester()
 
+	/**
+	 * The whole outcome of the record check and of the manager lookup,
+	 * allowed and refused.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeRecordCheckAndManagerLookup(): void {
+		$deputies = $this->deputies();
+		$valid = ['managerUserId' => 'mila', 'deputyUserId' => 'dirk', 'from' => '2026-07-14', 'until' => '2026-08-01'];
+		$records = [
+			'valid'          => $valid,
+			'one-day'        => array_merge($valid, ['until' => '2026-07-14']),
+			'no-manager'     => array_merge($valid, ['managerUserId' => ' ']),
+			'no-deputy'      => array_merge($valid, ['deputyUserId' => null]),
+			'neither'        => [],
+			'self'           => array_merge($valid, ['deputyUserId' => ' mila ']),
+			'self-no-dates'  => ['managerUserId' => 'mila', 'deputyUserId' => 'mila'],
+			'no-from'        => array_merge($valid, ['from' => '']),
+			'no-until'       => array_merge($valid, ['until' => null]),
+			'bad-from'       => array_merge($valid, ['from' => 'next week']),
+			'backwards'      => array_merge($valid, ['from' => '2026-08-01', 'until' => '2026-07-14']),
+			'no-deputy-back' => array_merge($valid, ['deputyUserId' => '', 'from' => '2026-08-01', 'until' => '2026-07-14']),
+		];
+		$got = [];
+		foreach ($records as $name => $record) {
+			$got['refusal'][$name] = $deputies->refusal($record);
+		}
+
+		$requests = [
+			'stamped'      => ['employeeId' => 'emp-sam', 'managerUserId' => ' mila '],
+			'unstamped'    => ['employeeId' => 'emp-noor'],
+			'again'        => ['employeeId' => ' emp-noor '],
+			'no-employee'  => ['employeeId' => ' '],
+			'nothing'      => [],
+			'unknown'      => ['employeeId' => 'emp-nobody'],
+			'blank-stamp'  => ['employeeId' => 'emp-sam', 'managerUserId' => ''],
+		];
+		foreach ($requests as $name => $request) {
+			$got['managers'][$name] = $deputies->managersOf($request, '2026-07-20');
+		}
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/deputy-rules.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeRecordCheckAndManagerLookup()
+
 }//end class

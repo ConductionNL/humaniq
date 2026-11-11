@@ -1,0 +1,33 @@
+{
+    "refusal": {
+        "valid": null,
+        "one-day": null,
+        "no-manager": "Name both the manager and the deputy.",
+        "no-deputy": "Name both the manager and the deputy.",
+        "neither": "Name both the manager and the deputy.",
+        "self": "A manager cannot be their own deputy.",
+        "self-no-dates": "A manager cannot be their own deputy.",
+        "no-from": "Give the first and the last day the deputy stands in.",
+        "no-until": "Give the first and the last day the deputy stands in.",
+        "bad-from": "Give the first and the last day the deputy stands in.",
+        "backwards": "The last day comes before the first day.",
+        "no-deputy-back": "Name both the manager and the deputy."
+    },
+    "managers": {
+        "stamped": [
+            "mila"
+        ],
+        "unstamped": [
+            "mila"
+        ],
+        "again": [
+            "mila"
+        ],
+        "no-employee": [],
+        "nothing": [],
+        "unknown": [],
+        "blank-stamp": [
+            "mila"
+        ]
+    }
+}
