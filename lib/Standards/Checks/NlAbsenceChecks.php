@@ -141,41 +141,68 @@ final class NlAbsenceChecks implements CheckProvider {
 	 * @return bool
 	 */
 	private static function derivationSatisfied(array $o): bool {
+		$clock = self::clockOf(o: $o);
+		if ($clock === null) {
+			return true;
+		}
+
+		foreach (self::MILESTONES as $milestone) {
+			if (self::milestoneDerived(clock: $clock, milestone: $milestone) === false) {
+				return false;
+			}
+		}
+
+		return true;
+	}//end derivationSatisfied()
+
+	/**
+	 * The case's clock, or null when the corpus weeks are missing or the first sick day is unparseable.
+	 *
+	 * @param array<string, mixed> $o The SickLeaveCase.
+	 *
+	 * @return SickCaseClock|null
+	 */
+	private static function clockOf(array $o): SickCaseClock|null {
 		$milestoneWeeks = self::milestoneWeeks();
 		if ($milestoneWeeks === null) {
-			return true;
+			return null;
 		}
 
 		$firstSickDay = strtotime((string)($o['firstSickDay'] ?? ''));
 		if ($firstSickDay === false) {
+			return null;
+		}
+
+		$clock = new SickCaseClock();
+		$clock->case = $o;
+		$clock->firstSickDay = $firstSickDay;
+		$clock->isOpen = (string)($o['status'] ?? 'gemeld') === 'gemeld';
+		$clock->weeks = $milestoneWeeks;
+
+		return $clock;
+	}//end clockOf()
+
+	/**
+	 * Whether one milestone's Due date is derived correctly: equal to the first sick day plus its weeks, and present while the case is open.
+	 *
+	 * @param SickCaseClock $clock The case's clock.
+	 * @param array{due: string, done: string, weeksKey: string} $milestone The milestone.
+	 *
+	 * @return bool
+	 */
+	private static function milestoneDerived(SickCaseClock $clock, array $milestone): bool {
+		$weeks = ($clock->weeks[$milestone['weeksKey']] ?? null);
+		if (is_numeric($weeks) === false) {
 			return true;
 		}
 
-		$isOpen = (string)($o['status'] ?? 'gemeld') === 'gemeld';
+		$due = trim((string)($clock->case[$milestone['due']] ?? ''));
+		if ($due === '') {
+			return $clock->isOpen === false;
+		}
 
-		foreach (self::MILESTONES as $milestone) {
-			$weeks = ($milestoneWeeks[$milestone['weeksKey']] ?? null);
-			if (is_numeric($weeks) === false) {
-				continue;
-			}
-
-			$due = trim((string)($o[$milestone['due']] ?? ''));
-			if ($due === '') {
-				if ($isOpen === true) {
-					return false;
-				}
-
-				continue;
-			}
-
-			$expected = date('Y-m-d', strtotime('+' . ((int)$weeks * 7) . ' days', $firstSickDay));
-			if ($due !== $expected) {
-				return false;
-			}
-		}//end foreach
-
-		return true;
-	}//end derivationSatisfied()
+		return $due === date('Y-m-d', strtotime('+' . ((int)$weeks * 7) . ' days', $clock->firstSickDay));
+	}//end milestoneDerived()
 
 	/**
 	 * True on a hersteld (closed) case, or when every WVP milestone on an
