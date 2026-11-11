@@ -107,37 +107,53 @@ class HoursPayService {
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 */
 	public function payFor(array $employee, array $contract, array $timesheets, array $entries, ?array $nonWorkingDates): array {
-		$salaried = (is_numeric($employee['grossMonthlySalary'] ?? null) === true && (float)$employee['grossMonthlySalary'] > 0.0);
-		$rate = $this->hourlyRate(employee: $employee, contract: $contract, salaried: $salaried);
-		$pay = ['hourlyCents' => 0, 'overtimeCents' => 0, 'hoursPaid' => 0.0, 'overtimeHours' => 0.0, 'hourlyRate' => $rate, 'surchargeUnresolved' => false, 'timesheetIds' => [], 'timeCredits' => []];
-
+		$run = new HoursPayRun();
+		$run->contract = $contract;
+		$run->entries = $entries;
+		$run->nonWorkingDates = $nonWorkingDates;
+		$run->salaried = (is_numeric($employee['grossMonthlySalary'] ?? null) === true && (float)$employee['grossMonthlySalary'] > 0.0);
+		$run->rate = $this->hourlyRate(employee: $employee, contract: $contract, salaried: $run->salaried);
+		$run->pay = ['hourlyCents' => 0, 'overtimeCents' => 0, 'hoursPaid' => 0.0, 'overtimeHours' => 0.0, 'hourlyRate' => $run->rate, 'surchargeUnresolved' => false, 'timesheetIds' => [], 'timeCredits' => []];
 		foreach ($timesheets as $timesheet) {
-			$timesheetId = (string)($timesheet['id'] ?? ($timesheet['@self']['id'] ?? ''));
-			$pay['timesheetIds'][] = $timesheetId;
-			$overtime = array_values(array_filter($entries, static fn (array $entry): bool => (string)($entry['timesheetId'] ?? '') === $timesheetId && ($entry['overtime'] ?? false) === true));
-			$overtimeHours = array_sum(array_map(static fn (array $entry): float => (float)($entry['hours'] ?? 0), $overtime));
-			if ($salaried === false) {
-				$pay['hoursPaid'] += max(0.0, (float)($timesheet['hours'] ?? 0) - $overtimeHours);
-			}
-
-			$pay['overtimeHours'] += $overtimeHours;
-			$settled = $this->settleOvertime(entries: $overtime, contract: $contract, rate: $rate, nonWorkingDates: $nonWorkingDates);
-			$pay['overtimeCents'] += $settled['cents'];
-			$pay['surchargeUnresolved'] = ($pay['surchargeUnresolved'] || $settled['unresolved']);
-			if ($settled['credit'] > 0.0) {
-				$pay['timeCredits'][] = ['timesheetId' => $timesheetId, 'hours' => round($settled['credit'], 2)];
-			}
+			$this->payTimesheet(run: $run, timesheet: $timesheet);
 		}
 
-		if ($salaried === false && $rate !== null) {
-			$pay['hourlyCents'] = (int)round($pay['hoursPaid'] * $rate * 100);
+		if ($run->salaried === false && $run->rate !== null) {
+			$run->pay['hourlyCents'] = (int)round($run->pay['hoursPaid'] * $run->rate * 100);
 		}
 
-		$pay['hoursPaid'] = round($pay['hoursPaid'], 2);
-		$pay['overtimeHours'] = round($pay['overtimeHours'], 2);
+		$run->pay['hoursPaid'] = round($run->pay['hoursPaid'], 2);
+		$run->pay['overtimeHours'] = round($run->pay['overtimeHours'], 2);
 
-		return $pay;
+		return $run->pay;
 	}//end payFor()
+
+	/**
+	 * Add one timesheet: its hours less overtime for an hourly employee, its
+	 * overtime settled in money or time off.
+	 *
+	 * @param HoursPayRun          $run       The pay being added up.
+	 * @param array<string, mixed> $timesheet The timesheet.
+	 *
+	 * @return void
+	 */
+	private function payTimesheet(HoursPayRun $run, array $timesheet): void {
+		$timesheetId = (string)($timesheet['id'] ?? ($timesheet['@self']['id'] ?? ''));
+		$run->pay['timesheetIds'][] = $timesheetId;
+		$overtime = array_values(array_filter($run->entries, static fn (array $entry): bool => (string)($entry['timesheetId'] ?? '') === $timesheetId && ($entry['overtime'] ?? false) === true));
+		$overtimeHours = array_sum(array_map(static fn (array $entry): float => (float)($entry['hours'] ?? 0), $overtime));
+		if ($run->salaried === false) {
+			$run->pay['hoursPaid'] += max(0.0, (float)($timesheet['hours'] ?? 0) - $overtimeHours);
+		}
+
+		$run->pay['overtimeHours'] += $overtimeHours;
+		$settled = $this->settleOvertime(entries: $overtime, contract: $run->contract, rate: $run->rate, nonWorkingDates: $run->nonWorkingDates);
+		$run->pay['overtimeCents'] += $settled['cents'];
+		$run->pay['surchargeUnresolved'] = ($run->pay['surchargeUnresolved'] || $settled['unresolved']);
+		if ($settled['credit'] > 0.0) {
+			$run->pay['timeCredits'][] = ['timesheetId' => $timesheetId, 'hours' => round($settled['credit'], 2)];
+		}
+	}//end payTimesheet()
 
 	/**
 	 * Stamp the timesheets this run paid, and clear the stamp of one it paid
