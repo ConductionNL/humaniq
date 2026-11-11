@@ -51,6 +51,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @uses \OCA\Humaniq\Standards\Checks\CompChecks
  * @uses \OCA\Humaniq\Standards\Checks\EuUsPayrollChecks
+ * @uses \OCA\Humaniq\Standards\Checks\FilingDates
  * @uses \OCA\Humaniq\Standards\Checks\NlAbpChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlAbsenceChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlAdministratieChecks
