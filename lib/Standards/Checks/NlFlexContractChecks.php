@@ -107,6 +107,28 @@ final class NlFlexContractChecks implements CheckProvider {
 			return true;
 		}
 
+		$chain = self::chainOf(contract: $contract, context: $context);
+		if ($chain['position'] === 0) {
+			return true;
+		}
+
+		if ($chain['position'] >= ContractChainService::MAX_CONTRACTS) {
+			return false;
+		}
+
+		return self::outsideWindow(turnsPermanentOn: (string)$chain['turnsPermanentOn'], today: $today);
+	}//end ketenregelingSatisfied()
+
+	/**
+	 * The contract's place in its employee's chain, the contract itself
+	 * counted under its own id (or a stand-in when it has none yet).
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param array<string, mixed> $context  The audit context.
+	 *
+	 * @return array{position: int, maxContracts: int, contractIds: array<int, string>, startsOn: ?string, monthsCounted: int, turnsPermanentOn: ?string}
+	 */
+	private static function chainOf(array $contract, array $context): array {
 		$ownId = (string)($contract['id'] ?? $contract['@self']['id'] ?? '');
 		if ($ownId === '') {
 			$ownId = '__self__';
@@ -120,20 +142,24 @@ final class NlFlexContractChecks implements CheckProvider {
 		);
 		$siblings[] = array_merge($contract, ['id' => $ownId]);
 
-		$chain = (new ContractChainService())->chainFor(contracts: $siblings, contractId: $ownId);
-		if ($chain['position'] === 0) {
-			return true;
-		}
+		return (new ContractChainService())->chainFor(contracts: $siblings, contractId: $ownId);
+	}//end chainOf()
 
-		if ($chain['position'] >= ContractChainService::MAX_CONTRACTS) {
-			return false;
-		}
-
-		$permanentOn = strtotime((string)$chain['turnsPermanentOn']);
+	/**
+	 * Whether the chain does not turn permanent within the warning window
+	 * from today (or the day is unknown or already passed).
+	 *
+	 * @param string $turnsPermanentOn The day the chain turns permanent.
+	 * @param int    $today            Today, as a timestamp.
+	 *
+	 * @return bool
+	 */
+	private static function outsideWindow(string $turnsPermanentOn, int $today): bool {
+		$permanentOn = strtotime($turnsPermanentOn);
 		$windowEnd = strtotime('+' . self::CHAIN_WINDOW_DAYS . ' days', $today);
 
 		return $permanentOn === false || $permanentOn < $today || $permanentOn > $windowEnd;
-	}//end ketenregelingSatisfied()
+	}//end outsideWindow()
 
 	/**
 	 * Whether a fixed-term contract runs on the given day.
