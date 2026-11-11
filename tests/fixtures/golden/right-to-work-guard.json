@@ -1,0 +1,38 @@
+{
+    "allowed-on-start": [
+        true,
+        null
+    ],
+    "allowed-timestamped-start": [
+        true,
+        null
+    ],
+    "no-employee": [
+        false,
+        "Deze onboarding heeft geen medewerker of geen geldige startdatum, dus de right-to-work-controle kan niet worden beoordeeld."
+    ],
+    "bad-start": [
+        false,
+        "Deze onboarding heeft geen medewerker of geen geldige startdatum, dus de right-to-work-controle kan niet worden beoordeeld."
+    ],
+    "no-check": [
+        false,
+        "Er is nog geen right-to-work-controle (identiteit en recht op arbeid) voor deze medewerker. Voer de controle uit op de onboarding."
+    ],
+    "checked-after-start": [
+        false,
+        "De right-to-work-controle moet op of voor de startdatum (2026-10-01) zijn gedaan."
+    ],
+    "checked-without-date": [
+        false,
+        "De right-to-work-controle moet op of voor de startdatum (2026-10-01) zijn gedaan."
+    ],
+    "failed": [
+        false,
+        "De laatste right-to-work-controle is mislukt: Geen arbeidstoestemming. Alleen een nieuwe controle met nieuw bewijs heft dit op."
+    ],
+    "forged-pass": [
+        false,
+        "De right-to-work-controle staat als geslaagd, maar de gegevens voldoen niet aan de regel: No permission to work: the residence document does not allow work and there is no work permit covering the start date."
+    ]
+}

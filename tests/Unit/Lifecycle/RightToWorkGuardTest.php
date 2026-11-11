@@ -116,6 +116,34 @@ class RightToWorkGuardTest extends TestCase {
 	}//end testAHandSetPassThatTheRuleRefusesIsRefused()
 
 	/**
+	 * Every outcome and message of the guard, allowed and refused.
+	 *
+	 * @return void
+	 */
+	public function testEveryOutcomeAndMessage(): void {
+		$pass = $this->check('geslaagd', 'NLD', null, '2026-10-01');
+		$fail = array_merge($this->check('mislukt', 'SYR', null, '2026-09-20'), ['reason' => 'Geen arbeidstoestemming.']);
+		$cases = [
+			'allowed-on-start' => [[$pass], $this->onboarding()],
+			'allowed-timestamped-start' => [[$pass], array_merge($this->onboarding(), ['startDate' => '2026-10-01T09:00:00Z'])],
+			'no-employee' => [[$pass], array_merge($this->onboarding(), ['employeeId' => ' '])],
+			'bad-start' => [[$pass], array_merge($this->onboarding(), ['startDate' => '1-10-2026'])],
+			'no-check' => [[], $this->onboarding()],
+			'checked-after-start' => [[array_merge($pass, ['checkedOn' => '2026-10-02'])], $this->onboarding()],
+			'checked-without-date' => [[array_merge($pass, ['checkedOn' => ''])], $this->onboarding()],
+			'failed' => [[$fail], $this->onboarding()],
+			'forged-pass' => [[$this->check('geslaagd', 'SYR', 'Arbeid niet toegestaan.', '2026-09-20')], $this->onboarding()],
+		];
+		$got = [];
+		foreach ($cases as $name => [$checks, $onboarding]) {
+			$result = $this->guard($checks)->check($onboarding, 'gereed_melden', 'hr');
+			$got[$name] = [$result->isAllowed(), $result->getMessage()];
+		}
+
+		$this->assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/right-to-work-guard.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testEveryOutcomeAndMessage()
+
+	/**
 	 * The check rows are payloads the register accepts.
 	 *
 	 * @return void
