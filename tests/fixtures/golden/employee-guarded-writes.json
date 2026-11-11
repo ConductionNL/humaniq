@@ -1,0 +1,62 @@
+{
+    "salary": {
+        "errors": {
+            "message": "Een wijziging van salaris (grossMonthlySalary) moet worden goedgekeurd. Dien een wijzigingsverzoek in."
+        },
+        "stopped": true
+    },
+    "iban": {
+        "errors": {
+            "message": "Een wijziging van bankrekening (iban) moet worden goedgekeurd. Dien een wijzigingsverzoek in."
+        },
+        "stopped": true
+    },
+    "salary-and-iban": {
+        "errors": {
+            "message": "Een wijziging van bankrekening (iban) moet worden goedgekeurd. Dien een wijzigingsverzoek in."
+        },
+        "stopped": true
+    },
+    "same-salary": {
+        "errors": [],
+        "stopped": false
+    },
+    "address": {
+        "errors": [],
+        "stopped": false
+    },
+    "a1": {
+        "errors": [],
+        "stopped": false
+    },
+    "not-shown": {
+        "errors": [],
+        "stopped": false
+    },
+    "meta-only": {
+        "errors": [],
+        "stopped": false
+    },
+    "no-old-salary": {
+        "errors": {
+            "message": "Een wijziging van salaris (grossMonthlySalary) moet worden goedgekeurd. Dien een wijzigingsverzoek in."
+        },
+        "stopped": true
+    },
+    "no-old-address": {
+        "errors": [],
+        "stopped": false
+    },
+    "other-schema": {
+        "errors": [],
+        "stopped": false
+    },
+    "nothing": {
+        "errors": [],
+        "stopped": false
+    },
+    "create": {
+        "errors": [],
+        "stopped": false
+    }
+}

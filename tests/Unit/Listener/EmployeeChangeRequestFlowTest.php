@@ -459,4 +459,45 @@ class EmployeeChangeRequestFlowTest extends TestCase {
 		self::assertTrue($event->isPropagationStopped());
 	}//end testUnreadableRulesRefuseTheWrite()
 
+	/**
+	 * The whole outcome of every guarded employee write, allowed and
+	 * refused: the refusal (or none) of each change.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeOutcomeOfEveryGuardedWrite(): void {
+		$old = $this->employee();
+		$cases = [
+			'salary'          => [['grossMonthlySalary' => 9000.0], 'Employee', true],
+			'iban'            => [['iban' => 'NL02RABO0123456789'], 'Employee', true],
+			'salary-and-iban' => [['iban' => 'NL02RABO0123456789', 'grossMonthlySalary' => 9000.0], 'Employee', true],
+			'same-salary'     => [['grossMonthlySalary' => '3800.00', 'endDate' => null], 'Employee', true],
+			'address'         => [['straat' => 'Laan 1', 'huisnummer' => 14], 'Employee', true],
+			'a1'              => [['a1CertificateNumber' => 'A1-2026-001'], 'Employee', true],
+			'not-shown'       => [['iban' => null, 'grossMonthlySalary' => null, 'land' => 'BE'], 'Employee', true],
+			'meta-only'       => [['id' => 'other', '@self' => ['x' => 1]], 'Employee', true],
+			'no-old-salary'   => [['grossMonthlySalary' => 9000.0], 'Employee', false],
+			'no-old-address'  => [['straat' => 'Laan 1'], 'Employee', false],
+			'other-schema'    => [['grossMonthlySalary' => 9000.0], 'Contract', true],
+			'nothing'         => [[], 'Employee', true],
+		];
+		$got = [];
+		foreach ($cases as $name => [$change, $schema, $withOld]) {
+			$before = null;
+			if ($withOld === true) {
+				$before = $this->entity(self::EMPLOYEE, $old, $schema);
+			}
+
+			$event = new ObjectUpdatingEvent($this->entity(self::EMPLOYEE, array_merge($old, $change), $schema), $before);
+			$this->guard->handle($event);
+			$got[$name] = ['errors' => $event->getErrors(), 'stopped' => $event->isPropagationStopped()];
+		}
+
+		$created = new ObjectCreatingEvent($this->entity(self::EMPLOYEE, array_merge($old, ['grossMonthlySalary' => 9000.0]), 'Employee'));
+		$this->guard->handle($created);
+		$got['create'] = ['errors' => $created->getErrors(), 'stopped' => $created->isPropagationStopped()];
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/employee-guarded-writes.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeOutcomeOfEveryGuardedWrite()
+
 }//end class
