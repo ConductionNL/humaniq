@@ -90,29 +90,16 @@ class RestampOpenManagerRecords implements IRepairStep {
 	 * @spec openspec/changes/restamp-open-manager-records/specs/mss-team-scope/spec.md#Requirement:-Open-records-SHALL-be-restamped-with-the-manager-the-shared-resolution-gives-today-(REQ-MSS-007)
 	 */
 	public function run(IOutput $output): void {
-		if ($this->appConfig->getValueBool(Application::APP_ID, self::DONE_KEY, false) === true) {
+		if ($this->ready($output) === false) {
 			return;
 		}
 
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			$output->warning('OpenRegister is not installed or enabled. Skipping the manager restamp.');
+		$report = $this->report($output);
+		if ($report === null) {
 			return;
 		}
 
-		try {
-			$report = $this->repair->run(false);
-		} catch (\Throwable $e) {
-			$output->warning('Could not restamp the manager on open records: ' . $e->getMessage());
-			$this->logger->error('Humaniq: manager restamp failed', ['exception' => $e->getMessage()]);
-			return;
-		}
-
-		$failed = 0;
-		foreach ($report as $schema => $counts) {
-			$output->info(sprintf('%s: inspected=%d open=%d restamped=%d failed=%d', $schema, $counts['inspected'], $counts['open'], $counts['changed'], $counts['failed']));
-			$failed += $counts['failed'];
-		}
-
+		$failed = $this->failedIn(output: $output, report: $report);
 		if ($failed > 0) {
 			$output->warning(sprintf('%d records could not be restamped; the step runs again on the next upgrade or repair.', $failed));
 			return;
@@ -120,5 +107,61 @@ class RestampOpenManagerRecords implements IRepairStep {
 
 		$this->appConfig->setValueBool(Application::APP_ID, self::DONE_KEY, true);
 	}//end run()
+
+	/**
+	 * Whether the step still has to run and OpenRegister is there to run it on.
+	 *
+	 * @param IOutput $output The repair output.
+	 *
+	 * @return bool
+	 */
+	private function ready(IOutput $output): bool {
+		if ($this->appConfig->getValueBool(Application::APP_ID, self::DONE_KEY, false) === true) {
+			return false;
+		}
+
+		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+			$output->warning('OpenRegister is not installed or enabled. Skipping the manager restamp.');
+			return false;
+		}
+
+		return true;
+	}//end ready()
+
+	/**
+	 * The restamp report per schema; null when the pass failed, which is
+	 * reported and logged.
+	 *
+	 * @param IOutput $output The repair output.
+	 *
+	 * @return array<string, array{inspected: int, open: int, changed: int, failed: int}>|null
+	 */
+	private function report(IOutput $output): array|null {
+		try {
+			return $this->repair->run(false);
+		} catch (\Throwable $e) {
+			$output->warning('Could not restamp the manager on open records: ' . $e->getMessage());
+			$this->logger->error('Humaniq: manager restamp failed', ['exception' => $e->getMessage()]);
+			return null;
+		}
+	}//end report()
+
+	/**
+	 * Print the counts per schema and return the records that failed.
+	 *
+	 * @param IOutput                                                                    $output The repair output.
+	 * @param array<string, array{inspected: int, open: int, changed: int, failed: int}> $report The restamp report.
+	 *
+	 * @return int
+	 */
+	private function failedIn(IOutput $output, array $report): int {
+		$failed = 0;
+		foreach ($report as $schema => $counts) {
+			$output->info(sprintf('%s: inspected=%d open=%d restamped=%d failed=%d', $schema, $counts['inspected'], $counts['open'], $counts['changed'], $counts['failed']));
+			$failed += $counts['failed'];
+		}
+
+		return $failed;
+	}//end failedIn()
 
 }//end class
