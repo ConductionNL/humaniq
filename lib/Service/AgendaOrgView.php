@@ -211,6 +211,25 @@ final class AgendaOrgView {
 			return false;
 		}
 
+		$managers = $this->managersWithin(accounts: $accounts, boundary: $boundary);
+		foreach ($this->chainWithin(orgUnitId: $orgUnitId, boundary: $boundary) as $unit) {
+			if (in_array(trim((string)($unit['managerId'] ?? '')), $managers, true) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end isManagedBy()
+
+	/**
+	 * The employees behind the accounts whose own administration is the boundary.
+	 *
+	 * @param array<int, string> $accounts The accounts.
+	 * @param string $boundary The administration the unit belongs to.
+	 *
+	 * @return list<string>
+	 */
+	private function managersWithin(array $accounts, string $boundary): array {
 		$managers = [];
 		foreach ($this->employeeIdsOf($accounts) as $employeeId) {
 			if ($this->orgResolution->leavesAdministration($this->employees[$employeeId], $boundary) === false) {
@@ -218,23 +237,33 @@ final class AgendaOrgView {
 			}
 		}
 
+		return $managers;
+	}//end managersWithin()
+
+	/**
+	 * The unit and the units above it, stopping before a unit in another administration, at a loop, or at a missing parent.
+	 *
+	 * @param string $orgUnitId The unit.
+	 * @param string $boundary The administration the unit belongs to.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function chainWithin(string $orgUnitId, string $boundary): array {
+		$chain = [];
 		$visited = [];
 		while (isset($this->units[$orgUnitId]) === true && isset($visited[$orgUnitId]) === false) {
 			$unit = $this->units[$orgUnitId];
-			if ($visited !== [] && $this->orgResolution->leavesAdministration($unit, $boundary) === true) {
-				return false;
+			if ($chain !== [] && $this->orgResolution->leavesAdministration($unit, $boundary) === true) {
+				break;
 			}
 
 			$visited[$orgUnitId] = true;
-			if (in_array(trim((string)($unit['managerId'] ?? '')), $managers, true) === true) {
-				return true;
-			}
-
+			$chain[] = $unit;
 			$orgUnitId = trim((string)($unit['parentUnitId'] ?? ''));
 		}
 
-		return false;
-	}//end isManagedBy()
+		return $chain;
+	}//end chainWithin()
 
 	/**
 	 * The administration a unit's managers must stay in: the unit's own, or,
