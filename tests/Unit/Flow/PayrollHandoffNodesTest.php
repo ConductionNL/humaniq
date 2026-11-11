@@ -28,6 +28,7 @@ use OCA\Humaniq\Flow\PayrollNetPayNode;
 use OCA\Humaniq\Flow\PayrollFlowNodeServices;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use RuntimeException;
 
 /**
@@ -108,11 +109,11 @@ class PayrollHandoffNodesTest extends FlowNodeTestCase {
 			->with($this->callback(fn (array $run): bool => ($run['id'] ?? '') === 'run-1'))
 			->willReturn(['runId' => 'run-1', 'status' => 'posted', 'message' => 'ok']);
 
-		$out = $this->glPostNode($service)->execute(
-			[$this->item(['payroll' => ['runId' => 'run-1']])],
-			[],
-			[]
-		);
+		$out = $this->glPostNode($service)->execute(new FlowNodeCall(
+			items: [$this->item(['payroll' => ['runId' => 'run-1']])],
+			config: [],
+			context: []
+		));
 
 		$this->assertSame('posted', $out[0]['json']['glpost']['status']);
 	}//end testGlPostOutcomePassThrough()
@@ -128,11 +129,11 @@ class PayrollHandoffNodesTest extends FlowNodeTestCase {
 		$service->method('postRun')
 			->willReturn(['runId' => 'run-1', 'status' => 'skipped-no-shillinq', 'message' => 'geen shillinq']);
 
-		$out = $this->glPostNode($service)->execute(
-			[$this->item(['payroll' => ['runId' => 'run-1']])],
-			[],
-			[]
-		);
+		$out = $this->glPostNode($service)->execute(new FlowNodeCall(
+			items: [$this->item(['payroll' => ['runId' => 'run-1']])],
+			config: [],
+			context: []
+		));
 
 		$this->assertSame('skipped-no-shillinq', $out[0]['json']['glpost']['status']);
 	}//end testGlPostSkippedNoShillinqContinues()
@@ -148,11 +149,11 @@ class PayrollHandoffNodesTest extends FlowNodeTestCase {
 			->willReturn(['runId' => 'run-1', 'status' => 'failed', 'message' => 'onbalans']);
 
 		$this->expectException(RuntimeException::class);
-		$this->glPostNode($service)->execute(
-			[$this->item(['payroll' => ['runId' => 'run-1']])],
-			[],
-			[]
-		);
+		$this->glPostNode($service)->execute(new FlowNodeCall(
+			items: [$this->item(['payroll' => ['runId' => 'run-1']])],
+			config: [],
+			context: []
+		));
 	}//end testGlPostFailedThrows()
 
 	/**
@@ -167,11 +168,11 @@ class PayrollHandoffNodesTest extends FlowNodeTestCase {
 			->with($this->callback(fn (array $run): bool => ($run['id'] ?? '') === 'run-1'))
 			->willReturn(['runId' => 'run-1', 'status' => 'created', 'message' => 'ok']);
 
-		$out = $this->netPayNode($service)->execute(
-			[$this->item(['payroll' => ['runId' => 'run-1']])],
-			[],
-			[]
-		);
+		$out = $this->netPayNode($service)->execute(new FlowNodeCall(
+			items: [$this->item(['payroll' => ['runId' => 'run-1']])],
+			config: [],
+			context: []
+		));
 
 		$this->assertSame('created', $out[0]['json']['netpay']['status']);
 	}//end testNetPayOutcomePassThrough()
@@ -186,11 +187,11 @@ class PayrollHandoffNodesTest extends FlowNodeTestCase {
 		$service->method('processRun')
 			->willReturn(['runId' => 'run-1', 'status' => 'skipped-no-shillinq', 'message' => 'geen shillinq']);
 
-		$out = $this->netPayNode($service)->execute(
-			[$this->item(['payroll' => ['runId' => 'run-1']])],
-			[],
-			[]
-		);
+		$out = $this->netPayNode($service)->execute(new FlowNodeCall(
+			items: [$this->item(['payroll' => ['runId' => 'run-1']])],
+			config: [],
+			context: []
+		));
 		$this->assertSame('skipped-no-shillinq', $out[0]['json']['netpay']['status']);
 
 		$failing = $this->createMock(PayrollNetPayService::class);
@@ -198,11 +199,11 @@ class PayrollHandoffNodesTest extends FlowNodeTestCase {
 			->willReturn(['runId' => 'run-1', 'status' => 'failed', 'message' => 'IBAN ontbreekt']);
 
 		$this->expectException(RuntimeException::class);
-		$this->netPayNode($failing)->execute(
-			[$this->item(['payroll' => ['runId' => 'run-1']])],
-			[],
-			[]
-		);
+		$this->netPayNode($failing)->execute(new FlowNodeCall(
+			items: [$this->item(['payroll' => ['runId' => 'run-1']])],
+			config: [],
+			context: []
+		));
 	}//end testNetPayOutcomeRouting()
 
 	/**
@@ -216,8 +217,8 @@ class PayrollHandoffNodesTest extends FlowNodeTestCase {
 		$netService = $this->createMock(PayrollNetPayService::class);
 		$netService->expects($this->never())->method('processRun');
 
-		$this->assertSame([], $this->glPostNode($glService)->execute([], [], []));
-		$this->assertSame([], $this->netPayNode($netService)->execute([], [], []));
+		$this->assertSame([], $this->glPostNode($glService)->execute(new FlowNodeCall(items: [], config: [], context: [])));
+		$this->assertSame([], $this->netPayNode($netService)->execute(new FlowNodeCall(items: [], config: [], context: [])));
 	}//end testEmptyFiringsShortCircuit()
 
 }//end class
