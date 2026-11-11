@@ -129,51 +129,91 @@ class PayrollExpenseFoldService {
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-002
 	 */
 	public function foldFor(array $inputs, string $employeeId, string $period, string $runId): array {
-		$fold = ['claimCents' => 0, 'claimIds' => [], 'taxedCents' => 0, 'untaxedCents' => 0, 'lines' => [], 'wkr' => []];
+		$fold = new ExpenseFold();
 		$lastDay = self::lastDay($period);
 		if ($lastDay === null) {
-			return $fold;
+			return $fold->totals;
 		}
 
-		foreach ((array)$inputs['expenses'] as $claim) {
-			if ((string)($claim['employeeId'] ?? '') === $employeeId && $this->isPayable(claim: $claim, lastDay: $lastDay, runId: $runId) === true) {
-				$fold['claimCents'] += (int)round(((float)$claim['amount']) * 100);
-				$fold['claimIds'][] = self::idOf($claim);
-			}
-		}
-
+		$fold->inputs = $inputs;
+		$fold->employeeId = $employeeId;
+		$fold->period = $period;
+		$fold->runId = $runId;
+		$fold->lastDay = $lastDay;
+		$this->foldClaims(fold: $fold);
 		foreach ((array)$inputs['allowances'] as $allowance) {
-			if ((string)($allowance['employeeId'] ?? '') !== $employeeId || $this->splitter->covers(allowance: $allowance, period: $period) === false) {
-				continue;
+			if ((string)($allowance['employeeId'] ?? '') === $employeeId && $this->splitter->covers(allowance: $allowance, period: $period) === true) {
+				$this->foldAllowance(fold: $fold, allowance: $allowance);
 			}
+		}
 
-			$arrangement = ($inputs['arrangementsById'][(string)($allowance['commuteArrangementId'] ?? '')] ?? null);
-			$split = $this->splitter->split(allowance: $allowance, arrangement: $arrangement, norm: $inputs['norm']);
-			$fold['taxedCents'] += $split['taxedCents'];
-			$fold['untaxedCents'] += $split['untaxedCents'];
-			$fold['lines'][] = [
-				'allowanceId' => self::idOf($allowance),
-				'kind' => (string)($allowance['kind'] ?? ''),
-				'status' => $split['status'],
-				'taxed' => self::euros($split['taxedCents']),
-				'untaxed' => self::euros($split['untaxedCents']),
-				'wkrCategory' => $split['wkrCategory'],
-			];
-			if ($split['untaxedCents'] > 0) {
-				$fold['wkr'][] = [
-					'sourceReference' => 'allowance:' . self::idOf($allowance) . ':' . $period,
-					'amount' => self::euros($split['untaxedCents']),
-					'wkrCategory' => $split['wkrCategory'],
-					'employeeId' => $employeeId,
-					'date' => $lastDay,
-					'year' => (int)substr($period, 0, 4),
-					'description' => (self::KIND_LABELS[(string)($allowance['kind'] ?? '')] ?? 'Vaste vergoeding') . ' ' . $period,
-				];
-			}
-		}//end foreach
-
-		return $fold;
+		return $fold->totals;
 	}//end foldFor()
+
+	/**
+	 * Add every payable claim of the employee.
+	 *
+	 * @param ExpenseFold $fold The fold.
+	 *
+	 * @return void
+	 */
+	private function foldClaims(ExpenseFold $fold): void {
+		foreach ((array)$fold->inputs['expenses'] as $claim) {
+			if ((string)($claim['employeeId'] ?? '') === $fold->employeeId && $this->isPayable(claim: $claim, lastDay: $fold->lastDay, runId: $fold->runId) === true) {
+				$fold->totals['claimCents'] += (int)round(((float)$claim['amount']) * 100);
+				$fold->totals['claimIds'][] = self::idOf($claim);
+			}
+		}
+	}//end foldClaims()
+
+	/**
+	 * Split one allowance that covers the period, list it, and declare its
+	 * untaxed part under the WKR.
+	 *
+	 * @param ExpenseFold          $fold      The fold.
+	 * @param array<string, mixed> $allowance The RecurringAllowance.
+	 *
+	 * @return void
+	 */
+	private function foldAllowance(ExpenseFold $fold, array $allowance): void {
+		$arrangement = ($fold->inputs['arrangementsById'][(string)($allowance['commuteArrangementId'] ?? '')] ?? null);
+		$split = $this->splitter->split(allowance: $allowance, arrangement: $arrangement, norm: $fold->inputs['norm']);
+		$fold->totals['taxedCents'] += $split['taxedCents'];
+		$fold->totals['untaxedCents'] += $split['untaxedCents'];
+		$line = [
+			'allowanceId' => self::idOf($allowance),
+			'kind' => (string)($allowance['kind'] ?? ''),
+			'status' => $split['status'],
+			'taxed' => self::euros($split['taxedCents']),
+			'untaxed' => self::euros($split['untaxedCents']),
+			'wkrCategory' => $split['wkrCategory'],
+		];
+		$fold->totals['lines'][] = $line;
+		if ($split['untaxedCents'] > 0) {
+			$fold->totals['wkr'][] = self::wkrRow(fold: $fold, line: $line);
+		}
+	}//end foldAllowance()
+
+	/**
+	 * The WKR declaration of an allowance line's untaxed part, keyed on the
+	 * allowance and the period.
+	 *
+	 * @param ExpenseFold          $fold The fold.
+	 * @param array<string, mixed> $line The allowance line.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function wkrRow(ExpenseFold $fold, array $line): array {
+		return [
+			'sourceReference' => 'allowance:' . $line['allowanceId'] . ':' . $fold->period,
+			'amount' => $line['untaxed'],
+			'wkrCategory' => $line['wkrCategory'],
+			'employeeId' => $fold->employeeId,
+			'date' => $fold->lastDay,
+			'year' => (int)substr($fold->period, 0, 4),
+			'description' => (self::KIND_LABELS[$line['kind']] ?? 'Vaste vergoeding') . ' ' . $fold->period,
+		];
+	}//end wkrRow()
 
 	/**
 	 * The payslip fields of a fold; none when nothing was folded, so a
