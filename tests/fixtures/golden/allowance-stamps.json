@@ -1,0 +1,102 @@
+{
+    "create": {
+        "modified": {
+            "proposedBy": "hr",
+            "userId": "pjansen",
+            "administrationId": "ADM-001"
+        },
+        "logged": []
+    },
+    "create-anonymous": {
+        "modified": {
+            "proposedBy": "",
+            "userId": "pjansen",
+            "administrationId": "ADM-001"
+        },
+        "logged": []
+    },
+    "create-no-employee": {
+        "modified": {
+            "proposedBy": "hr"
+        },
+        "logged": []
+    },
+    "create-unreadable": {
+        "modified": {
+            "proposedBy": "hr"
+        },
+        "logged": [
+            {
+                "level": "warning",
+                "message": "humaniq: the employee of a recurring allowance could not be read",
+                "context": {
+                    "exception": "store down"
+                }
+            }
+        ]
+    },
+    "create-bare-employee": {
+        "modified": {
+            "proposedBy": "hr"
+        },
+        "logged": []
+    },
+    "create-unknown": {
+        "modified": {
+            "proposedBy": "hr"
+        },
+        "logged": []
+    },
+    "update-keeps-drafter": {
+        "modified": {
+            "proposedBy": "anna"
+        },
+        "logged": []
+    },
+    "update-same-drafter": {
+        "modified": [],
+        "logged": []
+    },
+    "update-no-old-drafter": {
+        "modified": [],
+        "logged": []
+    },
+    "update-restamps": {
+        "modified": {
+            "userId": "pjansen",
+            "administrationId": "ADM-001"
+        },
+        "logged": []
+    },
+    "update-drops-drafter": {
+        "modified": {
+            "proposedBy": "anna"
+        },
+        "logged": []
+    },
+    "update-without-old": {
+        "modified": {
+            "userId": "pjansen",
+            "administrationId": "ADM-001"
+        },
+        "logged": []
+    },
+    "update-unreadable": {
+        "modified": {
+            "proposedBy": "anna"
+        },
+        "logged": [
+            {
+                "level": "warning",
+                "message": "humaniq: the employee of a recurring allowance could not be read",
+                "context": {
+                    "exception": "store down"
+                }
+            }
+        ]
+    },
+    "post-save": {
+        "modified": null,
+        "logged": []
+    }
+}
