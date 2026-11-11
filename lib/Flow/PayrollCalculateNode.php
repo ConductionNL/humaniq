@@ -150,9 +150,8 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	public function execute(FlowNodeCall $call): array {
-		$items = $call->items;
 		$config = $call->config;
-		if ($items === []) {
+		if ($call->items === []) {
 			return [];
 		}
 
@@ -160,36 +159,43 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 		// reaches execute() unvalidated (the DossiqFlowNodeBase guard).
 		$this->validateConfig(config: $config);
 
-		$out = [];
-		foreach ($items as $item) {
-			$json = (array)(((array)$item)['json'] ?? []);
-
-			$period = $this->render((string)($config['period'] ?? ''), $json);
-			if ($period === '') {
-				$period = gmdate('Y-m');
-			}
-
-			$administrationId = $this->render((string)($config['administrationId'] ?? ''), $json);
-			$recalculate = (($config['recalculate'] ?? true) !== false);
-
-			$outcome = $this->payrollRunService->runFor(
-				$period,
-				($administrationId === '' ? null : $administrationId),
-				$recalculate
-			);
-
-			$status = (string)($outcome['status'] ?? '');
-			if (in_array($status, ['calculated', 'exists'], true) === false) {
-				throw new RuntimeException(
-					'Loonrun berekenen voor ' . $period . ' is geweigerd (' . $status . '): '
-					. (string)($outcome['message'] ?? '')
-				);
-			}
-
-			$out[] = $this->withOutcome((array)$item, self::OUTCOME_KEY, $outcome);
-		}//end foreach
-
-		return $out;
+		return $this->stampEachItem(
+			$call,
+			fn (array $json): array => $this->calculateFor(json: $json, config: $config)
+		);
 	}//end execute()
+
+	/**
+	 * Calculate the run of the item's period and administration.
+	 *
+	 * @param array<string, mixed> $json   The item's record, for the placeholders.
+	 * @param array<string, mixed> $config The step configuration.
+	 *
+	 * @return array<string, mixed> The service outcome.
+	 *
+	 * @throws RuntimeException When the service reports `failed` or `refused-not-draft`.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 */
+	private function calculateFor(array $json, array $config): array {
+		$period = $this->render((string)($config['period'] ?? ''), $json);
+		if ($period === '') {
+			$period = gmdate('Y-m');
+		}
+
+		$administrationId = $this->render((string)($config['administrationId'] ?? ''), $json);
+		$recalculate = (($config['recalculate'] ?? true) !== false);
+
+		$outcome = $this->payrollRunService->runFor(
+			$period,
+			($administrationId === '' ? null : $administrationId),
+			$recalculate
+		);
+
+		return $this->requireStatus(
+			$outcome,
+			new ExpectedStatus(['calculated', 'exists'], 'Loonrun berekenen voor ' . $period . ' is geweigerd')
+		);
+	}//end calculateFor()
 
 }//end class

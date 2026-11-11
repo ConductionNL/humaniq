@@ -29,18 +29,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
-use OCP\EventDispatcher\Event;
-use OCP\EventDispatcher\IEventListener;
 use OCP\IUserSession;
 
 /**
  * Writes and keeps acknowledgedBy on a payroll run finding.
  *
- * @template-implements IEventListener<Event>
- *
  * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
  */
-class PayrollRunFindingStampListener implements IEventListener {
+class PayrollRunFindingStampListener extends ObjectUpdatingListener {
 
 	/**
 	 * Lower-cased slug of the finding schema.
@@ -62,17 +58,13 @@ class PayrollRunFindingStampListener implements IEventListener {
 	/**
 	 * Stamp the reviewer on the acknowledgement, keep them afterwards.
 	 *
-	 * @param Event $event The event.
+	 * @param ObjectUpdatingEvent $event The pre-save event.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
 	 */
-	public function handle(Event $event): void {
-		if (($event instanceof ObjectUpdatingEvent) === false) {
-			return;
-		}
-
+	protected function onUpdating(ObjectUpdatingEvent $event): void {
 		$finding = ($event->getNewObject()->getObject() ?? []);
 		$old = ($event->getOldObject()?->getObject() ?? []);
 		$reviewer = (string)($old['acknowledgedBy'] ?? '');
@@ -83,6 +75,6 @@ class PayrollRunFindingStampListener implements IEventListener {
 		if ($reviewer !== '' && $reviewer !== ($finding['acknowledgedBy'] ?? null)) {
 			$event->setModifiedData(['acknowledgedBy' => $reviewer]);
 		}
-	}//end handle()
+	}//end onUpdating()
 
 }//end class

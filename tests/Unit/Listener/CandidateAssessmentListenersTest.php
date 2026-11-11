@@ -200,6 +200,47 @@ class CandidateAssessmentListenersTest extends TestCase {
 	}//end testTheReferralFollowsTheApplicationStatus()
 
 	/**
+	 * The whole outcome of a sequence of referral and application events:
+	 * what each event is refused, stamped or stopped with, and the referrals
+	 * and applications stored afterwards.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeOutcomeOfEveryReferralEvent(): void {
+		$this->store->seed('Referral', 'ref-2', $this->referral(['referrerUserId' => 'employee.two', 'applicationId' => 'app-2', 'status' => 'nieuw']));
+		$this->store->seed('Referral', 'ref-3', $this->referral(['referrerUserId' => 'employee.two', 'applicationId' => 'app-3', 'status' => 'nieuw']));
+		$referral = $this->referral(['referrerUserId' => 'forged']);
+		$events = [
+			'create' => fn (): object => new ObjectCreatingEvent($this->entity('Referral', $referral)),
+			'create-refused' => fn (): object => new ObjectCreatingEvent($this->entity('Referral', $this->referral(['candidateConsented' => false]))),
+			'created' => function () use ($referral): object {
+				$this->store->seed('Referral', 'ref-1', $referral + ['referrerUserId' => 'employee.one']);
+				return new ObjectCreatedEvent($this->entity('Referral', $referral + ['id' => 'ref-1'], 'ref-1'));
+			},
+			'followed' => fn (): object => new ObjectUpdatedEvent($this->entity('job-application', ['status' => 'gesprek', 'referredByUserId' => 'employee.two'], 'app-2'), $this->entity('job-application', ['status' => 'nieuw'], 'app-2')),
+			'not-referred' => fn (): object => new ObjectUpdatedEvent($this->entity('job-application', ['status' => 'afgewezen', 'referredByUserId' => ' '], 'app-3'), $this->entity('job-application', ['status' => 'nieuw'], 'app-3')),
+			'referral-updated' => fn (): object => new ObjectUpdatedEvent($this->entity('Referral', ['status' => 'x'], 'ref-3'), $this->entity('Referral', [], 'ref-3')),
+			'application-created' => fn (): object => new ObjectCreatedEvent($this->entity('job-application', ['referredByUserId' => 'employee.two'], 'app-9')),
+			'application-creating' => fn (): object => new ObjectCreatingEvent($this->entity('job-application', ['referredByUserId' => 'employee.two'])),
+		];
+		$got = [];
+		foreach ($events as $name => $make) {
+			$event = $make();
+			$this->referralListener('employee.one')->handle($event);
+			$got['events'][$name] = [
+				'errors' => method_exists($event, 'getErrors') === true ? $event->getErrors() : null,
+				'modified' => method_exists($event, 'getModifiedData') === true ? $event->getModifiedData() : null,
+				'stopped' => $event->isPropagationStopped(),
+			];
+		}
+
+		$got['referralStatus'] = array_map(static fn (array $row): ?string => ($row['status'] ?? null), $this->store->state->objects['Referral']);
+		$got['applications'] = array_map(static fn (array $row): array => array_diff_key($row, ['id' => 1]), array_values($this->store->state->objects['job-application'] ?? []));
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/referral-events.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeOutcomeOfEveryReferralEvent()
+
+	/**
 	 * A referral payload.
 	 *
 	 * @param array<string, mixed> $overrides Field overrides.

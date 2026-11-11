@@ -68,21 +68,7 @@ class CostAllocationShares {
 	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-001
 	 */
 	public function hoursShares(array $entries, ?string $fallbackCostCenter): array {
-		$hours = [];
-		$keys = [];
-		foreach ($entries as $entry) {
-			$value = (is_numeric($entry['hours'] ?? null) === true ? (float)$entry['hours'] : 0.0);
-			if ($value <= 0.0) {
-				continue;
-			}
-
-			$costCenter = ($this->codeOrNull($entry['costCenter'] ?? null) ?? $fallbackCostCenter);
-			$projectId = $this->codeOrNull($entry['projectId'] ?? null);
-			$key = ($costCenter ?? '') . '|' . ($projectId ?? '');
-			$keys[$key] = [$costCenter, $projectId];
-			$hours[$key] = (($hours[$key] ?? 0.0) + $value);
-		}
-
+		[$hours, $keys] = $this->hoursByAllocation(entries: $entries, fallbackCostCenter: $fallbackCostCenter);
 		$total = array_sum($hours);
 		if ($total <= 0.0) {
 			return [];
@@ -95,6 +81,31 @@ class CostAllocationShares {
 
 		return $shares;
 	}//end hoursShares()
+
+	/**
+	 * The positive hours per cost centre and project, in first-seen order, with each key's centre and project.
+	 *
+	 * @param array<int, array<string, mixed>> $entries The time entries.
+	 * @param string|null $fallbackCostCenter The centre for an entry that names none.
+	 *
+	 * @return array{0: array<string, float>, 1: array<string, array{0: string|null, 1: string|null}>}
+	 */
+	private function hoursByAllocation(array $entries, ?string $fallbackCostCenter): array {
+		$hours = [];
+		$keys = [];
+		foreach ($entries as $entry) {
+			$value = (is_numeric($entry['hours'] ?? null) === true ? (float)$entry['hours'] : 0.0);
+			if ($value > 0.0) {
+				$costCenter = ($this->codeOrNull($entry['costCenter'] ?? null) ?? $fallbackCostCenter);
+				$projectId = $this->codeOrNull($entry['projectId'] ?? null);
+				$key = ($costCenter ?? '') . '|' . ($projectId ?? '');
+				$keys[$key] = [$costCenter, $projectId];
+				$hours[$key] = (($hours[$key] ?? 0.0) + $value);
+			}
+		}
+
+		return [$hours, $keys];
+	}//end hoursByAllocation()
 
 	/**
 	 * Split an amount in cents by weights; the remainder goes to the

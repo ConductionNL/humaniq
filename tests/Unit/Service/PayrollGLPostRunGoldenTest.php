@@ -117,11 +117,11 @@ class PayrollGLPostRunGoldenTest extends TestCase {
 		$cases['cents rounding'] = ['run' => $run(['totalGross' => 1234.565, 'totalEmployerCharges' => 0.1 + 0.2, 'totalLoonheffing' => 100.004, 'totalNet' => 1000.0]), 'rows' => []];
 		$cases['adopts the JournalEntry with the journal number'] = [
 			'run' => $run(),
-			'rows' => ['JournalEntry' => [['id' => 'je-other', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-002'], ['id' => 'je-9', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001']]],
+			'rows' => ['JournalEntry' => [['id' => 'je-other', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-002'], ['id' => 'je-9', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001', 'lines' => [['side' => 'debit', 'amount' => 4449.80], ['side' => 'credit', 'amount' => 4449.80]]]]],
 		];
 		$cases['adopts a JournalEntry whose id is in @self'] = [
 			'run' => $run(),
-			'rows' => ['JournalEntry' => [['@self' => ['id' => 'je-self'], 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001']]],
+			'rows' => ['JournalEntry' => [['@self' => ['id' => 'je-self'], 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001', 'lines' => [['side' => 'debit', 'amount' => 4449.80], ['side' => 'credit', 'amount' => 4449.80]]]]],
 		];
 		$cases['does not adopt a near journal number'] = ['run' => $run(), 'rows' => ['JournalEntry' => [['id' => 'je-near', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001 ']]]];
 		$cases['create fails'] = ['run' => $run(), 'rows' => [], 'saveThrows' => true];
@@ -134,14 +134,14 @@ class PayrollGLPostRunGoldenTest extends TestCase {
 			'run' => $run(),
 			'rows' => [
 				'PayrollGLPost' => [['id' => 'g-1', 'payrollRunId' => 'run-1', 'status' => 'pending']],
-				'JournalEntry' => [['id' => 'je-9', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001']],
+				'JournalEntry' => [['id' => 'je-9', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001', 'lines' => [['side' => 'debit', 'amount' => 4449.80], ['side' => 'credit', 'amount' => 4449.80]]]],
 			],
 		];
 		$cases['stale pending with a stored journalNumber, padded period and administration, adopts'] = [
 			'run' => $run(['period' => ' 2026-05 ', 'administrationId' => ' ADM-001 ']),
 			'rows' => [
 				'PayrollGLPost' => [['id' => 'g-3', 'payrollRunId' => 'run-1', 'status' => 'pending', 'journalNumber' => 'HRMQ-LOON-2026-04-ADM-OLD']],
-				'JournalEntry' => [['id' => 'je-old', 'journalNumber' => 'HRMQ-LOON-2026-04-ADM-OLD'], ['id' => 'je-9', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001']],
+				'JournalEntry' => [['id' => 'je-old', 'journalNumber' => 'HRMQ-LOON-2026-04-ADM-OLD'], ['id' => 'je-9', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001', 'lines' => [['side' => 'debit', 'amount' => 4449.80], ['side' => 'credit', 'amount' => 4449.80]]]],
 			],
 		];
 		$cases['already posted'] = ['run' => $run(), 'rows' => ['PayrollGLPost' => [['id' => 'g-2', 'payrollRunId' => 'run-1', 'status' => 'posted', 'journalEntryId' => 'je-1']]]];

@@ -232,4 +232,57 @@ class CompChecksTest extends TestCase {
 
 	}//end testUnresolvableBandIsVacuous()
 
+	/**
+	 * The within-band verdict for every shape of adjustment and band.
+	 *
+	 * @return void
+	 */
+	public function testTheWithinBandVerdictForEveryShape(): void {
+		$check = CompChecks::checks()['CompAdjustment']['comp-adjustment-within-band'];
+		$context = ['comp' => ['salaryBandsById' => ['b-1' => ['minSalary' => 3000, 'maxSalary' => '4200.5'], 'b-2' => ['minSalary' => 'x', 'maxSalary' => 5000], 'b-3' => 'not-a-band']]];
+		$adjustment = ['status' => 'proposed', 'targetBandId' => 'b-1', 'proposedSalary' => 3500];
+		$cases = [
+			'inside' => [$adjustment, $context],
+			'at-min' => [array_merge($adjustment, ['proposedSalary' => '3000']), $context],
+			'at-max' => [array_merge($adjustment, ['proposedSalary' => 4200.5]), $context],
+			'below' => [array_merge($adjustment, ['proposedSalary' => 2999.99]), $context],
+			'above' => [array_merge($adjustment, ['status' => 'effective', 'proposedSalary' => 4201]), $context],
+			'approved-above' => [array_merge($adjustment, ['status' => 'approved', 'proposedSalary' => 9000]), $context],
+			'draft-above' => [array_merge($adjustment, ['status' => 'draft', 'proposedSalary' => 9000]), $context],
+			'no-status' => [['targetBandId' => 'b-1', 'proposedSalary' => 9000], $context],
+			'no-band' => [array_merge($adjustment, ['targetBandId' => ' ', 'proposedSalary' => 9000]), $context],
+			'padded-band' => [array_merge($adjustment, ['targetBandId' => ' b-1 ', 'proposedSalary' => 9000]), $context],
+			'unknown-band' => [array_merge($adjustment, ['targetBandId' => 'b-9', 'proposedSalary' => 9000]), $context],
+			'odd-band' => [array_merge($adjustment, ['targetBandId' => 'b-3', 'proposedSalary' => 9000]), $context],
+			'band-without-min' => [array_merge($adjustment, ['targetBandId' => 'b-2', 'proposedSalary' => 9000]), $context],
+			'no-salary' => [array_merge($adjustment, ['proposedSalary' => null]), $context],
+			'no-context' => [array_merge($adjustment, ['proposedSalary' => 9000]), []],
+		];
+		$got = [];
+		foreach ($cases as $name => [$o, $c]) {
+			$got[$name] = $check($o, $c);
+		}
+
+		$this->assertSame(
+			[
+				'inside' => true,
+				'at-min' => true,
+				'at-max' => true,
+				'below' => false,
+				'above' => false,
+				'approved-above' => false,
+				'draft-above' => true,
+				'no-status' => true,
+				'no-band' => true,
+				'padded-band' => false,
+				'unknown-band' => true,
+				'odd-band' => true,
+				'band-without-min' => true,
+				'no-salary' => true,
+				'no-context' => true,
+			],
+			$got
+		);
+	}//end testTheWithinBandVerdictForEveryShape()
+
 }//end class

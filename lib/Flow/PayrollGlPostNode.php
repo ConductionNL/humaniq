@@ -117,31 +117,13 @@ class PayrollGlPostNode extends PayrollFlowNodeBase {
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	public function execute(FlowNodeCall $call): array {
-		$items = $call->items;
-		$config = $call->config;
-		if ($items === []) {
-			return [];
-		}
-
-		$out = [];
-		foreach ($items as $item) {
-			$json = (array)(((array)$item)['json'] ?? []);
-			$run = $this->requireRun(config: $config, json: $json);
-
-			$outcome = $this->glPostService->postRun($run);
-
-			$status = (string)($outcome['status'] ?? '');
-			if (in_array($status, ['posted', 'skipped-no-shillinq'], true) === false) {
-				throw new RuntimeException(
-					'Loonjournaalpost voor loonrun ' . $this->idOf($run) . ' is mislukt (' . $status . '): '
-					. (string)($outcome['message'] ?? '')
-				);
-			}
-
-			$out[] = $this->withOutcome((array)$item, self::OUTCOME_KEY, $outcome);
-		}//end foreach
-
-		return $out;
+		return $this->stampEachRun(
+			$call,
+			fn (array $run): array => $this->requireStatus(
+				$this->glPostService->postRun($run),
+				new ExpectedStatus(['posted', 'skipped-no-shillinq'], 'Loonjournaalpost voor loonrun ' . $this->idOf($run) . ' is mislukt')
+			)
+		);
 	}//end execute()
 
 }//end class
