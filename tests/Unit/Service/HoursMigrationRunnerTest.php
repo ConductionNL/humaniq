@@ -240,4 +240,78 @@ class HoursMigrationRunnerTest extends TestCase {
 		self::assertSame(1, $result['processed']);
 		self::assertSame([], $this->setUserCalls, 'No impersonation may happen when no admin resolves.');
 	}//end testFailingAdminResolutionIsLoggedAndThePassStillRuns()
+
+	/**
+	 * The whole acting-user outcome: who the pass runs as, what it
+	 * returns, the session writes and what is logged, for every way the
+	 * admin lookup can go.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeActingUserOutcome(): void {
+		$cases = [
+			'session-user'     => ['session' => 'anna', 'group' => 'admins', 'admins' => ['root' => 'root']],
+			'first-admin'      => ['session' => null, 'group' => 'admins', 'admins' => ['zed' => 'zed', 'amy' => 'amy']],
+			'no-admin-users'   => ['session' => null, 'group' => 'admins', 'admins' => []],
+			'no-admin-group'   => ['session' => null, 'group' => 'none', 'admins' => []],
+			'group-throws'     => ['session' => null, 'group' => 'throws', 'admins' => []],
+			'users-throw'      => ['session' => null, 'group' => 'users-throw', 'admins' => []],
+			'pass-throws'      => ['session' => null, 'group' => 'admins', 'admins' => ['root' => 'root'], 'fail' => true],
+		];
+		$got = [];
+		foreach ($cases as $name => $case) {
+			$this->setUserCalls = [];
+			$logged = [];
+			$session = $this->createMock(IUserSession::class);
+			$session->method('getUser')->willReturn(($case['session'] === null ? null : $this->user($case['session'])));
+			$session->method('setUser')->willReturnCallback(
+				function (?IUser $user): void {
+					$this->setUserCalls[] = $user?->getUID();
+				}
+			);
+			$groupManager = $this->createMock(IGroupManager::class);
+			$group = $this->createMock(IGroup::class);
+			$users = array_map(fn (string $uid): IUser => $this->user($uid), $case['admins']);
+			if ($case['group'] === 'users-throw') {
+				$group->method('getUsers')->willThrowException(new \RuntimeException('users down'));
+			} else {
+				$group->method('getUsers')->willReturn($users);
+			}
+
+			match ($case['group']) {
+				'none'   => $groupManager->method('get')->willReturn(null),
+				'throws' => $groupManager->method('get')->willThrowException(new \RuntimeException('directory down')),
+				default  => $groupManager->method('get')->willReturn($group),
+			};
+			$logger = $this->createMock(LoggerInterface::class);
+			$logger->method('warning')->willReturnCallback(
+				static function (string $message, array $context) use (&$logged): void {
+					$logged[] = [$message, $context];
+				}
+			);
+			$runner = new HoursMigrationRunner($session, $groupManager, $this->createMock(IJobList::class), $logger);
+			$fail = ($case['fail'] ?? false);
+			$error = null;
+			$result = null;
+			try {
+				$result = $runner->runAsActingUser(
+					function () use ($fail): array {
+						$seen = $this->setUserCalls;
+						if ($fail === true) {
+							throw new \RuntimeException('pass failed');
+						}
+
+						return ['processed' => 1, 'setUserBeforePass' => $seen];
+					}
+				);
+			} catch (\RuntimeException $e) {
+				$error = $e->getMessage();
+			}
+
+			$got[$name] = ['result' => $result, 'error' => $error, 'setUser' => $this->setUserCalls, 'logged' => $logged];
+		}
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/hours-migration-acting-user.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeActingUserOutcome()
+
 }//end class

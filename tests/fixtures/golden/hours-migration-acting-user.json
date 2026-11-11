@@ -1,0 +1,84 @@
+{
+    "session-user": {
+        "result": {
+            "processed": 1,
+            "setUserBeforePass": []
+        },
+        "error": null,
+        "setUser": [],
+        "logged": []
+    },
+    "first-admin": {
+        "result": {
+            "processed": 1,
+            "setUserBeforePass": [
+                "zed"
+            ]
+        },
+        "error": null,
+        "setUser": [
+            "zed",
+            null
+        ],
+        "logged": []
+    },
+    "no-admin-users": {
+        "result": {
+            "processed": 1,
+            "setUserBeforePass": []
+        },
+        "error": null,
+        "setUser": [],
+        "logged": []
+    },
+    "no-admin-group": {
+        "result": {
+            "processed": 1,
+            "setUserBeforePass": []
+        },
+        "error": null,
+        "setUser": [],
+        "logged": []
+    },
+    "group-throws": {
+        "result": {
+            "processed": 1,
+            "setUserBeforePass": []
+        },
+        "error": null,
+        "setUser": [],
+        "logged": [
+            [
+                "humaniq: hours-process migration could not resolve an acting admin user",
+                {
+                    "exception": "directory down"
+                }
+            ]
+        ]
+    },
+    "users-throw": {
+        "result": {
+            "processed": 1,
+            "setUserBeforePass": []
+        },
+        "error": null,
+        "setUser": [],
+        "logged": [
+            [
+                "humaniq: hours-process migration could not resolve an acting admin user",
+                {
+                    "exception": "users down"
+                }
+            ]
+        ]
+    },
+    "pass-throws": {
+        "result": null,
+        "error": "pass failed",
+        "setUser": [
+            "root",
+            null
+        ],
+        "logged": []
+    }
+}
