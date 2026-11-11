@@ -39,6 +39,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\LeaveHoursCalculator;
 use OCA\Humaniq\Service\LeaveTypeResolver;
+use OCA\Humaniq\Service\LeaveUsedHoursScope;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WorkingCalendarReader;
 use PHPUnit\Framework\TestCase;
@@ -536,10 +537,7 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 					'status' => 'approved',
 				],
 			],
-			'emp-1',
-			2026,
-			'holiday',
-			null
+			$this->balance()
 		);
 
 		$this->assertSame(0.0, $projection['usedHours']);
@@ -567,10 +565,7 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 				['id' => 'r-2025', 'hours' => 8, 'startDate' => '2025-03-02', 'endDate' => '2025-03-02'] + $request,
 				['hours' => 0, 'startDate' => '2026-03-02', 'endDate' => '2026-03-03'] + $request,
 			],
-			'emp-1',
-			2026,
-			'holiday',
-			null
+			$this->balance()
 		);
 
 		$this->assertSame(['usedHours' => 3.44, 'underivable' => ['unknown']], $projection);
@@ -716,4 +711,18 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 		$this->assertSame(16.0, $this->writtenBalance($fake, 'bal-1')['usedHours'] ?? null, 'Monday and Tuesday of a Monday to Wednesday pattern.');
 		$this->assertSame(16.0, $this->writtenBalance($fake, 'bal-2')['usedHours'] ?? null, 'No pattern: two days of the 40-hour contract average.');
 	}//end testTheCalendarIsReadOncePerProjection()
+
+	/**
+	 * The 2026 holiday balance of emp-1, without a contract hours snapshot.
+	 *
+	 * @return LeaveUsedHoursScope
+	 */
+	private function balance(): LeaveUsedHoursScope {
+		$balance = new LeaveUsedHoursScope();
+		$balance->employeeId = 'emp-1';
+		$balance->year = 2026;
+		$balance->leaveType = 'holiday';
+
+		return $balance;
+	}//end balance()
 }
