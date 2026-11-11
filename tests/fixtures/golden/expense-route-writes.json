@@ -1,0 +1,89 @@
+{
+    "create-plain": {
+        "errors": [],
+        "stopped": false,
+        "modified": []
+    },
+    "create-payroll-taxable": {
+        "errors": {
+            "message": "Deze declaratie heeft een belaste deel en kan nog niet via de salarisrun worden uitbetaald. Kies de directe route."
+        },
+        "stopped": true,
+        "modified": []
+    },
+    "create-payroll-untaxed": {
+        "errors": [],
+        "stopped": false,
+        "modified": []
+    },
+    "create-direct-taxable": {
+        "errors": [],
+        "stopped": false,
+        "modified": []
+    },
+    "approve-untaxed": {
+        "errors": [],
+        "stopped": false,
+        "modified": {
+            "reimbursementRoute": "payroll"
+        }
+    },
+    "approve-taxable": {
+        "errors": [],
+        "stopped": false,
+        "modified": {
+            "reimbursementRoute": "direct"
+        }
+    },
+    "approve-again": {
+        "errors": [],
+        "stopped": false,
+        "modified": []
+    },
+    "approve-routed": {
+        "errors": [],
+        "stopped": false,
+        "modified": []
+    },
+    "in-run-route-change": {
+        "errors": {
+            "message": "Deze declaratie zit in een salarisrun; de route kan niet meer worden gewijzigd."
+        },
+        "stopped": true,
+        "modified": []
+    },
+    "in-run-same-route": {
+        "errors": [],
+        "stopped": false,
+        "modified": []
+    },
+    "not-in-run-change": {
+        "errors": [],
+        "stopped": false,
+        "modified": []
+    },
+    "hand-paid-payroll": {
+        "errors": {
+            "message": "Deze declaratie wordt via de salarisrun uitbetaald en wordt vergoed zodra die run is goedgekeurd."
+        },
+        "stopped": true,
+        "modified": []
+    },
+    "hand-paid-was-payroll": {
+        "errors": {
+            "message": "Deze declaratie wordt via de salarisrun uitbetaald en wordt vergoed zodra die run is goedgekeurd."
+        },
+        "stopped": true,
+        "modified": []
+    },
+    "hand-paid-direct": {
+        "errors": [],
+        "stopped": false,
+        "modified": []
+    },
+    "already-reimbursed": {
+        "errors": [],
+        "stopped": false,
+        "modified": []
+    }
+}

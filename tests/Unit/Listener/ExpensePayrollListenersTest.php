@@ -241,4 +241,43 @@ class ExpensePayrollListenersTest extends TestCase {
 		$this->assertSame([], $kept->getModifiedData());
 	}//end testANewAllowanceIsStampedWithItsDrafterAndEmployee()
 
+	/**
+	 * The whole outcome of every route write, allowed and refused: the
+	 * refusal message (or none) and the stamped route.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeOutcomeOfEveryRouteWrite(): void {
+		$cases = [
+			'create-plain'           => [['status' => 'submitted'], null],
+			'create-payroll-taxable' => [['reimbursementRoute' => 'payroll', 'taxableAmount' => '12.50'], null],
+			'create-payroll-untaxed' => [['reimbursementRoute' => 'payroll', 'taxableAmount' => '0'], null],
+			'create-direct-taxable'  => [['reimbursementRoute' => 'direct', 'taxableAmount' => 3], null],
+			'approve-untaxed'        => [['status' => 'approved'], ['status' => 'submitted']],
+			'approve-taxable'        => [['status' => 'approved', 'taxableAmount' => 4], ['status' => 'submitted']],
+			'approve-again'          => [['status' => 'approved'], ['status' => 'approved']],
+			'approve-routed'         => [['status' => 'approved', 'reimbursementRoute' => 'direct'], ['status' => 'submitted']],
+			'in-run-route-change'    => [['reimbursementRoute' => 'direct'], ['reimbursementRoute' => 'payroll', 'payrollRunId' => 'run-1']],
+			'in-run-same-route'      => [['reimbursementRoute' => 'payroll'], ['reimbursementRoute' => 'payroll', 'payrollRunId' => 'run-1']],
+			'not-in-run-change'      => [['reimbursementRoute' => 'direct'], ['reimbursementRoute' => 'payroll']],
+			'hand-paid-payroll'      => [['status' => 'reimbursed', 'reimbursementRoute' => 'payroll'], ['status' => 'approved', 'reimbursementRoute' => 'payroll']],
+			'hand-paid-was-payroll'  => [['status' => 'reimbursed', 'reimbursementRoute' => 'direct'], ['status' => 'approved', 'reimbursementRoute' => 'payroll']],
+			'hand-paid-direct'       => [['status' => 'reimbursed', 'reimbursementRoute' => 'direct'], ['status' => 'approved', 'reimbursementRoute' => 'direct']],
+			'already-reimbursed'     => [['status' => 'reimbursed', 'reimbursementRoute' => 'payroll'], ['status' => 'reimbursed', 'reimbursementRoute' => 'payroll']],
+		];
+		$got = [];
+		foreach ($cases as $name => [$claim, $old]) {
+			$entity = $this->entity(schema: ExpenseRouteListener::SLUG, data: $claim);
+			$event  = new ObjectCreatingEvent($entity);
+			if ($old !== null) {
+				$event = new ObjectUpdatingEvent($entity, $this->entity(schema: ExpenseRouteListener::SLUG, data: $old));
+			}
+
+			$this->routeListener()->handle($event);
+			$got[$name] = ['errors' => $event->getErrors(), 'stopped' => $event->isPropagationStopped(), 'modified' => $event->getModifiedData()];
+		}
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/expense-route-writes.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeOutcomeOfEveryRouteWrite()
+
 }//end class
