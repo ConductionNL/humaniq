@@ -299,6 +299,13 @@ class CompCollectiveServiceTest extends TestCase {
 	}//end gateway()
 
 	/**
+	 * The adjustment whose approve transition the engine stand-in refuses, if any.
+	 *
+	 * @var string|null
+	 */
+	private ?string $refuseTransitionOf = null;
+
+	/**
 	 * Record a transition the engine stand-in received, and apply it.
 	 *
 	 * @param string $objectId Object id.
@@ -308,6 +315,10 @@ class CompCollectiveServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function recordTransition(string $objectId, string $action, array $data): void {
+		if ($objectId === $this->refuseTransitionOf) {
+			throw new \RuntimeException('The approve guard refused.');
+		}
+
 		$this->transitions[] = ['id' => $objectId, 'action' => $action, 'data' => $data];
 		foreach (($this->rows['CompAdjustment'] ?? []) as $i => $row) {
 			if ($row['id'] === $objectId && $action === 'approve') {
@@ -512,4 +523,36 @@ class CompCollectiveServiceTest extends TestCase {
 		self::assertSame(1, $result['refusedSelfApproval']);
 	}//end testAnEmployeeIsSkippedForTheirOwnRaise()
 
+	/**
+	 * The whole approval outcome: the employee's own raise refused, a refused
+	 * transition reported with its message, the rest approved with the
+	 * trimmed decision reason; only proposed adjustments are read.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeApprovalOutcome(): void {
+		$this->service()->proposeForCycle(self::id('cycle-collective'), 'hr-adviseur');
+		$ids = array_column($this->rows['CompAdjustment'], 'id', 'employeeId');
+		$this->refuseTransitionOf = $ids[self::id('emp-devries')];
+		$this->rows['CompAdjustment'][] = ['id' => 'adj-old', 'cycleId' => self::id('cycle-collective'), 'employeeId' => 'emp-x', 'status' => 'approved'];
+
+		$result = $this->approver()->approveCycle(self::id('cycle-collective'), 'sjansen', '  Goed werk  ');
+
+		self::assertSame(
+			[
+				'status' => 'ok',
+				'cycleId' => self::id('cycle-collective'),
+				'approved' => 1,
+				'refusedSelfApproval' => 1,
+				'failed' => 1,
+				'rows' => [
+					['adjustmentId' => $ids[self::id('emp-jansen')], 'employeeId' => self::id('emp-jansen'), 'status' => 'refused-self-approval'],
+					['adjustmentId' => $ids[self::id('emp-devries')], 'employeeId' => self::id('emp-devries'), 'status' => 'failed', 'message' => 'The approve guard refused.'],
+					['adjustmentId' => $ids[self::id('emp-bakker')], 'employeeId' => self::id('emp-bakker'), 'status' => 'approved'],
+				],
+			],
+			$result
+		);
+		self::assertSame([['id' => $ids[self::id('emp-bakker')], 'action' => 'approve', 'data' => ['approvedBy' => 'sjansen', 'decisionReason' => 'Goed werk']]], $this->transitions);
+	}//end testTheWholeApprovalOutcome()
 }//end class
