@@ -29,7 +29,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\ManagerAccessStamps;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
@@ -62,18 +61,16 @@ class ManagerAccessStampListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Resolves the schema slug.
-	 * @param InternalWriteMarker $marker Lets humaniq's own writes pass.
-	 * @param ManagerAccessStamps $stamps Resolves the stamps.
+	 * @param ManagerAccessStamps $stamps Resolves the schema and the stamps.
 	 * @param LoggerInterface $logger Records a failed resolution.
+	 * @param InternalWriteMarker $marker Lets humaniq's own writes pass.
 	 *
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
-		private readonly InternalWriteMarker $marker,
 		private readonly ManagerAccessStamps $stamps,
 		private readonly LoggerInterface $logger,
+		private readonly InternalWriteMarker $marker,
 	) {
 
 	}//end __construct()
@@ -88,16 +85,14 @@ class ManagerAccessStampListener implements IEventListener {
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
 	public function handle(Event $event): void {
-		if (($event instanceof ObjectCreatingEvent) === false && ($event instanceof ObjectUpdatingEvent) === false) {
+		$entity = SchemaWriteFilter::pendingObject($event);
+		if ($entity === null || $this->marker->isInternal() === true) {
 			return;
 		}
 
-		$filter = new SchemaWriteFilter($this->gateway, $this->marker);
-		foreach (self::SLUGS as $slug => $schema) {
-			if ($filter->judges($event, $slug) === true) {
-				$this->stamp(event: $event, schema: $schema);
-				return;
-			}
+		$schema = $this->stamps->schemaFor(schemaId: (string)$entity->getSchema());
+		if ($schema !== null && ($event instanceof ObjectCreatingEvent || $event instanceof ObjectUpdatingEvent)) {
+			$this->stamp(event: $event, schema: $schema);
 		}
 	}//end handle()
 

@@ -31,7 +31,6 @@ use OCA\Humaniq\Service\ManagerAccessStamps;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
-use Psr\Log\LoggerInterface;
 
 /**
  * Scheduled manager access refresh.
@@ -41,28 +40,16 @@ use Psr\Log\LoggerInterface;
 class RefreshManagerAccessJob extends TimedJob {
 
 	/**
-	 * Six hours.
+	 * Constructor: runs every six hours, outside busy hours when possible.
 	 *
-	 * @var int
-	 */
-	private const INTERVAL_SECONDS = 21600;
-
-	/**
-	 * Constructor.
-	 *
-	 * @param ITimeFactory  The clock.
-	 * @param ManagerAccessStamps  The restamp pass.
-	 * @param LoggerInterface  Records a failed pass.
+	 * @param ITimeFactory $time The clock.
+	 * @param ManagerAccessStamps $stamps The restamp pass.
 	 *
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
-	public function __construct(
-		ITimeFactory $time,
-		private readonly ManagerAccessStamps $stamps,
-		private readonly LoggerInterface $logger,
-	) {
+	public function __construct(ITimeFactory $time, private readonly ManagerAccessStamps $stamps) {
 		parent::__construct(time: $time);
-		$this->setInterval(seconds: self::INTERVAL_SECONDS);
+		$this->setInterval(seconds: 21600);
 		$this->setTimeSensitivity(sensitivity: IJob::TIME_INSENSITIVE);
 	}//end __construct()
 
@@ -78,11 +65,7 @@ class RefreshManagerAccessJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) -- $argument is mandated by the TimedJob::run() signature.
 	 */
 	protected function run($argument): void {
-		try {
-			$this->stamps->run(false, $this->time->getDateTime()->format('Y-m-d'));
-		} catch (\Throwable $e) {
-			$this->logger->warning('humaniq: manager access refresh failed', ['exception' => $e->getMessage()]);
-		}
+		$this->stamps->refresh(today: $this->time->getDateTime()->format('Y-m-d'));
 	}//end run()
 
 }//end class

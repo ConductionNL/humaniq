@@ -91,35 +91,42 @@ class StampManagerAccess implements IRepairStep {
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
 	public function run(IOutput $output): void {
-		if ($this->appConfig->getValueBool(Application::APP_ID, self::DONE_KEY, false) === true) {
-			return;
-		}
-
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			$output->warning('OpenRegister is not installed or enabled. Skipping the manager access stamp.');
+		if ($this->settingsService->isOpenRegisterAvailable() === false || $this->appConfig->getValueBool(Application::APP_ID, self::DONE_KEY, false) === true) {
 			return;
 		}
 
 		try {
-			$report = $this->stamps->run(false, gmdate('Y-m-d'));
+			$failed = $this->report(output: $output, report: $this->stamps->run(false, gmdate('Y-m-d')));
 		} catch (\Throwable $e) {
-			$output->warning('Could not stamp the manager access fields: ' . $e->getMessage());
 			$this->logger->error('Humaniq: manager access stamp failed', ['exception' => $e->getMessage()]);
+			$output->warning('The manager access fields were not stamped and the step runs again: ' . $e->getMessage());
 			return;
 		}
 
-		$failed = 0;
+		if ($failed === 0) {
+			$this->appConfig->setValueBool(Application::APP_ID, self::DONE_KEY, true);
+		}
+	}//end run()
+
+	/**
+	 * Print the counts per schema and return how many records failed.
+	 *
+	 * @param IOutput $output The repair output.
+	 * @param array<string, array{inspected: int, changed: int, failed: int}> $report The pass's counts.
+	 *
+	 * @return int
+	 */
+	private function report(IOutput $output, array $report): int {
 		foreach ($report as $schema => $counts) {
-			$output->info(sprintf('%s: inspected=%d stamped=%d failed=%d', $schema, $counts['inspected'], $counts['changed'], $counts['failed']));
-			$failed += $counts['failed'];
+			$output->info(sprintf('%s: %d of %d stamped, %d failed', $schema, $counts['changed'], $counts['inspected'], $counts['failed']));
 		}
 
+		$failed = array_sum(array_column($report, 'failed'));
 		if ($failed > 0) {
 			$output->warning(sprintf('%d records could not be stamped; the step runs again on the next upgrade or repair.', $failed));
-			return;
 		}
 
-		$this->appConfig->setValueBool(Application::APP_ID, self::DONE_KEY, true);
-	}//end run()
+		return $failed;
+	}//end report()
 
 }//end class

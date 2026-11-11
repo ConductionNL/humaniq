@@ -29,7 +29,6 @@ use OCA\Humaniq\Listener\ManagerAccessOrgChangeListener;
 use OCA\Humaniq\Listener\ManagerAccessStampListener;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\ManagerAccessStamps;
-use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Tests\Unit\Support\ApprovalsFixture;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
@@ -43,23 +42,48 @@ class ManagerAccessStampListenerTest extends TestCase {
 
 	use ApprovalsFixture;
 
+	/**
+	 * The internal write marker.
+	 *
+	 * @var InternalWriteMarker
+	 */
 	private InternalWriteMarker $marker;
 
+	/**
+	 * Seed the fixture.
+	 *
+	 * @return void
+	 */
 	protected function setUp(): void {
 		parent::setUp();
 		$this->seedTeam();
 		$this->marker = new InternalWriteMarker();
 	}//end setUp()
 
+	/**
+	 * Listener.
+	 *
+	 * @param ManagerAccessStamps|null $stamps The stamps.
+	 *
+	 * @return ManagerAccessStampListener
+	 */
 	private function listener(?ManagerAccessStamps $stamps = null): ManagerAccessStampListener {
 		return new ManagerAccessStampListener(
-			gateway: $this->gateway(),
-			marker: $this->marker,
-			stamps: $stamps ?? new ManagerAccessStamps(gateway: $this->gateway(), marker: $this->marker, deputies: $this->deputies(), orgResolution: new OrgResolutionService(), logger: new NullLogger()),
-			logger: new NullLogger()
+			stamps: $stamps ?? new ManagerAccessStamps(gateway: $this->gateway(), marker: $this->marker, deputies: $this->deputies(), logger: new NullLogger()),
+			logger: new NullLogger(),
+			marker: $this->marker
 		);
 	}//end listener()
 
+	/**
+	 * Entity.
+	 *
+	 * @param string $schema The schema.
+	 * @param string $uuid The uuid.
+	 * @param array<string, mixed> $data The data.
+	 *
+	 * @return ObjectEntity
+	 */
 	private function entity(string $schema, string $uuid, array $data): ObjectEntity {
 		$entity = new ObjectEntity();
 		$entity->setUuid($uuid);
@@ -68,6 +92,11 @@ class ManagerAccessStampListenerTest extends TestCase {
 		return $entity;
 	}//end entity()
 
+	/**
+	 * A created record is stamped and a forged stamp is replaced.
+	 *
+	 * @return void
+	 */
 	public function testACreatedRecordIsStampedAndAForgedStampIsReplaced(): void {
 		$event = new ObjectCreatingEvent($this->entity('LeaveTransaction', 'lt-1', ['employeeId' => 'emp-sam', 'userId' => 'sam', 'managerUserId' => 'sam', 'deputyUserIds' => ['sam']]));
 		$this->listener()->handle($event);
@@ -76,6 +105,11 @@ class ManagerAccessStampListenerTest extends TestCase {
 		self::assertNotContains('sam', $event->getModifiedData()['deputyUserIds']);
 	}//end testACreatedRecordIsStampedAndAForgedStampIsReplaced()
 
+	/**
+	 * An employee record is stamped with its own manager.
+	 *
+	 * @return void
+	 */
 	public function testAnEmployeeRecordIsStampedWithItsOwnManager(): void {
 		$event = new ObjectUpdatingEvent($this->entity('Employee', 'emp-noor', ['lastName' => 'Visser']), $this->entity('Employee', 'emp-noor', ['lastName' => 'Visser']));
 		$this->listener()->handle($event);
@@ -83,9 +117,15 @@ class ManagerAccessStampListenerTest extends TestCase {
 		self::assertSame('mila', $event->getModifiedData()['managerUserId']);
 	}//end testAnEmployeeRecordIsStampedWithItsOwnManager()
 
+	/**
+	 * A failed resolution keeps the stored stamps.
+	 *
+	 * @return void
+	 */
 	public function testAFailedResolutionKeepsTheStoredStamps(): void {
 		$stamps = $this->createMock(ManagerAccessStamps::class);
 		$stamps->method('stampsFor')->willThrowException(new \RuntimeException('register down'));
+		$stamps->method('schemaFor')->willReturn('SickLeaveCase');
 		$stored = ['employeeId' => 'emp-sam', 'managerUserId' => 'mila', 'deputyUserIds' => ['dirk']];
 		$event = new ObjectUpdatingEvent($this->entity('SickLeaveCase', 'sl-1', ['employeeId' => 'emp-sam', 'managerUserId' => 'sam']), $this->entity('SickLeaveCase', 'sl-1', $stored));
 		$this->listener(stamps: $stamps)->handle($event);
@@ -93,6 +133,11 @@ class ManagerAccessStampListenerTest extends TestCase {
 		self::assertSame(['managerUserId' => 'mila', 'deputyUserIds' => ['dirk']], array_intersect_key($event->getModifiedData(), ['managerUserId' => 1, 'deputyUserIds' => 1]));
 	}//end testAFailedResolutionKeepsTheStoredStamps()
 
+	/**
+	 * Other schemas and humaniqs own writes pass untouched.
+	 *
+	 * @return void
+	 */
 	public function testOtherSchemasAndHumaniqsOwnWritesPassUntouched(): void {
 		$other = new ObjectCreatingEvent($this->entity('LeaveRequest', 'lr-1', ['employeeId' => 'emp-sam']));
 		$this->listener()->handle($other);
@@ -103,6 +148,11 @@ class ManagerAccessStampListenerTest extends TestCase {
 		self::assertArrayNotHasKey('managerUserId', $own->getModifiedData());
 	}//end testOtherSchemasAndHumaniqsOwnWritesPassUntouched()
 
+	/**
+	 * An org or deputy change queues one refresh.
+	 *
+	 * @return void
+	 */
 	public function testAnOrgOrDeputyChangeQueuesOneRefresh(): void {
 		$queued = [];
 		$jobs = $this->createMock(IJobList::class);

@@ -55,7 +55,6 @@ class ManagerAccessStamps {
 	 * @param HoursRegisterGateway $gateway The register.
 	 * @param InternalWriteMarker $marker Marks the pass's writes as humaniq's own.
 	 * @param ManagerDeputies $deputies The active deputies of a manager.
-	 * @param OrgResolutionService $orgResolution The shared manager resolution.
 	 * @param LoggerInterface $logger Records every failure.
 	 *
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
@@ -64,7 +63,6 @@ class ManagerAccessStamps {
 		private readonly HoursRegisterGateway $gateway,
 		private readonly InternalWriteMarker $marker,
 		private readonly ManagerDeputies $deputies,
-		private readonly OrgResolutionService $orgResolution,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -85,6 +83,43 @@ class ManagerAccessStamps {
 	public function stampsFor(array $record, string $schema, string $uuid, string $today): array {
 		return $this->resolve(employeeId: $this->employeeIdOf(record: $record, schema: $schema, uuid: $uuid), lookups: $this->gateway->orgLookups(), today: $today);
 	}//end stampsFor()
+
+	/**
+	 * The schema name of a stamped schema id, or null for any other schema.
+	 *
+	 * @param string $schemaId The schema id an object carries.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
+	 */
+	public function schemaFor(string $schemaId): ?string {
+		$slug = strtolower($this->gateway->resolveSchemaSlug($schemaId));
+		foreach (self::SCHEMAS as $schema) {
+			if (strtolower($schema) === $slug) {
+				return $schema;
+			}
+		}
+
+		return null;
+	}//end schemaFor()
+
+	/**
+	 * Run the pass for today and log a pass that could not run.
+	 *
+	 * @param string $today The day, YYYY-MM-DD.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
+	 */
+	public function refresh(string $today): void {
+		try {
+			$this->run(false, $today);
+		} catch (\Throwable $e) {
+			$this->logger->warning('humaniq: manager access refresh failed', ['exception' => $e->getMessage()]);
+		}
+	}//end refresh()
 
 	/**
 	 * Restamp every record whose stamps differ, or only count them on a dry run.
@@ -188,15 +223,7 @@ class ManagerAccessStamps {
 			return ['managerUserId' => null, 'deputyUserIds' => []];
 		}
 
-		$manager = $this->orgResolution->uniqueOrNull(
-			$this->orgResolution->resolveManagerUserIds(
-				employeeId: $employeeId,
-				assignmentsByEmployeeId: $lookups['assignments'],
-				unitsById: $lookups['units'],
-				employeesById: $lookups['employees'],
-				onDate: $today
-			)
-		);
+		$manager = $this->gateway->uniqueManagerUserIdIn($lookups, $employeeId, $today);
 		if ($manager === null || $manager === '') {
 			return ['managerUserId' => null, 'deputyUserIds' => []];
 		}

@@ -105,6 +105,13 @@ class StampManagerAccessTest extends TestCase {
 		};
 	}//end outputDouble()
 
+	/**
+	 * App config.
+	 *
+	 * @param bool $done The done.
+	 *
+	 * @return IAppConfig
+	 */
 	private function appConfig(bool $done): IAppConfig {
 		$double = $this->createMock(IAppConfig::class);
 		$double->method('getValueBool')->willReturnCallback(
@@ -114,6 +121,14 @@ class StampManagerAccessTest extends TestCase {
 		return $double;
 	}//end appConfig()
 
+	/**
+	 * Step.
+	 *
+	 * @param ManagerAccessStamps $stamps The stamps.
+	 * @param IAppConfig $config The config.
+	 *
+	 * @return StampManagerAccess
+	 */
 	private function step(ManagerAccessStamps $stamps, IAppConfig $config): StampManagerAccess {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
@@ -121,6 +136,11 @@ class StampManagerAccessTest extends TestCase {
 		return new StampManagerAccess($stamps, $settings, $this->createMock(LoggerInterface::class), $config);
 	}//end step()
 
+	/**
+	 * A clean pass reports and sets the done marker.
+	 *
+	 * @return void
+	 */
 	public function testACleanPassReportsAndSetsTheDoneMarker(): void {
 		$stamps = $this->createMock(ManagerAccessStamps::class);
 		$stamps->expects(self::once())->method('run')->with(false)->willReturn(['SickLeaveCase' => ['inspected' => 3, 'changed' => 2, 'failed' => 0]]);
@@ -130,10 +150,15 @@ class StampManagerAccessTest extends TestCase {
 		$out = $this->outputDouble();
 		$this->step($stamps, $config)->run($out);
 
-		self::assertSame(['SickLeaveCase: inspected=3 stamped=2 failed=0'], $out->infos);
+		self::assertSame(['SickLeaveCase: 2 of 3 stamped, 0 failed'], $out->infos);
 		self::assertSame([], $out->warnings);
 	}//end testACleanPassReportsAndSetsTheDoneMarker()
 
+	/**
+	 * A pass with failures leaves the marker unset.
+	 *
+	 * @return void
+	 */
 	public function testAPassWithFailuresLeavesTheMarkerUnset(): void {
 		$stamps = $this->createMock(ManagerAccessStamps::class);
 		$stamps->method('run')->willReturn(['Employee' => ['inspected' => 2, 'changed' => 1, 'failed' => 1]]);
@@ -146,6 +171,11 @@ class StampManagerAccessTest extends TestCase {
 		self::assertSame(['1 records could not be stamped; the step runs again on the next upgrade or repair.'], $out->warnings);
 	}//end testAPassWithFailuresLeavesTheMarkerUnset()
 
+	/**
+	 * The step runs only once.
+	 *
+	 * @return void
+	 */
 	public function testTheStepRunsOnlyOnce(): void {
 		$stamps = $this->createMock(ManagerAccessStamps::class);
 		$stamps->expects(self::never())->method('run');

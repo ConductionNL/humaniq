@@ -27,7 +27,6 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\ManagerAccessStamps;
-use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Tests\Unit\Support\ApprovalsFixture;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use PHPUnit\Framework\TestCase;
@@ -47,6 +46,11 @@ class ManagerAccessStampsTest extends TestCase {
 	 */
 	private const AFTER_PERIOD = '2026-08-02';
 
+	/**
+	 * Seed the fixture.
+	 *
+	 * @return void
+	 */
 	protected function setUp(): void {
 		parent::setUp();
 		$this->seedTeam();
@@ -56,16 +60,28 @@ class ManagerAccessStampsTest extends TestCase {
 		$this->store->seed('OrgAssignment', 'as-piet', ['employeeId' => 'emp-piet', 'orgUnitId' => 'unit-sales', 'startDate' => '2024-01-01']);
 	}//end setUp()
 
+	/**
+	 * Stamps.
+	 *
+	 * @return ManagerAccessStamps
+	 */
 	private function stamps(): ManagerAccessStamps {
 		return new ManagerAccessStamps(
 			gateway: $this->gateway(),
 			marker: new InternalWriteMarker(),
 			deputies: $this->deputies(),
-			orgResolution: new OrgResolutionService(),
 			logger: new NullLogger()
 		);
 	}//end stamps()
 
+	/**
+	 * Stored.
+	 *
+	 * @param string $schema The schema.
+	 * @param string $uuid The uuid.
+	 *
+	 * @return array<string, mixed>
+	 */
 	private function stored(string $schema, string $uuid): array {
 		return (array)$this->store->find($uuid, schema: $schema)?->getObject();
 	}//end stored()
@@ -103,6 +119,11 @@ class ManagerAccessStampsTest extends TestCase {
 		return false;
 	}//end admits()
 
+	/**
+	 * The team manager is stamped and reads every kind of record.
+	 *
+	 * @return void
+	 */
 	public function testTheTeamManagerIsStampedAndReadsEveryKindOfRecord(): void {
 		$service = $this->stamps();
 		$records = [
@@ -124,6 +145,11 @@ class ManagerAccessStampsTest extends TestCase {
 		}
 	}//end testTheTeamManagerIsStampedAndReadsEveryKindOfRecord()
 
+	/**
+	 * The manager of another team is refused.
+	 *
+	 * @return void
+	 */
 	public function testTheManagerOfAnotherTeamIsRefused(): void {
 		$record = ['employeeId' => 'emp-sam', 'status' => 'open'];
 		$stamped = array_merge($record, $this->stamps()->stampsFor($record, 'SickLeaveCase', 'sl-1', self::IN_PERIOD));
@@ -136,12 +162,22 @@ class ManagerAccessStampsTest extends TestCase {
 		self::assertFalse($this->admits('SickLeaveCase', 'read', 'mila', $theirs));
 	}//end testTheManagerOfAnotherTeamIsRefused()
 
+	/**
+	 * An incoming stamp is replaced.
+	 *
+	 * @return void
+	 */
 	public function testAnIncomingStampIsReplaced(): void {
 		$record = ['employeeId' => 'emp-sam', 'managerUserId' => 'kees', 'deputyUserIds' => ['kees']];
 
 		self::assertSame(['managerUserId' => 'mila', 'deputyUserIds' => []], $this->stamps()->stampsFor($record, 'CompAdjustment', 'ca-1', self::AFTER_PERIOD));
 	}//end testAnIncomingStampIsReplaced()
 
+	/**
+	 * The deputy reads and decides the queue only during their period.
+	 *
+	 * @return void
+	 */
 	public function testTheDeputyReadsAndDecidesTheQueueOnlyDuringTheirPeriod(): void {
 		$record = ['employeeId' => 'emp-sam', 'userId' => 'sam', 'status' => 'submitted'];
 		$during = array_merge($record, $this->stamps()->stampsFor($record, 'LeaveTransaction', 'lt-1', self::IN_PERIOD));
@@ -155,6 +191,11 @@ class ManagerAccessStampsTest extends TestCase {
 		self::assertFalse($this->admits('LeaveTransaction', 'read', 'dirk', $after));
 	}//end testTheDeputyReadsAndDecidesTheQueueOnlyDuringTheirPeriod()
 
+	/**
+	 * A record without a resolvable manager carries no stamp.
+	 *
+	 * @return void
+	 */
 	public function testARecordWithoutAResolvableManagerCarriesNoStamp(): void {
 		$this->store->seed('Employee', 'emp-loose', ['nextcloudUserId' => 'loose']);
 
@@ -162,6 +203,11 @@ class ManagerAccessStampsTest extends TestCase {
 		self::assertSame(['managerUserId' => null, 'deputyUserIds' => []], $this->stamps()->stampsFor([], 'SickLeaveCase', 'sl-4', self::IN_PERIOD));
 	}//end testARecordWithoutAResolvableManagerCarriesNoStamp()
 
+	/**
+	 * The pass stamps stored records once and a dry run writes nothing.
+	 *
+	 * @return void
+	 */
 	public function testThePassStampsStoredRecordsOnceAndADryRunWritesNothing(): void {
 		$this->store->seed('SickLeaveCase', 'sl-1', ['employeeId' => 'emp-sam', 'status' => 'open']);
 		$this->store->seed('LeaveTransaction', 'lt-1', ['employeeId' => 'emp-piet', 'userId' => 'piet', 'status' => 'submitted']);

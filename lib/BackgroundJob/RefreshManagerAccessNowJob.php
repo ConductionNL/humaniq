@@ -31,7 +31,6 @@ namespace OCA\Humaniq\BackgroundJob;
 use OCA\Humaniq\Service\ManagerAccessStamps;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
-use Psr\Log\LoggerInterface;
 
 /**
  * One-off manager access refresh.
@@ -43,22 +42,17 @@ class RefreshManagerAccessNowJob extends QueuedJob {
 	/**
 	 * Constructor.
 	 *
-	 * @param ITimeFactory  The clock.
-	 * @param ManagerAccessStamps  The restamp pass.
-	 * @param LoggerInterface  Records a failed pass.
+	 * @param ManagerAccessStamps $stamps The restamp pass.
+	 * @param ITimeFactory $time The clock.
 	 *
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
-	public function __construct(
-		ITimeFactory $time,
-		private readonly ManagerAccessStamps $stamps,
-		private readonly LoggerInterface $logger,
-	) {
+	public function __construct(private readonly ManagerAccessStamps $stamps, ITimeFactory $time) {
 		parent::__construct(time: $time);
 	}//end __construct()
 
 	/**
-	 * Run the restamp pass for today.
+	 * Run the restamp pass once for today.
 	 *
 	 * @param mixed $argument Unused job argument.
 	 *
@@ -69,11 +63,7 @@ class RefreshManagerAccessNowJob extends QueuedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) -- $argument is mandated by the QueuedJob::run() signature.
 	 */
 	protected function run($argument): void {
-		try {
-			$this->stamps->run(false, $this->time->getDateTime()->format('Y-m-d'));
-		} catch (\Throwable $e) {
-			$this->logger->warning('humaniq: manager access refresh failed', ['exception' => $e->getMessage()]);
-		}
+		$this->stamps->refresh(today: $this->time->getDateTime()->format('Y-m-d'));
 	}//end run()
 
 }//end class

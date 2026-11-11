@@ -51,6 +51,11 @@ class MockRegisterAuthorizationTest extends TestCase {
 		return ((new RegisterConfigReader(new NullLogger()))->read()['data'] ?? []);
 	}//end real()
 
+	/**
+	 * The mock register carries the real registers rules.
+	 *
+	 * @return void
+	 */
 	public function testTheMockRegisterCarriesTheRealRegistersRules(): void {
 		$real = self::real()['components']['registers']['humaniq'];
 		$mock = self::mock()['components']['registers']['humaniq'];
@@ -60,6 +65,11 @@ class MockRegisterAuthorizationTest extends TestCase {
 		self::assertSame($real['version'], $mock['version'], 'regenerate the mock register after a register change');
 	}//end testTheMockRegisterCarriesTheRealRegistersRules()
 
+	/**
+	 * Every mock schema carries the real schemas rules.
+	 *
+	 * @return void
+	 */
 	public function testEveryMockSchemaCarriesTheRealSchemasRules(): void {
 		$real = self::real()['components']['schemas'];
 		$mock = (self::mock()['components']['schemas'] ?? []);
