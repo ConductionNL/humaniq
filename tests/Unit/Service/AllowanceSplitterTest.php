@@ -165,4 +165,41 @@ class AllowanceSplitterTest extends TestCase {
 		$this->assertFalse($splitter->covers(allowance: $allowance, period: 'garbage'));
 	}//end testAnAllowanceCoversThePeriodsInsideItsDates()
 
+	/**
+	 * The whole split for every kind and treatment of allowance, with and without a norm and an arrangement.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeSplitOfEveryAllowanceShape(): void {
+		$splitter = new AllowanceSplitter();
+		$home = $this->allowance();
+		$travel = ['kind' => 'reiskosten', 'taxTreatment' => 'gericht-vrijgesteld', 'commuteArrangementId' => 'ca-1'];
+		$arrangement = ['taxFreeMonthly' => 118.13, 'taxableMonthly' => '35.95'];
+		$cases = [
+			'home-at-norm' => [$home, null, self::NORM],
+			'home-month-over-norm' => [$this->allowance(['amountPerDay' => null, 'amountPerMonth' => 99.5]), null, self::NORM],
+			'home-free-margin' => [$this->allowance(['taxTreatment' => 'vrije-ruimte']), null, null],
+			'home-taxed' => [$this->allowance(['taxTreatment' => 'belast']), null, null],
+			'home-no-norm' => [$home, null, null],
+			'home-unverified-norm' => [$home, null, ['perDayCents' => 240, 'verified' => false]],
+			'home-no-days' => [$this->allowance(['amountPerMonth' => 50, 'days' => null, 'daysPerMonth' => null]), null, self::NORM],
+			'home-no-amount' => [$this->allowance(['amountPerDay' => 0, 'amountPerMonth' => null]), null, self::NORM],
+			'other-kind' => [['kind' => 'telefoon', 'taxTreatment' => 'gericht-vrijgesteld', 'amountPerMonth' => '20'], null, null],
+			'unknown-treatment' => [$this->allowance(['taxTreatment' => 'onbekend']), null, self::NORM],
+			'travel' => [$travel, $arrangement, null],
+			'travel-allowance-only' => [$travel, ['monthlyAllowance' => 80, 'taxableMonthly' => 'x'], null],
+			'travel-no-amount' => [$travel, ['taxableMonthly' => 3], null],
+			'travel-no-arrangement' => [$travel, null, null],
+			'travel-no-id' => [array_merge($travel, ['commuteArrangementId' => '']), $arrangement, null],
+			'travel-free-margin' => [array_merge($travel, ['taxTreatment' => 'vrije-ruimte']), $arrangement, null],
+			'travel-taxed' => [array_merge($travel, ['taxTreatment' => 'belast', 'amountPerMonth' => 40]), $arrangement, null],
+		];
+		$got = [];
+		foreach ($cases as $name => [$allowance, $commute, $norm]) {
+			$got[$name] = $splitter->split(allowance: $allowance, arrangement: $commute, norm: $norm);
+		}
+
+		$this->assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/allowance-splits.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)) . "\n");
+	}//end testTheWholeSplitOfEveryAllowanceShape()
+
 }//end class
