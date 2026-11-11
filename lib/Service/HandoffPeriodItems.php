@@ -208,8 +208,8 @@ class HandoffPeriodItems {
 	 * @return array<string, mixed>|null
 	 */
 	private function mutationOf(HandoffItem $item): ?array {
-		$fields = $this->changedFields(item: $item);
-		if ($fields === []) {
+		$fields = $this->changesSinceSent(item: $item);
+		if ($fields === null) {
 			return null;
 		}
 
@@ -219,13 +219,14 @@ class HandoffPeriodItems {
 	}//end mutationOf()
 
 	/**
-	 * The fields whose value differs from what was sent, old and new.
+	 * The fields whose value differs from what was sent, old and new; null
+	 * when nothing changed since the item went out.
 	 *
 	 * @param HandoffItem $item The item and what was sent for it.
 	 *
-	 * @return array<string, array{old: mixed, new: mixed}>
+	 * @return array<string, array{old: mixed, new: mixed}>|null
 	 */
-	private function changedFields(HandoffItem $item): array {
+	private function changesSinceSent(HandoffItem $item): ?array {
 		$fields = [];
 		foreach ($this->valuesOf(kind: $item->kind, row: $item->row) as $field => $value) {
 			$old = ($item->before[$field] ?? null);
@@ -234,8 +235,8 @@ class HandoffPeriodItems {
 			}
 		}
 
-		return $fields;
-	}//end changedFields()
+		return ($fields === [] ? null : $fields);
+	}//end changesSinceSent()
 
 	/**
 	 * From when a mutation applies: the new end of a sent item that ended,
