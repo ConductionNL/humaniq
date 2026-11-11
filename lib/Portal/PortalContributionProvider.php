@@ -3,6 +3,9 @@
 /**
  * Humaniq Portal Contribution Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Humaniq's contribution to the shared Portaliq external portal (hydra ADR-046 +
  * 2026-07-06 amendment, contribution contract v2). Portaliq — the one shared
  * external portal for people WITHOUT Nextcloud accounts — discovers this class
@@ -32,9 +35,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

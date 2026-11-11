@@ -3,6 +3,9 @@
 /**
  * Payroll Net Pay Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Turns one payable PayrollRun (status approved/posted, design.md D4) into a
  * draft shillinq `PaymentRun` -- one SEPA credit-transfer line per payslip,
  * netto-loon to each employee's IBAN -- via OpenRegister's ObjectService, same
@@ -36,9 +39,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

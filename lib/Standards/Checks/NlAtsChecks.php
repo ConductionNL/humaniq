@@ -3,6 +3,9 @@
 /**
  * NL ATS (Recruitment) Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable checks for the two machine-checkable AVG/GDPR retention rules of
  * the recruiting-ats-basic change (lib/Standards/rules/privacy.json, domain
  * gdpr-recruitment): a rejected Application must carry a correctly-derived
@@ -26,9 +29,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

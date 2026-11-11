@@ -3,6 +3,9 @@
 /**
  * Payroll Approve Node
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `humaniq.payroll-approve`: the ONE write this change adds that no service
  * performed before (payroll-run-as-a-flow design.md D2/D3). It flips a
  * `draft` PayrollRun to `approved` after the review user task decided
@@ -27,9 +30,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

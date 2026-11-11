@@ -3,6 +3,9 @@
 /**
  * Awf Review Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Reviews the low unemployment premium (Awf) afterwards, the way the
  * Belastingdienst prescribes it (Handboek Loonheffingen 2026, maart 2026,
  * paragraaf 7.2.2 and 7.2.3; filings-premium-differentiation D2/D3):
@@ -26,9 +29,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

@@ -3,6 +3,9 @@
 /**
  * Unit tests for PayrollMutationService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pins the payroll-mutation-reports service contract (design.md D1-D7): the
  * design.md worked example (A changed / B left / C entered -> the exact
  * run-level deltas), the per-component integer-cents exactness of the
@@ -31,9 +34,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

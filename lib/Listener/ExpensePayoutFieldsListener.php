@@ -3,6 +3,9 @@
 /**
  * Humaniq ExpensePayoutFieldsListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` and
  * `ObjectUpdatingEvent` for `Expense`. Payroll pays an approved claim from
  * its amounts, its approval date and the run that holds it, and an edit that
@@ -31,9 +34,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

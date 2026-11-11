@@ -3,6 +3,9 @@
 /**
  * Humaniq ExpenseManagerStampListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` and
  * `ObjectUpdatingEvent` for `Expense`. An expense claim of any category gets
  * its approver the way a timesheet does: `managerUserId` is resolved by the
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

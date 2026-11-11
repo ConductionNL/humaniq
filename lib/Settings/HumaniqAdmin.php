@@ -2,6 +2,9 @@
 /**
  * Humaniq delegated-admin marker for attribute-scoped endpoints.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * 🔴 THIS EXISTS TO BE NAMED, NOT TO BE RENDERED. The admin page is
  * HumaniqAdminSettings, a plain ISettings that `appinfo/info.xml` registers;
  * this class deliberately stays out of that `<settings>` block. It is not

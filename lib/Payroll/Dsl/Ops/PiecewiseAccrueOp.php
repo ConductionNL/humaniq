@@ -3,6 +3,9 @@
 /**
  * Piecewise Accrue Op
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `piecewiseAccrue(value, segments[{upTo, rate, cap}], tail{from, rate}, zeroAbove, roundTerm)`
  * — a capped piecewise-linear build-up (jurisdiction-packs design.md D3).
  *
@@ -34,9 +37,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

@@ -3,6 +3,9 @@
 /**
  * Unit tests for the ambtenarenrecht (AOR) presence checks (NlAorChecks).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pins the two `ambtenarenwet-2017` predicates (spec.md REQ-AOR-002 /
  * REQ-AOR-003), both anchored on `Employee` and both presence-only (the
  * `nl-gebruikelijkloon-norm` MVP precedent):
@@ -26,9 +29,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

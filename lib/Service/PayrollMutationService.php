@@ -3,6 +3,9 @@
 /**
  * Payroll Mutation Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The per-run payroll diff an accountant reviews before flipping a run from
  * `draft` to `approved` (design.md D1-D3): resolves two PayrollRuns
  * (`fromRunId`/`toRunId`, or auto-resolves the prior period when only
@@ -41,9 +44,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

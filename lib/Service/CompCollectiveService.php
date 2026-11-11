@@ -3,6 +3,9 @@
 /**
  * Comp Collective Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Proposes and approves many compensation adjustments at once from one
  * CompReviewCycle (comp-collective-raise-and-step-increase design.md D2, D3,
  * D5). A collective cycle carries one raise, a percentage or an amount, and a
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

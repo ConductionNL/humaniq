@@ -3,6 +3,9 @@
 /**
  * Humaniq TimesheetAggregateListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Post-save listener on OpenRegister's `ObjectCreatedEvent` /
  * `ObjectUpdatedEvent` / `ObjectDeletedEvent` for the `TimeEntry` schema
  * (hours-process-redesign Decision 3, REQ-TEC-004): every entry write
@@ -30,9 +33,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
