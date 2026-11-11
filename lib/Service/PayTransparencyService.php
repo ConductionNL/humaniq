@@ -110,18 +110,8 @@ class PayTransparencyService {
 	 * @return array<int, array{gender: string, category: string, hourly: float, variable: float}>
 	 */
 	private function people(array $rows, int $year): array {
-		$categoryOf = [];
-		foreach (($rows['normfuncties'] ?? []) as $function) {
-			$categoryOf[(string)($function['id'] ?? '')] = trim((string)($function['payCategory'] ?? ''));
-		}
-
-		$slipsOf = [];
-		foreach (($rows['payslips'] ?? []) as $slip) {
-			if (str_starts_with((string)($slip['period'] ?? ''), $year . '-') === true) {
-				$slipsOf[(string)($slip['employeeId'] ?? '')][] = $slip;
-			}
-		}
-
+		$categoryOf = self::categoriesOf(rows: $rows);
+		$slipsOf = self::slipsInYear(rows: $rows, year: $year);
 		$people = [];
 		foreach (($rows['employees'] ?? []) as $employee) {
 			$employeeId = (string)($employee['id'] ?? '');
@@ -132,20 +122,53 @@ class PayTransparencyService {
 
 			$contract = $this->contractInYear(contracts: ($rows['contracts'] ?? []), employeeId: $employeeId, year: $year);
 			$pay = $this->pay(slips: $slips, contract: $contract, monthlySalary: (float)($employee['grossMonthlySalary'] ?? 0));
-			if ($pay === null) {
-				continue;
+			if ($pay !== null) {
+				$people[] = [
+					'gender' => (string)($employee['gender'] ?? ''),
+					'category' => ($categoryOf[(string)($contract['normfunctieId'] ?? '')] ?? self::UNCATEGORISED),
+					'hourly' => $pay['hourly'],
+					'variable' => $pay['variable'],
+				];
 			}
-
-			$people[] = [
-				'gender' => (string)($employee['gender'] ?? ''),
-				'category' => ($categoryOf[(string)($contract['normfunctieId'] ?? '')] ?? self::UNCATEGORISED),
-				'hourly' => $pay['hourly'],
-				'variable' => $pay['variable'],
-			];
 		}//end foreach
 
 		return $people;
 	}//end people()
+
+	/**
+	 * The pay category of each normfunctie, by id.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $rows The administration's rows.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function categoriesOf(array $rows): array {
+		$categoryOf = [];
+		foreach (($rows['normfuncties'] ?? []) as $function) {
+			$categoryOf[(string)($function['id'] ?? '')] = trim((string)($function['payCategory'] ?? ''));
+		}
+
+		return $categoryOf;
+	}//end categoriesOf()
+
+	/**
+	 * The year's payslips, per employee.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $rows The administration's rows.
+	 * @param int                                             $year The year.
+	 *
+	 * @return array<string, list<array<string, mixed>>>
+	 */
+	private static function slipsInYear(array $rows, int $year): array {
+		$slipsOf = [];
+		foreach (($rows['payslips'] ?? []) as $slip) {
+			if (str_starts_with((string)($slip['period'] ?? ''), $year . '-') === true) {
+				$slipsOf[(string)($slip['employeeId'] ?? '')][] = $slip;
+			}
+		}
+
+		return $slipsOf;
+	}//end slipsInYear()
 
 	/**
 	 * Hourly and variable pay from a year's payslips; null without hours.
