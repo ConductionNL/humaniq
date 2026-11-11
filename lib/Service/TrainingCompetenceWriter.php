@@ -83,13 +83,26 @@ class TrainingCompetenceWriter {
 			$stamps['completedOn'] = $completedOn;
 		}
 
+		return array_merge($stamps, $this->validityStamp(record: $record, completedOn: $completedOn));
+	}//end stamps()
+
+	/**
+	 * The end of the validity, counted from the completion day, when the
+	 * record gives a validity and no end of its own.
+	 *
+	 * @param array<string, mixed> $record      The training record.
+	 * @param string               $completedOn The completion day.
+	 *
+	 * @return array<string, string>
+	 */
+	private function validityStamp(array $record, string $completedOn): array {
 		$months = ($record['validityMonths'] ?? null);
-		if ($this->textOrNull($record['validUntil'] ?? null) === null && is_numeric($months) === true && (int)$months > 0) {
-			$stamps['validUntil'] = (new DateTimeImmutable($completedOn))->modify('+' . (int)$months . ' months')->format('Y-m-d');
+		if ($this->textOrNull($record['validUntil'] ?? null) !== null || is_numeric($months) === false || (int)$months <= 0) {
+			return [];
 		}
 
-		return $stamps;
-	}//end stamps()
+		return ['validUntil' => (new DateTimeImmutable($completedOn))->modify('+' . (int)$months . ' months')->format('Y-m-d')];
+	}//end validityStamp()
 
 	/**
 	 * The employee's administration when the record has none.
@@ -119,26 +132,63 @@ class TrainingCompetenceWriter {
 	 * @spec openspec/specs/training-and-lms-sync/spec.md#REQ-TRN-001
 	 */
 	public function apply(array $record): ?string {
-		$employeeId = trim((string)($record['employeeId'] ?? ''));
-		$code = trim((string)($record['competenceCode'] ?? ''));
-		if (($record['status'] ?? null) !== 'gevolgd' || $employeeId === '' || $code === '') {
+		$key = $this->competenceKey($record);
+		if (($record['status'] ?? null) !== 'gevolgd' || in_array('', $key, true) === true) {
 			return null;
 		}
 
-		$validUntil = $this->textOrNull($record['validUntil'] ?? null);
-		$held = $this->gateway->findFiltered(self::COMPETENCE_SCHEMA, ['employeeId' => $employeeId, 'competenceCode' => $code]);
+		$held = $this->gateway->findFiltered(self::COMPETENCE_SCHEMA, $key);
 		if ($held === []) {
-			$payload = [
-				'employeeId' => $employeeId,
-				'competenceCode' => $code,
-				'label' => $this->textOrNull($record['title'] ?? null) ?? $code,
-				'issuedOn' => $this->textOrNull($record['completedOn'] ?? null) ?? $this->textOrNull($record['plannedOn'] ?? null),
-				'validUntil' => $validUntil,
-			];
-
-			return (string)$this->gateway->save($payload, self::COMPETENCE_SCHEMA)->getUuid();
+			return $this->grant($record);
 		}
 
+		return $this->extend(held: $held, validUntil: $this->textOrNull($record['validUntil'] ?? null));
+	}//end apply()
+
+	/**
+	 * The employee and competence code a training record is about.
+	 *
+	 * @param array<string, mixed> $record The training record.
+	 *
+	 * @return array{employeeId: string, competenceCode: string}
+	 */
+	private function competenceKey(array $record): array {
+		return [
+			'employeeId' => trim((string)($record['employeeId'] ?? '')),
+			'competenceCode' => trim((string)($record['competenceCode'] ?? '')),
+		];
+	}//end competenceKey()
+
+	/**
+	 * Grant the competence the employee does not hold yet.
+	 *
+	 * @param array<string, mixed> $record The completed training record.
+	 *
+	 * @return string The new competence id.
+	 */
+	private function grant(array $record): string {
+		$key = $this->competenceKey($record);
+		$payload = [
+			'employeeId' => $key['employeeId'],
+			'competenceCode' => $key['competenceCode'],
+			'label' => $this->textOrNull($record['title'] ?? null) ?? $key['competenceCode'],
+			'issuedOn' => $this->textOrNull($record['completedOn'] ?? null) ?? $this->textOrNull($record['plannedOn'] ?? null),
+			'validUntil' => $this->textOrNull($record['validUntil'] ?? null),
+		];
+
+		return (string)$this->gateway->save($payload, self::COMPETENCE_SCHEMA)->getUuid();
+	}//end grant()
+
+	/**
+	 * Extend the longest-running competence held when the training runs
+	 * longer.
+	 *
+	 * @param list<array<string, mixed>> $held       The competences held.
+	 * @param string|null                $validUntil The training's end of validity; null runs forever.
+	 *
+	 * @return string|null The extended competence id, or null when nothing changed.
+	 */
+	private function extend(array $held, ?string $validUntil): ?string {
 		$current = $this->longestRunning($held);
 		if ($this->runsLonger(candidate: $validUntil, current: $this->textOrNull($current['validUntil'] ?? null)) === false) {
 			return null;
@@ -148,7 +198,7 @@ class TrainingCompetenceWriter {
 		$this->gateway->save(array_merge($this->withoutId($current), ['validUntil' => $validUntil]), self::COMPETENCE_SCHEMA, $competenceId);
 
 		return $competenceId;
-	}//end apply()
+	}//end extend()
 
 	/**
 	 * The held competence that runs longest; one without an end runs longest.
