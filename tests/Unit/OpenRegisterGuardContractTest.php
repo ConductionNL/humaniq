@@ -16,9 +16,10 @@
  * exists to prevent, the suite would still have been green.
  *
  * So this test drives every guarded class through the ONE state the rest of
- * the suite never puts it in. It resolves each class's SettingsService
- * dependency by TYPE rather than by property name, because the fleet spells
- * that property both `$settingsService` and `$settings`, and a test that
+ * the suite never puts it in. It resolves each class's SettingsService (or
+ * OpenRegisterAvailability) dependency by TYPE rather than by property
+ * name, because the fleet spells that property both `$settingsService` and
+ * `$settings`, and a test that
  * hard-codes one name silently skips the classes using the other — which is
  * the same invisible hole in a different place.
  *
@@ -41,7 +42,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit;
 
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Service\SettingsService;
+use OCP\App\IAppManager;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -120,6 +123,9 @@ class OpenRegisterGuardContractTest extends TestCase {
 	public function testRefusesWhenOpenRegisterIsAbsent(string $fqcn): void {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('isOpenRegisterAvailable')->willReturn(false);
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('isInstalled')->willReturn(false);
+		$doubles = [SettingsService::class => $settings, OpenRegisterAvailability::class => new OpenRegisterAvailability($apps)];
 
 		$reflection = new ReflectionClass($fqcn);
 
@@ -132,11 +138,11 @@ class OpenRegisterGuardContractTest extends TestCase {
 		$injected = false;
 		foreach ($reflection->getProperties() as $property) {
 			$type = $property->getType();
-			if (($type instanceof ReflectionNamedType) === false || $type->getName() !== SettingsService::class) {
+			if (($type instanceof ReflectionNamedType) === false || isset($doubles[$type->getName()]) === false) {
 				continue;
 			}
 
-			$property->setValue($instance, $settings);
+			$property->setValue($instance, $doubles[$type->getName()]);
 			$injected = true;
 		}
 
@@ -144,7 +150,7 @@ class OpenRegisterGuardContractTest extends TestCase {
 		// and expectException() alone cannot tell those apart at a glance. Say
 		// so explicitly, so a class that renames or re-types the property fails
 		// with the reason rather than with a confusing type mismatch.
-		$this->assertTrue($injected, $fqcn . ' has no SettingsService-typed property, so the guard could not be driven.');
+		$this->assertTrue($injected, $fqcn . ' has no SettingsService- or OpenRegisterAvailability-typed property, so the guard could not be driven.');
 
 		$method = $reflection->getMethod('objectService');
 

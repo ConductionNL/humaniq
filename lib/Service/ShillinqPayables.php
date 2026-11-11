@@ -65,15 +65,15 @@ class ShillinqPayables {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container       For the lazy ObjectService.
-	 * @param IAppManager        $appManager      To probe for shillinq.
-	 * @param SettingsService    $settingsService To check OpenRegister is there.
-	 * @param LoggerInterface    $logger          The logger.
+	 * @param ContainerInterface       $container    For the lazy ObjectService.
+	 * @param IAppManager              $appManager   To probe for shillinq.
+	 * @param OpenRegisterAvailability $openRegister To check OpenRegister is there.
+	 * @param LoggerInterface          $logger       The logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
-		private readonly SettingsService $settingsService,
+		private readonly OpenRegisterAvailability $openRegister,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -203,4 +203,13 @@ class ShillinqPayables {
 
 		return array_map(fn (mixed $row): array => $this->toArray(row: $row), array_values((array)$rows));
 	}//end rows()
+
+	/**
+	 * Whether OpenRegister is installed (the check ResolvesObjectService makes before each lookup).
+	 *
+	 * @return bool
+	 */
+	protected function openRegisterAvailable(): bool {
+		return $this->openRegister->isAvailable();
+	}//end openRegisterAvailable()
 }//end class

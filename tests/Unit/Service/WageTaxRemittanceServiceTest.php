@@ -111,7 +111,7 @@ class WageTaxRemittanceServiceTest extends TestCase {
 	 */
 	private function serviceOn(FakeObjectStore $store, bool $shillinq=true, string $payeeId='payee-belastingdienst'): WageTaxRemittanceService {
 		$appManager = $this->createMock(IAppManager::class);
-		$appManager->method('isInstalled')->willReturnCallback(static fn (string $appId): bool => ($appId === 'shillinq' && $shillinq));
+		$appManager->method('isInstalled')->willReturnCallback(static fn (string $appId): bool => (($appId === 'shillinq' && $shillinq) || $appId === 'openregister'));
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);

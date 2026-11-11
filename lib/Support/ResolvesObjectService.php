@@ -5,6 +5,9 @@
  *
  * Looks up OpenRegister's services for a class that holds the app's
  * SettingsService as `$settingsService` and a container as `$container`.
+ * A class that needs nothing else from SettingsService holds
+ * OpenRegisterAvailability instead and declares its own
+ * openRegisterAvailable() asking it.
  *
  * @category Support
  * @package  OCA\Humaniq\Support
@@ -55,10 +58,20 @@ trait ResolvesObjectService {
 	 * @throws RuntimeException When OpenRegister is not installed.
 	 */
 	private function openRegisterService(string $service): mixed {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+		if ($this->openRegisterAvailable() === false) {
 			throw new RuntimeException('humaniq requires the OpenRegister app, which is not installed on this instance.');
 		}
 
 		return $this->container->get($service);
 	}//end openRegisterService()
+
+	/**
+	 * Whether OpenRegister is installed, asked of the class's SettingsService.
+	 * A class holding OpenRegisterAvailability instead declares its own.
+	 *
+	 * @return bool
+	 */
+	protected function openRegisterAvailable(): bool {
+		return $this->settingsService->isOpenRegisterAvailable();
+	}//end openRegisterAvailable()
 }//end class

@@ -84,7 +84,7 @@ class WageTaxRemittanceService {
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
-		$this->payables = new ShillinqPayables(container: $container, appManager: $appManager, settingsService: $settingsService, logger: $logger);
+		$this->payables = new ShillinqPayables(container: $container, appManager: $appManager, openRegister: new OpenRegisterAvailability($appManager), logger: $logger);
 	}//end __construct()
 
 	/**

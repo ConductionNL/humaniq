@@ -22,10 +22,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Service\ShillinqPayables;
 use OCP\App\IAppManager;
-use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -35,7 +34,6 @@ use RuntimeException;
  * shillinq's payables are reached only while OpenRegister is installed.
  *
  * @covers \OCA\Humaniq\Service\ShillinqPayables
- * @uses   \OCA\Humaniq\Service\SettingsService
  * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
  */
 class ShillinqPayablesTest extends TestCase {
@@ -115,9 +113,7 @@ class ShillinqPayablesTest extends TestCase {
 	private function payables(array $installed, ContainerInterface $container): ShillinqPayables {
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('isInstalled')->willReturnCallback(static fn (string $app): bool => in_array($app, $installed, true));
-		$settings = new SettingsService($this->createMock(IAppConfig::class), $apps, $this->createMock(ContainerInterface::class), new NullLogger());
-
-		return new ShillinqPayables(container: $container, appManager: $apps, settingsService: $settings, logger: new NullLogger());
+		return new ShillinqPayables(container: $container, appManager: $apps, openRegister: new OpenRegisterAvailability($apps), logger: new NullLogger());
 	}//end payables()
 
 }//end class
