@@ -164,39 +164,48 @@ final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects {
 	 * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
 	 */
 	private static function isSingleActive(array $o, array $context): bool {
-		if ((string)($o['status'] ?? '') !== 'actief') {
-			// Only actief records can conflict for the single-active-beslag
-			// MVP assumption.
-			return true;
-		}
-
-		$employeeId = trim((string)($o['employeeId'] ?? ''));
-		if ($employeeId === '') {
+		if (self::canConflict(o: $o) === false) {
+			// Only actief records of a named employee can conflict for the
+			// single-active-beslag MVP assumption.
 			return true;
 		}
 
 		$selfId = trim((string)($o['id'] ?? $o['@self']['id'] ?? ''));
 
 		foreach ((array)($context['payroll']['loonbeslagenById'] ?? []) as $id => $other) {
-			if ((string)$id === $selfId) {
-				continue;
-			}
-
-			if (is_array($other) === false || (string)($other['status'] ?? '') !== 'actief') {
-				continue;
-			}
-
-			if (trim((string)($other['employeeId'] ?? '')) !== $employeeId) {
-				continue;
-			}
-
-			if (self::rangesOverlap($o, $other) === true) {
+			if ((string)$id !== $selfId && self::conflictsWith(o: $o, other: $other) === true) {
 				return false;
 			}
 		}
 
 		return true;
 	}//end isSingleActive()
+
+	/**
+	 * Whether a garnishment is actief and names its employee.
+	 *
+	 * @param array<string, mixed> $o The Loonbeslag.
+	 *
+	 * @return bool
+	 */
+	private static function canConflict(array $o): bool {
+		return (string)($o['status'] ?? '') === 'actief' && trim((string)($o['employeeId'] ?? '')) !== '';
+	}//end canConflict()
+
+	/**
+	 * Whether another record is an actief garnishment of the same employee over an overlapping range.
+	 *
+	 * @param array<string, mixed> $o The Loonbeslag.
+	 * @param mixed $other Another stored record.
+	 *
+	 * @return bool
+	 */
+	private static function conflictsWith(array $o, mixed $other): bool {
+		return is_array($other) === true
+			&& (string)($other['status'] ?? '') === 'actief'
+			&& trim((string)($other['employeeId'] ?? '')) === trim((string)($o['employeeId'] ?? ''))
+			&& self::rangesOverlap($o, $other) === true;
+	}//end conflictsWith()
 
 	/**
 	 * Whether two Loonbeslag records' effective ranges overlap: a null
