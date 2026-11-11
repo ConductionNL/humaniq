@@ -69,47 +69,110 @@ class ChangeRequestApplier {
 	 * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-001
 	 */
 	public function apply(string $requestId, array $request): bool {
-		if (($request['status'] ?? null) !== 'goedgekeurd' || $this->text($request['appliedAt'] ?? null) !== null || $this->text($request['applyError'] ?? null) !== null) {
+		if ($this->applicable($request) === false) {
 			return false;
 		}
 
-		$employeeId = (string)($request['employeeId'] ?? '');
-		$employee = $this->gateway->findObjectData($employeeId, 'Employee');
-		$changes = (is_array($request['changes'] ?? null) === true ? $request['changes'] : []);
-		$previous = (is_array($request['previousValues'] ?? null) === true ? $request['previousValues'] : []);
-		$stale = $this->staleFields($employee, $changes, $previous);
-
-		$record = $this->withoutIdentity($request);
-		if ($stale !== []) {
-			$record['applyError'] = 'Niet doorgevoerd: ' . implode(', ', $stale) . ' is gewijzigd nadat het verzoek werd gedaan. Doe een nieuw verzoek.';
-			$this->marker->runInternal(fn () => $this->gateway->save($record, self::SCHEMA, $requestId));
+		$run = $this->applicationOf(requestId: $requestId, request: $request);
+		if ($run->stale !== []) {
+			$this->refuseStale($run);
 			return false;
 		}
 
-		$record['appliedAt'] = $this->time->getDateTime()->format(DATE_ATOM);
-		$this->marker->runInternal(
-			function () use ($employee, $changes, $employeeId, $record, $requestId): void {
-				$this->gateway->save(array_merge($this->withoutIdentity((array)$employee), $changes), 'Employee', $employeeId);
-				$this->gateway->save($record, self::SCHEMA, $requestId);
-			}
-		);
+		$this->writeApplied($run);
 
 		return true;
 	}//end apply()
 
 	/**
+	 * Whether the request is approved and neither applied nor refused yet.
+	 *
+	 * @param array<string, mixed> $request The request.
+	 *
+	 * @return bool
+	 */
+	private function applicable(array $request): bool {
+		return ($request['status'] ?? null) === 'goedgekeurd' && $this->text($request['appliedAt'] ?? null) === null && $this->text($request['applyError'] ?? null) === null;
+	}//end applicable()
+
+	/**
+	 * The request, its employee and the fields found stale.
+	 *
+	 * @param string               $requestId The request id.
+	 * @param array<string, mixed> $request   The request.
+	 *
+	 * @return ChangeApplication
+	 */
+	private function applicationOf(string $requestId, array $request): ChangeApplication {
+		$run = new ChangeApplication();
+		$run->requestId = $requestId;
+		$run->record = $this->withoutIdentity($request);
+		$run->employeeId = (string)($request['employeeId'] ?? '');
+		$run->employee = $this->gateway->findObjectData($run->employeeId, 'Employee');
+		$run->changes = $this->mapOf($request['changes'] ?? null);
+		$run->stale = $this->staleFields(run: $run, previous: $this->mapOf($request['previousValues'] ?? null));
+
+		return $run;
+	}//end applicationOf()
+
+	/**
+	 * A list or map value, or empty.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return array<array-key, mixed>
+	 */
+	private function mapOf(mixed $value): array {
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		return $value;
+	}//end mapOf()
+
+	/**
+	 * Store on the request why it was not applied.
+	 *
+	 * @param ChangeApplication $run The application.
+	 *
+	 * @return void
+	 */
+	private function refuseStale(ChangeApplication $run): void {
+		$record = $run->record;
+		$record['applyError'] = 'Niet doorgevoerd: ' . implode(', ', $run->stale) . ' is gewijzigd nadat het verzoek werd gedaan. Doe een nieuw verzoek.';
+		$this->marker->runInternal(fn () => $this->gateway->save($record, self::SCHEMA, $run->requestId));
+	}//end refuseStale()
+
+	/**
+	 * Write the changes to the employee and mark the request applied.
+	 *
+	 * @param ChangeApplication $run The application.
+	 *
+	 * @return void
+	 */
+	private function writeApplied(ChangeApplication $run): void {
+		$record = $run->record;
+		$record['appliedAt'] = $this->time->getDateTime()->format(DATE_ATOM);
+		$this->marker->runInternal(
+			function () use ($run, $record): void {
+				$this->gateway->save(array_merge($this->withoutIdentity((array)$run->employee), $run->changes), 'Employee', $run->employeeId);
+				$this->gateway->save($record, self::SCHEMA, $run->requestId);
+			}
+		);
+	}//end writeApplied()
+
+	/**
 	 * The fields whose stored value is no longer the one the request saw.
 	 *
-	 * @param array<string, mixed>|null $employee The stored employee.
-	 * @param array<string, mixed>      $changes  The proposed values.
-	 * @param array<string, mixed>      $previous The values at request time.
+	 * @param ChangeApplication    $run      The application: the stored employee and the proposed values.
+	 * @param array<string, mixed> $previous The values at request time.
 	 *
 	 * @return list<string>
 	 */
-	private function staleFields(?array $employee, array $changes, array $previous): array {
+	private function staleFields(ChangeApplication $run, array $previous): array {
 		$stale = [];
-		foreach (array_keys($changes) as $field) {
-			if ($employee === null || $this->same($employee[$field] ?? null, $previous[$field] ?? null) === false) {
+		foreach (array_keys($run->changes) as $field) {
+			if ($run->employee === null || $this->same($run->employee[$field] ?? null, $previous[$field] ?? null) === false) {
 				$stale[] = (string)$field;
 			}
 		}
