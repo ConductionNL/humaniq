@@ -183,27 +183,49 @@ class OrgResolutionService {
 			return null;
 		}
 
-		$visited = [];
-		while ($unitId !== '' && isset($visited[$unitId]) === false) {
-			$unit = ($chain['unitsById'][$unitId] ?? null);
-			if (is_array($unit) === false || ($visited !== [] && $this->leavesAdministration(row: $unit, administrationId: $administrationId) === true)) {
-				return null;
-			}
+		$units = $this->within(units: (new OrgUnitClimb())->unitsFrom(unitId: $unitId, unitsById: $chain['unitsById']), administrationId: $administrationId);
+		$managerId = $this->firstOtherManager(units: $units, chain: $chain);
+		if ($managerId === null || $this->leavesAdministration(row: ($chain['employeesById'][$managerId] ?? null), administrationId: $administrationId) === true) {
+			return null;
+		}
 
-			$visited[$unitId] = true;
+		return $this->accountOf(employeeId: $managerId, chain: $chain);
+	}//end managerUserIdFrom()
 
+	/**
+	 * The climb up to the first unit above the placement unit outside the
+	 * boundary administration.
+	 *
+	 * @param list<array<string, mixed>> $units            The climb.
+	 * @param string                     $administrationId The boundary.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function within(array $units, string $administrationId): array {
+		$leaving = array_keys(array_filter(array_slice($units, 1), fn (array $unit): bool => $this->leavesAdministration(row: $unit, administrationId: $administrationId)));
+
+		return array_slice($units, 0, (($leaving[0] ?? count($units)) + 1));
+	}//end within()
+
+	/**
+	 * The manager of the first unit on the climb not managed by the
+	 * employee themself.
+	 *
+	 * @param list<array<string, mixed>> $units The climb.
+	 * @param array{employeeId: string, ownUserId: string, ownAdministrationId: string, unitsById: array<string, array<string, mixed>>, employeesById: array<string, array<string, mixed>>} $chain The employee and the indexes.
+	 *
+	 * @return string|null
+	 */
+	private function firstOtherManager(array $units, array $chain): ?string {
+		foreach ($units as $unit) {
 			$managerId = trim((string)($unit['managerId'] ?? ''));
 			if ($this->isSelf(managerId: $managerId, chain: $chain) === false) {
-				$manager = ($chain['employeesById'][$managerId] ?? null);
-
-				return $this->leavesAdministration(row: $manager, administrationId: $administrationId) === true ? null : $this->accountOf(employeeId: $managerId, chain: $chain);
+				return $managerId;
 			}
-
-			$unitId = trim((string)($unit['parentUnitId'] ?? ''));
 		}
 
 		return null;
-	}//end managerUserIdFrom()
+	}//end firstOtherManager()
 
 	/**
 	 * The boundary administration of a placement: the placement unit's, or
