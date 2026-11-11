@@ -186,6 +186,22 @@ class CostAllocationServiceTest extends TestCase {
 	}//end testByHoursWithoutHoursFallsBackToThePlacement()
 
 	/**
+	 * A fixed allocation without splits that starts mid-period falls back to
+	 * the placement; another employee's allocation does not apply.
+	 *
+	 * @return void
+	 */
+	public function testAFixedAllocationWithoutSplitsFallsBackToThePlacement(): void {
+		$this->store->seed('CostAllocation', 'ca-empty', ['employeeId' => 'emp-jansen', 'startDate' => '2026-05-10', 'splits' => []]);
+		$this->store->seed('CostAllocation', 'ca-other', ['employeeId' => 'emp-devries', 'basis' => 'fixed', 'startDate' => '2026-01-01', 'splits' => [['costCenter' => 'CC-200', 'percentage' => 100]]]);
+		$this->store->seed('OrgAssignment', 'as-1', ['employeeId' => 'emp-jansen', 'orgUnitId' => 'unit-consultancy', 'startDate' => '2024-01-01']);
+
+		$shares = $this->service->splitFor('emp-jansen', '2026-05', $this->service->inputs('2026-05'));
+
+		self::assertSame([['costCenter' => 'CC-100', 'projectId' => null, 'percentage' => 100.0, 'allocationSource' => 'placement']], $shares);
+	}//end testAFixedAllocationWithoutSplitsFallsBackToThePlacement()
+
+	/**
 	 * Three equal shares of 1000.01 add up to 1000.01; the remainder cent
 	 * goes to the largest share.
 	 *
