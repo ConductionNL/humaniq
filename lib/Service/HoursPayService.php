@@ -112,7 +112,7 @@ class HoursPayService {
 		$run->entries = $entries;
 		$run->nonWorkingDates = $nonWorkingDates;
 		$run->salaried = (is_numeric($employee['grossMonthlySalary'] ?? null) === true && (float)$employee['grossMonthlySalary'] > 0.0);
-		$run->rate = $this->hourlyRate(employee: $employee, contract: $contract, salaried: $run->salaried);
+		$run->rate = $this->hourlyRate(run: $run, employee: $employee);
 		$run->pay = ['hourlyCents' => 0, 'overtimeCents' => 0, 'hoursPaid' => 0.0, 'overtimeHours' => 0.0, 'hourlyRate' => $run->rate, 'surchargeUnresolved' => false, 'timesheetIds' => [], 'timeCredits' => []];
 		foreach ($timesheets as $timesheet) {
 			$this->payTimesheet(run: $run, timesheet: $timesheet);
@@ -147,7 +147,7 @@ class HoursPayService {
 		}
 
 		$run->pay['overtimeHours'] += $overtimeHours;
-		$settled = $this->settleOvertime(entries: $overtime, contract: $run->contract, rate: $run->rate, nonWorkingDates: $run->nonWorkingDates);
+		$settled = $this->settleOvertime(run: $run, entries: $overtime);
 		$run->pay['overtimeCents'] += $settled['cents'];
 		$run->pay['surchargeUnresolved'] = ($run->pay['surchargeUnresolved'] || $settled['unresolved']);
 		if ($settled['credit'] > 0.0) {
@@ -198,21 +198,19 @@ class HoursPayService {
 	 * Settle one timesheet's overtime entries: the pay in cents, the hours to
 	 * credit as time off, and whether a surcharge did not resolve.
 	 *
-	 * @param list<array<string, mixed>> $entries         The overtime entries.
-	 * @param array<string, mixed>       $contract        The contract.
-	 * @param float|null                 $rate            The hourly rate.
-	 * @param list<string>|null          $nonWorkingDates The calendar dates.
+	 * @param HoursPayRun                $run     The pay being added up: its contract, hourly rate and calendar dates.
+	 * @param list<array<string, mixed>> $entries The overtime entries.
 	 *
 	 * @return array{cents: int, credit: float, unresolved: bool}
 	 */
-	private function settleOvertime(array $entries, array $contract, ?float $rate, ?array $nonWorkingDates): array {
+	private function settleOvertime(HoursPayRun $run, array $entries): array {
 		$credit = 0.0;
 		$cents = 0;
 		$unresolved = false;
-		$default = $this->terms->overtimeCompensationFor($contract);
+		$default = $this->terms->overtimeCompensationFor($run->contract);
 		foreach ($entries as $entry) {
 			$hours = (float)($entry['hours'] ?? 0);
-			$percentage = $this->surcharge(contract: $contract, category: self::categoryOf(date: (string)($entry['date'] ?? ''), nonWorkingDates: $nonWorkingDates));
+			$percentage = $this->surcharge(contract: $run->contract, category: self::categoryOf(date: (string)($entry['date'] ?? ''), nonWorkingDates: $run->nonWorkingDates));
 			if ($percentage === null) {
 				$unresolved = true;
 			}
@@ -223,7 +221,7 @@ class HoursPayService {
 				continue;
 			}
 
-			$cents += (int)round($hours * ($rate ?? 0.0) * $factor * 100);
+			$cents += (int)round($hours * ($run->rate ?? 0.0) * $factor * 100);
 		}
 
 		return ['cents' => $cents, 'credit' => $credit, 'unresolved' => $unresolved];
@@ -251,19 +249,18 @@ class HoursPayService {
 	 * The hourly rate: the salary over the contracted monthly hours for a
 	 * salaried employee, the contract's hourly wage otherwise.
 	 *
+	 * @param HoursPayRun          $run      The pay being added up: its contract and whether the employee is salaried.
 	 * @param array<string, mixed> $employee The employee.
-	 * @param array<string, mixed> $contract The contract.
-	 * @param bool                 $salaried Whether the employee has a monthly salary.
 	 *
 	 * @return float|null Null when neither gives a rate.
 	 */
-	private function hourlyRate(array $employee, array $contract, bool $salaried): ?float {
-		if ($salaried === true) {
-			$monthlyHours = ((float)($contract['hoursPerWeek'] ?? 0) * 52 / 12);
+	private function hourlyRate(HoursPayRun $run, array $employee): ?float {
+		if ($run->salaried === true) {
+			$monthlyHours = ((float)($run->contract['hoursPerWeek'] ?? 0) * 52 / 12);
 			return ($monthlyHours > 0.0 ? (float)$employee['grossMonthlySalary'] / $monthlyHours : null);
 		}
 
-		$wage = ($contract['hourlyWage'] ?? null);
+		$wage = ($run->contract['hourlyWage'] ?? null);
 		return (is_numeric($wage) === true && (float)$wage > 0.0 ? (float)$wage : null);
 	}//end hourlyRate()
 
