@@ -161,21 +161,17 @@ class TeamDigestNode implements IFlowNode {
 			return [];
 		}
 
-		$out = [];
-		foreach (($items === [] ? [['json' => []]] : $items) as $item) {
-			$item = (array)$item;
-			$json = (array)($item['json'] ?? []);
-			$json[self::OUTCOME_KEY] = [
-				'unit' => $digest['unit'],
-				'message' => $digest['message'],
-				'awayCount' => count($digest['away']),
-				'birthdayCount' => count($digest['birthdays']),
-			];
-			$item['json'] = $json;
-			$out[] = $item;
-		}
-
-		return $out;
+		return FlowItems::stampEach(
+			$items,
+			[
+				self::OUTCOME_KEY => [
+					'unit' => $digest['unit'],
+					'message' => $digest['message'],
+					'awayCount' => count($digest['away']),
+					'birthdayCount' => count($digest['birthdays']),
+				],
+			]
+		);
 	}//end execute()
 
 }//end class

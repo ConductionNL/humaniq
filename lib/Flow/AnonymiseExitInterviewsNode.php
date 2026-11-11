@@ -29,14 +29,13 @@ use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCP\IL10N;
 use OCP\IURLGenerator;
-use OCP\WorkflowEngine\IManager;
 
 /**
  * A scheduled step over every due record.
  *
  * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-002
  */
-class AnonymiseExitInterviewsNode implements IFlowNode {
+class AnonymiseExitInterviewsNode extends AdminSweepNode implements IFlowNode {
 
 	public const OUTCOME_KEY = 'anonymised';
 
@@ -82,17 +81,6 @@ class AnonymiseExitInterviewsNode implements IFlowNode {
 	}//end getDisplayName()
 
 	/**
-	 * What the step does.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-002
-	 */
-	public function getDescription(): string {
-		return $this->l10n->t('Clear the leaver, the case, who held it and the free text of every exit interview held more than the given number of days ago, keeping the reason, scores, department and date.');
-	}//end getDescription()
-
-	/**
 	 * The icon.
 	 *
 	 * @return string
@@ -104,30 +92,15 @@ class AnonymiseExitInterviewsNode implements IFlowNode {
 	}//end getIcon()
 
 	/**
-	 * Available to administrators only: it acts on every case.
+	 * What the step does.
 	 *
-	 * @param int $scope The scope.
-	 *
-	 * @return bool
+	 * @return string
 	 *
 	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-002
 	 */
-	public function isAvailableForScope(int $scope): bool {
-		return $scope === IManager::SCOPE_ADMIN;
-	}//end isAvailableForScope()
-
-	/**
-	 * Nothing to validate.
-	 *
-	 * @param array<string, mixed> $config The step config.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-002
-	 */
-	public function validateConfig(array $config): void {
-		unset($config);
-	}//end validateConfig()
+	public function getDescription(): string {
+		return $this->l10n->t('Clear the leaver, the case, who held it and the free text of every exit interview held more than the given number of days ago, keeping the reason, scores, department and date.');
+	}//end getDescription()
 
 	/**
 	 * Run the step once and pass the outcome on.
@@ -139,21 +112,11 @@ class AnonymiseExitInterviewsNode implements IFlowNode {
 	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-002
 	 */
 	public function execute(FlowNodeCall $call): array {
-		$items = $call->items;
 		$config = $call->config;
 		$today = ($this->today ?? gmdate('Y-m-d'));
 		$now = ($today === gmdate('Y-m-d') ? gmdate('c') : $today . 'T00:00:00+00:00');
 		$done = $this->interviews->anonymiseDue(today: $today, now: $now, afterDays: (int)($config['afterDays'] ?? 90));
 
-		$out = [];
-		foreach (($items === [] ? [['json' => []]] : $items) as $item) {
-			$item = (array)$item;
-			$json = (array)($item['json'] ?? []);
-			$json[self::OUTCOME_KEY] = ['ids' => $done, 'count' => count($done)];
-			$item['json'] = $json;
-			$out[] = $item;
-		}
-
-		return $out;
+		return FlowItems::stampEach($call->items, [self::OUTCOME_KEY => FlowItems::idsAndCount($done)]);
 	}//end execute()
 }//end class
