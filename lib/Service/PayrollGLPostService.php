@@ -250,6 +250,12 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', (string)$glPost['errorMessage'], $glPost);
 		}
 
+		$mismatch = self::adoptionMismatch(adopted: $adopted, lines: $built['lines'], journalNumber: $journalNumber);
+		if ($mismatch !== null) {
+			$glPost = $this->saveGlPost($active, ['status' => 'failed', 'errorMessage' => $mismatch]);
+			return $this->outcome($runId, 'failed', $mismatch, $glPost);
+		}
+
 		$journalEntryId = (string)($adopted['id'] ?? $adopted['@self']['id'] ?? '');
 		$glPost = $this->saveGlPost($active, ['status' => 'posted', 'journalEntryId' => $journalEntryId, 'journalNumber' => $journalNumber, 'postedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'errorMessage' => null]);
 		$this->applySuccessToRun($run, (float)$built['glExpensePosted'], (float)$built['glLiabilityPosted']);
@@ -510,6 +516,11 @@ class PayrollGLPostService {
 		$journalNumber = $this->journalNumber($run);
 		$adopted = $this->findJournalEntryByNumber($journalNumber);
 		if ($adopted !== null) {
+			$mismatch = self::adoptionMismatch(adopted: $adopted, lines: $lines, journalNumber: $journalNumber);
+			if ($mismatch !== null) {
+				throw new \RuntimeException($mismatch);
+			}
+
 			return (string)($adopted['id'] ?? $adopted['@self']['id'] ?? '');
 		}
 
@@ -538,6 +549,54 @@ class PayrollGLPostService {
 
 		return (string)($this->toArray($created)['id'] ?? $this->toArray($created)['@self']['id'] ?? '');
 	}//end createOrAdoptJournalEntry()
+
+	/**
+	 * Why an existing JournalEntry may not be adopted for these lines: its
+	 * debit or credit total differs from this run's. Null when both match.
+	 *
+	 * @param array<string, mixed> $adopted       The JournalEntry found by journal number.
+	 * @param array<int, mixed>    $lines         The run's balanced journal lines.
+	 * @param string               $journalNumber The journal number.
+	 *
+	 * @return string|null The refusal, or null to adopt.
+	 *
+	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-003
+	 */
+	private static function adoptionMismatch(array $adopted, array $lines, string $journalNumber): ?string {
+		$found = self::sideTotalsCents(lines: (array)($adopted['lines'] ?? []));
+		$expected = self::sideTotalsCents(lines: $lines);
+		if ($found === $expected) {
+			return null;
+		}
+
+		return sprintf(
+			'Shillinq-journaalpost %s heeft debet %.2f en credit %.2f, deze loonrun debet %.2f en credit %.2f; niet overgenomen, controleer die met de hand.',
+			$journalNumber,
+			($found['debit'] / 100),
+			($found['credit'] / 100),
+			($expected['debit'] / 100),
+			($expected['credit'] / 100)
+		);
+	}//end adoptionMismatch()
+
+	/**
+	 * The debit and credit totals of journal lines, in cents.
+	 *
+	 * @param array<int, mixed> $lines Lines with `side` and `amount` in euros.
+	 *
+	 * @return array{debit: int, credit: int}
+	 */
+	private static function sideTotalsCents(array $lines): array {
+		$totals = ['debit' => 0, 'credit' => 0];
+		foreach ($lines as $line) {
+			$side = (string)(is_array($line) === true ? ($line['side'] ?? '') : '');
+			if (isset($totals[$side]) === true) {
+				$totals[$side] += (int)round(((float)($line['amount'] ?? 0)) * 100);
+			}
+		}
+
+		return $totals;
+	}//end sideTotalsCents()
 
 	/**
 	 * The deterministic idempotency key of a run's JournalEntry: its trimmed

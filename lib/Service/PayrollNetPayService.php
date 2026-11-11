@@ -443,6 +443,12 @@ class PayrollNetPayService {
 			return null;
 		}
 
+		$refusal = $this->staleAdoptionRefusal(adopted: $adopted, run: $run, runNumber: $runNumber);
+		if ($refusal !== null) {
+			$batch = $this->saveBatch($stalePending, ['status' => 'failed', 'errorMessage' => $refusal]);
+			return $this->outcome($runId, 'failed', $refusal, $batch);
+		}
+
 		$paymentRunId = $this->idOf($adopted);
 		$batch = $this->saveBatch(
 			$stalePending,
@@ -473,6 +479,11 @@ class PayrollNetPayService {
 		$runNumber = $this->runNumber($run);
 		$adopted = $this->findPaymentRunByNumber($runNumber);
 		if ($adopted !== null) {
+			$mismatch = self::adoptionMismatch(adopted: $adopted, totalAmount: (float)$collected['totalAmount'], runNumber: $runNumber);
+			if ($mismatch !== null) {
+				throw new \RuntimeException($mismatch);
+			}
+
 			return $this->idOf($adopted);
 		}
 
@@ -502,6 +513,59 @@ class PayrollNetPayService {
 
 		return $this->idOf($this->toArray($created));
 	}//end createOrAdoptPaymentRun()
+
+	/**
+	 * Why a stale claim may not adopt the PaymentRun shillinq carries: the
+	 * run's period is not a month, its lines cannot be collected, or the
+	 * totals differ. Null to adopt.
+	 *
+	 * @param array<string, mixed> $adopted   The PaymentRun found by run number.
+	 * @param array<string, mixed> $run       The PayrollRun.
+	 * @param string               $runNumber The run number.
+	 *
+	 * @return string|null The refusal, or null to adopt.
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private function staleAdoptionRefusal(array $adopted, array $run, string $runNumber): ?string {
+		if ((new WagePeriod(trim((string)($run['period'] ?? ''))))->month() === null) {
+			return 'PayrollRun-periode is geen maand in de vorm JJJJ-MM; shillinq PaymentRun ' . $runNumber . ' is niet overgenomen, controleer die met de hand.';
+		}
+
+		$collected = $this->collectLines($run);
+		if ($collected['error'] !== null) {
+			return $collected['error'] . ' Shillinq heeft al PaymentRun ' . $runNumber . ' van een eerdere poging; controleer die met de hand.';
+		}
+
+		return self::adoptionMismatch(adopted: $adopted, totalAmount: (float)$collected['totalAmount'], runNumber: $runNumber);
+	}//end staleAdoptionRefusal()
+
+	/**
+	 * Why an existing PaymentRun may not be adopted: its total differs from
+	 * this run's. Null when they match.
+	 *
+	 * @param array<string, mixed> $adopted     The PaymentRun found by run number.
+	 * @param float                $totalAmount This run's total in euros.
+	 * @param string               $runNumber   The run number.
+	 *
+	 * @return string|null The refusal, or null to adopt.
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private static function adoptionMismatch(array $adopted, float $totalAmount, string $runNumber): ?string {
+		$found = (int)round(((float)($adopted['totalAmount'] ?? 0)) * 100);
+		$expected = (int)round($totalAmount * 100);
+		if ($found === $expected) {
+			return null;
+		}
+
+		return sprintf(
+			'Shillinq PaymentRun %s heeft totaal %.2f, deze loonrun %.2f; niet overgenomen, controleer die met de hand.',
+			$runNumber,
+			($found / 100),
+			($expected / 100)
+		);
+	}//end adoptionMismatch()
 
 	/**
 	 * The deterministic idempotency key of a run's PaymentRun: its trimmed

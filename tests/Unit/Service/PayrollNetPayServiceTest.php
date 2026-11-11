@@ -646,7 +646,7 @@ class PayrollNetPayServiceTest extends TestCase {
 			'Employee' => [$this->employee()],
 			'Payslip' => [$this->payslip()],
 			'PaymentRun' => [
-				['id' => 'pr-existing', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001'],
+				['id' => 'pr-existing', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001', 'totalAmount' => $this->collectedTotal()],
 			],
 		];
 		[$service, $fake] = $this->service($rows);
@@ -658,6 +658,64 @@ class PayrollNetPayServiceTest extends TestCase {
 		$this->assertCount(0, $this->savedFor($fake, 'PaymentRun'));
 
 	}//end testProcessRunAdoptsExistingPaymentRunByNumberInsteadOfDuplicating()
+
+	/**
+	 * The total this run's one payable payslip collects.
+	 *
+	 * @return float
+	 */
+	private function collectedTotal(): float {
+		[$service] = $this->service(['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]]);
+
+		return (float)$service->collectLines($this->payrollRun())['totalAmount'];
+	}//end collectedTotal()
+
+	/**
+	 * An existing PaymentRun with another total is not adopted, fresh or stale.
+	 *
+	 * @return void
+	 */
+	public function testAPaymentRunWithAnotherTotalIsNotAdopted(): void {
+		$other = ['id' => 'pr-other', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001', 'totalAmount' => ($this->collectedTotal() + 1)];
+		[$service, $fake] = $this->service(['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()], 'PaymentRun' => [$other]]);
+		$fresh = $service->processRun($this->payrollRun());
+
+		[$staleService, $staleFake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'Payslip' => [$this->payslip()],
+				'PaymentRun' => [$other],
+				'PayrollPaymentBatch' => [['id' => 'pb-1', 'payrollRunId' => 'run-1', 'period' => '2026-05', 'status' => 'pending']],
+			]
+		);
+		$stale = $staleService->processRun($this->payrollRun());
+
+		foreach ([[$fresh, $fake], [$stale, $staleFake]] as [$result, $store]) {
+			$this->assertSame('failed', $result['status']);
+			$this->assertStringContainsString('niet overgenomen', (string)$result['message']);
+			$this->assertCount(0, $this->savedFor($store, 'PaymentRun'));
+		}
+	}//end testAPaymentRunWithAnotherTotalIsNotAdopted()
+
+	/**
+	 * A stale claim of a run whose period is not a month adopts nothing.
+	 *
+	 * @return void
+	 */
+	public function testAStaleClaimWithANonMonthPeriodAdoptsNothing(): void {
+		[$service, $fake] = $this->service(
+			[
+				'PaymentRun' => [['id' => 'pr-mei', 'runNumber' => 'HRMQ-NETPAY-mei-ADM-001', 'totalAmount' => 0]],
+				'PayrollPaymentBatch' => [['id' => 'pb-1', 'payrollRunId' => 'run-1', 'period' => 'mei', 'status' => 'pending']],
+			]
+		);
+
+		$result = $service->processRun($this->payrollRun(['period' => 'mei']));
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertNull($result['paymentRunId'] ?? null);
+		$this->assertSame('failed', $this->savedFor($fake, 'PayrollPaymentBatch')[0]['status'] ?? null);
+	}//end testAStaleClaimWithANonMonthPeriodAdoptsNothing()
 
 	/**
 	 * @return void
@@ -737,8 +795,10 @@ class PayrollNetPayServiceTest extends TestCase {
 	 */
 	public function testStalePendingBatchAdoptsExistingPaymentRunOnCrashRecovery(): void {
 		$rows = [
+			'Employee' => [$this->employee()],
+			'Payslip' => [$this->payslip()],
 			'PaymentRun' => [
-				['id' => 'pr-existing', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001'],
+				['id' => 'pr-existing', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001', 'totalAmount' => $this->collectedTotal()],
 			],
 			'PayrollPaymentBatch' => [
 				['id' => 'pb-1', 'payrollRunId' => 'run-1', 'period' => '2026-05', 'status' => 'pending'],

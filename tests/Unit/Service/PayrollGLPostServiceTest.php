@@ -583,9 +583,10 @@ class PayrollGLPostServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testPostRunAdoptsExistingJournalEntryByNumberInsteadOfDuplicating(): void {
+		[$builder] = $this->service();
 		$rows = [
 			'JournalEntry' => [
-				['id' => 'je-existing', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001'],
+				['id' => 'je-existing', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001', 'lines' => $builder->buildLines($this->payrollRun())['lines']],
 			],
 		];
 		[$service, $fake] = $this->service($rows);
@@ -597,6 +598,24 @@ class PayrollGLPostServiceTest extends TestCase {
 		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
 
 	}//end testPostRunAdoptsExistingJournalEntryByNumberInsteadOfDuplicating()
+
+	/**
+	 * An existing JournalEntry with other totals is not adopted.
+	 *
+	 * @return void
+	 */
+	public function testAJournalEntryWithOtherTotalsIsNotAdopted(): void {
+		[$builder] = $this->service();
+		$lines = $builder->buildLines($this->payrollRun())['lines'];
+		$lines[0]['amount'] = ((float)$lines[0]['amount'] + 1);
+		[$service, $fake] = $this->service(['JournalEntry' => [['id' => 'je-other', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001', 'lines' => $lines]]]);
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertStringContainsString('niet overgenomen', (string)$result['message']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+	}//end testAJournalEntryWithOtherTotalsIsNotAdopted()
 
 	/**
 	 * @return void
