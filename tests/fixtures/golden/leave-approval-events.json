@@ -1,0 +1,56 @@
+{
+    "created": {
+        "projected": [
+            {
+                "employeeId": "emp-1",
+                "leaveType": "vacation",
+                "status": "approved"
+            }
+        ],
+        "logged": []
+    },
+    "updated": {
+        "projected": [
+            {
+                "employeeId": "emp-1",
+                "leaveType": "vacation",
+                "status": "approved"
+            }
+        ],
+        "logged": []
+    },
+    "other-schema": {
+        "projected": [],
+        "logged": []
+    },
+    "no-schema": {
+        "projected": [],
+        "logged": []
+    },
+    "empty-object": {
+        "projected": [
+            []
+        ],
+        "logged": []
+    },
+    "pre-save": {
+        "projected": [],
+        "logged": []
+    },
+    "plain-event": {
+        "projected": [],
+        "logged": []
+    },
+    "projection-ko": {
+        "projected": [],
+        "logged": [
+            {
+                "level": "warning",
+                "message": "humaniq: LeaveApprovalListener could not project a leave request onto its balance",
+                "context": {
+                    "exception": "projection failed"
+                }
+            }
+        ]
+    }
+}
