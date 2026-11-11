@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Payroll;
 
+use OCA\Humaniq\Payroll\AwfDayRange;
 use OCA\Humaniq\Payroll\AwfHoursReview;
 use PHPUnit\Framework\TestCase;
 
@@ -69,8 +70,8 @@ class AwfHoursReviewTest extends TestCase {
 		$from = new \DateTimeImmutable('2026-05-01');
 		$until = new \DateTimeImmutable('2026-05-31');
 
-		self::assertSame(31, AwfHoursReview::overlapDays(contract: [], from: $from, until: $until));
-		self::assertSame(12, AwfHoursReview::overlapDays(contract: ['startDate' => '2026-05-20'], from: $from, until: $until));
-		self::assertSame(0, AwfHoursReview::overlapDays(contract: ['endDate' => '2026-04-30'], from: $from, until: $until));
+		self::assertSame(31, AwfHoursReview::overlapDays(contract: [], range: AwfDayRange::of(from: $from, until: $until)));
+		self::assertSame(12, AwfHoursReview::overlapDays(contract: ['startDate' => '2026-05-20'], range: AwfDayRange::of(from: $from, until: $until)));
+		self::assertSame(0, AwfHoursReview::overlapDays(contract: ['endDate' => '2026-04-30'], range: AwfDayRange::of(from: $from, until: $until)));
 	}
 }
