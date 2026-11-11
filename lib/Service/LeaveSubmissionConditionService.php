@@ -108,7 +108,7 @@ class LeaveSubmissionConditionService {
 			return null;
 		}
 
-		$start = $this->date(value: ($request['startDate'] ?? null));
+		$start = DateValues::datePart(value: ($request['startDate'] ?? null));
 		if ($start === null) {
 			// A request with no start date cannot be measured against a notice
 			// period. The schema requires one, so this is not the place to
@@ -128,24 +128,4 @@ class LeaveSubmissionConditionService {
 			. ' dagen vooruit verlof worden aangevraagd; deze aanvraag begint over ' . $daysAhead . ' dagen.';
 	}//end noticeRefusal()
 
-	/**
-	 * Narrow a raw value to a date.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return DateTimeImmutable|null The date, or null when unusable.
-	 *
-	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-T02
-	 */
-	private function date(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable(substr(trim($value), 0, 10));
-		} catch (\Throwable $e) {
-			return null;
-		}
-	}//end date()
 }//end class
