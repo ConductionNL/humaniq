@@ -1,0 +1,30 @@
+{
+    "inside": null,
+    "at-min": null,
+    "at-max": null,
+    "below": {
+        "status": "refused-out-of-band",
+        "message": "Het voorgestelde salaris valt buiten de schaal (300000-420000 cent); effectueren is geweigerd."
+    },
+    "above": {
+        "status": "refused-out-of-band",
+        "message": "Het voorgestelde salaris valt buiten de schaal (300000-420000 cent); effectueren is geweigerd."
+    },
+    "fractional-bounds": null,
+    "no-band": {
+        "status": "refused-band-unresolvable",
+        "message": "De gekoppelde salarisschaal kon niet worden geladen; effectueren is geweigerd."
+    },
+    "no-min": {
+        "status": "refused-band-unresolvable",
+        "message": "De gekoppelde salarisschaal heeft geen geldig min/max-bereik; effectueren is geweigerd."
+    },
+    "text-max": {
+        "status": "refused-band-unresolvable",
+        "message": "De gekoppelde salarisschaal heeft geen geldig min/max-bereik; effectueren is geweigerd."
+    },
+    "empty-band": {
+        "status": "refused-band-unresolvable",
+        "message": "De gekoppelde salarisschaal heeft geen geldig min/max-bereik; effectueren is geweigerd."
+    }
+}
