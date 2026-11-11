@@ -157,12 +157,7 @@ class MigrateRegisterSlug implements IRepairStep {
 			);
 		}
 
-		$renamed = 0;
-		foreach ($plan['renames'] as $old => $new) {
-			if ($this->renameSlug(old: $old, new: $new) === true) {
-				$renamed++;
-			}
-		}
+		$renamed = $this->decisions->countRenamed(renames: $plan['renames'], rename: $this->renameSlug(...));
 
 		$rekeyed = $this->migrateStoredSlugValues();
 
