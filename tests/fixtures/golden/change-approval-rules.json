@@ -1,0 +1,240 @@
+{
+    "none": {
+        "rules": {
+            "salaris": {
+                "fields": [
+                    "grossMonthlySalary"
+                ],
+                "approverRole": "cfo"
+            },
+            "bankrekening": {
+                "fields": [
+                    "iban",
+                    "7"
+                ],
+                "approverRole": "hr"
+            },
+            "adres": {
+                "fields": [
+                    "straat"
+                ],
+                "approverRole": "none"
+            },
+            "0": {
+                "fields": [
+                    "code"
+                ],
+                "approverRole": "hr"
+            }
+        },
+        "guard": {
+            "grossMonthlySalary": "salaris",
+            "bonus": null,
+            "iban": "bankrekening",
+            "7": "bankrekening",
+            "straat": null,
+            "firstName": null,
+            "x": null
+        }
+    },
+    "blank": {
+        "rules": {
+            "salaris": {
+                "fields": [
+                    "grossMonthlySalary"
+                ],
+                "approverRole": "cfo"
+            },
+            "bankrekening": {
+                "fields": [
+                    "iban",
+                    "7"
+                ],
+                "approverRole": "hr"
+            },
+            "adres": {
+                "fields": [
+                    "straat"
+                ],
+                "approverRole": "none"
+            },
+            "0": {
+                "fields": [
+                    "code"
+                ],
+                "approverRole": "hr"
+            }
+        },
+        "guard": {
+            "grossMonthlySalary": "salaris",
+            "bonus": null,
+            "iban": "bankrekening",
+            "7": "bankrekening",
+            "straat": null,
+            "firstName": null,
+            "x": null
+        }
+    },
+    "space": {
+        "rules": {
+            "salaris": {
+                "fields": [
+                    "grossMonthlySalary"
+                ],
+                "approverRole": "cfo"
+            },
+            "bankrekening": {
+                "fields": [
+                    "iban",
+                    "7"
+                ],
+                "approverRole": "hr"
+            },
+            "adres": {
+                "fields": [
+                    "straat"
+                ],
+                "approverRole": "none"
+            },
+            "0": {
+                "fields": [
+                    "code"
+                ],
+                "approverRole": "hr"
+            }
+        },
+        "guard": {
+            "grossMonthlySalary": "salaris",
+            "bonus": null,
+            "iban": "bankrekening",
+            "7": "bankrekening",
+            "straat": null,
+            "firstName": null,
+            "x": null
+        }
+    },
+    "adm-1": {
+        "rules": {
+            "salaris": {
+                "fields": [
+                    "grossMonthlySalary"
+                ],
+                "approverRole": "cfo"
+            },
+            "bankrekening": {
+                "fields": [
+                    "iban",
+                    "7"
+                ],
+                "approverRole": "hr"
+            },
+            "adres": {
+                "fields": [
+                    "straat"
+                ],
+                "approverRole": "none"
+            },
+            "0": {
+                "fields": [
+                    "code"
+                ],
+                "approverRole": "hr"
+            }
+        },
+        "guard": {
+            "grossMonthlySalary": "salaris",
+            "bonus": null,
+            "iban": "bankrekening",
+            "7": "bankrekening",
+            "straat": null,
+            "firstName": null,
+            "x": null
+        }
+    },
+    "adm-2": {
+        "rules": {
+            "salaris": {
+                "fields": [
+                    "grossMonthlySalary",
+                    "bonus"
+                ],
+                "approverRole": "finance"
+            },
+            "bankrekening": {
+                "fields": [
+                    "iban",
+                    "7"
+                ],
+                "approverRole": "hr"
+            },
+            "adres": {
+                "fields": [
+                    "straat"
+                ],
+                "approverRole": "manager"
+            },
+            "0": {
+                "fields": [
+                    "code"
+                ],
+                "approverRole": "hr"
+            },
+            "naam": {
+                "fields": [],
+                "approverRole": "none"
+            },
+            "1": {
+                "fields": [
+                    "code"
+                ],
+                "approverRole": "hr"
+            }
+        },
+        "guard": {
+            "grossMonthlySalary": "salaris",
+            "bonus": "salaris",
+            "iban": "bankrekening",
+            "7": "bankrekening",
+            "straat": "adres",
+            "firstName": null,
+            "x": null
+        }
+    },
+    "adm-3": {
+        "rules": {
+            "salaris": {
+                "fields": [
+                    "grossMonthlySalary"
+                ],
+                "approverRole": "cfo"
+            },
+            "bankrekening": {
+                "fields": [
+                    "iban"
+                ],
+                "approverRole": "none"
+            },
+            "adres": {
+                "fields": [
+                    "straat"
+                ],
+                "approverRole": "none"
+            },
+            "0": {
+                "fields": [
+                    "code"
+                ],
+                "approverRole": "hr"
+            }
+        },
+        "guard": {
+            "grossMonthlySalary": "salaris",
+            "bonus": null,
+            "iban": null,
+            "7": null,
+            "straat": null,
+            "firstName": null,
+            "x": null
+        }
+    }
+}
