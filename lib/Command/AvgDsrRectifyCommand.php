@@ -90,22 +90,10 @@ class AvgDsrRectifyCommand extends Command {
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$employeeId = trim((string)$input->getOption('employee'));
-		if ($employeeId === '') {
-			$output->writeln('<error>--employee is verplicht.</error>');
-			return 1;
-		}
-
-		$dsrRequestId = trim((string)$input->getOption('dsr-request-id'));
-		if ($dsrRequestId === '') {
-			$output->writeln('<error>--dsr-request-id is verplicht.</error>');
-			return 1;
-		}
-
-		$changesJson = (string)$input->getOption('changes');
-		$changes = json_decode($changesJson, true);
-		if (is_array($changes) === false || $changes === []) {
-			$output->writeln('<error>--changes moet een niet-lege JSON-object zijn.</error>');
+		$request = AvgDsrRectifyRequest::fromInput($input);
+		$inputError = $request->inputError();
+		if ($inputError !== null) {
+			$output->writeln('<error>' . $inputError . '</error>');
 			return 1;
 		}
 
@@ -118,14 +106,43 @@ class AvgDsrRectifyCommand extends Command {
 			return 1;
 		}
 
-		$resolvedEmployeeId = $this->resolveEmployeeIdentifier($employeeId);
-		if ($resolvedEmployeeId === null) {
+		return $this->rectify($request, $output);
+	}//end execute()
+
+	/**
+	 * Resolve the employee under the privileged session, then rectify it.
+	 *
+	 * @param AvgDsrRectifyRequest $request The validated request.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 on a successful rectification, 1 otherwise.
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
+	 */
+	private function rectify(AvgDsrRectifyRequest $request, OutputInterface $output): int {
+		$request->resolvedEmployeeId = $this->resolveEmployeeIdentifier($request->employeeId);
+		if ($request->resolvedEmployeeId === null) {
 			$output->writeln('<error>Werknemer niet gevonden.</error>');
 			return 1;
 		}
 
+		return $this->applyRectification($request, $output);
+	}//end rectify()
+
+	/**
+	 * Rectify the resolved employee and report the changed fields; a refused
+	 * or failed rectification is reported as an error.
+	 *
+	 * @param AvgDsrRectifyRequest $request The request, with the employee resolved.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 on a successful rectification, 1 otherwise.
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
+	 */
+	private function applyRectification(AvgDsrRectifyRequest $request, OutputInterface $output): int {
 		try {
-			$result = $this->service->rectifySubjectObject($resolvedEmployeeId, $changes, $dsrRequestId);
+			$result = $this->service->rectifySubjectObject($request->resolvedEmployeeId, $request->changes, $request->dsrRequestId);
 		} catch (\RuntimeException $e) {
 			// Defense-in-depth (design.md D3 step 4): a RuntimeException from
 			// assertPrivileged() is still caught rather than reaching the
@@ -140,10 +157,10 @@ class AvgDsrRectifyCommand extends Command {
 		}
 
 		$output->writeln('<info>Humaniq AVG-rectificatie toegepast</info>');
-		$output->writeln('  veld(en): ' . implode(', ', array_keys($changes)));
+		$output->writeln('  veld(en): ' . implode(', ', array_keys($request->changes)));
 
 		return 0;
-	}//end execute()
+	}//end applyRectification()
 
 	/**
 	 * RBAC-resolve the employee (existence + access, the no-admin-idor
