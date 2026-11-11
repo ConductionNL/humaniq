@@ -40,7 +40,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Flow;
 
 use OCA\Humaniq\Service\SettingsService;
+use Closure;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -73,6 +75,14 @@ abstract class PayrollFlowNodeBase implements IFlowNode {
 	 * @var int
 	 */
 	protected const LIMIT = 10000;
+
+	/**
+	 * The key a node's outcome travels under on the item's record; every
+	 * node names its own.
+	 *
+	 * @var string
+	 */
+	public const OUTCOME_KEY = '';
 
 	/**
 	 * The `{{ dotted.path }}` placeholder shape, mirroring OpenRegister's
@@ -294,6 +304,76 @@ abstract class PayrollFlowNodeBase implements IFlowNode {
 
 		return $item;
 	}//end withOutcome()
+
+	/**
+	 * Run a step once per item, in order, and place each outcome on its item
+	 * under the node's outcome key.
+	 *
+	 * @param FlowNodeCall $call The input items.
+	 * @param Closure      $step The step: the item's record in, the service outcome out.
+	 *
+	 * @return array<int, array<string, mixed>> The items, each carrying its outcome.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 */
+	protected function stampEachItem(FlowNodeCall $call, Closure $step): array {
+		$out = [];
+		foreach ($call->items as $item) {
+			$json = (array)(((array)$item)['json'] ?? []);
+			$out[] = $this->withOutcome((array)$item, static::OUTCOME_KEY, $step($json));
+		}
+
+		return $out;
+	}//end stampEachItem()
+
+	/**
+	 * Load each item's approved run and hand it to the step; an empty firing
+	 * returns empty without loading anything.
+	 *
+	 * @param FlowNodeCall $call The input items and the step configuration.
+	 * @param Closure      $step The step: the loaded run in, the service outcome out.
+	 *
+	 * @return array<int, array<string, mixed>> The items, each carrying its outcome.
+	 *
+	 * @throws RuntimeException When an item's run cannot be resolved.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+	 */
+	protected function stampEachRun(FlowNodeCall $call, Closure $step): array {
+		$config = $call->config;
+		if ($call->items === []) {
+			return [];
+		}
+
+		return $this->stampEachItem(
+			$call,
+			fn (array $json): array => $step($this->requireRun(config: $config, json: $json))
+		);
+	}//end stampEachRun()
+
+	/**
+	 * Let an outcome through when the service reported an accepted status;
+	 * throw otherwise, so the step's onError policy decides.
+	 *
+	 * @param array<string, mixed> $outcome  The service outcome.
+	 * @param ExpectedStatus       $expected The accepted statuses and the refusal's opening words.
+	 *
+	 * @return array<string, mixed> The outcome, unchanged.
+	 *
+	 * @throws RuntimeException When the status is not accepted.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 */
+	protected function requireStatus(array $outcome, ExpectedStatus $expected): array {
+		$status = (string)($outcome['status'] ?? '');
+		if (in_array($status, $expected->accepted, true) === false) {
+			throw new RuntimeException(
+				$expected->refusal . ' (' . $status . '): ' . (string)($outcome['message'] ?? '')
+			);
+		}
+
+		return $outcome;
+	}//end requireStatus()
 
 	/**
 	 * @return mixed The OpenRegister ObjectService (ADR-083: availability
