@@ -147,19 +147,27 @@ class RunningTimerService {
 			throw new HoursWriteRefusedException('De lopende timer kon niet worden opgehaald.');
 		}
 
-		$open = [];
-		foreach ($rows as $row) {
-			if (trim((string)($row['endedAt'] ?? '')) === '') {
-				$open[] = $row;
-			}
-		}
+		return self::newestOpen(rows: $rows);
+	}//end running()
 
+	/**
+	 * The newest row without an end, or null when every row has ended.
+	 *
+	 * Newest first, so a pre-existing duplicate from before the one-timer
+	 * guard existed resolves to the one the person most plausibly started.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The caller's timer rows.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function newestOpen(array $rows): ?array {
+		$open = array_values(
+			array_filter($rows, static fn (array $row): bool => trim((string)($row['endedAt'] ?? '')) === '')
+		);
 		if ($open === []) {
 			return null;
 		}
 
-		// Newest first, so a pre-existing duplicate from before this guard
-		// existed resolves to the one the person most plausibly started.
 		usort(
 			$open,
 			static fn (array $a, array $b): int => strcmp(
@@ -169,7 +177,7 @@ class RunningTimerService {
 		);
 
 		return $open[0];
-	}//end running()
+	}//end newestOpen()
 
 	/**
 	 * Start a timer against a host object.
