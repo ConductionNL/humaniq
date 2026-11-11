@@ -204,19 +204,62 @@ class WkrService {
 	 * @return array<string, array<int, array<string, float>>>
 	 */
 	private function buildAggregate(): array {
-		$runsById = $this->administrationIdsByRun();
 		$aggregate = new WkrAggregate();
-
-		foreach ($this->loadAll('Payslip') as $payslip) {
-			$aggregate->addPayslip($this->payslipAdministrationId($payslip, $runsById), $payslip);
-		}
-
-		foreach ($this->loadAll('WkrDeclaration') as $declaration) {
-			$aggregate->addDeclaration($declaration);
-		}
+		$this->addPayslips($aggregate, $this->administrationIdsByRun());
+		$this->addDeclarations($aggregate);
 
 		return $aggregate->toArray();
 	}//end buildAggregate()
+
+	/**
+	 * Add every attributable Payslip's grossPay and wkrUsed to the bucket of
+	 * its effective administrationId and wage year; a payslip without either
+	 * is left out.
+	 *
+	 * @param WkrAggregate $aggregate The aggregate being built.
+	 * @param array<string, string> $runsById Run administrationIds keyed by run id.
+	 *
+	 * @return void
+	 */
+	private function addPayslips(WkrAggregate $aggregate, array $runsById): void {
+		foreach ($this->loadAll('Payslip') as $payslip) {
+			$administrationId = $this->payslipAdministrationId($payslip, $runsById);
+			if ($administrationId === '') {
+				continue;
+			}
+
+			$year = self::yearFromPeriod((string)($payslip['period'] ?? ''));
+			if ($year === null) {
+				continue;
+			}
+
+			$aggregate->at($administrationId, $year)
+				->add('loonsom', (float)($payslip['grossPay'] ?? 0))
+				->add('payslipWkrUsed', (float)($payslip['wkrUsed'] ?? 0));
+		}
+	}//end addPayslips()
+
+	/**
+	 * Add every counted WkrDeclaration's amount to its (administrationId,
+	 * year) bucket; declarations without an administration or year, and
+	 * gericht-vrijgesteld ones, are left out.
+	 *
+	 * @param WkrAggregate $aggregate The aggregate being built.
+	 *
+	 * @return void
+	 */
+	private function addDeclarations(WkrAggregate $aggregate): void {
+		foreach ($this->loadAll('WkrDeclaration') as $declaration) {
+			$administrationId = trim((string)($declaration['administrationId'] ?? ''));
+			$year = (int)($declaration['year'] ?? 0);
+			$category = (string)($declaration['wkrCategory'] ?? '');
+			if ($administrationId === '' || $year === 0 || $category === 'gericht-vrijgesteld') {
+				continue;
+			}
+
+			$aggregate->at($administrationId, $year)->addDeclared($category, (float)($declaration['amount'] ?? 0));
+		}
+	}//end addDeclarations()
 
 	/**
 	 * Each PayrollRun's administrationId, keyed by run id (runs without an id
@@ -254,6 +297,23 @@ class WkrService {
 		$runId = (string)($payslip['payrollRunId'] ?? '');
 		return trim((string)($runsById[$runId] ?? ''));
 	}//end payslipAdministrationId()
+
+	/**
+	 * Derive a calendar year from a wage period (`YYYY-MM`/`YYYY-Pnn`) — the
+	 * leading four-digit year prefix (the `RuleAuditService::yearFromPeriod`
+	 * precedent). Returns null when unparseable.
+	 *
+	 * @param string $period Wage period string.
+	 *
+	 * @return int|null
+	 */
+	private static function yearFromPeriod(string $period): ?int {
+		if (preg_match('/^(\d{4})/', $period, $matches) !== 1) {
+			return null;
+		}
+
+		return (int)$matches[1];
+	}//end yearFromPeriod()
 
 	/**
 	 * The existing WkrAssessment for (administrationId, year), or null — the

@@ -6,8 +6,8 @@
  * Accumulates the per-(administrationId, year) fiscale-loonsom and
  * vrije-ruimte figures `WkrService` assesses: Σ Payslip.grossPay and
  * Σ Payslip.wkrUsed per wage year, plus the declared vrije-ruimte and
- * eindheffing amounts per declaration year. Gericht-vrijgesteld
- * declarations never count.
+ * eindheffing amounts per declaration year. Buckets keep the order in which
+ * they were first opened.
  *
  * @category Service
  * @package  OCA\Humaniq\Service
@@ -36,6 +36,18 @@ namespace OCA\Humaniq\Service;
 final class WkrAggregate {
 
 	/**
+	 * A bucket before anything is added to it.
+	 *
+	 * @var array<string, float>
+	 */
+	private const EMPTY_BUCKET = [
+		'loonsom' => 0.0,
+		'payslipWkrUsed' => 0.0,
+		'vrijeRuimteDeclared' => 0.0,
+		'eindheffingDeclared' => 0.0,
+	];
+
+	/**
 	 * The bucket field each counted declaration category adds its amount to.
 	 *
 	 * @var array<string, string>
@@ -53,63 +65,76 @@ final class WkrAggregate {
 	private array $buckets = [];
 
 	/**
-	 * Add a payslip's grossPay and wkrUsed to the bucket of its wage year;
-	 * a payslip without an administration or a parseable period is skipped.
+	 * The administration of the selected bucket.
 	 *
-	 * @param string $administrationId The payslip's effective administration.
-	 * @param array<string, mixed> $payslip The payslip row.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/wkr-administration/spec.md#REQ-WKR-003
+	 * @var string
 	 */
-	public function addPayslip(string $administrationId, array $payslip): void {
-		if ($administrationId === '') {
-			return;
-		}
-
-		$year = self::yearFromPeriod((string)($payslip['period'] ?? ''));
-		if ($year === null) {
-			return;
-		}
-
-		$bucket = $this->bucket(administrationId: $administrationId, year: $year);
-		$bucket['loonsom'] += ((float)($payslip['grossPay'] ?? 0));
-		$bucket['payslipWkrUsed'] += ((float)($payslip['wkrUsed'] ?? 0));
-		$this->buckets[$administrationId][$year] = $bucket;
-
-	}//end addPayslip()
+	private string $administrationId = '';
 
 	/**
-	 * Add a declaration's amount to its category's field; a declaration
-	 * without administration or year, or a gericht-vrijgesteld one, is skipped.
+	 * The year of the selected bucket.
 	 *
-	 * @param array<string, mixed> $declaration The WkrDeclaration row.
+	 * @var int
+	 */
+	private int $year = 0;
+
+	/**
+	 * Select the bucket of (administrationId, year), opening it with zeroes
+	 * when it does not exist yet.
 	 *
-	 * @return void
+	 * @param string $administrationId The administration.
+	 * @param int $year The year.
+	 *
+	 * @return self
 	 *
 	 * @spec openspec/specs/wkr-administration/spec.md#REQ-WKR-003
 	 */
-	public function addDeclaration(array $declaration): void {
-		$administrationId = trim((string)($declaration['administrationId'] ?? ''));
-		$year = (int)($declaration['year'] ?? 0);
-		$category = (string)($declaration['wkrCategory'] ?? '');
-		if ($administrationId === '' || $year === 0 || $category === 'gericht-vrijgesteld') {
-			return;
-		}
+	public function at(string $administrationId, int $year): self {
+		$this->administrationId = $administrationId;
+		$this->year = $year;
+		$this->buckets[$administrationId][$year] ??= self::EMPTY_BUCKET;
 
-		$bucket = $this->bucket(administrationId: $administrationId, year: $year);
+		return $this;
+	}//end at()
+
+	/**
+	 * Add an amount to one field of the selected bucket.
+	 *
+	 * @param string $field The bucket field.
+	 * @param float $amount The amount to add.
+	 *
+	 * @return self
+	 *
+	 * @spec openspec/specs/wkr-administration/spec.md#REQ-WKR-003
+	 */
+	public function add(string $field, float $amount): self {
+		$this->buckets[$this->administrationId][$this->year][$field] += $amount;
+
+		return $this;
+	}//end add()
+
+	/**
+	 * Add a declared amount to the selected bucket's field for its category;
+	 * a category other than vrije-ruimte or eindheffing adds nothing.
+	 *
+	 * @param string $category The declaration's wkrCategory.
+	 * @param float $amount The declared amount.
+	 *
+	 * @return self
+	 *
+	 * @spec openspec/specs/wkr-administration/spec.md#REQ-WKR-003
+	 */
+	public function addDeclared(string $category, float $amount): self {
 		$field = (self::DECLARED_FIELD_BY_CATEGORY[$category] ?? null);
 		if ($field !== null) {
-			$bucket[$field] += ((float)($declaration['amount'] ?? 0));
+			$this->add($field, $amount);
 		}
 
-		$this->buckets[$administrationId][$year] = $bucket;
-
-	}//end addDeclaration()
+		return $this;
+	}//end addDeclared()
 
 	/**
-	 * The buckets collected so far, in insertion order.
+	 * The buckets collected so far, in the order they were opened.
 	 *
 	 * @return array<string, array<int, array<string, float>>>
 	 *
@@ -118,39 +143,4 @@ final class WkrAggregate {
 	public function toArray(): array {
 		return $this->buckets;
 	}//end toArray()
-
-	/**
-	 * The existing bucket for (administrationId, year), or a zeroed one.
-	 *
-	 * @param string $administrationId The administration.
-	 * @param int $year The year.
-	 *
-	 * @return array<string, float>
-	 */
-	private function bucket(string $administrationId, int $year): array {
-		return ($this->buckets[$administrationId][$year] ?? [
-			'loonsom' => 0.0,
-			'payslipWkrUsed' => 0.0,
-			'vrijeRuimteDeclared' => 0.0,
-			'eindheffingDeclared' => 0.0,
-		]);
-
-	}//end bucket()
-
-	/**
-	 * Derive a calendar year from a wage period (`YYYY-MM`/`YYYY-Pnn`) — the
-	 * leading four-digit year prefix (the `RuleAuditService::yearFromPeriod`
-	 * precedent). Returns null when unparseable.
-	 *
-	 * @param string $period Wage period string.
-	 *
-	 * @return int|null
-	 */
-	private static function yearFromPeriod(string $period): ?int {
-		if (preg_match('/^(\d{4})/', $period, $matches) !== 1) {
-			return null;
-		}
-
-		return (int)$matches[1];
-	}//end yearFromPeriod()
 }//end class
