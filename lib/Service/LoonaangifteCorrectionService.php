@@ -106,31 +106,57 @@ class LoonaangifteCorrectionService {
 			return ['status' => 'refused-not-sent', 'filingId' => $sentId, 'message' => 'Alleen een verzonden aangifte wordt gecorrigeerd; heropen een aangifte die nog niet is verzonden.'];
 		}
 
-		$period = (string)($sent['period'] ?? '');
-		$administrationId = (string)($sent['administrationId'] ?? '');
-		foreach ($this->correctionsOf($administrationId, $period) as $existing) {
+		$open = $this->openCorrectionOf(sent: $sent);
+		if ($open !== null) {
+			return ['status' => 'exists', 'filingId' => (string)$open['id'], 'message' => 'Er staat al een correctie open voor ' . (string)($sent['period'] ?? '') . '.'];
+		}
+
+		$saved = $this->gateway->save(payload: $this->correctionPayload(sent: $sent), schema: 'LoonaangifteFiling');
+		$this->logger->info('LoonaangifteCorrectionService: ' . $userId . ' opened a correction of filing ' . $sentId);
+
+		return ['status' => 'opened', 'filingId' => (string)$saved->getUuid()];
+	}//end open()
+
+	/**
+	 * The correction of the sent return's period that is still open, or null.
+	 *
+	 * @param array<string, mixed> $sent The sent filing.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function openCorrectionOf(array $sent): ?array {
+		foreach ($this->correctionsOf((string)($sent['administrationId'] ?? ''), (string)($sent['period'] ?? '')) as $existing) {
 			if (in_array((string)($existing['status'] ?? ''), ['concept', 'klaargezet', 'bevestigd'], true) === true) {
-				return ['status' => 'exists', 'filingId' => (string)$existing['id'], 'message' => 'Er staat al een correctie open voor ' . $period . '.'];
+				return $existing;
 			}
 		}
 
-		$payload = [
+		return null;
+	}//end openCorrectionOf()
+
+	/**
+	 * The new concept correction of a sent return, with its route.
+	 *
+	 * @param array<string, mixed> $sent The sent filing, with its id.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function correctionPayload(array $sent): array {
+		$period = (string)($sent['period'] ?? '');
+
+		return [
 			'period' => $period,
 			'jurisdiction' => 'NL',
 			'filingType' => 'correctie',
 			'tijdvak' => (string)($sent['tijdvak'] ?? 'maand'),
 			'deadline' => (string)($sent['deadline'] ?? ''),
 			'status' => 'concept',
-			'administrationId' => $administrationId,
-			'corrects' => $sentId,
+			'administrationId' => (string)($sent['administrationId'] ?? ''),
+			'corrects' => (string)($sent['id'] ?? ''),
 			'correctionRoute' => $this->route($period, (string)($sent['tijdvak'] ?? 'maand')),
 			'retainedUntil' => ($sent['retainedUntil'] ?? null),
 		];
-		$saved = $this->gateway->save(payload: $payload, schema: 'LoonaangifteFiling');
-		$this->logger->info('LoonaangifteCorrectionService: ' . $userId . ' opened a correction of filing ' . $sentId);
-
-		return ['status' => 'opened', 'filingId' => (string)$saved->getUuid()];
-	}//end open()
+	}//end correctionPayload()
 
 	/**
 	 * Make a correction: compare, store the lines, the new stand and the
@@ -157,68 +183,96 @@ class LoonaangifteCorrectionService {
 			return ['status' => 'refused-no-specification', 'filingId' => $filingId, 'message' => 'humaniq kent de specificaties van de aangifte voor tijdvak ' . $period . ' niet.'];
 		}
 
-		$stored = ['messageRenderedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'messageRenderedBy' => $userId, 'messageVersion' => $year['version']];
-		$baseline = $this->baseline($correction);
-		if ($baseline === null) {
-			return $this->store($correction, $stored, [$this->finding('baseline-without-message', 'De gecorrigeerde aangifte heeft geen bericht van humaniq; corrigeer haar buiten humaniq.')]);
-		}
+		$render = new CorrectionRender();
+		$render->correction = $correction;
+		$render->period = $period;
+		$render->dates = [$dates[0], $dates[1]];
+		$render->year = $year;
+		$render->stored = ['messageRenderedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'messageRenderedBy' => $userId, 'messageVersion' => $year['version']];
 
-		$current = $this->messages->periodLines((string)($correction['administrationId'] ?? ''), $period, [$dates[0], $dates[1]]);
-		if ($current['run'] === null) {
-			return $this->store($correction, $stored, [$this->finding('run-not-approved', 'Er is voor ' . $period . ' geen goedgekeurde loonrun.')]);
-		}
-
-		[$stored, $findings, $tree] = $this->compared($baseline, $current, [$dates[0], $dates[1]], $stored, $period);
-
-		if ($this->blocking($findings) === 0 && (string)($correction['correctionRoute'] ?? '') === self::ROUTE_OWN_MESSAGE) {
-			$findings = array_merge($findings, $this->ownMessage($current['administration'], $period, $tree, $year, $stored));
-		}
-
-		return $this->store($correction, $stored, $findings);
+		return $this->store(render: $render, findings: $this->madeFindings(render: $render));
 	}//end render()
 
 	/**
-	 * Compare the current lines with the last stand received: the changed
-	 * relationships, the new collective stand and the saldo (GS 2.4.5, p56-57).
+	 * Compare against the last stand received and, for a closed year, render
+	 * the correction message; the findings, or the one finding that stops it.
 	 *
-	 * @param array{relationships: array<string, array{numIv: string, bsn: string, persNr: string, values: array<string, string>}>, totTeBet: int} $baseline The last stand received.
-	 * @param array{run: array<string, mixed>|null, administration: array<string, mixed>, lines: list<array<string, mixed>>}                      $current  The period's current lines.
-	 * @param array{0: string, 1: string}                                                                                                         $dates    The period's first and last day.
-	 * @param array<string, mixed>                                                                                                                $stored   The facts so far.
-	 * @param string                                                                                                                              $period   The period.
+	 * @param CorrectionRender $render The correction being made.
 	 *
-	 * @return array{0: array<string, mixed>, 1: list<array<string, string>>, 2: array<string, mixed>} The facts, the findings and the TijdvakCorrectie.
+	 * @return list<array<string, string>>
 	 */
-	private function compared(array $baseline, array $current, array $dates, array $stored, string $period): array {
-		$run = (array)$current['run'];
-		$diff = CorrectionDiff::compare($baseline['relationships'], $current['lines']);
-		$stand = LoonaangifteMessageBuilder::collective($current['lines']);
+	private function madeFindings(CorrectionRender $render): array {
+		$baseline = $this->baseline($render->correction);
+		if ($baseline === null) {
+			return [$this->finding('baseline-without-message', 'De gecorrigeerde aangifte heeft geen bericht van humaniq; corrigeer haar buiten humaniq.')];
+		}
+
+		$render->current = $this->messages->periodLines((string)($render->correction['administrationId'] ?? ''), $render->period, $render->dates);
+		if ($render->current['run'] === null) {
+			return [$this->finding('run-not-approved', 'Er is voor ' . $render->period . ' geen goedgekeurde loonrun.')];
+		}
+
+		[$findings, $tree] = $this->compared(render: $render, baseline: $baseline);
+		if ($this->blocking($findings) === 0 && (string)($render->correction['correctionRoute'] ?? '') === self::ROUTE_OWN_MESSAGE) {
+			$findings = array_merge($findings, $this->ownMessage(render: $render, tree: $tree));
+		}
+
+		return $findings;
+	}//end madeFindings()
+
+	/**
+	 * Compare the current lines with the last stand received: the changed
+	 * relationships, the new collective stand and the saldo (GS 2.4.5, p56-57),
+	 * added to the stored facts.
+	 *
+	 * @param CorrectionRender                                                                                                                    $render   The correction being made, with the period's current lines.
+	 * @param array{relationships: array<string, array{numIv: string, bsn: string, persNr: string, values: array<string, string>}>, totTeBet: int} $baseline The last stand received.
+	 *
+	 * @return array{0: list<array<string, string>>, 1: array<string, mixed>} The findings and the TijdvakCorrectie.
+	 */
+	private function compared(CorrectionRender $render, array $baseline): array {
+		$lines = $render->current['lines'];
+		$diff = CorrectionDiff::compare($baseline['relationships'], $lines);
+		$stand = LoonaangifteMessageBuilder::collective($lines);
 		unset($stand['TotGen']);
-		$findings = $this->lineFindings($current['lines']);
+		$findings = $this->lineFindings($lines);
 		$saldo = ($stand['TotTeBet'] - $baseline['totTeBet']);
 		if ($diff['lines'] === [] && $saldo === 0) {
-			$findings[] = $this->finding('nothing-to-correct', 'Er is niets te corrigeren: de loonstroken van ' . $period . ' komen overeen met wat is verzonden.');
+			$findings[] = $this->finding('nothing-to-correct', 'Er is niets te corrigeren: de loonstroken van ' . $render->period . ' komen overeen met wat is verzonden.');
 		}
 
 		$tree = [
-			'DatAanvTv' => $dates[0],
-			'DatEindTv' => $dates[1],
+			'DatAanvTv' => $render->dates[0],
+			'DatEindTv' => $render->dates[1],
 			'CollectieveAangifte' => array_map(static fn (int $euros): string => (string)$euros, $stand),
 			'InkomstenverhoudingInitieel' => $diff['initial'],
 			'InkomstenverhoudingIntrekking' => $diff['withdrawn'],
 		];
-		$stored = array_merge($stored, [
-			'messageRunId' => (string)$run['id'],
-			'messageRunCalculatedAt' => (string)($run['calculatedAt'] ?? ''),
-			'messageRunTotalLoonheffing' => (float)($run['totalLoonheffing'] ?? 0),
-			'collectiveTotals' => $stand,
+		$render->stored = array_merge($render->stored, self::runFacts(run: (array)$render->current['run'], stand: $stand), [
 			'correctionLines' => $this->withEmployees($diff['lines']),
 			'correctionTree' => $tree,
 			'correctionSaldo' => $saldo,
 		]);
 
-		return [$stored, $findings, $tree];
+		return [$findings, $tree];
 	}//end compared()
+
+	/**
+	 * The run the correction was compared against and the new collective stand.
+	 *
+	 * @param array<string, mixed> $run   The approved run.
+	 * @param array<string, int>   $stand The new collective stand.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function runFacts(array $run, array $stand): array {
+		return [
+			'messageRunId' => (string)$run['id'],
+			'messageRunCalculatedAt' => (string)($run['calculatedAt'] ?? ''),
+			'messageRunTotalLoonheffing' => (float)($run['totalLoonheffing'] ?? 0),
+			'collectiveTotals' => $stand,
+		];
+	}//end runFacts()
 
 	/**
 	 * The route: the next return inside the tax year, its own message after
@@ -273,27 +327,26 @@ class LoonaangifteCorrectionService {
 	}//end baseline()
 
 	/**
-	 * The correction message of a closed year: only the corrected period.
+	 * The correction message of a closed year: only the corrected period;
+	 * a validated message is added to the stored facts.
 	 *
-	 * @param array<string, mixed>                                   $administration The hrAdministration.
-	 * @param string                                                 $period         The period.
-	 * @param array<string, mixed>                                   $tree           The TijdvakCorrectie.
-	 * @param array{version: string, namespace: string, xsd: string} $year           The year entry.
-	 * @param array<string, mixed>                                   $stored         The stored facts, extended with the message.
+	 * @param CorrectionRender     $render The correction being made.
+	 * @param array<string, mixed> $tree   The TijdvakCorrectie.
 	 *
 	 * @return list<array<string, string>> The findings of the header and the XSD.
 	 */
-	private function ownMessage(array $administration, string $period, array $tree, array $year, array &$stored): array {
-		$built = LoonaangifteMessageBuilder::correctionMessage($administration, $this->messages->header('LC' . $period), [$tree]);
+	private function ownMessage(CorrectionRender $render, array $tree): array {
+		$administration = $render->current['administration'];
+		$built = LoonaangifteMessageBuilder::correctionMessage($administration, $this->messages->header('LC' . $render->period), [$tree]);
 		if ($this->blocking($built['findings']) > 0) {
 			return $built['findings'];
 		}
 
-		$fileName = 'LHC_' . (string)($administration['loonheffingennummer'] ?? '') . '_' . $period . '_' . gmdate('YmdHis') . '.xml';
-		[$message, $findings] = $this->messages->validated($built['tree'], $year, $fileName, $built['findings']);
+		$fileName = 'LHC_' . (string)($administration['loonheffingennummer'] ?? '') . '_' . $render->period . '_' . gmdate('YmdHis') . '.xml';
+		[$message, $findings] = $this->messages->validated($built['tree'], $render->year, $fileName, $built['findings']);
 		if ($message !== null) {
-			$stored['messageXml'] = $message['xml'];
-			$stored['messageFileName'] = $message['fileName'];
+			$render->stored['messageXml'] = $message['xml'];
+			$render->stored['messageFileName'] = $message['fileName'];
 		}
 
 		return $findings;
@@ -350,16 +403,15 @@ class LoonaangifteCorrectionService {
 	/**
 	 * Store the outcome on the correction.
 	 *
-	 * @param array<string, mixed>        $correction The correction.
-	 * @param array<string, mixed>        $stored     The facts.
-	 * @param list<array<string, string>> $findings   The findings.
+	 * @param CorrectionRender            $render   The correction and the facts.
+	 * @param list<array<string, string>> $findings The findings.
 	 *
 	 * @return array{status: string, filingId: string, blockingFindings: int, warningFindings: int}
 	 */
-	private function store(array $correction, array $stored, array $findings): array {
-		$filingId = (string)($correction['id'] ?? '');
+	private function store(CorrectionRender $render, array $findings): array {
+		$filingId = (string)($render->correction['id'] ?? '');
 		$blocking = $this->blocking($findings);
-		$payload = array_merge($correction, ['messageXml' => null, 'messageFileName' => null], $stored, [
+		$payload = array_merge($render->correction, ['messageXml' => null, 'messageFileName' => null], $render->stored, [
 			'messageFindings' => $findings,
 			'blockingFindings' => $blocking,
 			'warningFindings' => (count($findings) - $blocking),
