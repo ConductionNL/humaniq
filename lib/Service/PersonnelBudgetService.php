@@ -82,28 +82,13 @@ class PersonnelBudgetService {
 		$raise = (1.0 + ((float)($scenario['caoRaisePercentage'] ?? 0) / 100.0));
 		$charges = $this->totals->chargesBasis(scenario: $scenario, runs: (array)($rows['runs'] ?? []));
 		$scenarioId = (string)($scenario['id'] ?? '');
-		$mutations = array_values(
-			array_filter((array)($rows['mutations'] ?? []), static fn (array $mutation): bool => $scenarioId !== '' && (string)($mutation['scenarioId'] ?? '') === $scenarioId)
-		);
-
-		$lines = [];
-		$budgetRun = ['mutations' => $mutations, 'rows' => $rows, 'year' => $year, 'raise' => $raise];
-		foreach ($this->placesOf(rows: $rows, mutations: $mutations) as $place) {
-			$line = $this->placeLine(place: $place, budgetRun: $budgetRun);
-			$lines[] = $this->totals->withSurcharges(line: $line, chargesRatio: $charges['ratio']);
-		}
+		$mutations = self::scenarioMutations(scenarioId: $scenarioId, rows: $rows);
+		$lines = $this->budgetLines(budgetRun: ['mutations' => $mutations, 'rows' => $rows, 'year' => $year, 'raise' => $raise], chargesRatio: $charges['ratio']);
 
 		return [
 			'scenarioId' => $scenarioId,
 			'year' => $year,
-			'basis' => [
-				'caoRaisePercentage' => (float)($scenario['caoRaisePercentage'] ?? 0),
-				'holidayAllowancePercentage' => $this->totals->holidayAllowancePercentage(),
-				'employerChargesPercentage' => round(($charges['ratio'] * 100.0), 4),
-				'employerChargesBasis' => $charges['basis'],
-				'fullTimeHoursPerWeek' => $this->fullTimeHoursWeek,
-				'monthRule' => 'a contract or change counts in a month when it applies on the first of that month',
-			],
+			'basis' => $this->basisOf(scenario: $scenario, charges: $charges),
 			'lines' => $lines,
 			'byUnit' => $this->totals->rollUp(lines: $lines, key: 'orgUnitId'),
 			'byFunction' => $this->totals->rollUp(lines: $lines, key: 'normfunctieId'),
@@ -111,6 +96,58 @@ class PersonnelBudgetService {
 			'total' => round(array_sum(array_column($lines, 'total')), 2),
 		];
 	}//end budget()
+
+	/**
+	 * The scenario's own mutations; none for the baseline (no scenario id).
+	 *
+	 * @param string               $scenarioId The scenario.
+	 * @param array<string, mixed> $rows       The rows, as budget() takes them.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private static function scenarioMutations(string $scenarioId, array $rows): array {
+		return array_values(
+			array_filter((array)($rows['mutations'] ?? []), static fn (array $mutation): bool => $scenarioId !== '' && (string)($mutation['scenarioId'] ?? '') === $scenarioId)
+		);
+	}//end scenarioMutations()
+
+	/**
+	 * One line per place, with the employer charges and surcharges added.
+	 *
+	 * @param array<string, mixed> $budgetRun    The mutations, rows, year and raise factor.
+	 * @param float                $chargesRatio The employer charges ratio.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function budgetLines(array $budgetRun, float $chargesRatio): array {
+		$lines = [];
+		foreach ($this->placesOf(rows: $budgetRun['rows'], mutations: $budgetRun['mutations']) as $place) {
+			$line = $this->placeLine(place: $place, budgetRun: $budgetRun);
+			$lines[] = $this->totals->withSurcharges(line: $line, chargesRatio: $chargesRatio);
+		}
+
+		return $lines;
+	}//end budgetLines()
+
+	/**
+	 * What the budget rests on: the raise, holiday allowance, employer
+	 * charges and where they come from, the full-time week and the month rule.
+	 *
+	 * @param array<string, mixed>                $scenario The FormationScenario.
+	 * @param array{ratio: float, basis: mixed}   $charges  The employer charges basis.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function basisOf(array $scenario, array $charges): array {
+		return [
+			'caoRaisePercentage' => (float)($scenario['caoRaisePercentage'] ?? 0),
+			'holidayAllowancePercentage' => $this->totals->holidayAllowancePercentage(),
+			'employerChargesPercentage' => round(($charges['ratio'] * 100.0), 4),
+			'employerChargesBasis' => $charges['basis'],
+			'fullTimeHoursPerWeek' => $this->fullTimeHoursWeek,
+			'monthRule' => 'a contract or change counts in a month when it applies on the first of that month',
+		];
+	}//end basisOf()
 
 	/**
 	 * Two scenarios and the baseline (the first scenario without its changes), per unit.
