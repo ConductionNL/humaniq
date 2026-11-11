@@ -64,28 +64,40 @@ class ChangeApprovalRules {
 	 * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-001
 	 */
 	public function forAdministration(?string $administrationId): array {
-		$general = [];
+		$rows = $this->gateway->loadAll('ChangeApprovalRule');
 		$own = [];
-		foreach ($this->gateway->loadAll('ChangeApprovalRule') as $row) {
+		if ((string)$administrationId !== '') {
+			$own = $this->rulesIn(rows: $rows, scope: (string)$administrationId);
+		}
+
+		return array_merge($this->rulesIn(rows: $rows, scope: ''), $own);
+	}//end forAdministration()
+
+	/**
+	 * The rules per change kind of one scope: the general rules for '',
+	 * else one administration's own; a later row of a kind wins.
+	 *
+	 * @param array<int, array<string, mixed>> $rows  The stored rules.
+	 * @param string                           $scope The administration, or '' for the general rules.
+	 *
+	 * @return array<string, array{fields: list<string>, approverRole: string}>
+	 */
+	private function rulesIn(array $rows, string $scope): array {
+		$rules = [];
+		foreach ($rows as $row) {
 			$kind = trim((string)($row['changeKind'] ?? ''));
-			if ($kind === '') {
+			if ($kind === '' || trim((string)($row['administrationId'] ?? '')) !== $scope) {
 				continue;
 			}
 
-			$rule = [
+			$rules[$kind] = [
 				'fields' => array_values(array_map('strval', (is_array($row['fields'] ?? null) === true ? $row['fields'] : []))),
 				'approverRole' => (string)($row['approverRole'] ?? self::NO_APPROVER),
 			];
-			$scope = trim((string)($row['administrationId'] ?? ''));
-			if ($scope === '') {
-				$general[$kind] = $rule;
-			} else if ($scope === (string)$administrationId) {
-				$own[$kind] = $rule;
-			}
 		}
 
-		return array_merge($general, $own);
-	}//end forAdministration()
+		return $rules;
+	}//end rulesIn()
 
 	/**
 	 * The kind of change that guards a field: covered by a rule with an approver.
