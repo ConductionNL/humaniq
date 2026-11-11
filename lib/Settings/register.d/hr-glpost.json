@@ -4,6 +4,7 @@
         "schemas": {
             "PayrollGLPost": {
                 "slug": "PayrollGLPost",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "BookEditOutline",
                 "version": "0.3.0",
                 "title": "Payroll GL post",

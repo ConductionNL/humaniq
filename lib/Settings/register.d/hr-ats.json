@@ -4,6 +4,7 @@
         "schemas": {
             "Vacancy": {
                 "slug": "Vacancy",
+                "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"status": "gepubliceerd"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "AccountBoxOutline",
                 "version": "0.6.0",
                 "title": "Vacancy",
@@ -1606,6 +1607,7 @@
             },
             "Referral": {
                 "slug": "Referral",
+                "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"referrerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "AccountArrowRightOutline",
                 "version": "0.1.0",
                 "title": "Referral",
