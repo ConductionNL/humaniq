@@ -142,7 +142,6 @@ class LeaveAccrualJobSkipReasonsTest extends TestCase {
 		);
 
 		return new LeaveAccrualJob($time, $container, $settings, $logger, $this->createMock(LeaveBalanceProjectionService::class));
-
 	}//end job()
 
 	/**
