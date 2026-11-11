@@ -82,6 +82,13 @@ class PayrollNetPayServiceTest extends TestCase {
 			public array $saved = [];
 
 			/**
+			 * Schemas whose filtered lookups fail; the availability probe is unfiltered.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $lookupFails = [];
+
+			/**
 			 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
 			 * @param bool $shillinqThrows Whether PaymentRun access throws.
 			 */
@@ -121,6 +128,10 @@ class PayrollNetPayServiceTest extends TestCase {
 			public function findAll(array $options = []): array {
 				if ($this->schema === 'PaymentRun' && $this->shillinqThrows === true) {
 					throw new \RuntimeException('shillinq register unavailable');
+				}
+
+				if (isset($options['filters']) === true && in_array($this->schema, $this->lookupFails, true) === true) {
+					throw new \RuntimeException('lookup failed');
 				}
 
 				return $this->rowsBySchema[$this->schema] ?? [];
@@ -647,6 +658,55 @@ class PayrollNetPayServiceTest extends TestCase {
 		$this->assertCount(0, $this->savedFor($fake, 'PaymentRun'));
 
 	}//end testProcessRunAdoptsExistingPaymentRunByNumberInsteadOfDuplicating()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedPaymentRunLookupCreatesNoPaymentRun(): void {
+		[$service, $fake] = $this->service(['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]]);
+		$fake->lookupFails = ['PaymentRun'];
+
+		$result = $service->processRun($this->payrollRun());
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'PaymentRun'));
+		$this->assertSame('failed', array_column($this->savedFor($fake, 'PayrollPaymentBatch'), 'status')[1] ?? null);
+	}//end testAFailedPaymentRunLookupCreatesNoPaymentRun()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedPaymentRunLookupLeavesAStalePendingBatchAlone(): void {
+		$rows = [
+			'Employee' => [$this->employee()],
+			'Payslip' => [$this->payslip()],
+			'PayrollPaymentBatch' => [
+				['id' => 'pb-1', 'payrollRunId' => 'run-1', 'period' => '2026-05', 'status' => 'pending'],
+			],
+		];
+		[$service, $fake] = $this->service($rows);
+		$fake->lookupFails = ['PaymentRun'];
+
+		$result = $service->processRun($this->payrollRun());
+
+		$this->assertSame('pending', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'PaymentRun'));
+		$this->assertCount(0, $this->savedFor($fake, 'PayrollPaymentBatch'));
+	}//end testAFailedPaymentRunLookupLeavesAStalePendingBatchAlone()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedBatchLookupWritesNothing(): void {
+		[$service, $fake] = $this->service(['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]]);
+		$fake->lookupFails = ['PayrollPaymentBatch'];
+
+		$result = $service->processRun($this->payrollRun());
+
+		$this->assertSame('pending', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'PaymentRun'));
+		$this->assertCount(0, $this->savedFor($fake, 'PayrollPaymentBatch'));
+	}//end testAFailedBatchLookupWritesNothing()
 
 	/**
 	 * @return void

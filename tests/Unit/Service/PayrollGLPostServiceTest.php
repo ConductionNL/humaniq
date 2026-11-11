@@ -81,6 +81,13 @@ class PayrollGLPostServiceTest extends TestCase {
 			public array $saved = [];
 
 			/**
+			 * Schemas whose filtered lookups fail; the availability probe is unfiltered.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $lookupFails = [];
+
+			/**
 			 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
 			 * @param bool $shillinqThrows Whether JournalEntry access throws.
 			 */
@@ -120,6 +127,10 @@ class PayrollGLPostServiceTest extends TestCase {
 			public function findAll(array $options = []): array {
 				if ($this->schema === 'JournalEntry' && $this->shillinqThrows === true) {
 					throw new \RuntimeException('shillinq register unavailable');
+				}
+
+				if (isset($options['filters']) === true && in_array($this->schema, $this->lookupFails, true) === true) {
+					throw new \RuntimeException('lookup failed');
 				}
 
 				return $this->rowsBySchema[$this->schema] ?? [];
@@ -586,6 +597,47 @@ class PayrollGLPostServiceTest extends TestCase {
 		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
 
 	}//end testPostRunAdoptsExistingJournalEntryByNumberInsteadOfDuplicating()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedJournalEntryLookupCreatesNoJournalEntry(): void {
+		[$service, $fake] = $this->service();
+		$fake->lookupFails = ['JournalEntry'];
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+	}//end testAFailedJournalEntryLookupCreatesNoJournalEntry()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedJournalEntryLookupLeavesAStalePendingGlPostAlone(): void {
+		[$service, $fake] = $this->service(['PayrollGLPost' => [['id' => 'gp-1', 'payrollRunId' => 'run-1', 'period' => '2026-05', 'status' => 'pending']]]);
+		$fake->lookupFails = ['JournalEntry'];
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('pending', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+		$this->assertCount(0, $this->savedFor($fake, 'PayrollGLPost'));
+	}//end testAFailedJournalEntryLookupLeavesAStalePendingGlPostAlone()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedGlPostLookupWritesNothing(): void {
+		[$service, $fake] = $this->service();
+		$fake->lookupFails = ['PayrollGLPost'];
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('pending', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+		$this->assertCount(0, $this->savedFor($fake, 'PayrollGLPost'));
+	}//end testAFailedGlPostLookupWritesNothing()
 
 	/**
 	 * @return void

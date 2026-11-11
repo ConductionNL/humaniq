@@ -156,7 +156,12 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', 'PayrollRun is missing id/period/administrationId; cannot post.');
 		}
 
-		$settled = $this->settledByActiveGlPost($run);
+		try {
+			$settled = $this->settledByActiveGlPost($run);
+		} catch (HandoffLookupFailed $e) {
+			return $this->outcome($runId, 'pending', $e->getMessage());
+		}
+
 		if ($settled !== null) {
 			return $settled;
 		}
@@ -188,7 +193,11 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', (string)$built['error'], $glPost);
 		}
 
-		$locked = (new HandoffLock($this->container))->holding('glpost/' . $this->journalNumber($run), fn (): array => $this->postUnderClaim($run, $built));
+		try {
+			$locked = (new HandoffLock($this->container))->holding('glpost/' . $this->journalNumber($run), fn (): array => $this->postUnderClaim($run, $built));
+		} catch (HandoffLookupFailed $e) {
+			return $this->outcome($runId, 'pending', $e->getMessage());
+		}
 
 		return ($locked ?? $this->outcome($runId, 'pending', 'Another process holds the hand-off lock for this journal number.'));
 	}//end postRun()
@@ -266,7 +275,13 @@ class PayrollGLPostService {
 		$journalNumber = $this->journalNumber($run);
 		$claim = $this->createGlPost(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'journalNumber' => $journalNumber]);
 		$claims = new PendingClaims(self::ACTIVE_STATUSES);
-		$records = $this->glPostsWhere('journalNumber', $journalNumber);
+		try {
+			$records = $this->glPostsWhere('journalNumber', $journalNumber);
+		} catch (HandoffLookupFailed $e) {
+			$withdrawn = $this->saveGlPost($claim, ['status' => 'failed', 'errorMessage' => 'Withdrawn: ' . $e->getMessage()]);
+			return $this->outcome($runId, 'pending', $e->getMessage(), $withdrawn);
+		}
+
 		foreach ($claims->staleOthers($records, $claim) as $stale) {
 			$this->saveGlPost($stale, ['status' => 'failed', 'errorMessage' => 'Verlopen pending-poging met hetzelfde journaalnummer vervangen.']);
 		}
@@ -600,19 +615,20 @@ class PayrollGLPostService {
 
 	/**
 	 * Search shillinq for an existing JournalEntry with the given journalNumber
-	 * (the idempotency probe, design.md D6). Never throws — a lookup failure is
-	 * treated as "not found" by the caller's fall-through logic.
+	 * (the idempotency probe, design.md D6).
 	 *
 	 * @param string $journalNumber The deterministic idempotency key.
 	 *
 	 * @return array<string, mixed>|null
+	 *
+	 * @throws HandoffLookupFailed When the lookup fails, so it is never read as "not found".
 	 */
 	private function findJournalEntryByNumber(string $journalNumber): ?array {
 		try {
 			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000, 'filters' => ['journalNumber' => $journalNumber]], false, false);
 		} catch (\Throwable $e) {
 			$this->logger->warning('PayrollGLPostService: the shillinq JournalEntry lookup failed.', ['exceptionClass' => $e::class]);
-			return null;
+			throw new HandoffLookupFailed('A lookup failed; the payroll run is tried again later.');
 		}
 
 		foreach ($this->normaliseRows($rows) as $row) {
@@ -634,13 +650,15 @@ class PayrollGLPostService {
 	 * @param string $value Its value.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @throws HandoffLookupFailed When the lookup fails, so it is never read as "none".
 	 */
 	private function glPostsWhere(string $field, string $value): array {
 		try {
 			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::GLPOST_SCHEMA)->findAll(['limit' => 10000, 'filters' => [$field => $value]], false, false);
 		} catch (\Throwable $e) {
 			$this->logger->warning('PayrollGLPostService: the PayrollGLPost lookup failed.', ['exceptionClass' => $e::class]);
-			return [];
+			throw new HandoffLookupFailed('A lookup failed; the payroll run is tried again later.');
 		}
 
 		$out = [];
