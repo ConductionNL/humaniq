@@ -252,4 +252,57 @@ class RestampOpenManagerRecordsTest extends TestCase {
 		self::assertSame([], $out->warnings);
 	}//end testTheStepRunsOnlyOnce()
 
+	/**
+	 * The whole outcome of the step: output, log lines, repair calls and the
+	 * done marker, for every path.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeStepOutcome(): void {
+		$clean = ['TimeEntry' => ['inspected' => 4, 'open' => 2, 'changed' => 1, 'failed' => 0], 'LeaveRequest' => ['inspected' => 3, 'open' => 1, 'changed' => 0, 'failed' => 0]];
+		$cases = [
+			'done'        => [true, true, $clean],
+			'no-register' => [false, false, $clean],
+			'clean'       => [false, true, $clean],
+			'empty'       => [false, true, []],
+			'failures'    => [false, true, ['TimeEntry' => ['inspected' => 4, 'open' => 2, 'changed' => 0, 'failed' => 2], 'Expense' => ['inspected' => 1, 'open' => 1, 'changed' => 0, 'failed' => 1]]],
+			'throws'      => [false, true, null],
+		];
+		$got = [];
+		foreach ($cases as $name => [$done, $available, $report]) {
+			$calls = [];
+			$marked = [];
+			$logged = [];
+			$repair = $this->createMock(ManagerStampRepair::class);
+			$repair->method('run')->willReturnCallback(
+				static function (bool $dryRun) use (&$calls, $report): array {
+					$calls[] = $dryRun;
+					if ($report === null) {
+						throw new \RuntimeException('register down');
+					}
+
+					return $report;
+				}
+			);
+			$config = $this->appConfig($done);
+			$config->method('setValueBool')->willReturnCallback(
+				static function (string $app, string $key, bool $value) use (&$marked): bool {
+					$marked[] = [$app, $key, $value];
+					return true;
+				}
+			);
+			$logger = $this->createMock(LoggerInterface::class);
+			$logger->method('error')->willReturnCallback(
+				static function (string $message, array $context) use (&$logged): void {
+					$logged[] = [$message, $context];
+				}
+			);
+			$out = $this->outputDouble();
+			(new RestampOpenManagerRecords($repair, $this->settings($available), $logger, $config))->run($out);
+			$got[$name] = ['infos' => $out->infos, 'warnings' => $out->warnings, 'logged' => $logged, 'calls' => $calls, 'marked' => $marked];
+		}
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/restamp-open-managers.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeStepOutcome()
+
 }//end class

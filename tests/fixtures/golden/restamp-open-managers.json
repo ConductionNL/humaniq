@@ -1,0 +1,83 @@
+{
+    "done": {
+        "infos": [],
+        "warnings": [],
+        "logged": [],
+        "calls": [],
+        "marked": []
+    },
+    "no-register": {
+        "infos": [],
+        "warnings": [
+            "OpenRegister is not installed or enabled. Skipping the manager restamp."
+        ],
+        "logged": [],
+        "calls": [],
+        "marked": []
+    },
+    "clean": {
+        "infos": [
+            "TimeEntry: inspected=4 open=2 restamped=1 failed=0",
+            "LeaveRequest: inspected=3 open=1 restamped=0 failed=0"
+        ],
+        "warnings": [],
+        "logged": [],
+        "calls": [
+            false
+        ],
+        "marked": [
+            [
+                "humaniq",
+                "manager_restamp_done",
+                true
+            ]
+        ]
+    },
+    "empty": {
+        "infos": [],
+        "warnings": [],
+        "logged": [],
+        "calls": [
+            false
+        ],
+        "marked": [
+            [
+                "humaniq",
+                "manager_restamp_done",
+                true
+            ]
+        ]
+    },
+    "failures": {
+        "infos": [
+            "TimeEntry: inspected=4 open=2 restamped=0 failed=2",
+            "Expense: inspected=1 open=1 restamped=0 failed=1"
+        ],
+        "warnings": [
+            "3 records could not be restamped; the step runs again on the next upgrade or repair."
+        ],
+        "logged": [],
+        "calls": [
+            false
+        ],
+        "marked": []
+    },
+    "throws": {
+        "infos": [],
+        "warnings": [
+            "Could not restamp the manager on open records: register down"
+        ],
+        "logged": [
+            [
+                "Humaniq: manager restamp failed",
+                {
+                    "exception": "register down"
+                }
+            ]
+        ],
+        "calls": [
+            false
+        ],
+        "marked": []
+    }
+}
