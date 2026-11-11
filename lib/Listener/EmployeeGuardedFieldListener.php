@@ -84,41 +84,77 @@ class EmployeeGuardedFieldListener implements IEventListener {
 	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-002
 	 */
 	public function handle(Event $event): void {
-		if (($event instanceof ObjectUpdatingEvent) === false || $this->marker->isInternal() === true) {
+		if ($this->applies($event) === false) {
 			return;
 		}
 
-		$entity = $event->getNewObject();
-		if (strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::EMPLOYEE_SLUG) {
-			return;
-		}
-
-		$new = ($entity->getObject() ?? []);
-		$old = ($event->getOldObject()?->getObject() ?? ($this->gateway->findObjectData((string)$entity->getUuid(), 'Employee') ?? []));
+		$new = ($event->getNewObject()->getObject() ?? []);
+		$old = $this->storedOf($event);
 		// A protected field the writer was never shown arrives empty and is
 		// carried forward by FieldAccessListener: that is no change to guard.
-		$carried = $this->access->carriedForward(schemaId: (string)$entity->getSchema(), old: $old, new: $new);
+		$carried = $this->access->carriedForward(schemaId: (string)$event->getNewObject()->getSchema(), old: $old, new: $new);
 		$changed = array_values(array_diff($this->changedFields(old: $old, new: $new), array_keys($carried)));
 		if ($changed === []) {
 			return;
 		}
 
+		$refusal = $this->refusalFor(changed: $changed, administrationId: (string)($new['administrationId'] ?? ($old['administrationId'] ?? '')));
+		$this->refuse(event: $event, message: $refusal);
+	}//end handle()
+
+	/**
+	 * Whether this is an outside update of an employee.
+	 *
+	 * @param Event $event The event.
+	 *
+	 * @psalm-assert-if-true ObjectUpdatingEvent $event
+	 *
+	 * @return bool
+	 */
+	private function applies(Event $event): bool {
+		return $event instanceof ObjectUpdatingEvent
+			&& $this->marker->isInternal() === false
+			&& strtolower($this->gateway->resolveSchemaSlug((string)$event->getNewObject()->getSchema())) === self::EMPLOYEE_SLUG;
+	}//end applies()
+
+	/**
+	 * The employee as stored, read from the register when the event has no
+	 * old object.
+	 *
+	 * @param ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function storedOf(ObjectUpdatingEvent $event): array {
+		return ($event->getOldObject()?->getObject() ?? ($this->gateway->findObjectData((string)$event->getNewObject()->getUuid(), 'Employee') ?? []));
+	}//end storedOf()
+
+	/**
+	 * The refusal for the first changed field that needs approval; a
+	 * refusal too when the rules cannot be read.
+	 *
+	 * @param list<string> $changed          The changed fields.
+	 * @param string       $administrationId The employee's administration.
+	 *
+	 * @return string|null
+	 */
+	private function refusalFor(array $changed, string $administrationId): ?string {
 		try {
-			$rules = $this->rules->forAdministration((string)($new['administrationId'] ?? ($old['administrationId'] ?? '')));
+			$rules = $this->rules->forAdministration($administrationId);
 		} catch (\Throwable $e) {
 			$this->logger->warning('humaniq: the change approval rules could not be read, an employee update was refused', ['exception' => $e->getMessage()]);
-			$this->refuse($event, 'De goedkeuringsregels voor wijzigingen konden niet worden gelezen, dus deze wijziging is niet opgeslagen. Probeer het later opnieuw.');
-			return;
+			return 'De goedkeuringsregels voor wijzigingen konden niet worden gelezen, dus deze wijziging is niet opgeslagen. Probeer het later opnieuw.';
 		}
 
 		foreach ($changed as $field) {
 			$kind = $this->rules->guardingKind($field, $rules);
 			if ($kind !== null) {
-				$this->refuse($event, sprintf('Een wijziging van %s (%s) moet worden goedgekeurd. Dien een wijzigingsverzoek in.', $kind, $field));
-				return;
+				return sprintf('Een wijziging van %s (%s) moet worden goedgekeurd. Dien een wijzigingsverzoek in.', $kind, $field);
 			}
 		}
-	}//end handle()
+
+		return null;
+	}//end refusalFor()
 
 	/**
 	 * The fields whose value the update changes.
@@ -170,11 +206,15 @@ class EmployeeGuardedFieldListener implements IEventListener {
 	 * Refuse the write with a user-facing message.
 	 *
 	 * @param ObjectUpdatingEvent $event   The event.
-	 * @param string              $message The message.
+	 * @param string|null         $message The refusal; none leaves the save alone.
 	 *
 	 * @return void
 	 */
-	private function refuse(ObjectUpdatingEvent $event, string $message): void {
+	private function refuse(ObjectUpdatingEvent $event, ?string $message): void {
+		if ($message === null) {
+			return;
+		}
+
 		$event->setErrors(['message' => $message]);
 		$event->stopPropagation();
 	}//end refuse()
