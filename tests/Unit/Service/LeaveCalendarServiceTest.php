@@ -34,8 +34,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\CalendarSettings;
 use OCA\Humaniq\Service\LeaveCalendarService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
+use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -401,12 +404,11 @@ class LeaveCalendarServiceTest extends TestCase {
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getLeaveCalendarPrincipal')->willReturn($principal);
-		$settings->method('getLeaveCalendarUri')->willReturn($calendarUri);
+		$calendars = new CalendarSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), ['leave_calendar_principal' => $principal, 'leave_calendar_uri' => $calendarUri]));
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new LeaveCalendarService($container, $settings, $logger), $fakeBackend];
+		return [new LeaveCalendarService($container, $settings, $calendars, $logger), $fakeBackend];
 	}//end service()
 
 	/**

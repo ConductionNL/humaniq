@@ -38,8 +38,12 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\CalendarSettings;
 use OCA\Humaniq\Service\InterviewCalendarService;
+use OCA\Humaniq\Service\InterviewRepository;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
+use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -490,12 +494,11 @@ class InterviewCalendarServiceTest extends TestCase {
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getInterviewCalendarPrincipal')->willReturn($principal);
-		$settings->method('getInterviewCalendarUri')->willReturn($calendarUri);
+		$calendars = new CalendarSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), ['interview_calendar_principal' => $principal, 'interview_calendar_uri' => $calendarUri]));
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new InterviewCalendarService($container, $settings, $logger), $fakeBackend, $fakeObjects];
+		return [new InterviewCalendarService($container, $calendars, new InterviewRepository($container, $settings, $logger), $logger), $fakeBackend, $fakeObjects];
 	}//end service()
 
 	/**
