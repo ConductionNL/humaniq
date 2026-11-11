@@ -57,6 +57,8 @@ use OCA\Humaniq\Listener\HandoffIntakeListener;
 use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
+use OCA\Humaniq\Listener\ManagerAccessOrgChangeListener;
+use OCA\Humaniq\Listener\ManagerAccessStampListener;
 use OCA\Humaniq\Listener\ManagerDeputyListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
@@ -506,6 +508,7 @@ class Application extends App implements IBootstrap {
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 		$this->registerApprovalsInboxListeners($dispatcher);
+		$this->registerManagerAccessListeners($dispatcher);
 		$this->registerOvertimeCreditListener($dispatcher);
 		$this->registerExpensePayrollListeners($dispatcher);
 		$this->registerHrLifecycleEventListener($dispatcher);
@@ -1007,6 +1010,40 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerApprovalsInboxListeners()
+
+	/**
+	 * mss-team-scope REQ-MSS-009: the records a manager reads are stamped
+	 * with the manager and deputies before they are saved, and an org or
+	 * deputy change queues a refresh of the stamps already stored.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
+	 */
+	private function registerManagerAccessListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: ManagerAccessStampListener::class,
+				registers: null,
+				schemas: array_keys(ManagerAccessStampListener::SLUGS)
+			);
+		}
+
+		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class, ObjectDeletedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: ManagerAccessOrgChangeListener::class,
+				registers: null,
+				schemas: ManagerAccessOrgChangeListener::SLUGS
+			);
+		}
+
+	}//end registerManagerAccessListeners()
 
 	/**
 	 * multi-administratie REQ-MULTI-003: an access row is written or removed

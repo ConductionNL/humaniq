@@ -109,7 +109,7 @@ class ManagerStampRepair {
 	 */
 	public function run(bool $dryRun): array {
 		$this->dryRun = $dryRun;
-		$this->lookups = $this->readLookups();
+		$this->lookups = $this->gateway->orgLookups();
 		$report = [];
 		foreach (array_keys(self::SCHEMAS) as $schema) {
 			$report[$schema] = $this->restampSchema(schema: $schema);
@@ -203,48 +203,6 @@ class ManagerStampRepair {
 			['schema' => $change['schema'], 'id' => $change['id'], 'old' => $change['old'], 'new' => $change['new'], 'dryRun' => $change['dryRun']]
 		);
 	}//end logChange()
-
-	/**
-	 * The org lookups the resolution needs, read once, and whether every
-	 * read reached the end.
-	 *
-	 * @return array{assignments: array<string, array<int, array<string, mixed>>>, units: array<string, array<string, mixed>>, employees: array<string, array<string, mixed>>, complete: bool}
-	 */
-	private function readLookups(): array {
-		$assignments = $this->gateway->loadAll('OrgAssignment');
-		$units = $this->gateway->loadAll('OrgUnit');
-		$employees = $this->gateway->loadAll('Employee');
-		$byEmployee = [];
-		foreach ($assignments as $assignment) {
-			$byEmployee[trim((string)($assignment['employeeId'] ?? ''))][] = $assignment;
-		}
-
-		return [
-			'assignments' => $byEmployee,
-			'units' => $this->indexById(rows: $units),
-			'employees' => $this->indexById(rows: $employees),
-			'complete' => (max(count($assignments), count($units), count($employees)) < HoursRegisterGateway::MAX_ROWS),
-		];
-	}//end readLookups()
-
-	/**
-	 * Key rows by their id.
-	 *
-	 * @param array<int, array<string, mixed>> $rows The rows.
-	 *
-	 * @return array<string, array<string, mixed>>
-	 */
-	private function indexById(array $rows): array {
-		$index = [];
-		foreach ($rows as $row) {
-			$id = trim((string)($row['id'] ?? ($row['@self']['id'] ?? '')));
-			if ($id !== '') {
-				$index[$id] = $row;
-			}
-		}
-
-		return $index;
-	}//end indexById()
 
 	/**
 	 * Whether a record is still open: awaiting a decision, or not closed.
