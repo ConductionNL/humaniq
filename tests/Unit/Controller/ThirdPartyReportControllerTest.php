@@ -30,6 +30,7 @@ use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\ThirdPartyReportService;
 use OCA\Humaniq\Service\ThirdPartyStatementService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\PayrollDeskAccess;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -139,11 +140,14 @@ class ThirdPartyReportControllerTest extends TestCase {
 		$roles->method('isHr')->willReturn($hrOnly);
 		$roles->method('isPayroll')->willReturn($hr && $hrOnly === false);
 
+		$caller = new CallerContext($session, $roles, $container, new NullLogger());
+
 		return new ThirdPartyReportController(
 			$this->createMock(IRequest::class),
 			$settings,
 			new ThirdPartyPaymentServices(($service ?? $this->createMock(ThirdPartyReportService::class)), ($statements ?? $this->createMock(ThirdPartyStatementService::class))),
-			new CallerContext($session, $roles, $container, new NullLogger())
+			$caller,
+			new PayrollDeskAccess($caller, $settings)
 		);
 	}//end controller()
 

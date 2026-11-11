@@ -39,6 +39,7 @@ use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\ThirdPartyPaymentServices;
 use OCA\Humaniq\Service\ThirdPartyReportService;
 use OCA\Humaniq\Service\ThirdPartyStatementService;
+use OCA\Humaniq\Service\PayrollDeskAccess;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -155,12 +156,12 @@ class PayrollDeskAccessGoldenTest extends TestCase {
 		if ($endpoint === 'PayrollHandoffController') {
 			$service = $this->createMock(SalaryBureauExchangeService::class);
 			$service->method('compile')->willReturnCallback(static fn (string $a, string $p, string $u): array => $record($a, $p, $u) + ['status' => 'compiled']);
-			$response = (new PayrollHandoffController($this->createMock(IRequest::class), $settings, $service, $caller))->compile('ADM-006', '2026-05');
+			$response = (new PayrollHandoffController($this->createMock(IRequest::class), $settings, $service, $caller, new PayrollDeskAccess($caller, $settings)))->compile('ADM-006', '2026-05');
 		} else {
 			$reports = $this->createMock(ThirdPartyReportService::class);
 			$reports->method('assemble')->willReturnCallback(static fn (string $a, int $y, string $u): array => ['status' => 'assembled'] + $record($a, $y, $u));
 			$payments = new ThirdPartyPaymentServices($reports, $this->createMock(ThirdPartyStatementService::class));
-			$response = (new ThirdPartyReportController($this->createMock(IRequest::class), $settings, $payments, $caller))->assemble('ADM-006', '2026');
+			$response = (new ThirdPartyReportController($this->createMock(IRequest::class), $settings, $payments, $caller, new PayrollDeskAccess($caller, $settings)))->assemble('ADM-006', '2026');
 		}
 
 		return [$response->getStatus(), isset($ran['uid']), ($ran['uid'] ?? null)];
