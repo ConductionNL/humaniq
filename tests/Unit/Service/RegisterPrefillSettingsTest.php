@@ -22,17 +22,16 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Humaniq\Service\SettingsService;
-use OCP\App\IAppManager;
-use OCP\IAppConfig;
+use OCA\Humaniq\Service\RegisterPrefillSettings;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * Which integriq source a base register is called through.
  *
- * @covers \OCA\Humaniq\Service\SettingsService
+ * @covers \OCA\Humaniq\Service\RegisterPrefillSettings
+ * @uses   \OCA\Humaniq\Tests\Unit\Support\AppConfigValues
  */
 class RegisterPrefillSettingsTest extends TestCase {
 
@@ -42,11 +41,7 @@ class RegisterPrefillSettingsTest extends TestCase {
 	 * @return void
 	 */
 	public function testEachRegisterReadsItsOwnSource(): void {
-		$config = $this->createMock(IAppConfig::class);
-		$config->method('getValueString')->willReturnCallback(
-			static fn (string $app, string $key, string $default): string => ($app === 'humaniq' ? (['prefill_rdw_source' => ' src-rdw '][$key] ?? $default) : $default)
-		);
-		$settings = $this->settings($config);
+		$settings = $this->settings(AppConfigValues::answer($this->createMock(IAppConfig::class), ['prefill_rdw_source' => ' src-rdw ']));
 
 		self::assertSame('src-rdw', $settings->getRegisterPrefillSource('rdw'));
 		self::assertSame('', $settings->getRegisterPrefillSource('brp'));
@@ -57,10 +52,10 @@ class RegisterPrefillSettingsTest extends TestCase {
 	 *
 	 * @param IAppConfig $config The app config.
 	 *
-	 * @return SettingsService
+	 * @return RegisterPrefillSettings
 	 */
-	private function settings(IAppConfig $config): SettingsService {
-		return new SettingsService($config, $this->createMock(IAppManager::class), $this->createMock(ContainerInterface::class), new NullLogger());
+	private function settings(IAppConfig $config): RegisterPrefillSettings {
+		return new RegisterPrefillSettings($config);
 	}//end settings()
 
 }//end class
