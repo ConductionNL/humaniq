@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\CostAllocationRun;
 use OCA\Humaniq\Service\CostAllocationService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\OrgResolutionService;
@@ -90,8 +91,8 @@ class CostAllocationServiceTest extends TestCase {
 		$this->store->seed('CostAllocation', 'ca-1', ['employeeId' => 'emp-devries', 'basis' => 'fixed', 'startDate' => '2026-01-01', 'endDate' => null, 'splits' => [['costCenter' => 'CC-100', 'projectId' => null, 'percentage' => 60], ['costCenter' => 'CC-200', 'projectId' => 'PRJ-7', 'percentage' => 40]]]);
 
 		$inputs = $this->service->inputs('2026-05');
-		$shares = $this->service->splitFor('emp-devries', '2026-05', $inputs);
-		$lines = $this->service->linesFor($shares, 291200, 50000);
+		$shares = $this->service->splitFor('emp-devries', $this->periodRun('2026-05', $inputs));
+		$lines = $this->service->linesFor($shares, ['grossCents' => 291200, 'chargesCents' => 50000]);
 
 		self::assertCount(2, $lines);
 		self::assertSame(['CC-100', null, 60.0, 1747.2, 300.0, 2047.2, 'fixed'], [$lines[0]['costCenter'], $lines[0]['projectId'], $lines[0]['percentage'], $lines[0]['gross'], $lines[0]['employerCharges'], $lines[0]['totalCost'], $lines[0]['allocationSource']]);
@@ -108,7 +109,7 @@ class CostAllocationServiceTest extends TestCase {
 		$this->store->seed('CostAllocation', 'ca-old', ['employeeId' => 'emp-jansen', 'basis' => 'fixed', 'startDate' => '2025-01-01', 'endDate' => '2026-03-31', 'splits' => [['costCenter' => 'CC-200', 'percentage' => 100]]]);
 		$this->store->seed('OrgAssignment', 'as-1', ['employeeId' => 'emp-jansen', 'orgUnitId' => 'unit-consultancy', 'startDate' => '2024-01-01', 'endDate' => null]);
 
-		$shares = $this->service->splitFor('emp-jansen', '2026-05', $this->service->inputs('2026-05'));
+		$shares = $this->service->splitFor('emp-jansen', $this->periodRun('2026-05', $this->service->inputs('2026-05')));
 
 		self::assertSame([['costCenter' => 'CC-100', 'projectId' => null, 'percentage' => 100.0, 'allocationSource' => 'placement']], $shares);
 	}//end testAnEndedAllocationFallsBackToThePlacement()
@@ -124,7 +125,7 @@ class CostAllocationServiceTest extends TestCase {
 		$this->store->seed('OrgAssignment', 'as-2', ['employeeId' => 'emp-jansen', 'orgUnitId' => 'unit-finance', 'startDate' => '2026-05-16', 'endDate' => null]);
 		$this->store->seed('OrgAssignment', 'as-3', ['employeeId' => 'emp-jansen', 'orgUnitId' => 'unit-finance', 'startDate' => '2023-01-01', 'endDate' => '2023-12-31']);
 
-		$shares = $this->service->splitFor('emp-jansen', '2026-05', $this->service->inputs('2026-05'));
+		$shares = $this->service->splitFor('emp-jansen', $this->periodRun('2026-05', $this->service->inputs('2026-05')));
 
 		self::assertSame(['CC-100', 'CC-200'], array_column($shares, 'costCenter'));
 		self::assertSame([50.0, 50.0], array_column($shares, 'percentage'));
@@ -137,7 +138,7 @@ class CostAllocationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testNothingResolvesIsUnallocated(): void {
-		$shares = $this->service->splitFor('emp-nobody', '2026-05', $this->service->inputs('2026-05'));
+		$shares = $this->service->splitFor('emp-nobody', $this->periodRun('2026-05', $this->service->inputs('2026-05')));
 
 		self::assertSame([['costCenter' => null, 'projectId' => null, 'percentage' => 100.0, 'allocationSource' => 'unallocated']], $shares);
 	}//end testNothingResolvesIsUnallocated()
@@ -158,7 +159,7 @@ class CostAllocationServiceTest extends TestCase {
 		$this->store->seed('TimeEntry', 'te-2', ['employeeId' => 'emp-jansen', 'timesheetId' => 'ts-may', 'date' => '2026-05-05', 'hours' => 10, 'costCenter' => null, 'projectId' => null]);
 		$this->store->seed('TimeEntry', 'te-3', ['employeeId' => 'emp-jansen', 'timesheetId' => 'ts-draft', 'date' => '2026-05-06', 'hours' => 40, 'costCenter' => 'CC-300', 'projectId' => null]);
 
-		$shares = $this->service->splitFor('emp-jansen', '2026-05', $this->service->inputs('2026-05'));
+		$shares = $this->service->splitFor('emp-jansen', $this->periodRun('2026-05', $this->service->inputs('2026-05')));
 
 		self::assertSame(
 			[
@@ -179,7 +180,7 @@ class CostAllocationServiceTest extends TestCase {
 		$this->store->seed('CostAllocation', 'ca-h', ['employeeId' => 'emp-jansen', 'basis' => 'hours', 'startDate' => '2026-01-01']);
 		$this->store->seed('OrgAssignment', 'as-1', ['employeeId' => 'emp-jansen', 'orgUnitId' => 'unit-consultancy', 'startDate' => '2024-01-01']);
 
-		$shares = $this->service->splitFor('emp-jansen', '2026-05', $this->service->inputs('2026-05'));
+		$shares = $this->service->splitFor('emp-jansen', $this->periodRun('2026-05', $this->service->inputs('2026-05')));
 
 		self::assertSame('placement', $shares[0]['allocationSource']);
 		self::assertSame('CC-100', $shares[0]['costCenter']);
@@ -196,7 +197,7 @@ class CostAllocationServiceTest extends TestCase {
 		$this->store->seed('CostAllocation', 'ca-other', ['employeeId' => 'emp-devries', 'basis' => 'fixed', 'startDate' => '2026-01-01', 'splits' => [['costCenter' => 'CC-200', 'percentage' => 100]]]);
 		$this->store->seed('OrgAssignment', 'as-1', ['employeeId' => 'emp-jansen', 'orgUnitId' => 'unit-consultancy', 'startDate' => '2024-01-01']);
 
-		$shares = $this->service->splitFor('emp-jansen', '2026-05', $this->service->inputs('2026-05'));
+		$shares = $this->service->splitFor('emp-jansen', $this->periodRun('2026-05', $this->service->inputs('2026-05')));
 
 		self::assertSame([['costCenter' => 'CC-100', 'projectId' => null, 'percentage' => 100.0, 'allocationSource' => 'placement']], $shares);
 	}//end testAFixedAllocationWithoutSplitsFallsBackToThePlacement()
@@ -214,7 +215,7 @@ class CostAllocationServiceTest extends TestCase {
 			['costCenter' => 'CC-3', 'projectId' => null, 'percentage' => 33.34, 'allocationSource' => 'fixed'],
 		];
 
-		$lines = $this->service->linesFor($shares, 100001, 17001);
+		$lines = $this->service->linesFor($shares, ['grossCents' => 100001, 'chargesCents' => 17001]);
 
 		self::assertSame(100001, (int)round(array_sum(array_column($lines, 'gross')) * 100));
 		self::assertSame(17001, (int)round(array_sum(array_column($lines, 'employerCharges')) * 100));
@@ -290,6 +291,22 @@ class CostAllocationServiceTest extends TestCase {
 	public function testAnEmptyRunWritesNothing(): void {
 		self::assertSame(0, $this->service->allocateRun(runId: '', period: '2026-05', administrationId: 'ADM-001', payslips: []));
 	}//end testAnEmptyRunWritesNothing()
+
+	/**
+	 * A run of a period over the given inputs.
+	 *
+	 * @param string               $period The wage period, YYYY-MM.
+	 * @param array<string, mixed> $inputs The inputs from inputs().
+	 *
+	 * @return CostAllocationRun
+	 */
+	private function periodRun(string $period, array $inputs): CostAllocationRun {
+		$run = new CostAllocationRun();
+		$run->period = $period;
+		$run->inputs = $inputs;
+
+		return $run;
+	}//end periodRun()
 
 	/**
 	 * Every row of a schema in the fake store.
