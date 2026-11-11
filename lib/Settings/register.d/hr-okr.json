@@ -4,6 +4,7 @@
         "schemas": {
             "Objective": {
                 "slug": "Objective",
+                "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "BullseyeArrow",
                 "version": "0.1.0",
                 "title": "Objective",
@@ -126,6 +127,7 @@
             },
             "KeyResult": {
                 "slug": "KeyResult",
+                "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "TargetVariant",
                 "version": "0.1.0",
                 "title": "Key Result",

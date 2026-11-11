@@ -4,6 +4,7 @@
         "schemas": {
             "Employee": {
                 "slug": "Employee",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr"]},
                 "icon": "AccountTieOutline",
                 "version": "0.14.0",
                 "title": "Employee",
@@ -69,6 +70,7 @@
             },
             "EmploymentContract": {
                 "slug": "EmploymentContract",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr"]},
                 "icon": "FileSign",
                 "version": "0.13.0",
                 "title": "Employment Contract",
@@ -117,6 +119,7 @@
             },
             "Payslip": {
                 "slug": "Payslip",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "ReceiptTextOutline",
                 "version": "0.18.0",
                 "configuration": {
@@ -259,6 +262,7 @@
             },
             "PayrollRun": {
                 "slug": "PayrollRun",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "CogPlayOutline",
                 "version": "0.5.0",
                 "configuration": {
@@ -345,6 +349,7 @@
             },
             "PayrollRunFinding": {
                 "slug": "PayrollRunFinding",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "AlertCircleOutline",
                 "version": "0.1.0",
                 "title": "Payroll run finding",
@@ -492,6 +497,7 @@
             },
             "PayrollMutationReport": {
                 "slug": "PayrollMutationReport",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "SwapHorizontal",
                 "version": "0.1.0",
                 "title": "Payroll Mutation Report",
@@ -552,6 +558,7 @@
             },
             "LoonaangifteFiling": {
                 "slug": "LoonaangifteFiling",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "FileSendOutline",
                 "version": "0.5.0",
                 "title": "Wage Tax Filing",
@@ -690,6 +697,7 @@
             },
             "WkrDeclaration": {
                 "slug": "WkrDeclaration",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "GiftOutline",
                 "version": "0.1.0",
                 "title": "WKR Declaration",
@@ -720,6 +728,7 @@
             },
             "WkrAssessment": {
                 "slug": "WkrAssessment",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "CalculatorVariantOutline",
                 "version": "0.1.0",
                 "title": "WKR Assessment",

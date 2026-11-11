@@ -4,6 +4,7 @@
         "schemas": {
             "SalaryBand": {
                 "slug": "SalaryBand",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "CurrencyEur",
                 "version": "0.2.0",
                 "title": "Salary band",
@@ -238,6 +239,7 @@
             },
             "CompAdjustment": {
                 "slug": "CompAdjustment",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"employeeUserId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "CashPlus",
                 "version": "0.2.1",
                 "title": "Compensation adjustment",

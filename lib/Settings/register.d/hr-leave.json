@@ -4,6 +4,7 @@
         "schemas": {
             "LeaveRequest": {
                 "slug": "LeaveRequest",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "CalendarClock",
                 "version": "0.6.0",
                 "title": "Leave request",
@@ -246,6 +247,7 @@
             },
             "LeaveBalance": {
                 "slug": "LeaveBalance",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "ScaleBalance",
                 "version": "0.5.0",
                 "title": "Leave balance",
@@ -446,6 +448,7 @@
             },
             "LeaveTransaction": {
                 "slug": "LeaveTransaction",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr"]},
                 "icon": "SwapHorizontal",
                 "version": "0.3.0",
                 "title": "Leave transaction",
