@@ -76,29 +76,63 @@ class RecurringAllowanceStampListener implements IEventListener {
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof ObjectCreatingEvent) {
-			$allowance = ($event->getObject()->getObject() ?? []);
-			$stamp = ['proposedBy' => (string)($this->userSession->getUser()?->getUID() ?? '')];
-			$event->setModifiedData(array_merge($stamp, $this->employeeStamp(allowance: $allowance)));
+			$this->stampNew($event);
 			return;
 		}
 
-		if (($event instanceof ObjectUpdatingEvent) === false) {
-			return;
+		if ($event instanceof ObjectUpdatingEvent) {
+			$this->stampChange($event);
 		}
+	}//end handle()
 
+	/**
+	 * A new allowance carries its drafter and its employee's account and
+	 * administration.
+	 *
+	 * @param ObjectCreatingEvent $event The pre-save event.
+	 *
+	 * @return void
+	 */
+	private function stampNew(ObjectCreatingEvent $event): void {
+		$allowance = ($event->getObject()->getObject() ?? []);
+		$stamp = ['proposedBy' => (string)($this->userSession->getUser()?->getUID() ?? '')];
+		$event->setModifiedData(array_merge($stamp, $this->employeeStamp(allowance: $allowance)));
+	}//end stampNew()
+
+	/**
+	 * A changed allowance keeps its drafter and is restamped from its
+	 * employee; only the fields that differ are written.
+	 *
+	 * @param ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return void
+	 */
+	private function stampChange(ObjectUpdatingEvent $event): void {
 		$allowance = ($event->getNewObject()->getObject() ?? []);
 		$old = ($event->getOldObject()?->getObject() ?? []);
-		$stamp = $this->employeeStamp(allowance: $allowance);
-		$drafter = (string)($old['proposedBy'] ?? '');
-		if ($drafter !== '' && $drafter !== (string)($allowance['proposedBy'] ?? '')) {
-			$stamp['proposedBy'] = $drafter;
-		}
-
+		$stamp = array_merge($this->employeeStamp(allowance: $allowance), $this->drafterStamp(allowance: $allowance, old: $old));
 		$changed = array_diff_assoc($stamp, array_intersect_key($allowance, $stamp));
 		if ($changed !== []) {
 			$event->setModifiedData($changed);
 		}
-	}//end handle()
+	}//end stampChange()
+
+	/**
+	 * The stored drafter, when the write would change it.
+	 *
+	 * @param array<string, mixed> $allowance The incoming allowance.
+	 * @param array<string, mixed> $old       The stored allowance.
+	 *
+	 * @return array<string, string>
+	 */
+	private function drafterStamp(array $allowance, array $old): array {
+		$drafter = (string)($old['proposedBy'] ?? '');
+		if ($drafter === '' || $drafter === (string)($allowance['proposedBy'] ?? '')) {
+			return [];
+		}
+
+		return ['proposedBy' => $drafter];
+	}//end drafterStamp()
 
 	/**
 	 * The employee's account and administration, or nothing when the
@@ -114,13 +148,7 @@ class RecurringAllowanceStampListener implements IEventListener {
 			return [];
 		}
 
-		try {
-			$employee = $this->gateway->findObjectData($employeeId, 'Employee');
-		} catch (\Throwable $e) {
-			$this->logger->warning('humaniq: the employee of a recurring allowance could not be read', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
+		$employee = $this->employee(employeeId: $employeeId);
 		$stamp = [];
 		foreach (['userId' => 'nextcloudUserId', 'administrationId' => 'administrationId'] as $field => $source) {
 			$value = (string)($employee[$source] ?? '');
@@ -131,5 +159,22 @@ class RecurringAllowanceStampListener implements IEventListener {
 
 		return $stamp;
 	}//end employeeStamp()
+
+	/**
+	 * The allowance's employee; empty when it cannot be read, which is
+	 * logged.
+	 *
+	 * @param string $employeeId The employee.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function employee(string $employeeId): array {
+		try {
+			return ($this->gateway->findObjectData($employeeId, 'Employee') ?? []);
+		} catch (\Throwable $e) {
+			$this->logger->warning('humaniq: the employee of a recurring allowance could not be read', ['exception' => $e->getMessage()]);
+			return [];
+		}
+	}//end employee()
 
 }//end class
