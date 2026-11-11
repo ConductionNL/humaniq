@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\DocudeskTemplates;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\SettingsService;
@@ -410,7 +411,7 @@ class HrDocumentServiceTest extends TestCase {
 			$retentionGuard->method('isUnderActiveRetention')->willReturn(false);
 		}
 
-		return [new HrDocumentService($container, $appManager, $settings, $retentionGuard, $logger), $fakeObjects, $fileSvc];
+		return [new HrDocumentService($container, $appManager, $settings, $retentionGuard, $logger, new DocudeskTemplates($container, $settings)), $fakeObjects, $fileSvc];
 	}//end service()
 
 	/**

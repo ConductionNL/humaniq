@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\DocudeskTemplates;
 use OCA\Humaniq\Service\OfferLetterService;
 use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
@@ -211,7 +212,7 @@ class OfferLetterServiceTest extends TestCase {
 		);
 		$settings->method('getDocumentsEmployerBlock')->willReturn(['name' => 'Werkgever B.V.']);
 
-		return new OfferLetterService($container, $settings);
+		return new OfferLetterService($container, $settings, new DocudeskTemplates($container, $settings));
 
 	}//end service()
 
