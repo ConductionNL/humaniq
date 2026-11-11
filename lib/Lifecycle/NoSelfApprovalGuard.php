@@ -88,48 +88,69 @@ class NoSelfApprovalGuard implements LifecycleGuardInterface {
 	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-002
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
-		if ($userId === '') {
-			return GuardResult::deny('U moet ingelogd zijn om goed te keuren of af te keuren.');
-		}
-
-		$employeeId = (string)($object['employeeId'] ?? '');
-		if ($employeeId === '') {
-			return GuardResult::deny('De indiener van deze declaratie/urenstaat is onbekend; goedkeuring is geweigerd.');
-		}
-
-		// Compare ACCOUNT to ACCOUNT. `userId` is the denormalized Nextcloud
-		// uid of the claiming employee (REQ-MHS-002), stamped server-side and
-		// re-derived from employeeId on every write, so it cannot drift.
-		$claimantUserId = trim((string)($object['userId'] ?? ''));
-		if ($claimantUserId !== '' && $claimantUserId === $userId) {
-			return GuardResult::deny(
-				'U mag uw eigen urenstaat of declaratie niet goedkeuren of afkeuren. '
-				. 'Een andere medewerker (manager) moet dit doen.'
-			);
-		}
-
-		// A pay change (CompAdjustment) carries no `userId`: its subject's
-		// account is `employeeUserId` and its author is `proposedBy`, both
-		// Nextcloud uids. Neither may decide on it. Without these two checks
-		// the rule the CompAdjustment schema promised ("the approver may not
-		// be the proposer") never fired, because `userId` is always empty there.
-		$subjectUserId = trim((string)($object['employeeUserId'] ?? ''));
-		if ($subjectUserId !== '' && $subjectUserId === $userId) {
-			return GuardResult::deny('U mag geen besluit nemen over uw eigen salarisaanpassing.');
-		}
-
-		$proposedBy = trim((string)($object['proposedBy'] ?? ''));
-		if ($proposedBy !== '' && $proposedBy === $userId) {
-			return GuardResult::deny(
-				'U heeft dit voorstel zelf gedaan en mag het niet goedkeuren of afwijzen. Een tweede persoon moet dit doen.'
-			);
+		$refusal = $this->refusal(object: $object, userId: $userId);
+		if ($refusal !== null) {
+			return GuardResult::deny($refusal);
 		}
 
 		// An empty `userId` on an identified claimant means that employee has
 		// no Nextcloud account at all (humaniq seeds several), so the acting user
 		// provably is not them — allow. This is NOT the unknown-claimant case,
-		// which is denied above on the missing employeeId.
+		// which is denied on the missing employeeId.
 		return GuardResult::allow();
 	}//end check()
+
+	/**
+	 * Why the caller may not decide: no session, an unknown claimant, or the caller's own record or proposal; null when they may.
+	 *
+	 * @param array<string, mixed> $object The payload at its current state.
+	 * @param string $userId The acting user's uid, '' without a session.
+	 *
+	 * @return string|null
+	 */
+	private function refusal(array $object, string $userId): string|null {
+		if ($userId === '') {
+			return 'U moet ingelogd zijn om goed te keuren of af te keuren.';
+		}
+
+		if ((string)($object['employeeId'] ?? '') === '') {
+			return 'De indiener van deze declaratie/urenstaat is onbekend; goedkeuring is geweigerd.';
+		}
+
+		return $this->selfRefusal(object: $object, userId: $userId);
+	}//end refusal()
+
+	/**
+	 * Why the acting user may not decide on their own record or proposal, or null.
+	 *
+	 * Compare ACCOUNT to ACCOUNT, in this order. `userId` is the denormalized
+	 * Nextcloud uid of the claiming employee (REQ-MHS-002), stamped
+	 * server-side and re-derived from employeeId on every write, so it cannot
+	 * drift. A pay change (CompAdjustment) carries no `userId`: its subject's
+	 * account is `employeeUserId` and its author is `proposedBy`, both
+	 * Nextcloud uids, and neither may decide on it. Without those two checks
+	 * the rule the CompAdjustment schema promised ("the approver may not be
+	 * the proposer") never fired, because `userId` is always empty there.
+	 *
+	 * @param array<string, mixed> $object The payload at its current state.
+	 * @param string $userId The acting user's uid.
+	 *
+	 * @return string|null
+	 */
+	private function selfRefusal(array $object, string $userId): string|null {
+		$refusals = [
+			'userId' => 'U mag uw eigen urenstaat of declaratie niet goedkeuren of afkeuren. Een andere medewerker (manager) moet dit doen.',
+			'employeeUserId' => 'U mag geen besluit nemen over uw eigen salarisaanpassing.',
+			'proposedBy' => 'U heeft dit voorstel zelf gedaan en mag het niet goedkeuren of afwijzen. Een tweede persoon moet dit doen.',
+		];
+		foreach ($refusals as $field => $message) {
+			$account = trim((string)($object[$field] ?? ''));
+			if ($account !== '' && $account === $userId) {
+				return $message;
+			}
+		}
+
+		return null;
+	}//end selfRefusal()
 
 }//end class
