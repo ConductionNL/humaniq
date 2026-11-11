@@ -30,6 +30,7 @@ namespace OCA\Humaniq\Flow;
 
 use InvalidArgumentException;
 use OCA\Humaniq\Service\TeamDigestComposer;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -140,16 +141,15 @@ class TeamDigestNode implements IFlowNode {
 	/**
 	 * Compose the message and put it on each item.
 	 *
-	 * @param array<int, mixed>    $items   The incoming items; none on a scheduled start.
-	 * @param array<string, mixed> $config  orgUnitId, includeChildren (default true).
-	 * @param array<string, mixed> $context The run context.
+	 * @param FlowNodeCall $call The input items, the step configuration and the run-level metadata.
 	 *
 	 * @return array<int, array<string, mixed>> The items with `digest`, or none on a quiet day.
 	 *
 	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
 	 */
-	public function execute(array $items, array $config, array $context): array {
-		unset($context);
+	public function execute(FlowNodeCall $call): array {
+		$items = $call->items;
+		$config = $call->config;
 		$this->validateConfig($config);
 		$digest = $this->composer->compose(
 			orgUnitId: trim((string)$config['orgUnitId']),
