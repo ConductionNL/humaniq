@@ -1,0 +1,133 @@
+{
+    "nothing": {
+        "active": false,
+        "sync": {
+            "held": false,
+            "ceiling": null,
+            "source": null
+        },
+        "holds": []
+    },
+    "retained-future": {
+        "active": true,
+        "sync": {
+            "held": true,
+            "ceiling": "2099-01-31",
+            "source": "retainedUntil"
+        },
+        "holds": [
+            {
+                "reason": "Statutaire bewaarplicht (hrmq#99) tot 2099-01-31 (retainedUntil)"
+            }
+        ]
+    },
+    "retained-past": {
+        "active": false,
+        "sync": {
+            "held": false,
+            "ceiling": "2001-01-31",
+            "source": "retainedUntil"
+        },
+        "holds": []
+    },
+    "retained-blank": {
+        "active": true,
+        "sync": {
+            "held": true,
+            "ceiling": "2098-06-30",
+            "source": "retention.archiefactiedatum"
+        },
+        "holds": [
+            {
+                "reason": "Statutaire bewaarplicht (hrmq#99) tot 2098-06-30 (retention.archiefactiedatum)"
+            }
+        ]
+    },
+    "retained-junk": {
+        "active": true,
+        "sync": {
+            "held": true,
+            "ceiling": "2098-06-30",
+            "source": "retention.archiefactiedatum"
+        },
+        "holds": [
+            {
+                "reason": "Statutaire bewaarplicht (hrmq#99) tot 2098-06-30 (retention.archiefactiedatum)"
+            }
+        ]
+    },
+    "retained-wins": {
+        "active": true,
+        "sync": {
+            "held": true,
+            "ceiling": "2099-01-31",
+            "source": "retainedUntil"
+        },
+        "holds": [
+            {
+                "reason": "Statutaire bewaarplicht (hrmq#99) tot 2099-01-31 (retainedUntil)"
+            }
+        ]
+    },
+    "archief-future": {
+        "active": true,
+        "sync": {
+            "held": true,
+            "ceiling": "2098-06-30",
+            "source": "retention.archiefactiedatum"
+        },
+        "holds": [
+            {
+                "reason": "Statutaire bewaarplicht (hrmq#99) tot 2098-06-30 (retention.archiefactiedatum)"
+            }
+        ]
+    },
+    "archief-past": {
+        "active": false,
+        "sync": {
+            "held": false,
+            "ceiling": "2001-06-30",
+            "source": "retention.archiefactiedatum"
+        },
+        "holds": []
+    },
+    "archief-junk": {
+        "active": false,
+        "sync": {
+            "held": false,
+            "ceiling": null,
+            "source": null
+        },
+        "holds": []
+    },
+    "unreadable": {
+        "active": false,
+        "sync": {
+            "held": false,
+            "ceiling": null,
+            "source": null
+        },
+        "holds": []
+    },
+    "unreadable-payload": {
+        "active": true,
+        "sync": {
+            "held": true,
+            "ceiling": "2098-06-30",
+            "source": "retention.archiefactiedatum"
+        },
+        "holds": [
+            {
+                "reason": "Statutaire bewaarplicht (hrmq#99) tot 2098-06-30 (retention.archiefactiedatum)"
+            }
+        ]
+    },
+    "not-an-object": {
+        "active": false,
+        "sync": {
+            "held": false,
+            "ceiling": null,
+            "source": null
+        }
+    }
+}

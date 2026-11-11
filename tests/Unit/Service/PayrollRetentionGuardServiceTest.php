@@ -489,4 +489,87 @@ class PayrollRetentionGuardServiceTest extends TestCase {
 
 	}//end fakeObjectMapper()
 
+	/**
+	 * The whole retention ceiling outcome, held and not held: which date
+	 * and source a hold is placed from, and whether an object counts as
+	 * under active retention.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeRetentionCeilingOutcome(): void {
+		$cases = [
+			'nothing'              => fn (): object => $this->fakeEntity([], []),
+			'retained-future'      => fn (): object => $this->fakeEntity(['retainedUntil' => '2099-01-31'], []),
+			'retained-past'        => fn (): object => $this->fakeEntity(['retainedUntil' => '2001-01-31'], []),
+			'retained-blank'       => fn (): object => $this->fakeEntity(['retainedUntil' => '  '], ['archiefactiedatum' => '2098-06-30']),
+			'retained-junk'        => fn (): object => $this->fakeEntity(['retainedUntil' => 'someday'], ['archiefactiedatum' => '2098-06-30']),
+			'retained-wins'        => fn (): object => $this->fakeEntity(['retainedUntil' => '2099-01-31'], ['archiefactiedatum' => '2001-06-30']),
+			'archief-future'       => fn (): object => $this->fakeEntity([], ['archiefactiedatum' => '2098-06-30']),
+			'archief-past'         => fn (): object => $this->fakeEntity([], ['archiefactiedatum' => '2001-06-30']),
+			'archief-junk'         => fn (): object => $this->fakeEntity([], ['archiefactiedatum' => 'never']),
+			'unreadable'           => fn (): object => $this->unreadableEntity(),
+			'unreadable-payload'   => fn (): object => $this->unreadableEntity(['archiefactiedatum' => '2098-06-30']),
+		];
+		$got = [];
+		foreach ($cases as $name => $make) {
+			$retentionService = $this->fakeRetentionService(hasActiveLegalHold: false);
+			$service = $this->buildService($retentionService, $this->fakeObjectMapper());
+			$active = $service->isUnderActiveRetention($make());
+			$synced = $service->syncLegalHold($make(), 'Payslip');
+			$got[$name] = ['active' => $active, 'sync' => $synced, 'holds' => $retentionService->placeLegalHoldCalls];
+		}
+
+		$service = $this->buildService($this->fakeRetentionService(hasActiveLegalHold: false), $this->fakeObjectMapper());
+		$got['not-an-object'] = ['active' => $service->isUnderActiveRetention('payslip-1'), 'sync' => $service->syncLegalHold('payslip-1', 'Payslip')];
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/retention-ceiling.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeRetentionCeilingOutcome()
+
+	/**
+	 * An entity whose payload cannot be read; its retention block can be,
+	 * when given.
+	 *
+	 * @param array<string, mixed>|null $retention The retention block, or none to make it unreadable too.
+	 *
+	 * @return object
+	 */
+	private function unreadableEntity(?array $retention = null): object {
+		return new class($retention) {
+			/**
+			 * @param array<string, mixed>|null $retention Retention block.
+			 */
+			public function __construct(
+				private ?array $retention,
+			) {
+			}//end __construct()
+
+			/**
+			 * @return array<string, mixed>
+			 */
+			public function getObject(): array {
+				throw new \RuntimeException('payload unreadable');
+			}//end getObject()
+
+			/**
+			 * @return array<string, mixed>
+			 */
+			public function getRetention(): array {
+				if ($this->retention === null) {
+					throw new \RuntimeException('retention unreadable');
+				}
+
+				return $this->retention;
+			}//end getRetention()
+
+			/**
+			 * @param array<string, mixed> $retention Retention block.
+			 *
+			 * @return void
+			 */
+			public function setRetention(array $retention): void {
+				$this->retention = $retention;
+			}//end setRetention()
+		};
+	}//end unreadableEntity()
+
 }//end class
