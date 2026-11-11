@@ -32,6 +32,7 @@
     "OCA\\Humaniq\\Listener\\RelationsCaseListener::$gateway",
     "OCA\\Humaniq\\Listener\\ResourceBookingOverlapListener::$gateway",
     "OCA\\Humaniq\\Listener\\ScenarioMutationListener::$gateway",
+    "OCA\\Humaniq\\Listener\\SchemaWriteFilter::$gateway",
     "OCA\\Humaniq\\Listener\\TimeEntryStampListener::$gateway",
     "OCA\\Humaniq\\Listener\\TimeEstimateListener::$gateway",
     "OCA\\Humaniq\\Listener\\TimesheetAggregateListener::$gateway",
