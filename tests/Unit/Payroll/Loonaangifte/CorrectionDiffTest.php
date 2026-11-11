@@ -149,4 +149,24 @@ class CorrectionDiffTest extends TestCase {
 		self::assertSame(['lines' => [], 'initial' => [], 'withdrawn' => []], CorrectionDiff::compare($received, [['employeeId' => 'emp-1', 'tree' => $tree]]));
 	}//end testNoDifferenceIsEmpty()
 
+	/**
+	 * The whole comparison: added, changed, unchanged, withdrawn by BSN and
+	 * by personnel number, a line without a tree, and nothing current.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeComparison(): void {
+		$received = CorrectionDiff::apply([], ['InkomstenverhoudingInitieel' => [$this->tree('1', '123456782', 'P1', '3800'), $this->tree('1', '111222333', 'P2', '2400'), $this->tree('1', '', 'P9', '10'), $this->tree('2', '999999990', 'P8', '20')]]);
+		$current = [
+			['employeeId' => 'emp-1', 'tree' => $this->tree('1', '123456782', 'P1', '3800')],
+			['employeeId' => 'emp-2', 'tree' => $this->tree('1', '111222333', 'P2', '2500')],
+			['employeeId' => 'emp-3', 'tree' => $this->tree('1', '', 'P3', '700')],
+			['tree' => $this->tree('1', '', 'P9', '11')],
+			['employeeId' => 'emp-4'],
+		];
+		$got = ['diff' => CorrectionDiff::compare($received, $current), 'nothing-current' => CorrectionDiff::compare($received, []), 'nothing-received' => CorrectionDiff::compare([], array_slice($current, 0, 1))];
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 3) . '/fixtures/golden/loonaangifte-correction-diff.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeComparison()
+
 }//end class
