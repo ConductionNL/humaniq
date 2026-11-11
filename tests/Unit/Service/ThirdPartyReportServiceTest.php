@@ -156,6 +156,30 @@ class ThirdPartyReportServiceTest extends TestCase {
 	}//end testAPayeeWithoutABsnIsABlockingFinding()
 
 	/**
+	 * The stored report keeps its fields in order, the outcome its counts,
+	 * and a payee finding its message.
+	 *
+	 * @return void
+	 */
+	public function testTheStoredReportAndTheOutcomeKeepTheirShape(): void {
+		$outcome = $this->service->assemble(administrationId: 'ADM-001', year: 2026, userId: 'payroll-1');
+		self::assertSame(['status', 'reportId', 'lineCount', 'totalAmount', 'blockingFindings', 'warningFindings'], array_keys($outcome));
+		$report = $this->rowsOf('ThirdPartyReport')[0];
+		self::assertSame(['administrationId', 'year', 'status', 'deadline', 'lineCount', 'totalAmount', 'assembledAt', 'assembledBy', 'messageXml', 'messageFileName', 'leveringsId', 'findings', 'blockingFindings', 'warningFindings'], array_values(array_diff(array_keys($report), ['id', '@self'])));
+
+		$payee = $this->store->find('payee-member', schema: 'ThirdPartyPayee')->getObject();
+		unset($payee['bsn'], $payee['dateOfBirth']);
+		$this->store->seed('ThirdPartyPayee', 'payee-member', $payee);
+		$again = $this->service->assemble(administrationId: 'ADM-001', year: 2026, userId: 'payroll-2');
+		self::assertSame([$outcome['reportId'], 1, 2], [$again['reportId'], $again['lineCount'], $again['blockingFindings']]);
+		$report = $this->rowsOf('ThirdPartyReport')[0];
+		self::assertSame('payroll-2', $report['assembledBy']);
+		self::assertSame(['payee-without-bsn', 'payee-without-date-of-birth'], array_column($report['findings'], 'kind'));
+		self::assertStringEndsWith(' heeft geen BSN.', $report['findings'][0]['message']);
+		self::assertSame(['kind', 'severity', 'payeeId', 'message'], array_keys($report['findings'][0]));
+	}//end testTheStoredReportAndTheOutcomeKeepTheirShape()
+
+	/**
 	 * The administration's own identification blocks the report: no
 	 * payroll tax number in the format, no postal address.
 	 *
