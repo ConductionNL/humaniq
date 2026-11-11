@@ -131,12 +131,29 @@ class AgendaReadAccess {
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-008
 	 */
 	public function employeeScope(string $orgUnitId, DateTimeImmutable $onDate): ?array {
-		if ($orgUnitId !== '') {
-			$grant = $this->grant(subjectType: 'orgUnit', subjectId: $orgUnitId);
+		return ($orgUnitId !== '') ? $this->unitScope(orgUnitId: $orgUnitId, onDate: $onDate) : $this->viewerScope();
+	}//end employeeScope()
 
-			return $grant === null ? null : (['ids' => $this->members(orgUnitId: $orgUnitId, onDate: $onDate)] + $grant);
-		}
+	/**
+	 * The members of a unit the viewer may read on the day, with the viewer's grant; null when they may not.
+	 *
+	 * @param string $orgUnitId The unit.
+	 * @param DateTimeImmutable $onDate The day.
+	 *
+	 * @return array{ids: array<int, string>, all: bool, full: array<int, string>}|null
+	 */
+	private function unitScope(string $orgUnitId, DateTimeImmutable $onDate): array|null {
+		$grant = $this->grant(subjectType: 'orgUnit', subjectId: $orgUnitId);
 
+		return $grant === null ? null : (['ids' => $this->members(orgUnitId: $orgUnitId, onDate: $onDate)] + $grant);
+	}//end unitScope()
+
+	/**
+	 * Every employee for HR, else the employees the viewer may read; null without a viewer or when they may read nobody.
+	 *
+	 * @return array{ids: array<int, string>, all: bool, full: array<int, string>}|null
+	 */
+	private function viewerScope(): array|null {
 		$viewer = $this->viewer();
 		if ($viewer === '') {
 			return null;
@@ -147,6 +164,17 @@ class AgendaReadAccess {
 			return ['ids' => $org->employeeIds(), 'all' => true, 'full' => []];
 		}
 
+		return $this->grantedScope(org: $org);
+	}//end viewerScope()
+
+	/**
+	 * The employees the viewer holds a grant on, and those whose agenda they may read in full; null when there are none.
+	 *
+	 * @param AgendaOrgView $org The viewer's view of the organisation.
+	 *
+	 * @return array{ids: array<int, string>, all: bool, full: array<int, string>}|null
+	 */
+	private function grantedScope(AgendaOrgView $org): array|null {
 		$scope = ['ids' => [], 'all' => false, 'full' => []];
 		foreach ($org->employeeIds() as $employeeId) {
 			$grant = $this->employeeGrant(employeeId: $employeeId, org: $org);
@@ -157,7 +185,7 @@ class AgendaReadAccess {
 		}
 
 		return $scope['ids'] === [] ? null : $scope;
-	}//end employeeScope()
+	}//end grantedScope()
 
 	/**
 	 * The entries a grant lets the viewer see: a colleague's interviews and
