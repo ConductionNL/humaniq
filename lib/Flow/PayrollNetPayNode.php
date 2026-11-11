@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -106,21 +107,17 @@ class PayrollNetPayNode extends PayrollFlowNodeBase {
 	/**
 	 * Prepare the batch for the run each item names.
 	 *
-	 * @param array $items The input items.
-	 * @param array $config The step configuration (`runId`, default `{{ payroll.runId }}`).
-	 * @param array $context Run-level metadata.
+	 * @param FlowNodeCall $call The input items, the step configuration and the run-level metadata.
 	 *
 	 * @return array The items, each carrying the outcome under `netpay`.
 	 *
 	 * @throws RuntimeException When the service reports `failed`.
 	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $context is part of the
-	 *     IFlowNode::execute() contract; this adapter reads no run-level
-	 *     metadata (the acting identity is applied by the dispatcher).
-	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
-	public function execute(array $items, array $config, array $context): array {
+	public function execute(FlowNodeCall $call): array {
+		$items = $call->items;
+		$config = $call->config;
 		if ($items === []) {
 			return [];
 		}
