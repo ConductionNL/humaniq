@@ -178,6 +178,46 @@ class AvgDsrEraseCommandTest extends TestCase {
 	}//end testRuntimeExceptionFromServiceIsCaughtNotUncaught()
 
 	/**
+	 * The exit code and every line written, for each refusal, a preview and
+	 * an erase.
+	 *
+	 * @return void
+	 */
+	public function testTheWrittenLinesAndExitCodes(): void {
+		$service = $this->createMock(AvgDsrService::class);
+		$service->method('previewErasure')->willReturnCallback(static fn (string $employeeId, ?string $dsrRequestId): array => ['wouldErase' => [1, 2, 3], 'retained' => [['uuid' => 'r-1', 'reason' => 'legal-hold:' . (string)$dsrRequestId], []]]);
+		$service->method('eraseSubject')->willReturnCallback(static fn (string $employeeId, string $dsrRequestId): array => ['status' => ($dsrRequestId === 'dsr-no' ? 'afgewezen' : 'uitgevoerd'), 'erased' => [1], 'retained' => [], 'failed' => [1, 2]]);
+		$ok = new AvgDsrEraseCommand($service, $this->succeedingSessionResolver());
+
+		self::assertSame([1, "--employee is verplicht.\n"], $this->linesOf($ok, ['--as-user' => 'admin']));
+		self::assertSame([1, "--confirm vereist --dsr-request-id.\n"], $this->linesOf($ok, ['--employee' => 'emp-1', '--confirm' => true, '--dsr-request-id' => ' ']));
+		self::assertSame([1, "--as-user is verplicht.\n"], $this->linesOf($ok, ['--employee' => 'emp-1']));
+		self::assertSame(
+			[0, "Humaniq AVG-verwijdering — voorbeeld (geen schrijfacties)\n  zou verwijderd worden: 3\n  - r-1: legal-hold:dsr-1\n  - : \n  retained (OpenRegister legal-hold / immutable archival status): 2\n"],
+			$this->linesOf($ok, ['--employee' => 'emp-1', '--as-user' => 'admin', '--dsr-request-id' => ' dsr-1 '])
+		);
+		self::assertSame(
+			[1, "Humaniq AVG-verwijdering — uitgevoerd\n  verwijderd: 1\n  retained (OpenRegister legal-hold / immutable archival status): 0\n  mislukt: 2\n"],
+			$this->linesOf($ok, ['--employee' => 'emp-1', '--as-user' => 'admin', '--dsr-request-id' => 'dsr-no', '--confirm' => true])
+		);
+	}//end testTheWrittenLinesAndExitCodes()
+
+	/**
+	 * Run a command and keep what it wrote, undecorated.
+	 *
+	 * @param AvgDsrEraseCommand   $command The command under test.
+	 * @param array<string, mixed> $options The `--option` => value map.
+	 *
+	 * @return array{0: int, 1: string}
+	 */
+	private function linesOf(AvgDsrEraseCommand $command, array $options): array {
+		$output = new BufferedOutput();
+		$exit = $command->run(new ArrayInput($options, $command->getDefinition()), $output);
+
+		return [$exit, $output->fetch()];
+	}//end linesOf()
+
+	/**
 	 * A REAL PrivilegedSessionResolver whose establish() always fails
 	 * (unknown uid) -- `IUserManager::get()` returns null.
 	 *
