@@ -100,13 +100,15 @@ class PayrollGLPostService {
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppManager $appManager To duck-type-probe shillinq's presence.
-	 * @param SettingsService $settingsService Register slug + configurable RGS account numbers.
+	 * @param SettingsService $settingsService Register slug.
+	 * @param PayrollBookkeepingSettings $bookkeeping The configurable RGS account numbers.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly SettingsService $settingsService,
+		private readonly PayrollBookkeepingSettings $bookkeeping,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -364,15 +366,15 @@ class PayrollGLPostService {
 
 		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
 		$candidates = array_merge(
-			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'gross', 'totalCents' => $grossCents, 'account' => $this->settingsService->getGlPostAccountGross(), 'description' => 'Loonkosten bruto']),
-			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'employerCharges', 'totalCents' => $chargesCents, 'account' => $this->settingsService->getGlPostAccountEmployerCharges(), 'description' => 'Werkgeverslasten sociale premies'])
+			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'gross', 'totalCents' => $grossCents, 'account' => $this->bookkeeping->getGlPostAccountGross(), 'description' => 'Loonkosten bruto']),
+			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'employerCharges', 'totalCents' => $chargesCents, 'account' => $this->bookkeeping->getGlPostAccountEmployerCharges(), 'description' => 'Werkgeverslasten sociale premies'])
 		);
 		$liabilities = [
-			['side' => 'credit', 'accountNumber' => $this->settingsService->getGlPostAccountWageTaxLiability(), 'amount' => $loonheffingCents, 'description' => 'Loonheffing-schuld'],
-			['side' => 'credit', 'accountNumber' => $this->settingsService->getGlPostAccountNetWagesLiability(), 'amount' => $netLiabilityCents, 'description' => 'Netto-loonschuld'],
+			['side' => 'credit', 'accountNumber' => $this->bookkeeping->getGlPostAccountWageTaxLiability(), 'amount' => $loonheffingCents, 'description' => 'Loonheffing-schuld'],
+			['side' => 'credit', 'accountNumber' => $this->bookkeeping->getGlPostAccountNetWagesLiability(), 'amount' => $netLiabilityCents, 'description' => 'Netto-loonschuld'],
 		];
 		if ($reimbursementCents > 0) {
-			$candidates[] = ['side' => 'debit', 'accountNumber' => $this->settingsService->getGlPostAccountReimbursements(), 'amount' => $reimbursementCents, 'description' => 'Declaraties en onbelaste vergoedingen'];
+			$candidates[] = ['side' => 'debit', 'accountNumber' => $this->bookkeeping->getGlPostAccountReimbursements(), 'amount' => $reimbursementCents, 'description' => 'Declaraties en onbelaste vergoedingen'];
 		}
 
 		$candidates = array_merge($candidates, $liabilities);

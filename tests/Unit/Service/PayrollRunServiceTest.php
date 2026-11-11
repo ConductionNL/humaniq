@@ -52,12 +52,14 @@ use OCA\Humaniq\Service\EmploymentTermsResolver;
 use OCA\Humaniq\Service\HoursPayService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\PayrollBookkeepingSettings;
 use OCA\Humaniq\Service\PayrollExpenseFoldService;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -1051,16 +1053,12 @@ class PayrollRunServiceTest extends TestCase {
 		$run = $fake->rowsBySchema['PayrollRun'][0];
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getGlPostAccountGross')->willReturn('4001');
-		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
-		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
-		$settings->method('getGlPostAccountReimbursements')->willReturn('4010');
 
 		$glPost = new PayrollGLPostService(
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
 			$settings,
+			new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)),
 			$this->createMock(LoggerInterface::class)
 		);
 		$built = $glPost->buildLines($run);
@@ -1986,12 +1984,7 @@ class PayrollRunServiceTest extends TestCase {
 		$run['totalReimbursements'] = 27.40;
 		$run['totalNet'] = ($run['totalNet'] + 27.40);
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getGlPostAccountGross')->willReturn('4001');
-		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
-		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
-		$settings->method('getGlPostAccountReimbursements')->willReturn('4010');
-		$built = (new PayrollGLPostService($this->createMock(ContainerInterface::class), $this->createMock(IAppManager::class), $settings, $this->createMock(LoggerInterface::class)))->buildLines($run);
+		$built = (new PayrollGLPostService($this->createMock(ContainerInterface::class), $this->createMock(IAppManager::class), $settings, new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)), $this->createMock(LoggerInterface::class)))->buildLines($run);
 
 		$this->assertNull($built['error']);
 		$byAccount = array_column($built['lines'], 'amount', 'accountNumber');

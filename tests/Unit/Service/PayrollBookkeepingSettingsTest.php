@@ -22,18 +22,15 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\PayrollBookkeepingSettings;
 use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
-use OCP\App\IAppManager;
-use OCP\IAppConfig;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * The GL accounts the payroll journal posts to and the wage tax payee.
  *
- * @covers \OCA\Humaniq\Service\SettingsService
+ * @covers \OCA\Humaniq\Service\PayrollBookkeepingSettings
  * @uses   \OCA\Humaniq\Tests\Unit\Support\AppConfigValues
  */
 class PayrollBookkeepingSettingsTest extends TestCase {
@@ -81,11 +78,11 @@ class PayrollBookkeepingSettingsTest extends TestCase {
 	/**
 	 * The five GL accounts in journal order.
 	 *
-	 * @param SettingsService $settings The settings.
+	 * @param PayrollBookkeepingSettings $settings The settings.
 	 *
 	 * @return list<string>
 	 */
-	private function accounts(SettingsService $settings): array {
+	private function accounts(PayrollBookkeepingSettings $settings): array {
 		return [
 			$settings->getGlPostAccountGross(),
 			$settings->getGlPostAccountEmployerCharges(),
@@ -100,12 +97,12 @@ class PayrollBookkeepingSettingsTest extends TestCase {
 	 *
 	 * @param array<string, string> $values The stored app config values by key.
 	 *
-	 * @return SettingsService
+	 * @return PayrollBookkeepingSettings
 	 */
-	private function settings(array $values): SettingsService {
+	private function settings(array $values): PayrollBookkeepingSettings {
 		$config = AppConfigValues::answer($this->createMock(IAppConfig::class), $values);
 
-		return new SettingsService($config, $this->createMock(IAppManager::class), $this->createMock(ContainerInterface::class), new NullLogger());
+		return new PayrollBookkeepingSettings($config);
 	}//end settings()
 
 }//end class

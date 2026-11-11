@@ -107,63 +107,6 @@ class SettingsService {
 	}//end getRegisterSlug()
 
 	/**
-	 * The RGS-coded GL account for gross wages (payroll-glpost-shillinq D2 line 1:
-	 * debit loonkosten bruto), configurable via app config key
-	 * `glpost_account_gross`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountGross(): string {
-		return $this->glPostAccount('glpost_account_gross', '4001');
-	}//end getGlPostAccountGross()
-
-	/**
-	 * The RGS-coded GL account for employer social charges (payroll-glpost-shillinq
-	 * D2 line 2: debit werkgeverslasten sociale premies), configurable via app
-	 * config key `glpost_account_employer_charges`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountEmployerCharges(): string {
-		return $this->glPostAccount('glpost_account_employer_charges', '4002');
-	}//end getGlPostAccountEmployerCharges()
-
-	/**
-	 * The RGS-coded GL account for the wage-tax liability (payroll-glpost-shillinq
-	 * D2 line 3: credit loonheffing-schuld), configurable via app config key
-	 * `glpost_account_wage_tax_liability`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountWageTaxLiability(): string {
-		return $this->glPostAccount('glpost_account_wage_tax_liability', '1701');
-	}//end getGlPostAccountWageTaxLiability()
-
-	/**
-	 * The RGS-coded GL account for the net-wages liability (payroll-glpost-shillinq
-	 * D2 line 4: credit netto-loonschuld, which absorbs the balancing remainder R),
-	 * configurable via app config key `glpost_account_net_wages_liability`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountNetWagesLiability(): string {
-		return $this->glPostAccount('glpost_account_net_wages_liability', '1702');
-	}//end getGlPostAccountNetWagesLiability()
-
-	/**
-	 * The GL account for employee expense reimbursements paid through payroll
-	 * (payroll-expenses-and-allowances D6: debit declaraties), configurable via
-	 * app config key `glpost_account_reimbursements`.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-004
-	 */
-	public function getGlPostAccountReimbursements(): string {
-		return $this->glPostAccount('glpost_account_reimbursements', '4010');
-	}//end getGlPostAccountReimbursements()
-
-	/**
 	 * The route an approved claim takes by default, `payroll` or `direct`
 	 * (payroll-expenses-and-allowances D1), configurable via app config key
 	 * `expense_reimbursement_route`. Unset or unknown keeps today's direct route.
@@ -176,20 +119,6 @@ class SettingsService {
 		$value = $this->appConfig->getValueString(Application::APP_ID, 'expense_reimbursement_route', 'direct');
 		return $value === 'payroll' ? 'payroll' : 'direct';
 	}//end getExpenseReimbursementRoute()
-
-	/**
-	 * Read a `glpost_account_*` config key, falling back to its placeholder
-	 * default when unset or blank.
-	 *
-	 * @param string $key The app config key.
-	 * @param string $default The placeholder default account number.
-	 *
-	 * @return string
-	 */
-	private function glPostAccount(string $key, string $default): string {
-		$value = $this->appConfig->getValueString(Application::APP_ID, $key, $default);
-		return $value === '' ? $default : $value;
-	}//end glPostAccount()
 
 	/**
 	 * The day of the wage-period month used as the shillinq PaymentRun
@@ -218,19 +147,6 @@ class SettingsService {
 	public function getNetPayDebtorIban(): string {
 		return $this->appConfig->getValueString(Application::APP_ID, 'netpay_debtor_iban', '');
 	}//end getNetPayDebtorIban()
-
-	/**
-	 * The shillinq Payee (id or slug) that receives the wage tax remittance:
-	 * the Belastingdienst (payroll-wage-tax-remittance-shillinq D4), app config
-	 * key `wagetax_payee_id`. Empty means the hand-off fails closed.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
-	 */
-	public function getWageTaxPayeeId(): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, 'wagetax_payee_id', ''));
-	}//end getWageTaxPayeeId()
 
 	/**
 	 * The docudesk template UUID configured for one HR document type
