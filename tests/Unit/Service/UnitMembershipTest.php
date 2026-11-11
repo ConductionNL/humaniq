@@ -145,6 +145,24 @@ class UnitMembershipTest extends TestCase {
 	}//end testContractSharesCoverThePeriodTheContractRan()
 
 	/**
+	 * The window counts whole days whatever its times, a range without dates
+	 * covers the whole window, and a row without an employee is left out.
+	 *
+	 * @return void
+	 */
+	public function testTheWindowCountsWholeDays(): void {
+		$contracts = [
+			['employeeId' => 'emp-1'],
+			['employeeId' => ' ', 'startDate' => '2020-01-01'],
+			['employeeId' => 'emp-2', 'startDate' => '2026-06-30'],
+		];
+
+		$shares = (new UnitMembership())->contractShares($contracts, new DateTimeImmutable('2026-06-01 15:30'), new DateTimeImmutable('2026-06-30 08:00'));
+
+		$this->assertSame(['emp-1' => 1.0, 'emp-2' => 0.0333], $shares);
+	}//end testTheWindowCountsWholeDays()
+
+	/**
 	 * A manager leads the units whose manager is their employee record; a
 	 * user who manages nothing leads nothing.
 	 *
