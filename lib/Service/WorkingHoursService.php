@@ -290,7 +290,7 @@ class WorkingHoursService {
 	 */
 	public function assertPatternsDoNotOverlap(array $patterns): void {
 		foreach ($this->windowsByEmployee(patterns: $patterns) as $employeeId => $windows) {
-			self::assertWindowsDoNotOverlap(employeeId: $employeeId, windows: $windows);
+			(new WorkingPatternWindows())->assertNoOverlap(employeeId: $employeeId, windows: $windows);
 		}
 	}//end assertPatternsDoNotOverlap()
 
@@ -320,51 +320,6 @@ class WorkingHoursService {
 
 		return $byEmployee;
 	}//end windowsByEmployee()
-
-	/**
-	 * Refuse the first pair of one employee's windows that share a day.
-	 *
-	 * @param int|string $employeeId The employee (an int when the id is numeric, as an array key).
-	 * @param array<int, array{from: string, until: string}> $windows The employee's windows.
-	 *
-	 * @return void
-	 *
-	 * @throws OverlappingWorkingPatternException When two windows overlap.
-	 */
-	private static function assertWindowsDoNotOverlap(int|string $employeeId, array $windows): void {
-		$count = count($windows);
-		for ($i = 0; $i < $count; $i++) {
-			$b = self::firstOverlapWith(windows: $windows, i: $i);
-			if ($b !== null) {
-				throw new OverlappingWorkingPatternException(
-					'Two working patterns for employee ' . $employeeId
-					. ' cover the same days (' . $windows[$i]['from'] . ' and ' . $b['from']
-					. '). End the running pattern before writing a new one.'
-				);
-			}
-		}
-	}//end assertWindowsDoNotOverlap()
-
-	/**
-	 * The first window after window `$i` that shares a day with it, or null.
-	 *
-	 * @param array<int, array{from: string, until: string}> $windows One employee's windows.
-	 * @param int $i The window to compare the later ones with.
-	 *
-	 * @return array{from: string, until: string}|null
-	 */
-	private static function firstOverlapWith(array $windows, int $i): ?array {
-		$a = $windows[$i];
-		$count = count($windows);
-		for ($j = ($i + 1); $j < $count; $j++) {
-			$b = $windows[$j];
-			if ($a['from'] <= substr($b['until'], 0, 10) && $b['from'] <= substr($a['until'], 0, 10)) {
-				return $b;
-			}
-		}
-
-		return null;
-	}//end firstOverlapWith()
 
 	/**
 	 * Contracted hours expressed in calendar-day equivalents, the basis
