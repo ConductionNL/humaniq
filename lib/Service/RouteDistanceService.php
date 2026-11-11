@@ -81,26 +81,34 @@ class RouteDistanceService {
 		}
 
 		$config = $this->settings->getRouteDistanceSource();
-		$environment = FleetAppId::getService(container: $this->container, canonical: 'integriq', relative: 'Service\EnvironmentService');
 		$caller = FleetAppId::getService(container: $this->container, canonical: 'integriq', relative: 'Service\CallService');
-		$source = null;
-		if ($config['source'] !== '' && $environment !== null && $caller !== null) {
-			$source = $environment->resolveSource($config['source']);
-		}
-
+		$source = ($caller === null) ? null : $this->sourceFor($config['source']);
 		if ($source === null || $caller === null) {
 			throw new RouteDistanceUnavailableException('Er is geen routeplanner ingesteld. Vul de afstand zelf in, of vraag de beheerder een routeplanner te koppelen.');
 		}
 
-		$log = $caller->call(
-			source: $source,
-			endpoint: $config['endpoint'],
-			method: 'GET',
-			config: ['query' => ['from' => $this->normalise($originPostcode), 'to' => $this->normalise($destinationPostcode)]]
-		);
+		$query = ['from' => $this->normalise($originPostcode), 'to' => $this->normalise($destinationPostcode)];
+		$log = $caller->call(source: $source, endpoint: $config['endpoint'], method: 'GET', config: ['query' => $query]);
 
 		return ['distanceKm' => $this->distanceFrom($log), 'provider' => $this->providerOf($source)];
 	}//end lookup()
+
+	/**
+	 * The configured route planner source; null when none is configured or
+	 * it cannot be resolved.
+	 *
+	 * @param string $sourceId The configured source.
+	 *
+	 * @return object|null
+	 */
+	private function sourceFor(string $sourceId): ?object {
+		$environment = FleetAppId::getService(container: $this->container, canonical: 'integriq', relative: 'Service\EnvironmentService');
+		if ($sourceId === '' || $environment === null) {
+			return null;
+		}
+
+		return $environment->resolveSource($sourceId);
+	}//end sourceFor()
 
 	/**
 	 * The distance in a CallLog's response.
