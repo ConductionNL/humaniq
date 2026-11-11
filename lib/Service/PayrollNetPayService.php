@@ -171,7 +171,12 @@ class PayrollNetPayService {
 			return $this->outcome($runId, 'failed', 'PayrollRun mist id/period/administrationId; kan niet worden verwerkt.');
 		}
 
-		$settled = $this->settledByActiveBatch($run);
+		try {
+			$settled = $this->settledByActiveBatch($run);
+		} catch (HandoffLookupFailed $e) {
+			return $this->outcome($runId, 'pending', $e->getMessage());
+		}
+
 		if ($settled !== null) {
 			return $settled;
 		}
@@ -203,7 +208,11 @@ class PayrollNetPayService {
 			return $this->outcome($runId, 'failed', (string)$collected['error'], $batch);
 		}
 
-		$locked = (new HandoffLock($this->container))->holding('netpay/' . $this->runNumber($run), fn (): array => $this->createUnderClaim($run, $collected));
+		try {
+			$locked = (new HandoffLock($this->container))->holding('netpay/' . $this->runNumber($run), fn (): array => $this->createUnderClaim($run, $collected));
+		} catch (HandoffLookupFailed $e) {
+			return $this->outcome($runId, 'pending', $e->getMessage());
+		}
 
 		return ($locked ?? $this->outcome($runId, 'pending', 'Een andere verwerking houdt de overdrachtsvergrendeling voor dit runnummer vast.'));
 	}//end processRun()
@@ -257,7 +266,13 @@ class PayrollNetPayService {
 		$runNumber = $this->runNumber($run);
 		$claim = $this->createBatch(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'runNumber' => $runNumber]);
 		$claims = new PendingClaims(self::ACTIVE_STATUSES);
-		$batches = $this->batchesWhere('runNumber', $runNumber);
+		try {
+			$batches = $this->batchesWhere('runNumber', $runNumber);
+		} catch (HandoffLookupFailed $e) {
+			$withdrawn = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Ingetrokken: ' . $e->getMessage()]);
+			return $this->outcome($runId, 'pending', $e->getMessage(), $withdrawn);
+		}
+
 		foreach ($claims->staleOthers($batches, $claim) as $stale) {
 			$this->saveBatch($stale, ['status' => 'failed', 'errorMessage' => 'Verlopen pending-poging met hetzelfde runnummer vervangen.']);
 		}
@@ -428,6 +443,12 @@ class PayrollNetPayService {
 			return null;
 		}
 
+		$refusal = $this->staleAdoptionRefusal(adopted: $adopted, run: $run, runNumber: $runNumber);
+		if ($refusal !== null) {
+			$batch = $this->saveBatch($stalePending, ['status' => 'failed', 'errorMessage' => $refusal]);
+			return $this->outcome($runId, 'failed', $refusal, $batch);
+		}
+
 		$paymentRunId = $this->idOf($adopted);
 		$batch = $this->saveBatch(
 			$stalePending,
@@ -458,6 +479,11 @@ class PayrollNetPayService {
 		$runNumber = $this->runNumber($run);
 		$adopted = $this->findPaymentRunByNumber($runNumber);
 		if ($adopted !== null) {
+			$mismatch = self::adoptionMismatch(adopted: $adopted, totalAmount: (float)$collected['totalAmount'], runNumber: $runNumber);
+			if ($mismatch !== null) {
+				throw new \RuntimeException($mismatch);
+			}
+
 			return $this->idOf($adopted);
 		}
 
@@ -487,6 +513,59 @@ class PayrollNetPayService {
 
 		return $this->idOf($this->toArray($created));
 	}//end createOrAdoptPaymentRun()
+
+	/**
+	 * Why a stale claim may not adopt the PaymentRun shillinq carries: the
+	 * run's period is not a month, its lines cannot be collected, or the
+	 * totals differ. Null to adopt.
+	 *
+	 * @param array<string, mixed> $adopted   The PaymentRun found by run number.
+	 * @param array<string, mixed> $run       The PayrollRun.
+	 * @param string               $runNumber The run number.
+	 *
+	 * @return string|null The refusal, or null to adopt.
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private function staleAdoptionRefusal(array $adopted, array $run, string $runNumber): ?string {
+		if ((new WagePeriod(trim((string)($run['period'] ?? ''))))->month() === null) {
+			return 'PayrollRun-periode is geen maand in de vorm JJJJ-MM; shillinq PaymentRun ' . $runNumber . ' is niet overgenomen, controleer die met de hand.';
+		}
+
+		$collected = $this->collectLines($run);
+		if ($collected['error'] !== null) {
+			return $collected['error'] . ' Shillinq heeft al PaymentRun ' . $runNumber . ' van een eerdere poging; controleer die met de hand.';
+		}
+
+		return self::adoptionMismatch(adopted: $adopted, totalAmount: (float)$collected['totalAmount'], runNumber: $runNumber);
+	}//end staleAdoptionRefusal()
+
+	/**
+	 * Why an existing PaymentRun may not be adopted: its total differs from
+	 * this run's. Null when they match.
+	 *
+	 * @param array<string, mixed> $adopted     The PaymentRun found by run number.
+	 * @param float                $totalAmount This run's total in euros.
+	 * @param string               $runNumber   The run number.
+	 *
+	 * @return string|null The refusal, or null to adopt.
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-006
+	 */
+	private static function adoptionMismatch(array $adopted, float $totalAmount, string $runNumber): ?string {
+		$found = (int)round(((float)($adopted['totalAmount'] ?? 0)) * 100);
+		$expected = (int)round($totalAmount * 100);
+		if ($found === $expected) {
+			return null;
+		}
+
+		return sprintf(
+			'Shillinq PaymentRun %s heeft totaal %.2f, deze loonrun %.2f; niet overgenomen, controleer die met de hand.',
+			$runNumber,
+			($found / 100),
+			($expected / 100)
+		);
+	}//end adoptionMismatch()
 
 	/**
 	 * The deterministic idempotency key of a run's PaymentRun: its trimmed
@@ -529,19 +608,20 @@ class PayrollNetPayService {
 
 	/**
 	 * Search shillinq for an existing PaymentRun with the given runNumber
-	 * (the idempotency probe, design.md D6). Never throws -- a lookup failure
-	 * is treated as "not found" by the caller's fall-through logic.
+	 * (the idempotency probe, design.md D6).
 	 *
 	 * @param string $runNumber The deterministic idempotency key.
 	 *
 	 * @return array<string, mixed>|null
+	 *
+	 * @throws HandoffLookupFailed When the lookup fails, so it is never read as "not found".
 	 */
 	private function findPaymentRunByNumber(string $runNumber): ?array {
 		try {
 			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000, 'filters' => ['runNumber' => $runNumber]], false, false);
 		} catch (\Throwable $e) {
 			$this->logger->warning('PayrollNetPayService: the shillinq PaymentRun lookup failed.', ['exceptionClass' => $e::class]);
-			return null;
+			throw new HandoffLookupFailed('Een opzoeking is mislukt; de loonrun wordt later opnieuw geprobeerd.');
 		}
 
 		foreach ($this->normaliseRows($rows) as $row) {
@@ -563,13 +643,15 @@ class PayrollNetPayService {
 	 * @param string $value Its value.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @throws HandoffLookupFailed When the lookup fails, so it is never read as "none".
 	 */
 	private function batchesWhere(string $field, string $value): array {
 		try {
 			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::BATCH_SCHEMA)->findAll(['limit' => 10000, 'filters' => [$field => $value]], false, false);
 		} catch (\Throwable $e) {
 			$this->logger->warning('PayrollNetPayService: the PayrollPaymentBatch lookup failed.', ['exceptionClass' => $e::class]);
-			return [];
+			throw new HandoffLookupFailed('Een opzoeking is mislukt; de loonrun wordt later opnieuw geprobeerd.');
 		}
 
 		$out = [];

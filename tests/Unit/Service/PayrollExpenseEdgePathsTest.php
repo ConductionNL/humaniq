@@ -162,4 +162,70 @@ class PayrollExpenseEdgePathsTest extends TestCase {
 		$listener->handle(new Event());
 	}//end testTheStampListenerKeepsTheDrafterAndSurvivesAnUnreadableEmployee()
 
+	/**
+	 * Every call and log line of the approval listener for every status move,
+	 * with and without the claim step, and with each step failing.
+	 *
+	 * @return void
+	 */
+	public function testEveryCallAndLogOfTheApprovalListener(): void {
+		$calls = [];
+		$credits = $this->createMock(OvertimeCreditService::class);
+		$credits->method('creditForRun')->willReturnCallback(
+			static function (string $runId) use (&$calls): int {
+				$calls[] = 'credit ' . $runId;
+				if ($runId === 'run-fail') {
+					throw new \RuntimeException('credit down');
+				}
+
+				return 1;
+			}
+		);
+		$expenses = $this->createMock(PayrollExpenseFoldService::class);
+		$expenses->method('markReimbursed')->willReturnCallback(
+			static function (string $runId) use (&$calls): int {
+				$calls[] = 'reimburse ' . $runId;
+				if ($runId === 'run-fail') {
+					throw new \RuntimeException('claims down');
+				}
+
+				return 1;
+			}
+		);
+		$logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+		$logger->method('error')->willReturnCallback(
+			static function (string $message) use (&$calls): void {
+				$calls[] = 'error ' . $message;
+			}
+		);
+		$move = function (string $runId, mixed $from, mixed $to): ObjectUpdatedEvent {
+			$new = $this->entity('PayrollRun', ['status' => $to]);
+			$new->setUuid($runId);
+			return new ObjectUpdatedEvent($new, $this->entity('PayrollRun', ['status' => $from]));
+		};
+		$withClaims = new PayrollRunApprovedListener($credits, $logger, $expenses);
+		$withoutClaims = new PayrollRunApprovedListener($credits, $logger);
+
+		$withClaims->handle($move('run-1', 'draft', 'approved'));
+		$withClaims->handle($move('run-fail', 'draft', 'approved'));
+		$withoutClaims->handle($move('run-2', 'draft', 'approved'));
+		$withClaims->handle($move('run-3', 'approved', 'approved'));
+		$withClaims->handle($move('run-4', 'draft', 'posted'));
+		$withClaims->handle($move('run-5', null, 'approved'));
+		$withClaims->handle(new Event());
+
+		$this->assertSame(
+			[
+				'credit run-1',
+				'reimburse run-1',
+				'credit run-fail',
+				'error humaniq: crediting the overtime of payroll run run-fail failed: credit down',
+				'reimburse run-fail',
+				'error humaniq: marking the claims of payroll run run-fail reimbursed failed: claims down',
+				'credit run-2',
+			],
+			$calls
+		);
+	}//end testEveryCallAndLogOfTheApprovalListener()
+
 }//end class

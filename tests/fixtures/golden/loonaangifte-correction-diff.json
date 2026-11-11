@@ -1,0 +1,226 @@
+{
+    "diff": {
+        "lines": [
+            {
+                "employeeId": "emp-2",
+                "kind": "changed",
+                "changes": {
+                    "LnLbPh": {
+                        "old": "2400",
+                        "new": "2500"
+                    },
+                    "LnSV": {
+                        "old": "2400",
+                        "new": "2500"
+                    }
+                }
+            },
+            {
+                "employeeId": "emp-3",
+                "kind": "added",
+                "changes": {
+                    "DatAanv": {
+                        "old": null,
+                        "new": "2026-01-01"
+                    },
+                    "Inkomstenperiode/DatAanvTv": {
+                        "old": null,
+                        "new": "2026-03-01"
+                    },
+                    "Inkomstenperiode/SrtIV": {
+                        "old": null,
+                        "new": "15"
+                    },
+                    "LnLbPh": {
+                        "old": null,
+                        "new": "700"
+                    },
+                    "LnSV": {
+                        "old": null,
+                        "new": "700"
+                    }
+                }
+            },
+            {
+                "employeeId": "",
+                "kind": "changed",
+                "changes": {
+                    "LnLbPh": {
+                        "old": "10",
+                        "new": "11"
+                    },
+                    "LnSV": {
+                        "old": "10",
+                        "new": "11"
+                    }
+                }
+            },
+            {
+                "employeeId": "emp-4",
+                "kind": "added",
+                "changes": []
+            },
+            {
+                "employeeId": "",
+                "bsn": "999999990",
+                "kind": "withdrawn",
+                "changes": []
+            }
+        ],
+        "initial": [
+            {
+                "NumIV": "1",
+                "DatAanv": "2026-01-01",
+                "PersNr": "P2",
+                "NatuurlijkPersoon": {
+                    "SofiNr": "111222333"
+                },
+                "Inkomstenperiode": [
+                    {
+                        "DatAanvTv": "2026-03-01",
+                        "SrtIV": "15"
+                    }
+                ],
+                "Werknemersgegevens": {
+                    "LnLbPh": "2500",
+                    "LnSV": "2500"
+                }
+            },
+            {
+                "NumIV": "1",
+                "DatAanv": "2026-01-01",
+                "PersNr": "P3",
+                "Inkomstenperiode": [
+                    {
+                        "DatAanvTv": "2026-03-01",
+                        "SrtIV": "15"
+                    }
+                ],
+                "Werknemersgegevens": {
+                    "LnLbPh": "700",
+                    "LnSV": "700"
+                }
+            },
+            {
+                "NumIV": "1",
+                "DatAanv": "2026-01-01",
+                "PersNr": "P9",
+                "Inkomstenperiode": [
+                    {
+                        "DatAanvTv": "2026-03-01",
+                        "SrtIV": "15"
+                    }
+                ],
+                "Werknemersgegevens": {
+                    "LnLbPh": "11",
+                    "LnSV": "11"
+                }
+            },
+            []
+        ],
+        "withdrawn": [
+            {
+                "NumIV": "2",
+                "SofiNr": "999999990"
+            }
+        ]
+    },
+    "nothing-current": {
+        "lines": [
+            {
+                "employeeId": "",
+                "bsn": "123456782",
+                "kind": "withdrawn",
+                "changes": []
+            },
+            {
+                "employeeId": "",
+                "bsn": "111222333",
+                "kind": "withdrawn",
+                "changes": []
+            },
+            {
+                "employeeId": "",
+                "bsn": "",
+                "kind": "withdrawn",
+                "changes": []
+            },
+            {
+                "employeeId": "",
+                "bsn": "999999990",
+                "kind": "withdrawn",
+                "changes": []
+            }
+        ],
+        "initial": [],
+        "withdrawn": [
+            {
+                "NumIV": "1",
+                "SofiNr": "123456782"
+            },
+            {
+                "NumIV": "1",
+                "SofiNr": "111222333"
+            },
+            {
+                "NumIV": "1",
+                "PersNr": "P9"
+            },
+            {
+                "NumIV": "2",
+                "SofiNr": "999999990"
+            }
+        ]
+    },
+    "nothing-received": {
+        "lines": [
+            {
+                "employeeId": "emp-1",
+                "kind": "added",
+                "changes": {
+                    "DatAanv": {
+                        "old": null,
+                        "new": "2026-01-01"
+                    },
+                    "Inkomstenperiode/DatAanvTv": {
+                        "old": null,
+                        "new": "2026-03-01"
+                    },
+                    "Inkomstenperiode/SrtIV": {
+                        "old": null,
+                        "new": "15"
+                    },
+                    "LnLbPh": {
+                        "old": null,
+                        "new": "3800"
+                    },
+                    "LnSV": {
+                        "old": null,
+                        "new": "3800"
+                    }
+                }
+            }
+        ],
+        "initial": [
+            {
+                "NumIV": "1",
+                "DatAanv": "2026-01-01",
+                "PersNr": "P1",
+                "NatuurlijkPersoon": {
+                    "SofiNr": "123456782"
+                },
+                "Inkomstenperiode": [
+                    {
+                        "DatAanvTv": "2026-03-01",
+                        "SrtIV": "15"
+                    }
+                ],
+                "Werknemersgegevens": {
+                    "LnLbPh": "3800",
+                    "LnSV": "3800"
+                }
+            }
+        ],
+        "withdrawn": []
+    }
+}

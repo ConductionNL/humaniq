@@ -448,28 +448,37 @@ final class RelatedContextIndexer {
 		// yet in the register -- the two changes land in either order.
 		$plannedCompletionByEmployeeId = [];
 		foreach ($this->rows('Offboarding') as $offboarding) {
-			if ((string)($offboarding['status'] ?? '') === 'geannuleerd') {
+			$planned = $this->plannedCompletion(offboarding: $offboarding);
+			if ($planned === null) {
 				continue;
 			}
 
-			$employeeId = trim((string)($offboarding['employeeId'] ?? ''));
-			$lastWorkingDay = trim((string)($offboarding['lastWorkingDay'] ?? ''));
-			if ($employeeId === '' || $lastWorkingDay === '') {
-				continue;
-			}
-
-			$candidate = strtotime($lastWorkingDay);
-			if ($candidate === false) {
-				continue;
-			}
-
+			// Only readable days are recorded, so the one recorded so far always parses.
+			[$employeeId, $lastWorkingDay] = $planned;
 			$current = ($plannedCompletionByEmployeeId[$employeeId] ?? null);
-			if ($current === null || strtotime($current) === false || $candidate > strtotime($current)) {
+			if ($current === null || strtotime($lastWorkingDay) > strtotime($current)) {
 				$plannedCompletionByEmployeeId[$employeeId] = $lastWorkingDay;
 			}
 		}
 
 		return ['plannedCompletionByEmployeeId' => $plannedCompletionByEmployeeId];
 	}//end offboardings()
+
+	/**
+	 * A live offboarding case's employee and readable last working day, or null.
+	 *
+	 * @param array<string, mixed> $offboarding The Offboarding case.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function plannedCompletion(array $offboarding): array|null {
+		$employeeId = trim((string)($offboarding['employeeId'] ?? ''));
+		$lastWorkingDay = trim((string)($offboarding['lastWorkingDay'] ?? ''));
+		if ((string)($offboarding['status'] ?? '') === 'geannuleerd' || $employeeId === '' || $lastWorkingDay === '' || strtotime($lastWorkingDay) === false) {
+			return null;
+		}
+
+		return [$employeeId, $lastWorkingDay];
+	}//end plannedCompletion()
 
 }//end class

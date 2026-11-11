@@ -138,12 +138,8 @@ final class NlOrgChecks implements CheckProvider {
 		$startDate = trim((string)($o['startDate'] ?? ''));
 		$endDate = trim((string)($o['endDate'] ?? ''));
 
-		if ($endDate !== '') {
-			$start = strtotime($startDate);
-			$end = strtotime($endDate);
-			if ($start !== false && $end !== false && $end < $start) {
-				return false;
-			}
+		if ($endDate !== '' && self::endsBeforeStart(startDate: $startDate, endDate: $endDate) === true) {
+			return false;
 		}
 
 		if (self::isCurrentlyActive($endDate) === false) {
@@ -152,18 +148,42 @@ final class NlOrgChecks implements CheckProvider {
 			return true;
 		}
 
+		return self::placedInActiveUnit(o: $o, c: $c);
+	}//end assignmentConsistent()
+
+	/**
+	 * Whether a placement ends before it starts; an unreadable date never does.
+	 *
+	 * @param string $startDate The first day.
+	 * @param string $endDate The last day.
+	 *
+	 * @return bool
+	 */
+	private static function endsBeforeStart(string $startDate, string $endDate): bool {
+		$start = strtotime($startDate);
+		$end = strtotime($endDate);
+
+		return $start !== false && $end !== false && $end < $start;
+	}//end endsBeforeStart()
+
+	/**
+	 * Whether a placement names a known, active unit.
+	 *
+	 * @param array<string, mixed> $o The placement.
+	 * @param array<string, mixed> $c The evaluation context.
+	 *
+	 * @return bool
+	 */
+	private static function placedInActiveUnit(array $o, array $c): bool {
 		$orgUnitId = trim((string)($o['orgUnitId'] ?? ''));
 		if ($orgUnitId === '') {
 			return false;
 		}
 
 		$unit = (self::relatedOrgUnitsById($c)[$orgUnitId] ?? null);
-		if (is_array($unit) === false) {
-			return false;
-		}
 
-		return ($unit['active'] ?? false) === true;
-	}//end assignmentConsistent()
+		return is_array($unit) === true && ($unit['active'] ?? false) === true;
+	}//end placedInActiveUnit()
 
 	/**
 	 * True when the placement is current — no `endDate`, or an `endDate` on

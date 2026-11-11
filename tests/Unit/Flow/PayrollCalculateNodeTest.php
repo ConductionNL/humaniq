@@ -170,6 +170,34 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 	}//end testFailedThrows()
 
 	/**
+	 * The refusal names the period, the status and the service's message.
+	 *
+	 * @return void
+	 */
+	public function testTheRefusalMessageNamesPeriodStatusAndReason(): void {
+		$service = $this->createMock(PayrollRunService::class);
+		$service->method('runFor')->willReturn($this->outcome('failed'));
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Loonrun berekenen voor 2026-05 is geweigerd (failed): msg');
+		$this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: ['period' => '2026-05'], context: []));
+	}//end testTheRefusalMessageNamesPeriodStatusAndReason()
+
+	/**
+	 * An outcome without status or message is refused with empty parts.
+	 *
+	 * @return void
+	 */
+	public function testAnOutcomeWithoutStatusIsRefused(): void {
+		$service = $this->createMock(PayrollRunService::class);
+		$service->method('runFor')->willReturn([]);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Loonrun berekenen voor 2026-05 is geweigerd (): ');
+		$this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: ['period' => '2026-05'], context: []));
+	}//end testAnOutcomeWithoutStatusIsRefused()
+
+	/**
 	 * An empty firing returns empty without touching the service.
 	 *
 	 * @return void

@@ -116,31 +116,13 @@ class PayrollNetPayNode extends PayrollFlowNodeBase {
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	public function execute(FlowNodeCall $call): array {
-		$items = $call->items;
-		$config = $call->config;
-		if ($items === []) {
-			return [];
-		}
-
-		$out = [];
-		foreach ($items as $item) {
-			$json = (array)(((array)$item)['json'] ?? []);
-			$run = $this->requireRun(config: $config, json: $json);
-
-			$outcome = $this->netPayService->processRun($run);
-
-			$status = (string)($outcome['status'] ?? '');
-			if (in_array($status, ['created', 'skipped-no-shillinq'], true) === false) {
-				throw new RuntimeException(
-					'Netto-loonbatch voor loonrun ' . $this->idOf($run) . ' is mislukt (' . $status . '): '
-					. (string)($outcome['message'] ?? '')
-				);
-			}
-
-			$out[] = $this->withOutcome((array)$item, self::OUTCOME_KEY, $outcome);
-		}//end foreach
-
-		return $out;
+		return $this->stampEachRun(
+			$call,
+			fn (array $run): array => $this->requireStatus(
+				$this->netPayService->processRun($run),
+				new ExpectedStatus(['created', 'skipped-no-shillinq'], 'Netto-loonbatch voor loonrun ' . $this->idOf($run) . ' is mislukt')
+			)
+		);
 	}//end execute()
 
 }//end class
