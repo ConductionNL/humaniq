@@ -104,12 +104,14 @@ class LeaveCalendarService {
 
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService/CalDavBackend resolution.
-	 * @param SettingsService $settingsService Target-calendar config (design.md D6).
+	 * @param SettingsService $settingsService Register slug.
+	 * @param CalendarSettings $calendars Target-calendar config (design.md D6).
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
+		private readonly CalendarSettings $calendars,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -140,8 +142,8 @@ class LeaveCalendarService {
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-006
 	 */
 	public function sync(?string $from = null): array {
-		$principal = $this->settingsService->getLeaveCalendarPrincipal();
-		$uri = $this->settingsService->getLeaveCalendarUri();
+		$principal = $this->calendars->getLeaveCalendarPrincipal();
+		$uri = $this->calendars->getLeaveCalendarUri();
 		if ($principal === '' || $uri === '') {
 			return [$this->skipOutcome('leave_calendar_principal/leave_calendar_uri is niet geconfigureerd.')];
 		}

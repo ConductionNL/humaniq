@@ -22,18 +22,15 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\CalendarSettings;
 use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
-use OCP\App\IAppManager;
-use OCP\IAppConfig;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * Which shared calendars the leave and interview syncs write to.
  *
- * @covers \OCA\Humaniq\Service\SettingsService
+ * @covers \OCA\Humaniq\Service\CalendarSettings
  * @uses   \OCA\Humaniq\Tests\Unit\Support\AppConfigValues
  */
 class CalendarSettingsTest extends TestCase {
@@ -75,12 +72,12 @@ class CalendarSettingsTest extends TestCase {
 	 *
 	 * @param array<string, string> $values The stored app config values by key.
 	 *
-	 * @return SettingsService
+	 * @return CalendarSettings
 	 */
-	private function settings(array $values): SettingsService {
+	private function settings(array $values): CalendarSettings {
 		$config = AppConfigValues::answer($this->createMock(IAppConfig::class), $values);
 
-		return new SettingsService($config, $this->createMock(IAppManager::class), $this->createMock(ContainerInterface::class), new NullLogger());
+		return new CalendarSettings($config);
 	}//end settings()
 
 }//end class

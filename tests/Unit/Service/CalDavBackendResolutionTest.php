@@ -29,9 +29,12 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\CalendarSettings;
 use OCA\Humaniq\Service\InterviewCalendarService;
+use OCA\Humaniq\Service\InterviewRepository;
 use OCA\Humaniq\Service\LeaveCalendarService;
 use OCA\Humaniq\Service\SettingsService;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -197,7 +200,13 @@ class CalDavBackendResolutionTest extends TestCase {
 			$logger->expects($this->once())->method('info')->with($info);
 		}
 
-		return new $class($container, $this->createMock(SettingsService::class), $logger);
+		$settings = $this->createMock(SettingsService::class);
+		$calendars = new CalendarSettings($this->createMock(IAppConfig::class));
+		if ($class === LeaveCalendarService::class) {
+			return new LeaveCalendarService($container, $settings, $calendars, $logger);
+		}
+
+		return new InterviewCalendarService($container, $calendars, new InterviewRepository($container, $settings, $logger), $logger);
 
 	}//end service()
 }//end class
