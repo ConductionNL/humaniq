@@ -111,30 +111,55 @@ final class CorrectionDiff {
 	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public static function compare(array $received, array $current): array {
-		$out = ['lines' => [], 'initial' => [], 'withdrawn' => []];
+		$run = new CorrectionComparison();
+		$run->received = $received;
 		foreach ($current as $line) {
-			$now = self::fromTree((array)($line['tree'] ?? []));
-			$key = self::key($now);
-			$before = ($received[$key] ?? null);
-			unset($received[$key]);
-			$changes = self::changes(($before['values'] ?? []), $now['values']);
-			if ($before !== null && $changes === []) {
-				continue;
-			}
-
-			$out['lines'][] = ['employeeId' => (string)($line['employeeId'] ?? ''), 'kind' => ($before === null ? 'added' : 'changed'), 'changes' => $changes];
-			$out['initial'][] = (array)($line['tree'] ?? []);
+			self::compareLine(run: $run, line: $line);
 		}
 
-		foreach ($received as $gone) {
-			$withdrawal = ['NumIV' => $gone['numIv']];
-			$withdrawal += ($gone['bsn'] !== '' ? ['SofiNr' => $gone['bsn']] : ['PersNr' => $gone['persNr']]);
-			$out['withdrawn'][] = $withdrawal;
-			$out['lines'][] = ['employeeId' => '', 'bsn' => $gone['bsn'], 'kind' => 'withdrawn', 'changes' => []];
+		foreach ($run->received as $gone) {
+			self::withdraw(run: $run, gone: $gone);
 		}
 
-		return $out;
+		return ['lines' => $run->lines, 'initial' => $run->initial, 'withdrawn' => $run->withdrawn];
 	}//end compare()
+
+	/**
+	 * Match one current relationship against the received stand: added or changed ones become a correction line.
+	 *
+	 * @param CorrectionComparison $run The comparison being made.
+	 * @param array<string, mixed> $line One current relationship: its employee and tree.
+	 *
+	 * @return void
+	 */
+	private static function compareLine(CorrectionComparison $run, array $line): void {
+		$now = self::fromTree((array)($line['tree'] ?? []));
+		$key = self::key($now);
+		$before = ($run->received[$key] ?? null);
+		unset($run->received[$key]);
+		$changes = self::changes(($before['values'] ?? []), $now['values']);
+		if ($before !== null && $changes === []) {
+			return;
+		}
+
+		$run->lines[] = ['employeeId' => (string)($line['employeeId'] ?? ''), 'kind' => ($before === null ? 'added' : 'changed'), 'changes' => $changes];
+		$run->initial[] = (array)($line['tree'] ?? []);
+	}//end compareLine()
+
+	/**
+	 * Withdraw a received relationship no current one matches: by BSN, or without one by personnel number.
+	 *
+	 * @param CorrectionComparison $run The comparison being made.
+	 * @param array<string, mixed> $gone The unmatched received relationship.
+	 *
+	 * @return void
+	 */
+	private static function withdraw(CorrectionComparison $run, array $gone): void {
+		$withdrawal = ['NumIV' => $gone['numIv']];
+		$withdrawal += ($gone['bsn'] !== '' ? ['SofiNr' => $gone['bsn']] : ['PersNr' => $gone['persNr']]);
+		$run->withdrawn[] = $withdrawal;
+		$run->lines[] = ['employeeId' => '', 'bsn' => $gone['bsn'], 'kind' => 'withdrawn', 'changes' => []];
+	}//end withdraw()
 
 	/**
 	 * What changed, element by element.
@@ -163,6 +188,19 @@ final class CorrectionDiff {
 	 * @return array{numIv: string, bsn: string, persNr: string, values: array<string, string>}
 	 */
 	private static function fromTree(array $tree): array {
+		$values = array_replace(self::topValues(tree: $tree), self::periodValues(tree: $tree), self::employmentValues(tree: $tree));
+
+		return ['numIv' => (string)($tree['NumIV'] ?? ''), 'bsn' => (string)($tree['NatuurlijkPersoon']['SofiNr'] ?? ''), 'persNr' => (string)($tree['PersNr'] ?? ''), 'values' => $values];
+	}//end fromTree()
+
+	/**
+	 * The relationship's own elements that are set.
+	 *
+	 * @param array<string, mixed> $tree The relationship tree.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function topValues(array $tree): array {
 		$values = [];
 		foreach (self::TOP as $element) {
 			if (($tree[$element] ?? null) !== null) {
@@ -170,21 +208,44 @@ final class CorrectionDiff {
 			}
 		}
 
-		$period = (array)(($tree['Inkomstenperiode'] ?? [])[0] ?? []);
-		foreach ($period as $element => $value) {
+		return $values;
+	}//end topValues()
+
+	/**
+	 * The first income period's elements that are set, under `Inkomstenperiode/`.
+	 *
+	 * @param array<string, mixed> $tree The relationship tree.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function periodValues(array $tree): array {
+		$values = [];
+		foreach ((array)(($tree['Inkomstenperiode'] ?? [])[0] ?? []) as $element => $value) {
 			if ($value !== null) {
 				$values['Inkomstenperiode/' . $element] = (string)$value;
 			}
 		}
 
+		return $values;
+	}//end periodValues()
+
+	/**
+	 * The employment data elements that are set.
+	 *
+	 * @param array<string, mixed> $tree The relationship tree.
+	 *
+	 * @return array<int|string, string>
+	 */
+	private static function employmentValues(array $tree): array {
+		$values = [];
 		foreach ((array)($tree['Werknemersgegevens'] ?? []) as $element => $value) {
 			if ($value !== null) {
 				$values[(string)$element] = (string)$value;
 			}
 		}
 
-		return ['numIv' => (string)($tree['NumIV'] ?? ''), 'bsn' => (string)($tree['NatuurlijkPersoon']['SofiNr'] ?? ''), 'persNr' => (string)($tree['PersNr'] ?? ''), 'values' => $values];
-	}//end fromTree()
+		return $values;
+	}//end employmentValues()
 
 	/**
 	 * A relationship from its XML element.
