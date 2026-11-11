@@ -95,24 +95,39 @@ class TimeEstimateService {
 		string $domainObjectType,
 		string $domainObjectRef,
 	): array {
-		$mine = $this->forObject(rows: $estimates, type: $domainObjectType, ref: $domainObjectRef);
-		$booked = $this->forObject(rows: $entries, type: $domainObjectType, ref: $domainObjectRef);
+		$object = ['type' => $domainObjectType, 'ref' => $domainObjectRef];
+		$mine = $this->forObject(rows: $estimates, target: $object);
+		$booked = $this->forObject(rows: $entries, target: $object);
 
 		$spent = $this->spent(booked: $booked);
 		if ($mine === []) {
-			// No estimate is not an estimate of zero. The spent total still
-			// answers; the remainder does not exist.
-			return [
-				'hasEstimate' => false,
-				'estimatedHours' => null,
-				'spentHours' => round(num: $spent[0], precision: 2),
-				'remainingHours' => null,
-				'roles' => [],
-			];
+			return $this->unestimatedSummary(spent: $spent);
 		}
 
 		return $this->estimatedSummary(estimates: $mine, spent: $spent);
 	}//end summary()
+
+	/**
+	 * The summary of an object without an estimate.
+	 *
+	 * No estimate is not an estimate of zero. The spent total still answers;
+	 * the remainder does not exist.
+	 *
+	 * @param array{0: float, 1: array<string, float>} $spent The total spent and the spent per role.
+	 *
+	 * @return array{hasEstimate: bool, estimatedHours: float|null, spentHours: float, remainingHours: float|null, roles: array<int, array<string, mixed>>}
+	 *
+	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-002
+	 */
+	private function unestimatedSummary(array $spent): array {
+		return [
+			'hasEstimate' => false,
+			'estimatedHours' => null,
+			'spentHours' => round(num: $spent[0], precision: 2),
+			'remainingHours' => null,
+			'roles' => [],
+		];
+	}//end unestimatedSummary()
 
 	/**
 	 * The summary of an object with estimates: their total, the spent hours,
@@ -194,35 +209,78 @@ class TimeEstimateService {
 	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-001
 	 */
 	public function refusalForEstimate(array $estimate, array $existing): ?string {
-		$type = trim((string)($estimate['domainObjectType'] ?? ''));
-		$ref = trim((string)($estimate['domainObjectRef'] ?? ''));
-		if ($type === '' || $ref === '') {
-			// The schema requires both; an estimate missing one is refused
-			// before this service sees it.
+		$target = $this->estimateTarget(estimate: $estimate);
+		if ($target === null) {
 			return null;
 		}
 
-		$role = $this->role($estimate);
-		$id = trim((string)($estimate['id'] ?? ''));
-
-		foreach ($this->forObject(rows: $existing, type: $type, ref: $ref) as $other) {
-			$otherId = trim((string)($other['id'] ?? ''));
-			if ($otherId !== '' && $otherId === $id) {
-				// The estimate being edited is not its own duplicate.
-				continue;
+		foreach ($this->forObject(rows: $existing, target: $target) as $other) {
+			if ($this->isAnotherOfTheRole(other: $other, target: $target) === true) {
+				return $this->duplicateRefusal(role: $target['role']);
 			}
-
-			if ($this->role($other) !== $role) {
-				continue;
-			}
-
-			return 'Voor dit object bestaat al een schatting'
-				. ($role === self::NO_ROLE ? '' : ' voor de rol ' . $role)
-				. '. Pas de bestaande schatting aan in plaats van een tweede toe te voegen.';
 		}
 
 		return null;
 	}//end refusalForEstimate()
+
+	/**
+	 * The object, role and own id of an incoming estimate; null when it
+	 * names no object.
+	 *
+	 * The schema requires both; an estimate missing one is refused before
+	 * this service sees it.
+	 *
+	 * @param array<string, mixed> $estimate The incoming TimeEstimate.
+	 *
+	 * @return array{type: string, ref: string, role: string, entryId: string}|null
+	 *
+	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-001
+	 */
+	private function estimateTarget(array $estimate): ?array {
+		$type = trim((string)($estimate['domainObjectType'] ?? ''));
+		$ref = trim((string)($estimate['domainObjectRef'] ?? ''));
+		if ($type === '' || $ref === '') {
+			return null;
+		}
+
+		return ['type' => $type, 'ref' => $ref, 'role' => $this->role($estimate), 'entryId' => trim((string)($estimate['id'] ?? ''))];
+	}//end estimateTarget()
+
+	/**
+	 * Whether a stored row is another one than the row being written, and of
+	 * the same role. The row being edited is not its own duplicate, and does
+	 * not count against itself.
+	 *
+	 * @param array<string, mixed>                                            $other  The stored TimeEstimate or TimeEntry.
+	 * @param array{type: string, ref: string, role: string, entryId: string} $target The object, the role and the id of the row being written ('' when new).
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-004
+	 */
+	private function isAnotherOfTheRole(array $other, array $target): bool {
+		$otherId = trim((string)($other['id'] ?? ''));
+		if ($otherId !== '' && $otherId === $target['entryId']) {
+			return false;
+		}
+
+		return $this->role($other) === $target['role'];
+	}//end isAnotherOfTheRole()
+
+	/**
+	 * The refusal of a second estimate for one object and role.
+	 *
+	 * @param string $role The role, or {@see NO_ROLE}.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-001
+	 */
+	private function duplicateRefusal(string $role): string {
+		return 'Voor dit object bestaat al een schatting'
+			. ($role === self::NO_ROLE ? '' : ' voor de rol ' . $role)
+			. '. Pas de bestaande schatting aan in plaats van een tweede toe te voegen.';
+	}//end duplicateRefusal()
 
 	/**
 	 * The refusal for writing one time entry against an enforced estimate, or
@@ -238,26 +296,51 @@ class TimeEstimateService {
 	 */
 	public function refusalForEntry(array $entry, array $estimates, array $entries): ?string {
 		$target = $this->bookingTarget(entry: $entry);
+		$estimate = $this->enforcedEstimate(estimates: $estimates, target: $target);
+		if ($estimate === null) {
+			return null;
+		}
+
+		$hours = ['ceiling' => $this->estimatedHours($estimate), 'booked' => $this->bookedAgainst(entries: $entries, target: $target), 'incoming' => $this->hours($entry)];
+		if (($hours['booked'] + $hours['incoming']) <= $hours['ceiling']) {
+			return null;
+		}
+
+		return $this->ceilingRefusal(role: $target['role'], hours: $hours);
+	}//end refusalForEntry()
+
+	/**
+	 * The enforced estimate an entry books against, or null when it books
+	 * against no object or the estimate is absent or not enforced.
+	 *
+	 * An estimate that is not enforced refuses nothing, and an object with no
+	 * estimate for this role has no ceiling at all.
+	 *
+	 * @param array<array<string, mixed>>                                          $estimates Every stored TimeEstimate.
+	 * @param array{type: string, ref: string, role: string, entryId: string}|null $target    The booking target, or null.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-004
+	 */
+	private function enforcedEstimate(array $estimates, ?array $target): ?array {
 		if ($target === null) {
 			return null;
 		}
 
-		$estimate = $this->estimateFor(estimates: $estimates, type: $target['type'], ref: $target['ref'], role: $target['role']);
-		if ($estimate === null || ($estimate['enforced'] ?? false) !== true) {
-			// An estimate that is not enforced refuses nothing, and an object
-			// with no estimate for this role has no ceiling at all.
-			return null;
-		}
+		return self::ifEnforced(estimate: $this->estimateFor(estimates: $estimates, target: $target));
+	}//end enforcedEstimate()
 
-		$ceiling = $this->estimatedHours($estimate);
-		$booked = $this->bookedAgainst(entries: $entries, target: $target);
-		$incoming = $this->hours($entry);
-		if (($booked + $incoming) <= $ceiling) {
-			return null;
-		}
-
-		return $this->ceilingRefusal(role: $target['role'], hours: ['ceiling' => $ceiling, 'booked' => $booked, 'incoming' => $incoming]);
-	}//end refusalForEntry()
+	/**
+	 * The estimate when it is enforced, else null.
+	 *
+	 * @param array<string, mixed>|null $estimate The estimate, or null.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function ifEnforced(?array $estimate): ?array {
+		return ($estimate !== null && ($estimate['enforced'] ?? false) === true) ? $estimate : null;
+	}//end ifEnforced()
 
 	/**
 	 * The object and role an entry books against, and the entry's own id;
@@ -321,17 +404,10 @@ class TimeEstimateService {
 	 */
 	private function bookedAgainst(array $entries, array $target): float {
 		$booked = 0.0;
-		foreach ($this->forObject(rows: $entries, type: $target['type'], ref: $target['ref']) as $other) {
-			$otherId = trim((string)($other['id'] ?? ''));
-			if ($otherId !== '' && $otherId === $target['entryId']) {
-				continue;
+		foreach ($this->forObject(rows: $entries, target: $target) as $other) {
+			if ($this->isAnotherOfTheRole(other: $other, target: $target) === true) {
+				$booked += $this->hours($other);
 			}
-
-			if ($this->role($other) !== $target['role']) {
-				continue;
-			}
-
-			$booked += $this->hours($other);
 		}
 
 		return $booked;
@@ -341,26 +417,18 @@ class TimeEstimateService {
 	 * The estimate governing one object and role, preferring the role's own
 	 * estimate over the object-wide one.
 	 *
-	 * @param array<array<string, mixed>> $estimates Every stored TimeEstimate.
-	 * @param string $type The `<app>:<schema>` literal.
-	 * @param string $ref The object's uuid.
-	 * @param string $role The role, or {@see NO_ROLE}.
+	 * @param array<array<string, mixed>>               $estimates Every stored TimeEstimate.
+	 * @param array{type: string, ref: string, role: string} $target    The `<app>:<schema>` literal, the object's uuid and the role (or {@see NO_ROLE}).
 	 *
 	 * @return array<string, mixed>|null The estimate, or null.
 	 *
 	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-004
 	 */
-	public function estimateFor(array $estimates, string $type, string $ref, string $role): ?array {
-		$mine = $this->forObject(rows: $estimates, type: $type, ref: $ref);
-
-		foreach ($mine as $estimate) {
-			if ($this->role($estimate) === $role) {
+	public function estimateFor(array $estimates, array $target): ?array {
+		foreach ($this->forObject(rows: $estimates, target: $target) as $estimate) {
+			if ($this->role($estimate) === $target['role']) {
 				return $estimate;
 			}
-		}
-
-		if ($role === self::NO_ROLE) {
-			return null;
 		}
 
 		// A ceiling on one role does not block another, so an entry carrying a
@@ -373,22 +441,21 @@ class TimeEstimateService {
 	/**
 	 * The rows belonging to one host object.
 	 *
-	 * @param array<array<string, mixed>> $rows The rows.
-	 * @param string $type The `<app>:<schema>` literal.
-	 * @param string $ref The object's uuid.
+	 * @param array<array<string, mixed>>    $rows   The rows.
+	 * @param array{type: string, ref: string} $target The `<app>:<schema>` literal and the object's uuid.
 	 *
 	 * @return array<int, array<string, mixed>> The matching rows.
 	 *
 	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-002
 	 */
-	private function forObject(array $rows, string $type, string $ref): array {
+	private function forObject(array $rows, array $target): array {
 		$mine = [];
 		foreach ($rows as $row) {
-			if (trim((string)($row['domainObjectType'] ?? '')) !== $type) {
+			if (trim((string)($row['domainObjectType'] ?? '')) !== $target['type']) {
 				continue;
 			}
 
-			if (trim((string)($row['domainObjectRef'] ?? '')) !== $ref) {
+			if (trim((string)($row['domainObjectRef'] ?? '')) !== $target['ref']) {
 				continue;
 			}
 
