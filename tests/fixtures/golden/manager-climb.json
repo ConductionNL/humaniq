@@ -1,0 +1,29 @@
+{
+    "leaf-member": [
+        "leaf"
+    ],
+    "leaf-manager": [
+        "mid"
+    ],
+    "mid-manager": [
+        "boss"
+    ],
+    "top-manager": [],
+    "twin-of-mid": [
+        "boss"
+    ],
+    "cross-manager": [],
+    "cross-own-above": [],
+    "loop-manager": [],
+    "dangling-manager": [],
+    "unmanaged-unit": [],
+    "foreign-manager": [],
+    "numeric-unit": [
+        "boss"
+    ],
+    "bad-parent": [],
+    "missing-unit": [],
+    "no-account": [
+        "mid"
+    ]
+}

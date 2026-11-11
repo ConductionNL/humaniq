@@ -614,4 +614,68 @@ class OrgResolutionServiceTest extends TestCase {
 		$this->assertSame(['pieter'], $this->service->resolveManagerUserIds('emp-tim', $assignments, $units, $employees, '2026-11-03'));
 	}//end testAPlacementInAnotherAdministrationsUnitGivesNoManager()
 
+	/**
+	 * The whole climb, allowed and refused, over one tree with every
+	 * dead-end: the managers each employee resolves to.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeClimbOverEveryDeadEnd(): void {
+		$units = [
+			'u-top'      => ['managerId' => 'e-boss', 'parentUnitId' => '', 'administrationId' => 'A1'],
+			'u-mid'      => ['managerId' => 'e-mid', 'parentUnitId' => 'u-top', 'administrationId' => 'A1'],
+			'u-leaf'     => ['managerId' => 'e-leaf', 'parentUnitId' => 'u-mid', 'administrationId' => 'A1'],
+			'u-other'    => ['managerId' => 'e-x', 'parentUnitId' => '', 'administrationId' => 'A2'],
+			'u-cross'    => ['managerId' => 'e-cross', 'parentUnitId' => 'u-other', 'administrationId' => 'A1'],
+			'u-other2'   => ['managerId' => 'e-boss', 'parentUnitId' => '', 'administrationId' => 'A2'],
+			'u-cross2'   => ['managerId' => 'e-cross', 'parentUnitId' => 'u-other2', 'administrationId' => 'A1'],
+			'u-loop-a'   => ['managerId' => 'e-loop', 'parentUnitId' => 'u-loop-b'],
+			'u-loop-b'   => ['managerId' => 'e-loop', 'parentUnitId' => 'u-loop-a'],
+			'u-dangling' => ['managerId' => 'e-dang', 'parentUnitId' => 'u-gone', 'administrationId' => 'A1'],
+			'u-empty'    => ['managerId' => '', 'parentUnitId' => 'u-top', 'administrationId' => 'A1'],
+			'u-foreign'  => ['managerId' => 'e-far', 'parentUnitId' => '', 'administrationId' => 'A1'],
+			'7'          => ['managerId' => 'e-num', 'parentUnitId' => 'u-top', 'administrationId' => 'A1'],
+			'u-bad'      => 'not a unit',
+			'u-badtop'   => ['managerId' => 'e-bt', 'parentUnitId' => 'u-bad', 'administrationId' => 'A1'],
+		];
+		$employees = [
+			'e-boss'  => ['nextcloudUserId' => 'boss', 'administrationId' => 'A1'],
+			'e-mid'   => ['nextcloudUserId' => 'mid', 'administrationId' => 'A1'],
+			'e-leaf'  => ['nextcloudUserId' => 'leaf', 'administrationId' => 'A1'],
+			'e-x'     => ['nextcloudUserId' => 'x', 'administrationId' => 'A2'],
+			'e-cross' => ['nextcloudUserId' => 'cross', 'administrationId' => 'A1'],
+			'e-loop'  => ['nextcloudUserId' => 'loop'],
+			'e-dang'  => ['nextcloudUserId' => 'dang', 'administrationId' => 'A1'],
+			'e-far'   => ['nextcloudUserId' => 'far', 'administrationId' => 'A2'],
+			'e-num'   => ['nextcloudUserId' => 'num', 'administrationId' => 'A1'],
+			'e-bt'    => ['nextcloudUserId' => 'bt', 'administrationId' => 'A1'],
+			'e-twin'  => ['nextcloudUserId' => 'mid', 'administrationId' => 'A1'],
+			'e-none'  => ['administrationId' => 'A1'],
+		];
+		$cases = [
+			'leaf-member'      => ['e-staff', 'u-leaf'],
+			'leaf-manager'     => ['e-leaf', 'u-leaf'],
+			'mid-manager'      => ['e-mid', 'u-mid'],
+			'top-manager'      => ['e-boss', 'u-top'],
+			'twin-of-mid'      => ['e-twin', 'u-mid'],
+			'cross-manager'    => ['e-cross', 'u-cross'],
+			'cross-own-above'  => ['e-cross', 'u-cross2'],
+			'loop-manager'     => ['e-loop', 'u-loop-a'],
+			'dangling-manager' => ['e-dang', 'u-dangling'],
+			'unmanaged-unit'   => ['e-staff', 'u-empty'],
+			'foreign-manager'  => ['e-staff', 'u-foreign'],
+			'numeric-unit'     => ['e-num', '7'],
+			'bad-parent'       => ['e-bt', 'u-badtop'],
+			'missing-unit'     => ['e-staff', 'u-missing'],
+			'no-account'       => ['e-none', 'u-mid'],
+		];
+		$got = [];
+		foreach ($cases as $name => [$employeeId, $unitId]) {
+			$assignments = [$employeeId => [['orgUnitId' => $unitId, 'endDate' => '']]];
+			$got[$name] = $this->service->resolveManagerUserIds($employeeId, $assignments, $units, $employees, '2026-11-02');
+		}
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/manager-climb.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeClimbOverEveryDeadEnd()
+
 }//end class
