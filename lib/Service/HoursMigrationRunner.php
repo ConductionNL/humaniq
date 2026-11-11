@@ -35,6 +35,7 @@ namespace OCA\Humaniq\Service;
 
 use OCP\BackgroundJob\IJobList;
 use OCP\IGroupManager;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -83,22 +84,7 @@ class HoursMigrationRunner {
 			return $pass();
 		}
 
-		$actingUser = null;
-		try {
-			$adminGroup = $this->groupManager->get('admin');
-			if ($adminGroup !== null) {
-				$admins = $adminGroup->getUsers();
-				if (count($admins) > 0) {
-					$actingUser = reset($admins);
-				}
-			}
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'humaniq: hours-process migration could not resolve an acting admin user',
-				['exception' => $e->getMessage()]
-			);
-		}
-
+		$actingUser = $this->actingAdmin();
 		if ($actingUser === null) {
 			return $pass();
 		}
@@ -110,6 +96,26 @@ class HoursMigrationRunner {
 			$this->userSession->setUser(null);
 		}
 	}//end runAsActingUser()
+
+	/**
+	 * The first admin, to act as; null when there is none or the lookup
+	 * fails, which is logged.
+	 *
+	 * @return IUser|null
+	 */
+	private function actingAdmin(): ?IUser {
+		try {
+			$admins = array_values(($this->groupManager->get('admin')?->getUsers() ?? []));
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'humaniq: hours-process migration could not resolve an acting admin user',
+				['exception' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		return ($admins[0] ?? null);
+	}//end actingAdmin()
 
 	/**
 	 * Whether a failed pass should defer to the background completion job.
