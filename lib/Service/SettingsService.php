@@ -501,52 +501,6 @@ class SettingsService {
 	}//end isRetentionExpiryEnabled()
 
 	/**
-	 * The leave type codes the net FTE of a formation leaves out
-	 * (people-formation-positions design.md D3), configurable via app config
-	 * key `formation_net_fte_leave_types` as a comma-separated list. Defaults
-	 * to parental leave and pregnancy and childbirth leave, the tender's
-	 * categories; long-term sickness is the separate threshold below.
-	 *
-	 * @return array<int, string>
-	 *
-	 * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-003
-	 */
-	public function getFormationNetFteLeaveTypes(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, 'formation_net_fte_leave_types', 'parental,zwangerschap');
-
-		return array_values(array_filter(array_map('trim', explode(',', $raw)), static fn (string $code): bool => $code !== ''));
-	}//end getFormationNetFteLeaveTypes()
-
-	/**
-	 * The number of weeks after which a sickness case counts against the net
-	 * FTE of a formation (people-formation-positions design.md D3),
-	 * configurable via app config key `formation_long_term_sick_weeks`.
-	 * Defaults to 6.
-	 *
-	 * @return int
-	 *
-	 * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-003
-	 */
-	public function getFormationLongTermSickWeeks(): int {
-		return max(0, $this->appConfig->getValueInt(Application::APP_ID, 'formation_long_term_sick_weeks', 6));
-	}//end getFormationLongTermSickWeeks()
-
-	/**
-	 * department-figures: the fewest people a unit must hold in a period
-	 * before its manager sees its figures, so a small team's absence or wage
-	 * cost cannot be traced to one person. App config key
-	 * `department_figures_minimum_members`, default 5; HR and accountants are
-	 * not bound by it.
-	 *
-	 * @return int
-	 *
-	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-002
-	 */
-	public function getDepartmentFiguresMinimumMembers(): int {
-		return max(1, $this->appConfig->getValueInt(Application::APP_ID, 'department_figures_minimum_members', 5));
-	}//end getDepartmentFiguresMinimumMembers()
-
-	/**
 	 * reporting-pay-transparency: the fewest women and the fewest men a group
 	 * needs before the pay transparency report shows its figures. App config
 	 * key `pay_transparency_minimum_group`, default 5.
