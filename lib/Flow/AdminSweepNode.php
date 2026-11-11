@@ -26,15 +26,16 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
-use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCP\WorkflowEngine\IManager;
 
 /**
- * A scheduled step over every due record, for administrators only.
+ * A scheduled step over every due record, for administrators only. The
+ * steps themselves implement OpenRegister's flow node interface, which only
+ * exists once OpenRegister is installed.
  *
  * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-002
  */
-abstract class AdminSweepNode implements IFlowNode {
+abstract class AdminSweepNode {
 
 	/**
 	 * Available to administrators only: it acts on every case.
