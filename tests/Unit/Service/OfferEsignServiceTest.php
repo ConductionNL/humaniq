@@ -838,6 +838,66 @@ class OfferEsignServiceTest extends TestCase {
 	}//end testNoNextcloudUserForCandidateFailsCleanlyWithoutCallingDocudesk()
 
 	/**
+	 * The whole signing request handed to docudesk, key for key and in order,
+	 * with the deadline the configured number of days ahead.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeSigningRequest(): void {
+		$signingService = $this->fakeSigningService();
+		[$service] = $this->service(['job-application' => [$this->application()]], signingService: $signingService, fileService: $this->fakeFileService(fileId: 42));
+
+		$before = new \DateTimeImmutable('+14 days -1 minute');
+		$result = $service->requestSignature('app-1');
+		$after  = new \DateTimeImmutable('+14 days +1 minute');
+
+		$data = $signingService->createCalls[0];
+		$this->assertSame(
+			['documentFileId', 'documentName', 'signatureLevel', 'signingMode', 'deadline', 'signers', 'sourceApp', 'subjectRegister', 'subjectSchema', 'subjectId', 'subjectLabel', 'externalReference', 'correlationId'],
+			array_keys($data)
+		);
+		$this->assertSame('42', $data['documentFileId']);
+		$this->assertIsString($data['documentName']);
+		$this->assertSame(['SES', 'sequential'], [$data['signatureLevel'], $data['signingMode']]);
+		$deadline = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $data['deadline']);
+		$this->assertNotFalse($deadline);
+		$this->assertTrue($deadline >= $before && $deadline <= $after, '14 days ahead');
+		$this->assertSame(['Sanne Voorbeeld', 'app-1', 'app-1'], [$data['subjectLabel'], $data['externalReference'], $data['correlationId']]);
+		$this->assertSame(['requested', 'Aanbiedingsbrief gegenereerd en e-handtekeningaanvraag aangemaakt.'], [$result['status'], $result['message']]);
+
+	}//end testTheWholeSigningRequest()
+
+	/**
+	 * The exact failure messages: no Nextcloud user, an orphan recovered, an orphan not guessed.
+	 *
+	 * @return void
+	 */
+	public function testTheExactFailureMessages(): void {
+		[$noUser] = $this->service(['job-application' => [$this->application()]], signingService: $this->fakeSigningService(), userManager: $this->fakeUserManager([]));
+		$this->assertSame(
+			'no-nextcloud-user-for-candidate — docudesk kan niet ondertekenen voor externe (niet-Nextcloud-)ondertekenaars '
+			.'(zie docudesk SigningService::sign, dat autoriseert op signer.userId): geen Nextcloud-gebruiker gevonden voor "sanne.voorbeeld@example.org".',
+			$noUser->requestSignature('app-1')['message']
+		);
+
+		$recovering = $this->fakeSigningService(createThrows: true, listRequestsResult: [['id' => 'req-orphan', 'correlationId' => 'app-1', 'documentFileId' => '42', 'status' => 'PENDING']]);
+		[$recovered] = $this->service(['job-application' => [$this->application()]], signingService: $recovering, fileService: $this->fakeFileService(fileId: 42));
+		$this->assertStringEndsWith(
+			' Een gedeeltelijk aangemaakte signing-request (req-orphan) is teruggevonden en blijft bereikbaar via syncSignatureStatus/cancelRequest.',
+			$recovered->requestSignature('app-1')['message']
+		);
+
+		[$lost] = $this->service(['job-application' => [$this->application()]], signingService: $this->fakeSigningService(createThrows: true, listRequestsResult: []), fileService: $this->fakeFileService(fileId: 42));
+		$message = $lost->requestSignature('app-1')['message'];
+		$this->assertStringStartsWith('Aanvragen van de e-handtekening via docudesk is mislukt: ', $message);
+		$this->assertStringEndsWith(
+			' Kon een eventueel gedeeltelijk aangemaakte signing-request niet eenduidig terugvinden -- zoek zo nodig handmatig in het signingRequest-register op correlationId="app-1".',
+			$message
+		);
+
+	}//end testTheExactFailureMessages()
+
+	/**
 	 * Defect-3 fix: when createRequest() throws AFTER docudesk already
 	 * wrote the signing-request row (e.g. an unrelated docudesk-side
 	 * failure in the signer-record loop), the orphaned request is
