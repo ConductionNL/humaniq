@@ -102,6 +102,13 @@ class EmployeeChangeRequestFlowTest extends TestCase {
 	private EmployeeGuardedFieldListener $guard;
 
 	/**
+	 * The change request service under the listener.
+	 *
+	 * @var ChangeRequestService
+	 */
+	private ChangeRequestService $service;
+
+	/**
 	 * Seed an employee, the five default rules and wire the real services.
 	 *
 	 * @return void
@@ -172,6 +179,7 @@ class EmployeeChangeRequestFlowTest extends TestCase {
 		$rules = new ChangeApprovalRules($gateway);
 		$service = new ChangeRequestService(gateway: $gateway, rules: $rules, userSession: $session, time: $time);
 		$applier = new ChangeRequestApplier(gateway: $gateway, marker: $this->marker, time: $time);
+		$this->service = $service;
 		$this->requests = new ChangeRequestListener(gateway: $gateway, service: $service, applier: $applier, logger: new NullLogger());
 		$this->guard = new EmployeeGuardedFieldListener(gateway: $gateway, rules: $rules, marker: $this->marker, logger: new NullLogger(), access: new FieldReadAccess(new FakeContainer([]), new NullLogger()));
 	}//end wire()
@@ -260,6 +268,36 @@ class EmployeeChangeRequestFlowTest extends TestCase {
 		self::assertSame([], RegisterSchemaValidator::errors('EmployeeChangeRequest', $payload), (string)json_encode($payload));
 		return $request;
 	}//end request()
+
+	/**
+	 * The whole set of stamps for each kind of placement, allowed and refused:
+	 * HR's address change for someone else waits for HR, the employee's own
+	 * applies at once, a concept stays a concept, and the refusals carry their
+	 * message and no stamps.
+	 *
+	 * @return void
+	 */
+	public function testTheWholePlacementOfEachRequest(): void {
+		$cases = [
+			'other'   => ['hr.user', ['employeeId' => self::EMPLOYEE, 'changeKind' => 'adres', 'straat' => 'Stationsplein']],
+			'own'     => ['a.visser', ['changeKind' => 'adres', 'straat' => 'Stationsplein', 'changes' => ['huisnummer' => '1']]],
+			'concept' => ['a.visser', ['changeKind' => 'bankrekening', 'iban' => 'NL02RABO0123456789', 'status' => 'concept']],
+			'anon'    => ['', ['employeeId' => self::EMPLOYEE, 'changeKind' => 'bankrekening', 'iban' => 'NL02RABO0123456789']],
+			'nobody'  => ['x.nobody', ['changeKind' => 'adres', 'straat' => 'Stationsplein']],
+			'kind'    => ['a.visser', ['changeKind' => 'onbekend', 'straat' => 'Stationsplein']],
+			'empty'   => ['a.visser', ['changeKind' => 'adres']],
+			'outside' => ['a.visser', ['changeKind' => 'adres', 'iban' => 'NL02RABO0123456789']],
+		];
+		$got = [];
+		foreach ($cases as $name => [$uid, $request]) {
+			$this->uid = $uid;
+			$got[$name] = $this->service->prepare($request);
+		}
+
+		$golden = json_decode((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/change-request-placement.json'), true);
+		self::assertSame($golden, $got);
+
+	}//end testTheWholePlacementOfEachRequest()
 
 	/**
 	 * A bank account change waits for HR, then is applied once on approval.
