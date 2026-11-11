@@ -312,4 +312,100 @@ class LeaveBuySellApprovalGuardTest extends TestCase {
 		$this->assertTrue($result->isAllowed());
 	}//end testBuyIsUnaffectedByAnAbsentRegister()
 
+	/**
+	 * Golden: which sells the balance lookup allows and which it denies, and with what message.
+	 *
+	 * @return void
+	 */
+	public function testBalanceLookupAllowsAndDeniesExactly(): void {
+		$notFound = 'Er is geen verlofsaldo gevonden voor deze medewerker/jaar/verloftype; goedkeuring is geweigerd.';
+		$guard = $this->guardWithBalances(
+			[
+				$this->balance(['employeeId' => 'emp-2']),
+				$this->balance(['leaveType' => 'extra', 'bovenwettelijkHours' => 4]),
+				$this->balance(['year' => '2026', 'bovenwettelijkHours' => 10]),
+				$this->balance(['bovenwettelijkHours' => 99]),
+			]
+		);
+		$cases = [
+			'first matching balance wins' => [[], null],
+			'string year in the request' => [['year' => '2026', 'hours' => 10], null],
+			'over the first match' => [['hours' => 11], 'Onvoldoende bovenwettelijke verlofuren (10 beschikbaar, 11 aangevraagd om te verkopen); goedkeuring is geweigerd.'],
+			'other leave type' => [['leaveType' => 'extra', 'hours' => 4], null],
+			'no employee: the claimant check refuses first' => [['employeeId' => ''], 'De indiener van deze declaratie/urenstaat is onbekend; goedkeuring is geweigerd.'],
+			'no year' => [['year' => 0], $notFound],
+			'a negative year' => [['year' => -2026], $notFound],
+			'no leave type' => [['leaveType' => null], $notFound],
+			'unknown employee' => [['employeeId' => 'emp-9'], $notFound],
+		];
+
+		foreach ($cases as $label => [$overrides, $message]) {
+			$result = $guard->check($this->transaction($overrides), 'approve', 'manager-1');
+			$this->assertSame([$message === null, $message], [$result->isAllowed(), $result->isAllowed() === true ? null : $result->getMessage()], $label);
+		}
+
+	}//end testBalanceLookupAllowsAndDeniesExactly()
+
+	/**
+	 * Golden: a register read that throws, or returns no list, denies a sell as not found.
+	 *
+	 * @return void
+	 */
+	public function testUnreadableBalancesDeny(): void {
+		foreach ([new \RuntimeException('down'), 'not-a-list'] as $answer) {
+			$objectService = new class($answer) {
+
+				/**
+				 * @param mixed $answer What findAll() throws or returns.
+				 */
+				public function __construct(
+					private readonly mixed $answer,
+				) {
+
+				}//end __construct()
+
+				/**
+				 * @param string $register The register.
+				 *
+				 * @return self
+				 */
+				public function setRegister(string $register): self {
+					return $this;
+				}//end setRegister()
+
+				/**
+				 * @param string $schema The schema.
+				 *
+				 * @return self
+				 */
+				public function setSchema(string $schema): self {
+					return $this;
+				}//end setSchema()
+
+				/**
+				 * @param array<string, mixed> $options Ignored.
+				 *
+				 * @return mixed
+				 */
+				public function findAll(array $options = []): mixed {
+					if ($this->answer instanceof \Throwable) {
+						throw $this->answer;
+					}
+
+					return $this->answer;
+				}//end findAll()
+			};
+
+			$container = $this->createMock(ContainerInterface::class);
+			$container->method('get')->willReturn($objectService);
+			$appConfig = $this->createMock(IAppConfig::class);
+			$appConfig->method('getValueString')->willReturn('humaniq');
+
+			$result = (new LeaveBuySellApprovalGuard($container, $appConfig))->check($this->transaction(), 'approve', 'manager-1');
+
+			$this->assertFalse($result->isAllowed());
+			$this->assertSame('Er is geen verlofsaldo gevonden voor deze medewerker/jaar/verloftype; goedkeuring is geweigerd.', $result->getMessage());
+		}
+
+	}//end testUnreadableBalancesDeny()
 }//end class
