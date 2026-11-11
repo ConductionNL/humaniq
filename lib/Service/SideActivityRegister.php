@@ -94,11 +94,11 @@ class SideActivityRegister {
 		}
 
 		$own = (string)($employee['nextcloudUserId'] ?? '');
-		if ($userId !== '' && $userId !== $own && $this->roles->isHr($userId) === false) {
+		if ($this->mayReportFor(own: $own, userId: $userId) === false) {
 			return ['stamps' => [], 'error' => 'You can only report your own side activities.'];
 		}
 
-		if (($report['noneToReport'] ?? false) !== true && trim((string)($report['description'] ?? '')) === '') {
+		if (self::isFilledIn(report: $report) === false) {
 			return ['stamps' => [], 'error' => 'Describe the activity, or tick Nothing to report.'];
 		}
 
@@ -114,6 +114,29 @@ class SideActivityRegister {
 			'error' => null,
 		];
 	}//end place()
+
+	/**
+	 * Whether the caller may report for the employee: the system, the employee themself, or HR.
+	 *
+	 * @param string $own The employee's own account, or ''.
+	 * @param string $userId The caller, '' for the system.
+	 *
+	 * @return bool
+	 */
+	private function mayReportFor(string $own, string $userId): bool {
+		return $userId === '' || $userId === $own || $this->roles->isHr($userId) === true;
+	}//end mayReportFor()
+
+	/**
+	 * Whether a report describes an activity or is ticked as nothing to report.
+	 *
+	 * @param array<string, mixed> $report The report.
+	 *
+	 * @return bool
+	 */
+	private static function isFilledIn(array $report): bool {
+		return ($report['noneToReport'] ?? false) === true || trim((string)($report['description'] ?? '')) !== '';
+	}//end isFilledIn()
 
 	/**
 	 * Whether the employee has a report on file.
