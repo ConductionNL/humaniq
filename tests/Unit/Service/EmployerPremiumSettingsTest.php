@@ -22,18 +22,15 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
-use OCP\App\IAppManager;
-use OCP\IAppConfig;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * What the employer's Aof tariff and Whk percentage read from app config.
  *
- * @covers \OCA\Humaniq\Service\SettingsService
+ * @covers \OCA\Humaniq\Service\EmployerPremiumSettings
  * @uses   \OCA\Humaniq\Tests\Unit\Support\AppConfigValues
  */
 class EmployerPremiumSettingsTest extends TestCase {
@@ -67,12 +64,12 @@ class EmployerPremiumSettingsTest extends TestCase {
 	 *
 	 * @param array<string, string> $values The stored app config values by key.
 	 *
-	 * @return SettingsService
+	 * @return EmployerPremiumSettings
 	 */
-	private function settings(array $values): SettingsService {
+	private function settings(array $values): EmployerPremiumSettings {
 		$config = AppConfigValues::answer($this->createMock(IAppConfig::class), $values);
 
-		return new SettingsService($config, $this->createMock(IAppManager::class), $this->createMock(ContainerInterface::class), new NullLogger());
+		return new EmployerPremiumSettings($config);
 	}//end settings()
 
 }//end class

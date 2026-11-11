@@ -48,6 +48,7 @@ use OCA\Humaniq\Service\AwfReviewService;
 use OCA\Humaniq\Service\CaoComponentCalculator;
 use OCA\Humaniq\Service\CaoComponentPayService;
 use OCA\Humaniq\Service\CostAllocationService;
+use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Service\EmploymentTermsResolver;
 use OCA\Humaniq\Service\HoursPayService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
@@ -58,8 +59,9 @@ use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
-use PHPUnit\Framework\TestCase;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Services\IAppConfig;
+use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -251,8 +253,6 @@ class PayrollRunServiceTest extends TestCase {
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getPayrollAofTariff')->willReturn('laag');
-		$settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
 
 		$logger = $this->createMock(LoggerInterface::class);
 
@@ -261,7 +261,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview),
+			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview),
 			$fake,
 			$retentionGuard,
 		];
