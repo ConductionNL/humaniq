@@ -448,9 +448,9 @@
             },
             "LeaveTransaction": {
                 "slug": "LeaveTransaction",
-                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr"]},
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}, {"group": "authenticated", "match": {"deputyUserIds": {"$contains": "$userId"}}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}, {"group": "authenticated", "match": {"deputyUserIds": {"$contains": "$userId"}}}], "delete": ["humaniq-hr"]},
                 "icon": "SwapHorizontal",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Leave transaction",
                 "description": "An employee request to buy or sell leave hours (IKB-style flexibility, individueel keuzebudget): a declarative draft -> submitted -> approved/rejected -> settled lifecycle (leave-buy-sell), guarded by the reused NoSelfApprovalGuard for separation of duties. A sell may only ever draw down bovenwettelijkHours on the matching LeaveBalance: never entitledHours/usedHours, so it can never threaten the nl-verlof-wettelijk-minimum statutory floor. Settlement (LeaveBuySellSettlementService) writes the balance exactly once and stamps settledAmount, which PayrollRunService.generate() folds into the current run's Payslip.leaveBuySell as an already-computed payroll input, never an engine recompute.",
                 "type": "object",
@@ -589,6 +589,8 @@
                     }
                 },
                 "properties": {
+                    "managerUserId": {"type": "string", "nullable": true, "title": "Manager", "description": "The account of the employee's manager, who may read this record.", "x-notes": "Stamped by humaniq on every save and refreshed by the manager access pass (ManagerAccessStamps): the nextcloudUserId of the manager the org resolution gives today for the record's employee. Never taken from the request. Read by the managerUserId authorization rule."},
+                    "deputyUserIds": {"type": "array", "items": {"type": "string"}, "nullable": true, "title": "Deputies", "description": "The accounts standing in for the manager today, who may read this record too.", "x-notes": "Stamped with managerUserId: the deputies of ManagerDeputy records active today for that manager. Refreshed by the manager access pass when a deputy period starts or ends. Read by the deputyUserIds $contains authorization rule."},
                     "employeeId": {
                         "type": "string",
                         "format": "uuid",

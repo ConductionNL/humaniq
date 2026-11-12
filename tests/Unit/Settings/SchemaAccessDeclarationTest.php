@@ -150,4 +150,35 @@ class SchemaAccessDeclarationTest extends TestCase {
 		self::assertContains(['group' => 'authenticated', 'match' => ['managerUserId' => '$userId']], $schemas['LeaveRequest']['authorization']['read']);
 		self::assertSame([HumaniqRoles::HR_GROUP, HumaniqRoles::PAYROLL_GROUP], $schemas['PayrollRun']['authorization']['read']);
 	}//end testEmployeesAndManagersReadTheirOwnRecords()
+
+	/**
+	 * The manager and the deputies stamped on a team member's employee
+	 * record, sickness case, leave trade and pay adjustment read it, and
+	 * decide the leave trade; nobody else outside HR gains a verb.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
+	 */
+	public function testTheStampedManagerAndDeputiesReadTheirTeamsRecords(): void {
+		$schemas = self::config()['components']['schemas'];
+		$manager = ['group' => 'authenticated', 'match' => ['managerUserId' => '$userId']];
+		$deputy = ['group' => 'authenticated', 'match' => ['deputyUserIds' => ['$contains' => '$userId']]];
+
+		foreach (['Employee', 'SickLeaveCase', 'LeaveTransaction', 'CompAdjustment'] as $name) {
+			$auth = $schemas[$name]['authorization'];
+			self::assertContains($manager, $auth['read'], $name);
+			self::assertContains($deputy, $auth['read'], $name);
+			self::assertArrayHasKey('managerUserId', $schemas[$name]['properties'], $name);
+			self::assertArrayHasKey('deputyUserIds', $schemas[$name]['properties'], $name);
+			self::assertNotContains($manager, $auth['create'], $name);
+			self::assertNotContains($manager, $auth['delete'], $name);
+		}
+
+		self::assertContains($manager, $schemas['LeaveTransaction']['authorization']['update']);
+		self::assertContains($deputy, $schemas['LeaveTransaction']['authorization']['update']);
+		self::assertSame([HumaniqRoles::HR_GROUP], $schemas['SickLeaveCase']['authorization']['update']);
+		self::assertSame([HumaniqRoles::HR_GROUP], $schemas['CompAdjustment']['authorization']['update']);
+		self::assertSame([HumaniqRoles::HR_GROUP, HumaniqRoles::PAYROLL_GROUP], $schemas['Employee']['authorization']['update']);
+	}//end testTheStampedManagerAndDeputiesReadTheirTeamsRecords()
 }//end class
