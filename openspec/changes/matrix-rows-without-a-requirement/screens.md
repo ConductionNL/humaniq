@@ -7,3 +7,6 @@
 - HuProjecturen https://identity.conduction.nl/screens/board?id=humaniq/HuProjecturen
 - HuAanwezigheid https://identity.conduction.nl/screens/board?id=humaniq/HuAanwezigheid
 - HuGesprekscyclus https://identity.conduction.nl/screens/board?id=humaniq/HuGesprekscyclus
+- HuToetsing https://identity.conduction.nl/screens/board?id=humaniq/HuToetsing
+- HuKoppelingen https://identity.conduction.nl/screens/board?id=humaniq/HuKoppelingen
+- HuDeclaratie https://identity.conduction.nl/screens/board?id=humaniq/HuDeclaratie

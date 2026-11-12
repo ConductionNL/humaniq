@@ -19,6 +19,10 @@
       page and menu entry. Verify: `npm run check:manifest` exits 0.
 - [ ] 2.4 Seed the two leave type settings and two requests. Verify:
       `npm run check:seed-refs` exits 0.
+- [ ] 2.5 Show the coverage warning from `GET /api/leave/coverage` on `LeaveRequestDetail`
+      before Approve, and store what the approver accepted in `coverageWarningAccepted`
+      (`src/manifest.d/hr-leave.json`, REQ-LVM-S02). Verify: `npm run check:manifest` exits 0
+      and approving the seeded thin-coverage request records the warning.
 
 ## 3. Verification
 
