@@ -117,6 +117,10 @@ Vrij en open source onder de EUPL-1.2-licentie.
             Off until retention_expiry_enabled is set.
         -->
         <job>OCA\Humaniq\BackgroundJob\RetentionExpiryJob</job>
+        <!-- mss-team-scope REQ-MSS-009: every six hours, restamps the manager and
+             deputy access fields, so a deputy period that starts or ends reaches
+             the read rules without a save of the record. -->
+        <job>OCA\Humaniq\BackgroundJob\RefreshManagerAccessJob</job>
     </background-jobs>
 
     <repair-steps>
@@ -247,6 +251,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  Runs AFTER MigrateHoursProcess. Idempotent: only a stamp that
                  differs from the shared resolution is written. -->
             <step>OCA\Humaniq\Repair\RestampOpenManagerRecords</step>
+            <!-- mss-team-scope (REQ-MSS-009): stamp managerUserId and deputyUserIds
+                 on Employee, SickLeaveCase, LeaveTransaction and CompAdjustment
+                 records stored before the fields existed. Runs AFTER
+                 InitializeRegister, which imports the fields. -->
+            <step>OCA\Humaniq\Repair\StampManagerAccess</step>
             <!-- settle-the-shipped-example-claim: the old seed shipped the example
                  travel claim approved on the payroll route without a run. Marks it
                  reimbursed on the direct route, once, only while it still holds the
@@ -355,6 +364,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  Runs AFTER MigrateHoursProcess. Idempotent: only a stamp that
                  differs from the shared resolution is written. -->
             <step>OCA\Humaniq\Repair\RestampOpenManagerRecords</step>
+            <!-- mss-team-scope (REQ-MSS-009): stamp managerUserId and deputyUserIds
+                 on Employee, SickLeaveCase, LeaveTransaction and CompAdjustment
+                 records stored before the fields existed. Runs AFTER
+                 InitializeRegister, which imports the fields. -->
+            <step>OCA\Humaniq\Repair\StampManagerAccess</step>
             <!-- settle-the-shipped-example-claim: the old seed shipped the example
                  travel claim approved on the payroll route without a run. Marks it
                  reimbursed on the direct route, once, only while it still holds the
