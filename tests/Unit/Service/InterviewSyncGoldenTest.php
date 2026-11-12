@@ -61,6 +61,8 @@ use RuntimeException;
  * @uses   \OCA\Humaniq\Support\ResolvesObjectService
  * @uses   \OCA\Humaniq\Support\NormalisesRows
  * @uses   \OCA\Humaniq\Support\ReadsIcsValues
+ * @uses \OCA\Humaniq\Service\CalDavBackendResolver
+ * @uses \OCA\Humaniq\Service\IcsText
  *
  * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-003
  */

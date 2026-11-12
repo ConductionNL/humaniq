@@ -44,6 +44,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \OCA\Humaniq\Listener\ExpensePayoutFieldsListener
  * @uses   \OCA\Humaniq\Service\HoursRegisterGateway
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
+ * @uses \OCA\Humaniq\Listener\SchemaWriteFilter
  */
 class ExpensePayoutFieldsListenerTest extends TestCase {
 
