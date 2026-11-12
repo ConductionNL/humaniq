@@ -4,6 +4,7 @@
         "schemas": {
             "WntDisclosure": {
                 "slug": "WntDisclosure",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "ScaleBalance",
                 "version": "0.1.0",
                 "title": "WNT disclosure",

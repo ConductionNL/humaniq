@@ -3,6 +3,9 @@
 /**
  * Loonrun Flow Repair Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The v1 `Loonrun` declaration shipped its switch-gate condition as
  * `{"var": "review.outcome"}`. OpenRegister's `UserTaskNode::placeOutcome()`
  * writes the outcome bag INTO the item's record (`json.<outcomeKey>`), and
@@ -42,9 +45,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

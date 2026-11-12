@@ -3,6 +3,9 @@
 /**
  * Humaniq RegisterAgendaLeafListener.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Registers humaniq's `humaniq-agenda` leaf on OpenRegister through the
  * sibling-app leaf-registration hook (`RegisterLeafProvidersEvent`, ADR-066).
  * This is the SERVER half of a registration whose client half lives in
@@ -41,8 +44,6 @@
  * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-006
  */
 
-// SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>.
-// SPDX-License-Identifier: EUPL-1.2
 declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;

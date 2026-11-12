@@ -3,6 +3,9 @@
 /**
  * Roster Check Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The pre-publish (and standing) Arbeidstijdenwet verdict for a roster
  * (rostering MVP design D5, REQ-ROST-005): resolves a `Roster` and its
  * `RosterAssignment`s through OpenRegister's `ObjectService` (the
@@ -32,9 +35,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

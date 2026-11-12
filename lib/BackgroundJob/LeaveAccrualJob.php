@@ -3,6 +3,9 @@
 /**
  * Leave Accrual Job
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The automatic producer for the leave-verzuim `LeaveBalance` ledger
  * (leave-accrual-job): a `TimedJob` that provisions each active employee's
  * current-year `holiday` LeaveBalance with the full statutory (BW art. 7:634)
@@ -33,9 +36,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

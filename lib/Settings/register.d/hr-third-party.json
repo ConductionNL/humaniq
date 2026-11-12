@@ -4,6 +4,7 @@
         "schemas": {
             "ThirdPartyPayee": {
                 "slug": "ThirdPartyPayee",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "AccountArrowRightOutline",
                 "version": "0.1.0",
                 "title": "Third-party payee",
@@ -33,6 +34,7 @@
             },
             "ThirdPartyPayment": {
                 "slug": "ThirdPartyPayment",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "CashMultiple",
                 "version": "0.1.0",
                 "title": "Third-party payment",
@@ -56,6 +58,7 @@
             },
             "ThirdPartyReport": {
                 "slug": "ThirdPartyReport",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "FileSendOutline",
                 "version": "0.1.0",
                 "title": "Third-party payments report",

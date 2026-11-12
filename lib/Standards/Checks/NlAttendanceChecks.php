@@ -3,6 +3,9 @@
 /**
  * NL Arbeidstijdenwet Attendance Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable checks for the three Dutch working-time-law rules
  * (framework `nl-arbeidstijdenwet`, lib/Standards/rules/labour.json,
  * time-attendance-mvp), mapped onto the `AttendanceRecord` object type:
@@ -36,9 +39,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

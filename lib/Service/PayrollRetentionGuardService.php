@@ -3,6 +3,9 @@
 /**
  * Payroll Retention Guard Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * hrmq#99 (consume-not-rebuild correction): the SINGLE place that turns an
  * already-known retention ceiling into a real OpenRegister legal hold, so
  * OpenRegister's own guarded erase (`Gdpr\DataSubjectRequestService::erase()`,
@@ -90,9 +93,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

@@ -3,6 +3,9 @@
 /**
  * Retro Adjustment Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Computes and settles terugwerkende kracht (TWK) corrections for a SEALED
  * prior-period payslip (design.md D1): the original, already-approved/posted/
  * paid Payslip and its PayrollRun are READ ONLY, never passed to
@@ -32,9 +35,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

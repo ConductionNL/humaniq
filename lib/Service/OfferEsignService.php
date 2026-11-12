@@ -3,6 +3,9 @@
 /**
  * Offer E-sign Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Closes the MVP gap the `Application.aanbieden` transition's own docblock
  * names: generates a real offer-letter (aanbiedingsbrief) PDF from
  * `Application`+`Vacancy` data via docudesk's rendering engine and raises a
@@ -82,9 +85,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

@@ -3,6 +3,9 @@
 /**
  * The MCP surface humaniq declares, and everything it refuses.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * ADR-063 rules that an app declares a per-schema `x-openregister-mcp` block
  * and OpenRegister derives the tools; the app hand-writes none. humaniq had no
  * MCP surface at all before this, and it is the sharpest privacy case in the
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

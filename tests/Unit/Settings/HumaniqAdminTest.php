@@ -3,6 +3,9 @@
 /**
  * Tests for the delegated-admin marker guarding the setup wizard's endpoints.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * WHY THIS EXISTS. `HumaniqAdmin` holds no logic, so a test that only
  * instantiated it would assert that PHP can construct a class. The thing worth
  * protecting is the AUTH POSTURE it encodes, and that posture lives in two
@@ -32,9 +35,6 @@
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.conduction.nl
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

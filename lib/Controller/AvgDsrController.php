@@ -3,6 +3,9 @@
 /**
  * AVG DSR Controller
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Backs the `DsrRequestDetail` manifest page actions "Exporteer"/"Voorbeeld
  * verwijdering"/"Bevestig verwijdering"/"Rectificeer": every method is
  * `#[NoAdminRequired]` + a manual admin-only 403 gate BEFORE any resolve (the
@@ -36,9 +39,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

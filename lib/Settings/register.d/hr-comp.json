@@ -4,6 +4,7 @@
         "schemas": {
             "SalaryBand": {
                 "slug": "SalaryBand",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "CurrencyEur",
                 "version": "0.2.0",
                 "title": "Salary band",
@@ -238,8 +239,9 @@
             },
             "CompAdjustment": {
                 "slug": "CompAdjustment",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"employeeUserId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}, {"group": "authenticated", "match": {"deputyUserIds": {"$contains": "$userId"}}}], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "CashPlus",
-                "version": "0.2.1",
+                "version": "0.3.0",
                 "title": "Compensation adjustment",
                 "description": "One manager-proposed compensation adjustment for one employee within one CompReviewCycle (comp-cycles), carrying the review-round lifecycle draft → proposed → approved → effective. Separation of duties on approve/reject is enforced by the reused NoSelfApprovalGuard; the approved→effective transition is gated by the read-only, fail-closed CompEffectiveDateGuard. The effective-dated write onto the employee's compensation is a separate imperative step (CompAdjustmentService), never performed by the declarative transition alone.",
                 "type": "object",
@@ -377,6 +379,8 @@
                     }
                 },
                 "properties": {
+                    "managerUserId": {"type": "string", "nullable": true, "title": "Manager", "description": "The account of the employee's manager, who may read this record.", "x-notes": "Stamped by humaniq on every save and refreshed by the manager access pass (ManagerAccessStamps): the nextcloudUserId of the manager the org resolution gives today for the record's employee. Never taken from the request. Read by the managerUserId authorization rule."},
+                    "deputyUserIds": {"type": "array", "items": {"type": "string"}, "nullable": true, "title": "Deputies", "description": "The accounts standing in for the manager today, who may read this record too.", "x-notes": "Stamped with managerUserId: the deputies of ManagerDeputy records active today for that manager. Refreshed by the manager access pass when a deputy period starts or ends. Read by the deputyUserIds $contains authorization rule."},
                     "cycleId": {
                         "type": "string",
                         "format": "uuid",

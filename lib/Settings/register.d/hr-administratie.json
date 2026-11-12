@@ -32,10 +32,16 @@
             "AdministrationAccess": {
                 "slug": "AdministrationAccess",
                 "icon": "AccountKeyOutline",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "title": "Administration access",
                 "description": "multi-administratie (design.md D2/D7): the accountant multi-client access model. ONE membership row binding a Nextcloud user to an administratie with a role. An accountant user carries MANY rows (their whole client book); a single-company HR/employee user carries one. This is the closed set `AdministrationController::setActive` resolves the caller against (D4) and the switcher may offer (D5). A user can never activate an administratie with no row here. A plain declarative OpenRegister object (ADR-001 data-layer: domain data lives in the register), deliberately NOT a Nextcloud group. An accountant's client book is app data, not an instance-admin concern.",
                 "required": ["userId", "administrationId", "role"],
+                "authorization": {
+                    "read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}],
+                    "create": ["humaniq-hr"],
+                    "update": ["humaniq-hr"],
+                    "delete": ["humaniq-hr"]
+                },
                 "properties": {
                     "userId": {"title": "User ID", "type": "string", "description": "The Nextcloud account being given access.", "x-notes": "Denormalized Nextcloud user id (plain string, the app's existing userId/managerUserId link convention -- never a $ref, it names an account, not an Employee object)."},
                     "administrationId": {"title": "Administration ID", "type": "string", "description": "The administration this row grants access to.", "x-notes": "The Administration.administrationId business key this row grants access to. NOT a $ref (ADR-062 rule 7, the same convention every child schema's denormalized administrationId follows)."},

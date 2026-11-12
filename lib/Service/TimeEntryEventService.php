@@ -3,6 +3,9 @@
 /**
  * Humaniq TimeEntryEventService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Emits the `nl.conduction.hrmq.timeentry.approved` CloudEvent when a Timesheet
  * (humaniq's per-employee, per-period time-entry record) transitions into the
  * `approved` state. The event carries the approved hours, project / cost centre
@@ -34,9 +37,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
