@@ -46,6 +46,8 @@ use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -192,7 +194,7 @@ class LoonaangifteCorrectionServiceTest extends TestCase {
 	 */
 	public function testAnEmployeeNoLongerPaidIsWithdrawn(): void {
 		$correctionId = $this->service('2026-05-15')->open($this->row('filing-03'), 'payroll-1')['filingId'];
-		$this->store->deleteObject('slip-bakker-03', 'humaniq', 'Payslip');
+		$this->store->deleteObject(new ObjectDeletion(uuid: 'slip-bakker-03', target: new ObjectFindTarget(register: 'humaniq', schema: 'Payslip')));
 
 		$this->service('2026-05-15')->render($this->row($correctionId), 'payroll-1');
 

@@ -40,6 +40,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -208,9 +210,13 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 	 */
 	public function delete(string $uuid, string $schema): void {
 		$this->objects()->deleteObject(
-			uuid: $uuid,
-			register: $this->settingsService->getRegisterSlug(),
-			schema: $schema,
+			deletion: new ObjectDeletion(
+				uuid: $uuid,
+				target: new ObjectFindTarget(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: $schema
+				)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

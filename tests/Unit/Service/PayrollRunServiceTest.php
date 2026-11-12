@@ -58,6 +58,7 @@ use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use PHPUnit\Framework\TestCase;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -189,21 +190,21 @@ class PayrollRunServiceTest extends TestCase {
 			}//end saveObject()
 
 			/**
-			 * @param string $uuid The object id to delete.
-			 * @param string|null $register Register slug (unused by the fake).
-			 * @param string|null $schema Schema name.
+			 * @param ObjectDeletion $deletion The object id and the register and schema it is in.
 			 * @param bool $_rbac Unused by the fake.
 			 * @param bool $_multitenancy Unused by the fake.
+			 * @param bool $_retentionSweep Unused by the fake.
 			 *
 			 * @return bool
 			 */
 			public function deleteObject(
-				string $uuid,
-				?string $register = null,
-				?string $schema = null,
+				ObjectDeletion $deletion,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
+				bool $_retentionSweep = false,
 			): bool {
+				$uuid = $deletion->uuid;
+				$schema = $deletion->target->schema;
 				$this->deleted[] = $uuid;
 
 				$targetSchema = ($schema ?? $this->schema);

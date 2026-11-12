@@ -44,6 +44,7 @@ use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Service\RetroAdjustmentService;
 use OCA\Humaniq\Service\RetroCorrection;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -173,22 +174,20 @@ class RetroAdjustmentServiceTest extends TestCase {
 			}//end saveObject()
 
 			/**
-			 * @param string $uuid The object id to delete.
-			 * @param string|null $register Register slug (unused by the fake).
-			 * @param string|null $schema Schema name.
+			 * @param ObjectDeletion $deletion The object id and the register and schema it is in.
 			 * @param bool $_rbac Unused by the fake.
 			 * @param bool $_multitenancy Unused by the fake.
+			 * @param bool $_retentionSweep Unused by the fake.
 			 *
 			 * @return bool
 			 */
 			public function deleteObject(
-				string $uuid,
-				?string $register = null,
-				?string $schema = null,
+				ObjectDeletion $deletion,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
+				bool $_retentionSweep = false,
 			): bool {
-				$this->deleted[] = $uuid;
+				$this->deleted[] = $deletion->uuid;
 				return true;
 			}//end deleteObject()
 

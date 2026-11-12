@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Support;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 
 /**
  * In-memory ObjectService double with clone-surviving shared state.
@@ -191,28 +192,21 @@ class FakeObjectStore {
 	 * (openregister lib/Service/ObjectService.php): removes the object and
 	 * reports whether it was there.
 	 *
-	 * @param string    $uuid           The object.
-	 * @param mixed     $register       The register (ignored).
-	 * @param mixed     $schema         The schema slug.
-	 * @param bool      $_rbac          Ignored.
-	 * @param bool      $_multitenancy  Ignored.
-	 * @param bool      $_retentionSweep Ignored.
-	 * @param mixed     $currentUser    Ignored.
-	 * @param bool      $permanent      Ignored.
+	 * @param ObjectDeletion $deletion        The object, the register and schema it is in, the user and the permanent flag.
+	 * @param bool           $_rbac           Ignored.
+	 * @param bool           $_multitenancy   Ignored.
+	 * @param bool           $_retentionSweep Ignored.
 	 *
 	 * @return bool
 	 */
 	public function deleteObject(
-		string $uuid,
-		mixed $register = null,
-		mixed $schema = null,
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_retentionSweep = false,
-		mixed $currentUser = null,
-		bool $permanent = false,
 	): bool {
-		$schemaKey = (string)($schema ?? $this->contextSchema);
+		$uuid = $deletion->uuid;
+		$schemaKey = (string)($deletion->target->schema ?? $this->contextSchema);
 		$found = isset($this->state->objects[$schemaKey][$uuid]);
 		unset($this->state->objects[$schemaKey][$uuid]);
 		return $found;
