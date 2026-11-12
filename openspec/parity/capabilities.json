@@ -3543,6 +3543,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360007584818-Track-your-working-hours: record working time as you work or add entries later via browser, mobile app or a shared device."
    },
    "built": {
+    "plan": "openspec/changes/a-time-entry-can-be-booked-to-a-day",
     "state": "built",
     "evidence": "src/manifest.d/hr-timesheet.json page MijnUren (route /mijn/uren) includeFields startedAt/endedAt/breakMinutes/description/projectId/billable; lib/Listener/TimeEntryStampListener.php stamps userId/administrationId/costCenter server-side; hours derived from start/end/break by TimeEntryHoursDeriver.php",
     "reachedOn": "MijnUren /mijn/uren (menu My HR > My hours), self-service create form",

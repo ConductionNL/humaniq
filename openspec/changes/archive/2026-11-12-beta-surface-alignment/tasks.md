@@ -27,12 +27,14 @@
 
 ## 3. Docs site — flagged, not scaffolded
 
-- [ ] 3.1 Decide whether to invest in a `docs/` Docusaurus site for Humaniq via `journeydoc-init`
+- [x] 3.1 Decide whether to invest in a `docs/` Docusaurus site for Humaniq via `journeydoc-init`
       (app-owner decision — out of scope for this alignment pass; see proposal.md "Still
       misaligned").
+  Ticked on code (decision 399): decided and built: `docs/` holds the Docusaurus site (`docs/docusaurus.config.js`, `docs/intro.md`), live at `https://humaniq.conduction.nl/` (checked 12 Nov 2026).
 
 ## 4. Follow-ups outside this repo
 
-- [ ] 4.1 File/track a change against `docusaurus-preset` to add an `humaniq` entry to its shipped
+- [x] 4.1 File/track a change against `docusaurus-preset` to add an `humaniq` entry to its shipped
       `data/apps-registry.js` (consumed by `<AppCrossLinks/>` and the academy product filter) —
       cannot be edited from this repo since it ships from the preset's own package.
+  Ticked on code (decision 399): `@conduction/docusaurus-preset` 3.52.1 ships `src/data/apps-registry.js:47` with the Humaniq entry (slug `hrmq`, name "Humaniq", docsHref `https://hrmq.conduction.nl`, which redirects to the live docs).
