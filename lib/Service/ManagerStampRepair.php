@@ -243,7 +243,7 @@ class ManagerStampRepair {
 			return null;
 		}
 
-		$new = $this->org->managerOf($this->lookups, $employeeId, $this->referenceDate(row: $row, field: self::SCHEMAS[$schema]['date']));
+		$new = $this->org->managerOf($employeeId, $this->referenceDate(row: $row, field: self::SCHEMAS[$schema]['date']));
 		if ($new === $old) {
 			return null;
 		}

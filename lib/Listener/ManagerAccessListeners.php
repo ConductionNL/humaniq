@@ -42,7 +42,7 @@ final class ManagerAccessListeners {
 	/**
 	 * Hand every subscription to the app's filtered subscriber.
 	 *
-	 * @param callable(string, string, list<string>): void $subscribe Subscribes one listener for one event and its schema slugs.
+	 * @param callable(array{event: string, listener: string, schemas: list<string>}): void $subscribe Subscribes one listener for one event and its schema slugs.
 	 *
 	 * @return void
 	 *
@@ -50,11 +50,11 @@ final class ManagerAccessListeners {
 	 */
 	public static function register(callable $subscribe): void {
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
-			$subscribe($event, ManagerAccessStampListener::class, array_keys(ManagerAccessStampListener::SLUGS));
+			$subscribe(['event' => $event, 'listener' => ManagerAccessStampListener::class, 'schemas' => array_keys(ManagerAccessStampListener::SLUGS)]);
 		}
 
 		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class, ObjectDeletedEvent::class] as $event) {
-			$subscribe($event, ManagerAccessOrgChangeListener::class, ManagerAccessOrgChangeListener::SLUGS);
+			$subscribe(['event' => $event, 'listener' => ManagerAccessOrgChangeListener::class, 'schemas' => ManagerAccessOrgChangeListener::SLUGS]);
 		}
 	}//end register()
 

@@ -108,7 +108,7 @@ class ManagerAccessStampListener implements IEventListener {
 		$entity = ($event instanceof ObjectUpdatingEvent) ? $event->getNewObject() : $event->getObject();
 		$stored = ($event instanceof ObjectUpdatingEvent) ? ($event->getOldObject()?->getObject() ?? []) : [];
 		try {
-			$stamps = $this->stamps->stampsFor(record: ($entity->getObject() ?? []), schema: $schema, uuid: (string)$entity->getUuid(), today: gmdate('Y-m-d'));
+			$stamps = $this->stamps->stampsFor(record: (['id' => (string)$entity->getUuid()] + ($entity->getObject() ?? [])), schema: $schema);
 		} catch (\Throwable $e) {
 			$this->logger->info('humaniq: manager access stamp failed; keeping stored values', ['schema' => $schema, 'exception' => $e->getMessage()]);
 			$stamps = ['managerUserId' => ($stored['managerUserId'] ?? null), 'deputyUserIds' => ($stored['deputyUserIds'] ?? [])];

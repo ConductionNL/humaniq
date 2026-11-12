@@ -136,7 +136,7 @@ class ManagerAccessStampsTest extends TestCase {
 		];
 
 		foreach ($records as $schema => [$record, $uuid]) {
-			$stamped = array_merge($record, $service->stampsFor($record, $schema, $uuid, self::AFTER_PERIOD));
+			$stamped = array_merge($record, $service->stampsFor(['id' => $uuid] + $record, $schema));
 
 			self::assertSame('mila', $stamped['managerUserId'], $schema);
 			self::assertSame([], $stamped['deputyUserIds'], $schema);
@@ -154,12 +154,12 @@ class ManagerAccessStampsTest extends TestCase {
 	 */
 	public function testTheManagerOfAnotherTeamIsRefused(): void {
 		$record = ['employeeId' => 'emp-sam', 'status' => 'open'];
-		$stamped = array_merge($record, $this->stamps()->stampsFor($record, 'SickLeaveCase', 'sl-1', self::IN_PERIOD));
+		$stamped = array_merge($record, $this->stamps()->stampsFor($record, 'SickLeaveCase'));
 
 		self::assertFalse($this->admits('SickLeaveCase', 'read', 'kees', $stamped));
-		self::assertFalse($this->admits('Employee', 'read', 'kees', array_merge(['nextcloudUserId' => 'sam'], $this->stamps()->stampsFor([], 'Employee', 'emp-sam', self::IN_PERIOD))));
+		self::assertFalse($this->admits('Employee', 'read', 'kees', array_merge(['nextcloudUserId' => 'sam'], $this->stamps()->stampsFor(['id' => 'emp-sam'], 'Employee'))));
 
-		$theirs = array_merge(['employeeId' => 'emp-piet'], $this->stamps()->stampsFor(['employeeId' => 'emp-piet'], 'SickLeaveCase', 'sl-2', self::IN_PERIOD));
+		$theirs = array_merge(['employeeId' => 'emp-piet'], $this->stamps()->stampsFor(['employeeId' => 'emp-piet'], 'SickLeaveCase'));
 		self::assertTrue($this->admits('SickLeaveCase', 'read', 'kees', $theirs));
 		self::assertFalse($this->admits('SickLeaveCase', 'read', 'mila', $theirs));
 	}//end testTheManagerOfAnotherTeamIsRefused()
@@ -172,7 +172,7 @@ class ManagerAccessStampsTest extends TestCase {
 	public function testAnIncomingStampIsReplaced(): void {
 		$record = ['employeeId' => 'emp-sam', 'managerUserId' => 'kees', 'deputyUserIds' => ['kees']];
 
-		self::assertSame(['managerUserId' => 'mila', 'deputyUserIds' => []], $this->stamps()->stampsFor($record, 'CompAdjustment', 'ca-1', self::AFTER_PERIOD));
+		self::assertSame(['managerUserId' => 'mila', 'deputyUserIds' => []], $this->stamps()->stampsFor($record, 'CompAdjustment'));
 	}//end testAnIncomingStampIsReplaced()
 
 	/**
@@ -181,9 +181,12 @@ class ManagerAccessStampsTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheDeputyReadsAndDecidesTheQueueOnlyDuringTheirPeriod(): void {
+		$this->store->seed('ManagerDeputy', 'dep-now', ['managerUserId' => 'mila', 'deputyUserId' => 'dirk', 'from' => gmdate('Y-m-d', time() - 86400), 'until' => gmdate('Y-m-d', time() + 86400)]);
 		$record = ['employeeId' => 'emp-sam', 'userId' => 'sam', 'status' => 'submitted'];
-		$during = array_merge($record, $this->stamps()->stampsFor($record, 'LeaveTransaction', 'lt-1', self::IN_PERIOD));
-		$after = array_merge($record, $this->stamps()->stampsFor($record, 'LeaveTransaction', 'lt-1', self::AFTER_PERIOD));
+		$during = array_merge($record, $this->stamps()->stampsFor($record, 'LeaveTransaction'));
+		$this->store->seed('LeaveTransaction', 'lt-1', $during);
+		$this->stamps()->run(false, gmdate('Y-m-d', time() + (3 * 86400)));
+		$after = $this->stored('LeaveTransaction', 'lt-1');
 
 		self::assertSame(['dirk'], $during['deputyUserIds']);
 		self::assertTrue($this->admits('LeaveTransaction', 'read', 'dirk', $during));
@@ -201,8 +204,8 @@ class ManagerAccessStampsTest extends TestCase {
 	public function testARecordWithoutAResolvableManagerCarriesNoStamp(): void {
 		$this->store->seed('Employee', 'emp-loose', ['nextcloudUserId' => 'loose']);
 
-		self::assertSame(['managerUserId' => null, 'deputyUserIds' => []], $this->stamps()->stampsFor(['employeeId' => 'emp-loose'], 'SickLeaveCase', 'sl-3', self::IN_PERIOD));
-		self::assertSame(['managerUserId' => null, 'deputyUserIds' => []], $this->stamps()->stampsFor([], 'SickLeaveCase', 'sl-4', self::IN_PERIOD));
+		self::assertSame(['managerUserId' => null, 'deputyUserIds' => []], $this->stamps()->stampsFor(['employeeId' => 'emp-loose'], 'SickLeaveCase'));
+		self::assertSame(['managerUserId' => null, 'deputyUserIds' => []], $this->stamps()->stampsFor([], 'SickLeaveCase'));
 	}//end testARecordWithoutAResolvableManagerCarriesNoStamp()
 
 	/**

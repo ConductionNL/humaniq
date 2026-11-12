@@ -50,6 +50,20 @@ class ManagerAccessStamps {
 	public const SCHEMAS = ['Employee', 'SickLeaveCase', 'LeaveTransaction', 'CompAdjustment'];
 
 	/**
+	 * The day the current resolution is for, YYYY-MM-DD.
+	 *
+	 * @var string
+	 */
+	private string $today = '';
+
+	/**
+	 * Whether the current pass only counts.
+	 *
+	 * @var bool
+	 */
+	private bool $dryRun = true;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param HoursRegisterGateway $gateway The register.
@@ -69,19 +83,21 @@ class ManagerAccessStamps {
 	}//end __construct()
 
 	/**
-	 * The stamps one record should carry today.
+	 * The stamps one record should carry today. The record's `id` names an
+	 * Employee record's own employee.
 	 *
 	 * @param array<string, mixed> $record The record as it would be saved.
 	 * @param string $schema The schema name, one of SCHEMAS.
-	 * @param string $uuid The record's uuid ('' when not known).
-	 * @param string $today The day, YYYY-MM-DD.
 	 *
 	 * @return array{managerUserId: string|null, deputyUserIds: list<string>}
 	 *
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
-	public function stampsFor(array $record, string $schema, string $uuid, string $today): array {
-		return $this->resolve(employeeId: $this->employeeIdOf(record: $record, schema: $schema, uuid: $uuid), lookups: $this->org->read(), today: $today);
+	public function stampsFor(array $record, string $schema): array {
+		$this->today = gmdate('Y-m-d');
+		$this->org->read();
+
+		return $this->resolve(employeeId: $this->employeeIdOf(record: $record, schema: $schema));
 	}//end stampsFor()
 
 	/**
@@ -132,7 +148,9 @@ class ManagerAccessStamps {
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
 	public function run(bool $dryRun, string $today): array {
-		$lookups = $this->org->read();
+		$this->dryRun = $dryRun;
+		$this->today = $today;
+		$complete = $this->org->read()['complete'];
 		$report = [];
 		foreach (self::SCHEMAS as $schema) {
 			$counts = ['inspected' => 0, 'changed' => 0, 'failed' => 0];
@@ -144,7 +162,7 @@ class ManagerAccessStamps {
 
 			foreach ($rows as $row) {
 				$counts['inspected']++;
-				$outcome = $this->restamp(row: $row, schema: $schema, lookups: $lookups, run: ['dryRun' => $dryRun, 'today' => $today]);
+				$outcome = $this->restamp(row: $row, schema: $schema, complete: $complete);
 				if ($outcome !== '') {
 					$counts[$outcome]++;
 				}
@@ -161,25 +179,24 @@ class ManagerAccessStamps {
 	 *
 	 * @param array<string, mixed> $row The stored record.
 	 * @param string $schema The schema name.
-	 * @param array{assignments: array<string, array<int, array<string, mixed>>>, units: array<string, array<string, mixed>>, employees: array<string, array<string, mixed>>, complete: bool} $lookups The org lookups.
-	 * @param array{dryRun: bool, today: string} $run The run's mode and day.
+	 * @param bool $complete Whether every org lookup read reached the end.
 	 *
 	 * @return string
 	 */
-	private function restamp(array $row, string $schema, array $lookups, array $run): string {
-		$uuid = trim((string)($row['id'] ?? ($row['@self']['id'] ?? '')));
+	private function restamp(array $row, string $schema, bool $complete): string {
+		$uuid = self::idOf(record: $row);
 		try {
-			$stamps = $this->resolve(employeeId: $this->employeeIdOf(record: $row, schema: $schema, uuid: $uuid), lookups: $lookups, today: $run['today']);
+			$stamps = $this->resolve(employeeId: $this->employeeIdOf(record: $row, schema: $schema));
 			if ($uuid === '' || $this->isCurrent(row: $row, stamps: $stamps) === true) {
 				return '';
 			}
 
-			if ($lookups['complete'] === false) {
+			if ($complete === false) {
 				$this->logger->error('humaniq: manager access not restamped, a lookup read was cut off', ['schema' => $schema, 'id' => $uuid]);
 				return 'failed';
 			}
 
-			if ($run['dryRun'] === false) {
+			if ($this->dryRun === false) {
 				$record = array_merge($row, $stamps);
 				unset($record['@self']);
 				$this->marker->runInternal(fn () => $this->gateway->save($record, $schema, $uuid));
@@ -209,27 +226,21 @@ class ManagerAccessStamps {
 	}//end isCurrent()
 
 	/**
-	 * The manager the org resolution gives today and that manager's
-	 * deputies, without the employee's own account.
+	 * The manager the org resolution gives on the current day and that
+	 * manager's deputies, without the employee's own account.
 	 *
 	 * @param string $employeeId The record's employee.
-	 * @param array{assignments: array<string, array<int, array<string, mixed>>>, units: array<string, array<string, mixed>>, employees: array<string, array<string, mixed>>, complete: bool} $lookups The org lookups.
-	 * @param string $today The day, YYYY-MM-DD.
 	 *
 	 * @return array{managerUserId: string|null, deputyUserIds: list<string>}
 	 */
-	private function resolve(string $employeeId, array $lookups, string $today): array {
-		if ($employeeId === '') {
-			return ['managerUserId' => null, 'deputyUserIds' => []];
-		}
-
-		$manager = $this->org->managerOf($lookups, $employeeId, $today);
+	private function resolve(string $employeeId): array {
+		$manager = ($employeeId === '') ? null : $this->org->managerOf(employeeId: $employeeId, onDate: $this->today);
 		if ($manager === null || $manager === '') {
 			return ['managerUserId' => null, 'deputyUserIds' => []];
 		}
 
-		$own = trim((string)($lookups['employees'][$employeeId]['nextcloudUserId'] ?? ''));
-		$deputies = array_values(array_filter($this->org->deputiesOf(managerUserId: $manager, today: $today), static fn (string $uid): bool => $uid !== $own && $uid !== $manager));
+		$own = $this->org->accountOf(employeeId: $employeeId);
+		$deputies = array_values(array_filter($this->org->deputiesOf(managerUserId: $manager, today: $this->today), static fn (string $uid): bool => $uid !== $own && $uid !== $manager));
 		sort($deputies);
 
 		return ['managerUserId' => $manager, 'deputyUserIds' => $deputies];
@@ -240,16 +251,26 @@ class ManagerAccessStamps {
 	 *
 	 * @param array<string, mixed> $record The record.
 	 * @param string $schema The schema name.
-	 * @param string $uuid The record's uuid.
 	 *
 	 * @return string
 	 */
-	private function employeeIdOf(array $record, string $schema, string $uuid): string {
+	private function employeeIdOf(array $record, string $schema): string {
 		if ($schema === 'Employee') {
-			return trim($uuid);
+			return self::idOf(record: $record);
 		}
 
 		return trim((string)($record['employeeId'] ?? ''));
 	}//end employeeIdOf()
+
+	/**
+	 * A record's id.
+	 *
+	 * @param array<string, mixed> $record The record.
+	 *
+	 * @return string
+	 */
+	private static function idOf(array $record): string {
+		return trim((string)($record['id'] ?? ($record['@self']['id'] ?? '')));
+	}//end idOf()
 
 }//end class
