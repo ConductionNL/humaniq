@@ -50,13 +50,13 @@ class CompCycleApprover {
 	/**
 	 * @param RecordStoreInterface $gateway Reads the cycle's adjustments.
 	 * @param ContainerInterface $container Resolves OpenRegister's TransitionEngine.
-	 * @param SettingsService $settingsService OpenRegister availability.
+	 * @param OpenRegisterAvailability $openRegister OpenRegister availability.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly RecordStoreInterface $gateway,
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly OpenRegisterAvailability $openRegister,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -165,7 +165,7 @@ class CompCycleApprover {
 	 * @return mixed OpenRegister's TransitionEngine.
 	 */
 	private function transitionEngine(): mixed {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+		if ($this->openRegister->isAvailable() === false) {
 			throw new RuntimeException('humaniq requires the OpenRegister app, which is not installed on this instance.');
 		}
 
