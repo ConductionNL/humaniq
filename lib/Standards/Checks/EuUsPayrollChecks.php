@@ -564,7 +564,7 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * @return \Closure(array<string, mixed>): bool
 	 */
 	private static function retainedFor(int $years): \Closure {
-		return static fn (array $o): bool => self::retainedYearsAfterPeriod($o, $years);
+		return static fn (array $o): bool => FilingDates::retainedYearsAfterPeriod($o, $years);
 
 	}//end retainedFor()
 
@@ -576,7 +576,7 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * @return \Closure(array<string, mixed>): bool
 	 */
 	private static function submittedOnTimeForTijdvak(string $tijdvak): \Closure {
-		return static fn (array $o): bool => ((string)($o['tijdvak'] ?? '') === $tijdvak) && self::onOrBefore($o, 'submittedDate', 'deadline');
+		return static fn (array $o): bool => ((string)($o['tijdvak'] ?? '') === $tijdvak) && FilingDates::onOrBeforeDeadline($o, 'submittedDate');
 
 	}//end submittedOnTimeForTijdvak()
 
@@ -588,7 +588,7 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * @return \Closure(array<string, mixed>): bool
 	 */
 	private static function datedByDeadline(string $dateKey): \Closure {
-		return static fn (array $o): bool => self::present($o, $dateKey) && self::onOrBefore($o, $dateKey, 'deadline');
+		return static fn (array $o): bool => self::present($o, $dateKey) && FilingDates::onOrBeforeDeadline($o, $dateKey);
 
 	}//end datedByDeadline()
 
@@ -612,7 +612,7 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * @return bool
 	 */
 	private static function filedElectronicallyByDeadline(array $o): bool {
-		return (($o['electronicallyFiled'] ?? false) === true) && self::onOrBefore($o, 'submittedDate', 'deadline');
+		return (($o['electronicallyFiled'] ?? false) === true) && FilingDates::onOrBeforeDeadline($o, 'submittedDate');
 
 	}//end filedElectronicallyByDeadline()
 
@@ -672,7 +672,7 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * @return bool
 	 */
 	private static function paidByDeadline(array $o): bool {
-		return self::onOrBefore($o, 'paidDate', 'deadline');
+		return FilingDates::onOrBeforeDeadline($o, 'paidDate');
 
 	}//end paidByDeadline()
 
@@ -684,7 +684,7 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 * @return bool
 	 */
 	private static function submittedByDeadline(array $o): bool {
-		return self::onOrBefore($o, 'submittedDate', 'deadline');
+		return FilingDates::onOrBeforeDeadline($o, 'submittedDate');
 
 	}//end submittedByDeadline()
 
@@ -722,7 +722,7 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	 */
 	private static function monthlyDepositOnTime(array $o): bool {
 		return ((string)($o['depositSchedule'] ?? '') !== 'monthly')
-			|| self::onOrBefore($o, 'paidDate', 'deadline');
+			|| FilingDates::onOrBeforeDeadline($o, 'paidDate');
 
 	}//end monthlyDepositOnTime()
 
@@ -1349,26 +1349,6 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 	}//end centsEqual()
 
 	/**
-	 * True when the date at $dateKey is present and on or before the date at
-	 * $limitKey.
-	 *
-	 * @param array<string, mixed> $o The object.
-	 * @param string $dateKey Actual-date field.
-	 * @param string $limitKey Limit/deadline field.
-	 *
-	 * @return bool
-	 */
-	private static function onOrBefore(array $o, string $dateKey, string $limitKey): bool {
-		$date = strtotime((string)($o[$dateKey] ?? ''));
-		$limit = strtotime((string)($o[$limitKey] ?? ''));
-		if ($date === false || $limit === false) {
-			return false;
-		}
-
-		return $date <= $limit;
-	}//end onOrBefore()
-
-	/**
 	 * True when the date at $endKey is present and within $days days of the date
 	 * at $startKey.
 	 *
@@ -1388,25 +1368,5 @@ final class EuUsPayrollChecks implements CheckProvider, SeedsObjects {
 
 		return (($end - $start) / 86400) <= $days;
 	}//end withinDaysOf()
-
-	/**
-	 * True when the retention date is at least $years after the end of the year
-	 * of the filing period (period in YYYY or YYYY-... form).
-	 *
-	 * @param array<string, mixed> $o The filing.
-	 * @param int $years Minimum retention years.
-	 *
-	 * @return bool
-	 */
-	private static function retainedYearsAfterPeriod(array $o, int $years): bool {
-		$retain = strtotime((string)($o['retainedUntil'] ?? ''));
-		$period = (string)($o['period'] ?? '');
-		if ($retain === false || preg_match('/^(\d{4})/', $period, $m) !== 1) {
-			return false;
-		}
-
-		$required = mktime(0, 0, 0, 12, 31, ((int)$m[1] + $years));
-		return $retain >= $required;
-	}//end retainedYearsAfterPeriod()
 
 }//end class
