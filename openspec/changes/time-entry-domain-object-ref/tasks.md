@@ -1,6 +1,6 @@
 ## 1. Register
 
-- [ ] 1.1 Declare `domainObjectType` and `domainObjectRef` on `TimeEntry` in the shipped register with the D1 pattern, uuid format and index; bump the register version (REQ-TEC-006)
+- [x] 1.1 Declare `domainObjectType` and `domainObjectRef` on `TimeEntry` in the shipped register with the D1 pattern, uuid format and index; bump the register version (REQ-TEC-006)
 - [ ] 1.2 Verify the import on a fresh instance shows both properties on the schema
 
 ## 2. Form and timer

@@ -6,10 +6,10 @@
 
 ## 2. Per change, done inside that change
 
-- [ ] 2.1 `agenda-rostering-and-resource-booking`
-- [ ] 2.2 `estimate-spent-and-remaining-on-an-hours-leaf`
-- [ ] 2.3 `a-working-calendar-per-person`
-- [ ] 2.4 `leave-against-a-department-schedule`
+- [x] 2.1 `agenda-rostering-and-resource-booking`
+- [x] 2.2 `estimate-spent-and-remaining-on-an-hours-leaf`
+- [x] 2.3 `a-working-calendar-per-person`
+- [x] 2.4 `leave-against-a-department-schedule`
 
 ## 4. Wave 4, the pending proposals
 
@@ -18,5 +18,5 @@
 
 ## 3. Closing
 
-- [ ] 3.1 Archive this umbrella only after the four changes under it are archived,
+- [x] 3.1 Archive this umbrella only after the four changes under it are archived,
       so the trail from a candidate id to a merged requirement stays readable.

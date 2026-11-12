@@ -34,3 +34,7 @@ Ruben decided on 2 November 2026: stop at the administration boundary.
 - Records stamped before this change keep their stamp until their next server-side write.
 - Which units a manager leads (`UnitMembership::managedUnitIds`). That reads the tree
   downwards and is unchanged.
+
+## Matrix rows
+
+Rows: `ess-manager-team` (humaniq `openspec/parity/capabilities.json`).
