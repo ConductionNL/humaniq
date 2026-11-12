@@ -418,4 +418,68 @@ class WkrServiceTest extends TestCase {
 
 	}//end testAssessRefusesInvalidInput()
 
+	/**
+	 * Characterisation of the per-(administrationId, year) aggregate: own
+	 * administrationId wins over the run's, a payslip without an
+	 * administration or with an unparseable period is skipped, declarations
+	 * without administration/year and gericht-vrijgesteld ones are skipped,
+	 * an unknown category opens an empty bucket, and buckets keep their
+	 * insertion order.
+	 *
+	 * @return void
+	 */
+	public function testAggregateSumsPayslipsAndDeclarationsPerAdministrationYear(): void {
+		[$service] = $this->service(
+			[
+				'PayrollRun' => [
+					['id' => 'run-1', 'administrationId' => 'ADM-001'],
+					['id' => '', 'administrationId' => 'ADM-IGNORED'],
+					['id' => 'run-2', 'administrationId' => ' ADM-002 '],
+				],
+				'Payslip' => [
+					['id' => 'ps-1', 'payrollRunId' => 'run-1', 'period' => '2026-01', 'grossPay' => 1000.50, 'wkrUsed' => 10.25],
+					['id' => 'ps-2', 'administrationId' => ' ADM-003 ', 'payrollRunId' => 'run-1', 'period' => '2025-P13', 'grossPay' => 200, 'wkrUsed' => 5],
+					['id' => 'ps-3', 'payrollRunId' => 'run-2', 'period' => '2026-02', 'grossPay' => 300.00],
+					['id' => 'ps-4', 'payrollRunId' => 'run-unknown', 'period' => '2026-02', 'grossPay' => 999.00],
+					['id' => 'ps-5', 'payrollRunId' => 'run-1', 'period' => 'januari', 'grossPay' => 999.00],
+					['id' => 'ps-6', 'payrollRunId' => 'run-1', 'period' => '2026-03', 'grossPay' => 99.50, 'wkrUsed' => 0.75],
+				],
+				'WkrDeclaration' => [
+					['id' => 'wd-1', 'administrationId' => 'ADM-001', 'year' => 2026, 'amount' => 300.00, 'wkrCategory' => 'vrije-ruimte'],
+					['id' => 'wd-2', 'administrationId' => 'ADM-001', 'year' => 2026, 'amount' => 70.00, 'wkrCategory' => 'eindheffing'],
+					['id' => 'wd-3', 'administrationId' => 'ADM-001', 'year' => 2026, 'amount' => 900.00, 'wkrCategory' => 'gericht-vrijgesteld'],
+					['id' => 'wd-4', 'administrationId' => '', 'year' => 2026, 'amount' => 900.00, 'wkrCategory' => 'vrije-ruimte'],
+					['id' => 'wd-5', 'administrationId' => 'ADM-001', 'year' => 0, 'amount' => 900.00, 'wkrCategory' => 'vrije-ruimte'],
+					['id' => 'wd-6', 'administrationId' => ' ADM-004 ', 'year' => '2027', 'amount' => 40, 'wkrCategory' => 'eindheffing'],
+					['id' => 'wd-7', 'administrationId' => 'ADM-005', 'year' => 2026, 'amount' => 40, 'wkrCategory' => 'onbekend'],
+				],
+			]
+		);
+
+		$method = new \ReflectionMethod(WkrService::class, 'buildAggregate');
+		$aggregate = $method->invoke($service);
+
+		self::assertSame(
+			[
+				'ADM-001' => [
+					2026 => ['loonsom' => 1100.0, 'payslipWkrUsed' => 11.0, 'vrijeRuimteDeclared' => 300.0, 'eindheffingDeclared' => 70.0],
+				],
+				'ADM-003' => [
+					2025 => ['loonsom' => 200.0, 'payslipWkrUsed' => 5.0, 'vrijeRuimteDeclared' => 0.0, 'eindheffingDeclared' => 0.0],
+				],
+				'ADM-002' => [
+					2026 => ['loonsom' => 300.0, 'payslipWkrUsed' => 0.0, 'vrijeRuimteDeclared' => 0.0, 'eindheffingDeclared' => 0.0],
+				],
+				'ADM-004' => [
+					2027 => ['loonsom' => 0.0, 'payslipWkrUsed' => 0.0, 'vrijeRuimteDeclared' => 0.0, 'eindheffingDeclared' => 40.0],
+				],
+				'ADM-005' => [
+					2026 => ['loonsom' => 0.0, 'payslipWkrUsed' => 0.0, 'vrijeRuimteDeclared' => 0.0, 'eindheffingDeclared' => 0.0],
+				],
+			],
+			$aggregate
+		);
+
+	}//end testAggregateSumsPayslipsAndDeclarationsPerAdministrationYear()
+
 }//end class
