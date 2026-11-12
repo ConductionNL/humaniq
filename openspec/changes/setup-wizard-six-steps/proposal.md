@@ -34,3 +34,7 @@ Every step acts on its answer: no step asks a question the app ignores.
   config-fields step needs a repeatable group for the administration list. Both are generic and
   belong in nextcloud-vue, not in humaniq.
 - Depends on `configuration-store` (#724) for the `templates` step.
+
+## Matrix rows
+
+Rows: `plt-setup-wizard` (humaniq `openspec/parity/capabilities.json`).

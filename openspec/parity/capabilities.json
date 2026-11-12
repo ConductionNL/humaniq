@@ -1335,12 +1335,16 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000038385-Create-reminders: reminder workflows can be created for the events Contract ends and Probation period end, shown in the inbox."
    },
    "built": {
-    "requirement": ["openspec/specs/hr-signals :: The corpus signals expiring temporary contracts (REQ-SIG-001)", "openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals :: HR SHALL be signalled before a probation period ends (REQ-SIG-007)"],
-    "state": "built",
-    "evidence": "lib/Standards/rules/labour.json nl-signaal-contract-verloopt (60-day window, advisory, no successor contract) and nl-aanzegtermijn-bewaking (BW 7:668 lid 1, mandatory, missed one-month notice on a >=6-month fixed term); lib/Standards/Checks/NlSignalChecks.php implements both; lib/Standards/Checks/NlOnboardingChecks.php:71 nl-onboarding-proeftijd-bewaking covers probation-ending separately; lib/Service/ObligationsService.php:73,191-218 folds EmploymentContract expiries into the merged obligations list; src/manifest.effective.json:~1660 Dashboard 'Open obligations' widget calls GET /api/analytics/obligations",
+    "requirement": [
+     "openspec/specs/hr-signals :: The corpus signals expiring temporary contracts (REQ-SIG-001)",
+     "openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals :: HR SHALL be signalled before a probation period ends (REQ-SIG-007)"
+    ],
+    "state": "specified",
+    "evidence": "Not built: no signal before a probation period ends (REQ-SIG-007); nl-onboarding-proeftijd-bewaking only flags a probation already past its end date. The contract expiry half is built. (12 Nov, decision 389) Was: lib/Standards/rules/labour.json nl-signaal-contract-verloopt (60-day window, advisory, no successor contract) and nl-aanzegtermijn-bewaking (BW 7:668 lid 1, mandatory, missed one-month notice on a >=6-month fixed term); lib/Standards/Checks/NlSignalChecks.php implements both; lib/Standards/Checks/NlOnboardingChecks.php:71 nl-onboarding-proeftijd-bewaking covers probation-ending separately; lib/Service/ObligationsService.php:73,191-218 folds EmploymentContract expiries into the merged obligations list; src/manifest.effective.json:~1660 Dashboard 'Open obligations' widget calls GET /api/analytics/obligations",
     "reachedOn": "Dashboard /dashboard, Open obligations widget (object-table) via GET /api/analytics/obligations, rowRoute EmploymentContractDetail",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-13-hr-signals"
+    "change": "2026-07-13-hr-signals",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -1405,7 +1409,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/33552992365597-Summary-of-departments-and-teams: departments with sub-departments below their parent in the hierarchy, and teams as a separate structure with their own hierarchy."
    },
    "built": {
-    "requirement": ["openspec/specs/org-chart-basic :: REQ-ORG-001: A new `hr-org` fragment SHALL define the `OrgUnit` schema with a self-referencing parent", "openspec/specs/org-chart-basic :: REQ-ORG-006: New org pages SHALL surface the hierarchy and placements under Personeel"],
+    "requirement": ["openspec/specs/org-chart-basic :: A new `hr-org` fragment SHALL define the `OrgUnit` schema with a self-referencing parent (REQ-ORG-001)", "openspec/specs/org-chart-basic :: New org pages SHALL surface the hierarchy and placements under Personeel (REQ-ORG-006)"],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-org.json OrgUnit schema (name, type enum afdeling/team/kostenplaats, parentUnitId self-referencing $ref OrgUnit, costCenter, managerId $ref Employee, active); lib/Standards/Checks/NlOrgChecks.php:91 nl-org-unit-cycle keeps the parentUnitId chain acyclic; src/manifest.d/hr-org.json OrgUnits index (/org-units) and OrgUnitDetail (/org-units/:id) with Child units and Assignments object-lists",
     "reachedOn": "OrgUnits /org-units (menu Personeel), OrgUnitDetail /org-units/:id",
@@ -1481,7 +1485,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/36539231813661-Summary-of-Employee-profile-and-Employment-details-permissions-New-experience: the History tab shows a record of all data changes to an employee's attributes; https://support.personio.de/hc/en-us/articles/34554225234845-Manage-employment-changes records promotions, role and legal entity changes on the profile with dates."
    },
    "built": {
-    "requirement": ["openspec/specs/org-chart-basic :: REQ-ORG-002: The `hr-org` fragment SHALL define the effective-dated `OrgAssignment` schema", "openspec/specs/org-chart-basic :: REQ-ORG-007: `EmployeeDetail` SHALL list the employee's assignments"],
+    "requirement": ["openspec/specs/org-chart-basic :: The `hr-org` fragment SHALL define the effective-dated `OrgAssignment` schema (REQ-ORG-002)", "openspec/specs/org-chart-basic :: `EmployeeDetail` SHALL list the employee's assignments (REQ-ORG-007)"],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-org.json OrgAssignment schema (employeeId $ref Employee, orgUnitId $ref OrgUnit, role, startDate, endDate nullable = effective-dated placement); src/manifest.d/hr-org.json OrgAssignments index (/org-assignments) and OrgAssignmentDetail (/org-assignments/:id); EmployeeDetail and OrgUnitDetail each carry an Assignments object-list filtered by employeeId/orgUnitId, so multiple historical rows accumulate per employee rather than one field being overwritten",
     "reachedOn": "OrgAssignments /org-assignments (menu Personeel), OrgAssignmentDetail /org-assignments/:id; also surfaced on EmployeeDetail and OrgUnitDetail",
@@ -2248,11 +2252,13 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000800537-Schedule-interviews-using-the-integrated-calendar: schedule interviews with the integrated recruiting calendar, find a slot for everyone involved and send invitations."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-ats.json Interview schema (applicationId, scheduledStart, scheduledEnd, interviewers, mode, location, status, calendarEventUid); lib/Service/InterviewSyncEngine.php + lib/Controller/InterviewController.php POST /api/interviews/sync (2 hits in frontend-api-paths.txt); src/manifest.d/hr-ats.json:362-372 InterviewDetail 'Sync naar agenda' header action calls that route",
+    "state": "specified",
+    "evidence": "Not built: the sync writes interviewers as plain text into one shared calendar with no ATTENDEE (REQ-INTV-005); decision 390 makes the interviewers attendees (REQ-INTV-010). Was: lib/Settings/register.d/hr-ats.json Interview schema (applicationId, scheduledStart, scheduledEnd, interviewers, mode, location, status, calendarEventUid); lib/Service/InterviewSyncEngine.php + lib/Controller/InterviewController.php POST /api/interviews/sync (2 hits in frontend-api-paths.txt); src/manifest.d/hr-ats.json:362-372 InterviewDetail 'Sync naar agenda' header action calls that route",
     "reachedOn": "Interviews /interviews (menu Werving), InterviewDetail /interviews/:id, 'Sync naar agenda' action, POST /api/interviews/sync",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-15-interview-scheduling"
+    "change": "2026-07-15-interview-scheduling",
+    "requirement": "openspec/changes/interview-in-the-interviewers-calendars/specs/interview-scheduling :: An interview SHALL be a calendar event with the interviewers as attendees (REQ-INTV-010)",
+    "plan": "openspec/changes/interview-in-the-interviewers-calendars"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2629,7 +2635,7 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmLeavePlugin/config/routes.yaml:62 apply leave API with LeaveApply.vue, supervisor approve or reject via /api/v2/leave/employees/leave-requests (:79) and LeaveList.vue"
    },
    "built": {
-    "requirement": "openspec/specs/leave-management :: REQ-LVM-002: `LeaveRequestDetail` SHALL drive the EXISTING lifecycle — no new or altered transitions",
+    "requirement": "openspec/specs/leave-management :: `LeaveRequestDetail` SHALL drive the EXISTING lifecycle — no new or altered transitions (REQ-LVM-002)",
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-leave.json:33 LeaveRequest.submit requires LeaveTypeConditionGuard (registered lib/AppInfo/Application.php:166); hr-leave.json:41,49 approve/reject require NoSelfApprovalGuard (registered Application.php:125); src/manifest.d/hr-leave.json:4 LeaveRequestDetail lifecycleActions submit/approve/reject; src/manifest.d/hr-leave.json:150 LeaveRequests index page",
     "reachedOn": "LeaveRequestDetail /leave-requests/:id (menu Leave & Absence > My leave / Leave requests / Leave approval), submit/approve/reject via lifecycle action buttons",
@@ -2704,7 +2710,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/18252734824349-Set-up-statutory-and-non-statutory-entitlement: with the Netherlands template one time off type holds statutory and non-statutory entitlement and uses the one expiring first; https://support.personio.de/hc/en-us/articles/23107147477277-Explore-your-Time-off-page shows balances."
    },
    "built": {
-    "requirement": ["openspec/specs/leave-management :: REQ-LVM-003: A new `LeaveBalance` schema SHALL model per-employee/year/type entitlements with a calculated remainder", "openspec/specs/leave-accrual-job :: Bovenwettelijk hours SHALL accrue as a monthly opbouw slice (REQ-ACCR-003)"],
+    "requirement": ["openspec/specs/leave-management :: A new `LeaveBalance` schema SHALL model per-employee/year/type entitlements with a calculated remainder (REQ-LVM-003)", "openspec/specs/leave-accrual-job :: Bovenwettelijk hours SHALL accrue as a monthly opbouw slice (REQ-ACCR-003)"],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-leave.json:181-198 LeaveBalance.remainingHours (x-openregister-calculations) = entitledHours+bovenwettelijkHours-usedHours; lib/Service/LeaveBalanceProjectionService.php recomputes usedHours from approved LeaveRequests on every change; lib/BackgroundJob/LeaveAccrualJob.php writes entitledHours/bovenwettelijkHours; src/manifest.d/hr-leave.json:179 LeaveBalances index shows all four columns",
     "reachedOn": "LeaveBalances /leave-balances (menu Leave & Absence > Leave balances)",
@@ -2971,11 +2977,12 @@
    },
    "built": {
     "requirement": "openspec/specs/leave-management :: Thin coverage SHALL warn the approver, and SHALL NOT refuse (REQ-LVM-S02)",
-    "state": "built",
-    "evidence": "appinfo/routes.php:61 GET /api/leave/coverage -> lib/Controller/LeaveScheduleController.php::coverage, backed by lib/Service/LeaveCoverageService.php; the path /api/leave/coverage is absent from _lane/research/frontend-api-paths.txt and `grep -rn \"leave/coverage\" src/ --include=*.vue --include=*.js` has no hits; the LeaveSchedule manifest page (src/manifest.d/hr-leave-types.json) is a plain indexScaffold over LeaveRequest and does not call this endpoint",
+    "state": "specified",
+    "evidence": "Not built: `GET /api/leave/coverage` and `LeaveCoverageService` compute the warning, but no page calls them, so the approver is never shown it (REQ-LVM-S02). (12 Nov, decision 389) Was: appinfo/routes.php:61 GET /api/leave/coverage -> lib/Controller/LeaveScheduleController.php::coverage, backed by lib/Service/LeaveCoverageService.php; the path /api/leave/coverage is absent from _lane/research/frontend-api-paths.txt and `grep -rn \"leave/coverage\" src/ --include=*.vue --include=*.js` has no hits; the LeaveSchedule manifest page (src/manifest.d/hr-leave-types.json) is a plain indexScaffold over LeaveRequest and does not call this endpoint",
     "reachedOn": "nothing reaches it: the route and LeaveCoverageService exist but no page, widget or occ command calls them",
     "owner": "ConductionNL/humaniq",
-    "change": "leave-against-a-department-schedule"
+    "change": "leave-against-a-department-schedule",
+    "plan": "openspec/changes/leave-approval-steps-and-history"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3008,7 +3015,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000286117-Add-a-Personio-Calendar-via-an-iCal-link: subscribe to a Personio calendar of colleagues' time off in third-party apps such as Google Calendar, Apple Calendar and Outlook via an iCal link; Nextcloud is not named, so a Nextcloud calendar would only work as a generic iCal subscription."
    },
    "built": {
-    "requirement": ["openspec/specs/leave-calendar-nc :: REQ-LC-001: A configured shared calendar SHALL be the sync target", "openspec/specs/leave-calendar-nc :: REQ-LC-002: Approved leave SHALL upsert one deterministic all-day event"],
+    "requirement": ["openspec/specs/leave-calendar-nc :: A configured shared calendar SHALL be the sync target (REQ-LC-001)", "openspec/specs/leave-calendar-nc :: Approved leave SHALL upsert one deterministic all-day event (REQ-LC-002)"],
     "state": "built",
     "evidence": "lib/Command/CalendarSyncCommand.php:47,67 registers occ humaniq:calendar:sync (appinfo/info.xml:385); lib/Service/LeaveCalendarService.php one-way projects approved LeaveRequest/SickLeaveCase onto a configured shared Nextcloud calendar; appinfo/info.xml background-jobs block (lines 99-113) registers only LeaveAccrualJob and PollCalendarSubscriptionsJob, not this command, so it never runs unattended",
     "reachedOn": "occ humaniq:calendar:sync only, no page and no scheduled job",
@@ -3123,12 +3130,16 @@
     "personio": "https://support.personio.de/hc/en-us/articles/37979311997213-Termination-of-employment-in-Personio-Payroll: the leaver checklist asks whether remaining vacation has been checked and recorded as vacation compensation via a one-off payment, which is manual and applies to Personio Payroll (Germany only per https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll)."
    },
    "built": {
-    "requirement": ["openspec/specs/offboarding-wizard :: `NlOffboardingChecks` SHALL enforce transitievergoeding presence, verlofsaldo payout, getuigschrift provision, and einddatum consistency (REQ-OFB-004)", "openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion :: The open leave balance SHALL be paid on the leaver's final payslip (REQ-OFC-005)"],
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-onboarding.json:170-291 Offboarding schema carries a verlofsaldoUitbetaald checklist boolean, checked cross-object against the employee's LeaveBalance rows by nl-offboarding-verlofsaldo-uitbetaling (lib/Standards/rules/labour.json:249, lib/Standards/Checks/NlOffboardingChecks.php:79); the field is a manual HR checkbox on the eindafrekening-ready transition, not a computed payout amount or a payslip line; the offboarding-wizard-mvp proposal explicitly lists 'no eindafrekening computation engine' as out of scope",
+    "requirement": [
+     "openspec/specs/offboarding-wizard :: `NlOffboardingChecks` SHALL enforce transitievergoeding presence, verlofsaldo payout, getuigschrift provision, and einddatum consistency (REQ-OFB-004)",
+     "openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion :: The open leave balance SHALL be paid on the leaver's final payslip (REQ-OFC-005)"
+    ],
+    "state": "specified",
+    "evidence": "Not built: PayrollRunService does not pay the open leave balance on the final payslip (REQ-OFC-005); offboarding only checks the verlofsaldoUitbetaald box. (12 Nov, decision 389) Was: lib/Settings/register.d/hr-onboarding.json:170-291 Offboarding schema carries a verlofsaldoUitbetaald checklist boolean, checked cross-object against the employee's LeaveBalance rows by nl-offboarding-verlofsaldo-uitbetaling (lib/Standards/rules/labour.json:249, lib/Standards/Checks/NlOffboardingChecks.php:79); the field is a manual HR checkbox on the eindafrekening-ready transition, not a computed payout amount or a payslip line; the offboarding-wizard-mvp proposal explicitly lists 'no eindafrekening computation engine' as out of scope",
     "reachedOn": "OffboardingDetail page (src/manifest.d/hr-onboarding.json:168), checked by occ humaniq:rules:audit for nl-offboarding-verlofsaldo-uitbetaling",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-12-leave-verzuim-mvp"
+    "change": "2026-07-12-leave-verzuim-mvp",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3199,7 +3210,7 @@
     "personio": "not checked: not settled: searched help centre for Gatekeeper, poortwachter, UWV, week 42 and occupational health service; no article covers Dutch long-term sickness milestones (sickness articles are German eAU and EEL payroll procedures)."
    },
    "built": {
-    "requirement": ["openspec/specs/verzuim-wvp :: REQ-VWP-004: `NlVerzuimChecks` SHALL enforce derivation, overdue signalling, and the loondoorbetaling floor", "openspec/specs/verzuim-wvp :: REQ-VWP-005: The verzuim pages SHALL surface the case, the milestone clock, and the lifecycle under `Verlof & verzuim`"],
+    "requirement": ["openspec/specs/verzuim-wvp :: `NlVerzuimChecks` SHALL enforce derivation, overdue signalling, and the loondoorbetaling floor (REQ-VWP-004)", "openspec/specs/verzuim-wvp :: The verzuim pages SHALL surface the case, the milestone clock, and the lifecycle under `Verlof & verzuim` (REQ-VWP-005)"],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-verzuim.json probleemanalyseDue/planVanAanpakDue/uwv42WeekMeldingDue/eerstejaarsevaluatieDue stored, derived from firstSickDay (+6/8/42/52 weeks), checked by nl-wvp-milestone-derivation (lib/Standards/Checks/NlLeaveChecks.php referenced via lib/Standards/rules/labour.json); src/manifest.d/hr-verzuim.json:41-57 SickLeaveCaseDetail 'Poortwachter milestones' widget shows all eight Due/Done dates",
     "reachedOn": "SickLeaveCaseDetail /sick-leave/:id, 'Poortwachter milestones' widget",
@@ -3274,7 +3285,7 @@
     "personio": "not checked: not settled: searched help centre for medical data and sickness privacy; https://support.personio.de/hc/en-us/articles/36540434486685-Summary-of-Time-off-and-Team-calendar-permissions-New-experience gives each time off type its own view permission, but no page states managers see only that someone is sick while medical details stay hidden."
    },
    "built": {
-    "requirement": "openspec/specs/verzuim-wvp :: REQ-VWP-002: The schema SHALL carry NO medical data — administrative case facts only",
+    "requirement": "openspec/specs/verzuim-wvp :: The schema SHALL carry NO medical data — administrative case facts only (REQ-VWP-002)",
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-verzuim.json SickLeaveCase declares no diagnosis/symptom/cause/medical-note field of any kind (REQ-VWP-002, schema description and manifest _note both state this); src/manifest.d/hr-verzuim.json:11 files widget description restricts uploads to gespreksverslagen/plan-van-aanpak documents only; grep -n x-property-rbac lib/Settings/register.d/hr-verzuim.json and the whole register.d tree: no hits anywhere in the app, so nothing enforces that restriction beyond field omission and a text label",
     "reachedOn": "SickLeaveCaseDetail /sick-leave/:id, 'Case notes & action plan' files widget",
@@ -3758,11 +3769,12 @@
    },
    "built": {
     "requirement": "openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-timesheet-approval :: An approved timesheet SHALL be reopenable until payroll has used it",
-    "state": "built",
-    "evidence": "src/manifest.d/hr-timesheet.json TimesheetDetail lifecycleActions 'reopen' from approved to draft; lib/Listener/TimesheetProcessStampListener.php:312 'All four process fields cleared (the reopen edge)'; lib/Settings/register.d/hr-timesheet.json carries no requires guard on the approved->draft edge (only submit and approve/reject are guarded)",
+    "state": "specified",
+    "evidence": "Not built: the approved to draft reopen edge in hr-timesheet.json has no guard, so it stays open after payroll has used the hours. (12 Nov, decision 389) Was: src/manifest.d/hr-timesheet.json TimesheetDetail lifecycleActions 'reopen' from approved to draft; lib/Listener/TimesheetProcessStampListener.php:312 'All four process fields cleared (the reopen edge)'; lib/Settings/register.d/hr-timesheet.json carries no requires guard on the approved->draft edge (only submit and approve/reject are guarded)",
     "reachedOn": "TimesheetDetail /timesheets/:id, Reopen lifecycle action (visible only when status is approved)",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-06-22-hrmq-timesheet-approval"
+    "change": "2026-06-22-hrmq-timesheet-approval",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3796,11 +3808,12 @@
    },
    "built": {
     "requirement": "openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture :: A billable booking SHALL carry the rate it is billed at (REQ-TEC-009)",
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-timesheet.json TimeEntry properties include projectId and billable (boolean); no 'rate' property anywhere on TimeEntry (grep '\\\"rate\\\"' hr-timesheet.json: no hits); MijnUren /mijn/uren includeFields ends with projectId, billable",
+    "state": "specified",
+    "evidence": "Not built: TimeEntry in hr-timesheet.json has a billable flag but no rate (REQ-TEC-009). (12 Nov, decision 389) Was: lib/Settings/register.d/hr-timesheet.json TimeEntry properties include projectId and billable (boolean); no 'rate' property anywhere on TimeEntry (grep '\\\"rate\\\"' hr-timesheet.json: no hits); MijnUren /mijn/uren includeFields ends with projectId, billable",
     "reachedOn": "MijnUren /mijn/uren booking form (project + billable flag only, no rate field)",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-14-time-entry-capture"
+    "change": "2026-07-14-time-entry-capture",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3907,12 +3920,17 @@
     "personio": "https://support.personio.de/hc/en-us/articles/35372967652893-Create-time-tracking-policies: live tracking (clock in/out) via web app, mobile app or the Entrance shared-device app; https://support.personio.de/hc/en-us/articles/21214231032093-Set-up-a-shared-time-tracking-device-with-the-Entrance-app."
    },
    "built": {
-    "requirement": ["openspec/specs/time-attendance :: A new `AttendanceRecord` schema SHALL model one clock day per employee with an open⇄gesloten lifecycle (REQ-TA-001)", "openspec/specs/time-attendance :: The attendance pages SHALL surface the record, the lifecycle, and the `@me` self-service view (REQ-TA-005)"],
-    "state": "built",
-    "evidence": "src/manifest.d/hr-attendance.json AttendanceRecords /attendance and AttendanceRecordDetail /attendance/:id over AttendanceRecord (clockIn/clockOut/workedHours/status); lifecycleActions sluiten/heropenen (open<->gesloten)",
+    "requirement": [
+     "openspec/specs/time-attendance :: A new `AttendanceRecord` schema SHALL model one clock day per employee with an open⇄gesloten lifecycle (REQ-TA-001)",
+     "openspec/specs/time-attendance :: The attendance pages SHALL surface the record, the lifecycle, and the `@me` self-service view (REQ-TA-005)",
+     "openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance :: An employee SHALL clock in and clock out from My attendance (REQ-TA-008)"
+    ],
+    "state": "specified",
+    "evidence": "Not built: an attendance record can be typed and closed, but the employee has no clock in or clock out action, nothing stamps their employee and user id, and `workedHours` is left to the client (REQ-TA-008). (12 Nov, decision 389) Was: src/manifest.d/hr-attendance.json AttendanceRecords /attendance and AttendanceRecordDetail /attendance/:id over AttendanceRecord (clockIn/clockOut/workedHours/status); lifecycleActions sluiten/heropenen (open<->gesloten)",
     "reachedOn": "AttendanceRecords /attendance (menu), AttendanceRecordDetail",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-13-time-attendance-mvp"
+    "change": "2026-07-13-time-attendance-mvp",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3945,11 +3963,12 @@
    },
    "built": {
     "requirement": "openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance :: A manager SHALL see who is present, absent or late today (REQ-TA-007)",
-    "state": "built",
-    "evidence": "src/manifest.d/hr-attendance.json AttendanceRecords index page columns employeeId/date/clockIn/clockOut/workedHours/status, filters status+location; a plain list, no live present/absent/late summary widget",
+    "state": "specified",
+    "evidence": "Not built: the attendance page is a plain list of clock records, with no today view of who is present, absent or late (REQ-TA-007). (12 Nov, decision 389) Was: src/manifest.d/hr-attendance.json AttendanceRecords index page columns employeeId/date/clockIn/clockOut/workedHours/status, filters status+location; a plain list, no live present/absent/late summary widget",
     "reachedOn": "AttendanceRecords /attendance (menu Time and scheduling), filter by status",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-13-time-attendance-mvp"
+    "change": "2026-07-13-time-attendance-mvp",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4382,9 +4401,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/35372841985565-Create-work-schedules and https://support.personio.de/hc/en-us/articles/22919070507037-Create-and-manage-custom-bank-holiday-calendars: each person's work schedule and holiday calendar drive target hours, overtime and time off; no page describes other deadlines or plans counting against that calendar."
    },
    "built": {
-    "requirement": ["openspec/specs/working-hours-per-person :: An employee SHALL carry non-working times that are neither leave nor sickness (REQ-WHP-002)", "openspec/specs/working-hours-per-person :: One query SHALL answer how many hours a person works on a date (REQ-WHP-003)"],
+    "requirement": [
+     "openspec/specs/working-hours-per-person :: An employee SHALL carry non-working times that are neither leave nor sickness (REQ-WHP-002)",
+     "openspec/specs/working-hours-per-person :: One query SHALL answer how many hours a person works on a date (REQ-WHP-003)"
+    ],
     "state": "built",
-    "evidence": "openspec/changes/a-working-calendar-per-person/tasks.md: all tasks checked [x]; lib/Service/WorkingCalendarReader.php reads openregister's national-holiday calendar duck-typed, never owns it (decision D19); lib/Service/WorkingHoursService.php composes WorkingPattern + NonWorkingTime + the calendar into contractedHoursOn(employee,date); src/manifest.d/hr-working-calendar.json NonWorkingTimes /niet-werkdagen page; consumed by lib/Service/AbsenceRateService.php and lib/Controller/AgendaController.php (availability/capacity)",
+    "evidence": "openspec/changes/archive/2026-10-07-a-working-calendar-per-person/tasks.md: all tasks checked [x]; lib/Service/WorkingCalendarReader.php reads openregister's national-holiday calendar duck-typed, never owns it (decision D19); lib/Service/WorkingHoursService.php composes WorkingPattern + NonWorkingTime + the calendar into contractedHoursOn(employee,date); src/manifest.d/hr-working-calendar.json NonWorkingTimes /niet-werkdagen page; consumed by lib/Service/AbsenceRateService.php and lib/Controller/AgendaController.php (availability/capacity)",
     "reachedOn": "WorkingPatterns /werkpatronen and NonWorkingTimes /niet-werkdagen pages; contractedHoursOn() feeds the Dashboard absence-rate metric and the availability/capacity endpoints",
     "owner": "ConductionNL/humaniq",
     "change": "a-working-calendar-per-person"
@@ -5195,7 +5217,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/35527377864861-Loket-Integration-Sync-payroll-documents: payslips and annual statements from approved Loket runs are fetched into Personio and shared to employees' profiles; https://support.personio.de/hc/en-us/articles/18581054524189-How-to-access-your-documents-in-Personio."
    },
    "built": {
-    "requirement": ["openspec/specs/mijn-hr-self-service :: REQ-MHS-004: The four Mijn pages SHALL list only the current user's records via an `@me` base filter", "openspec/specs/payslip-pdf-docudesk :: Loonstrook rendering SHALL pass `[Employee, Payslip]` dataRefs through the existing leaf (REQ-PPD-002)"],
+    "requirement": ["openspec/specs/mijn-hr-self-service :: The four Mijn pages SHALL list only the current user's records via an `@me` base filter (REQ-MHS-004)", "openspec/specs/payslip-pdf-docudesk :: Loonstrook rendering SHALL pass `[Employee, Payslip]` dataRefs through the existing leaf (REQ-PPD-002)"],
     "state": "built",
     "evidence": "src/manifest.d/hr-objects.json:1571-1600 MijnLoonstroken @me Payslip index; PayslipDetail hr-objects.json:680-830 with 'Generate PDF' at hr-objects.json:809. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
     "reachedOn": "MijnLoonstroken /mijn/loonstroken (menu My HR) to PayslipDetail /payslips/:id, with the Generate PDF button",
@@ -5690,7 +5712,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/13632466245661-Personio-Payroll-About lists SEPA files for wages and salaries and https://support.personio.de/hc/en-us/articles/35330624808221-Payment-overview-in-Personio-Payroll checks SEPA file amounts before transfer; Personio Payroll is Germany only per https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, and for Dutch entities Loket holds the SEPA bank payment (https://support.personio.de/hc/en-us/articles/35527484814621-Loket-integration-Summary-of-supported-attributes)."
    },
    "built": {
-    "requirement": ["openspec/specs/payroll-sepa-netpay-shillinq :: REQ-PNP-003: `PayrollNetPayService` SHALL collect one payment line per payslip, fail-closed on missing IBANs", "openspec/specs/payroll-sepa-netpay-shillinq :: REQ-PNP-004: The service SHALL create the batch as a draft shillinq `PaymentRun` via OpenRegister's ObjectService"],
+    "requirement": ["openspec/specs/payroll-sepa-netpay-shillinq :: `PayrollNetPayService` SHALL collect one payment line per payslip, fail-closed on missing IBANs (REQ-PNP-003)", "openspec/specs/payroll-sepa-netpay-shillinq :: The service SHALL create the batch as a draft shillinq `PaymentRun` via OpenRegister's ObjectService (REQ-PNP-004)"],
     "state": "built",
     "evidence": "lib/Service/PayrollNetPayService.php hands off each payable PayrollRun's payslips as a draft SEPA PaymentRun into shillinq's own PaymentRun register (isInstalled('shillinq') duck-type probe, SHILLINQ_APP_ID/SHILLINQ_REGISTER constants), idempotent by runNumber; lib/Flow/PayrollNetPayNode.php exposes the same as flow step humaniq.payroll-netpay; src/manifest.d/hr-paybatch.json PayrollPaymentBatchDetail note: 'a PayrollPaymentBatch is humaniq's log of ONE net-pay handoff attempt ... never the payment batch itself ... Copy says klaargezet in shillinq, NEVER betaald: created != paid, money only moves after shillinq's controller approves and exports'",
     "reachedOn": "occ humaniq:netpay:run or the Flow step humaniq.payroll-netpay create the draft handoff (this page declares no headerActions/lifecycleActions, so there is no dead-button issue here, it is occ/flow-driven by design); PaymentBatches /payment-batches and PayrollPaymentBatchDetail show the attempt read-only",
@@ -5728,7 +5750,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/19284187332509-Set-up-the-Accounting-Report-for-Personio-Payroll: a monthly accounting report in DATEV SKR03/04 formats with debit and credit accounts, optionally grouped by cost center; Personio Payroll is Germany only per https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll."
    },
    "built": {
-    "requirement": ["openspec/specs/payroll-glpost-shillinq :: REQ-PGP-002: `PayrollGLPostService` SHALL build a balanced 4-line journal from the run totals", "openspec/specs/payroll-glpost-shillinq :: REQ-PGP-003: The service SHALL create the journal as a shillinq `JournalEntry` via OpenRegister's ObjectService"],
+    "requirement": ["openspec/specs/payroll-glpost-shillinq :: `PayrollGLPostService` SHALL build a balanced 4-line journal from the run totals (REQ-PGP-002)", "openspec/specs/payroll-glpost-shillinq :: The service SHALL create the journal as a shillinq `JournalEntry` via OpenRegister's ObjectService (REQ-PGP-003)"],
     "state": "built",
     "evidence": "lib/Command/GlPostRunCommand.php + a PayrollGLPostService post each approved PayrollRun as a balanced loonjournaalpost into shillinq's JournalEntry register via PayrollChartOfAccountsMapping (duck-typed no-op when shillinq is absent); lib/Flow/PayrollGlPostNode.php exposes the same as flow step humaniq.payroll-glpost; src/manifest.d/hr-glpost.json PayrollGLPostDetail note: 'a PayrollGLPost is humaniq's log of ONE handoff attempt into shillinq's JournalEntry register, never the journal itself' Corrections round 8 (2026-09-28), humaniq#514: retro pay and leave payouts folded into net at lib/Service/PayrollRunService.php:536 reach totals net at :570 but not totals gross at :566, so lib/Service/PayrollGLPostService.php:254-267 books no cost line for them and refuses the post with Inconsistente runtotalen once the folds exceed the remainder, at e08ffe0.",
     "reachedOn": "occ humaniq:glpost:run or the Flow step humaniq.payroll-glpost (this page declares no headerActions/lifecycleActions, occ/flow-driven by design); PayrollGLPosts /gl-posts and PayrollGLPostDetail show the attempt read-only",
@@ -6403,12 +6425,17 @@
     "personio": "https://support.personio.de/hc/en-us/articles/4435216121117-Create-feedback-forms and https://support.personio.de/hc/en-us/articles/26260833891101-Set-up-employee-ratings: review forms with question types, ratings and comments, shared with the employee before a cycle closes (https://support.personio.de/hc/en-us/articles/4415703772561-Manage-a-performance-review-cycle); no signing off by both sides is described."
    },
    "built": {
-    "requirement": ["openspec/specs/performance-reviews :: A new `PerformanceReview` schema SHALL model the review dossier with goals inside the review (REQ-PRV-001)", "openspec/specs/performance-reviews :: The review lifecycle SHALL be declarative and `vaststellen` SHALL require the existing `NoSelfApprovalGuard` (REQ-PRV-002)", "openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews :: The employee SHALL sign off their own review (REQ-PRV-007)"],
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-performance.json:100 PerformanceReview schema (rating/sterktes/ontwikkelpunten/afspraken); src/manifest.d/hr-performance.json:186 page PerformanceReviewDetail, lifecycleActions indienen/bespreken/vaststellen/heropenen; lib/Lifecycle/NoSelfApprovalGuard.php:66 guards vaststellen server-side",
+    "requirement": [
+     "openspec/specs/performance-reviews :: A new `PerformanceReview` schema SHALL model the review dossier with goals inside the review (REQ-PRV-001)",
+     "openspec/specs/performance-reviews :: The review lifecycle SHALL be declarative and `vaststellen` SHALL require the existing `NoSelfApprovalGuard` (REQ-PRV-002)",
+     "openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews :: The employee SHALL sign off their own review (REQ-PRV-007)"
+    ],
+    "state": "specified",
+    "evidence": "Not built: the PerformanceReview lifecycle in hr-performance.json has no employee sign-off transition (REQ-PRV-007). (12 Nov, decision 389) Was: lib/Settings/register.d/hr-performance.json:100 PerformanceReview schema (rating/sterktes/ontwikkelpunten/afspraken); src/manifest.d/hr-performance.json:186 page PerformanceReviewDetail, lifecycleActions indienen/bespreken/vaststellen/heropenen; lib/Lifecycle/NoSelfApprovalGuard.php:66 guards vaststellen server-side",
     "reachedOn": "PerformanceReviewDetail /reviews/:id, reached from the EmployeeDetail Beoordelingen row, the cycle's review list, or MijnBeoordelingen /mijn/beoordelingen self-service",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-13-performance-reviews-mvp"
+    "change": "2026-07-13-performance-reviews-mvp",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6509,12 +6536,17 @@
     "loket": "not checked: not settled: searched loket.nl feature pages, roadmap and the API tag list for a compensation review with budgets; only a wage proposal resource exists (https://developer.loket.nl/ApiDocs#tag/Wage-proposal) with no budget cycle described."
    },
    "built": {
-    "requirement": ["openspec/specs/comp-cycles :: A CompReviewCycle SHALL group a periodic review round (REQ-COMP-002)", "openspec/specs/comp-cycles :: CompAdjustment SHALL carry the declarative draft→proposed→approved→effective review-round lifecycle (REQ-COMP-003)", "openspec/changes/matrix-rows-without-a-requirement/specs/comp-cycles :: A review cycle SHALL carry a raise budget and show what is left of it (REQ-COMP-009)"],
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-comp.json CompReviewCycle/CompAdjustment/SalaryBand schemas; src/manifest.d/hr-comp.json:4 CompReviewCycleDetail page lifecycleActions sluiten; CompAdjustmentDetail (line 204) lifecycleActions propose/approve/reject, approve/reject guarded by NoSelfApprovalGuard",
+    "requirement": [
+     "openspec/specs/comp-cycles :: A CompReviewCycle SHALL group a periodic review round (REQ-COMP-002)",
+     "openspec/specs/comp-cycles :: CompAdjustment SHALL carry the declarative draft→proposed→approved→effective review-round lifecycle (REQ-COMP-003)",
+     "openspec/changes/matrix-rows-without-a-requirement/specs/comp-cycles :: A review cycle SHALL carry a raise budget and show what is left of it (REQ-COMP-009)"
+    ],
+    "state": "specified",
+    "evidence": "Not built: CompReviewCycle in hr-comp.json has no budget and the cycle page shows no used or left figure (REQ-COMP-009). (12 Nov, decision 389) Was: lib/Settings/register.d/hr-comp.json CompReviewCycle/CompAdjustment/SalaryBand schemas; src/manifest.d/hr-comp.json:4 CompReviewCycleDetail page lifecycleActions sluiten; CompAdjustmentDetail (line 204) lifecycleActions propose/approve/reject, approve/reject guarded by NoSelfApprovalGuard",
     "reachedOn": "CompReviewCycles /comp-review-cycles (sub-page under Personeel), CompReviewCycleDetail /comp-review-cycles/:id, CompAdjustmentDetail reached from EmployeeDetail's Beloningsvoorstellen row",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-14-comp-cycles"
+    "change": "2026-07-14-comp-cycles",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6583,7 +6615,10 @@
     "personio": "https://support.personio.de/hc/en-us/articles/4426976022045-Manage-courses-and-sessions: participation records carry completion date, expiration date and duration; https://support.personio.de/hc/en-us/articles/30454790101789-Set-up-career-frameworks defines competencies per job and level."
    },
    "built": {
-    "requirement": "openspec/specs/rostering :: A shift SHALL declare the competences it needs (REQ-ROST-C01)",
+    "requirement": [
+     "openspec/specs/rostering :: A shift SHALL declare the competences it needs (REQ-ROST-C01)",
+     "openspec/specs/training-and-lms-sync :: HR SHALL plan training per employee and register attendance (REQ-TRN-001)"
+    ],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-agenda.json:5 EmployeeCompetence schema (competenceCode, issuedOn, validUntil, matched against Shift.requiredCompetences by CompetenceCheckService, hr-roster.json:24); src/manifest.d/hr-agenda.json:3 index EmployeeCompetences /bevoegdheden and EmployeeCompetenceDetail",
     "reachedOn": "EmployeeCompetences /bevoegdheden, menu group VerlofVerzuimGroup (src/manifest.d/05-menu.json:331)",
@@ -6822,7 +6857,7 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/config/routes.yaml:512 My Info (own record, own salary readable per installer/Migration/V3_3_3/dbscript-2.sql:1738) plus My Leave, My Timesheets, My Attendance, My Claims and My Reviews pages; no payslips"
    },
    "built": {
-    "requirement": ["openspec/specs/mijn-hr-self-service :: REQ-MHS-004: The four Mijn pages SHALL list only the current user's records via an `@me` base filter", "openspec/specs/performance-reviews :: Employees SHALL see their own reviews via `MijnBeoordelingen` (REQ-PRV-005)"],
+    "requirement": ["openspec/specs/mijn-hr-self-service :: The four Mijn pages SHALL list only the current user's records via an `@me` base filter (REQ-MHS-004)", "openspec/specs/performance-reviews :: Employees SHALL see their own reviews via `MijnBeoordelingen` (REQ-PRV-005)"],
     "state": "built",
     "evidence": "src/manifest.d/personal-dashboard.json MijnHr dashboard /mijn with stat/object-table widgets scoped userId:@me (My hours this month over TimeEntry, My open expenses over Expense, Timesheets to review, My timesheets, My leave balance, My recent payslips); openspec/specs/mijn-hr-self-service/spec.md REQ-MHS-001..007; sibling menu items MijnBeoordelingen (05-menu.json:52, performance reviews), MijnVerlofKopenVerkopen, MijnGebruikelijkLoon all filtered @me",
     "reachedOn": "MijnHr /mijn (menu Mijn HR), plus the sibling Mijn* pages (MijnBeoordelingen, MijnVerlofKopenVerkopen etc.) under the same menu group",
@@ -6897,9 +6932,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000073569-Configure-reporting-line-access: reporting line access controls the employee data supervisors and relationship holders can see for their reports."
    },
    "built": {
-    "requirement": ["openspec/specs/mss-team-scope :: The approval-carrying schemas SHALL gain an optional denormalized `managerUserId` scoping property (REQ-MSS-001)", "openspec/specs/mss-team-scope :: Three team-scoped approval pages SHALL pre-filter the existing approval queues to `managerUserId: @me` (REQ-MSS-002)"],
+    "requirement": [
+     "openspec/specs/mss-team-scope :: The approval-carrying schemas SHALL gain an optional denormalized `managerUserId` scoping property (REQ-MSS-001)",
+     "openspec/specs/mss-team-scope :: Three team-scoped approval pages SHALL pre-filter the existing approval queues to `managerUserId: @me` (REQ-MSS-002)"
+    ],
     "state": "built",
-    "evidence": "openspec/specs/mss-team-scope/spec.md REQ-MSS-001: denormalized managerUserId on Timesheet/Expense/LeaveRequest, three Team*goedkeuring pages pre-filtered managerUserId:@me, nl-mss-manager-consistency audit cross-checks against org-chart-basic; Timesheet.managerUserId is server-stamped on every write via OrgResolutionService (hrmq-hours-process-redesign), Expense/LeaveRequest remain HR-populated (not yet server-stamped)",
+    "evidence": "openspec/specs/mss-team-scope/spec.md REQ-MSS-001: denormalized managerUserId on Timesheet/Expense/LeaveRequest, three Team*goedkeuring pages pre-filtered managerUserId:@me, nl-mss-manager-consistency audit cross-checks against org-chart-basic; Timesheet.managerUserId is server-stamped on every write via OrgResolutionService (hrmq-hours-process-redesign), Expense.managerUserId is server-stamped too (lib/Listener/ExpenseManagerStampListener.php); LeaveRequest.managerUserId is still filled by HR",
     "reachedOn": "TeamVerlofgoedkeuring, TeamDeclaratiegoedkeuring, TeamUrengoedkeuring (menu, each filtered to the caller's own team)",
     "owner": "ConductionNL/humaniq",
     "change": "2026-07-13-mss-team-scope"
@@ -7569,12 +7607,17 @@
     "personio": "not checked: not settled: searched help centre for rule checks and violations; attendance rule violations are flagged against work schedules (https://support.personio.de/hc/en-us/articles/20418710205341-Set-up-attendance-approval-workflows) and German payroll has compliance actions (https://support.personio.de/hc/en-us/articles/17968756575133-Compliance-actions-with-Personio-Payroll), but no general check of HR records against labour law is described."
    },
    "built": {
-    "requirement": ["openspec/specs/hrm-rule-engine :: The engine SHALL evaluate an object against the rules that apply to it (REQ-RULE-002)", "openspec/specs/hrm-rule-engine :: The compliance audit is a machine-actionable signal (REQ-RULE-008)"],
-    "state": "built",
-    "evidence": "lib/Standards/RuleEngine.php, lib/Standards/RuleCatalogue.php, lib/Standards/Violation.php implement the versioned rule corpus; lib/Command/RulesAuditCommand.php:59 command humaniq:rules:audit prints violations and coverage; no manifest page surfaces RuleEngine output or violation lists",
+    "requirement": [
+     "openspec/specs/hrm-rule-engine :: The engine SHALL evaluate an object against the rules that apply to it (REQ-RULE-002)",
+     "openspec/specs/hrm-rule-engine :: The compliance audit is a machine-actionable signal (REQ-RULE-008)",
+     "openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine :: HR SHALL see the audit's violations and coverage on a page (REQ-RULE-010)"
+    ],
+    "state": "specified",
+    "evidence": "Not built: the engine and `occ humaniq:rules:audit` work, but no page shows the violations (REQ-RULE-010). (12 Nov, decision 389) Was: lib/Standards/RuleEngine.php, lib/Standards/RuleCatalogue.php, lib/Standards/Violation.php implement the versioned rule corpus; lib/Command/RulesAuditCommand.php:59 command humaniq:rules:audit prints violations and coverage; no manifest page surfaces RuleEngine output or violation lists",
     "reachedOn": "occ humaniq:rules:audit only, no page",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-09-07-humaniq-rule-compliance-enforcement"
+    "change": "2026-09-07-humaniq-rule-compliance-enforcement",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7606,12 +7649,16 @@
     "personio": "not checked: not settled: no help centre page reports what share of machine-checkable rules is enforced."
    },
    "built": {
-    "requirement": "openspec/specs/hrm-rule-engine :: An audit SHALL report enforced-versus-catalogued coverage (REQ-RULE-005)",
-    "state": "built",
-    "evidence": "lib/Command/RulesAuditCommand.php:85 prints 'enforceable today: N (%.1f%% of machine-checkable)'; no dashboard widget or page surfaces this percentage anywhere in src/manifest.d/",
+    "requirement": [
+     "openspec/specs/hrm-rule-engine :: An audit SHALL report enforced-versus-catalogued coverage (REQ-RULE-005)",
+     "openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine :: HR SHALL see the audit's violations and coverage on a page (REQ-RULE-010)"
+    ],
+    "state": "specified",
+    "evidence": "Not built: the coverage figure is printed by `occ humaniq:rules:audit` only; no page shows it (REQ-RULE-010). (12 Nov, decision 389) Was: lib/Command/RulesAuditCommand.php:85 prints 'enforceable today: N (%.1f%% of machine-checkable)'; no dashboard widget or page surfaces this percentage anywhere in src/manifest.d/",
     "reachedOn": "occ humaniq:rules:audit only, no page",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-09-07-humaniq-rule-compliance-enforcement"
+    "change": "2026-09-07-humaniq-rule-compliance-enforcement",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8041,7 +8088,10 @@
     "personio": "https://support.personio.de/hc/en-us/articles/209388769-Set-up-workplaces-and-legal-entities: several legal entities in one account; https://www.personio.com/pricing/ (browser read 2026-09-26) gives Core one legal entity and Core PRO unlimited legal entity management; payroll views are selected per legal entity (https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration)."
    },
    "built": {
-    "requirement": "openspec/changes/setup-wizard-six-steps/specs/first-time-setup :: The Administraties step SHALL create the administrations humaniq starts with (REQ-FTS-008)",
+    "requirement": [
+     "openspec/specs/multi-administratie :: An Administration catalog and access membership model the tenant axis (REQ-MULTI-002)",
+     "openspec/specs/multi-administratie :: The active administratie is a per-user, access-guarded selection (REQ-MULTI-003)"
+    ],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-administratie.json:28 Administration membership schema (one row binds an NC user to an administratie with a role); appinfo/routes.php:76 POST /api/administration/active -> administration#setActive; src/views/AdministrationSwitcher.vue injects the active administration on first paint and on switch",
     "reachedOn": "AdministrationSwitcher.vue mounted app-wide in src/App.vue, POST /api/administration/active (present in _lane/research/frontend-api-paths.txt)",
@@ -8115,7 +8165,11 @@
     "personio": "https://developer.personio.de/ (Personio Developer Hub, HTTP 200 today) documents the public API v2 with persons, employments, absence and attendance periods, projects, documents, cost centers and webhooks; https://support.personio.de/hc/en-us/articles/209328509-Overview-of-Personio-public-APIs and https://support.personio.de/hc/en-us/articles/4404623630993-Generate-and-manage-API-credentials."
    },
    "built": {
-    "requirement": ["openspec/specs/hris-api-public :: humaniq SHALL NOT build a parallel REST, GraphQL, webhook, or SCIM API stack (REQ-HRIS-001)", "openspec/specs/hris-api-public :: External integrator authentication SHALL use standard Nextcloud app passwords; no custom credential system SHALL be built (REQ-HRIS-002)"],
+    "requirement": [
+     "openspec/specs/hris-api-public :: humaniq SHALL NOT build a parallel REST, GraphQL, webhook, or SCIM API stack (REQ-HRIS-001)",
+     "openspec/specs/hris-api-public :: External integrator authentication SHALL use standard Nextcloud app passwords; no custom credential system SHALL be built (REQ-HRIS-002)",
+     "openspec/changes/matrix-rows-without-a-requirement/specs/hris-api-public :: An integrator SHALL read and write HR records through the objects API with an app password (REQ-HRIS-006)"
+    ],
     "state": "built",
     "evidence": "openspec/specs/hris-api-public/spec.md: 'humaniq builds no parallel REST/GraphQL/webhook/SCIM stack; external access is Nextcloud app passwords over OpenRegister's own API'; lib/Settings/register.d/hr-integrations.json:5 IntegrationAccount is a catalog only, not the API itself; no dedicated OpenAPI/API-docs artifact found under docs/",
     "reachedOn": "external systems call OpenRegister's generic object API (GET/POST/PUT/PATCH/DELETE /api/objects/{register}/{schema}) directly, authenticated with a Nextcloud app password; humaniq's own contribution is the IntegrationAccounts audit page",
@@ -8346,7 +8400,7 @@
     "reachedOn": "the platform's generic CnSetupWizard shell (nextcloud-vue), driven entirely by src/manifest.json's declarative setup block, shown on first admin visit, no humaniq-authored Vue component imports CnSetupWizard directly, which is expected for this shared ADR-042 mechanism",
     "owner": "ConductionNL/humaniq",
     "spec": "openspec/specs/first-time-setup",
-    "requirement": "REQ-FTS-001"
+    "requirement": "openspec/specs/first-time-setup :: humaniq SHALL declare a three-step setup wizard that never gates the app (REQ-FTS-001)"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8378,7 +8432,10 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360004896117-Change-your-personal-language: Personio is available in German, English, Dutch and 15 more languages; https://support.personio.de/hc/en-us/articles/115005034909-Overview-of-the-Company-and-Customization-settings lists Dutch and English as company default languages."
    },
    "built": {
-    "requirement": "openspec/changes/setup-wizard-six-steps/specs/first-time-setup :: The Taal step SHALL set humaniq's fallback language (REQ-FTS-010)",
+    "requirement": [
+     "openspec/specs/hrmq-i18n-locale-completeness :: The app-nav menu renders in the session locale",
+     "openspec/specs/humaniq-i18n-form-surface :: Every schema-derived display string is a catalogue key in both locales"
+    ],
     "state": "built",
     "evidence": "l10n/en.json and l10n/nl.json, 2115 translation keys each",
     "reachedOn": "app-wide, via Nextcloud's own personal locale setting",
@@ -9288,7 +9345,7 @@
     "change": "openregister/rapportage-bi-export",
     "readOn": "2026-10-07",
     "spec": "openregister/openspec/specs/rapportage-bi-export",
-    "requirement": ["openregister/openspec/specs/rapportage-bi-export :: The system MUST support API access for external BI tools via GraphQL + REST", "openregister/openspec/specs/rapportage-bi-export :: The system MUST support scheduled report generation"]
+    "requirement": ["openregister:openspec/specs/rapportage-bi-export :: The system MUST support API access for external BI tools via GraphQL + REST", "openregister:openspec/specs/rapportage-bi-export :: The system MUST support scheduled report generation"]
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
@@ -9327,7 +9384,12 @@
     "reachedOn": "GeneratedDocuments /documents, GeneratedDocumentDetail /documents/:id",
     "owner": "ConductionNL/filinq",
     "change": "filinq/generate-store-in-case-system",
-    "requirement": ["filinq/openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: An admin declares where generated documents go in the case system (REQ-GSC-001)", "filinq/openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A stored document gets a delivery for its destination (REQ-GSC-002)", "filinq/openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A delivery's outcome is visible and a failure can be retried (REQ-GSC-003)"]
+    "requirement": [
+     "filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: An admin declares where generated documents go in the case system (REQ-GSC-001)",
+     "filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A stored document gets a delivery for its destination (REQ-GSC-002)",
+     "filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A delivery's outcome is visible and a failure can be retried (REQ-GSC-003)"
+    ],
+    "plan": "filinq:openspec/changes/generate-store-in-case-system"
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
@@ -9970,12 +10032,16 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmClaimPlugin/entity/ClaimExpense.php:59 to :78 the expense columns are expense type, date, amount, note and request; grep -riwE 'vat' src/plugins src/client/src: no match"
    },
    "built": {
-    "requirement": "openspec/specs/receipt-ocr :: The `Expense` schema SHALL gain additive vendor/VAT fields and a `ReceiptExtraction` attempt log SHALL exist (REQ-RCPT-001)",
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-expense.json:145 Expense.vatAmount, filled by hand or read off the receipt (:149, :270); shown on src/manifest.d/hr-expense.json:4 ExpenseDetail",
+    "requirement": [
+     "openspec/specs/receipt-ocr :: The `Expense` schema SHALL gain additive vendor/VAT fields and a `ReceiptExtraction` attempt log SHALL exist (REQ-RCPT-001)",
+     "openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr :: A claim SHALL record its VAT and finance SHALL see the VAT to reclaim per period (REQ-RCPT-008)"
+    ],
+    "state": "specified",
+    "evidence": "Not built: the claim records its VAT, but nothing totals the VAT to reclaim per period and the journal books it on the cost account (REQ-RCPT-008). (12 Nov, decision 389) Was: lib/Settings/register.d/hr-expense.json:145 Expense.vatAmount, filled by hand or read off the receipt (:149, :270); shown on src/manifest.d/hr-expense.json:4 ExpenseDetail",
     "reachedOn": "ExpenseDetail /expenses/:id",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-15-receipt-ocr"
+    "change": "2026-07-15-receipt-ocr",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
