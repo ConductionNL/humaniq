@@ -142,7 +142,7 @@ final class AwfHoursReview {
 			return round($perWeek * 4, 2);
 		}
 
-		$first = self::date($period . '-01');
+		$first = PayrollDate::fromYmd($period . '-01');
 		if ($first === null) {
 			return 0.0;
 		}
@@ -167,7 +167,7 @@ final class AwfHoursReview {
 	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
 	public static function coversPeriod(array $contract, string $period): bool {
-		$first = self::date($period . '-01');
+		$first = PayrollDate::fromYmd($period . '-01');
 		if ($first === null) {
 			return false;
 		}
@@ -188,8 +188,8 @@ final class AwfHoursReview {
 	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-102
 	 */
 	public static function overlapDays(array $contract, DateTimeImmutable $from, DateTimeImmutable $until): int {
-		$start = (self::date((string)($contract['startDate'] ?? '')) ?? $from);
-		$end   = (self::date((string)($contract['endDate'] ?? '')) ?? $until);
+		$start = (PayrollDate::fromYmd((string)($contract['startDate'] ?? '')) ?? $from);
+		$end   = (PayrollDate::fromYmd((string)($contract['endDate'] ?? '')) ?? $until);
 		$start = max($start, $from);
 		$end   = min($end, $until);
 		if ($end < $start) {
@@ -287,24 +287,4 @@ final class AwfHoursReview {
 		return count($covered);
 
 	}//end employedDays()
-	/**
-	 * A Y-m-d date (the first ten characters), or null.
-	 *
-	 * @param string $value The value.
-	 *
-	 * @return DateTimeImmutable|null
-	 */
-	private static function date(string $value): ?DateTimeImmutable {
-		$value = substr(trim($value), 0, 10);
-		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception) {
-			return null;
-		}
-
-	}//end date()
 }//end class

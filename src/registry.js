@@ -1,6 +1,9 @@
 /**
  * Humaniq v2 component registry (ADR-036).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Kind-tagged map passed as the `registry` prop to CnAppRoot. Humaniq ships
  * almost exclusively declarative `type: "index"` / `type: "detail"` pages,
  * which the library renders generically from each page's register+schema
@@ -95,9 +98,6 @@
  * straight at the library's `CnChartWidget`) once a future
  * `@conduction/nextcloud-vue` release gives the catalog's chart widget its
  * own chrome the way `CnWidgetObjectTable` already has.
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
  */
 
 import { CnActionButtons, CnDeltaWidget, CnStatWidget } from '@conduction/nextcloud-vue'

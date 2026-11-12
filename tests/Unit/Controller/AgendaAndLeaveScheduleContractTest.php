@@ -97,10 +97,11 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 	 * Build the leave-schedule controller with every collaborator doubled.
 	 *
 	 * @param array<string, mixed>|null $resolved What the caller-scoped read answers with.
+	 * @param array<string, mixed>|null $scope    What the unit agenda rule answers, null for a refusal.
 	 *
 	 * @return LeaveScheduleController The subject.
 	 */
-	private function leaveController(?array $resolved = null): LeaveScheduleController {
+	private function leaveController(?array $resolved = null, ?array $scope = ['ids' => ['employee-1'], 'all' => true, 'full' => []]): LeaveScheduleController {
 		$gateway = $this->createMock(HoursRegisterGateway::class);
 		$gateway->method('loadAll')->willReturn([]);
 		$gateway->method('findFiltered')->willReturn([]);
@@ -112,13 +113,17 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 		$rbac = $this->createMock(RbacObjectReader::class);
 		$rbac->method('findOrNull')->willReturn($resolved);
 
+		$access = $this->createMock(AgendaReadAccess::class);
+		$access->method('employeeScope')->willReturn($scope);
+
 		return new LeaveScheduleController(
 			$this->createMock(IRequest::class),
 			$gateway,
 			$schedule,
 			$this->createMock(LeaveCoverageService::class),
 			$this->createMock(OrgResolutionService::class),
-			$rbac
+			$rbac,
+			$access
 		);
 	}//end leaveController()
 
@@ -205,6 +210,19 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 	}//end testTheScheduleRefusesWithoutAnOrgUnit()
 
 	/**
+	 * `GET /api/leave/schedule` refuses an unusable window with the window sentence.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
+	 */
+	public function testTheScheduleRefusesAnUnusableWindowWithItsSentence(): void {
+		$response = $this->leaveController()->schedule(orgUnitId: 'unit-1', from: '2026-09-07', to: '2026-09-01');
+
+		$this->assertSame([Http::STATUS_BAD_REQUEST, ['error' => 'from en to moeten geldige datums zijn, met to op of na from.']], [$response->getStatus(), $response->getData()]);
+	}//end testTheScheduleRefusesAnUnusableWindowWithItsSentence()
+
+	/**
 	 * `GET /api/leave/schedule` answers the member count beside the entries.
 	 *
 	 * @return void
@@ -224,6 +242,34 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 			array_keys($response->getData())
 		);
 	}//end testTheScheduleAnswersTheMemberCountAndTheEntries()
+
+	/**
+	 * `GET /api/leave/schedule` refuses a unit the caller may not read, and
+	 * reads no leave for it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
+	 */
+	public function testTheScheduleRefusesAUnitTheCallerMayNotRead(): void {
+		$response = $this->leaveController(scope: null)->schedule(orgUnitId: 'unit-other', from: '2026-09-01', to: '2026-09-07');
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertArrayNotHasKey('entries', $response->getData());
+	}//end testTheScheduleRefusesAUnitTheCallerMayNotRead()
+
+	/**
+	 * The member count is the members the unit agenda rule admits.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
+	 */
+	public function testTheScheduleCountsTheAdmittedMembers(): void {
+		$response = $this->leaveController()->schedule(orgUnitId: 'unit-1', from: '2026-09-01', to: '2026-09-07');
+
+		$this->assertSame(1, $response->getData()['memberCount']);
+	}//end testTheScheduleCountsTheAdmittedMembers()
 
 	/**
 	 * `GET /api/leave/coverage` answers 404 for a request this caller may not

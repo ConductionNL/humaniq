@@ -3,6 +3,9 @@
 /**
  * AVG Data-Subject-Rights Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Thin humaniq orchestration layer over OpenRegister's RBAC/tenant-scoped
  * `OCA\OpenRegister\Service\Gdpr\DataSubjectRequestService` (hrmq#99 --
  * consume-not-rebuild correction, superseding the original avg-dsr design):
@@ -47,9 +50,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

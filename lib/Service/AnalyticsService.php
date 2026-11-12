@@ -3,6 +3,9 @@
 /**
  * Analytics Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Backs the Dashboard's three `endpointSource` trend widgets' metrics
  * (`absence-rate` / `payroll-cost` / `approval-lead-time`,
  * humaniq-dashboard-steering-indicators): every method here is called ONLY
@@ -36,9 +39,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -477,14 +477,7 @@ class AnalyticsService {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadFiltered(string $schema, string $administrationId): array {
-		$rows = [];
-		foreach ($this->loadAll($schema) as $row) {
-			if ((string)($row['administrationId'] ?? '') === $administrationId) {
-				$rows[] = $row;
-			}
-		}
-
-		return $rows;
+		return AdministrationRows::scopedTo($this->loadAll($schema), $administrationId);
 	}//end loadFiltered()
 
 	/**

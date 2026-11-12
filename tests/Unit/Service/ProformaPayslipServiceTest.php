@@ -298,4 +298,34 @@ class ProformaPayslipServiceTest extends TestCase {
 		return new ProformaPayslipService(new PayrollCalculator(), $settings);
 	}//end buildService()
 
+	/**
+	 * Golden: the full breakdown, key for key and in order, for two inputs (explicit and defaulted levies).
+	 *
+	 * @return void
+	 */
+	public function testTheFullBreakdownMatchesTheGolden(): void {
+		$golden  = json_decode((string)file_get_contents(__DIR__.'/../../fixtures/golden/proforma-payslip.json'), true, 512, JSON_THROW_ON_ERROR);
+		$service = $this->buildService();
+
+		$actual = [
+			'explicit' => $service->simulate(['gross' => '4200.50', 'table' => 'groen', 'loonheffingskorting' => 'false', 'dateOfBirth' => '1958-01-01', 'period' => '2026-03', 'parttime' => '0.8', 'bijzonder' => '250', 'aof' => 'hoog', 'whk' => '2.1']),
+			'defaulted' => $service->simulate(['gross' => 2500, 'period' => '2026-07']),
+		];
+
+		$this->assertSame(json_encode($golden), json_encode($actual));
+
+	}//end testTheFullBreakdownMatchesTheGolden()
+
+	/**
+	 * A period without a tax table is refused, naming the period.
+	 *
+	 * @return void
+	 */
+	public function testAPeriodWithoutTablesIsRefused(): void {
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessageMatches('/^Belastingtabel voor periode 1999-01 is niet beschikbaar: /');
+		$this->buildService()->simulate(['gross' => 3800, 'period' => '1999-01']);
+
+	}//end testAPeriodWithoutTablesIsRefused()
+
 }//end class

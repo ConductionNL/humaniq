@@ -99,6 +99,7 @@
             },
             "PerformanceReview": {
                 "slug": "PerformanceReview",
+                "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}], "delete": ["humaniq-hr"]},
                 "icon": "ClipboardAccountOutline",
                 "version": "0.4.0",
                 "title": "Performance Review",

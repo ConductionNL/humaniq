@@ -109,6 +109,47 @@ class AvgDsrExportCommandTest extends TestCase {
 	}//end testValidAdminEstablishesSessionAndExports()
 
 	/**
+	 * The exit code and every line written, for each refusal and an export.
+	 *
+	 * @return void
+	 */
+	public function testTheWrittenLinesAndExitCodes(): void {
+		$service = $this->createMock(AvgDsrService::class);
+		$service->method('exportForSubject')->willReturnCallback(static function (string $employeeId, string $right, ?string $dsrRequestId): array {
+			if ($employeeId === 'emp-stale') {
+				throw new \RuntimeException('Geen bevoegde sessie.');
+			}
+
+			return ['count' => 2, 'objects' => [['object' => ['id' => 'o-1', '@self' => ['schema' => 'Employee']]], ['id' => 'o-2'], 'request:' . (string)$dsrRequestId]];
+		});
+		$ok = new AvgDsrExportCommand($service, $this->succeedingSessionResolver());
+
+		self::assertSame([1, "--employee is verplicht.\n"], $this->linesOf($ok, ['--employee' => '  ', '--as-user' => 'admin']));
+		self::assertSame([1, "--right moet \"inzage\" of \"portabiliteit\" zijn.\n"], $this->linesOf($ok, ['--employee' => 'emp-1', '--right' => 'x']));
+		self::assertSame([1, "--as-user is verplicht.\n"], $this->linesOf($ok, ['--employee' => 'emp-1']));
+		self::assertSame([1, "Geen bevoegde sessie.\n"], $this->linesOf($ok, ['--employee' => 'emp-stale', '--as-user' => 'admin']));
+		self::assertSame(
+			[0, "Humaniq AVG-export (inzage)\n  aantal objecten: 2\n  - Employee / o-1\n  - ? / o-2\n  - ? / ?\n"],
+			$this->linesOf($ok, ['--employee' => ' emp-1 ', '--as-user' => 'admin', '--dsr-request-id' => ' dsr-1 '])
+		);
+	}//end testTheWrittenLinesAndExitCodes()
+
+	/**
+	 * Run a command and keep what it wrote, undecorated.
+	 *
+	 * @param AvgDsrExportCommand  $command The command under test.
+	 * @param array<string, mixed> $options The `--option` => value map.
+	 *
+	 * @return array{0: int, 1: string}
+	 */
+	private function linesOf(AvgDsrExportCommand $command, array $options): array {
+		$output = new BufferedOutput();
+		$exit = $command->run(new ArrayInput($options, $command->getDefinition()), $output);
+
+		return [$exit, $output->fetch()];
+	}//end linesOf()
+
+	/**
 	 * A REAL PrivilegedSessionResolver whose establish() always fails
 	 * (unknown/non-admin uid) -- `IGroupManager::isAdmin()` returns false.
 	 *

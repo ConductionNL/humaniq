@@ -228,6 +228,91 @@ class NlRetroChecksTest extends TestCase {
 	}//end testAnEmployeeWithoutATableColourIsRecomputedOnTheWhiteTable()
 
 	/**
+	 * engineVersion present but a field the recompute needs missing or blank is a violation.
+	 *
+	 * @return void
+	 */
+	public function testIncompleteAdjustmentWithAnEngineVersionIsAViolation(): void {
+		[$adjustment, $context] = $this->consistentAdjustmentAndContext();
+		$check = NlRetroChecks::checks()['PayrollAdjustment']['nl-retro-adjustment-consistency'];
+
+		foreach (['originalPeriod', 'employeeId', 'originalPayslipId'] as $field) {
+			$broken = $adjustment;
+			$broken[$field] = '  ';
+			$this->assertFalse($check($broken, $context), $field.' blank');
+			unset($broken[$field]);
+			$this->assertFalse($check($broken, $context), $field.' absent');
+		}
+
+		$broken = $adjustment;
+		$broken['correctedGrossMonthlySalary'] = 'veel';
+		$this->assertFalse($check($broken, $context), 'A non-numeric corrected gross.');
+
+		$broken = $adjustment;
+		$broken['engineVersion'] = 'nl-1999';
+		$this->assertFalse($check($broken, $context), 'An engineVersion that resolves to no table.');
+
+		$broken = $adjustment;
+		unset($broken['deltaNet']);
+		$this->assertFalse($check($broken, $context), 'A delta field missing.');
+
+		$this->assertTrue($check(['engineVersion' => '   '], []), 'A blank engineVersion is not yet computed.');
+
+	}//end testIncompleteAdjustmentWithAnEngineVersionIsAViolation()
+
+	/**
+	 * An original payslip or employee that does not resolve cannot be verified, so it passes.
+	 *
+	 * @return void
+	 */
+	public function testUnresolvableCrossObjectsPass(): void {
+		[$adjustment, $context] = $this->consistentAdjustmentAndContext();
+		$check = NlRetroChecks::checks()['PayrollAdjustment']['nl-retro-adjustment-consistency'];
+		$adjustment['deltaNet'] = ((float)$adjustment['deltaNet'] + 1.00);
+
+		$noPayslip = $context;
+		unset($noPayslip['retro']['payslipsById']['ps-orig']);
+		$this->assertTrue($check($adjustment, $noPayslip), 'Unknown original payslip.');
+
+		$noEmployee = $context;
+		$noEmployee['retro']['employeesById']['emp-1'] = 'not-a-row';
+		$this->assertTrue($check($adjustment, $noEmployee), 'Unknown employee.');
+
+		$this->assertFalse($check($adjustment, $context), 'Resolvable and tampered still fails.');
+
+	}//end testUnresolvableCrossObjectsPass()
+
+	/**
+	 * The recompute reads the whk override, the contract's Awf tariff, the birth date and the heffingskorting.
+	 *
+	 * @return void
+	 */
+	public function testRecomputeReadsEveryInput(): void {
+		[$adjustment, $context] = $this->consistentAdjustmentAndContext();
+		$check = NlRetroChecks::checks()['PayrollAdjustment']['nl-retro-adjustment-consistency'];
+
+		$override = $context;
+		$override['retro']['whkPercentageOverride'] = '9.5';
+		$this->assertFalse($check($adjustment, $override), 'A numeric whk override changes the figures.');
+
+		$override['retro']['whkPercentageOverride'] = 'n/a';
+		$this->assertTrue($check($adjustment, $override), 'A non-numeric override falls back to the default.');
+
+		$noContract = $context;
+		unset($noContract['retro']['contractsByEmployeeId']['emp-1']);
+		$this->assertFalse($check($adjustment, $noContract), 'No contract: the high Awf tariff.');
+
+		$noKorting = $context;
+		$noKorting['retro']['employeesById']['emp-1']['loonheffingskortingToegepast'] = false;
+		$this->assertFalse($check($adjustment, $noKorting), 'Without heffingskorting the figures differ.');
+
+		$noBirth = $context;
+		unset($noBirth['retro']['employeesById']['emp-1']['dateOfBirth']);
+		$this->assertTrue($check($adjustment, $noBirth), 'No birth date recomputes as an adult on the same figures.');
+
+	}//end testRecomputeReadsEveryInput()
+
+	/**
 	 * A tampered delta fires the `nl-retro-adjustment-consistency` violation at
 	 * `mandatory` severity -- through the REAL RuleEngine::evaluate.
 	 *

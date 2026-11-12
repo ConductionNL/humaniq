@@ -1,0 +1,67 @@
+publiccodeYmlVersion: "0.4"
+
+name: Humaniq
+url: "https://github.com/ConductionNL/humaniq"
+developmentStatus: development
+softwareType: addon
+
+platforms:
+  - nextcloud
+
+categories:
+  - hr
+  - payroll
+  - time-tracking
+
+description:
+  nl:
+    shortDescription: "HR- en salarisadministratie voor Nextcloud"
+    longDescription: |
+      Humaniq is een open-source HR- en salarisadministratie voor Nederlandse en
+      EU-werkgevers, gebouwd op de OpenRegister-datalaag. Medewerkers registreren
+      uren en dienen declaraties in via een workflow van indienen, goedkeuren of
+      afwijzen. Het register bevat ook medewerkers, arbeidscontracten,
+      salarisruns, loonstroken en loonaangiftes. Een rule engine toetst die
+      gegevens aan een vaste set regels uit arbeidsrecht, AVG en
+      loonheffingen, en rapporteert hoeveel daarvan wordt nageleefd.
+    features:
+      - Urenregistratie met goedkeuringsworkflow
+      - Declaraties van indienen tot vergoeding
+      - Medewerkers, contracten en salarisruns in OpenRegister
+      - Compliance-toetsing van arbeidsrecht en loonheffingen
+  en:
+    shortDescription: "HR and payroll administration for Nextcloud"
+    longDescription: |
+      Humaniq is open-source HR and payroll administration for Dutch and EU
+      employers, built on the OpenRegister data layer. Employees log hours and
+      submit expense claims through a submit, approve or reject workflow. The
+      register also holds employees, employment contracts, payroll runs,
+      payslips and wage tax filings. A rule engine audits that data against a
+      versioned corpus of labour law, GDPR and wage tax rules, and reports the
+      compliance coverage.
+    features:
+      - Timesheets with an approval workflow
+      - Expense claims from submission to reimbursement
+      - Employees, contracts and payroll runs in OpenRegister
+      - Compliance audit against labour law and wage tax rules
+
+legal:
+  license: EUPL-1.2
+
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - nl
+    - en
+
+maintenance:
+  type: internal
+  contacts:
+    - name: Conduction Development Team
+      email: info@conduction.nl
+      affiliation: Conduction B.V.
+
+dependsOn:
+  open:
+    - name: OpenRegister
+      versionMin: "0.1.0"

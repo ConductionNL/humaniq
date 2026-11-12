@@ -140,4 +140,24 @@ class ObjectWeekHoursTest extends TestCase {
 		self::assertSame(0.0, $week['total']);
 		self::assertSame([], $week['people']);
 	}//end testAWeekWithoutVisibleEntriesHasNoPeople()
+
+	/**
+	 * A blank person is left out, the person and the date are trimmed, and the
+	 * first non-empty employee link names the team; a Sunday with a time of
+	 * day still falls in its own week.
+	 *
+	 * @return void
+	 */
+	public function testTrimmedPeopleAndTheFirstEmployeeLink(): void {
+		$week = $this->weekHours([
+			$this->entry(' pieter ', '2026-10-06T09:30:00+02:00', 1.25),
+			$this->entry('pieter', '2026-10-07', '0.5', 'e-pieter'),
+			$this->entry('pieter', '2026-10-08', 1, 'e-lars'),
+			$this->entry('  ', '2026-10-07', 9, 'e-lars'),
+			$this->entry('lars', '2026-10-11', 'veel', 'e-lars'),
+		])->forObject(domainObjectType: 'dossiq:case', domainObjectRef: 'case-1', day: new DateTimeImmutable('2026-10-11 23:15:00'));
+
+		self::assertSame(['week' => 41, 'weekStart' => '2026-10-05', 'weekEnd' => '2026-10-11', 'total' => 2.75], array_slice($week, 0, 4));
+		self::assertSame([['userId' => 'pieter', 'displayName' => 'Pieter Jansen', 'team' => 'Woo en informatie', 'hours' => 2.75]], $week['people']);
+	}//end testTrimmedPeopleAndTheFirstEmployeeLink()
 }//end class

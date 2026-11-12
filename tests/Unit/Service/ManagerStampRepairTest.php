@@ -31,6 +31,10 @@ use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\ManagerStampRepair;
 use OCA\Humaniq\Service\OrgResolutionService;
+use OCA\Humaniq\Service\OrgLookups;
+use OCA\Humaniq\Service\ManagerDeputies;
+use OCA\Humaniq\Service\HumaniqRoles;
+use OCP\IGroupManager;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
@@ -575,7 +579,7 @@ class ManagerStampRepairTest extends TestCase {
 	 * @return ManagerStampRepair
 	 */
 	private function repairWith(LoggerInterface $logger): ManagerStampRepair {
-		return new ManagerStampRepair(gateway: $this->gateway, marker: $this->marker, logger: $logger, orgResolution: new OrgResolutionService());
+		return new ManagerStampRepair(gateway: $this->gateway, marker: $this->marker, logger: $logger, org: new OrgLookups($this->gateway, new OrgResolutionService(), new ManagerDeputies(gateway: $this->gateway, roles: new HumaniqRoles($this->createMock(IGroupManager::class)))));
 	}//end repairWith()
 
 }//end class

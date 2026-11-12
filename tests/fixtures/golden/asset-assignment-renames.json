@@ -1,0 +1,100 @@
+{
+    "null old": {
+        "input": {
+            "id": "s1",
+            "uitgifteDatum": null,
+            "issuedOn": "2026-01-01"
+        },
+        "expected": {
+            "row": {
+                "id": "s1",
+                "uitgifteDatum": null,
+                "issuedOn": "2026-01-01"
+            },
+            "changed": false,
+            "hardSkipReason": null
+        }
+    },
+    "equivalent values": {
+        "input": {
+            "id": "s2",
+            "uitgifteBonSigned": "1",
+            "issueReceiptSigned": true,
+            "eigenBijdrage": "12.50",
+            "employeeContribution": 12.5,
+            "uitgifteDatum": "2026-01-01",
+            "issuedOn": "2026-01-01T00:00:00+00:00"
+        },
+        "expected": {
+            "row": {
+                "id": "s2",
+                "uitgifteBonSigned": "1",
+                "issueReceiptSigned": true,
+                "eigenBijdrage": "12.50",
+                "employeeContribution": 12.5,
+                "uitgifteDatum": "2026-01-01",
+                "issuedOn": "2026-01-01T00:00:00+00:00"
+            },
+            "changed": false,
+            "hardSkipReason": null
+        }
+    },
+    "two clashes": {
+        "input": {
+            "id": "s3",
+            "uitgifteDatum": "2026-01-01",
+            "issuedOn": "2026-02-01",
+            "innameDatum": "x",
+            "returnedOn": "y"
+        },
+        "expected": {
+            "row": {
+                "id": "s3",
+                "uitgifteDatum": "2026-01-01",
+                "issuedOn": "2026-02-01",
+                "innameDatum": "x",
+                "returnedOn": "y"
+            },
+            "changed": false,
+            "hardSkipReason": "both 'uitgifteDatum' (\"2026-01-01\") and 'issuedOn' (\"2026-02-01\") present with different values, refusing to guess; both 'innameDatum' (\"x\") and 'returnedOn' (\"y\") present with different values, refusing to guess"
+        }
+    },
+    "rename and clash": {
+        "input": {
+            "id": "s4",
+            "innameDatum": "2026-03-01",
+            "eigenBijdrage": 5,
+            "employeeContribution": 6
+        },
+        "expected": {
+            "row": {
+                "id": "s4",
+                "innameDatum": "2026-03-01",
+                "eigenBijdrage": 5,
+                "employeeContribution": 6,
+                "returnedOn": "2026-03-01"
+            },
+            "changed": true,
+            "hardSkipReason": "both 'eigenBijdrage' (5) and 'employeeContribution' (6) present with different values, refusing to guess"
+        }
+    },
+    "plain renames": {
+        "input": {
+            "id": "s5",
+            "uitgifteDatum": "2026-01-01",
+            "eigenBijdrage": 0,
+            "issuedOn": null
+        },
+        "expected": {
+            "row": {
+                "id": "s5",
+                "uitgifteDatum": "2026-01-01",
+                "eigenBijdrage": 0,
+                "issuedOn": "2026-01-01",
+                "employeeContribution": 0
+            },
+            "changed": true,
+            "hardSkipReason": null
+        }
+    }
+}

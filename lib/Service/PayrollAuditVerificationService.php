@@ -3,6 +3,9 @@
 /**
  * Payroll Audit Verification Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Chain-of-custody verification for a `PayrollRun` (audit-trail-payroll
  * design.md D2, fixing hrmq#98): resolves the audit-trail row id range
  * covering the run's and its payslips' create/update rows, then hands that
@@ -29,9 +32,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -114,7 +114,7 @@ final class PayrollAuditVerificationService {
 		$uuids = [$runId];
 		foreach ($this->loadAll(self::PAYSLIP_SCHEMA) as $payslip) {
 			if ((string)($payslip['payrollRunId'] ?? '') === $runId) {
-				$uuids[] = $this->idOf($payslip);
+				$uuids[] = RegisterRows::idOf($payslip);
 			}
 		}
 
@@ -227,13 +227,7 @@ final class PayrollAuditVerificationService {
 			return null;
 		}
 
-		foreach ($this->loadAll($schema) as $row) {
-			if ($this->idOf($row) === $id) {
-				return $row;
-			}
-		}
-
-		return null;
+		return RegisterRows::byId($this->loadAll($schema), $id);
 	}//end findById()
 
 	/**
@@ -256,45 +250,8 @@ final class PayrollAuditVerificationService {
 			return [];
 		}
 
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
+		return RegisterRows::fromRows($rows);
 	}//end loadAll()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to a plain array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		if (is_object($row) === true && method_exists($row, 'getObject') === true) {
-			return (array)$row->getObject();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
-	 * @param array<string, mixed> $row The row.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $row): string {
-		return (string)($row['id'] ?? $row['@self']['id'] ?? '');
-	}//end idOf()
 
 	/**
 	 * @return mixed OpenRegister's per-object audit-log read path.

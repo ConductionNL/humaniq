@@ -3,6 +3,9 @@
 /**
  * Humaniq Migrate App Config Keys Repair Step
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Repair step that carries this app's stored `IAppConfig` values across the
  * `hrmq` -> `humaniq` app-id rename.
  *
@@ -46,9 +49,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -149,47 +149,57 @@ class MigrateAppConfigKeys implements IRepairStep {
 			return;
 		}
 
-		$migrated = 0;
-		$alreadyPresent = 0;
-		$emptySource = 0;
-		$skippedReserved = 0;
-
+		$counts = ['migrated' => 0, 'present' => 0, 'empty' => 0, 'reserved' => 0];
 		foreach ($keys as $key) {
-			if (in_array($key, self::RESERVED_KEYS, strict: true) === true) {
-				$skippedReserved++;
-				continue;
+			$outcome = $this->migrateKey(key: $key);
+			if ($outcome !== null) {
+				$counts[$outcome]++;
 			}
-
-			$old = $this->appConfig->getValueString(self::OLD_APP_ID, $key, '');
-			if ($old === '') {
-				$emptySource++;
-				continue;
-			}
-
-			$existing = $this->appConfig->getValueString(self::NEW_APP_ID, $key, '');
-			if ($existing !== '') {
-				$alreadyPresent++;
-				continue;
-			}
-
-			try {
-				$this->appConfig->setValueString(self::NEW_APP_ID, $key, $old);
-				$migrated++;
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'Humaniq: could not migrate one app config key; leaving it under the old namespace',
-					['key' => $key, 'exception' => $e->getMessage()]
-				);
-			}//end try
-		}//end foreach
+		}
 
 		$output->info(
-			'MigrateAppConfigKeys: ' . $migrated . ' key(s) migrated, ' . $alreadyPresent
-			. ' already present, ' . $emptySource . ' had no value to migrate, '
-			. $skippedReserved . ' skipped as Nextcloud-reserved.'
+			'MigrateAppConfigKeys: ' . $counts['migrated'] . ' key(s) migrated, ' . $counts['present']
+			. ' already present, ' . $counts['empty'] . ' had no value to migrate, '
+			. $counts['reserved'] . ' skipped as Nextcloud-reserved.'
 		);
 
 	}//end run()
+
+	/**
+	 * Copy one key of the old namespace to the new one.
+	 *
+	 * @param string $key The key.
+	 *
+	 * @return 'migrated'|'present'|'empty'|'reserved'|null What happened; null when the write failed.
+	 */
+	private function migrateKey(string $key): ?string {
+		if (in_array($key, self::RESERVED_KEYS, strict: true) === true) {
+			return 'reserved';
+		}
+
+		$old = $this->appConfig->getValueString(self::OLD_APP_ID, $key, '');
+		if ($old === '') {
+			return 'empty';
+		}
+
+		$existing = $this->appConfig->getValueString(self::NEW_APP_ID, $key, '');
+		if ($existing !== '') {
+			return 'present';
+		}
+
+		try {
+			$this->appConfig->setValueString(self::NEW_APP_ID, $key, $old);
+
+			return 'migrated';
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Humaniq: could not migrate one app config key; leaving it under the old namespace',
+				['key' => $key, 'exception' => $e->getMessage()]
+			);
+
+			return null;
+		}//end try
+	}//end migrateKey()
 
 	/**
 	 * Every key currently stored under the old app-config namespace.

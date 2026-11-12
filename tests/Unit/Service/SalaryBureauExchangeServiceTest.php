@@ -188,6 +188,37 @@ class SalaryBureauExchangeServiceTest extends TestCase {
 	}//end testTheIntakeListsMissingAndUnknownEmployees()
 
 	/**
+	 * The intake's findings in order: unknown employees as the payslips come,
+	 * then missing and duplicate ones per expected employee; an unknown
+	 * handoff answers nothing and writes nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-004
+	 */
+	public function testTheIntakeFindingsInOrder(): void {
+		self::assertSame(['blocking' => 0, 'findings' => []], $this->service->checkIntake('no-such-handoff'));
+
+		$handoff = $this->service->compile(administrationId: 'ADM-006', period: '2026-04', userId: 'hr-1');
+		$this->store->seed('Payslip', 'slip-x', ['employeeId' => 'emp-other', 'period' => '2026-04', 'payrollHandoffId' => $handoff['handoffId']]);
+		$this->store->seed('Payslip', 'slip-b1', ['employeeId' => 'emp-b', 'period' => '2026-04', 'payrollHandoffId' => $handoff['handoffId']]);
+		$this->store->seed('Payslip', 'slip-b2', ['employeeId' => 'emp-b', 'period' => '2026-04', 'payrollHandoffId' => $handoff['handoffId']]);
+
+		self::assertSame(
+			[
+				'blocking' => 3,
+				'findings' => [
+					['kind' => 'unknown-employee', 'employeeId' => 'emp-other', 'message' => 'Het bureau leverde een loonstrook voor iemand buiten deze administratie.'],
+					['kind' => 'missing-payslip', 'employeeId' => 'emp-a', 'message' => 'Geen loonstrook terug van het bureau.'],
+					['kind' => 'duplicate-payslip', 'employeeId' => 'emp-b', 'message' => 'Meer dan één loonstrook terug van het bureau.'],
+				],
+			],
+			$this->service->checkIntake($handoff['handoffId'])
+		);
+		self::assertSame(3, count($this->store->find($handoff['handoffId'], schema: 'PayrollHandoff')->getObject()['intakeFindings']));
+	}//end testTheIntakeFindingsInOrder()
+
+	/**
 	 * Mark the handoff of a period as sent.
 	 *
 	 * @param string $period The period.

@@ -3,6 +3,9 @@
 /**
  * Payroll Reproduce Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `occ humaniq:payroll:reproduce --payslip <uuid>` (audit-trail-payroll
  * design.md D1, REQ-AUDP-002, fixing hrmq#98): reloads a sealed Payslip's
  * stored `engineInputSnapshot` — NEVER the live Employee/EmploymentContract
@@ -30,9 +33,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -396,13 +396,7 @@ final class PayrollReproduceService {
 			return null;
 		}
 
-		foreach ($this->loadAll($schema) as $row) {
-			if ($this->idOf($row) === $id) {
-				return $row;
-			}
-		}
-
-		return null;
+		return RegisterRows::byId($this->loadAll($schema), $id);
 	}//end findById()
 
 	/**
@@ -425,49 +419,8 @@ final class PayrollReproduceService {
 			return [];
 		}
 
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
+		return RegisterRows::fromRows($rows);
 	}//end loadAll()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to a plain array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === false) {
-			return [];
-		}
-
-		if (method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		if (method_exists($row, 'getObject') === true) {
-			return (array)$row->getObject();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
-	 * @param array<string, mixed> $row The row.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $row): string {
-		return (string)($row['id'] ?? $row['@self']['id'] ?? '');
-	}//end idOf()
 
 	/**
 	 * @return string The configured humaniq register slug.

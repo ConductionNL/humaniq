@@ -3,6 +3,9 @@
 /**
  * WKR (Werkkostenregeling) Assessment Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Rolls the cross-object fiscale loonsom (Σ Payslip.grossPay) and the
  * administration's WkrDeclarations into an idempotent, per-(administrationId,
  * year) `WkrAssessment` (wkr-administration design.md D5): reads the SAME
@@ -32,9 +35,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

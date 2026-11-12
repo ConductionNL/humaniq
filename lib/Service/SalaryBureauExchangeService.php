@@ -189,11 +189,43 @@ class SalaryBureauExchangeService {
 			return ['blocking' => 0, 'findings' => []];
 		}
 
+		$expected = $this->expectedEmployees(handoff: $handoff);
+		$intake = $this->takeInPayslips(handoffId: $handoffId, expected: $expected);
+		$findings = array_merge($intake['findings'], self::countFindings(expected: $expected, returned: $intake['returned']));
+
+		$payload = array_merge($handoff, ['intakeFindings' => $findings, 'blockingFindings' => count($findings)]);
+		unset($payload['id']);
+		$this->gateway->save(payload: $payload, schema: 'PayrollHandoff', uuid: $handoffId);
+
+		return ['blocking' => count($findings), 'findings' => $findings];
+	}//end checkIntake()
+
+	/**
+	 * The employees of the handoff's administration and period, by id.
+	 *
+	 * @param array<string, mixed> $handoff The PayrollHandoff.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function expectedEmployees(array $handoff): array {
 		$expected = [];
 		foreach ($this->employeesIn(administrationId: (string)($handoff['administrationId'] ?? ''), period: (string)($handoff['period'] ?? '')) as $employee) {
 			$expected[(string)$employee['id']] = $employee;
 		}
 
+		return $expected;
+	}//end expectedEmployees()
+
+	/**
+	 * Count the returned payslips per employee, stamp those of expected
+	 * employees, and name those of anyone else.
+	 *
+	 * @param string                              $handoffId The handoff.
+	 * @param array<string, array<string, mixed>> $expected  The expected employees by id.
+	 *
+	 * @return array{returned: array<string, int>, findings: list<array<string, mixed>>}
+	 */
+	private function takeInPayslips(string $handoffId, array $expected): array {
 		$returned = [];
 		$findings = [];
 		foreach ($this->gateway->findFiltered('Payslip', ['payrollHandoffId' => $handoffId]) as $payslip) {
@@ -207,7 +239,20 @@ class SalaryBureauExchangeService {
 			$this->stampPayslip(payslip: $payslip, employee: $expected[$employeeId]);
 		}
 
-		foreach ($expected as $employeeId => $employee) {
+		return ['returned' => $returned, 'findings' => $findings];
+	}//end takeInPayslips()
+
+	/**
+	 * A finding for each expected employee with no payslip or more than one.
+	 *
+	 * @param array<string, array<string, mixed>> $expected The expected employees by id.
+	 * @param array<string, int>                  $returned The payslips returned per employee.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private static function countFindings(array $expected, array $returned): array {
+		$findings = [];
+		foreach (array_keys($expected) as $employeeId) {
 			$count = ($returned[$employeeId] ?? 0);
 			if ($count === 0) {
 				$findings[] = ['kind' => 'missing-payslip', 'employeeId' => $employeeId, 'message' => 'Geen loonstrook terug van het bureau.'];
@@ -216,12 +261,8 @@ class SalaryBureauExchangeService {
 			}
 		}
 
-		$payload = array_merge($handoff, ['intakeFindings' => $findings, 'blockingFindings' => count($findings)]);
-		unset($payload['id']);
-		$this->gateway->save(payload: $payload, schema: 'PayrollHandoff', uuid: $handoffId);
-
-		return ['blocking' => count($findings), 'findings' => $findings];
-	}//end checkIntake()
+		return $findings;
+	}//end countFindings()
 
 	/**
 	 * Whether an outside bureau runs the administration's payroll.

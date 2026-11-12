@@ -3,9 +3,10 @@
 /**
  * OpenRegister leaf-catalogue stub, deliberately PRE-#3956
  *
- * Mirrors the `LeafDescriptor` / `RegisterLeafProvidersEvent` pair as
- * OpenRegister published them BEFORE ConductionNL/openregister#3956 added the
- * `loadStrategy` constructor parameter and the `LOADS_*` constants.
+ * Mirrors the `LeafDescriptor` / `RegisterLeafProvidersEvent` pair, with the
+ * grouped `LeafIdentity` / `LeafAvailability` / `LeafRendering` constructor, but
+ * WITHOUT what ConductionNL/openregister#3956 added: the `loadStrategy`
+ * parameter and the `LOADS_*` constants.
  *
  * That version is the one worth stubbing. humaniq cannot choose which
  * OpenRegister an admin runs it beside, and a leaf listener that reads a
@@ -57,35 +58,81 @@ if (class_exists('OCA\OpenRegister\Service\Integration\LeafDescriptor') === fals
 		 */
 		public const RENDER_MODE_MOUNT = 'mount';
 
+		public string $id;
+
+		public string $label;
+
+		public string $icon;
+
+		public string $requiredApp;
+
+		public ?string $group;
+
+		public array $surfaces;
+
+		public ?string $referenceType;
+
+		public ?string $requiresPermission;
+
+		public ?string $renderMode;
+
 		/**
-		 * Constructor, as OpenRegister declared it before #3956.
+		 * Constructor, grouped as OpenRegister declares it, without the #3956 load strategy.
 		 *
-		 * @param string $id The leaf id, shared with the client half.
-		 * @param string $label The translated label.
-		 * @param string $icon The icon name.
+		 * @param LeafIdentity $identity The id, label, icon and group.
 		 * @param array<int, string> $kinds What the leaf contributes.
-		 * @param string $requiredApp The app that must be installed.
-		 * @param string|null $group The catalogue group.
-		 * @param array<int, string> $surfaces Where the leaf may be placed.
-		 * @param string|null $referenceType The reference type it reads.
-		 * @param string|null $requiresPermission Optional permission string gating visibility.
-		 * @param string|null $renderMode How the client half renders.
+		 * @param LeafAvailability|null $availability The app that must be installed.
+		 * @param LeafRendering|null $rendering Surfaces, reference type and render mode.
 		 */
 		public function __construct(
-			public readonly string $id = '',
-			public readonly string $label = '',
-			public readonly string $icon = '',
-			public readonly array $kinds = [],
-			public readonly string $requiredApp = '',
-			public readonly ?string $group = null,
-			public readonly array $surfaces = [],
-			public readonly ?string $referenceType = null,
-			public readonly ?string $requiresPermission = null,
-			public readonly ?string $renderMode = null,
+			LeafIdentity $identity,
+			private array $kinds,
+			?LeafAvailability $availability = null,
+			?LeafRendering $rendering = null,
 		) {
-
+			$availability = $availability ?? new LeafAvailability();
+			$rendering = $rendering ?? new LeafRendering();
+			$this->id = $identity->id;
+			$this->label = $identity->label;
+			$this->icon = $identity->icon;
+			$this->requiredApp = $availability->requiredApp;
+			$this->group = $identity->group;
+			$this->surfaces = $rendering->surfaces;
+			$this->referenceType = $rendering->referenceType;
+			$this->requiresPermission = $availability->requiresPermission;
+			$this->renderMode = $rendering->renderMode;
 		}//end __construct()
 	}//end class
+
+	final class LeafIdentity {
+		public function __construct(
+			public readonly string $id,
+			public readonly string $label,
+			public readonly string $icon,
+			public readonly ?string $group = null,
+		) {
+		}
+	}
+
+	final class LeafAvailability {
+		public function __construct(
+			public readonly ?string $requiredApp = null,
+			public readonly ?string $requiresPermission = null,
+		) {
+		}
+	}
+
+	final class LeafRendering {
+		/**
+		 * @param array<int, string> $surfaces Surfaces.
+		 */
+		public function __construct(
+			public readonly array $surfaces = [],
+			public readonly ?string $referenceType = null,
+			public readonly string $renderMode = 'component',
+		) {
+		}
+	}
 }//end if
 
 namespace OCA\OpenRegister\Event;

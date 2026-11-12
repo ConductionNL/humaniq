@@ -207,4 +207,33 @@ class NlGlPostChecksTest extends TestCase {
 
 	}//end testMissingContextDefaultsToZeroActiveCount()
 
+	/**
+	 * Every malformed line, and a zero or negative-only balance, violates; mixed sides balance to the cent.
+	 *
+	 * @return void
+	 */
+	public function testLineShapesAndBalanceEdges(): void {
+		$check = $this->checks['nl-glpost-idempotent-per-run'];
+		$context = $this->context(['run-1' => 1]);
+		$credit = ['side' => 'credit', 'amount' => 10.0];
+
+		$malformed = [
+			'not an array' => 'debit 10',
+			'no side' => ['amount' => 10.0],
+			'no amount' => ['side' => 'debit'],
+			'null amount' => ['side' => 'debit', 'amount' => null],
+			'text amount' => ['side' => 'debit', 'amount' => 'tien'],
+			'unknown side' => ['side' => 'Debit', 'amount' => 10.0],
+		];
+		foreach ($malformed as $label => $line) {
+			$this->assertFalse($check($this->glPost(['lines' => [$line, $credit]]), $context), $label);
+		}
+
+		$this->assertFalse($check($this->glPost(['lines' => 'none']), $context), 'Lines not a list.');
+		$this->assertFalse($check($this->glPost(['lines' => [['side' => 'debit', 'amount' => 0], ['side' => 'credit', 'amount' => '0.00']]]), $context), 'A zero balance.');
+		$this->assertFalse($check($this->glPost(['lines' => [['side' => 'debit', 'amount' => -5], ['side' => 'credit', 'amount' => -5]]]), $context), 'A negative balance.');
+		$this->assertTrue($check($this->glPost(['lines' => [['side' => 'debit', 'amount' => '10.004'], $credit]]), $context), 'Rounded to the cent.');
+		$this->assertTrue($check($this->glPost(['lines' => [['side' => 'credit', 'amount' => 4.0], ['side' => 'debit', 'amount' => 10.0], ['side' => 'credit', 'amount' => 6.0]]]), $context), 'Sides in any order.');
+
+	}//end testLineShapesAndBalanceEdges()
 }//end class

@@ -3,6 +3,9 @@
 /**
  * NL Offboarding Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable checks for the Dutch offboarding rules of the labour/payroll
  * corpus (lib/Standards/rules/labour.json, framework bw7-10), mapped onto the
  * Offboarding object type (offboarding-wizard-mvp): a dismissal-initiated
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

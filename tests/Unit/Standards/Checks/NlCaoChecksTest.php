@@ -3,6 +3,9 @@
 /**
  * Unit tests for the below-CAO-minimum checks (NlCaoChecks).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Drives the two cao-library predicates through the REAL RuleEngine +
  * RuleCatalogue + CaoRegistry corpus (not the raw closures) so the test also
  * proves the corpus rules exist, are machine-checkable, and are reachable —
@@ -26,9 +29,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

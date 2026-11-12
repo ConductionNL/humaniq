@@ -111,30 +111,26 @@ class EmployerCostRateController extends Controller {
 		// kind of value an unguarded id would leak, so an unresolvable or
 		// unauthorised id must be indistinguishable from a missing one.
 		$employee = $this->access->employeeForCaller(employeeId: $employeeId);
-		$period = ($period ?? date('Y-m'));
+		$request = new CostRateRequest();
+		$request->employeeId = $employeeId;
+		$request->period = ($period ?? date('Y-m'));
+		$request->additions = $additions;
 
+		return $this->answered(request: $request, employee: $employee);
+	}//end show()
+
+	/**
+	 * The answer to a request, with the service's refusals turned into a 400
+	 * and any other failure into a 500 that names nothing.
+	 *
+	 * @param CostRateRequest           $request  The request.
+	 * @param array<string, mixed>|null $employee The employee as the caller reads it, or null.
+	 *
+	 * @return JSONResponse
+	 */
+	private function answered(CostRateRequest $request, ?array $employee): JSONResponse {
 		try {
-			$rate = null;
-			if ($employee !== null) {
-				$rate = $this->costRates->resolve(
-					employee: $employee,
-					contract: $this->access->contractForCaller(employee: $employee, period: $period),
-					period: $period,
-					extraAdditions: $additions
-				);
-			}
-
-			if ($rate === null) {
-				// DECISIONS row 8 (Ruben, 29 Sep 2026): a project manager of a
-				// project the employee works on gets the derived rate while the
-				// salary stays hidden. Only reached when the caller's own read
-				// gave no employee or no wage base, so a caller who can read the
-				// salary keeps the full answer and anyone else learns nothing.
-				$managed = $this->projectManagerRate(employeeId: $employeeId, period: $period, additions: $additions);
-				if ($managed !== null) {
-					return new JSONResponse($managed);
-				}
-			}
+			return $this->rateAnswer(request: $request, employee: $employee);
 		} catch (\InvalidArgumentException $e) {
 			// The service refuses an indefensible composition — an override
 			// with no reason, an addition with no basis, overtime stacked on
@@ -144,32 +140,81 @@ class EmployerCostRateController extends Controller {
 			$this->logger->error('EmployerCostRateController: the cost rate could not be resolved.', ['exceptionClass' => $e::class]);
 			return new JSONResponse(['error' => 'Could not resolve the cost rate.'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
+	}//end answered()
+
+	/**
+	 * The caller's own rate; else the project manager's reduced rate; else
+	 * 404 for an employee the caller cannot read, 409 for one without a
+	 * wage base.
+	 *
+	 * @param CostRateRequest           $request  The request.
+	 * @param array<string, mixed>|null $employee The employee as the caller reads it, or null.
+	 *
+	 * @return JSONResponse
+	 */
+	private function rateAnswer(CostRateRequest $request, ?array $employee): JSONResponse {
+		$rate = $this->callerRate(request: $request, employee: $employee);
+		if ($rate !== null) {
+			return new JSONResponse(['employeeId' => $request->employeeId, 'period' => $request->period, 'currency' => 'EUR'] + $rate);
+		}
+
+		// DECISIONS row 8 (Ruben, 29 Sep 2026): a project manager of a
+		// project the employee works on gets the derived rate while the
+		// salary stays hidden. Only reached when the caller's own read
+		// gave no employee or no wage base, so a caller who can read the
+		// salary keeps the full answer and anyone else learns nothing.
+		$managed = $this->projectManagerRate(request: $request);
+		if ($managed !== null) {
+			return new JSONResponse($managed);
+		}
 
 		if ($employee === null) {
 			return new JSONResponse(['error' => 'Employee not found.'], Http::STATUS_NOT_FOUND);
 		}
 
-		if ($rate === null) {
-			// Additions alone are never a cost rate: an hour with overhead and
-			// no wage is not an hour anyone worked. 409 rather than 404 —
-			// the employee exists, the wage base does not.
-			return new JSONResponse(
-				[
-					'error' => 'No wage base: the employee has neither a reasoned override nor a contract this period can be costed from.',
-					'employeeId' => $employeeId,
-				],
-				Http::STATUS_CONFLICT
-			);
+		return self::noWageBase(request: $request);
+	}//end rateAnswer()
+
+	/**
+	 * The rate from the employee and contract the caller may read; null
+	 * without an employee or a wage base.
+	 *
+	 * @param CostRateRequest           $request  The request.
+	 * @param array<string, mixed>|null $employee The employee as the caller reads it, or null.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function callerRate(CostRateRequest $request, ?array $employee): ?array {
+		if ($employee === null) {
+			return null;
 		}
 
+		return $this->costRates->resolve(
+			employee: $employee,
+			contract: $this->access->contractForCaller(employee: $employee, period: $request->period),
+			period: $request->period,
+			extraAdditions: $request->additions
+		);
+	}//end callerRate()
+
+	/**
+	 * Additions alone are never a cost rate: an hour with overhead and no
+	 * wage is not an hour anyone worked. 409 rather than 404 — the employee
+	 * exists, the wage base does not.
+	 *
+	 * @param CostRateRequest $request The request.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function noWageBase(CostRateRequest $request): JSONResponse {
 		return new JSONResponse(
 			[
-				'employeeId' => $employeeId,
-				'period' => $period,
-				'currency' => 'EUR',
-			] + $rate
+				'error' => 'No wage base: the employee has neither a reasoned override nor a contract this period can be costed from.',
+				'employeeId' => $request->employeeId,
+			],
+			Http::STATUS_CONFLICT
 		);
-	}//end show()
+	}//end noWageBase()
 
 	/**
 	 * The reduced answer for a project manager of a project the employee works
@@ -180,38 +225,49 @@ class EmployerCostRateController extends Controller {
 	 * the salary, the contract or the wage basis (for an override that is HR's
 	 * own free-text reason).
 	 *
-	 * @param string $employeeId The Employee object id.
-	 * @param string $period Costing period `YYYY-MM`.
-	 * @param array<int, array<string, mixed>> $additions Caller-computed additions.
+	 * @param CostRateRequest $request The request.
 	 *
 	 * @return array<string, mixed>|null
 	 *
 	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md#Requirement:-A-project-manager-gets-the-derived-rate-of-the-people-on-the-project,-never-their-salary-(REQ-ECR-PM)
 	 */
-	private function projectManagerRate(string $employeeId, string $period, array $additions): ?array {
-		$employee = $this->access->employeeManagedByCaller(employeeId: $employeeId);
+	private function projectManagerRate(CostRateRequest $request): ?array {
+		$employee = $this->access->employeeManagedByCaller(employeeId: $request->employeeId);
 		if ($employee === null) {
 			return null;
 		}
 
 		$rate = $this->costRates->resolve(
 			employee: $employee,
-			contract: $this->access->contractFor(employeeId: $employeeId, period: $period),
-			period: $period,
-			extraAdditions: $additions
+			contract: $this->access->contractFor(employeeId: $request->employeeId, period: $request->period),
+			period: $request->period,
+			extraAdditions: $request->additions
 		);
 		if ($rate === null) {
 			return null;
 		}
 
+		return self::hourlyFiguresOnly(request: $request, rate: $rate);
+	}//end projectManagerRate()
+
+	/**
+	 * The hourly figures of a rate and nothing else: no salary, no contract,
+	 * no wage basis.
+	 *
+	 * @param CostRateRequest      $request The request.
+	 * @param array<string, mixed> $rate    The resolved rate.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function hourlyFiguresOnly(CostRateRequest $request, array $rate): array {
 		return [
-			'employeeId' => $employeeId,
-			'period' => $period,
+			'employeeId' => $request->employeeId,
+			'period' => $request->period,
 			'currency' => 'EUR',
 			'access' => 'project-manager',
 			'totalCentsPerHour' => $rate['totalCentsPerHour'],
 			'wageCostCents' => $rate['wageCostCents'],
 			'additions' => $rate['additions'],
 		];
-	}//end projectManagerRate()
+	}//end hourlyFiguresOnly()
 }//end class

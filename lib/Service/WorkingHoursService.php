@@ -3,6 +3,9 @@
 /**
  * Working Hours Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The one answer to "how many hours does this person work on this date".
  *
  * WHY THIS EXISTS
@@ -51,9 +54,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -104,123 +104,139 @@ class WorkingHoursService {
 	/**
 	 * Contracted hours for one employee on one date.
 	 *
-	 * @param string $employeeId The employee uuid.
-	 * @param DateTimeImmutable $date The date asked about.
-	 * @param array<array<string, mixed>> $patterns WorkingPattern objects (plain arrays), any employee.
-	 * @param array<array<string, mixed>> $nonWorkingTimes NonWorkingTime objects (plain arrays), any employee.
-	 * @param array<int, string>|null $nonWorkingDates ISO dates openregister's working calendar marks non-working, or null when that calendar could not be read.
+	 * @param EmployeeWorkingTime $time The employee and the patterns, non-working times and calendar dates to read (any employee; the calendar dates are null when that calendar could not be read).
+	 * @param DateTimeImmutable   $date The date asked about.
 	 *
 	 * @return array{hours: float, patternOnly: bool, patternFound: bool, calendarApplied: bool}
 	 *
 	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-003
 	 */
-	public function contractedHoursOn(
-		string $employeeId,
-		DateTimeImmutable $date,
-		array $patterns,
-		array $nonWorkingTimes = [],
-		?array $nonWorkingDates = null,
-	): array {
-		$patternOnly = ($nonWorkingDates === null);
-		$pattern = $this->patternInForce(employeeId: $employeeId, date: $date, patterns: $patterns);
+	public function hoursOn(EmployeeWorkingTime $time, DateTimeImmutable $date): array {
+		$day = new WorkingDay(time: $time, date: $date);
+		$pattern = $this->patternInForce(employeeId: $time->employeeId, date: $date, patterns: $time->sources->workingPatterns);
 
 		if ($pattern === null) {
 			return [
 				'hours' => 0.0,
-				'patternOnly' => $patternOnly,
+				'patternOnly' => $day->isPatternOnly(),
 				'patternFound' => false,
 				'calendarApplied' => false,
 			];
 		}
 
-		$weekday = strtolower($date->format('l'));
-		$hours = $this->floatOrZero(value: ($pattern[(self::WEEKDAY_PROPERTIES[$weekday] ?? '')] ?? null));
-
-		foreach ($nonWorkingTimes as $entry) {
-			if ($this->nonWorkingTimeApplies(entry: $entry, employeeId: $employeeId, date: $date, weekday: $weekday) === false) {
-				continue;
-			}
-
-			$hoursNotWorked = ($entry['hoursNotWorked'] ?? null);
-			if (is_numeric($hoursNotWorked) === false) {
-				// A whole non-working day, which is the common case: nobody
-				// records how many hours a standing free Wednesday is.
-				$hours = 0.0;
-				continue;
-			}
-
-			$hours = max(0.0, ($hours - (float)$hoursNotWorked));
-		}
-
-		$calendarApplied = false;
-		if ($nonWorkingDates !== null && in_array($date->format('Y-m-d'), $nonWorkingDates, true) === true) {
-			$hours = 0.0;
-			$calendarApplied = true;
-		}
-
-		return [
-			'hours' => round(num: $hours, precision: 4),
-			'patternOnly' => $patternOnly,
-			'patternFound' => true,
-			'calendarApplied' => $calendarApplied,
-		];
-	}//end contractedHoursOn()
+		return self::dayAnswer(day: $day, hours: $this->hoursAfterNonWorkingTimes(day: $day, pattern: $pattern));
+	}//end hoursOn()
 
 	/**
 	 * Contracted hours for one employee over a closed date range.
 	 *
-	 * @param string $employeeId The employee uuid.
-	 * @param DateTimeImmutable $from First day, inclusive.
-	 * @param DateTimeImmutable $to Last day, inclusive.
-	 * @param array<array<string, mixed>> $patterns WorkingPattern objects (plain arrays).
-	 * @param array<array<string, mixed>> $nonWorkingTimes NonWorkingTime objects (plain arrays).
-	 * @param array<int, string>|null $nonWorkingDates ISO dates the working calendar marks non-working, or null when unreadable.
+	 * @param EmployeeWorkingTime                               $time  The employee and the records to read.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $range First and last day, inclusive.
 	 *
 	 * @return array{hours: float, patternOnly: bool, days: int, workedDays: int}
 	 *
 	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-003
 	 */
-	public function contractedHoursOver(
-		string $employeeId,
-		DateTimeImmutable $from,
-		DateTimeImmutable $to,
-		array $patterns,
-		array $nonWorkingTimes = [],
-		?array $nonWorkingDates = null,
-	): array {
+	public function hoursOver(EmployeeWorkingTime $time, array $range): array {
 		$total = 0.0;
 		$days = 0;
 		$workedDays = 0;
+		foreach (self::daysIn(range: $range) as $date) {
+			$hours = $this->hoursOn(time: $time, date: $date)['hours'];
 
-		$cursor = $from->setTime(hour: 0, minute: 0);
-		$last = $to->setTime(hour: 0, minute: 0);
-		$step = new DateInterval('P1D');
-
-		while ($cursor <= $last) {
-			$answer = $this->contractedHoursOn(
-				employeeId: $employeeId,
-				date: $cursor,
-				patterns: $patterns,
-				nonWorkingTimes: $nonWorkingTimes,
-				nonWorkingDates: $nonWorkingDates
-			);
-
-			$total += $answer['hours'];
+			$total += $hours;
 			++$days;
-			if ($answer['hours'] > 0.0) {
+			if ($hours > 0.0) {
 				++$workedDays;
 			}
-
-			$cursor = $cursor->add($step);
 		}
 
 		return [
 			'hours' => round(num: $total, precision: 4),
-			'patternOnly' => ($nonWorkingDates === null),
+			'patternOnly' => ($time->sources->nonWorkingDates === null),
 			'days' => $days,
 			'workedDays' => $workedDays,
 		];
-	}//end contractedHoursOver()
+	}//end hoursOver()
+
+	/**
+	 * Every day of a range, each at midnight.
+	 *
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $range First and last day, inclusive.
+	 *
+	 * @return list<DateTimeImmutable>
+	 */
+	private static function daysIn(array $range): array {
+		$days = [];
+		$cursor = $range[0]->setTime(hour: 0, minute: 0);
+		$last = $range[1]->setTime(hour: 0, minute: 0);
+		$step = new DateInterval('P1D');
+		while ($cursor <= $last) {
+			$days[] = $cursor;
+			$cursor = $cursor->add($step);
+		}
+
+		return $days;
+	}//end daysIn()
+
+	/**
+	 * The pattern's hours for the weekday, less every non-working time that
+	 * covers the day: a time without hours takes the whole day.
+	 *
+	 * @param WorkingDay           $day     The employee's day.
+	 * @param array<string, mixed> $pattern The pattern in force.
+	 *
+	 * @return float
+	 */
+	private function hoursAfterNonWorkingTimes(WorkingDay $day, array $pattern): float {
+		$hours = $this->floatOrZero(value: ($pattern[(self::WEEKDAY_PROPERTIES[$day->weekday()] ?? '')] ?? null));
+		foreach ($day->time->sources->nonWorkingTimes as $entry) {
+			if ($this->nonWorkingTimeApplies(entry: $entry, day: $day) === true) {
+				$hours = self::lessNonWorking(entry: $entry, hours: $hours);
+			}
+		}
+
+		return $hours;
+	}//end hoursAfterNonWorkingTimes()
+
+	/**
+	 * The hours left after one non-working time.
+	 *
+	 * @param array<string, mixed> $entry The NonWorkingTime.
+	 * @param float                $hours The hours before it.
+	 *
+	 * @return float
+	 */
+	private static function lessNonWorking(array $entry, float $hours): float {
+		$hoursNotWorked = ($entry['hoursNotWorked'] ?? null);
+		if (is_numeric($hoursNotWorked) === false) {
+			// A whole non-working day, which is the common case: nobody
+			// records how many hours a standing free Wednesday is.
+			return 0.0;
+		}
+
+		return max(0.0, ($hours - (float)$hoursNotWorked));
+	}//end lessNonWorking()
+
+	/**
+	 * The answer for a day with a pattern: the working calendar's
+	 * non-working dates zero it.
+	 *
+	 * @param WorkingDay $day   The employee's day.
+	 * @param float      $hours The pattern hours left after non-working times.
+	 *
+	 * @return array{hours: float, patternOnly: bool, patternFound: bool, calendarApplied: bool}
+	 */
+	private static function dayAnswer(WorkingDay $day, float $hours): array {
+		$calendarApplied = $day->isCalendarNonWorking();
+
+		return [
+			'hours' => round(num: ($calendarApplied === true ? 0.0 : $hours), precision: 4),
+			'patternOnly' => $day->isPatternOnly(),
+			'patternFound' => true,
+			'calendarApplied' => $calendarApplied,
+		];
+	}//end dayAnswer()
 
 	/**
 	 * The pattern governing one employee on one date, or null when none does.
@@ -330,44 +346,52 @@ class WorkingHoursService {
 	 * Whether one non-working time covers one employee's date.
 	 *
 	 * @param array<string, mixed> $entry The NonWorkingTime.
-	 * @param string $employeeId The employee uuid.
-	 * @param DateTimeImmutable $date The date asked about.
-	 * @param string $weekday The lowercase English weekday name of that date.
+	 * @param WorkingDay           $day   The employee's day.
 	 *
 	 * @return bool True when it applies.
 	 *
 	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-002
 	 */
-	private function nonWorkingTimeApplies(
-		array $entry,
-		string $employeeId,
-		DateTimeImmutable $date,
-		string $weekday,
-	): bool {
-		if ($this->stringOrNull(value: ($entry['employeeId'] ?? null)) !== $employeeId) {
+	private function nonWorkingTimeApplies(array $entry, WorkingDay $day): bool {
+		if ($this->stringOrNull(value: ($entry['employeeId'] ?? null)) !== $day->time->employeeId) {
 			return false;
 		}
 
-		$day = $date->format('Y-m-d');
-		$start = $this->stringOrNull(value: ($entry['startDate'] ?? null));
-		$end = $this->stringOrNull(value: ($entry['endDate'] ?? null));
-		if ($start !== null && substr($start, 0, 10) > $day) {
-			return false;
-		}
-
-		if ($end !== null && substr($end, 0, 10) < $day) {
+		if ($this->windowCovers(entry: $entry, isoDate: $day->isoDate()) === false) {
 			return false;
 		}
 
 		$recurring = $this->stringOrNull(value: ($entry['recurringWeekday'] ?? null));
 		if ($recurring !== null) {
-			return (strtolower($recurring) === $weekday);
+			return (strtolower($recurring) === $day->weekday());
 		}
 
 		// A one-off entry needs a window: an entry with neither a weekday nor a
 		// date would otherwise apply to every day for ever.
-		return ($start !== null || $end !== null);
+		return ($this->stringOrNull(value: ($entry['startDate'] ?? null)) !== null || $this->stringOrNull(value: ($entry['endDate'] ?? null)) !== null);
 	}//end nonWorkingTimeApplies()
+
+	/**
+	 * Whether the date falls inside the entry's start and end dates, each
+	 * open when absent.
+	 *
+	 * @param array<string, mixed> $entry   The NonWorkingTime.
+	 * @param string               $isoDate The date, `Y-m-d`.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-002
+	 */
+	private function windowCovers(array $entry, string $isoDate): bool {
+		$start = $this->stringOrNull(value: ($entry['startDate'] ?? null));
+		if ($start !== null && substr($start, 0, 10) > $isoDate) {
+			return false;
+		}
+
+		$end = $this->stringOrNull(value: ($entry['endDate'] ?? null));
+
+		return ($end === null || substr($end, 0, 10) >= $isoDate);
+	}//end windowCovers()
 
 	/**
 	 * Narrow a raw value to a float, defaulting to zero.

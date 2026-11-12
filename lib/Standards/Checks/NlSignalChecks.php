@@ -3,6 +3,9 @@
 /**
  * NL HR-Signals Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable checks for the three hr-signals corpus rules
  * (lib/Standards/rules/labour.json, framework `hr-signals` /`bw7-10`): two
  * keyed on `EmploymentContract` -- a temporary contract nearing its `endDate`
@@ -40,9 +43,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -254,15 +254,8 @@ final class NlSignalChecks implements CheckProvider {
 			return true;
 		}
 
-		$startDate = strtotime((string)($o['startDate'] ?? ''));
-		$endDate = strtotime((string)($o['endDate'] ?? ''));
-		if ($startDate === false || $endDate === false) {
-			return true;
-		}
-
-		$minTermEnd = strtotime('+' . self::MIN_CONTRACT_MONTHS . ' months', $startDate);
-		if ($endDate < $minTermEnd) {
-			// Fixed term shorter than the statutory threshold -- out of scope.
+		$endDate = self::monitoredTermEnd($o);
+		if ($endDate === null) {
 			return true;
 		}
 
@@ -279,6 +272,43 @@ final class NlSignalChecks implements CheckProvider {
 			return true;
 		}
 
+		return self::aanzegdBy($o, $deadline);
+	}//end aanzegtermijnSatisfied()
+
+	/**
+	 * The end of a fixed term the check monitors, or null when its dates are
+	 * unreadable or the term is shorter than the statutory threshold.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract object.
+	 *
+	 * @return int|null The end date as a timestamp.
+	 */
+	private static function monitoredTermEnd(array $o): ?int {
+		$startDate = strtotime((string)($o['startDate'] ?? ''));
+		$endDate = strtotime((string)($o['endDate'] ?? ''));
+		if ($startDate === false || $endDate === false) {
+			return null;
+		}
+
+		$minTermEnd = strtotime('+' . self::MIN_CONTRACT_MONTHS . ' months', $startDate);
+		if ($endDate < $minTermEnd) {
+			// Fixed term shorter than the statutory threshold -- out of scope.
+			return null;
+		}
+
+		return $endDate;
+
+	}//end monitoredTermEnd()
+
+	/**
+	 * Whether a readable aanzegdOn date lies on or before the deadline.
+	 *
+	 * @param array<string, mixed> $o        The EmploymentContract object.
+	 * @param int                  $deadline The aanzeg deadline, as a timestamp.
+	 *
+	 * @return bool
+	 */
+	private static function aanzegdBy(array $o, int $deadline): bool {
 		$aanzegdOn = trim((string)($o['aanzegdOn'] ?? ''));
 		if ($aanzegdOn === '') {
 			return false;
@@ -290,7 +320,8 @@ final class NlSignalChecks implements CheckProvider {
 		}
 
 		return $aanzegdOnDate <= $deadline;
-	}//end aanzegtermijnSatisfied()
+
+	}//end aanzegdBy()
 
 	/**
 	 * `nl-bhv-certificaat-verloopt`: true unless `certificaatGeldigTot` is a

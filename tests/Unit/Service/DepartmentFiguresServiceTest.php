@@ -115,6 +115,43 @@ class DepartmentFiguresServiceTest extends TestCase {
 	}//end testTheUnitsWageCostsAddUpToTheAdministrationTotal()
 
 	/**
+	 * The whole comparison when one person is split over two units, a month
+	 * has no payroll run and a unit has no cost: one month, and the trailing
+	 * quarter.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeComparisonWithASplitPlacementAndAMissingMonth(): void {
+		$admin = ['administrationId' => 'ADM-001'];
+		$thisMonth = new \DateTimeImmutable('first day of this month');
+		$runs = [(['id' => 'run-june', 'period' => '2026-06', 'status' => 'posted', 'totalGross' => 300000.0, 'totalEmployerCharges' => 60000.0] + $admin)];
+		$payslips = [
+			(['employeeId' => 'a', 'payrollRunId' => 'run-june', 'grossPay' => 100000.0] + $admin),
+			(['employeeId' => 'c', 'payrollRunId' => 'run-june', 'grossPay' => 50000.0] + $admin),
+		];
+		foreach ([0, 2] as $back) {
+			$month = $thisMonth->modify('-' . $back . ' months')->format('Y-m');
+			$runs[] = (['id' => 'run-' . $month, 'period' => $month, 'status' => 'posted', 'totalGross' => 9000.0, 'totalEmployerCharges' => 1000.0] + $admin);
+			$payslips[] = (['employeeId' => 'a', 'payrollRunId' => 'run-' . $month, 'grossPay' => 3000.0] + $admin);
+			$payslips[] = (['employeeId' => 'b', 'payrollRunId' => 'run-' . $month, 'grossPay' => 2000.0] + $admin);
+		}
+
+		$rows = $this->organisation();
+		$rows['OrgAssignment'][] = (['employeeId' => 'a', 'orgUnitId' => 'belastingen', 'startDate' => '2025-01-01'] + $admin);
+		$rows['OrgUnit'][] = (['id' => 'leeg', 'name' => 'Leeg', 'parentUnitId' => 'gemeente', 'managerId' => null] + $admin);
+		$rows += ['PayrollRun' => $runs, 'Payslip' => $payslips];
+		$service = $this->buildService($rows, 1);
+		$got = [];
+		foreach ([['2026-06', null], ['2026-06', 'gemeente'], ['2026-06', 'burgerzaken'], ['2026-05', 'gemeente'], ['quarter', 'gemeente']] as [$period, $parent]) {
+			$result = $service->compare('ADM-001', $period, $parent);
+			unset($result['from'], $result['to']);
+			$got[$period . ':' . (string)$parent] = $result;
+		}
+
+		$this->assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/department-figures-compare.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)) . "\n");
+	}//end testTheWholeComparisonWithASplitPlacementAndAMissingMonth()
+
+	/**
 	 * A named period is the trailing months ending in the current one.
 	 *
 	 * @return void

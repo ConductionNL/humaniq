@@ -3,6 +3,9 @@
 /**
  * Rule Engine
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Evaluates an HR/labour object against the machine-checkable rules that apply to
  * it, returning structured Violations. This is the executable layer over the
  * static RuleCatalogue: each registered check is a pure predicate over an object
@@ -35,9 +38,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

@@ -4,6 +4,7 @@
         "schemas": {
             "AttendanceRecord": {
                 "slug": "AttendanceRecord",
+                "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr"]},
                 "icon": "ClockOutline",
                 "version": "0.2.0",
                 "title": "Attendance record",

@@ -3,6 +3,9 @@
 /**
  * Humaniq TimeEntryStampListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` /
  * `ObjectUpdatingEvent` / `ObjectDeletingEvent` for the `TimeEntry` schema
  * (hours-process-redesign Decisions 3 + 5). One listener, two concerns:
@@ -40,9 +43,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -138,7 +138,7 @@ class TimeEntryStampListener implements IEventListener {
 		try {
 			$this->dispatch($event);
 		} catch (HoursWriteRefusedException $e) {
-			$this->refuse($event, $e->getMessage());
+			PreSaveEvents::refuse($event, $e->getMessage());
 		} catch (\Throwable $e) {
 			// Fail CLOSED: a half-stamped entry (no userId) silently vanishes
 			// from every @me page, which is worse than a refused write.
@@ -146,7 +146,7 @@ class TimeEntryStampListener implements IEventListener {
 				'humaniq: TimeEntryStampListener could not stamp a TimeEntry write',
 				['exception' => $e->getMessage()]
 			);
-			$this->refuse($event, 'De urenboeking kon niet worden verwerkt; probeer het later opnieuw.');
+			PreSaveEvents::refuse($event, 'De urenboeking kon niet worden verwerkt; probeer het later opnieuw.');
 		}//end try
 
 	}//end handle()
@@ -464,23 +464,6 @@ class TimeEntryStampListener implements IEventListener {
 			$this->assertParentMutable($parentId);
 		}
 	}//end guardDelete()
-
-	/**
-	 * Refuse the write with a structured, user-facing error.
-	 *
-	 * @param object $event The pre-save event.
-	 * @param string $message The Dutch user-facing message.
-	 *
-	 * @return void
-	 */
-	private function refuse(object $event, string $message): void {
-		if (method_exists($event, 'setErrors') === false || method_exists($event, 'stopPropagation') === false) {
-			return;
-		}
-
-		$event->setErrors(['message' => $message]);
-		$event->stopPropagation();
-	}//end refuse()
 
 	/**
 	 * Trim to a non-empty string or null.

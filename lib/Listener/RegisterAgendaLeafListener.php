@@ -3,6 +3,9 @@
 /**
  * Humaniq RegisterAgendaLeafListener.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Registers humaniq's `humaniq-agenda` leaf on OpenRegister through the
  * sibling-app leaf-registration hook (`RegisterLeafProvidersEvent`, ADR-066).
  * This is the SERVER half of a registration whose client half lives in
@@ -41,13 +44,12 @@
  * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-006
  */
 
-// SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>.
-// SPDX-License-Identifier: EUPL-1.2
 declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
 use OCA\OpenRegister\Service\Integration\LeafDescriptor;
+use OCA\OpenRegister\Service\Integration\LeafRendering;
 
 /**
  * Contributes the `humaniq-agenda` leaf descriptor to OpenRegister.
@@ -116,18 +118,22 @@ class RegisterAgendaLeafListener extends RenderLeafListener {
 	 * The widget reads the agenda through humaniq's own endpoint, so there is no
 	 * app-local store to serve behind this leaf.
 	 *
-	 * @param array<string, mixed> $arguments The descriptor arguments, by parameter name.
+	 * @param array<string, mixed> $arguments The descriptor arguments other than the rendering, by parameter name.
+	 * @param array<string, mixed> $rendering The rendering arguments, by parameter name.
 	 *
 	 * @return LeafDescriptor
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-006
 	 */
-	protected function describe(array $arguments): LeafDescriptor {
+	protected function describe(array $arguments, array $rendering): LeafDescriptor {
 		// Vue 3 leaf under a possibly-Vue-2.7 host: the JS half renders
 		// through a mount/unmount DOM hand-off, so the server descriptor
 		// MUST declare the same render mode under the shared id or the
 		// surface blanks (gate-24 R3).
-		return new LeafDescriptor(...$arguments, renderMode: LeafDescriptor::RENDER_MODE_MOUNT);
+		return new LeafDescriptor(
+			...$arguments,
+			rendering: new LeafRendering(...$rendering, renderMode: LeafDescriptor::RENDER_MODE_MOUNT),
+		);
 
 	}//end describe()
 }//end class

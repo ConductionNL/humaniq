@@ -3,6 +3,9 @@
 /**
  * Humaniq Portal Contribution Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Humaniq's contribution to the shared Portaliq external portal (hydra ADR-046 +
  * 2026-07-06 amendment, contribution contract v2). Portaliq — the one shared
  * external portal for people WITHOUT Nextcloud accounts — discovers this class
@@ -32,9 +35,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -160,23 +160,7 @@ class PortalContributionProvider {
 		$group = (string)$manifest['label'];
 		$pages = ($manifest['pages'] ?? []);
 		if ($pages === []) {
-			foreach ($manifest['collections'] as $collection) {
-				if (($collection['listable'] ?? true) !== true) {
-					continue;
-				}
-
-				$blocks = [];
-				foreach ($manifest['actions'] as $action) {
-					if (($action['type'] ?? '') === 'create' && ($action['schema'] ?? '') === ($collection['schema'] ?? '')) {
-						$blocks[] = ['type' => 'action', 'action' => (string)$action['id']];
-						break;
-					}
-				}
-
-				$blocks[] = ['type' => 'collection', 'collection' => (string)$collection['id']];
-				$blocks[] = ['type' => 'detail', 'collection' => (string)$collection['id']];
-				$pages[] = ['id' => (string)$collection['id'], 'label' => (string)$collection['label'], 'blocks' => $blocks];
-			}
+			$pages = self::collectionPages($manifest);
 		}
 
 		$manifest['pages'] = array_map(
@@ -186,6 +170,50 @@ class PortalContributionProvider {
 
 		return $manifest;
 	}//end withPages()
+
+	/**
+	 * One page per listable collection: its create action (when one targets the
+	 * collection's schema), the collection and its detail.
+	 *
+	 * @param array<string, mixed> $manifest The manifest without pages.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function collectionPages(array $manifest): array {
+		$pages = [];
+		foreach ($manifest['collections'] as $collection) {
+			if (($collection['listable'] ?? true) !== true) {
+				continue;
+			}
+
+			$blocks   = self::createActionBlocks($manifest['actions'], $collection);
+			$blocks[] = ['type' => 'collection', 'collection' => (string)$collection['id']];
+			$blocks[] = ['type' => 'detail', 'collection' => (string)$collection['id']];
+			$pages[]  = ['id' => (string)$collection['id'], 'label' => (string)$collection['label'], 'blocks' => $blocks];
+		}
+
+		return $pages;
+
+	}//end collectionPages()
+
+	/**
+	 * The action block of the first create action on the collection's schema, if any.
+	 *
+	 * @param array<int, array<string, mixed>> $actions    The manifest's actions.
+	 * @param array<string, mixed>             $collection The collection.
+	 *
+	 * @return array<int, array<string, string>>
+	 */
+	private static function createActionBlocks(array $actions, array $collection): array {
+		foreach ($actions as $action) {
+			if (($action['type'] ?? '') === 'create' && ($action['schema'] ?? '') === ($collection['schema'] ?? '')) {
+				return [['type' => 'action', 'action' => (string)$action['id']]];
+			}
+		}
+
+		return [];
+
+	}//end createActionBlocks()
 
 	/**
 	 * The manifests of the recruiting and leaver audiences
@@ -228,118 +256,141 @@ class PortalContributionProvider {
 		return [
 			'label' => 'Werk en uren',
 			'collections' => [
-				[
-					'id' => 'myEmployeeRecord',
-					'register' => 'humaniq',
-					'schema' => 'Employee',
-					'scopeField' => 'id',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'low',
-					'label' => 'Mijn personeelsgegevens',
-					'listable' => false,
-				],
-				[
-					'id' => 'payslips',
-					'register' => 'humaniq',
-					'schema' => 'Payslip',
-					'scopeField' => 'employeeId',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'low',
-					'label' => 'Mijn loonstroken',
-					'listable' => true,
-				],
-				[
-					'id' => 'employmentContracts',
-					'register' => 'humaniq',
-					'schema' => 'EmploymentContract',
-					'scopeField' => 'employeeId',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'low',
-					'label' => 'Mijn arbeidscontracten',
-					'listable' => true,
-				],
-				[
-					'id' => 'timesheets',
-					'register' => 'humaniq',
-					'schema' => 'Timesheet',
-					'scopeField' => 'employeeId',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'low',
-					'label' => 'Mijn urenstaten',
-					'listable' => true,
-				],
-				[
-					'id' => 'expenses',
-					'register' => 'humaniq',
-					'schema' => 'Expense',
-					'scopeField' => 'employeeId',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'low',
-					'label' => 'Mijn declaraties',
-					'listable' => true,
-				],
-				[
-					'id' => 'leaveRequests',
-					'register' => 'humaniq',
-					'schema' => 'LeaveRequest',
-					'scopeField' => 'employeeId',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'low',
-					'label' => 'Mijn verlofaanvragen',
-					'listable' => true,
-				],
+				self::ownEmployeeRecord('Mijn personeelsgegevens'),
+				self::ownCollection('payslips', 'Payslip') + ['label' => 'Mijn loonstroken', 'listable' => true],
+				self::ownCollection('employmentContracts', 'EmploymentContract') + ['label' => 'Mijn arbeidscontracten', 'listable' => true],
+				self::ownCollection('timesheets', 'Timesheet') + ['label' => 'Mijn urenstaten', 'listable' => true],
+				self::ownCollection('expenses', 'Expense') + ['label' => 'Mijn declaraties', 'listable' => true],
+				self::ownCollection('leaveRequests', 'LeaveRequest') + ['label' => 'Mijn verlofaanvragen', 'listable' => true],
 			],
 			'actions' => [
-				[
-					'id' => 'createTimesheet',
-					'type' => 'create',
-					'label' => 'Uren schrijven',
-					'register' => 'humaniq',
-					'schema' => 'Timesheet',
-					'fields' => [
-						'period',
-						'hours',
-						'description',
-						'projectId',
-						'costCenter',
-						'billable',
-						'clientRef',
-					],
-				],
-				[
-					'id' => 'createExpense',
-					'type' => 'create',
-					'label' => 'Een declaratie indienen',
-					'register' => 'humaniq',
-					'schema' => 'Expense',
-					'fields' => [
-						'title',
-						'description',
-						'amount',
-						'currency',
-						'category',
-						'expenseDate',
-					],
-				],
-				[
-					'id' => 'createLeaveRequest',
-					'type' => 'create',
-					'label' => 'Verlof aanvragen',
-					'register' => 'humaniq',
-					'schema' => 'LeaveRequest',
-					'fields' => [
-						'leaveType',
-						'startDate',
-						'endDate',
-						'hours',
-						'reason',
-					],
-				],
+				self::createTimesheetAction(),
+				self::createExpenseAction(),
+				self::createLeaveRequestAction(),
 			],
 			'notifications' => [],
 		];
 
 	}//end externalEmployeeManifest()
+
+	/**
+	 * A collection of the subject's own records of one schema: scoped by the
+	 * record's `employeeId` to the subject's `employeeId` claim, at low trust.
+	 *
+	 * @param string $id     The collection id.
+	 * @param string $schema The schema.
+	 *
+	 * @return array<string, mixed> The collection, before its label and listing flag.
+	 *
+	 * @spec openspec/changes/portal-contribution/tasks.md#task-3
+	 */
+	private static function ownCollection(string $id, string $schema): array {
+		return [
+			'id' => $id,
+			'register' => 'humaniq',
+			'schema' => $schema,
+			'scopeField' => 'employeeId',
+			'scopeClaim' => 'employeeId',
+			'minTrust' => 'low',
+		];
+
+	}//end ownCollection()
+
+	/**
+	 * The subject's own Employee record: scoped by its `id` to the subject's
+	 * `employeeId` claim, at low trust, read but not listed.
+	 *
+	 * @param string $label The collection label.
+	 *
+	 * @return array<string, mixed> The collection.
+	 *
+	 * @spec openspec/changes/portal-contribution/tasks.md#task-3
+	 */
+	private static function ownEmployeeRecord(string $label): array {
+		return [
+			'id' => 'myEmployeeRecord',
+			'register' => 'humaniq',
+			'schema' => 'Employee',
+			'scopeField' => 'id',
+			'scopeClaim' => 'employeeId',
+			'minTrust' => 'low',
+			'label' => $label,
+			'listable' => false,
+		];
+
+	}//end ownEmployeeRecord()
+
+	/**
+	 * The external employee's create-timesheet action and its field whitelist.
+	 *
+	 * @return array<string, mixed> The action.
+	 */
+	private static function createTimesheetAction(): array {
+		return [
+			'id' => 'createTimesheet',
+			'type' => 'create',
+			'label' => 'Uren schrijven',
+			'register' => 'humaniq',
+			'schema' => 'Timesheet',
+			'fields' => [
+				'period',
+				'hours',
+				'description',
+				'projectId',
+				'costCenter',
+				'billable',
+				'clientRef',
+			],
+		];
+
+	}//end createTimesheetAction()
+
+	/**
+	 * The external employee's create-expense action and its field whitelist.
+	 *
+	 * @return array<string, mixed> The action.
+	 */
+	private static function createExpenseAction(): array {
+		return [
+			'id' => 'createExpense',
+			'type' => 'create',
+			'label' => 'Een declaratie indienen',
+			'register' => 'humaniq',
+			'schema' => 'Expense',
+			'fields' => [
+				'title',
+				'description',
+				'amount',
+				'currency',
+				'category',
+				'expenseDate',
+			],
+		];
+
+	}//end createExpenseAction()
+
+	/**
+	 * The external employee's create-leave-request action and its field whitelist.
+	 *
+	 * @return array<string, mixed> The action.
+	 */
+	private static function createLeaveRequestAction(): array {
+		return [
+			'id' => 'createLeaveRequest',
+			'type' => 'create',
+			'label' => 'Verlof aanvragen',
+			'register' => 'humaniq',
+			'schema' => 'LeaveRequest',
+			'fields' => [
+				'leaveType',
+				'startDate',
+				'endDate',
+				'hours',
+				'reason',
+			],
+		];
+
+	}//end createLeaveRequestAction()
 
 	/**
 	 * The client manifest: a read-only view over the timesheets whose billable
@@ -403,36 +454,7 @@ class PortalContributionProvider {
 	private function managerManifest(): array {
 		return [
 			'label' => 'Werk en uren',
-			'collections' => [
-				[
-					'id' => 'teamTimesheets',
-					'register' => 'humaniq',
-					'schema' => 'Timesheet',
-					'scopeField' => 'costCenter',
-					'scopeClaim' => 'costCenter',
-					'minTrust' => 'low',
-					'label' => 'Urenstaten van uw team',
-					'listable' => true,
-					// Read-side projection (the DATA authority): only review
-					// fields leave humaniq. costCenter (the scope key), billable,
-					// projectId and submittedAt are dropped.
-					'fields' => [
-						'employeeId',
-						'period',
-						'hours',
-						'status',
-						'description',
-					],
-					'columns' => [
-						['field' => 'employeeId', 'label' => 'Medewerker'],
-						['field' => 'period', 'label' => 'Periode'],
-						['field' => 'hours', 'label' => 'Uren'],
-						['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
-					],
-					'detail' => ['layout' => 'card', 'fields' => ['employeeId', 'period', 'hours', 'status', 'description']],
-					'defaultSort' => ['field' => 'period', 'direction' => 'desc'],
-				],
-			],
+			'collections' => [self::teamTimesheetsCollection()],
 			'actions' => [],
 			'pages' => [
 				[
@@ -452,6 +474,57 @@ class PortalContributionProvider {
 		];
 
 	}//end managerManifest()
+
+	/**
+	 * The manager's team timesheets: scoped by `costCenter` to the subject's
+	 * `costCenter` claim, projected to the review fields.
+	 *
+	 * @return array<string, mixed> The collection.
+	 *
+	 * @spec openspec/changes/portal-contribution/tasks.md#task-3
+	 */
+	private static function teamTimesheetsCollection(): array {
+		return [
+			'id' => 'teamTimesheets',
+			'register' => 'humaniq',
+			'schema' => 'Timesheet',
+			'scopeField' => 'costCenter',
+			'scopeClaim' => 'costCenter',
+			'minTrust' => 'low',
+			'label' => 'Urenstaten van uw team',
+			'listable' => true,
+			// Read-side projection (the DATA authority): only review
+			// fields leave humaniq. costCenter (the scope key), billable,
+			// projectId and submittedAt are dropped.
+			'fields' => [
+				'employeeId',
+				'period',
+				'hours',
+				'status',
+				'description',
+			],
+		] + self::teamTimesheetsLayout();
+
+	}//end teamTimesheetsCollection()
+
+	/**
+	 * How the team timesheets are listed, shown and sorted.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function teamTimesheetsLayout(): array {
+		return [
+			'columns' => [
+				['field' => 'employeeId', 'label' => 'Medewerker'],
+				['field' => 'period', 'label' => 'Periode'],
+				['field' => 'hours', 'label' => 'Uren'],
+				['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+			],
+			'detail' => ['layout' => 'card', 'fields' => ['employeeId', 'period', 'hours', 'status', 'description']],
+			'defaultSort' => ['field' => 'period', 'direction' => 'desc'],
+		];
+
+	}//end teamTimesheetsLayout()
 
 	/**
 	 * The candidate manifest (hiring-portal-audiences D2): the only anonymous
@@ -481,30 +554,40 @@ class PortalContributionProvider {
 					'listable' => true,
 				],
 			],
-			'actions' => [
-				[
-					'id' => 'applyToVacancy',
-					'type' => 'create',
-					'label' => 'Solliciteren',
-					'register' => 'humaniq',
-					'schema' => 'job-application',
-					'anonymous' => true,
-					'minTrust' => 'low',
-					'fields' => [
-						'vacancyId',
-						'candidateName',
-						'email',
-						'phone',
-						'motivation',
-						'talentPoolOptIn',
-						'answers',
-					],
-				],
-			],
+			'actions' => [self::applyToVacancyAction()],
 			'notifications' => [],
 		];
 
 	}//end candidateManifest()
+
+	/**
+	 * The anonymous apply-to-vacancy action and its field whitelist.
+	 *
+	 * @return array<string, mixed> The action.
+	 *
+	 * @spec openspec/changes/portal-contribution/tasks.md#task-3
+	 */
+	private static function applyToVacancyAction(): array {
+		return [
+			'id' => 'applyToVacancy',
+			'type' => 'create',
+			'label' => 'Solliciteren',
+			'register' => 'humaniq',
+			'schema' => 'job-application',
+			'anonymous' => true,
+			'minTrust' => 'low',
+			'fields' => [
+				'vacancyId',
+				'candidateName',
+				'email',
+				'phone',
+				'motivation',
+				'talentPoolOptIn',
+				'answers',
+			],
+		];
+
+	}//end applyToVacancyAction()
 
 	/**
 	 * The new-hire manifest (hiring-portal-audiences D4): the hire's own
@@ -520,50 +603,45 @@ class PortalContributionProvider {
 		return [
 			'label' => 'Uw nieuwe baan',
 			'collections' => [
-				[
-					'id' => 'myEmployeeRecord',
-					'register' => 'humaniq',
-					'schema' => 'Employee',
-					'scopeField' => 'id',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'low',
-					'label' => 'Mijn gegevens',
-					'listable' => false,
-				],
-				[
-					'id' => 'myOnboarding',
-					'register' => 'humaniq',
-					'schema' => 'Onboarding',
-					'scopeField' => 'employeeId',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'low',
+				self::ownEmployeeRecord('Mijn gegevens'),
+				self::ownCollection('myOnboarding', 'Onboarding') + [
 					'fields' => ['startDate', 'status', 'contractSigned', 'widCheckDone', 'bsnValidated', 'ibanVerified', 'itProvisioned', 'pensioenAangemeld'],
 					'filesUpload' => true,
 					'label' => 'Voor uw eerste werkdag',
 					'listable' => true,
 				],
 			],
-			'actions' => [
-				[
-					'id' => 'updateMyDetails',
-					'type' => 'update',
-					'label' => 'Mijn bankrekening en BSN doorgeven',
-					'register' => 'humaniq',
-					'schema' => 'Employee',
-					'scopeField' => 'id',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'substantial',
-					'fields' => [
-						'iban',
-						'tenaamstelling',
-						'bsn',
-					],
-				],
-			],
+			'actions' => [self::updateMyDetailsAction()],
 			'notifications' => [],
 		];
 
 	}//end newHireManifest()
+
+	/**
+	 * The new hire's update of their own bank account and BSN, at substantial trust.
+	 *
+	 * @return array<string, mixed> The action.
+	 *
+	 * @spec openspec/changes/portal-contribution/tasks.md#task-3
+	 */
+	private static function updateMyDetailsAction(): array {
+		return [
+			'id' => 'updateMyDetails',
+			'type' => 'update',
+			'label' => 'Mijn bankrekening en BSN doorgeven',
+			'register' => 'humaniq',
+			'schema' => 'Employee',
+			'scopeField' => 'id',
+			'scopeClaim' => 'employeeId',
+			'minTrust' => 'substantial',
+			'fields' => [
+				'iban',
+				'tenaamstelling',
+				'bsn',
+			],
+		];
+
+	}//end updateMyDetailsAction()
 
 	/**
 	 * The former-employee manifest (hiring-portal-audiences D5): read-only, the
@@ -578,33 +656,9 @@ class PortalContributionProvider {
 		return [
 			'label' => 'Uw vroegere baan',
 			'collections' => [
-				[
-					'id' => 'payslips',
-					'register' => 'humaniq',
-					'schema' => 'Payslip',
-					'scopeField' => 'employeeId',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'low',
-					'label' => 'Mijn loonstroken',
-					'listable' => true,
-				],
-				[
-					'id' => 'annualStatements',
-					'register' => 'humaniq',
-					'schema' => 'Jaaropgaaf',
-					'scopeField' => 'employeeId',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'low',
-					'label' => 'Mijn jaaropgaven',
-					'listable' => true,
-				],
-				[
-					'id' => 'myDocuments',
-					'register' => 'humaniq',
-					'schema' => 'HrGeneratedDocument',
-					'scopeField' => 'employeeId',
-					'scopeClaim' => 'employeeId',
-					'minTrust' => 'low',
+				self::ownCollection('payslips', 'Payslip') + ['label' => 'Mijn loonstroken', 'listable' => true],
+				self::ownCollection('annualStatements', 'Jaaropgaaf') + ['label' => 'Mijn jaaropgaven', 'listable' => true],
+				self::ownCollection('myDocuments', 'HrGeneratedDocument') + [
 					'filter' => ['status' => 'generated'],
 					'label' => 'Mijn brieven en verklaringen',
 					'listable' => true,

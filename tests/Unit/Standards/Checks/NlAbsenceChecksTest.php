@@ -97,6 +97,58 @@ class NlAbsenceChecksTest extends TestCase {
 	}//end sickCase()
 
 	/**
+	 * The derivation verdict for every shape of sick leave case.
+	 *
+	 * @return void
+	 */
+	public function testTheDerivationVerdictForEveryShapeOfCase(): void {
+		$derivation = $this->checks['nl-wvp-milestone-derivation'];
+		$cases = [
+			'exact' => [],
+			'plan-a-day-off' => ['planVanAanpakDue' => '2026-07-21'],
+			'last-a-day-off' => ['eerstejaarsevaluatieDue' => '2027-05-25'],
+			'padded-due' => ['probleemanalyseDue' => ' 2026-07-06 '],
+			'open-missing-due' => ['uwv42WeekMeldingDue' => null],
+			'open-empty-due' => ['planVanAanpakDue' => '  '],
+			'closed-missing-due' => ['status' => 'hersteld', 'uwv42WeekMeldingDue' => null],
+			'closed-wrong-due' => ['status' => 'hersteld', 'probleemanalyseDue' => '2026-07-07'],
+			'no-status-missing-due' => ['status' => null, 'planVanAanpakDue' => null],
+			'other-status-missing-due' => ['status' => 'afgesloten', 'planVanAanpakDue' => null],
+			'no-first-day' => ['firstSickDay' => null, 'probleemanalyseDue' => 'x'],
+			'bad-first-day' => ['firstSickDay' => 'gisteren', 'probleemanalyseDue' => 'x'],
+			'other-first-day' => ['firstSickDay' => '2026-05-26'],
+		];
+		$got = [];
+		foreach ($cases as $name => $overrides) {
+			$case = $this->sickCase($overrides);
+			if (array_key_exists('status', $overrides) === true && $overrides['status'] === null) {
+				unset($case['status']);
+			}
+
+			$got[$name] = $derivation($case);
+		}
+
+		$this->assertSame(
+			[
+				'exact' => true,
+				'plan-a-day-off' => false,
+				'last-a-day-off' => false,
+				'padded-due' => true,
+				'open-missing-due' => false,
+				'open-empty-due' => false,
+				'closed-missing-due' => true,
+				'closed-wrong-due' => false,
+				'no-status-missing-due' => false,
+				'other-status-missing-due' => true,
+				'no-first-day' => true,
+				'bad-first-day' => true,
+				'other-first-day' => false,
+			],
+			$got
+		);
+	}//end testTheDerivationVerdictForEveryShapeOfCase()
+
+	/**
 	 * @return void
 	 */
 	public function testDerivationSatisfiedForExactSeededWeek7Dates(): void {

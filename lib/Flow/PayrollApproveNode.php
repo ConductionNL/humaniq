@@ -3,6 +3,9 @@
 /**
  * Payroll Approve Node
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `humaniq.payroll-approve`: the ONE write this change adds that no service
  * performed before (payroll-run-as-a-flow design.md D2/D3). It flips a
  * `draft` PayrollRun to `approved` after the review user task decided
@@ -28,9 +31,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
@@ -41,6 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use RuntimeException;
 
 /**
@@ -99,21 +100,17 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 	/**
 	 * Approve the draft run each item names.
 	 *
-	 * @param array $items The input items.
-	 * @param array $config The step configuration (`runId`, default `{{ payroll.runId }}`).
-	 * @param array $context Run-level metadata.
+	 * @param FlowNodeCall $call The input items, the step configuration and the run-level metadata.
 	 *
 	 * @return array The items, each carrying the approval outcome.
 	 *
 	 * @throws RuntimeException When the run is missing, not draft, or the write fails.
 	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $context is part of the
-	 *     IFlowNode::execute() contract; this adapter reads no run-level
-	 *     metadata (the acting identity is applied by the dispatcher).
-	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
 	 */
-	public function execute(array $items, array $config, array $context): array {
+	public function execute(FlowNodeCall $call): array {
+		$items = $call->items;
+		$config = $call->config;
 		if ($items === []) {
 			return [];
 		}

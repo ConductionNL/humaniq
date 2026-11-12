@@ -183,13 +183,13 @@ function relationTarget(property) {
 	return null;
 }
 
-function main() {
-	const { config, sourceBySlug, fragments } = buildEffectiveRegister();
-	const schemas = (config.components && config.components.schemas) || {};
-	const objects = (config.components && config.components.objects) || [];
-
-	// Top-level `objects` is imported but NEVER token-resolved by
-	// ImportHandler, so seed placed there can only ever hold real uuids.
+/**
+ * Fail when seed sits at the top-level `objects` key: ImportHandler imports it
+ * but NEVER token-resolves it, so seed there can only ever hold real uuids.
+ *
+ * @param {object} config The effective register.
+ */
+function rejectTopLevelObjects(config) {
 	if (Array.isArray(config.objects) && config.objects.length > 0) {
 		console.error(
 			"[validate-seed-refs] FAIL — seed objects found at the top-level `objects` key.",
@@ -202,8 +202,16 @@ function main() {
 		);
 		process.exit(1);
 	}
+}
 
-	// Slug -> the objects carrying it. More than one makes a bare @ref ambiguous.
+/**
+ * Slug to the schemas of the objects carrying it. More than one makes a bare
+ * @ref ambiguous.
+ *
+ * @param {Array<object>} objects The seed objects.
+ * @return {Map<string, Array<string>>} The index.
+ */
+function slugIndex(objects) {
 	const bySlug = new Map();
 	for (const object of objects) {
 		const self = object["@self"] || {};
@@ -211,117 +219,171 @@ function main() {
 		if (bySlug.has(self.slug) === false) bySlug.set(self.slug, []);
 		bySlug.get(self.slug).push(self.schema);
 	}
+	return bySlug;
+}
 
-	const failures = [];
-	const unresolvedSeen = new Set();
-	let ok = 0;
-	let checked = 0;
+/**
+ * Why an `@ref:` value does not resolve, or null when it does.
+ *
+ * @param {string} value The `@ref:[<Schema>:]<slug>` value.
+ * @param {Map<string, Array<string>>} bySlug The slug index.
+ * @return {string|null} The reason, starting after the value.
+ */
+function refProblem(value, bySlug) {
+	const reference = value.slice(REF_PREFIX.length);
+	const colon = reference.indexOf(":");
+	const slug = colon === -1 ? reference : reference.slice(colon + 1);
+	const qualifier = colon === -1 ? null : reference.slice(0, colon);
+	const targets = bySlug.get(slug) || [];
+	if (targets.length === 0) {
+		return `DANGLING: no seed object has slug "${slug}".`;
+	}
+	if (qualifier === null && targets.length > 1) {
+		return (
+			`AMBIGUOUS: slug "${slug}" exists on ${targets.join(", ")}.` +
+			` ImportHandler leaves this unresolved; use "@ref:<Schema>:${slug}".`
+		);
+	}
+	if (qualifier !== null && targets.includes(qualifier) === false) {
+		return `no "${qualifier}" object has slug "${slug}" (found on ${targets.join(", ")}).`;
+	}
+	return null;
+}
 
+/**
+ * Why a bare, non-uuid value on a relation property does not import, or null
+ * when KNOWN_UNRESOLVED allows it (recorded in `tally.unresolvedSeen`).
+ *
+ * @param {string} value The value.
+ * @param {string} key `<slug>.<property> -> <value>`.
+ * @param {Map<string, Array<string>>} bySlug The slug index.
+ * @param {object} tally The running tally.
+ * @return {string|null} The reason, starting after the value.
+ */
+function bareValueProblem(value, key, bySlug, tally) {
+	if (bySlug.has(value)) {
+		return (
+			`BARE SLUG on a $ref property.` +
+			` "${value}" is a seeded object; write it as "@ref:${value}" or it fails validation and the object is dropped.`
+		);
+	}
+	if (KNOWN_UNRESOLVED.includes(key)) {
+		tally.unresolvedSeen.add(key);
+		return null;
+	}
+	return (
+		`bare value on a $ref property and no seed object has that slug.` +
+		' Author the target and use "@ref:", or add it to KNOWN_UNRESOLVED with a reason.'
+	);
+}
+
+/**
+ * Check one value of a relation property and count it in `tally`.
+ *
+ * @param {string} where Where the object comes from, for the message.
+ * @param {object} self The object's `@self`.
+ * @param {string} name The property name.
+ * @param {*} value The value.
+ * @param {Map<string, Array<string>>} bySlug The slug index.
+ * @param {object} tally The running tally.
+ */
+function checkRelationValue(where, self, name, value, bySlug, tally) {
+	if (typeof value !== "string" || value === "") return;
+	tally.checked++;
+	if (UUID_RE.test(value)) {
+		tally.ok++;
+		return;
+	}
+	const problem = value.startsWith(REF_PREFIX)
+		? refProblem(value, bySlug)
+		: bareValueProblem(value, `${self.slug}.${name} -> ${value}`, bySlug, tally);
+	if (problem === null) {
+		tally.ok++;
+		return;
+	}
+	tally.failures.push(`${where}\n      ${name}: "${value}" — ${problem}`);
+}
+
+/**
+ * Check every relation value of every seed object.
+ *
+ * @param {Array<object>} objects The seed objects.
+ * @param {object} schemas Schema slug to schema.
+ * @param {Map<string, string>} sourceBySlug Object slug to the file it came from.
+ * @return {object} The tally: failures, unresolvedSeen, ok and checked.
+ */
+function checkObjects(objects, schemas, sourceBySlug) {
+	const bySlug = slugIndex(objects);
+	const tally = { failures: [], unresolvedSeen: new Set(), ok: 0, checked: 0 };
 	for (const object of objects) {
 		const self = object["@self"] || {};
 		const schema = schemas[self.schema];
 		if (isPlainObject(schema) === false) continue;
 		const properties = schema.properties || {};
 		const where = `${sourceBySlug.get(self.slug) || "?"}  ${self.schema}/${self.slug}`;
-
 		for (const [name, raw] of Object.entries(object)) {
 			if (name.startsWith("@")) continue;
 			if (relationTarget(properties[name]) === null) continue;
-
 			for (const value of Array.isArray(raw) ? raw : [raw]) {
-				if (typeof value !== "string" || value === "") continue;
-				checked++;
-
-				if (UUID_RE.test(value)) {
-					ok++;
-					continue;
-				}
-
-				if (value.startsWith(REF_PREFIX)) {
-					const reference = value.slice(REF_PREFIX.length);
-					const colon = reference.indexOf(":");
-					const slug =
-						colon === -1 ? reference : reference.slice(colon + 1);
-					const qualifier =
-						colon === -1 ? null : reference.slice(0, colon);
-					const targets = bySlug.get(slug) || [];
-					if (targets.length === 0) {
-						failures.push(
-							`${where}\n      ${name}: "${value}" — DANGLING: no seed object has slug "${slug}".`,
-						);
-					} else if (qualifier === null && targets.length > 1) {
-						failures.push(
-							`${where}\n      ${name}: "${value}" — AMBIGUOUS: slug "${slug}" exists on ${targets.join(", ")}.` +
-								` ImportHandler leaves this unresolved; use "@ref:<Schema>:${slug}".`,
-						);
-					} else if (
-						qualifier !== null &&
-						targets.includes(qualifier) === false
-					) {
-						failures.push(
-							`${where}\n      ${name}: "${value}" — no "${qualifier}" object has slug "${slug}" (found on ${targets.join(", ")}).`,
-						);
-					} else {
-						ok++;
-					}
-					continue;
-				}
-
-				// A bare, non-uuid value on a relation property.
-				const key = `${self.slug}.${name} -> ${value}`;
-				if (bySlug.has(value)) {
-					failures.push(
-						`${where}\n      ${name}: "${value}" — BARE SLUG on a $ref property.` +
-							` "${value}" is a seeded object; write it as "@ref:${value}" or it fails validation and the object is dropped.`,
-					);
-				} else if (KNOWN_UNRESOLVED.includes(key)) {
-					unresolvedSeen.add(key);
-					ok++;
-				} else {
-					failures.push(
-						`${where}\n      ${name}: "${value}" — bare value on a $ref property and no seed object has that slug.` +
-							' Author the target and use "@ref:", or add it to KNOWN_UNRESOLVED with a reason.',
-					);
-				}
+				checkRelationValue(where, self, name, value, bySlug, tally);
 			}
 		}
 	}
+	return tally;
+}
+
+/**
+ * Print the failures and the stale allowlist entries, if any, and exit 1.
+ *
+ * @param {Array<string>} failures The failures.
+ * @param {Array<string>} stale The stale KNOWN_UNRESOLVED entries.
+ */
+function failOnProblems(failures, stale) {
+	if (failures.length === 0 && stale.length === 0) return;
+	console.error("");
+	if (failures.length > 0) {
+		console.error(
+			`[validate-seed-refs] FAIL — ${failures.length} seed reference(s) will not import:`,
+		);
+		for (const failure of failures) console.error(`  - ${failure}`);
+	}
+	if (stale.length > 0) {
+		console.error("");
+		console.error(
+			`[validate-seed-refs] FAIL — ${stale.length} stale KNOWN_UNRESOLVED entr(ies); delete them:`,
+		);
+		for (const entry of stale) console.error(`  - ${entry}`);
+	}
+	process.exit(1);
+}
+
+function main() {
+	const { config, sourceBySlug, fragments } = buildEffectiveRegister();
+	const schemas = (config.components && config.components.schemas) || {};
+	const objects = (config.components && config.components.objects) || [];
+
+	rejectTopLevelObjects(config);
+	const tally = checkObjects(objects, schemas, sourceBySlug);
 
 	// A stale allowlist entry is a failure of its own: it means the reference
 	// was fixed or removed and the exemption was left behind.
 	const stale = KNOWN_UNRESOLVED.filter(
-		(entry) => unresolvedSeen.has(entry) === false,
+		(entry) => tally.unresolvedSeen.has(entry) === false,
 	);
 
 	console.log(
 		`[validate-seed-refs] ${fragments.length} fragments, ${objects.length} seed objects,` +
-			` ${checked} relation values checked.`,
+			` ${tally.checked} relation values checked.`,
 	);
 	console.log(
 		`[validate-seed-refs] ${KNOWN_UNRESOLVED.length} known-unresolved references allowlisted` +
 			" (missing target objects — see KNOWN_UNRESOLVED).",
 	);
 
-	if (failures.length > 0 || stale.length > 0) {
-		console.error("");
-		if (failures.length > 0) {
-			console.error(
-				`[validate-seed-refs] FAIL — ${failures.length} seed reference(s) will not import:`,
-			);
-			for (const failure of failures) console.error(`  - ${failure}`);
-		}
-		if (stale.length > 0) {
-			console.error("");
-			console.error(
-				`[validate-seed-refs] FAIL — ${stale.length} stale KNOWN_UNRESOLVED entr(ies); delete them:`,
-			);
-			for (const entry of stale) console.error(`  - ${entry}`);
-		}
-		process.exit(1);
-	}
+	failOnProblems(tally.failures, stale);
 
 	console.log(
-		`[validate-seed-refs] PASS — all ${ok} seed relation values are importable.`,
+		`[validate-seed-refs] PASS — all ${tally.ok} seed relation values are importable.`,
 	);
 	process.exit(0);
 }

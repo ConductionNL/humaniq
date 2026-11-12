@@ -3,6 +3,9 @@
 /**
  * Humaniq Migrate Asset Dialect Repair Step
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * hrmq-asset-fleet-merge (tasks.md section 13, blocking defect): the
  * Asset/AssetAssignment schema rename shipped without a data migration.
  * OpenRegister's register-config seed import is create-only, so it never
@@ -31,9 +34,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

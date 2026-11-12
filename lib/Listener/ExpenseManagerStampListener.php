@@ -3,6 +3,9 @@
 /**
  * Humaniq ExpenseManagerStampListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` and
  * `ObjectUpdatingEvent` for `Expense`. An expense claim of any category gets
  * its approver the way a timesheet does: `managerUserId` is resolved by the
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -99,18 +99,11 @@ class ExpenseManagerStampListener implements IEventListener {
 	 * @spec openspec/changes/restamp-open-manager-records/specs/humaniq-expenses/spec.md#Requirement:-An-expense-claim-of-any-category-SHALL-be-approved-the-way-hours-are
 	 */
 	public function handle(Event $event): void {
-		if ($this->marker->isInternal() === true) {
+		if ((new SchemaWriteFilter($this->gateway, $this->marker))->judges($event, self::SLUG) === false) {
 			return;
 		}
 
-		if (($event instanceof ObjectCreatingEvent) === false && ($event instanceof ObjectUpdatingEvent) === false) {
-			return;
-		}
-
-		$entity = ($event instanceof ObjectCreatingEvent) ? $event->getObject() : $event->getNewObject();
-		if (strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::SLUG) {
-			return;
-		}
+		$entity = SchemaWriteFilter::pendingObject($event);
 
 		$stored = ($event instanceof ObjectUpdatingEvent) ? ($event->getOldObject()?->getObject() ?? []) : [];
 		$stamps = $this->stampsFor(claim: ($entity->getObject() ?? []), stored: $stored);

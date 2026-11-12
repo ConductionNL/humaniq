@@ -20,6 +20,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://conduction.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -120,30 +123,13 @@ class DemoDataService {
 	 * @spec exclude Demo-data import; ADR-111 rule 1 has no per-app behavioural spec.
 	 */
 	public function install(): array {
-		$path = $this->descriptorPath();
-		if (is_file($path) === false) {
-			throw new RuntimeException('No demo dataset ships with this app (' . self::DESCRIPTOR . ' not found).');
-		}
-
-		$raw = file_get_contents($path);
-		if ($raw === false) {
-			throw new RuntimeException('The demo dataset could not be read: ' . $path);
-		}
-
-		$data = json_decode($raw, true);
-		if (is_array($data) === false) {
-			throw new RuntimeException('The demo dataset is not valid JSON: ' . $path);
-		}
+		$data = $this->descriptorData();
 
 		// Counted from the FILE, not the importer's reply, so the number reported
 		// is the number ASKED FOR. An object whose schema does not resolve is
 		// SKIPPED rather than errored, so a discrepancy here is a real condition
 		// an operator should be able to see.
-		$objects = 0;
-		$components = ($data['components'] ?? []);
-		if (is_array($components) === true && is_array(($components['objects'] ?? null)) === true) {
-			$objects = count($components['objects']);
-		}
+		$objects = self::objectCount(data: $data);
 
 		$importer = $this->configurationService();
 		$version = $this->appManager->getAppVersion(Application::APP_ID);
@@ -167,6 +153,48 @@ class DemoDataService {
 
 		return $imported;
 	}//end install()
+
+	/**
+	 * The decoded shipped descriptor.
+	 *
+	 * @return array<mixed> The dataset.
+	 *
+	 * @throws RuntimeException When no descriptor ships, it cannot be read, or it is not a JSON object or list.
+	 */
+	private function descriptorData(): array {
+		$path = $this->descriptorPath();
+		if (is_file($path) === false) {
+			throw new RuntimeException('No demo dataset ships with this app (' . self::DESCRIPTOR . ' not found).');
+		}
+
+		$raw = file_get_contents($path);
+		if ($raw === false) {
+			throw new RuntimeException('The demo dataset could not be read: ' . $path);
+		}
+
+		$data = json_decode($raw, true);
+		if (is_array($data) === false) {
+			throw new RuntimeException('The demo dataset is not valid JSON: ' . $path);
+		}
+
+		return $data;
+	}//end descriptorData()
+
+	/**
+	 * How many objects the dataset lists; zero when it lists none.
+	 *
+	 * @param array<mixed> $data The decoded descriptor.
+	 *
+	 * @return integer
+	 */
+	private static function objectCount(array $data): int {
+		$components = ($data['components'] ?? []);
+		if (is_array($components) === false || is_array(($components['objects'] ?? null)) === false) {
+			return 0;
+		}
+
+		return count($components['objects']);
+	}//end objectCount()
 
 	/**
 	 * Absolute path to the shipped descriptor.
@@ -237,27 +265,13 @@ class DemoDataService {
 	 * @return integer|null The object count, or null when there is no usable descriptor.
 	 */
 	private function shippedObjectCount(): ?int {
-		$path = $this->descriptorPath();
-		if (is_file($path) === false) {
+		try {
+			$data = $this->descriptorData();
+		} catch (RuntimeException) {
 			return null;
 		}
 
-		$raw = file_get_contents($path);
-		if ($raw === false) {
-			return null;
-		}
-
-		$data = json_decode($raw, true);
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		$components = ($data['components'] ?? []);
-		if (is_array($components) === false || is_array(($components['objects'] ?? null)) === false) {
-			return 0;
-		}
-
-		return count($components['objects']);
+		return self::objectCount(data: $data);
 
 	}//end shippedObjectCount()
 

@@ -3,6 +3,9 @@
 /**
  * NL CAO (collective-labour-agreement) Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable checks for the two below-CAO-minimum rules the `cao-library` change
  * added to the corpus (lib/Standards/rules/payroll.json /
  * lib/Standards/rules/labour.json), both `CaoRegistry`-backed and
@@ -37,9 +40,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

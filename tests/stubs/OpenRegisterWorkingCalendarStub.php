@@ -3,6 +3,9 @@
 /**
  * OpenRegister working calendar stubs — test-only.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `WorkingCalendarReader` asks the container for openregister's
  * `Flow\Timer\WorkingCalendarService` by class, resolves the default calendar
  * and reads its non-working dates per year. In the standalone PHPUnit suite
@@ -27,9 +30,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  */

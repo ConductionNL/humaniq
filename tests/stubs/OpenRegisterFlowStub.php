@@ -3,6 +3,9 @@
 /**
  * OpenRegister flow-engine test stub
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * TEST-ONLY shape of the three OpenRegister flow classes humaniq's payroll
  * nodes and their listener touch (payroll-run-as-a-flow design.md D6):
  *
@@ -31,9 +34,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  */
@@ -99,14 +99,34 @@ interface IFlowNode {
 	/**
 	 * Do the work: items in, items out.
 	 *
-	 * @param array $items The input items.
-	 * @param array $config The step's authored configuration.
-	 * @param array $context Run-level metadata — NOT the data channel.
+	 * @param FlowNodeCall $call The input items, the step's authored configuration and
+	 *                           the run-level metadata (NOT the data channel).
 	 *
 	 * @return array The output items.
 	 */
-	public function execute(array $items, array $config, array $context): array;
+	public function execute(FlowNodeCall $call): array;
 }//end interface
+
+/**
+ * Test-stub mirror of OpenRegister's FlowNodeCall: what one node is called with.
+ */
+final class FlowNodeCall {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param array $items   The input items.
+	 * @param array $config  The step's authored configuration.
+	 * @param array $context Run-level metadata.
+	 */
+	public function __construct(
+		public readonly array $items=[],
+		public readonly array $config=[],
+		public readonly array $context=[],
+	) {
+
+	}//end __construct()
+}//end class
 
 /**
  * Test-stub mirror of OpenRegister's FlowNodeRegistry registration surface

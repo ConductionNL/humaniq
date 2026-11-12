@@ -49,24 +49,20 @@ class CaoComponentCalculator {
 	/**
 	 * Compute the lines and their total.
 	 *
-	 * @param list<array<string, mixed>> $components       Resolved components (EmploymentTermsResolver::resolveComponents).
-	 * @param int                        $regularWageCents The regular wage of the period, in cents.
-	 * @param float|null                 $hourlyRate       The hourly rate, or null when unknown.
-	 * @param list<array<string, mixed>> $entries          The approved time entries the run pays.
-	 * @param list<string>               $nonWorkingDates  Public holidays, `YYYY-MM-DD`.
-	 * @param float                      $monthFraction    The share of the month the contract covers.
+	 * @param list<array<string, mixed>> $components Resolved components (EmploymentTermsResolver::resolveComponents).
+	 * @param CaoPayBasis                $basis      The wage, hourly rate, entries, holidays and month share.
 	 *
 	 * @return array{lines: list<array<string, mixed>>, totalCents: int}
 	 *
 	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-003
 	 */
-	public function compute(array $components, int $regularWageCents, ?float $hourlyRate, array $entries, array $nonWorkingDates = [], float $monthFraction = 1.0): array {
+	public function compute(array $components, CaoPayBasis $basis): array {
 		$lines = [];
 		foreach ($components as $component) {
 			$lines = array_merge($lines, match ($component['kind'] ?? '') {
-				'percentage-of-wage' => [$this->percentageLine(component: $component, regularWageCents: $regularWageCents, monthFraction: $monthFraction)],
-				'fixed-monthly' => [self::line(component: $component, basis: 'fixed per month' . ($monthFraction < 1.0 ? ', ' . round($monthFraction * 100, 1) . '% of the month' : ''), hours: null, pct: null, amountCents: (int)round((int)($component['amountCents'] ?? 0) * $monthFraction))],
-				'hourly-surcharge' => $this->surchargeLines(component: $component, hourlyRate: $hourlyRate, entries: $entries, holidays: array_flip($nonWorkingDates)),
+				'percentage-of-wage' => [$this->percentageLine(component: $component, basis: $basis)],
+				'fixed-monthly' => [self::fixedLine(component: $component, monthFraction: $basis->monthFraction)],
+				'hourly-surcharge' => $this->surchargeLines(component: $component, basis: $basis),
 				default => [],
 			});
 		}
@@ -75,15 +71,30 @@ class CaoComponentCalculator {
 	}//end compute()
 
 	/**
-	 * A percentage of the regular wage, lifted to its monthly minimum.
+	 * A fixed monthly amount, for the share of the month the contract covers.
 	 *
-	 * @param array<string, mixed> $component        The component.
-	 * @param int                  $regularWageCents The regular wage.
-	 * @param float                $monthFraction    The share of the month.
+	 * @param array<string, mixed> $component     The component.
+	 * @param float                $monthFraction The share of the month.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function percentageLine(array $component, int $regularWageCents, float $monthFraction): array {
+	private static function fixedLine(array $component, float $monthFraction): array {
+		$basis = 'fixed per month' . ($monthFraction < 1.0 ? ', ' . round($monthFraction * 100, 1) . '% of the month' : '');
+
+		return self::line(component: $component, basis: $basis, hours: null, pct: null, amountCents: (int)round((int)($component['amountCents'] ?? 0) * $monthFraction));
+	}//end fixedLine()
+
+	/**
+	 * A percentage of the regular wage, lifted to its monthly minimum.
+	 *
+	 * @param array<string, mixed> $component The component.
+	 * @param CaoPayBasis          $basis     The regular wage and the share of the month.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function percentageLine(array $component, CaoPayBasis $basis): array {
+		$regularWageCents = $basis->regularWageCents;
+		$monthFraction = $basis->monthFraction;
 		$pct = (float)($component['pct'] ?? 0);
 		$amountCents = (int)round($regularWageCents * $pct / 100);
 		$minimumCents = (int)round((int)($component['minAmountCents'] ?? 0) * $monthFraction);
@@ -100,28 +111,14 @@ class CaoComponentCalculator {
 	 * The premium lines of one surcharge: one per percentage earned, one for
 	 * the hours without times.
 	 *
-	 * @param array<string, mixed>       $component  The component.
-	 * @param float|null                 $hourlyRate The hourly rate.
-	 * @param list<array<string, mixed>> $entries    The entries.
-	 * @param array<string, int>         $holidays   Public holidays as keys.
+	 * @param array<string, mixed> $component The component.
+	 * @param CaoPayBasis          $basis     The hourly rate, the entries and the public holidays.
 	 *
 	 * @return list<array<string, mixed>>
 	 */
-	private function surchargeLines(array $component, ?float $hourlyRate, array $entries, array $holidays): array {
-		$minutesByBucket = [];
-		$noTimesHours = 0.0;
-		foreach ($entries as $entry) {
-			$span = self::span(entry: $entry);
-			if ($span === null) {
-				$noTimesHours += (float)($entry['hours'] ?? 0);
-				continue;
-			}
-
-			foreach ($this->premiumMinutes(component: $component, start: $span[0], end: $span[1], holidays: $holidays) as $bucket => $minutes) {
-				$minutesByBucket[$bucket] = (($minutesByBucket[$bucket] ?? 0) + $minutes);
-			}
-		}
-
+	private function surchargeLines(array $component, CaoPayBasis $basis): array {
+		$hourlyRate = $basis->hourlyRate;
+		[$minutesByBucket, $noTimesHours] = $this->premiumTally(component: $component, basis: $basis);
 		$lines = [];
 		foreach ($minutesByBucket as $bucket => $minutes) {
 			[$basis, $pct] = explode('|', (string)$bucket);
@@ -140,6 +137,34 @@ class CaoComponentCalculator {
 
 		return $lines;
 	}//end surchargeLines()
+
+	/**
+	 * The premium minutes per `basis|pct` bucket over the timed entries, and
+	 * the hours of the entries without times.
+	 *
+	 * @param array<string, mixed> $component The component.
+	 * @param CaoPayBasis          $basis     The entries and the public holidays.
+	 *
+	 * @return array{0: array<string, int>, 1: float}
+	 */
+	private function premiumTally(array $component, CaoPayBasis $basis): array {
+		$holidays = array_flip($basis->nonWorkingDates);
+		$minutesByBucket = [];
+		$noTimesHours = 0.0;
+		foreach ($basis->entries as $entry) {
+			$span = self::span(entry: $entry);
+			if ($span === null) {
+				$noTimesHours += (float)($entry['hours'] ?? 0);
+				continue;
+			}
+
+			foreach ($this->premiumMinutes(component: $component, start: $span[0], end: $span[1], holidays: $holidays) as $bucket => $minutes) {
+				$minutesByBucket[$bucket] = (($minutesByBucket[$bucket] ?? 0) + $minutes);
+			}
+		}
+
+		return [$minutesByBucket, $noTimesHours];
+	}//end premiumTally()
 
 	/**
 	 * Premium minutes of one span per `basis|pct` bucket.

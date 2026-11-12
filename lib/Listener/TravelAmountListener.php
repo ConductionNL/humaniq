@@ -3,6 +3,9 @@
 /**
  * Humaniq TravelAmountListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` and
  * `ObjectUpdatingEvent` for `Expense` and `CommuteArrangement`
  * (expenses-travel-calculation D1 and D2).
@@ -26,9 +29,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -113,10 +113,20 @@ class TravelAmountListener implements IEventListener {
 		}
 
 		$entity = $this->entityOf($event);
-		if ($entity === null) {
-			return;
+		if ($entity !== null) {
+			$this->stamp(event: $event, entity: $entity);
 		}
+	}//end handle()
 
+	/**
+	 * Stamp the calculated fields on a write, refuse a claim with neither an amount nor a distance, or log a failed calculation.
+	 *
+	 * @param Event $event The pre-save event.
+	 * @param object $entity The object being written.
+	 *
+	 * @return void
+	 */
+	private function stamp(Event $event, object $entity): void {
 		try {
 			$modified = $this->stampsFor(
 				slug: strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())),
@@ -132,10 +142,22 @@ class TravelAmountListener implements IEventListener {
 			return;
 		}
 
+		$this->applyStamps(event: $event, modified: $modified);
+	}//end stamp()
+
+	/**
+	 * Merge the stamps into a pre-save event's modified data.
+	 *
+	 * @param Event $event The pre-save event.
+	 * @param array<string, mixed> $modified The stamps.
+	 *
+	 * @return void
+	 */
+	private function applyStamps(Event $event, array $modified): void {
 		if ($modified !== [] && ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent || $event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent)) {
 			$event->setModifiedData(array_merge($event->getModifiedData(), $modified));
 		}
-	}//end handle()
+	}//end applyStamps()
 
 	/**
 	 * The object a create or update is about to save, or null for any other event.
@@ -191,20 +213,32 @@ class TravelAmountListener implements IEventListener {
 			return [];
 		}
 
-		$distance = ($claim['distanceKm'] ?? null);
-		$rates = $this->rates();
-		if (($claim['category'] ?? null) === 'travel' && is_numeric($distance) === true && (float)$distance > 0.0 && $rates !== null) {
-			$split = $this->calculator->claim(distanceKm: (float)$distance, ratePerKm: $rates['rate'], taxFreeRatePerKm: $rates['taxFree']);
-
-			return array_merge($split, ['ratePerKm' => $rates['rate'], 'amountSource' => 'calculated']);
+		$calculated = $this->calculatedClaim(claim: $claim);
+		if ($calculated !== null) {
+			return $calculated;
 		}
 
-		if (is_numeric($claim['amount'] ?? null) === false) {
+		return (is_numeric($claim['amount'] ?? null) === true) ? ['amountSource' => 'entered'] : null;
+	}//end stampClaim()
+
+	/**
+	 * The calculated amount split of a mileage claim with a distance, or null when it is not one or no rate is readable.
+	 *
+	 * @param array<string, mixed> $claim The Expense.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function calculatedClaim(array $claim): array|null {
+		$distance = ($claim['distanceKm'] ?? null);
+		$rates = $this->rates();
+		if (($claim['category'] ?? null) !== 'travel' || is_numeric($distance) === false || (float)$distance <= 0.0 || $rates === null) {
 			return null;
 		}
 
-		return ['amountSource' => 'entered'];
-	}//end stampClaim()
+		$split = $this->calculator->claim(distanceKm: (float)$distance, ratePerKm: $rates['rate'], taxFreeRatePerKm: $rates['taxFree']);
+
+		return array_merge($split, ['ratePerKm' => $rates['rate'], 'amountSource' => 'calculated']);
+	}//end calculatedClaim()
 
 	/**
 	 * The stamps for a commuting arrangement.
@@ -225,17 +259,28 @@ class TravelAmountListener implements IEventListener {
 			$modified['distanceSource'] = 'manual';
 		}
 
+		return array_merge($modified, $this->monthlyStamps(arrangement: $arrangement));
+	}//end stampArrangement()
+
+	/**
+	 * The monthly allowance split of an arrangement with a distance and days, or nothing when either is missing or no rate is readable.
+	 *
+	 * @param array<string, mixed> $arrangement The CommuteArrangement.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function monthlyStamps(array $arrangement): array {
 		$distance = ($arrangement['distanceKmOneWay'] ?? null);
 		$days = ($arrangement['daysPerWeek'] ?? null);
 		$rates = $this->rates();
 		if (is_numeric($distance) === false || is_numeric($days) === false || $rates === null) {
-			return $modified;
+			return [];
 		}
 
 		$monthly = $this->calculator->monthly(distanceKmOneWay: (float)$distance, daysPerWeek: (float)$days, ratePerKm: $rates['rate'], taxFreeRatePerKm: $rates['taxFree']);
 
-		return array_merge($modified, $monthly, ['ratePerKm' => $rates['rate']]);
-	}//end stampArrangement()
+		return array_merge($monthly, ['ratePerKm' => $rates['rate']]);
+	}//end monthlyStamps()
 
 	/**
 	 * The employee's account, administration and manager for an arrangement.

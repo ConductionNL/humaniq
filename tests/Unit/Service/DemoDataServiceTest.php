@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
 namespace Unit\Service;
 
 use OCA\Humaniq\Service\DemoDataService;
@@ -224,5 +229,46 @@ class DemoDataServiceTest extends TestCase {
 		$this->assertTrue($importer->seen['force']);
 		$this->assertTrue($importer->seen['shippedImport']);
 		$this->assertFalse($this->marker->isShippedImport());
+	}
+
+	/**
+	 * Objects that are not a list count zero, both on the card and in the
+	 * import; the import logs the three counts; a JSON scalar is not a dataset.
+	 *
+	 * @return void
+	 */
+	public function testTheCountTheLogAndAScalarDescriptor(): void {
+		file_put_contents($this->descriptor(), json_encode(['components' => ['objects' => 'several']]));
+		$importer = new class() {
+			/**
+			 * The importer's reply: two registers and one schema.
+			 *
+			 * @param string               $appId   The configuration namespace.
+			 * @param array<string, mixed> $data    The dataset.
+			 * @param string               $version The app version.
+			 * @param bool                 $force   Whether to force the import.
+			 *
+			 * @return array<string, array<int, int>>
+			 */
+			public function importFromApp(string $appId, array $data, string $version, bool $force): array {
+				return ['registers' => [1, 2], 'schemas' => [1]];
+			}
+		};
+		$this->container->method('get')->willReturn($importer);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('info')->with(
+			'[DemoDataService] imported demo data: 0 object(s), 2 register(s), 1 schema(s).',
+			['app' => 'humaniq']
+		);
+		$service = new DemoDataService($this->appManager, $this->container, $logger, $this->marker);
+
+		$this->assertSame(0, $service->listChoices()[1]['objectCount']);
+		$this->assertSame(['objects' => 0, 'registers' => 2, 'schemas' => 1], $service->install());
+
+		file_put_contents($this->descriptor(), '"text"');
+		$this->assertSame([DemoDataService::NONE_DATASET], array_column($service->listChoices(), 'id'));
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessageMatches('/not valid JSON/');
+		$service->install();
 	}
 }

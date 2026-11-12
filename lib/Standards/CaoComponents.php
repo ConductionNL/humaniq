@@ -102,25 +102,59 @@ final class CaoComponents {
 			return null;
 		}
 
-		$component = ['kind' => $raw['kind']];
+		return array_merge(['kind' => $raw['kind']], self::percentages(raw: $raw), self::amounts(raw: $raw), self::windows(raw: $raw));
+	}//end normalise()
+
+	/**
+	 * The declared percentages, a non-numeric one as null.
+	 *
+	 * @param array<string, mixed> $raw The declared component.
+	 *
+	 * @return array<string, float|null>
+	 */
+	private static function percentages(array $raw): array {
+		$percentages = [];
 		foreach (['pct', 'holidayPct'] as $field) {
 			if (array_key_exists($field, $raw) === true) {
-				$component[$field] = (is_numeric($raw[$field]) === true ? (float)$raw[$field] : null);
+				$percentages[$field] = (is_numeric($raw[$field]) === true ? (float)$raw[$field] : null);
 			}
 		}
 
+		return $percentages;
+	}//end percentages()
+
+	/**
+	 * The numeric declared amounts, in whole cents.
+	 *
+	 * @param array<string, mixed> $raw The declared component.
+	 *
+	 * @return array<string, int>
+	 */
+	private static function amounts(array $raw): array {
+		$amounts = [];
 		foreach (['amountCents', 'minAmountCents'] as $field) {
 			if (is_numeric($raw[$field] ?? null) === true) {
-				$component[$field] = (int)$raw[$field];
+				$amounts[$field] = (int)$raw[$field];
 			}
 		}
 
-		if (is_array($raw['windows'] ?? null) === true) {
-			$component['windows'] = array_values(array_map(static fn (mixed $window): array => self::normaliseWindow(raw: $window), $raw['windows']));
+		return $amounts;
+	}//end amounts()
+
+	/**
+	 * The declared time windows, normalised, when there is a list of them.
+	 *
+	 * @param array<string, mixed> $raw The declared component.
+	 *
+	 * @return array{windows?: list<array<string, mixed>>}
+	 */
+	private static function windows(array $raw): array {
+		if (is_array($raw['windows'] ?? null) === false) {
+			return [];
 		}
 
-		return $component;
-	}//end normalise()
+		return ['windows' => array_values(array_map(static fn (mixed $window): array => self::normaliseWindow(raw: $window), $raw['windows']))];
+	}//end windows()
 
 	/**
 	 * One surcharge window: days (weekday names, null when not transcribed),

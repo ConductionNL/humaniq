@@ -245,6 +245,28 @@ class CostAllocationServiceTest extends TestCase {
 	}//end testTheRunReplacesItsLinesAndTheyFitTheSchema()
 
 	/**
+	 * A stored line keeps its fields in order; a blank employee or
+	 * administration is stored as null; a run with no payslips still clears
+	 * its earlier lines.
+	 *
+	 * @return void
+	 */
+	public function testTheStoredLineFieldsAndTheClearedRun(): void {
+		$this->store->seed('WageCostAllocation', 'old-1', ['payrollRunId' => 'run-5', 'payslipId' => 'slip-gone', 'costCenter' => 'CC-9']);
+		self::assertSame(0, $this->service->allocateRun(runId: 'run-5', period: '2026-05', administrationId: 'ADM-001', payslips: []));
+		self::assertSame([], $this->rowsOf('WageCostAllocation'));
+
+		$this->store->seed('CostAllocation', 'ca-1', ['employeeId' => '', 'basis' => 'fixed', 'startDate' => '2026-01-01', 'splits' => [['costCenter' => 'CC-100', 'percentage' => 100]]]);
+		$this->service->allocateRun(runId: 'run-6', period: '2026-06', administrationId: '', payslips: [['payslipId' => 'slip-x', 'employeeId' => '', 'grossCents' => 1000, 'chargesCents' => 200]]);
+		$rows = $this->rowsOf('WageCostAllocation');
+		self::assertCount(1, $rows);
+		$row = $rows[0];
+		unset($row['id'], $row['@self']);
+		self::assertSame(['costCenter', 'projectId', 'percentage', 'gross', 'employerCharges', 'totalCost', 'allocationSource', 'payslipId', 'payrollRunId', 'period', 'employeeId', 'administrationId'], array_keys($row));
+		self::assertSame(['slip-x', 'run-6', '2026-06', null, null], [$row['payslipId'], $row['payrollRunId'], $row['period'], $row['employeeId'], $row['administrationId']]);
+	}//end testTheStoredLineFieldsAndTheClearedRun()
+
+	/**
 	 * A register that cannot be read degrades to no lines, never an error.
 	 *
 	 * @return void

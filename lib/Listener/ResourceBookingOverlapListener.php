@@ -3,6 +3,9 @@
 /**
  * Resource Booking Overlap Listener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` /
  * `ObjectUpdatingEvent` for `ResourceBooking` writes. It refuses a booking that
  * would take a resource past its quantity over an overlapping period, and a
@@ -27,9 +30,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -106,12 +106,12 @@ class ResourceBookingOverlapListener implements IEventListener {
 				'humaniq: ResourceBookingOverlapListener could not check a booking',
 				['exception' => $e->getMessage()]
 			);
-			$this->refuse($event, 'De reservering kon niet worden gecontroleerd; probeer het later opnieuw.');
+			PreSaveEvents::refuse($event, 'De reservering kon niet worden gecontroleerd; probeer het later opnieuw.');
 			return;
 		}
 
 		if ($refusal !== null) {
-			$this->refuse($event, $refusal);
+			PreSaveEvents::refuse($event, $refusal);
 		}
 	}//end handle()
 
@@ -166,22 +166,4 @@ class ResourceBookingOverlapListener implements IEventListener {
 		return (strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) === self::RESOURCEBOOKING_SLUG);
 	}//end isBooking()
 
-	/**
-	 * Stop the write and carry the reason back to the caller.
-	 *
-	 * @param object $event The dispatched event.
-	 * @param string $message The refusal.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-004
-	 */
-	private function refuse(object $event, string $message): void {
-		if (method_exists($event, 'setErrors') === false || method_exists($event, 'stopPropagation') === false) {
-			return;
-		}
-
-		$event->setErrors(['message' => $message]);
-		$event->stopPropagation();
-	}//end refuse()
 }//end class

@@ -165,10 +165,7 @@ class AnnouncementService {
 		}
 
 		$assignments = $this->gateway->loadAll('OrgAssignment');
-		$confirmed = [];
-		foreach ($this->gateway->findFiltered(self::CONFIRMATION, ['announcementId' => $announcementId]) as $confirmation) {
-			$confirmed[(string)($confirmation['employeeId'] ?? '')] = ($confirmation['confirmedAt'] ?? null);
-		}
+		$confirmed   = $this->confirmationTimes(announcementId: $announcementId);
 
 		$rows = [];
 		foreach ($this->gateway->loadAll('Employee') as $employee) {
@@ -186,6 +183,35 @@ class AnnouncementService {
 			];
 		}
 
+		return $this->overviewOf(announcementId: $announcementId, rows: $rows);
+	}//end overview()
+
+	/**
+	 * When each employee confirmed the announcement, keyed by employee id;
+	 * a confirmation without a time is still a confirmation.
+	 *
+	 * @param string $announcementId The announcement.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function confirmationTimes(string $announcementId): array {
+		$confirmed = [];
+		foreach ($this->gateway->findFiltered(self::CONFIRMATION, ['announcementId' => $announcementId]) as $confirmation) {
+			$confirmed[(string)($confirmation['employeeId'] ?? '')] = ($confirmation['confirmedAt'] ?? null);
+		}
+
+		return $confirmed;
+	}//end confirmationTimes()
+
+	/**
+	 * The overview of the audience rows, those who did not confirm first, then by name.
+	 *
+	 * @param string                           $announcementId The announcement.
+	 * @param array<int, array<string, mixed>> $rows           One row per employee in the audience.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function overviewOf(string $announcementId, array $rows): array {
 		usort($rows, fn (array $a, array $b): int => [$a['confirmed'], $this->sortName($a['name'])] <=> [$b['confirmed'], $this->sortName($b['name'])]);
 
 		return [
@@ -194,7 +220,7 @@ class AnnouncementService {
 			'confirmed' => count(array_filter($rows, static fn (array $row): bool => $row['confirmed'] === true)),
 			'rows' => $rows,
 		];
-	}//end overview()
+	}//end overviewOf()
 
 	/**
 	 * Place a confirmation created past the endpoint on the caller, or refuse

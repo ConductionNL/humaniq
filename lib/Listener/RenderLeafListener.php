@@ -35,7 +35,10 @@ namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\OpenRegister\Event\RegisterLeafProvidersEvent;
+use OCA\OpenRegister\Service\Integration\LeafAvailability;
 use OCA\OpenRegister\Service\Integration\LeafDescriptor;
+use OCA\OpenRegister\Service\Integration\LeafIdentity;
+use OCA\OpenRegister\Service\Integration\LeafRendering;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IL10N;
@@ -123,7 +126,7 @@ abstract class RenderLeafListener implements IEventListener {
 
 		try {
 			// Render-only leaf: no IntegrationProvider.
-			$event->registerLeaf($this->describe($this->descriptorArguments()), null);
+			$event->registerLeaf($this->describe($this->descriptorArguments(), $this->renderingArguments()), null);
 		} catch (Throwable $e) {
 			// Never take the leaf catalogue down: log and skip our own leaf only.
 			$this->logger->warning(
@@ -137,25 +140,39 @@ abstract class RenderLeafListener implements IEventListener {
 	/**
 	 * Build the leaf's descriptor from the shared arguments.
 	 *
-	 * @param array<string, mixed> $arguments The descriptor arguments, by parameter name.
+	 * @param array<string, mixed> $arguments The descriptor arguments other than the rendering, by parameter name.
+	 * @param array<string, mixed> $rendering The rendering arguments, by parameter name.
 	 *
 	 * @return LeafDescriptor
 	 */
-	abstract protected function describe(array $arguments): LeafDescriptor;
+	abstract protected function describe(array $arguments, array $rendering): LeafDescriptor;
 
 	/**
-	 * The descriptor arguments every render-surface leaf declares.
+	 * The descriptor arguments every render-surface leaf declares, except its rendering.
 	 *
 	 * @return array<string, mixed>
 	 */
 	private function descriptorArguments(): array {
-		$arguments = [
-			'id' => static::LEAF_ID,
-			'label' => $this->l10n->t(static::LABEL_SOURCE),
-			'icon' => static::ICON,
+		return [
+			'identity' => new LeafIdentity(
+				id: static::LEAF_ID,
+				label: $this->l10n->t(static::LABEL_SOURCE),
+				icon: static::ICON,
+				group: static::GROUP,
+			),
 			'kinds' => [LeafDescriptor::KIND_RENDER_SURFACE],
-			'requiredApp' => Application::APP_ID,
-			'group' => static::GROUP,
+			'availability' => new LeafAvailability(requiredApp: Application::APP_ID),
+		];
+
+	}//end descriptorArguments()
+
+	/**
+	 * The rendering arguments every render-surface leaf declares.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function renderingArguments(): array {
+		$rendering = [
 			'surfaces' => static::SURFACES,
 			'referenceType' => static::REFERENCE_TYPE,
 		];
@@ -169,12 +186,12 @@ abstract class RenderLeafListener implements IEventListener {
 			// and ships no bundle, which is exactly the failure that left
 			// `humaniq-hours` dark on dossiq case pages before the entry
 			// existed.
-			$arguments['loadStrategy'] = LeafDescriptor::LOADS_VIA_SHARED_ENTRY;
+			$rendering['loadStrategy'] = LeafDescriptor::LOADS_VIA_SHARED_ENTRY;
 		}
 
-		return $arguments;
+		return $rendering;
 
-	}//end descriptorArguments()
+	}//end renderingArguments()
 
 	/**
 	 * Whether the OpenRegister beside us understands the `loadStrategy` argument.
@@ -190,8 +207,8 @@ abstract class RenderLeafListener implements IEventListener {
 	 * that never registered.
 	 *
 	 * Both halves are checked rather than one standing in for the other: the
-	 * constant is what this listener reads, the parameter is what it passes, and
-	 * a stub or a partial backport can carry one without the other.
+	 * constant is what this listener reads, the `LeafRendering` parameter is what
+	 * it passes, and a stub or a partial backport can carry one without the other.
 	 *
 	 * @return bool Whether the descriptor accepts a load strategy.
 	 *
@@ -203,7 +220,7 @@ abstract class RenderLeafListener implements IEventListener {
 			return false;
 		}
 
-		$constructor = (new ReflectionClass(LeafDescriptor::class))->getConstructor();
+		$constructor = (new ReflectionClass(LeafRendering::class))->getConstructor();
 		if ($constructor === null) {
 			return false;
 		}

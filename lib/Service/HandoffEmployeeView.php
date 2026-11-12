@@ -105,36 +105,58 @@ class HandoffEmployeeView {
 		$employeeId = (string)$employee['id'];
 		$view = $this->viewOf(employee: $employee);
 		if ($sent === null) {
-			$fields = [];
-			foreach ($view as $values) {
-				foreach ($values as $field => $value) {
-					$fields[$field] = ['old' => null, 'new' => $value];
-				}
-			}
-
-			return [['employeeId' => $employeeId, 'kind' => 'start', 'effectiveDate' => ((string)($employee['startDate'] ?? '') === '' ? $period . '-01' : (string)$employee['startDate']), 'fields' => $fields, 'sourceSchema' => 'Employee', 'sourceId' => $employeeId, 'sentState' => $view]];
+			return [['employeeId' => $employeeId, 'kind' => 'start', 'effectiveDate' => ((string)($employee['startDate'] ?? '') === '' ? $period . '-01' : (string)$employee['startDate']), 'fields' => self::startFields(view: $view), 'sourceSchema' => 'Employee', 'sourceId' => $employeeId, 'sentState' => $view]];
 		}
 
 		$mutations = [];
 		foreach ($view as $kind => $values) {
-			$fields = [];
-			foreach ($values as $field => $value) {
-				$old = ($sent[$kind][$field] ?? null);
-				if ($old !== $value) {
-					$fields[$field] = ['old' => $old, 'new' => $value];
-				}
+			$fields = self::changedFields(values: $values, sent: (array)($sent[$kind] ?? []));
+			if ($fields !== []) {
+				[$sourceSchema, $sourceId, $effective] = $this->sourceOf(kind: $kind, employee: $employee, period: $period);
+				$mutations[] = ['employeeId' => $employeeId, 'kind' => $kind, 'effectiveDate' => $effective, 'fields' => $fields, 'sourceSchema' => $sourceSchema, 'sourceId' => $sourceId, 'sentState' => [$kind => $values]];
 			}
-
-			if ($fields === []) {
-				continue;
-			}
-
-			[$sourceSchema, $sourceId, $effective] = $this->sourceOf(kind: $kind, employee: $employee, period: $period);
-			$mutations[] = ['employeeId' => $employeeId, 'kind' => $kind, 'effectiveDate' => $effective, 'fields' => $fields, 'sourceSchema' => $sourceSchema, 'sourceId' => $sourceId, 'sentState' => [$kind => $values]];
 		}
 
 		return $mutations;
 	}//end differences()
+
+	/**
+	 * Every field of a starter's view, as new.
+	 *
+	 * @param array<string, array<string, mixed>> $view The employee's view, per kind.
+	 *
+	 * @return array<string, array{old: null, new: mixed}>
+	 */
+	private static function startFields(array $view): array {
+		$fields = [];
+		foreach ($view as $values) {
+			foreach ($values as $field => $value) {
+				$fields[$field] = ['old' => null, 'new' => $value];
+			}
+		}
+
+		return $fields;
+	}//end startFields()
+
+	/**
+	 * The fields of one kind whose value differs from what was sent.
+	 *
+	 * @param array<string, mixed> $values The current values.
+	 * @param array<string, mixed> $sent   What was sent for the kind.
+	 *
+	 * @return array<string, array{old: mixed, new: mixed}>
+	 */
+	private static function changedFields(array $values, array $sent): array {
+		$fields = [];
+		foreach ($values as $field => $value) {
+			$old = ($sent[$field] ?? null);
+			if ($old !== $value) {
+				$fields[$field] = ['old' => $old, 'new' => $value];
+			}
+		}
+
+		return $fields;
+	}//end changedFields()
 
 	/**
 	 * Where a change came from and from when it applies: a salary change

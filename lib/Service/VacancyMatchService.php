@@ -172,20 +172,8 @@ class VacancyMatchService {
 	 * @return list<array<string, mixed>>
 	 */
 	private function employees(array $requirements, string $today): array {
-		$held = [];
-		foreach ($this->gateway->loadAll('EmployeeCompetence') as $competence) {
-			$employeeId = (string)($competence['employeeId'] ?? '');
-			$issued = (string)($competence['issuedOn'] ?? '');
-			$until = (string)($competence['validUntil'] ?? '');
-			if ($employeeId === '' || ($issued !== '' && $issued > $today) || ($until !== '' && $until < $today)) {
-				continue;
-			}
-
-			$held[$employeeId][] = (string)($competence['competenceCode'] ?? '');
-		}
-
 		$rows = [];
-		foreach ($held as $employeeId => $codes) {
+		foreach ($this->heldCompetences(today: $today) as $employeeId => $codes) {
 			$employee = $this->gateway->findObjectData((string)$employeeId, 'Employee');
 			if ($employee === null) {
 				continue;
@@ -197,6 +185,40 @@ class VacancyMatchService {
 
 		return $rows;
 	}//end employees()
+
+	/**
+	 * The competence codes each colleague holds on the day, by employee, in first-seen order.
+	 *
+	 * @param string $today The day (Y-m-d).
+	 *
+	 * @return array<string, list<string>>
+	 */
+	private function heldCompetences(string $today): array {
+		$held = [];
+		foreach ($this->gateway->loadAll('EmployeeCompetence') as $competence) {
+			$employeeId = (string)($competence['employeeId'] ?? '');
+			if ($employeeId !== '' && self::isCurrentOn(competence: $competence, today: $today) === true) {
+				$held[$employeeId][] = (string)($competence['competenceCode'] ?? '');
+			}
+		}
+
+		return $held;
+	}//end heldCompetences()
+
+	/**
+	 * Whether a competence was issued by the day and is still valid on it; a missing date does not limit it.
+	 *
+	 * @param array<string, mixed> $competence The EmployeeCompetence.
+	 * @param string $today The day (Y-m-d).
+	 *
+	 * @return bool
+	 */
+	private static function isCurrentOn(array $competence, string $today): bool {
+		$issued = (string)($competence['issuedOn'] ?? '');
+		$until = (string)($competence['validUntil'] ?? '');
+
+		return ($issued === '' || $issued <= $today) && ($until === '' || $until >= $today);
+	}//end isCurrentOn()
 
 	/**
 	 * Whether an application may appear: in play, or rejected with talent-pool

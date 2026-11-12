@@ -3,6 +3,9 @@
 /**
  * Loonrun Flow Repair Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The v1 `Loonrun` declaration shipped its switch-gate condition as
  * `{"var": "review.outcome"}`. OpenRegister's `UserTaskNode::placeOutcome()`
  * writes the outcome bag INTO the item's record (`json.<outcomeKey>`), and
@@ -42,9 +45,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -124,14 +124,54 @@ class LoonrunFlowRepairService {
 			return ['status' => 'skipped', 'detail' => 'The shipped Loonrun flow is not imported on this instance.'];
 		}
 
+		return $this->repairFlow(flow: $flow);
+
+	}//end repair()
+
+	/**
+	 * Republish the flow's corrected head when its published v1 is untouched;
+	 * otherwise say why not.
+	 *
+	 * @param object $flow The stored Loonrun flow.
+	 *
+	 * @return array{status: string, detail: string}
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private function repairFlow(object $flow): array {
 		$published = $this->publishedGraph((string)$flow->getUuid());
 		if ($published === null) {
 			return ['status' => 'skipped', 'detail' => 'Loonrun has no published version. The corrected head publishes on adoption.'];
 		}
 
+		$leaveAlone = $this->reasonToLeave(flow: $flow, published: $published);
+		if ($leaveAlone !== null) {
+			return $leaveAlone;
+		}
+
+		$this->republish($flow);
+
+		return [
+			'status' => 'republished',
+			'detail' => 'Published Loonrun v' . (int)$flow->getVersion() . ' with the gate reading the record keypath.',
+		];
+	}//end repairFlow()
+
+	/**
+	 * Why the published flow is left as it is: its gate is already right,
+	 * it was edited after import, or an open draft would be shipped; null
+	 * when it may be republished.
+	 *
+	 * @param object               $flow      The stored Loonrun flow.
+	 * @param array<string, mixed> $published The published graph document.
+	 *
+	 * @return array{status: string, detail: string}|null
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private function reasonToLeave(object $flow, array $published): ?array {
 		$publishedNodes = (array)($published['nodes'] ?? []);
-		$outcomeKeys = $this->keypaths->outcomeKeys($publishedNodes);
-		if ($this->keypaths->carriesUnprefixedOutcomePath($publishedNodes, $outcomeKeys) === false) {
+		if ($this->keypaths->carriesUnprefixedOutcomePath($publishedNodes, $this->keypaths->outcomeKeys($publishedNodes)) === false) {
 			return ['status' => 'ok', 'detail' => 'The published Loonrun gate already reads the record keypath. Nothing to do.'];
 		}
 
@@ -150,14 +190,8 @@ class LoonrunFlowRepairService {
 			];
 		}
 
-		$this->republish($flow);
-
-		return [
-			'status' => 'republished',
-			'detail' => 'Published Loonrun v' . (int)$flow->getVersion() . ' with the gate reading the record keypath.',
-		];
-
-	}//end repair()
+		return null;
+	}//end reasonToLeave()
 
 	/**
 	 * The stored flow matching the shipped declaration's import identity.
@@ -249,7 +283,20 @@ class LoonrunFlowRepairService {
 			return null;
 		}
 
-		$flows = ($fragment['components']['schemas'][self::FLOW_TRIGGER_SCHEMA]['configuration']['x-openregister-flows'] ?? null);
+		return self::loonrunIn(flows: ($fragment['components']['schemas'][self::FLOW_TRIGGER_SCHEMA]['configuration']['x-openregister-flows'] ?? null));
+
+	}//end shippedDeclaration()
+
+	/**
+	 * The Loonrun declaration among a schema's declared flows.
+	 *
+	 * @param mixed $flows The schema's `x-openregister-flows`.
+	 *
+	 * @return array<string, mixed>|null The declaration, or null when absent.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private static function loonrunIn(mixed $flows): ?array {
 		if (is_array($flows) === false) {
 			return null;
 		}
@@ -261,8 +308,7 @@ class LoonrunFlowRepairService {
 		}
 
 		return null;
-
-	}//end shippedDeclaration()
+	}//end loonrunIn()
 
 	/**
 	 * Republish the corrected head, mirroring the builder's own sequence:

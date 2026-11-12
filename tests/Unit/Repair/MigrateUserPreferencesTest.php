@@ -3,6 +3,9 @@
 /**
  * Unit tests for MigrateUserPreferences.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * This is the half of the app-id rename that fails silently. `oc_preferences`
  * is namespaced by app id just like `oc_appconfig`, but per-user reads carry a
  * default — so a preference the rename cut off does not surface as an error,
@@ -30,9 +33,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -312,6 +312,34 @@ class MigrateUserPreferencesTest extends TestCase {
 
 		$this->assertSame(['humaniq:bob=ADM-002'], $writes);
 	}//end testAThrowingWriteIsLoggedAndTheWalkContinues()
+
+	/**
+	 * The report names both counts, and a failed write is logged with its key
+	 * and the new app id.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/app-identity/spec.md#REQ-AID-002
+	 */
+	public function testTheReportAndTheWarningOfAMixedWalk(): void {
+		$writes = [];
+		$output = $this->outputDouble();
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'MigrateUserPreferences: could not migrate one preference; leaving it under the old app id.',
+			['exception' => 'write refused', 'key' => 'active_administration_id', 'app' => 'humaniq']
+		);
+
+		(new MigrateUserPreferences(
+			$this->config(['alice' => 'ADM-001', 'bob' => 'ADM-002', 'dave' => 'ADM-004'], ['bob' => 'ADM-009'], $writes, throwsOn: 'dave'),
+			$this->userManager(['alice', 'bob', 'carol', 'dave']),
+			$logger
+		))->run($output);
+
+		$this->assertSame(['humaniq:alice=ADM-001'], $writes);
+		$this->assertSame(['MigrateUserPreferences: migrated 1 preference(s); 1 already set under humaniq.'], $output->infos);
+		$this->assertSame([], $output->warnings);
+	}//end testTheReportAndTheWarningOfAMixedWalk()
 
 	/**
 	 * An unusable user enumeration warns the operator and never throws.

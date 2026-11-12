@@ -3,6 +3,9 @@
 /**
  * Agenda Composer
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * What is planned for a person, a team or a room, composed on read from the
  * objects that already say it.
  *
@@ -33,9 +36,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -129,31 +129,74 @@ class AgendaComposer {
 
 		$entries = [];
 		foreach (($sources['assignments'] ?? []) as $assignment) {
-			$employeeId = trim((string)($assignment['employeeId'] ?? ''));
 			$date = substr(trim((string)($assignment['date'] ?? '')), 0, 10);
-			if (in_array($employeeId, $window->employees, true) === false || $date === '') {
-				continue;
+			if (self::employeeIn(row: $assignment, window: $window) !== null && $date !== '' && $date >= $window->from && $date <= $window->to) {
+				$entries[] = $this->shiftEntry(assignment: $assignment, shift: ($shiftsById[trim((string)($assignment['shiftId'] ?? ''))] ?? []));
 			}
-
-			if ($date < $window->from || $date > $window->to) {
-				continue;
-			}
-
-			$shift = ($shiftsById[trim((string)($assignment['shiftId'] ?? ''))] ?? []);
-			$entries[] = [
-				'kind' => 'shift',
-				'subjectType' => 'employee',
-				'subjectId' => $employeeId,
-				'start' => ($this->stringOrNull(($assignment['plannedStart'] ?? null)) ?? ($date . 'T00:00:00')),
-				'end' => ($this->stringOrNull(($assignment['plannedEnd'] ?? null)) ?? ($date . 'T23:59:59')),
-				'label' => trim((string)($shift['name'] ?? 'Dienst')),
-				'sourceType' => 'RosterAssignment',
-				'sourceId' => trim((string)($assignment['id'] ?? '')),
-			];
 		}
 
 		return $entries;
 	}//end shiftEntries()
+
+	/**
+	 * One rostered shift, at its planned times or over the whole day.
+	 *
+	 * @param array<string, mixed> $assignment The RosterAssignment.
+	 * @param array<string, mixed> $shift      Its Shift, or [].
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
+	 */
+	private function shiftEntry(array $assignment, array $shift): array {
+		$date = substr(trim((string)($assignment['date'] ?? '')), 0, 10);
+
+		return [
+			'kind' => 'shift',
+			'subjectType' => 'employee',
+			'subjectId' => trim((string)($assignment['employeeId'] ?? '')),
+			'start' => ($this->stringOrNull(($assignment['plannedStart'] ?? null)) ?? ($date . 'T00:00:00')),
+			'end' => ($this->stringOrNull(($assignment['plannedEnd'] ?? null)) ?? ($date . 'T23:59:59')),
+			'label' => trim((string)($shift['name'] ?? 'Dienst')),
+			'sourceType' => 'RosterAssignment',
+			'sourceId' => trim((string)($assignment['id'] ?? '')),
+		];
+	}//end shiftEntry()
+
+	/**
+	 * The row's employee when the window stands for them; null otherwise.
+	 *
+	 * @param array<string, mixed> $row    A row with an employeeId.
+	 * @param AgendaWindow         $window The subject's employees.
+	 *
+	 * @return string|null
+	 */
+	private static function employeeIn(array $row, AgendaWindow $window): ?string {
+		$employeeId = trim((string)($row['employeeId'] ?? ''));
+
+		return (in_array($employeeId, $window->employees, true) === true ? $employeeId : null);
+	}//end employeeIn()
+
+	/**
+	 * A whole-day entry from its first to its last day.
+	 *
+	 * @param array{kind: string, subjectId: string, label: string, sourceType: string, sourceId: string} $source What the entry is.
+	 * @param array{0: string, 1: string}                                                                  $days   The first and last day, Y-m-d.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function wholeDaysEntry(array $source, array $days): array {
+		return [
+			'kind' => $source['kind'],
+			'subjectType' => 'employee',
+			'subjectId' => $source['subjectId'],
+			'start' => ($days[0] . 'T00:00:00'),
+			'end' => ($days[1] . 'T23:59:59'),
+			'label' => $source['label'],
+			'sourceType' => $source['sourceType'],
+			'sourceId' => $source['sourceId'],
+		];
+	}//end wholeDaysEntry()
 
 	/**
 	 * Approved leave as agenda entries.
@@ -168,31 +211,16 @@ class AgendaComposer {
 	private function leaveEntries(array $sources, AgendaWindow $window): array {
 		$entries = [];
 		foreach (($sources['leaveRequests'] ?? []) as $request) {
-			$employeeId = trim((string)($request['employeeId'] ?? ''));
-			if (in_array($employeeId, $window->employees, true) === false) {
-				continue;
-			}
-
-			if (trim((string)($request['status'] ?? '')) !== 'approved') {
+			$employeeId = self::employeeIn(row: $request, window: $window);
+			if ($employeeId === null || trim((string)($request['status'] ?? '')) !== 'approved') {
 				continue;
 			}
 
 			$start = substr(trim((string)($request['startDate'] ?? '')), 0, 10);
 			$end = substr(trim((string)($request['endDate'] ?? '')), 0, 10);
-			if ($start === '' || $end === '' || $start > $window->to || $end < $window->from) {
-				continue;
+			if ($start !== '' && $end !== '' && $start <= $window->to && $end >= $window->from) {
+				$entries[] = self::wholeDaysEntry(source: ['kind' => 'leave', 'subjectId' => $employeeId, 'label' => 'Verlof', 'sourceType' => 'LeaveRequest', 'sourceId' => trim((string)($request['id'] ?? ''))], days: [$start, $end]);
 			}
-
-			$entries[] = [
-				'kind' => 'leave',
-				'subjectType' => 'employee',
-				'subjectId' => $employeeId,
-				'start' => ($start . 'T00:00:00'),
-				'end' => ($end . 'T23:59:59'),
-				'label' => 'Verlof',
-				'sourceType' => 'LeaveRequest',
-				'sourceId' => trim((string)($request['id'] ?? '')),
-			];
 		}
 
 		return $entries;
@@ -214,37 +242,38 @@ class AgendaComposer {
 	private function absenceEntries(array $sources, AgendaWindow $window): array {
 		$entries = [];
 		foreach (($sources['sickLeaveCases'] ?? []) as $case) {
-			$employeeId = trim((string)($case['employeeId'] ?? ''));
-			if (in_array($employeeId, $window->employees, true) === false) {
-				continue;
+			$employeeId = self::employeeIn(row: $case, window: $window);
+			$days = self::absenceDays(case: $case, window: $window);
+			if ($employeeId !== null && $days !== null) {
+				$entries[] = self::wholeDaysEntry(source: ['kind' => 'absent', 'subjectId' => $employeeId, 'label' => 'Afwezig', 'sourceType' => 'SickLeaveCase', 'sourceId' => trim((string)($case['id'] ?? ''))], days: $days);
 			}
-
-			$start = substr(trim((string)($case['firstSickDay'] ?? '')), 0, 10);
-			if ($start === '') {
-				continue;
-			}
-
-			$recovered = substr(trim((string)($case['recoveredDate'] ?? '')), 0, 10);
-			$closed = (trim((string)($case['status'] ?? '')) === 'hersteld');
-			$end = (($closed === true && $recovered !== '') ? $recovered : $window->to);
-			if ($start > $window->to || $end < $window->from) {
-				continue;
-			}
-
-			$entries[] = [
-				'kind' => 'absent',
-				'subjectType' => 'employee',
-				'subjectId' => $employeeId,
-				'start' => ($start . 'T00:00:00'),
-				'end' => ($end . 'T23:59:59'),
-				'label' => 'Afwezig',
-				'sourceType' => 'SickLeaveCase',
-				'sourceId' => trim((string)($case['id'] ?? '')),
-			];
 		}
 
 		return $entries;
 	}//end absenceEntries()
+
+	/**
+	 * The days a sick leave case covers inside the window: from the first sick
+	 * day to the recovery of a closed case, else to the window's end; null
+	 * when it does not touch the window.
+	 *
+	 * @param array<string, mixed> $case   The SickLeaveCase.
+	 * @param AgendaWindow         $window The first and last day.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private static function absenceDays(array $case, AgendaWindow $window): ?array {
+		$start = substr(trim((string)($case['firstSickDay'] ?? '')), 0, 10);
+		if ($start === '') {
+			return null;
+		}
+
+		$recovered = substr(trim((string)($case['recoveredDate'] ?? '')), 0, 10);
+		$closed = (trim((string)($case['status'] ?? '')) === 'hersteld');
+		$end = (($closed === true && $recovered !== '') ? $recovered : $window->to);
+
+		return ($start > $window->to || $end < $window->from) ? null : [$start, $end];
+	}//end absenceDays()
 
 	/**
 	 * Interviews as agenda entries.
@@ -259,37 +288,47 @@ class AgendaComposer {
 	private function interviewEntries(array $sources, AgendaWindow $window): array {
 		$entries = [];
 		foreach (($sources['interviews'] ?? []) as $interview) {
-			$start = $this->stringOrNull(($interview['scheduledStart'] ?? ($interview['start'] ?? null)));
-			$end = $this->stringOrNull(($interview['scheduledEnd'] ?? ($interview['end'] ?? null)));
-			if ($start === null) {
-				continue;
+			$entry = $this->interviewEntry(interview: $interview, window: $window);
+			if ($entry !== null) {
+				$entries[] = $entry;
 			}
-
-			$day = substr($start, 0, 10);
-			if ($day < $window->from || $day > $window->to) {
-				continue;
-			}
-
-			$participants = $this->interviewParticipants($interview);
-			$held = array_values(array_intersect($participants, $window->employees));
-			if ($held === []) {
-				continue;
-			}
-
-			$entries[] = [
-				'kind' => 'interview',
-				'subjectType' => 'employee',
-				'subjectId' => $held[0],
-				'start' => $start,
-				'end' => ($end ?? $start),
-				'label' => 'Gesprek',
-				'sourceType' => 'Interview',
-				'sourceId' => trim((string)($interview['id'] ?? '')),
-			];
 		}
 
 		return $entries;
 	}//end interviewEntries()
+
+	/**
+	 * One interview inside the window, on the first of its participants the
+	 * window stands for; null otherwise.
+	 *
+	 * @param array<string, mixed> $interview The interview row.
+	 * @param AgendaWindow         $window    The subject's employees and the first and last day.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function interviewEntry(array $interview, AgendaWindow $window): ?array {
+		$start = $this->stringOrNull(($interview['scheduledStart'] ?? ($interview['start'] ?? null)));
+		$end = $this->stringOrNull(($interview['scheduledEnd'] ?? ($interview['end'] ?? null)));
+		if ($start === null || substr($start, 0, 10) < $window->from || substr($start, 0, 10) > $window->to) {
+			return null;
+		}
+
+		$held = array_values(array_intersect($this->interviewParticipants($interview), $window->employees));
+		if ($held === []) {
+			return null;
+		}
+
+		return [
+			'kind' => 'interview',
+			'subjectType' => 'employee',
+			'subjectId' => $held[0],
+			'start' => $start,
+			'end' => ($end ?? $start),
+			'label' => 'Gesprek',
+			'sourceType' => 'Interview',
+			'sourceId' => trim((string)($interview['id'] ?? '')),
+		];
+	}//end interviewEntry()
 
 	/**
 	 * The employees an interview holds.

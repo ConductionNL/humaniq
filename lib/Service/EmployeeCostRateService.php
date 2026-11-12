@@ -3,6 +3,9 @@
 /**
  * Employee Cost Rate Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Resolves what one hour of an employee's time COSTS THE EMPLOYER — the
  * number a domain app multiplies by logged hours to get a cost allocation
  * (ADR-081 decision 4).
@@ -61,9 +64,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  */
@@ -185,28 +185,56 @@ class EmployeeCostRateService {
 		string $period = '',
 		array $extraAdditions = [],
 	): ?array {
-		$wage = $this->resolveOverride(employee: $employee);
-		if ($wage === null) {
-			$wage = $this->deriveFromContract(employee: $employee, contract: $contract, period: $period);
-		}
+		$costing = new ContractCosting();
+		$costing->employee = $employee;
+		$costing->contract = $contract;
+		$costing->period = $period;
 
+		$wage = ($this->resolveOverride(employee: $employee) ?? $this->deriveFromContract(costing: $costing));
 		if ($wage === null) {
 			return null;
 		}
 
-		$additions = $this->additions->normalise(
-			raw: array_merge(
-				(array)($employee['hourlyCostAdditions'] ?? []),
-				$extraAdditions
-			),
-			wageCents: $wage['centsPerHour']
+		$additions = $this->checkedAdditions(
+			wage: $wage,
+			raw: array_merge((array)($employee['hourlyCostAdditions'] ?? []), $extraAdditions)
 		);
+
+		return $this->rateOf(wage: $wage, additions: $additions);
+
+	}//end resolve()
+
+	/**
+	 * The additions resolved against the wage base, refused when they do not
+	 * fit it.
+	 *
+	 * @param array{centsPerHour: int, source: string, basis: string, blendsOvertime: bool} $wage The wage base.
+	 * @param array<int, array<string, mixed>>                                             $raw  The stored and caller-supplied additions.
+	 *
+	 * @return array<int, array{key: string, centsPerHour: int, source: string, basis: string}>
+	 *
+	 * @throws InvalidArgumentException When an addition carries no basis or does not fit the base.
+	 */
+	private function checkedAdditions(array $wage, array $raw): array {
+		$additions = $this->additions->normalise(raw: $raw, wageCents: $wage['centsPerHour']);
 
 		$this->additions->assertCompatible(
 			additions: $additions,
 			wageBaseBlendsOvertime: $wage['blendsOvertime']
 		);
 
+		return $additions;
+	}//end checkedAdditions()
+
+	/**
+	 * The cost rate: the wage base plus the additions.
+	 *
+	 * @param array{centsPerHour: int, source: string, basis: string, blendsOvertime: bool}   $wage      The wage base.
+	 * @param array<int, array{key: string, centsPerHour: int, source: string, basis: string}> $additions The checked additions.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function rateOf(array $wage, array $additions): array {
 		// Percentages already resolved against the WAGE BASE inside normalise(),
 		// never against a running total: compounding one addition onto another
 		// would make the result depend on the order they are listed in.
@@ -220,8 +248,7 @@ class EmployeeCostRateService {
 			'wageBaseBlendsOvertime' => $wage['blendsOvertime'],
 			'additions' => $additions,
 		];
-
-	}//end resolve()
+	}//end rateOf()
 
 	/**
 	 * Read the hand-set override, refusing an unexplained one.
@@ -243,6 +270,27 @@ class EmployeeCostRateService {
 			throw new InvalidArgumentException('hourlyCostRateOverrideCents must not be negative, got: ' . $cents);
 		}
 
+		// A hand-set base is whatever the administrator meant it to be; it
+		// carries no payslip's overtime blending.
+		return [
+			'centsPerHour' => $cents,
+			'source' => self::SOURCE_OVERRIDE,
+			'basis' => self::overrideReason(employee: $employee),
+			'blendsOvertime' => false,
+		];
+
+	}//end resolveOverride()
+
+	/**
+	 * Why the override exists, refusing one that does not say.
+	 *
+	 * @param array<string, mixed> $employee The Employee object as an array.
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException When no reason is recorded.
+	 */
+	private static function overrideReason(array $employee): string {
 		$reason = trim((string)($employee['hourlyCostRateOverrideReason'] ?? ''));
 		if ($reason === '') {
 			// Refused rather than ignored: silently falling back to the derived
@@ -255,16 +303,8 @@ class EmployeeCostRateService {
 			);
 		}
 
-		// A hand-set base is whatever the administrator meant it to be; it
-		// carries no payslip's overtime blending.
-		return [
-			'centsPerHour' => $cents,
-			'source' => self::SOURCE_OVERRIDE,
-			'basis' => $reason,
-			'blendsOvertime' => false,
-		];
-
-	}//end resolveOverride()
+		return $reason;
+	}//end overrideReason()
 
 	/**
 	 * Derive the loaded cost per hour from a proforma calculation over the
@@ -276,49 +316,79 @@ class EmployeeCostRateService {
 	 * contract's gross `hourlyWage` reconstitutes one, so an hourly-paid
 	 * employment still costs out.
 	 *
-	 * @param array<string, mixed> $employee The Employee object as an array.
-	 * @param array<string, mixed>|null $contract The active EmploymentContract as an array.
-	 * @param string $period Costing period as `YYYY-MM`.
+	 * @param ContractCosting $costing The employee, contract and period.
 	 *
 	 * @return array{centsPerHour: int, source: string, basis: string, blendsOvertime: bool}|null Null when the contract cannot yield a rate.
 	 */
-	private function deriveFromContract(array $employee, ?array $contract, string $period): ?array {
-		if ($contract === null || $period === '') {
+	private function deriveFromContract(ContractCosting $costing): ?array {
+		$monthlyHours = self::monthlyHoursOf(costing: $costing);
+		if ($monthlyHours === null) {
 			return null;
 		}
 
-		$hoursPerWeek = (float)($contract['hoursPerWeek'] ?? 0);
+		$breakdown = $this->proformaBreakdown(costing: $costing, monthlyHours: $monthlyHours);
+		if ($breakdown === null) {
+			return null;
+		}
+
+		$loadedCents = $this->loadedCents(breakdown: $breakdown);
+		if ($loadedCents <= 0) {
+			return null;
+		}
+
+		return self::contractWage(costing: $costing, centsPerHour: (int)round($loadedCents / $monthlyHours));
+
+	}//end deriveFromContract()
+
+	/**
+	 * The hours behind one contracted month; null without a contract, a
+	 * period or contracted hours.
+	 *
+	 * @param ContractCosting $costing The employee, contract and period.
+	 *
+	 * @return float|null
+	 */
+	private static function monthlyHoursOf(ContractCosting $costing): ?float {
+		if ($costing->contract === null || $costing->period === '') {
+			return null;
+		}
+
+		$hoursPerWeek = self::hoursPerWeekOf(costing: $costing);
 		if ($hoursPerWeek <= 0.0) {
 			return null;
 		}
 
-		$monthlyHours = ($hoursPerWeek * self::WEEKS_PER_YEAR / self::MONTHS_PER_YEAR);
+		return ($hoursPerWeek * self::WEEKS_PER_YEAR / self::MONTHS_PER_YEAR);
+	}//end monthlyHoursOf()
 
-		$grossMonthly = $this->resolveGrossMonthly(
-			employee: $employee,
-			contract: $contract,
-			monthlyHours: $monthlyHours
-		);
+	/**
+	 * The contract's weekly hours.
+	 *
+	 * @param ContractCosting $costing The employee, contract and period.
+	 *
+	 * @return float
+	 */
+	private static function hoursPerWeekOf(ContractCosting $costing): float {
+		return (float)($costing->contract['hoursPerWeek'] ?? 0);
+	}//end hoursPerWeekOf()
+
+	/**
+	 * The proforma breakdown of one plain month at the contract's salary;
+	 * null without a salary or when the calculator cannot price it.
+	 *
+	 * @param ContractCosting $costing      The employee, contract and period.
+	 * @param float           $monthlyHours Hours behind one contracted month.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function proformaBreakdown(ContractCosting $costing, float $monthlyHours): ?array {
+		$grossMonthly = $this->resolveGrossMonthly(costing: $costing, monthlyHours: $monthlyHours);
 		if ($grossMonthly === null || $grossMonthly <= 0.0) {
 			return null;
 		}
 
 		try {
-			// `bijzonder: 0` and `parttime: 1.0` deliberately: the contract's
-			// own hours ARE the denominator, and a one-off payment is not part
-			// of what an hour costs. This is what keeps the base free of the
-			// period noise a real payslip carries.
-			$breakdown = $this->proforma->simulate(
-				[
-					'gross' => $grossMonthly,
-					'table' => ($employee['taxTableColor'] ?? 'wit'),
-					'dateOfBirth' => ($employee['dateOfBirth'] ?? null),
-					'period' => $period,
-					'parttime' => 1.0,
-					'bijzonder' => 0.0,
-					'aof' => ($contract['aofTariff'] ?? null),
-				]
-			);
+			return $this->proforma->simulate(self::proformaParams(costing: $costing, grossMonthly: $grossMonthly));
 		} catch (Throwable $e) {
 			// A contract the calculator cannot price is a visible "no rate",
 			// not a zero — the caller surfaces it rather than booking the work
@@ -329,49 +399,103 @@ class EmployeeCostRateService {
 			);
 			return null;
 		}//end try
+	}//end proformaBreakdown()
 
-		$loadedCents = ($this->toCents(value: ($breakdown['grossPay'] ?? null)) ?? 0)
+	/**
+	 * The proforma's input for one plain month.
+	 *
+	 * `bijzonder: 0` and `parttime: 1.0` deliberately: the contract's own
+	 * hours ARE the denominator, and a one-off payment is not part of what an
+	 * hour costs. This is what keeps the base free of the period noise a real
+	 * payslip carries.
+	 *
+	 * @param ContractCosting $costing      The employee, contract and period.
+	 * @param float           $grossMonthly The gross monthly salary.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function proformaParams(ContractCosting $costing, float $grossMonthly): array {
+		return [
+			'gross' => $grossMonthly,
+			'table' => ($costing->employee['taxTableColor'] ?? 'wit'),
+			'dateOfBirth' => ($costing->employee['dateOfBirth'] ?? null),
+			'period' => $costing->period,
+			'parttime' => 1.0,
+			'bijzonder' => 0.0,
+			'aof' => ($costing->contract['aofTariff'] ?? null),
+		];
+	}//end proformaParams()
+
+	/**
+	 * What the month costs the employer in cents: gross plus the employer charges.
+	 *
+	 * @param array<string, mixed> $breakdown The proforma breakdown.
+	 *
+	 * @return int
+	 */
+	private function loadedCents(array $breakdown): int {
+		return ($this->toCents(value: ($breakdown['grossPay'] ?? null)) ?? 0)
 			+ ($this->toCents(value: ($breakdown['werknemersverzekeringen'] ?? null)) ?? 0)
 			+ ($this->toCents(value: ($breakdown['zvw'] ?? null)) ?? 0);
+	}//end loadedCents()
 
-		if ($loadedCents <= 0) {
-			return null;
-		}
-
+	/**
+	 * The contract-derived wage base.
+	 *
+	 * @param ContractCosting $costing      The employee, contract and period.
+	 * @param int             $centsPerHour The loaded cost per hour.
+	 *
+	 * @return array{centsPerHour: int, source: string, basis: string, blendsOvertime: bool}
+	 */
+	private static function contractWage(ContractCosting $costing, int $centsPerHour): array {
 		return [
-			'centsPerHour' => (int)round($loadedCents / $monthlyHours),
+			'centsPerHour' => $centsPerHour,
 			'source' => self::SOURCE_CONTRACT,
-			'basis' => 'proforma over the contract, ' . $period . ', '
-				. rtrim(rtrim(number_format($hoursPerWeek, 2, '.', ''), '0'), '.') . 'h/week',
+			'basis' => 'proforma over the contract, ' . $costing->period . ', '
+				. rtrim(rtrim(number_format(self::hoursPerWeekOf(costing: $costing), 2, '.', ''), '0'), '.') . 'h/week',
 			// A proforma over the contract contains no overtime, no one-offs
 			// and no sick pay, so an overtime addition on top is legitimate.
 			'blendsOvertime' => false,
 		];
-
-	}//end deriveFromContract()
+	}//end contractWage()
 
 	/**
 	 * Resolve the gross monthly salary the proforma should price.
 	 *
-	 * @param array<string, mixed> $employee The Employee object as an array.
-	 * @param array<string, mixed> $contract The EmploymentContract as an array.
-	 * @param float $monthlyHours Hours behind one contracted month.
+	 * @param ContractCosting $costing      The employee, contract and period.
+	 * @param float           $monthlyHours Hours behind one contracted month.
 	 *
 	 * @return float|null Null when neither a salary nor an hourly wage is recorded.
 	 */
-	private function resolveGrossMonthly(array $employee, array $contract, float $monthlyHours): ?float {
-		$salary = ($employee['grossMonthlySalary'] ?? null);
-		if ($salary !== null && $salary !== '' && is_numeric($salary) === true && (float)$salary > 0.0) {
-			return (float)$salary;
+	private function resolveGrossMonthly(ContractCosting $costing, float $monthlyHours): ?float {
+		$salary = self::positiveAmount(value: ($costing->employee['grossMonthlySalary'] ?? null));
+		if ($salary !== null) {
+			return $salary;
 		}
 
-		$hourly = ($contract['hourlyWage'] ?? null);
-		if ($hourly !== null && $hourly !== '' && is_numeric($hourly) === true && (float)$hourly > 0.0) {
-			return ((float)$hourly * $monthlyHours);
+		$hourly = self::positiveAmount(value: ($costing->contract['hourlyWage'] ?? null));
+		if ($hourly !== null) {
+			return ($hourly * $monthlyHours);
 		}
 
 		return null;
 	}//end resolveGrossMonthly()
+
+	/**
+	 * A recorded amount above zero, as a float; null when absent, not numeric
+	 * or not positive.
+	 *
+	 * @param mixed $value Raw field value.
+	 *
+	 * @return float|null
+	 */
+	private static function positiveAmount(mixed $value): ?float {
+		if ($value !== null && $value !== '' && is_numeric($value) === true && (float)$value > 0.0) {
+			return (float)$value;
+		}
+
+		return null;
+	}//end positiveAmount()
 
 	/**
 	 * Convert a euro amount to integer cents.

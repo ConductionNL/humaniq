@@ -82,11 +82,23 @@ class PayrollRunCommand extends Command {
 			return 1;
 		}
 
-		$administrationOption = $input->getOption('administration');
-		$administration = (is_string($administrationOption) === true && trim($administrationOption) !== '') ? trim($administrationOption) : null;
+		$result = $this->service->runFor($period, CommandOptions::trimmed($input, 'administration'), (bool)$input->getOption('recalculate'));
 
-		$result = $this->service->runFor($period, $administration, (bool)$input->getOption('recalculate'));
+		self::writeRun($output, $result);
+		self::writeTotals($output, $result['totals']);
 
+		return in_array((string)$result['status'], ['calculated', 'exists'], true) === true ? 0 : 1;
+	}//end execute()
+
+	/**
+	 * Write the run's heading, status and one line per computed or skipped employee.
+	 *
+	 * @param OutputInterface      $output Console output.
+	 * @param array<string, mixed> $result The runFor() outcome.
+	 *
+	 * @return void
+	 */
+	private static function writeRun(OutputInterface $output, array $result): void {
 		$output->writeln('<info>Humaniq payroll run</info>');
 		$output->writeln(sprintf('  periode        : %s', (string)$result['period']));
 		$output->writeln(sprintf('  administratie  : %s', (string)$result['administrationId']));
@@ -101,19 +113,29 @@ class PayrollRunCommand extends Command {
 			$output->writeln(sprintf('    overgeslagen : %s — %s', (string)$line['employee'], (string)$line['reason']));
 		}
 
-		$totals = $result['totals'];
-		if (is_array($totals) === true) {
-			$output->writeln(sprintf(
-				'  totalen        : bruto %.2f / loonheffing %.2f / werkgeverslasten %.2f / netto %.2f',
-				(float)$totals['totalGross'],
-				(float)$totals['totalLoonheffing'],
-				(float)$totals['totalEmployerCharges'],
-				(float)$totals['totalNet']
-			));
+	}//end writeRun()
+
+	/**
+	 * Write the run totals, when the run has them.
+	 *
+	 * @param OutputInterface $output Console output.
+	 * @param mixed           $totals The run totals, or anything else when there are none.
+	 *
+	 * @return void
+	 */
+	private static function writeTotals(OutputInterface $output, mixed $totals): void {
+		if (is_array($totals) === false) {
+			return;
 		}
 
-		$status = (string)$result['status'];
-		return in_array($status, ['calculated', 'exists'], true) === true ? 0 : 1;
-	}//end execute()
+		$output->writeln(sprintf(
+			'  totalen        : bruto %.2f / loonheffing %.2f / werkgeverslasten %.2f / netto %.2f',
+			(float)$totals['totalGross'],
+			(float)$totals['totalLoonheffing'],
+			(float)$totals['totalEmployerCharges'],
+			(float)$totals['totalNet']
+		));
+
+	}//end writeTotals()
 
 }//end class

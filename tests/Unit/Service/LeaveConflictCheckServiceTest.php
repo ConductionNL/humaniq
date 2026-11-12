@@ -46,6 +46,56 @@ class LeaveConflictCheckServiceTest extends TestCase {
 	}//end assignmentOn()
 
 	/**
+	 * The whole findings: approved leave wins over a sick case on the same
+	 * day; a recovered case ends on its recovery date; assignments without an
+	 * employee or date and days without absence give nothing.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeFindings(): void {
+		$finding = static fn (string $id, string $employee, string $date, array $source): array => [
+			'kind' => 'leave',
+			'objectType' => 'RosterAssignment',
+			'objectId' => $id,
+			'employeeId' => $employee,
+			'date' => $date,
+			'absence' => $source[0],
+			'sourceType' => $source[1],
+			'sourceId' => $source[2],
+			'severity' => $source[3],
+			'statement' => 'Medewerker ' . $employee . ' is op ' . $date . ' ingeroosterd maar ' . ($source[0] === 'leave' ? 'heeft goedgekeurd verlof.' : 'is afwezig.'),
+		];
+		$findings = (new LeaveConflictCheckService())->findings(
+			assignments: [
+				['id' => 'a-1', 'employeeId' => 'emp-1', 'date' => '2026-07-15T08:00:00'],
+				['@self' => ['id' => 'a-2'], 'employeeId' => ' emp-1 ', 'date' => '2026-07-20'],
+				['id' => 'a-3', 'employeeId' => 'emp-2', 'date' => '2026-07-10'],
+				['id' => 'a-4', 'employeeId' => 'emp-2', 'date' => '2026-07-11'],
+				['id' => 'a-5', 'employeeId' => '', 'date' => '2026-07-15'],
+				['id' => 'a-6', 'employeeId' => 'emp-1', 'date' => ''],
+				['id' => 'a-7', 'employeeId' => 'emp-3', 'date' => '2026-07-15'],
+			],
+			leaveRequests: [
+				['id' => 'lr-draft', 'employeeId' => 'emp-1', 'status' => 'submitted', 'startDate' => '2026-07-20', 'endDate' => '2026-07-20'],
+				['@self' => ['id' => 'lr-1'], 'employeeId' => 'emp-1', 'status' => 'approved', 'startDate' => '2026-07-14', 'endDate' => '2026-07-15'],
+			],
+			sickLeaveCases: [
+				['id' => 'sl-1', 'employeeId' => 'emp-1', 'firstSickDay' => '2026-07-01', 'status' => 'gemeld'],
+				['id' => 'sl-2', 'employeeId' => 'emp-2', 'firstSickDay' => '2026-07-01', 'status' => 'hersteld', 'recoveredDate' => '2026-07-10'],
+			]
+		);
+
+		$this->assertSame(
+			[
+				$finding('a-1', 'emp-1', '2026-07-15', ['leave', 'LeaveRequest', 'lr-1', 'mandatory']),
+				$finding('a-2', 'emp-1', '2026-07-20', ['absent', 'SickLeaveCase', 'sl-1', 'advisory']),
+				$finding('a-3', 'emp-2', '2026-07-10', ['absent', 'SickLeaveCase', 'sl-2', 'advisory']),
+			],
+			$findings
+		);
+	}//end testTheWholeFindings()
+
+	/**
 	 * Approved leave covering the assignment date is a mandatory `leave` finding
 	 * naming the employee, the date and the leave request.
 	 *

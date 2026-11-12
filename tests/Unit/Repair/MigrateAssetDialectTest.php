@@ -3,6 +3,9 @@
 /**
  * Unit tests for MigrateAssetDialect.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The repair step is the UNCONDITIONAL half of this migration's delivery: the
  * `occ humaniq:assets:migrate-dialect` command is opt-in and a human has to know
  * to run it, whereas this runs on every upgrade. It was the one new class in
@@ -29,9 +32,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

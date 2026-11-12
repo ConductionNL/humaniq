@@ -1,0 +1,650 @@
+{
+    "people": {
+        "tree": [
+            {
+                "id": "gem",
+                "label": "Gemeente",
+                "managerId": "e-boss",
+                "managerName": "Anna Baas",
+                "headcount": 0,
+                "badge": "0",
+                "x": 1.25,
+                "y": 0,
+                "children": [
+                    {
+                        "id": "dir-a",
+                        "label": "Directie A",
+                        "managerId": null,
+                        "managerName": "",
+                        "headcount": 0,
+                        "badge": "0",
+                        "x": 0.5,
+                        "y": 1,
+                        "children": [
+                            {
+                                "id": "team-1",
+                                "label": "Team 1",
+                                "managerId": "e-1",
+                                "managerName": "Sam Jansen",
+                                "headcount": 2,
+                                "badge": "2",
+                                "x": 0,
+                                "y": 2,
+                                "children": [],
+                                "people": [
+                                    {
+                                        "id": "e-1",
+                                        "name": "Sam Jansen",
+                                        "role": "Teamleider"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "team-2",
+                                "label": "Team 2",
+                                "managerId": null,
+                                "managerName": "",
+                                "headcount": 0,
+                                "badge": "0",
+                                "x": 1,
+                                "y": 2,
+                                "children": [],
+                                "people": []
+                            }
+                        ],
+                        "people": []
+                    },
+                    {
+                        "id": "dir-b",
+                        "label": "Directie B",
+                        "managerId": null,
+                        "managerName": "",
+                        "headcount": 0,
+                        "badge": "0",
+                        "x": 2,
+                        "y": 1,
+                        "children": [
+                            {
+                                "id": "team-3",
+                                "label": "Team 3",
+                                "managerId": null,
+                                "managerName": "",
+                                "headcount": 1,
+                                "badge": "1",
+                                "x": 2,
+                                "y": 2,
+                                "children": [],
+                                "people": [
+                                    {
+                                        "id": "e-3",
+                                        "name": "Lars Visser",
+                                        "role": "Adviseur"
+                                    }
+                                ]
+                            }
+                        ],
+                        "people": []
+                    }
+                ],
+                "people": []
+            },
+            {
+                "id": "self",
+                "label": "Zelf",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 3,
+                "y": 0,
+                "children": [],
+                "people": []
+            }
+        ],
+        "nodes": [
+            {
+                "id": "team-1",
+                "label": "Team 1",
+                "managerId": "e-1",
+                "managerName": "Sam Jansen",
+                "headcount": 2,
+                "badge": "2",
+                "x": 0,
+                "y": 2,
+                "parentId": "dir-a"
+            },
+            {
+                "id": "team-2",
+                "label": "Team 2",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 1,
+                "y": 2,
+                "parentId": "dir-a"
+            },
+            {
+                "id": "dir-a",
+                "label": "Directie A",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 0.5,
+                "y": 1,
+                "parentId": "gem"
+            },
+            {
+                "id": "team-3",
+                "label": "Team 3",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 1,
+                "badge": "1",
+                "x": 2,
+                "y": 2,
+                "parentId": "dir-b"
+            },
+            {
+                "id": "dir-b",
+                "label": "Directie B",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 2,
+                "y": 1,
+                "parentId": "gem"
+            },
+            {
+                "id": "gem",
+                "label": "Gemeente",
+                "managerId": "e-boss",
+                "managerName": "Anna Baas",
+                "headcount": 0,
+                "badge": "0",
+                "x": 1.25,
+                "y": 0,
+                "parentId": null
+            },
+            {
+                "id": "self",
+                "label": "Zelf",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 3,
+                "y": 0,
+                "parentId": null
+            }
+        ],
+        "edges": [
+            {
+                "source": "dir-a",
+                "target": "team-1"
+            },
+            {
+                "source": "dir-a",
+                "target": "team-2"
+            },
+            {
+                "source": "gem",
+                "target": "dir-a"
+            },
+            {
+                "source": "dir-b",
+                "target": "team-3"
+            },
+            {
+                "source": "gem",
+                "target": "dir-b"
+            }
+        ],
+        "width": 4,
+        "depth": 3
+    },
+    "no people": {
+        "tree": [
+            {
+                "id": "gem",
+                "label": "Gemeente",
+                "managerId": "e-boss",
+                "managerName": "Anna Baas",
+                "headcount": 0,
+                "badge": "0",
+                "x": 1.25,
+                "y": 0,
+                "children": [
+                    {
+                        "id": "dir-a",
+                        "label": "Directie A",
+                        "managerId": null,
+                        "managerName": "",
+                        "headcount": 0,
+                        "badge": "0",
+                        "x": 0.5,
+                        "y": 1,
+                        "children": [
+                            {
+                                "id": "team-1",
+                                "label": "Team 1",
+                                "managerId": "e-1",
+                                "managerName": "Sam Jansen",
+                                "headcount": 2,
+                                "badge": "2",
+                                "x": 0,
+                                "y": 2,
+                                "children": []
+                            },
+                            {
+                                "id": "team-2",
+                                "label": "Team 2",
+                                "managerId": null,
+                                "managerName": "",
+                                "headcount": 0,
+                                "badge": "0",
+                                "x": 1,
+                                "y": 2,
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "dir-b",
+                        "label": "Directie B",
+                        "managerId": null,
+                        "managerName": "",
+                        "headcount": 0,
+                        "badge": "0",
+                        "x": 2,
+                        "y": 1,
+                        "children": [
+                            {
+                                "id": "team-3",
+                                "label": "Team 3",
+                                "managerId": null,
+                                "managerName": "",
+                                "headcount": 1,
+                                "badge": "1",
+                                "x": 2,
+                                "y": 2,
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "self",
+                "label": "Zelf",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 3,
+                "y": 0,
+                "children": []
+            }
+        ],
+        "nodes": [
+            {
+                "id": "team-1",
+                "label": "Team 1",
+                "managerId": "e-1",
+                "managerName": "Sam Jansen",
+                "headcount": 2,
+                "badge": "2",
+                "x": 0,
+                "y": 2,
+                "parentId": "dir-a"
+            },
+            {
+                "id": "team-2",
+                "label": "Team 2",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 1,
+                "y": 2,
+                "parentId": "dir-a"
+            },
+            {
+                "id": "dir-a",
+                "label": "Directie A",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 0.5,
+                "y": 1,
+                "parentId": "gem"
+            },
+            {
+                "id": "team-3",
+                "label": "Team 3",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 1,
+                "badge": "1",
+                "x": 2,
+                "y": 2,
+                "parentId": "dir-b"
+            },
+            {
+                "id": "dir-b",
+                "label": "Directie B",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 2,
+                "y": 1,
+                "parentId": "gem"
+            },
+            {
+                "id": "gem",
+                "label": "Gemeente",
+                "managerId": "e-boss",
+                "managerName": "Anna Baas",
+                "headcount": 0,
+                "badge": "0",
+                "x": 1.25,
+                "y": 0,
+                "parentId": null
+            },
+            {
+                "id": "self",
+                "label": "Zelf",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 3,
+                "y": 0,
+                "parentId": null
+            }
+        ],
+        "edges": [
+            {
+                "source": "dir-a",
+                "target": "team-1"
+            },
+            {
+                "source": "dir-a",
+                "target": "team-2"
+            },
+            {
+                "source": "gem",
+                "target": "dir-a"
+            },
+            {
+                "source": "dir-b",
+                "target": "team-3"
+            },
+            {
+                "source": "gem",
+                "target": "dir-b"
+            }
+        ],
+        "width": 4,
+        "depth": 3
+    },
+    "root": {
+        "tree": [
+            {
+                "id": "dir-b",
+                "label": "Directie B",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 0,
+                "y": 0,
+                "children": [
+                    {
+                        "id": "team-3",
+                        "label": "Team 3",
+                        "managerId": null,
+                        "managerName": "",
+                        "headcount": 1,
+                        "badge": "1",
+                        "x": 0,
+                        "y": 1,
+                        "children": [],
+                        "people": []
+                    }
+                ],
+                "people": []
+            }
+        ],
+        "nodes": [
+            {
+                "id": "team-3",
+                "label": "Team 3",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 1,
+                "badge": "1",
+                "x": 0,
+                "y": 1,
+                "parentId": "dir-b"
+            },
+            {
+                "id": "dir-b",
+                "label": "Directie B",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 0,
+                "y": 0,
+                "parentId": null
+            }
+        ],
+        "edges": [
+            {
+                "source": "dir-b",
+                "target": "team-3"
+            }
+        ],
+        "width": 1,
+        "depth": 2
+    },
+    "unknown root": {
+        "tree": [],
+        "nodes": [],
+        "edges": [],
+        "width": 0,
+        "depth": 0
+    },
+    "empty root": {
+        "tree": [
+            {
+                "id": "gem",
+                "label": "Gemeente",
+                "managerId": "e-boss",
+                "managerName": "Anna Baas",
+                "headcount": 0,
+                "badge": "0",
+                "x": 1.25,
+                "y": 0,
+                "children": [
+                    {
+                        "id": "dir-a",
+                        "label": "Directie A",
+                        "managerId": null,
+                        "managerName": "",
+                        "headcount": 0,
+                        "badge": "0",
+                        "x": 0.5,
+                        "y": 1,
+                        "children": [
+                            {
+                                "id": "team-1",
+                                "label": "Team 1",
+                                "managerId": "e-1",
+                                "managerName": "Sam Jansen",
+                                "headcount": 2,
+                                "badge": "2",
+                                "x": 0,
+                                "y": 2,
+                                "children": []
+                            },
+                            {
+                                "id": "team-2",
+                                "label": "Team 2",
+                                "managerId": null,
+                                "managerName": "",
+                                "headcount": 0,
+                                "badge": "0",
+                                "x": 1,
+                                "y": 2,
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "dir-b",
+                        "label": "Directie B",
+                        "managerId": null,
+                        "managerName": "",
+                        "headcount": 0,
+                        "badge": "0",
+                        "x": 2,
+                        "y": 1,
+                        "children": [
+                            {
+                                "id": "team-3",
+                                "label": "Team 3",
+                                "managerId": null,
+                                "managerName": "",
+                                "headcount": 1,
+                                "badge": "1",
+                                "x": 2,
+                                "y": 2,
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "self",
+                "label": "Zelf",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 3,
+                "y": 0,
+                "children": []
+            }
+        ],
+        "nodes": [
+            {
+                "id": "team-1",
+                "label": "Team 1",
+                "managerId": "e-1",
+                "managerName": "Sam Jansen",
+                "headcount": 2,
+                "badge": "2",
+                "x": 0,
+                "y": 2,
+                "parentId": "dir-a"
+            },
+            {
+                "id": "team-2",
+                "label": "Team 2",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 1,
+                "y": 2,
+                "parentId": "dir-a"
+            },
+            {
+                "id": "dir-a",
+                "label": "Directie A",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 0.5,
+                "y": 1,
+                "parentId": "gem"
+            },
+            {
+                "id": "team-3",
+                "label": "Team 3",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 1,
+                "badge": "1",
+                "x": 2,
+                "y": 2,
+                "parentId": "dir-b"
+            },
+            {
+                "id": "dir-b",
+                "label": "Directie B",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 2,
+                "y": 1,
+                "parentId": "gem"
+            },
+            {
+                "id": "gem",
+                "label": "Gemeente",
+                "managerId": "e-boss",
+                "managerName": "Anna Baas",
+                "headcount": 0,
+                "badge": "0",
+                "x": 1.25,
+                "y": 0,
+                "parentId": null
+            },
+            {
+                "id": "self",
+                "label": "Zelf",
+                "managerId": null,
+                "managerName": "",
+                "headcount": 0,
+                "badge": "0",
+                "x": 3,
+                "y": 0,
+                "parentId": null
+            }
+        ],
+        "edges": [
+            {
+                "source": "dir-a",
+                "target": "team-1"
+            },
+            {
+                "source": "dir-a",
+                "target": "team-2"
+            },
+            {
+                "source": "gem",
+                "target": "dir-a"
+            },
+            {
+                "source": "dir-b",
+                "target": "team-3"
+            },
+            {
+                "source": "gem",
+                "target": "dir-b"
+            }
+        ],
+        "width": 4,
+        "depth": 3
+    }
+}

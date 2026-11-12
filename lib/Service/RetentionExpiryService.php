@@ -66,6 +66,13 @@ class RetentionExpiryService {
 	private const LIMIT = 10000;
 
 	/**
+	 * The dry-run counter for each write counter.
+	 *
+	 * @var array<string, string>
+	 */
+	private const DRY_RUN_COUNTERS = ['released' => 'wouldRelease', 'marked' => 'wouldMark'];
+
+	/**
 	 * @param ContainerInterface           $container       DI container for OpenRegister's ObjectService.
 	 * @param SettingsService              $settingsService Register slug and the admin switch.
 	 * @param LoggerInterface              $logger          Logger.
@@ -95,13 +102,13 @@ class RetentionExpiryService {
 		foreach (self::HOLD_SCHEMAS as $schema) {
 			foreach ($this->loadAll($schema) as $object) {
 				$result = $this->releaseLapsedFloorHold($object, $schema, $today, $apply);
-				$summary = $this->count($summary, $result['eligible'], $result['released'], 'released', 'wouldRelease');
+				$summary = $this->count(summary: $summary, result: $result);
 			}
 		}
 
 		foreach ($this->loadAll('Employee') as $object) {
 			$result = $this->markEndedEmployee($object, $today, $apply);
-			$summary = $this->count($summary, $result['eligible'], $result['marked'], 'marked', 'wouldMark');
+			$summary = $this->count(summary: $summary, result: $result);
 		}
 
 		return $summary;
@@ -315,27 +322,27 @@ class RetentionExpiryService {
 	}//end retentionService()
 
 	/**
-	 * Add one record's outcome to the summary.
+	 * Add one record's outcome to the summary: a released floor hold counts
+	 * under `released`, a marked employee under `marked`, and a dry run under
+	 * the matching `would` counter.
 	 *
-	 * @param array<string, bool|int> $summary  The running summary.
-	 * @param bool                    $eligible Whether the record had expired.
-	 * @param bool                    $done     Whether it was written.
-	 * @param string                  $doneKey  The counter for a write.
-	 * @param string                  $wouldKey The counter for a dry run.
+	 * @param array{enabled: bool, released: int, marked: int, wouldRelease: int, wouldMark: int} $summary The running summary.
+	 * @param array{eligible: bool, released?: bool, marked?: bool, floor: string|null} $result  The record's outcome.
 	 *
 	 * @return array{enabled: bool, released: int, marked: int, wouldRelease: int, wouldMark: int}
 	 */
-	private function count(array $summary, bool $eligible, bool $done, string $doneKey, string $wouldKey): array {
-		if ($eligible === false) {
+	private function count(array $summary, array $result): array {
+		if ($result['eligible'] === false) {
 			return $summary;
 		}
 
+		$doneKey = array_key_exists('released', $result) === true ? 'released' : 'marked';
 		if ($summary['enabled'] === false) {
-			$summary[$wouldKey]++;
+			$summary[self::DRY_RUN_COUNTERS[$doneKey]]++;
 			return $summary;
 		}
 
-		if ($done === true) {
+		if ($result[$doneKey] === true) {
 			$summary[$doneKey]++;
 		}
 

@@ -49,3 +49,7 @@ the seed owner; this change does not edit the seed.
 - Which units a manager leads (`UnitMembership::managedUnitIds`, department
   figures). That reads the tree downwards and is unchanged.
 - The org chart's manager column, which shows a unit's own manager.
+
+## Matrix rows
+
+Rows: `ess-manager-team` (humaniq `openspec/parity/capabilities.json`).

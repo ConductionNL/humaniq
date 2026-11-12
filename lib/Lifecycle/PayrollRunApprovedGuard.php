@@ -3,6 +3,9 @@
 /**
  * Humaniq PayrollRunApprovedGuard
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * OpenRegister lifecycle guard for the PensionFiling `controleren` transition
  * (pension-filing-upa-mvp). It enforces the one precondition the declarative
  * `x-openregister-lifecycle` state machine cannot express on its own: a UPA
@@ -30,9 +33,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

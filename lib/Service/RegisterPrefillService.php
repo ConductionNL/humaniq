@@ -99,15 +99,34 @@ class RegisterPrefillService {
 		}
 
 		$query = ['query' => ['kenteken' => $plate]];
-		$vehicles = $this->gateway->call(register: 'rdw', endpoint: self::RDW_VEHICLE_ENDPOINT, method: 'GET', config: $query);
+		$vehicles = $this->rdwLookup(endpoint: self::RDW_VEHICLE_ENDPOINT, config: $query);
 		if (is_array($vehicles[0] ?? null) === false) {
 			throw new RegisterPrefillUnavailableException('Het RDW-register kent kenteken ' . $plate . ' niet.', 'not-found');
 		}
 
-		$fuels = $this->gateway->call(register: 'rdw', endpoint: self::RDW_FUEL_ENDPOINT, method: 'GET', config: $query);
+		$fuels = $this->rdwLookup(endpoint: self::RDW_FUEL_ENDPOINT, config: $query);
 
 		return $this->merge($asset, $this->rdw->map($vehicles[0], array_values(array_filter($fuels, 'is_array'))));
 	}//end vehicle()
+
+	/**
+	 * A GET to an RDW path, with a CallLog.
+	 *
+	 * @param string               $endpoint The path on the RDW source.
+	 * @param array<string, mixed> $config   The request config.
+	 *
+	 * @return array<mixed>
+	 *
+	 * @throws RegisterPrefillUnavailableException When nothing can be looked up.
+	 */
+	private function rdwLookup(string $endpoint, array $config): array {
+		$call = new RegisterCall();
+		$call->register = 'rdw';
+		$call->endpoint = $endpoint;
+		$call->config = $config;
+
+		return $this->gateway->call(call: $call);
+	}//end rdwLookup()
 
 	/**
 	 * Fill an employee from the BRP by BSN.
@@ -131,13 +150,13 @@ class RegisterPrefillService {
 			'burgerservicenummer' => [$bsn],
 			'fields' => self::BRP_FIELDS,
 		];
-		$answer = $this->gateway->call(
-			register: 'brp',
-			endpoint: self::BRP_ENDPOINT,
-			method: 'POST',
-			config: ['body' => json_encode($request), 'headers' => ['Content-Type' => 'application/json']],
-			persistLog: false
-		);
+		$call = new RegisterCall();
+		$call->register = 'brp';
+		$call->endpoint = self::BRP_ENDPOINT;
+		$call->method = 'POST';
+		$call->config = ['body' => json_encode($request), 'headers' => ['Content-Type' => 'application/json']];
+		$call->persistLog = false;
+		$answer = $this->gateway->call(call: $call);
 		$person = ($answer['personen'][0] ?? null);
 		if (is_array($person) === false) {
 			throw new RegisterPrefillUnavailableException('De BRP kent deze medewerker niet.', 'not-found');

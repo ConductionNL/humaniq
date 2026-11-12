@@ -195,41 +195,79 @@ class CostAllocationService {
 			return 0;
 		}
 
-		foreach ($this->gateway->findFiltered(self::LINE_SCHEMA, ['payrollRunId' => $runId]) as $stale) {
-			$this->gateway->delete((string)($stale['id'] ?? ''), self::LINE_SCHEMA);
-		}
-
+		$this->deleteLinesOf(runId: $runId);
 		if ($payslips === []) {
 			return 0;
 		}
 
-		$inputs = $this->inputs($period);
+		$run = new CostAllocationRun();
+		$run->runId = $runId;
+		$run->period = $period;
+		$run->administrationId = $administrationId;
+		$run->inputs = $this->inputs($period);
 		$written = 0;
 		foreach ($payslips as $payslip) {
-			$employeeId = (string)($payslip['employeeId'] ?? '');
-			$shares = $this->splitFor(employeeId: $employeeId, period: $period, inputs: $inputs);
-			foreach ($this->linesFor($shares, (int)$payslip['grossCents'], (int)$payslip['chargesCents']) as $line) {
-				$this->gateway->save(
-					payload: array_merge(
-						$line,
-						[
-							'payslipId' => (string)$payslip['payslipId'],
-							'payrollRunId' => $runId,
-							'period' => $period,
-							'employeeId' => ($employeeId === '' ? null : $employeeId),
-							'administrationId' => ($administrationId === '' ? null : $administrationId),
-						]
-					),
-					schema: self::LINE_SCHEMA
-				);
-				$written++;
-			}
+			$written += $this->writeLinesOf(run: $run, payslip: $payslip);
 		}
 
 		$this->logger->debug('CostAllocationService: ' . $written . ' allocation lines for run ' . $runId);
 
 		return $written;
 	}//end allocateRun()
+
+	/**
+	 * Delete the lines a run wrote before.
+	 *
+	 * @param string $runId The run.
+	 *
+	 * @return void
+	 */
+	private function deleteLinesOf(string $runId): void {
+		foreach ($this->gateway->findFiltered(self::LINE_SCHEMA, ['payrollRunId' => $runId]) as $stale) {
+			$this->gateway->delete((string)($stale['id'] ?? ''), self::LINE_SCHEMA);
+		}
+	}//end deleteLinesOf()
+
+	/**
+	 * Write one payslip's allocation lines.
+	 *
+	 * @param CostAllocationRun    $run     The run.
+	 * @param array<string, mixed> $payslip payslipId, employeeId, grossCents, chargesCents.
+	 *
+	 * @return int The number of lines written.
+	 */
+	private function writeLinesOf(CostAllocationRun $run, array $payslip): int {
+		$employeeId = (string)($payslip['employeeId'] ?? '');
+		$shares = $this->splitFor(employeeId: $employeeId, period: $run->period, inputs: $run->inputs);
+		$written = 0;
+		foreach ($this->linesFor($shares, (int)$payslip['grossCents'], (int)$payslip['chargesCents']) as $line) {
+			$this->gateway->save(payload: array_merge($line, self::lineReferences(run: $run, payslip: $payslip)), schema: self::LINE_SCHEMA);
+			$written++;
+		}
+
+		return $written;
+	}//end writeLinesOf()
+
+	/**
+	 * What a line refers to: the payslip, the run, the period, the employee
+	 * and the administration (null when blank).
+	 *
+	 * @param CostAllocationRun    $run     The run.
+	 * @param array<string, mixed> $payslip The payslip.
+	 *
+	 * @return array<string, string|null>
+	 */
+	private static function lineReferences(CostAllocationRun $run, array $payslip): array {
+		$employeeId = (string)($payslip['employeeId'] ?? '');
+
+		return [
+			'payslipId' => (string)$payslip['payslipId'],
+			'payrollRunId' => $run->runId,
+			'period' => $run->period,
+			'employeeId' => ($employeeId === '' ? null : $employeeId),
+			'administrationId' => ($run->administrationId === '' ? null : $run->administrationId),
+		];
+	}//end lineReferences()
 
 	/**
 	 * The approved time entries of the period, per employee, for the

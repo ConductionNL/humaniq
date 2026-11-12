@@ -3,6 +3,9 @@
 /**
  * Competence Check Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Whether the person on a shift is qualified to work it, on the date they are
  * planned for.
  *
@@ -32,9 +35,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -81,43 +81,78 @@ class CompetenceCheckService {
 	public function findings(array $assignments, array $shiftsById, array $competences): array {
 		$findings = [];
 		foreach ($assignments as $assignment) {
-			$shift = ($shiftsById[trim((string)($assignment['shiftId'] ?? ''))] ?? null);
-			if (is_array($shift) === false) {
-				continue;
-			}
-
-			$required = $this->requiredCompetences($shift);
-			if ($required === []) {
-				continue;
-			}
-
-			$employeeId = trim((string)($assignment['employeeId'] ?? ''));
-			$date = substr(trim((string)($assignment['date'] ?? '')), 0, 10);
-			if ($employeeId === '' || $date === '') {
-				continue;
-			}
-
-			foreach ($required as $code) {
-				if ($this->holds(competences: $competences, employeeId: $employeeId, code: $code, date: $date) === true) {
-					continue;
+			foreach ($this->requiredFor(assignment: $assignment, shiftsById: $shiftsById) as $code) {
+				if ($this->holds(competences: $competences, employeeId: trim((string)($assignment['employeeId'] ?? '')), code: $code, date: self::dateOf(assignment: $assignment)) === false) {
+					$findings[] = self::missingFinding(assignment: $assignment, code: $code);
 				}
-
-				$findings[] = [
-					'kind' => self::FINDING_KIND,
-					'objectType' => 'RosterAssignment',
-					'objectId' => trim((string)($assignment['id'] ?? ($assignment['@self']['id'] ?? ''))),
-					'employeeId' => $employeeId,
-					'date' => $date,
-					'competence' => $code,
-					'severity' => 'mandatory',
-					'statement' => 'Medewerker ' . $employeeId . ' heeft op ' . $date
-						. ' geen geldige bevoegdheid ' . $code . ' voor deze dienst.',
-				];
 			}
 		}
 
 		return $findings;
 	}//end findings()
+
+	/**
+	 * The competences an assignment's shift needs; none for an assignment
+	 * without a known shift, an employee or a date.
+	 *
+	 * @param array<string, mixed>                $assignment The RosterAssignment.
+	 * @param array<string, array<string, mixed>> $shiftsById Shift rows keyed by id.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C02
+	 */
+	private function requiredFor(array $assignment, array $shiftsById): array {
+		$shift = ($shiftsById[trim((string)($assignment['shiftId'] ?? ''))] ?? null);
+		if (is_array($shift) === false) {
+			return [];
+		}
+
+		$required = $this->requiredCompetences($shift);
+		if ($required === [] || trim((string)($assignment['employeeId'] ?? '')) === '' || self::dateOf(assignment: $assignment) === '') {
+			return [];
+		}
+
+		return $required;
+	}//end requiredFor()
+
+	/**
+	 * The assignment's day, Y-m-d.
+	 *
+	 * @param array<string, mixed> $assignment The RosterAssignment.
+	 *
+	 * @return string
+	 */
+	private static function dateOf(array $assignment): string {
+		return substr(trim((string)($assignment['date'] ?? '')), 0, 10);
+	}//end dateOf()
+
+	/**
+	 * The finding for one competence an assignment's employee does not hold.
+	 *
+	 * @param array<string, mixed> $assignment The RosterAssignment.
+	 * @param string               $code       The competence code.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C02
+	 */
+	private static function missingFinding(array $assignment, string $code): array {
+		$employeeId = trim((string)($assignment['employeeId'] ?? ''));
+		$date = self::dateOf(assignment: $assignment);
+
+		return [
+			'kind' => self::FINDING_KIND,
+			'objectType' => 'RosterAssignment',
+			'objectId' => trim((string)($assignment['id'] ?? ($assignment['@self']['id'] ?? ''))),
+			'employeeId' => $employeeId,
+			'date' => $date,
+			'competence' => $code,
+			'severity' => 'mandatory',
+			'statement' => 'Medewerker ' . $employeeId . ' heeft op ' . $date
+				. ' geen geldige bevoegdheid ' . $code . ' voor deze dienst.',
+		];
+	}//end missingFinding()
 
 	/**
 	 * Whether one employee holds one competence on one date.
@@ -133,31 +168,39 @@ class CompetenceCheckService {
 	 */
 	public function holds(array $competences, string $employeeId, string $code, string $date): bool {
 		foreach ($competences as $competence) {
-			if (trim((string)($competence['employeeId'] ?? '')) !== $employeeId) {
-				continue;
+			if (trim((string)($competence['employeeId'] ?? '')) === $employeeId
+				&& trim((string)($competence['competenceCode'] ?? '')) === $code
+				&& self::validOn(competence: $competence, date: $date) === true
+			) {
+				return true;
 			}
-
-			if (trim((string)($competence['competenceCode'] ?? '')) !== $code) {
-				continue;
-			}
-
-			$issuedOn = substr(trim((string)($competence['issuedOn'] ?? '')), 0, 10);
-			if ($issuedOn !== '' && $issuedOn > $date) {
-				continue;
-			}
-
-			$validUntil = substr(trim((string)($competence['validUntil'] ?? '')), 0, 10);
-			if ($validUntil !== '' && $validUntil < $date) {
-				// Expired on its own date. Nobody edits a record for this to
-				// happen, which is the point.
-				continue;
-			}
-
-			return true;
 		}
 
 		return false;
 	}//end holds()
+
+	/**
+	 * Whether a competence is issued by and still valid on a date.
+	 *
+	 * @param array<string, mixed> $competence The EmployeeCompetence.
+	 * @param string               $date       The ISO date it must be held on.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C01
+	 */
+	private static function validOn(array $competence, string $date): bool {
+		$issuedOn = substr(trim((string)($competence['issuedOn'] ?? '')), 0, 10);
+		if ($issuedOn !== '' && $issuedOn > $date) {
+			return false;
+		}
+
+		// Expired on its own date. Nobody edits a record for this to happen,
+		// which is the point.
+		$validUntil = substr(trim((string)($competence['validUntil'] ?? '')), 0, 10);
+
+		return ($validUntil === '' || $validUntil >= $date);
+	}//end validOn()
 
 	/**
 	 * The competence codes one employee holds on one date.

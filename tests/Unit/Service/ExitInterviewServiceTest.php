@@ -216,4 +216,67 @@ class ExitInterviewServiceTest extends TestCase {
 		);
 	}//end gatewayOf()
 
+	/**
+	 * What the listener does with every kind of event: fills in a new
+	 * interview, stamps its case once stored, ignores other schemas and other
+	 * events, and logs rather than throws when the service fails.
+	 *
+	 * @return void
+	 */
+	public function testWhatTheListenerDoesWithEveryEvent(): void {
+		$calls = [];
+		$service = $this->createMock(\OCA\Humaniq\Service\ExitInterviewService::class);
+		$service->method('fillIn')->willReturnCallback(
+			static function (array $interview) use (&$calls): array {
+				$calls[] = ['fillIn', $interview];
+				if (($interview['offboardingId'] ?? '') === 'boom') {
+					throw new \RuntimeException('down');
+				}
+
+				return (($interview['offboardingId'] ?? '') === 'off-1') ? ['employeeId' => 'emp-1'] : [];
+			}
+		);
+		$service->method('stampCase')->willReturnCallback(
+			static function (array $interview) use (&$calls): bool {
+				$calls[] = ['stampCase', $interview];
+				return true;
+			}
+		);
+		$gateway = $this->createMock(\OCA\Humaniq\Service\HoursRegisterGateway::class);
+		$gateway->method('resolveSchemaSlug')->willReturnCallback(static fn (string $schema): string => $schema);
+		$listener = new ExitInterviewListener(interviews: $service, gateway: $gateway, logger: new NullLogger());
+		$entity = static function (string $schema, array $data): \OCA\OpenRegister\Db\ObjectEntity {
+			$object = new \OCA\OpenRegister\Db\ObjectEntity();
+			$object->setUuid('obj-1');
+			$object->setSchema($schema);
+			$object->setObject($data);
+			return $object;
+		};
+		$creating = [
+			'filled' => new \OCA\OpenRegister\Event\ObjectCreatingEvent($entity('ExitInterview', ['offboardingId' => 'off-1'])),
+			'nothing-to-fill' => new \OCA\OpenRegister\Event\ObjectCreatingEvent($entity('exitinterview', ['offboardingId' => 'off-2'])),
+			'failing' => new \OCA\OpenRegister\Event\ObjectCreatingEvent($entity('ExitInterview', ['offboardingId' => 'boom'])),
+			'other-schema' => new \OCA\OpenRegister\Event\ObjectCreatingEvent($entity('Offboarding', ['offboardingId' => 'off-1'])),
+		];
+		$modified = [];
+		foreach ($creating as $name => $event) {
+			$listener->handle($event);
+			$modified[$name] = $event->getModifiedData();
+		}
+
+		$listener->handle(new \OCA\OpenRegister\Event\ObjectCreatedEvent($entity('ExitInterview', ['offboardingId' => 'off-1', 'heldOn' => '2026-10-01'])));
+		$listener->handle(new \OCA\OpenRegister\Event\ObjectUpdatedEvent($entity('ExitInterview', ['offboardingId' => 'off-1']), $entity('ExitInterview', [])));
+
+		self::assertSame(['filled' => ['employeeId' => 'emp-1'], 'nothing-to-fill' => [], 'failing' => [], 'other-schema' => []], $modified);
+		self::assertSame(
+			[
+				['fillIn', ['offboardingId' => 'off-1']],
+				['fillIn', ['offboardingId' => 'off-2']],
+				['fillIn', ['offboardingId' => 'boom']],
+				['stampCase', ['offboardingId' => 'off-1', 'heldOn' => '2026-10-01']],
+			],
+			$calls
+		);
+	}//end testWhatTheListenerDoesWithEveryEvent()
+
 }//end class

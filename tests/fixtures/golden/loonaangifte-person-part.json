@@ -1,0 +1,273 @@
+{
+    "complete": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": "12",
+                "HuisNrToev": "a-bi",
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": []
+    },
+    "short-bsn": {
+        "part": {
+            "SofiNr": "011222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": "12",
+                "HuisNrToev": "a-bi",
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": [
+            {
+                "kind": "employee-bsn-invalid",
+                "severity": "blocking",
+                "employeeId": "emp-1",
+                "element": "SofiNr",
+                "problem": "Het burgerservicenummer van anna maria de Vries voldoet niet aan de elfproef."
+            }
+        ]
+    },
+    "bad-bsn": {
+        "part": {
+            "SofiNr": "123456789",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": "12",
+                "HuisNrToev": "a-bi",
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": [
+            {
+                "kind": "employee-bsn-invalid",
+                "severity": "blocking",
+                "employeeId": "emp-1",
+                "element": "SofiNr",
+                "problem": "Het burgerservicenummer van anna maria de Vries voldoet niet aan de elfproef."
+            }
+        ]
+    },
+    "no-bsn": {
+        "part": {
+            "SofiNr": null,
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": "12",
+                "HuisNrToev": "a-bi",
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": [
+            {
+                "kind": "employee-without-bsn",
+                "severity": "blocking",
+                "employeeId": "emp-1",
+                "element": "SofiNr",
+                "problem": "anna maria de Vries heeft geen burgerservicenummer; zonder BSN mag alleen het anoniementarief (tabel 940) worden aangegeven."
+            }
+        ]
+    },
+    "no-bsn-anonymous": {
+        "part": {
+            "SofiNr": null,
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": "12",
+                "HuisNrToev": "a-bi",
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": []
+    },
+    "no-name-no-birth": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": null,
+            "Gebdat": null,
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": "12",
+                "HuisNrToev": "a-bi",
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": [
+            {
+                "kind": "employee-without-last-name",
+                "severity": "blocking",
+                "employeeId": "emp-1",
+                "element": "SignNm",
+                "problem": "anna maria heeft geen achternaam."
+            },
+            {
+                "kind": "employee-without-date-of-birth",
+                "severity": "blocking",
+                "employeeId": "emp-1",
+                "element": "Gebdat",
+                "problem": "anna maria heeft geen geboortedatum."
+            }
+        ]
+    },
+    "plain-number": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": "7",
+                "HuisNrToev": null,
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": []
+    },
+    "number-and-space": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": "7",
+                "HuisNrToev": "B",
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": []
+    },
+    "no-number": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": null,
+                "HuisNrToev": null,
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": []
+    },
+    "zero-number": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": null,
+                "HuisNrToev": null,
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": []
+    },
+    "bad-postcode": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": null
+        },
+        "findings": []
+    },
+    "abroad": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": null
+        },
+        "findings": []
+    },
+    "no-country": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": "12",
+                "HuisNrToev": "a-bi",
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": []
+    },
+    "country-written-out": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": {
+                "Str": "Een heel lange straatnaa",
+                "HuisNr": "12",
+                "HuisNrToev": "a-bi",
+                "Pc": "1234AB",
+                "Woonpl": "Utrecht"
+            }
+        },
+        "findings": []
+    },
+    "no-street": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": null
+        },
+        "findings": []
+    },
+    "no-place": {
+        "part": {
+            "SofiNr": "111222333",
+            "Voorl": "AM",
+            "SignNm": "de Vries",
+            "Gebdat": "1990-04-01",
+            "AdresBinnenland": null
+        },
+        "findings": []
+    }
+}
