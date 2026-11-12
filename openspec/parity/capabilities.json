@@ -1409,7 +1409,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/33552992365597-Summary-of-departments-and-teams: departments with sub-departments below their parent in the hierarchy, and teams as a separate structure with their own hierarchy."
    },
    "built": {
-    "requirement": ["openspec/specs/org-chart-basic :: REQ-ORG-001: A new `hr-org` fragment SHALL define the `OrgUnit` schema with a self-referencing parent", "openspec/specs/org-chart-basic :: REQ-ORG-006: New org pages SHALL surface the hierarchy and placements under Personeel"],
+    "requirement": ["openspec/specs/org-chart-basic :: A new `hr-org` fragment SHALL define the `OrgUnit` schema with a self-referencing parent (REQ-ORG-001)", "openspec/specs/org-chart-basic :: New org pages SHALL surface the hierarchy and placements under Personeel (REQ-ORG-006)"],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-org.json OrgUnit schema (name, type enum afdeling/team/kostenplaats, parentUnitId self-referencing $ref OrgUnit, costCenter, managerId $ref Employee, active); lib/Standards/Checks/NlOrgChecks.php:91 nl-org-unit-cycle keeps the parentUnitId chain acyclic; src/manifest.d/hr-org.json OrgUnits index (/org-units) and OrgUnitDetail (/org-units/:id) with Child units and Assignments object-lists",
     "reachedOn": "OrgUnits /org-units (menu Personeel), OrgUnitDetail /org-units/:id",
@@ -1485,7 +1485,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/36539231813661-Summary-of-Employee-profile-and-Employment-details-permissions-New-experience: the History tab shows a record of all data changes to an employee's attributes; https://support.personio.de/hc/en-us/articles/34554225234845-Manage-employment-changes records promotions, role and legal entity changes on the profile with dates."
    },
    "built": {
-    "requirement": ["openspec/specs/org-chart-basic :: REQ-ORG-002: The `hr-org` fragment SHALL define the effective-dated `OrgAssignment` schema", "openspec/specs/org-chart-basic :: REQ-ORG-007: `EmployeeDetail` SHALL list the employee's assignments"],
+    "requirement": ["openspec/specs/org-chart-basic :: The `hr-org` fragment SHALL define the effective-dated `OrgAssignment` schema (REQ-ORG-002)", "openspec/specs/org-chart-basic :: `EmployeeDetail` SHALL list the employee's assignments (REQ-ORG-007)"],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-org.json OrgAssignment schema (employeeId $ref Employee, orgUnitId $ref OrgUnit, role, startDate, endDate nullable = effective-dated placement); src/manifest.d/hr-org.json OrgAssignments index (/org-assignments) and OrgAssignmentDetail (/org-assignments/:id); EmployeeDetail and OrgUnitDetail each carry an Assignments object-list filtered by employeeId/orgUnitId, so multiple historical rows accumulate per employee rather than one field being overwritten",
     "reachedOn": "OrgAssignments /org-assignments (menu Personeel), OrgAssignmentDetail /org-assignments/:id; also surfaced on EmployeeDetail and OrgUnitDetail",
@@ -2635,7 +2635,7 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmLeavePlugin/config/routes.yaml:62 apply leave API with LeaveApply.vue, supervisor approve or reject via /api/v2/leave/employees/leave-requests (:79) and LeaveList.vue"
    },
    "built": {
-    "requirement": "openspec/specs/leave-management :: REQ-LVM-002: `LeaveRequestDetail` SHALL drive the EXISTING lifecycle — no new or altered transitions",
+    "requirement": "openspec/specs/leave-management :: `LeaveRequestDetail` SHALL drive the EXISTING lifecycle — no new or altered transitions (REQ-LVM-002)",
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-leave.json:33 LeaveRequest.submit requires LeaveTypeConditionGuard (registered lib/AppInfo/Application.php:166); hr-leave.json:41,49 approve/reject require NoSelfApprovalGuard (registered Application.php:125); src/manifest.d/hr-leave.json:4 LeaveRequestDetail lifecycleActions submit/approve/reject; src/manifest.d/hr-leave.json:150 LeaveRequests index page",
     "reachedOn": "LeaveRequestDetail /leave-requests/:id (menu Leave & Absence > My leave / Leave requests / Leave approval), submit/approve/reject via lifecycle action buttons",
@@ -2710,7 +2710,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/18252734824349-Set-up-statutory-and-non-statutory-entitlement: with the Netherlands template one time off type holds statutory and non-statutory entitlement and uses the one expiring first; https://support.personio.de/hc/en-us/articles/23107147477277-Explore-your-Time-off-page shows balances."
    },
    "built": {
-    "requirement": ["openspec/specs/leave-management :: REQ-LVM-003: A new `LeaveBalance` schema SHALL model per-employee/year/type entitlements with a calculated remainder", "openspec/specs/leave-accrual-job :: Bovenwettelijk hours SHALL accrue as a monthly opbouw slice (REQ-ACCR-003)"],
+    "requirement": ["openspec/specs/leave-management :: A new `LeaveBalance` schema SHALL model per-employee/year/type entitlements with a calculated remainder (REQ-LVM-003)", "openspec/specs/leave-accrual-job :: Bovenwettelijk hours SHALL accrue as a monthly opbouw slice (REQ-ACCR-003)"],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-leave.json:181-198 LeaveBalance.remainingHours (x-openregister-calculations) = entitledHours+bovenwettelijkHours-usedHours; lib/Service/LeaveBalanceProjectionService.php recomputes usedHours from approved LeaveRequests on every change; lib/BackgroundJob/LeaveAccrualJob.php writes entitledHours/bovenwettelijkHours; src/manifest.d/hr-leave.json:179 LeaveBalances index shows all four columns",
     "reachedOn": "LeaveBalances /leave-balances (menu Leave & Absence > Leave balances)",
@@ -3014,7 +3014,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000286117-Add-a-Personio-Calendar-via-an-iCal-link: subscribe to a Personio calendar of colleagues' time off in third-party apps such as Google Calendar, Apple Calendar and Outlook via an iCal link; Nextcloud is not named, so a Nextcloud calendar would only work as a generic iCal subscription."
    },
    "built": {
-    "requirement": ["openspec/specs/leave-calendar-nc :: REQ-LC-001: A configured shared calendar SHALL be the sync target", "openspec/specs/leave-calendar-nc :: REQ-LC-002: Approved leave SHALL upsert one deterministic all-day event"],
+    "requirement": ["openspec/specs/leave-calendar-nc :: A configured shared calendar SHALL be the sync target (REQ-LC-001)", "openspec/specs/leave-calendar-nc :: Approved leave SHALL upsert one deterministic all-day event (REQ-LC-002)"],
     "state": "built",
     "evidence": "lib/Command/CalendarSyncCommand.php:47,67 registers occ humaniq:calendar:sync (appinfo/info.xml:385); lib/Service/LeaveCalendarService.php one-way projects approved LeaveRequest/SickLeaveCase onto a configured shared Nextcloud calendar; appinfo/info.xml background-jobs block (lines 99-113) registers only LeaveAccrualJob and PollCalendarSubscriptionsJob, not this command, so it never runs unattended",
     "reachedOn": "occ humaniq:calendar:sync only, no page and no scheduled job",
@@ -3209,7 +3209,7 @@
     "personio": "not checked: not settled: searched help centre for Gatekeeper, poortwachter, UWV, week 42 and occupational health service; no article covers Dutch long-term sickness milestones (sickness articles are German eAU and EEL payroll procedures)."
    },
    "built": {
-    "requirement": ["openspec/specs/verzuim-wvp :: REQ-VWP-004: `NlVerzuimChecks` SHALL enforce derivation, overdue signalling, and the loondoorbetaling floor", "openspec/specs/verzuim-wvp :: REQ-VWP-005: The verzuim pages SHALL surface the case, the milestone clock, and the lifecycle under `Verlof & verzuim`"],
+    "requirement": ["openspec/specs/verzuim-wvp :: `NlVerzuimChecks` SHALL enforce derivation, overdue signalling, and the loondoorbetaling floor (REQ-VWP-004)", "openspec/specs/verzuim-wvp :: The verzuim pages SHALL surface the case, the milestone clock, and the lifecycle under `Verlof & verzuim` (REQ-VWP-005)"],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-verzuim.json probleemanalyseDue/planVanAanpakDue/uwv42WeekMeldingDue/eerstejaarsevaluatieDue stored, derived from firstSickDay (+6/8/42/52 weeks), checked by nl-wvp-milestone-derivation (lib/Standards/Checks/NlLeaveChecks.php referenced via lib/Standards/rules/labour.json); src/manifest.d/hr-verzuim.json:41-57 SickLeaveCaseDetail 'Poortwachter milestones' widget shows all eight Due/Done dates",
     "reachedOn": "SickLeaveCaseDetail /sick-leave/:id, 'Poortwachter milestones' widget",
@@ -3284,7 +3284,7 @@
     "personio": "not checked: not settled: searched help centre for medical data and sickness privacy; https://support.personio.de/hc/en-us/articles/36540434486685-Summary-of-Time-off-and-Team-calendar-permissions-New-experience gives each time off type its own view permission, but no page states managers see only that someone is sick while medical details stay hidden."
    },
    "built": {
-    "requirement": "openspec/specs/verzuim-wvp :: REQ-VWP-002: The schema SHALL carry NO medical data — administrative case facts only",
+    "requirement": "openspec/specs/verzuim-wvp :: The schema SHALL carry NO medical data — administrative case facts only (REQ-VWP-002)",
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-verzuim.json SickLeaveCase declares no diagnosis/symptom/cause/medical-note field of any kind (REQ-VWP-002, schema description and manifest _note both state this); src/manifest.d/hr-verzuim.json:11 files widget description restricts uploads to gespreksverslagen/plan-van-aanpak documents only; grep -n x-property-rbac lib/Settings/register.d/hr-verzuim.json and the whole register.d tree: no hits anywhere in the app, so nothing enforces that restriction beyond field omission and a text label",
     "reachedOn": "SickLeaveCaseDetail /sick-leave/:id, 'Case notes & action plan' files widget",
@@ -5208,7 +5208,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/35527377864861-Loket-Integration-Sync-payroll-documents: payslips and annual statements from approved Loket runs are fetched into Personio and shared to employees' profiles; https://support.personio.de/hc/en-us/articles/18581054524189-How-to-access-your-documents-in-Personio."
    },
    "built": {
-    "requirement": ["openspec/specs/mijn-hr-self-service :: REQ-MHS-004: The four Mijn pages SHALL list only the current user's records via an `@me` base filter", "openspec/specs/payslip-pdf-docudesk :: Loonstrook rendering SHALL pass `[Employee, Payslip]` dataRefs through the existing leaf (REQ-PPD-002)"],
+    "requirement": ["openspec/specs/mijn-hr-self-service :: The four Mijn pages SHALL list only the current user's records via an `@me` base filter (REQ-MHS-004)", "openspec/specs/payslip-pdf-docudesk :: Loonstrook rendering SHALL pass `[Employee, Payslip]` dataRefs through the existing leaf (REQ-PPD-002)"],
     "state": "built",
     "evidence": "src/manifest.d/hr-objects.json:1571-1600 MijnLoonstroken @me Payslip index; PayslipDetail hr-objects.json:680-830 with 'Generate PDF' at hr-objects.json:809. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
     "reachedOn": "MijnLoonstroken /mijn/loonstroken (menu My HR) to PayslipDetail /payslips/:id, with the Generate PDF button",
@@ -5703,7 +5703,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/13632466245661-Personio-Payroll-About lists SEPA files for wages and salaries and https://support.personio.de/hc/en-us/articles/35330624808221-Payment-overview-in-Personio-Payroll checks SEPA file amounts before transfer; Personio Payroll is Germany only per https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, and for Dutch entities Loket holds the SEPA bank payment (https://support.personio.de/hc/en-us/articles/35527484814621-Loket-integration-Summary-of-supported-attributes)."
    },
    "built": {
-    "requirement": ["openspec/specs/payroll-sepa-netpay-shillinq :: REQ-PNP-003: `PayrollNetPayService` SHALL collect one payment line per payslip, fail-closed on missing IBANs", "openspec/specs/payroll-sepa-netpay-shillinq :: REQ-PNP-004: The service SHALL create the batch as a draft shillinq `PaymentRun` via OpenRegister's ObjectService"],
+    "requirement": ["openspec/specs/payroll-sepa-netpay-shillinq :: `PayrollNetPayService` SHALL collect one payment line per payslip, fail-closed on missing IBANs (REQ-PNP-003)", "openspec/specs/payroll-sepa-netpay-shillinq :: The service SHALL create the batch as a draft shillinq `PaymentRun` via OpenRegister's ObjectService (REQ-PNP-004)"],
     "state": "built",
     "evidence": "lib/Service/PayrollNetPayService.php hands off each payable PayrollRun's payslips as a draft SEPA PaymentRun into shillinq's own PaymentRun register (isInstalled('shillinq') duck-type probe, SHILLINQ_APP_ID/SHILLINQ_REGISTER constants), idempotent by runNumber; lib/Flow/PayrollNetPayNode.php exposes the same as flow step humaniq.payroll-netpay; src/manifest.d/hr-paybatch.json PayrollPaymentBatchDetail note: 'a PayrollPaymentBatch is humaniq's log of ONE net-pay handoff attempt ... never the payment batch itself ... Copy says klaargezet in shillinq, NEVER betaald: created != paid, money only moves after shillinq's controller approves and exports'",
     "reachedOn": "occ humaniq:netpay:run or the Flow step humaniq.payroll-netpay create the draft handoff (this page declares no headerActions/lifecycleActions, so there is no dead-button issue here, it is occ/flow-driven by design); PaymentBatches /payment-batches and PayrollPaymentBatchDetail show the attempt read-only",
@@ -5741,7 +5741,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/19284187332509-Set-up-the-Accounting-Report-for-Personio-Payroll: a monthly accounting report in DATEV SKR03/04 formats with debit and credit accounts, optionally grouped by cost center; Personio Payroll is Germany only per https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll."
    },
    "built": {
-    "requirement": ["openspec/specs/payroll-glpost-shillinq :: REQ-PGP-002: `PayrollGLPostService` SHALL build a balanced 4-line journal from the run totals", "openspec/specs/payroll-glpost-shillinq :: REQ-PGP-003: The service SHALL create the journal as a shillinq `JournalEntry` via OpenRegister's ObjectService"],
+    "requirement": ["openspec/specs/payroll-glpost-shillinq :: `PayrollGLPostService` SHALL build a balanced 4-line journal from the run totals (REQ-PGP-002)", "openspec/specs/payroll-glpost-shillinq :: The service SHALL create the journal as a shillinq `JournalEntry` via OpenRegister's ObjectService (REQ-PGP-003)"],
     "state": "built",
     "evidence": "lib/Command/GlPostRunCommand.php + a PayrollGLPostService post each approved PayrollRun as a balanced loonjournaalpost into shillinq's JournalEntry register via PayrollChartOfAccountsMapping (duck-typed no-op when shillinq is absent); lib/Flow/PayrollGlPostNode.php exposes the same as flow step humaniq.payroll-glpost; src/manifest.d/hr-glpost.json PayrollGLPostDetail note: 'a PayrollGLPost is humaniq's log of ONE handoff attempt into shillinq's JournalEntry register, never the journal itself' Corrections round 8 (2026-09-28), humaniq#514: retro pay and leave payouts folded into net at lib/Service/PayrollRunService.php:536 reach totals net at :570 but not totals gross at :566, so lib/Service/PayrollGLPostService.php:254-267 books no cost line for them and refuses the post with Inconsistente runtotalen once the folds exceed the remainder, at e08ffe0.",
     "reachedOn": "occ humaniq:glpost:run or the Flow step humaniq.payroll-glpost (this page declares no headerActions/lifecycleActions, occ/flow-driven by design); PayrollGLPosts /gl-posts and PayrollGLPostDetail show the attempt read-only",
@@ -6845,7 +6845,7 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/config/routes.yaml:512 My Info (own record, own salary readable per installer/Migration/V3_3_3/dbscript-2.sql:1738) plus My Leave, My Timesheets, My Attendance, My Claims and My Reviews pages; no payslips"
    },
    "built": {
-    "requirement": ["openspec/specs/mijn-hr-self-service :: REQ-MHS-004: The four Mijn pages SHALL list only the current user's records via an `@me` base filter", "openspec/specs/performance-reviews :: Employees SHALL see their own reviews via `MijnBeoordelingen` (REQ-PRV-005)"],
+    "requirement": ["openspec/specs/mijn-hr-self-service :: The four Mijn pages SHALL list only the current user's records via an `@me` base filter (REQ-MHS-004)", "openspec/specs/performance-reviews :: Employees SHALL see their own reviews via `MijnBeoordelingen` (REQ-PRV-005)"],
     "state": "built",
     "evidence": "src/manifest.d/personal-dashboard.json MijnHr dashboard /mijn with stat/object-table widgets scoped userId:@me (My hours this month over TimeEntry, My open expenses over Expense, Timesheets to review, My timesheets, My leave balance, My recent payslips); openspec/specs/mijn-hr-self-service/spec.md REQ-MHS-001..007; sibling menu items MijnBeoordelingen (05-menu.json:52, performance reviews), MijnVerlofKopenVerkopen, MijnGebruikelijkLoon all filtered @me",
     "reachedOn": "MijnHr /mijn (menu Mijn HR), plus the sibling Mijn* pages (MijnBeoordelingen, MijnVerlofKopenVerkopen etc.) under the same menu group",
@@ -8369,7 +8369,7 @@
     "reachedOn": "the platform's generic CnSetupWizard shell (nextcloud-vue), driven entirely by src/manifest.json's declarative setup block, shown on first admin visit, no humaniq-authored Vue component imports CnSetupWizard directly, which is expected for this shared ADR-042 mechanism",
     "owner": "ConductionNL/humaniq",
     "spec": "openspec/specs/first-time-setup",
-    "requirement": "REQ-FTS-001"
+    "requirement": "openspec/specs/first-time-setup :: humaniq SHALL declare a three-step setup wizard that never gates the app (REQ-FTS-001)"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -9311,7 +9311,7 @@
     "change": "openregister/rapportage-bi-export",
     "readOn": "2026-10-07",
     "spec": "openregister/openspec/specs/rapportage-bi-export",
-    "requirement": ["openregister/openspec/specs/rapportage-bi-export :: The system MUST support API access for external BI tools via GraphQL + REST", "openregister/openspec/specs/rapportage-bi-export :: The system MUST support scheduled report generation"]
+    "requirement": ["openregister:openspec/specs/rapportage-bi-export :: The system MUST support API access for external BI tools via GraphQL + REST", "openregister:openspec/specs/rapportage-bi-export :: The system MUST support scheduled report generation"]
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
@@ -9350,7 +9350,7 @@
     "reachedOn": "GeneratedDocuments /documents, GeneratedDocumentDetail /documents/:id",
     "owner": "ConductionNL/filinq",
     "change": "filinq/generate-store-in-case-system",
-    "requirement": ["filinq/openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: An admin declares where generated documents go in the case system (REQ-GSC-001)", "filinq/openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A stored document gets a delivery for its destination (REQ-GSC-002)", "filinq/openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A delivery's outcome is visible and a failure can be retried (REQ-GSC-003)"]
+    "requirement": ["filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: An admin declares where generated documents go in the case system (REQ-GSC-001)", "filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A stored document gets a delivery for its destination (REQ-GSC-002)", "filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A delivery's outcome is visible and a failure can be retried (REQ-GSC-003)"]
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
