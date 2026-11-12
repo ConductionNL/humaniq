@@ -85,6 +85,31 @@ class PayAnomalyDetectorTest extends TestCase {
 	}//end testAKnownCauseExplainsTheDeviation()
 
 	/**
+	 * The whole findings: every component over its threshold in order, the
+	 * causes this payslip carries that the baseline did not (a cause the
+	 * baseline carried too explains nothing), and the history message.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeFindingsAndTheirMessages(): void {
+		$history = $this->history();
+		$history[1]['overtimePay'] = 120.0;
+		$payslip = $this->payslip('2026-05', 5600.0, ['grossPay' => 7600.0, 'overtimePay' => 300.0, 'loonbeslag' => 50.0, 'bijtelling' => 0]);
+
+		$this->assertSame(
+			[
+				['kind' => 'deviation', 'severity' => 'info', 'component' => 'grossPay', 'currentValue' => 7600.0, 'baselineValue' => 3800.0, 'explanation' => 'Verklaard door loonbeslag, een doorgevoerde loonsverhoging.', 'message' => 'grossPay is 7600.00, de mediaan van de eerdere loonstroken is 3800.00.'],
+				['kind' => 'deviation', 'severity' => 'info', 'component' => 'nettoPay', 'currentValue' => 5600.0, 'baselineValue' => 2800.0, 'explanation' => 'Verklaard door loonbeslag, een doorgevoerde loonsverhoging.', 'message' => 'nettoPay is 5600.00, de mediaan van de eerdere loonstroken is 2800.00.'],
+			],
+			(new PayAnomalyDetector())->detect(payslip: $payslip, history: $history, raiseApplied: true)
+		);
+		$this->assertSame(
+			[['kind' => 'deviation', 'severity' => 'info', 'component' => null, 'currentValue' => null, 'baselineValue' => null, 'explanation' => null, 'message' => 'Te weinig eerdere loonstroken (0) om met de eigen geschiedenis te vergelijken.']],
+			(new PayAnomalyDetector())->detect(payslip: $payslip, history: [])
+		);
+	}//end testTheWholeFindingsAndTheirMessages()
+
+	/**
 	 * Two prior payslips are not enough history: one info finding.
 	 *
 	 * @return void
