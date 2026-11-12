@@ -3,6 +3,9 @@
 /**
  * Receipt Extraction Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The second, opposite-direction docudesk consumption (receipt-ocr design.md
  * D1): where `HrDocumentService` hands humaniq data TO docudesk to render a
  * PDF, this service reads an already-attached `Expense.receiptFile` and asks
@@ -73,9 +76,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

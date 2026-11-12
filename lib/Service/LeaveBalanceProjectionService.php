@@ -3,6 +3,9 @@
 /**
  * Humaniq LeaveBalanceProjectionService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Projects approved LeaveRequests onto `LeaveBalance.usedHours`, the field that
  * had no writer at all before this service existed: `LeaveAccrualJob` seeds it
  * to `0.0` when it creates a balance and never touches it again, and
@@ -29,9 +32,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

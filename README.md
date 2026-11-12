@@ -6,6 +6,12 @@ Status: specs pending. See [openspec/](openspec/) for the change log.
 
 Part of the Conduction ecosystem alongside [shillinq](https://github.com/ConductionNL/shillinq) (bookkeeping), [pipelinq](https://github.com/ConductionNL/pipelinq) (CRM), and [openregister](https://github.com/ConductionNL/openregister) (data layer).
 
+## Test coverage
+
+<!-- coverage:start -->
+Measured test coverage: 91.7% of statements (PHP 91.7% of 25,386 statements), at commit `ce8394ca` on 2026-11-11. The JavaScript frontend is not in this figure, because it has no coverage measurement yet. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
+<!-- coverage:end -->
+
 ## Payroll engine — NOT certified (read this before production use)
 
 humaniq ships an open-source Dutch payroll calculation engine implementing the
@@ -738,3 +744,28 @@ Nextcloud hands it (`OCP\IUserSession`) and does no identity work of its own.
   net-pay path sources the debtor IBAN from config, never from a self-service
   write). A future proposal must re-verify **both** conditions before citing this
   as a reason to build step-up.
+
+## Deployment
+
+### Try it with Docker
+
+The repository builds an evaluation image: the official Nextcloud image with humaniq and OpenRegister installed and enabled. It is meant for trying the app out and for test environments. For production, install the app from the Nextcloud App Store.
+
+```bash
+docker compose -f docker-compose.yml up -d --build
+```
+
+Open http://localhost:8080/apps/humaniq/ and sign in as `admin` with password `admin`. The first start takes a minute or two. Set `NEXTCLOUD_ADMIN_PASSWORD` and `APP_PORT` to change the password and the port; `docker-compose.yml` lists every setting. `docker compose -f docker-compose.yml down -v` removes the stack and its data.
+
+Released versions are published as `ghcr.io/conductionnl/humaniq`, so leaving out `--build` uses the published image.
+
+### Run it on Kubernetes
+
+`charts/humaniq` wraps the official [Nextcloud Helm chart](https://github.com/nextcloud/helm) and runs the same image with PostgreSQL:
+
+```bash
+helm dependency build charts/humaniq
+helm install humaniq charts/humaniq --set nextcloud.nextcloud.host=humaniq.example.org
+```
+
+Change the passwords in `charts/humaniq/values.yaml` before you install it anywhere that matters.

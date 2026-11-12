@@ -3,6 +3,9 @@
 /**
  * HR Document Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Generates the standard Dutch HR documents (arbeidsovereenkomst,
  * aanbiedingsbrief, werkgeversverklaring, getuigschrift) plus, since
  * payslip-pdf-docudesk, the loonstrook (per-Payslip) and jaaropgaaf
@@ -47,9 +50,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

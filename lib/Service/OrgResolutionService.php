@@ -3,6 +3,9 @@
 /**
  * Humaniq OrgResolutionService
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The ONE implementation of the employee → active OrgAssignment → OrgUnit
  * chain: manager resolution (unit `managerId` → manager Employee's
  * `nextcloudUserId`) and cost-centre resolution (unit `costCenter`). Extracted
@@ -30,9 +33,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

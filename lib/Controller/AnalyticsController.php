@@ -3,6 +3,9 @@
 /**
  * Analytics Controller
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Backs the Dashboard's five trend widgets and the Obligations list
  * (humaniq-dashboard-steering-indicators): `GET /api/analytics/trends` and
  * `GET /api/analytics/obligations`, mirroring pipelinq's `AnalyticsController`
@@ -27,9 +30,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

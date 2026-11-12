@@ -3,6 +3,9 @@
 /**
  * Humaniq TravelAmountListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` and
  * `ObjectUpdatingEvent` for `Expense` and `CommuteArrangement`
  * (expenses-travel-calculation D1 and D2).
@@ -26,9 +29,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

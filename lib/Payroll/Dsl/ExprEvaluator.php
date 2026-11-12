@@ -3,6 +3,9 @@
 /**
  * Expression Evaluator
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The `expr` op's grammar (jurisdiction-packs design.md D3, ADR-101 decision 2):
  * a **closed, total arithmetic calculator** — `+ - * /`, the functions
  * `min max abs round floor ceil`, parentheses, references and numeric
@@ -36,9 +39,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

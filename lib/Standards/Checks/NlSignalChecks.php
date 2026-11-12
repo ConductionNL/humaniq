@@ -3,6 +3,9 @@
 /**
  * NL HR-Signals Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable checks for the three hr-signals corpus rules
  * (lib/Standards/rules/labour.json, framework `hr-signals` /`bw7-10`): two
  * keyed on `EmploymentContract` -- a temporary contract nearing its `endDate`
@@ -40,9 +43,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

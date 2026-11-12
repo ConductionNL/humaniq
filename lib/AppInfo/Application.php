@@ -47,6 +47,7 @@ use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\SurveyOpenGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
 use OCA\Humaniq\Lifecycle\UbdReportReadyGuard;
+use OCA\Humaniq\Listener\AdministrationAccessWriteGuard;
 use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
 use OCA\Humaniq\Listener\ChangeRequestListener;
 use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
@@ -56,6 +57,7 @@ use OCA\Humaniq\Listener\HandoffIntakeListener;
 use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
+use OCA\Humaniq\Listener\ManagerAccessListeners;
 use OCA\Humaniq\Listener\ManagerDeputyListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
@@ -505,9 +507,11 @@ class Application extends App implements IBootstrap {
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 		$this->registerApprovalsInboxListeners($dispatcher);
+		(new ManagerAccessListeners())->register(fn (array $on) => $this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $on['event'], listener: $on['listener'], registers: null, schemas: $on['schemas']));
 		$this->registerOvertimeCreditListener($dispatcher);
 		$this->registerExpensePayrollListeners($dispatcher);
 		$this->registerHrLifecycleEventListener($dispatcher);
+		$this->registerAdministrationAccessGuard($dispatcher);
 
 	}//end boot()
 
@@ -1005,6 +1009,29 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerApprovalsInboxListeners()
+
+	/**
+	 * multi-administratie REQ-MULTI-003: an access row is written or removed
+	 * only by an administrator or HR of its administration.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-003
+	 */
+	private function registerAdministrationAccessGuard(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class, ObjectDeletingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: AdministrationAccessWriteGuard::class,
+				registers: null,
+				schemas: [AdministrationAccessWriteGuard::SLUG]
+			);
+		}
+
+	}//end registerAdministrationAccessGuard()
 
 	/**
 	 * platform-hr-lifecycle-events D1: after a contract, onboarding or

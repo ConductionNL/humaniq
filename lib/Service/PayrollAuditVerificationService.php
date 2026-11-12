@@ -3,6 +3,9 @@
 /**
  * Payroll Audit Verification Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Chain-of-custody verification for a `PayrollRun` (audit-trail-payroll
  * design.md D2, fixing hrmq#98): resolves the audit-trail row id range
  * covering the run's and its payslips' create/update rows, then hands that
@@ -29,9 +32,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

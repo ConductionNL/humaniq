@@ -2,10 +2,10 @@
 
 ## 1. The bundle (REQ-HLD-001)
 
-- [ ] 1.1 Add a `leaves` entry to `webpack.config.js` building
+- [x] 1.1 Add a `leaves` entry to `webpack.config.js` building
       `js/humaniq-leaves.js` from a new `src/leaves.js`, copying planninq's
       entry and its comment.
-- [ ] 1.2 Write `src/leaves.js` to import only the leaf registration and its
+- [x] 1.2 Write `src/leaves.js` to import only the leaf registration and its
       widget: no router, no store, no app shell.
 - [ ] 1.3 Add a build test asserting `js/humaniq-leaves.js` exists after a
       production build and stays under a stated size ceiling.

@@ -4,6 +4,7 @@
         "schemas": {
             "CostAllocation": {
                 "slug": "CostAllocation",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "ScaleBalance",
                 "version": "0.1.0",
                 "title": "Cost allocation",
@@ -108,6 +109,7 @@
             },
             "WageCostAllocation": {
                 "slug": "WageCostAllocation",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "ChartBar",
                 "version": "0.1.0",
                 "title": "Wage cost allocation",
