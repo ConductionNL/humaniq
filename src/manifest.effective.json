@@ -1135,7 +1135,7 @@
 		{
 			"icon": "StoreOutline",
 			"id": "StoreMenu",
-			"label": "Store",
+			"label": "Marketplace",
 			"order": 92,
 			"route": "Store",
 			"section": "footer"
@@ -1634,11 +1634,11 @@
 			"config": {
 				"app": "humaniq",
 				"description": "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding.",
-				"title": "Store"
+				"title": "Marketplace"
 			},
 			"id": "Store",
 			"route": "/store",
-			"title": "Store",
+			"title": "Marketplace",
 			"type": "store"
 		},
 		{

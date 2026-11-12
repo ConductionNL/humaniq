@@ -1438,7 +1438,7 @@ OC.L10N.register(
         "Steuerklasse": "Steuerklasse",
         "Stop": "Stoppen",
         "Stop the timer": "Stop de timer",
-        "Store": "Store",
+        "Marketplace": "Marktplaats",
         "Strengths": "Sterktes",
         "Study programme": "Opleiding",
         "Submission reference": "Aanleverkenmerk",

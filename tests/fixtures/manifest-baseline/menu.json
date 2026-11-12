@@ -905,7 +905,7 @@
 	},
 	{
 		"id": "StoreMenu",
-		"label": "Store",
+		"label": "Marketplace",
 		"icon": "StoreOutline",
 		"route": "Store",
 		"section": "footer",
