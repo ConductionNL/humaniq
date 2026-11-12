@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -272,10 +274,11 @@ class ReferencesAuditCommand extends Command {
 			// one-field update through them quietly clears every field the
 			// read did not return.
 			$run->objectService->patchObject(
-				objectId: $verdict['id'],
-				data: [self::REFERENCE_PROPERTY => $verdict['owner']],
-				register: self::REGISTER,
-				schema: self::SATELLITE_SCHEMA,
+				patch: new ObjectPatch(
+					objectId: $verdict['id'],
+					data: [self::REFERENCE_PROPERTY => $verdict['owner']],
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SATELLITE_SCHEMA)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

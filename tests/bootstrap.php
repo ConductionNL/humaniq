@@ -231,6 +231,13 @@ if (class_exists('OCA\\OpenRegister\\Event\\ObjectCreatingEvent') === false
 	require_once __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
 }
 
+// ObjectService::patchObject() takes an ObjectPatch with its
+// ObjectFindTarget. The stub declares both so humaniq's patch call, and the
+// doubles that receive it, load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Service\\Object\\ObjectPatch') === false) {
+	require __DIR__ . '/stubs/OpenRegisterObjectPatchStub.php';
+}
+
 // Same rule, different classes: the payroll flow nodes (lib/Flow/) implement
 // OpenRegister's IFlowNode and their listener consumes RegisterFlowNodesEvent
 // (payroll-run-as-a-flow design.md D6). IFlowNode is a method-for-method
