@@ -3,6 +3,9 @@
 /**
  * Pack Validator
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Every gate an uploaded pack must pass before it can pay anybody
  * (jurisdiction-packs design.md D11, ADR-101 decision 4). All of them BLOCK at
  * upload; none of them is optional, because the payload of that endpoint
@@ -39,9 +42,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

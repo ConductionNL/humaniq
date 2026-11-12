@@ -3,6 +3,9 @@
 /**
  * Payroll Controller
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Backs the `PayrollRunDetail` manifest page action "(Her)berekenen"
  * (payroll-core-engine design.md D6): a single POST endpoint that resolves
  * the posted `runId` through OpenRegister's ObjectService under the caller's
@@ -64,9 +67,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

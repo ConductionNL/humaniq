@@ -3,6 +3,9 @@
 /**
  * Leave Calendar Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Projects approved absence (LeaveRequest/SickLeaveCase) onto one configured
  * shared Nextcloud calendar as all-day VEVENTs (design.md D1-D6). humaniq holds
  * no calendar storage of its own — the sync is a stateless, idempotent
@@ -35,9 +38,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

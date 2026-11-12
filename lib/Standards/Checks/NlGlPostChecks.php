@@ -3,6 +3,9 @@
 /**
  * NL Payroll GL-Post Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable check for the payroll-to-GL posting idempotency rule
  * (`nl-glpost-idempotent-per-run`, lib/Standards/rules/payroll.json,
  * payroll-glpost-shillinq), mapped onto the `PayrollGLPost` object type.
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

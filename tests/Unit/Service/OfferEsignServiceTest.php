@@ -3,6 +3,9 @@
 /**
  * Unit tests for OfferEsignService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pins the offer-esign contract: the aanbod-stage guard (REQ-OFFR-002), the
  * duck-typed skip when docudesk is absent and its stability across repeated
  * calls (REQ-OFFR-004), the dataRefs/adHocData assembly with no Employee ref
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

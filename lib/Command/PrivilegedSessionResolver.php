@@ -3,6 +3,9 @@
 /**
  * Privileged Session Resolver
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The shared `--as-user` privileged-session establishment mechanism
  * (avg-dsr design.md D3) every `occ humaniq:avg:*` command uses BEFORE calling
  * `AvgDsrService`/OpenRegister's `DsarService`: there is no ambient
@@ -26,9 +29,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

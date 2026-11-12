@@ -3,6 +3,9 @@
 /**
  * Asset Dialect Migration Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * humaniq-asset-fleet-merge (tasks.md section 13, blocking defect): rewrites
  * pre-existing `Asset`/`AssetAssignment` objects from the retired Dutch
  * dialect to the renamed one. OpenRegister's register-config seed import is
@@ -68,9 +71,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

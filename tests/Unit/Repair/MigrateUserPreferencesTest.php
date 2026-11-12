@@ -3,6 +3,9 @@
 /**
  * Unit tests for MigrateUserPreferences.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * This is the half of the app-id rename that fails silently. `oc_preferences`
  * is namespaced by app id just like `oc_appconfig`, but per-user reads carry a
  * default — so a preference the rename cut off does not surface as an error,
@@ -30,9 +33,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

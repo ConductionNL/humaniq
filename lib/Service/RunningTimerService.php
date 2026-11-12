@@ -3,6 +3,9 @@
 /**
  * The caller's running timer: starting one, stopping it, and finding it again.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * A running timer IS a time entry. `startedAt` is set, `endedAt` is absent, and
  * `origin` says `timer`. There is no second store, no session key and no cached
  * flag, so there is nothing that can disagree with the row: every surface that
@@ -26,9 +29,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

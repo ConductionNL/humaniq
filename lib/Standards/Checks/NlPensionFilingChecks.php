@@ -3,6 +3,9 @@
 /**
  * NL Pension Filing (UPA) Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable checks for the Dutch sector-pension filing rules of the payroll
  * corpus (lib/Standards/rules/payroll.json, framework nl-pensioenaangifte),
  * mapped onto the PensionFiling / PayrollRun object types (pension-filing-upa-mvp):
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
