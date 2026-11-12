@@ -49,6 +49,9 @@ use Psr\Log\LoggerInterface;
  * @uses   \OCA\Humaniq\Service\HoursRegisterGateway
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\OrgResolutionService
+ * @uses \OCA\Humaniq\Service\HumaniqRoles
+ * @uses \OCA\Humaniq\Service\ManagerDeputies
+ * @uses \OCA\Humaniq\Service\OrgLookups
  */
 class ManagerStampRepairTest extends TestCase {
 
