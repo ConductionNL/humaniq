@@ -10051,7 +10051,10 @@
    "originUrl": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2",
    "screen": {
     "canvas": "design-system",
-    "board": "HuDeclaratie"
+    "board": [
+   "HuDeclaratie",
+   "HuBtwOverzicht"
+  ]
    }
   },
   {
