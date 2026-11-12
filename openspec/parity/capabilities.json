@@ -1330,6 +1330,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000038385-Create-reminders: reminder workflows can be created for the events Contract ends and Probation period end, shown in the inbox."
    },
    "built": {
+    "requirement": ["openspec/specs/hr-signals :: The corpus signals expiring temporary contracts (REQ-SIG-001)", "openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals :: HR SHALL be signalled before a probation period ends (REQ-SIG-007)"],
     "state": "built",
     "evidence": "lib/Standards/rules/labour.json nl-signaal-contract-verloopt (60-day window, advisory, no successor contract) and nl-aanzegtermijn-bewaking (BW 7:668 lid 1, mandatory, missed one-month notice on a >=6-month fixed term); lib/Standards/Checks/NlSignalChecks.php implements both; lib/Standards/Checks/NlOnboardingChecks.php:71 nl-onboarding-proeftijd-bewaking covers probation-ending separately; lib/Service/ObligationsService.php:73,191-218 folds EmploymentContract expiries into the merged obligations list; src/manifest.effective.json:~1660 Dashboard 'Open obligations' widget calls GET /api/analytics/obligations",
     "reachedOn": "Dashboard /dashboard, Open obligations widget (object-table) via GET /api/analytics/obligations, rowRoute EmploymentContractDetail",
@@ -3074,6 +3075,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/37979311997213-Termination-of-employment-in-Personio-Payroll: the leaver checklist asks whether remaining vacation has been checked and recorded as vacation compensation via a one-off payment, which is manual and applies to Personio Payroll (Germany only per https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll)."
    },
    "built": {
+    "requirement": ["openspec/specs/offboarding-wizard :: `NlOffboardingChecks` SHALL enforce transitievergoeding presence, verlofsaldo payout, getuigschrift provision, and einddatum consistency (REQ-OFB-004)", "openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion :: The open leave balance SHALL be paid on the leaver's final payslip (REQ-OFC-005)"],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-onboarding.json:170-291 Offboarding schema carries a verlofsaldoUitbetaald checklist boolean, checked cross-object against the employee's LeaveBalance rows by nl-offboarding-verlofsaldo-uitbetaling (lib/Standards/rules/labour.json:249, lib/Standards/Checks/NlOffboardingChecks.php:79); the field is a manual HR checkbox on the eindafrekening-ready transition, not a computed payout amount or a payslip line; the offboarding-wizard-mvp proposal explicitly lists 'no eindafrekening computation engine' as out of scope",
     "reachedOn": "OffboardingDetail page (src/manifest.d/hr-onboarding.json:168), checked by occ humaniq:rules:audit for nl-offboarding-verlofsaldo-uitbetaling",
@@ -3658,6 +3660,7 @@
     "personio": "not checked: not settled: searched help centre for empty timesheet and submission checks; attendance is approved per time entry (https://support.personio.de/hc/en-us/articles/21479538813085-Approve-an-employee-request), so no page addresses submitting an empty timesheet."
    },
    "built": {
+    "requirement": "openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-timesheet-approval :: An empty timesheet SHALL NOT be submitted",
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-timesheet.json:185 submit requires OCA\\\\Humaniq\\\\Lifecycle\\\\TimesheetNotEmptyGuard; lib/Lifecycle/TimesheetNotEmptyGuard.php; registered in lib/AppInfo/Application.php:152-163",
     "reachedOn": "TimesheetDetail /timesheets/:id, Submit lifecycle action",
@@ -3694,6 +3697,7 @@
     "personio": "not checked: not settled: https://support.personio.de/hc/en-us/articles/35372967652893-Create-time-tracking-policies lets admins restrict edits to a time window or until entries are approved, but no page describes reopening an approved timesheet before payroll."
    },
    "built": {
+    "requirement": "openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-timesheet-approval :: An approved timesheet SHALL be reopenable until payroll has used it",
     "state": "built",
     "evidence": "src/manifest.d/hr-timesheet.json TimesheetDetail lifecycleActions 'reopen' from approved to draft; lib/Listener/TimesheetProcessStampListener.php:312 'All four process fields cleared (the reopen edge)'; lib/Settings/register.d/hr-timesheet.json carries no requires guard on the approved->draft edge (only submit and approve/reject are guarded)",
     "reachedOn": "TimesheetDetail /timesheets/:id, Reopen lifecycle action (visible only when status is approved)",
@@ -3731,6 +3735,7 @@
     "personio": "not checked: not settled: searched help centre for billable, hourly rate on projects and invoicing; project time tracking (https://support.personio.de/hc/en-us/articles/360001981757-Set-up-project-based-time-tracking) has no billable rates."
    },
    "built": {
+    "requirement": "openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture :: A billable booking SHALL carry the rate it is billed at (REQ-TEC-009)",
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-timesheet.json TimeEntry properties include projectId and billable (boolean); no 'rate' property anywhere on TimeEntry (grep '\\\"rate\\\"' hr-timesheet.json: no hits); MijnUren /mijn/uren includeFields ends with projectId, billable",
     "reachedOn": "MijnUren /mijn/uren booking form (project + billable flag only, no rate field)",
@@ -3876,6 +3881,7 @@
     "personio": "not checked: not settled: searched help centre for who is present, currently working and presence overview; https://support.personio.de/hc/en-us/articles/28580678827421-Review-your-attendance-data shows an employee's own timesheet and the Team calendar shows time off, but no page describes a today view of present, absent or late people."
    },
    "built": {
+    "requirement": "openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance :: A manager SHALL see who is present, absent or late today (REQ-TA-007)",
     "state": "built",
     "evidence": "src/manifest.d/hr-attendance.json AttendanceRecords index page columns employeeId/date/clockIn/clockOut/workedHours/status, filters status+location; a plain list, no live present/absent/late summary widget",
     "reachedOn": "AttendanceRecords /attendance (menu Time and scheduling), filter by status",
@@ -6279,6 +6285,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/4435216121117-Create-feedback-forms and https://support.personio.de/hc/en-us/articles/26260833891101-Set-up-employee-ratings: review forms with question types, ratings and comments, shared with the employee before a cycle closes (https://support.personio.de/hc/en-us/articles/4415703772561-Manage-a-performance-review-cycle); no signing off by both sides is described."
    },
    "built": {
+    "requirement": ["openspec/specs/performance-reviews :: A new `PerformanceReview` schema SHALL model the review dossier with goals inside the review (REQ-PRV-001)", "openspec/specs/performance-reviews :: The review lifecycle SHALL be declarative and `vaststellen` SHALL require the existing `NoSelfApprovalGuard` (REQ-PRV-002)", "openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews :: The employee SHALL sign off their own review (REQ-PRV-007)"],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-performance.json:100 PerformanceReview schema (rating/sterktes/ontwikkelpunten/afspraken); src/manifest.d/hr-performance.json:186 page PerformanceReviewDetail, lifecycleActions indienen/bespreken/vaststellen/heropenen; lib/Lifecycle/NoSelfApprovalGuard.php:66 guards vaststellen server-side",
     "reachedOn": "PerformanceReviewDetail /reviews/:id, reached from the EmployeeDetail Beoordelingen row, the cycle's review list, or MijnBeoordelingen /mijn/beoordelingen self-service",
@@ -6383,6 +6390,7 @@
     "loket": "not checked: not settled: searched loket.nl feature pages, roadmap and the API tag list for a compensation review with budgets; only a wage proposal resource exists (https://developer.loket.nl/ApiDocs#tag/Wage-proposal) with no budget cycle described."
    },
    "built": {
+    "requirement": ["openspec/specs/comp-cycles :: A CompReviewCycle SHALL group a periodic review round (REQ-COMP-002)", "openspec/specs/comp-cycles :: CompAdjustment SHALL carry the declarative draft→proposed→approved→effective review-round lifecycle (REQ-COMP-003)", "openspec/changes/matrix-rows-without-a-requirement/specs/comp-cycles :: A review cycle SHALL carry a raise budget and show what is left of it (REQ-COMP-009)"],
     "state": "built",
     "evidence": "lib/Settings/register.d/hr-comp.json CompReviewCycle/CompAdjustment/SalaryBand schemas; src/manifest.d/hr-comp.json:4 CompReviewCycleDetail page lifecycleActions sluiten; CompAdjustmentDetail (line 204) lifecycleActions propose/approve/reject, approve/reject guarded by NoSelfApprovalGuard",
     "reachedOn": "CompReviewCycles /comp-review-cycles (sub-page under Personeel), CompReviewCycleDetail /comp-review-cycles/:id, CompAdjustmentDetail reached from EmployeeDetail's Beloningsvoorstellen row",
