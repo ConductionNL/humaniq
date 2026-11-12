@@ -36,6 +36,7 @@ namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -197,8 +198,7 @@ class LearniqCredentialListener implements IEventListener {
 		try {
 			$entity = (clone $this->container->get('OCA\OpenRegister\Service\ObjectService'))->find(
 				id: $id,
-				register: $register,
-				schema: $schema,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
 				_rbac: false,
 				_multitenancy: false
 			);

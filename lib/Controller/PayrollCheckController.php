@@ -30,6 +30,7 @@ use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -85,7 +86,10 @@ class PayrollCheckController extends Controller {
 		}
 
 		try {
-			$run = $this->caller->container->get('OCA\OpenRegister\Service\ObjectService')->find(id: $runId, register: $this->settings->getRegisterSlug(), schema: 'PayrollRun');
+			$run = $this->caller->container->get('OCA\OpenRegister\Service\ObjectService')->find(
+				id: $runId,
+				options: new ObjectFindOptions(register: $this->settings->getRegisterSlug(), schema: 'PayrollRun')
+			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('PayrollCheckController: a payroll run lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			$run = null;

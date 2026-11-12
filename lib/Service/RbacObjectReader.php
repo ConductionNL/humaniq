@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
@@ -80,8 +81,7 @@ class RbacObjectReader {
 		try {
 			$entity = $this->objectService()->find(
 				id: $id,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: $schema
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->info(

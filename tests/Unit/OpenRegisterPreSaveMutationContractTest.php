@@ -44,6 +44,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -297,8 +298,7 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 	private function readBack(string $uuid): array {
 		$entity = $this->objectService->find(
 			id: $uuid,
-			register: self::REGISTER,
-			schema: self::SCHEMA,
+			options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA),
 			_rbac: false
 		);
 		$data = $entity->getObject();

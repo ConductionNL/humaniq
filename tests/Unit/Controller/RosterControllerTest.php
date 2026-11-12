@@ -29,6 +29,7 @@ namespace OCA\Humaniq\Tests\Unit\Controller;
 use OCA\Humaniq\Controller\RosterController;
 use OCA\Humaniq\Service\RosterCheckService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -70,12 +71,12 @@ class RosterControllerTest extends TestCase {
 
 			/**
 			 * @param string $id The object id.
-			 * @param string $register The register slug.
-			 * @param string $schema The schema.
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$schema = (string)($options?->schema ?? '');
 				if ($this->readable === false) {
 					throw new \RuntimeException('Forbidden');
 				}

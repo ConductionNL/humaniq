@@ -35,6 +35,7 @@ namespace OCA\Humaniq\Command;
 
 use OCA\Humaniq\Service\AvgDsrService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
@@ -160,8 +161,7 @@ class AvgDsrRectifyCommand extends Command {
 		try {
 			$entity = $this->objectService()->find(
 				id: $employeeId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Employee'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Employee')
 			);
 		} catch (\Throwable $e) {
 			return null;

@@ -34,6 +34,7 @@ use OCA\Humaniq\Command\AvgDsrRectifyCommand;
 use OCA\Humaniq\Command\PrivilegedSessionResolver;
 use OCA\Humaniq\Service\AvgDsrService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -131,7 +132,7 @@ class AvgDsrRectifyCommandTest extends TestCase {
 				) {
 				}
 
-				public function find(string $id, ?string $register = null, ?string $schema = null): ?object {
+				public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
 					return $this->employeeEntity;
 				}
 			}

@@ -37,6 +37,7 @@ use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -158,8 +159,7 @@ class OfferController extends Controller {
 		try {
 			$application = $this->objectService()->find(
 				id: $applicationId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'job-application'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'job-application')
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('OfferController: an application lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);

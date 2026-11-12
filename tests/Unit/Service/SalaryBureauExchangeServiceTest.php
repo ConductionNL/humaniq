@@ -31,6 +31,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -115,7 +116,7 @@ class SalaryBureauExchangeServiceTest extends TestCase {
 	public function testARaiseBecomesOneMutation(): void {
 		$this->service->compile(administrationId: 'ADM-006', period: '2026-04', userId: 'hr-1');
 		$this->markSent('2026-04');
-		$this->store->seed('Employee', 'emp-a', array_merge($this->store->find('emp-a', schema: 'Employee')->getObject(), ['grossMonthlySalary' => 3876.00]));
+		$this->store->seed('Employee', 'emp-a', array_merge($this->store->find('emp-a', options: new ObjectFindOptions(schema: 'Employee'))->getObject(), ['grossMonthlySalary' => 3876.00]));
 		$this->store->seed('CompAdjustment', 'raise-1', ['employeeId' => 'emp-a', 'status' => 'applied', 'appliedAt' => '2026-05-01T08:00:00Z', 'currentSalary' => 3800.00, 'proposedSalary' => 3876.00]);
 
 		$outcome = $this->service->compile(administrationId: 'ADM-006', period: '2026-05', userId: 'hr-1');
@@ -136,7 +137,7 @@ class SalaryBureauExchangeServiceTest extends TestCase {
 	public function testARevertedEditIsNotSentAndARecompileReplaces(): void {
 		$this->service->compile(administrationId: 'ADM-006', period: '2026-04', userId: 'hr-1');
 		$this->markSent('2026-04');
-		$employee = $this->store->find('emp-b', schema: 'Employee')->getObject();
+		$employee = $this->store->find('emp-b', options: new ObjectFindOptions(schema: 'Employee'))->getObject();
 		$this->store->seed('Employee', 'emp-b', array_merge($employee, ['iban' => 'NL02RABO0123456789']));
 		$this->store->seed('Employee', 'emp-b', $employee);
 
@@ -182,9 +183,9 @@ class SalaryBureauExchangeServiceTest extends TestCase {
 		self::assertSame(2, $findings['blocking']);
 		self::assertEqualsCanonicalizing(['missing-payslip', 'unknown-employee'], array_column($findings['findings'], 'kind'));
 		self::assertSame('emp-b', array_values(array_filter($findings['findings'], static fn (array $f): bool => $f['kind'] === 'missing-payslip'))[0]['employeeId']);
-		$slip = $this->store->find('slip-a', schema: 'Payslip')->getObject();
+		$slip = $this->store->find('slip-a', options: new ObjectFindOptions(schema: 'Payslip'))->getObject();
 		self::assertSame(['anna', 'external-bureau'], [$slip['userId'], $slip['externalSource']]);
-		self::assertSame(2, $this->store->find($handoff['handoffId'], schema: 'PayrollHandoff')->getObject()['blockingFindings']);
+		self::assertSame(2, $this->store->find($handoff['handoffId'], options: new ObjectFindOptions(schema: 'PayrollHandoff'))->getObject()['blockingFindings']);
 	}//end testTheIntakeListsMissingAndUnknownEmployees()
 
 	/**

@@ -92,6 +92,7 @@ use OCA\Humaniq\Service\WkrService;
 use OCA\Humaniq\Standards\Checks\NlDgaChecks;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\ReadsTypedRequestParameters;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -529,8 +530,7 @@ class PayrollController extends Controller {
 		try {
 			$adjustment = $this->objectService()->find(
 				id: $adjustmentId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'PayrollAdjustment'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'PayrollAdjustment')
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('PayrollController: a payroll adjustment lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
@@ -610,8 +610,7 @@ class PayrollController extends Controller {
 		try {
 			$assessment = $this->objectService()->find(
 				id: $assessmentId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'WkrAssessment'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'WkrAssessment')
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('PayrollController: a WKR assessment lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
@@ -642,8 +641,7 @@ class PayrollController extends Controller {
 		try {
 			$run = $this->objectService()->find(
 				id: $runId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'PayrollRun'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'PayrollRun')
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('PayrollController: a payroll run lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);

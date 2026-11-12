@@ -46,6 +46,7 @@ use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\OfferLetterService;
 use OCA\Humaniq\Service\OfferSigningRecoveryService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -101,12 +102,12 @@ class OfferEsignServiceTest extends TestCase {
 
 			/**
 			 * @param string $id The object id.
-			 * @param string|null $register Register slug (unused by the fake).
-			 * @param string|null $schema Schema name.
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$schema = $options?->schema;
 				foreach (($this->rowsBySchema[$schema] ?? []) as $row) {
 					if ((string)($row['id'] ?? '') === $id) {
 						return $row;

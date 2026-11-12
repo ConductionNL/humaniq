@@ -38,6 +38,7 @@ use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\InterviewCalendarService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -150,8 +151,7 @@ class InterviewController extends Controller {
 		try {
 			$interview = $this->objectService()->find(
 				id: $interviewId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Interview'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Interview')
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('InterviewController: an interview lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);

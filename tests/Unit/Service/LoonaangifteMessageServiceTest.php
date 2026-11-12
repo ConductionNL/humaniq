@@ -45,6 +45,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -225,7 +226,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testADraftRunIsNotFiled(): void {
-		$run = $this->store->find('run-06', schema: 'PayrollRun')->getObject();
+		$run = $this->store->find('run-06', options: new ObjectFindOptions(schema: 'PayrollRun'))->getObject();
 		$this->store->seed('PayrollRun', 'run-06', array_merge($run, ['status' => 'draft']));
 
 		$outcome = $this->service->render($this->filing(), 'payroll-1');
@@ -264,7 +265,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnEmployeeWithoutABsnIsANamedFinding(): void {
-		$employee = $this->store->find('emp-bakker', schema: 'Employee')->getObject();
+		$employee = $this->store->find('emp-bakker', options: new ObjectFindOptions(schema: 'Employee'))->getObject();
 		unset($employee['bsn']);
 		$this->store->seed('Employee', 'emp-bakker', $employee);
 
@@ -288,10 +289,10 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheAnonymousRateIsReportedOnTable940(): void {
-		$employee = $this->store->find('emp-bakker', schema: 'Employee')->getObject();
+		$employee = $this->store->find('emp-bakker', options: new ObjectFindOptions(schema: 'Employee'))->getObject();
 		unset($employee['bsn']);
 		$this->store->seed('Employee', 'emp-bakker', $employee);
-		$slip = $this->store->find('slip-bakker', schema: 'Payslip')->getObject();
+		$slip = $this->store->find('slip-bakker', options: new ObjectFindOptions(schema: 'Payslip'))->getObject();
 		$this->store->seed('Payslip', 'slip-bakker', array_merge($slip, ['anoniementariefApplied' => true]));
 
 		$outcome = $this->service->render($this->filing(), 'payroll-1');
@@ -325,9 +326,9 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPayslipThatDoesNotReproduceAndACompanyCarBlock(): void {
-		$slip = $this->store->find('slip-jansen', schema: 'Payslip')->getObject();
+		$slip = $this->store->find('slip-jansen', options: new ObjectFindOptions(schema: 'Payslip'))->getObject();
 		$this->store->seed('Payslip', 'slip-jansen', array_merge($slip, ['loonheffing' => 700.00]));
-		$slip = $this->store->find('slip-bakker', schema: 'Payslip')->getObject();
+		$slip = $this->store->find('slip-bakker', options: new ObjectFindOptions(schema: 'Payslip'))->getObject();
 		$this->store->seed('Payslip', 'slip-bakker', array_merge($slip, ['bijtelling' => 250.00]));
 
 		$this->service->render($this->filing(), 'payroll-1');
@@ -343,7 +344,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnEndedEmploymentNeedsItsReason(): void {
-		$employee = $this->store->find('emp-jansen', schema: 'Employee')->getObject();
+		$employee = $this->store->find('emp-jansen', options: new ObjectFindOptions(schema: 'Employee'))->getObject();
 		$this->store->seed('Employee', 'emp-jansen', array_merge($employee, ['endDate' => '2026-06-30']));
 
 		$this->service->render($this->filing(), 'payroll-1');
@@ -373,7 +374,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testARenderAfterAFixReplacesTheFindings(): void {
-		$employee = $this->store->find('emp-bakker', schema: 'Employee')->getObject();
+		$employee = $this->store->find('emp-bakker', options: new ObjectFindOptions(schema: 'Employee'))->getObject();
 		unset($employee['bsn']);
 		$this->store->seed('Employee', 'emp-bakker', $employee);
 		$this->service->render($this->filing(), 'payroll-1');
@@ -480,7 +481,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function filing(): array {
-		return array_merge($this->store->find('filing-06', schema: 'LoonaangifteFiling')->getObject(), ['id' => 'filing-06']);
+		return array_merge($this->store->find('filing-06', options: new ObjectFindOptions(schema: 'LoonaangifteFiling'))->getObject(), ['id' => 'filing-06']);
 	}//end filing()
 
 	/**
@@ -489,7 +490,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function filingRow(): array {
-		return array_merge($this->store->find('filing-06', schema: 'LoonaangifteFiling')->getObject(), ['id' => 'filing-06']);
+		return array_merge($this->store->find('filing-06', options: new ObjectFindOptions(schema: 'LoonaangifteFiling'))->getObject(), ['id' => 'filing-06']);
 	}//end filingRow()
 
 	/**
@@ -500,7 +501,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function slipRow(string $uuid): array {
-		return $this->store->find($uuid, schema: 'Payslip')->getObject();
+		return $this->store->find($uuid, options: new ObjectFindOptions(schema: 'Payslip'))->getObject();
 	}//end slipRow()
 
 	/**

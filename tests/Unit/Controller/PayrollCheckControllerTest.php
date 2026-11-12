@@ -33,6 +33,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use OCA\Humaniq\Tests\Unit\Support\RecordingLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -62,12 +63,11 @@ class PayrollCheckControllerTest extends TestCase {
 
 			/**
 			 * @param string $id       The id.
-			 * @param string $register The register.
-			 * @param string $schema   The schema.
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
 				if ($id === 'forbidden') {
 					throw new \RuntimeException('Forbidden');
 				}

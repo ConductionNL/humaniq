@@ -43,6 +43,7 @@ use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -196,8 +197,7 @@ class DocumentController extends Controller {
 		try {
 			$row = $this->objectService()->find(
 				id: $id,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: $schema
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('DocumentController: a document subject lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
@@ -228,8 +228,7 @@ class DocumentController extends Controller {
 		try {
 			$contract = $this->objectService()->find(
 				id: $contractId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'EmploymentContract'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'EmploymentContract')
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('DocumentController: a contract lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
@@ -261,8 +260,7 @@ class DocumentController extends Controller {
 		try {
 			$payslip = $this->objectService()->find(
 				id: $payslipId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Payslip'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Payslip')
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('DocumentController: a payslip lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);

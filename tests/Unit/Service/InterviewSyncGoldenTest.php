@@ -36,6 +36,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\InterviewCalendarService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Db\DoesNotExistException;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -205,12 +206,12 @@ class InterviewSyncGoldenTest extends TestCase {
 
 			/**
 			 * @param string $id The id.
-			 * @param string|null $register The register.
-			 * @param string|null $schema The schema.
+			 * @param ObjectFindOptions|null $options The register and schema the object is read from.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$schema = $options?->schema;
 				foreach (($this->rows[(string)$schema] ?? []) as $row) {
 					if ((string)($row['id'] ?? '') === $id) {
 						return $row;

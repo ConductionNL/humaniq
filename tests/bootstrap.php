@@ -208,6 +208,13 @@ if (interface_exists('OCA\\OpenRegister\\Contract\\RegisterSlugResolverInterface
 	require __DIR__ . '/stubs/OpenRegisterSlugResolverStub.php';
 }
 
+// ObjectService::find() and findSilent() take an ObjectFindOptions. The stub
+// declares it so humaniq's find calls, and the doubles that receive them,
+// load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions') === false) {
+	require __DIR__ . '/stubs/OpenRegisterFindOptionsStub.php';
+}
+
 // Same rule, one layer below: when that contract is NOT published (an
 // OpenRegister older than #3571, which is what the dev instance was running on
 // 2026-09-11), RegisterSlugLookup reads the register table directly and guards

@@ -42,6 +42,7 @@ use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\LeaveBuySellSettlementService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -142,8 +143,7 @@ class LeaveController extends Controller {
 		try {
 			$transaction = $this->objectService()->find(
 				id: $transactionId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'LeaveTransaction'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'LeaveTransaction')
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('LeaveController: a leave transaction lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);

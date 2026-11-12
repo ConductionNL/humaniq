@@ -46,6 +46,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -373,7 +374,7 @@ class LoonaangifteCorrectionServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function row(string $uuid): array {
-		return array_merge($this->store->find($uuid, schema: 'LoonaangifteFiling')->getObject(), ['id' => $uuid]);
+		return array_merge($this->store->find($uuid, options: new ObjectFindOptions(schema: 'LoonaangifteFiling'))->getObject(), ['id' => $uuid]);
 	}//end row()
 
 }//end class

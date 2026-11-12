@@ -42,6 +42,7 @@ use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -302,8 +303,7 @@ class LoonbeslagController extends Controller {
 		try {
 			$loonbeslag = $this->objectService()->find(
 				id: $loonbeslagId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Loonbeslag'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Loonbeslag')
 			);
 		} catch (\Throwable $e) {
 			// The id is caller input and the exception text can carry row
