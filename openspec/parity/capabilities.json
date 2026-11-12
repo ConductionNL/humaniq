@@ -9384,7 +9384,12 @@
     "reachedOn": "GeneratedDocuments /documents, GeneratedDocumentDetail /documents/:id",
     "owner": "ConductionNL/filinq",
     "change": "filinq/generate-store-in-case-system",
-    "requirement": ["filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: An admin declares where generated documents go in the case system (REQ-GSC-001)", "filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A stored document gets a delivery for its destination (REQ-GSC-002)", "filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A delivery's outcome is visible and a failure can be retried (REQ-GSC-003)"]
+    "requirement": [
+     "filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: An admin declares where generated documents go in the case system (REQ-GSC-001)",
+     "filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A stored document gets a delivery for its destination (REQ-GSC-002)",
+     "filinq:openspec/changes/generate-store-in-case-system/specs/case-system-delivery :: A delivery's outcome is visible and a failure can be retried (REQ-GSC-003)"
+    ],
+    "plan": "filinq:openspec/changes/generate-store-in-case-system"
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
