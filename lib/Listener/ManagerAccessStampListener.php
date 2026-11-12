@@ -85,13 +85,13 @@ class ManagerAccessStampListener implements IEventListener {
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
 	public function handle(Event $event): void {
-		$entity = SchemaWriteFilter::pendingObject($event);
-		if ($entity === null || $this->marker->isInternal() === true) {
+		if (($event instanceof ObjectCreatingEvent || $event instanceof ObjectUpdatingEvent) === false || $this->marker->isInternal() === true) {
 			return;
 		}
 
+		$entity = ($event instanceof ObjectUpdatingEvent) ? $event->getNewObject() : $event->getObject();
 		$schema = $this->stamps->schemaFor(schemaId: (string)$entity->getSchema());
-		if ($schema !== null && ($event instanceof ObjectCreatingEvent || $event instanceof ObjectUpdatingEvent)) {
+		if ($schema !== null) {
 			$this->stamp(event: $event, schema: $schema);
 		}
 	}//end handle()

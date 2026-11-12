@@ -507,7 +507,7 @@ class Application extends App implements IBootstrap {
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 		$this->registerApprovalsInboxListeners($dispatcher);
-		ManagerAccessListeners::register(fn (array $on) => $this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $on['event'], listener: $on['listener'], registers: null, schemas: $on['schemas']));
+		(new ManagerAccessListeners())->register(fn (array $on) => $this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $on['event'], listener: $on['listener'], registers: null, schemas: $on['schemas']));
 		$this->registerOvertimeCreditListener($dispatcher);
 		$this->registerExpensePayrollListeners($dispatcher);
 		$this->registerHrLifecycleEventListener($dispatcher);

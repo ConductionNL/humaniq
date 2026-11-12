@@ -48,7 +48,7 @@ final class ManagerAccessListeners {
 	 *
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
-	public static function register(callable $subscribe): void {
+	public function register(callable $subscribe): void {
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
 			$subscribe(['event' => $event, 'listener' => ManagerAccessStampListener::class, 'schemas' => array_keys(ManagerAccessStampListener::SLUGS)]);
 		}
