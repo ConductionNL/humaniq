@@ -146,20 +146,6 @@ class SettingsService {
 	}//end getGlPostAccountReimbursements()
 
 	/**
-	 * The route an approved claim takes by default, `payroll` or `direct`
-	 * (payroll-expenses-and-allowances D1), configurable via app config key
-	 * `expense_reimbursement_route`. Unset or unknown keeps today's direct route.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
-	 */
-	public function getExpenseReimbursementRoute(): string {
-		$value = $this->appConfig->getValueString(Application::APP_ID, 'expense_reimbursement_route', 'direct');
-		return $value === 'payroll' ? 'payroll' : 'direct';
-	}//end getExpenseReimbursementRoute()
-
-	/**
 	 * Read a `glpost_account_*` config key, falling back to its placeholder
 	 * default when unset or blank.
 	 *
@@ -540,43 +526,6 @@ class SettingsService {
 	public function getPayTransparencyMinimumGroup(): int {
 		return max(1, $this->appConfig->getValueInt(Application::APP_ID, 'pay_transparency_minimum_group', 5));
 	}//end getPayTransparencyMinimumGroup()
-
-	/**
-	 * expenses-travel-calculation: the rate per kilometre the employer pays
-	 * for business and commuting travel. App config key
-	 * `mileage_rate_per_km` (for example `0.30`); null when unset or not a
-	 * positive number, and the caller then pays the tax-free rate from the
-	 * rule corpus.
-	 *
-	 * @return float|null
-	 *
-	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
-	 */
-	public function getMileageRatePerKm(): ?float {
-		$raw = trim(str_replace(',', '.', $this->appConfig->getValueString(Application::APP_ID, 'mileage_rate_per_km', '')));
-		if (is_numeric($raw) === false || (float)$raw <= 0.0) {
-			return null;
-		}
-
-		return (float)$raw;
-	}//end getMileageRatePerKm()
-
-	/**
-	 * expenses-travel-calculation: the integriq source that answers the road
-	 * distance between two postcodes (app config `route_distance_source`, a
-	 * source uuid) and the path on it (`route_distance_endpoint`, default
-	 * empty). Empty source means no route planner is configured.
-	 *
-	 * @return array{source: string, endpoint: string}
-	 *
-	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-003
-	 */
-	public function getRouteDistanceSource(): array {
-		return [
-			'source' => trim($this->appConfig->getValueString(Application::APP_ID, 'route_distance_source', '')),
-			'endpoint' => trim($this->appConfig->getValueString(Application::APP_ID, 'route_distance_endpoint', '')),
-		];
-	}//end getRouteDistanceSource()
 
 	/**
 	 * The integriq source uuid a base register is called through

@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Listener;
 
 use OCA\Humaniq\Listener\TravelAmountListener;
+use OCA\Humaniq\Service\ExpenseSettings;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OrgResolutionService;
@@ -40,6 +41,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -83,7 +85,8 @@ class TravelAmountListenerTest extends TestCase {
 	private function listener(): TravelAmountListener {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
-		$settings->method('getMileageRatePerKm')->willReturn($this->employerRate);
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getAppValueString')->willReturn($this->employerRate === null ? '' : (string)$this->employerRate);
 		$gateway = new HoursRegisterGateway(
 			container: new FakeContainer([
 				'OCA\OpenRegister\Service\ObjectService' => $this->store,
@@ -96,7 +99,7 @@ class TravelAmountListenerTest extends TestCase {
 		return new TravelAmountListener(
 			gateway: $gateway,
 			calculator: new TravelAllowanceCalculator(),
-			settings: $settings,
+			settings: new ExpenseSettings($config),
 			marker: new InternalWriteMarker(),
 			logger: new NullLogger()
 		);
