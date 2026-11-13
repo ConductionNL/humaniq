@@ -163,4 +163,18 @@ class NlFlexContractSignalsTest extends TestCase {
 		self::assertSame(['months' => 12], $rules['nl-signaal-oproep-vaste-uren']['parameters']);
 		self::assertSame('recommended', $rules['nl-signaal-oproep-vaste-uren']['severity']);
 	}//end testBothRulesAreInTheCorpusWithTheirParameters()
+	/**
+	 * An on-call contract whose startDate is not a date has no 12-month clock
+	 * to run out: not flagged for the missing fixed-hours offer.
+	 *
+	 * @return void
+	 */
+	public function testAnOnCallContractWithoutAParseableStartIsNotFlagged(): void {
+		$check = NlFlexContractChecks::checks()['EmploymentContract']['nl-signaal-oproep-vaste-uren'];
+
+		self::assertTrue($check(['type' => 'oproep', 'startDate' => 'onbekend']));
+		self::assertTrue($check(['type' => 'oproep']));
+
+	}//end testAnOnCallContractWithoutAParseableStartIsNotFlagged()
+
 }//end class

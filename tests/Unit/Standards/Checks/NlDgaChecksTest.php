@@ -34,9 +34,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
+use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Standards\Checks\NlDgaChecks;
 use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 /**
  * Tests for NlDgaChecks (raw predicate + through the REAL RuleEngine).
@@ -66,6 +68,7 @@ class NlDgaChecksTest extends TestCase {
 	 */
 	protected function tearDown(): void {
 		RuleEngine::reset();
+		TaxTables::resetAvailableIdsCache();
 
 	}//end tearDown()
 
@@ -251,5 +254,24 @@ class NlDgaChecksTest extends TestCase {
 		$this->assertNotContains('nl-gebruikelijkloon-norm', $ruleIds);
 
 	}//end testRealRuleEngineIsSilentForANonDgaEmployee()
+	/**
+	 * With no tax-year table available there is no gebruikelijkloon norm to
+	 * compare against: a below-norm DGA without justification passes
+	 * vacuously instead of being flagged against an invented figure.
+	 *
+	 * @return void
+	 */
+	public function testNoAvailableTaxTableMakesTheNormVacuous(): void {
+		$check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
+		$employee = $this->employee(['isDga' => true, 'grossMonthlySalary' => 3000.00]);
+		$this->assertFalse($check($employee, []), 'Sanity: against the bundled table this DGA is below the norm.');
+
+		$cache = new ReflectionProperty(TaxTables::class, 'availableIdsCache');
+		$cache->setValue(null, []);
+
+		$this->assertTrue($check($employee, []));
+		$this->assertTrue(NlDgaChecks::meetsGebruikelijkloonNorm($employee));
+
+	}//end testNoAvailableTaxTableMakesTheNormVacuous()
 
 }//end class

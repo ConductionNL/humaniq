@@ -46,6 +46,7 @@ use OCA\Humaniq\Standards\Checks\NlCaoChecks;
 use OCA\Humaniq\Standards\RuleCatalogue;
 use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 /**
  * Tests for NlCaoChecks, driven through the real RuleEngine.
@@ -553,5 +554,58 @@ class NlCaoChecksTest extends TestCase {
 		}
 
 	}//end testLeaveVacuousWithoutNumericContractHours()
+	/**
+	 * A CAO whose leaf groups are missing or not `{value, verified}` objects
+	 * still seeds a row: its values project as empty, its verification flags
+	 * as false, and only well-formed `basedOn` citations reach the source
+	 * summary. The registry is seeded through its memo (the
+	 * CaoOvertimeGoldenTest precedent), since the shipped corpus has no such
+	 * CAO.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-006
+	 */
+	public function testSeedObjectsProjectsMalformedLeavesAsEmptyAndUnverified(): void {
+		$cache = new ReflectionProperty(CaoRegistry::class, 'cache');
+		$cache->setValue(
+			null,
+			[
+				'cao-kaal' => [
+					'name' => 'Kale cao',
+					'sector' => 'Test',
+					'version' => '2026.1',
+					'effectiveDate' => '2026-01-01',
+					'payScales' => 'zie cao-tekst',
+					'allowances' => ['value' => 'n.v.t.', 'verified' => true],
+					'leaveEntitlement' => ['value' => ['minHoursPerYear' => 200], 'verified' => true, 'placeholder' => true],
+					'basedOn' => [['doc' => 'Cao-tekst 2026'], ['doc' => '  '], 'los'],
+				],
+			]
+		);
+
+		$this->assertSame(
+			[
+				'Cao' => [
+					[
+						'caoId' => 'cao-kaal',
+						'name' => 'Kale cao',
+						'sector' => 'Test',
+						'version' => '2026.1',
+						'effectiveDate' => '2026-01-01',
+						'payScales' => [],
+						'payScalesVerified' => false,
+						'allowances' => [],
+						'leaveEntitlement' => ['minHoursPerYear' => 200],
+						'leaveEntitlementVerified' => false,
+						'workingTime' => [],
+						'source' => 'Cao-tekst 2026',
+					],
+				],
+			],
+			NlCaoChecks::seedObjects()
+		);
+
+	}//end testSeedObjectsProjectsMalformedLeavesAsEmptyAndUnverified()
 
 }//end class
