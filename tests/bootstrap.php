@@ -37,6 +37,14 @@ if (is_dir(__DIR__ . '/../vendor/nextcloud/ocp/OCP') === true) {
 	$autoloader->addPsr4('NCU\\', __DIR__ . '/../vendor/nextcloud/ocp/NCU/');
 }
 
+// Integriq's connection status event, for the reporter's tests. Integriq is
+// optional and absent here; the stub mirrors its constructor and loads only
+// when the real class is not already loaded. The check must not autoload:
+// Composer remembers a class it failed to find and would then skip the stub.
+if (class_exists('OCA\\Integriq\\Event\\ConnectionStatusReportedEvent', false) === false) {
+	$autoloader->addPsr4('OCA\\Integriq\\', __DIR__ . '/stubs/Integriq/');
+}
+
 // Doctrine placeholders, loaded BEFORE anything can mock an OCP DB interface.
 // IQueryBuilder evaluates constants referencing Doctrine\DBAL\ParameterType at
 // parse time, and IDBConnection::getQueryBuilder() returns IQueryBuilder — so

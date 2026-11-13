@@ -1,10 +1,16 @@
 ## 1. Declaration
 
-- [ ] 1.1 Extend `lib/Settings/connections.json` with the rows of design D1. Verify: hydra gate
+- [x] 1.1 Extend `lib/Settings/connections.json` with the rows of design D1. Verify: hydra gate
       116 passes; on a dev instance with integriq the rows appear in integriq's overview.
-- [ ] 1.2 Dispatch `ConnectionStatusReportedEvent` for `shillinq-ledger` after glpost and netpay
+      - gate 116 (`check_connections_declaration.js`) passes with 0 findings; the live look in
+        integriq's overview is still to do.
+- [x] 1.2 Dispatch `ConnectionStatusReportedEvent` for `shillinq-ledger` after glpost and netpay
       handoffs. Verify: unit test for a success and a failure report; nothing is dispatched
       when integriq is absent.
+      - `Service\Connection\ConnectionReporter`: `configured` when shillinq took or already held
+        the journal entry or payment run, `error` with the reason when shillinq refused it,
+        `unavailable` when shillinq is absent. A run humaniq refuses itself (missing period,
+        missing IBAN) never reached shillinq and reports nothing.
 
 ## 2. Pages
 
