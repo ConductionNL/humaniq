@@ -3722,7 +3722,9 @@ OC.L10N.register(
         "Expense categories": "Declaratiecategorieën",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
-        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen."
+        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
+        "Own fields": "Eigen velden",
+        "Manage fields": "Velden beheren"
     },
     "nplurals=2; plural=(n != 1);"
 )

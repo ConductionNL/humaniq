@@ -3722,7 +3722,9 @@ OC.L10N.register(
         "Expense categories": "Expense categories",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.",
         "The expense categories could not be loaded.": "The expense categories could not be loaded.",
-        "The expense categories could not be saved.": "The expense categories could not be saved."
+        "The expense categories could not be saved.": "The expense categories could not be saved.",
+        "Own fields": "Own fields",
+        "Manage fields": "Manage fields"
     },
     "nplurals=2; plural=(n != 1);"
 )

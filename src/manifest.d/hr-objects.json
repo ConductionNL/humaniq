@@ -8,7 +8,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "Employee",
-				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001). people-dossier-completeness (2026-09-29): a Dossier status table over GET /api/employees/{id}/dossier-status names each required document as present, missing, expired, expiring or too old at start (REQ-DCP-002), and a Personnel documents object-list (PersonnelDocument.employeeId = @objectId) holds the supplied documents. people-secondment-and-side-activities (2026-09-29): Secondments (Secondment.employeeId = @objectId, REQ-SEC-001) and Side activities (SideActivity.employeeId = @objectId, REQ-SEC-003) object-lists side by side.",
+				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001). people-dossier-completeness (2026-09-29): a Dossier status table over GET /api/employees/{id}/dossier-status names each required document as present, missing, expired, expiring or too old at start (REQ-DCP-002), and a Personnel documents object-list (PersonnelDocument.employeeId = @objectId) holds the supplied documents. people-secondment-and-side-activities (2026-09-29): Secondments (Secondment.employeeId = @objectId, REQ-SEC-001) and Side activities (SideActivity.employeeId = @objectId, REQ-SEC-003) object-lists side by side. employee-custom-fields-through-the-register (2026-11-13): 'Own fields' (full-width, below Employment & compliance) renders every Employee property the app does NOT ship (exclude = the shipped properties of hr-objects.json and hr-cost-rate.json, pinned by EmployeeCustomFieldsManifestTest), so a field an administrator adds in OpenRegister appears and edits there; 'Employment & compliance' now names its shipped fields with include instead of excluding the person fields, so an added field does not show twice. 'Manage fields' (adminOnly header action) opens OpenRegister's schema list.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -132,14 +132,130 @@
 						"icon": "ShieldCheckOutline",
 						"content": {
 							"columns": 3,
+							"include": [
+								"hourlyCostRateOverrideCents",
+								"hourlyCostRateOverrideReason",
+								"hourlyCostRateOverrideBy",
+								"hourlyCostRateOverrideAt",
+								"hourlyCostAdditions",
+								"managerUserId",
+								"deputyUserIds",
+								"shareBirthday",
+								"startDate",
+								"endDate",
+								"incomeRelationshipNumber",
+								"endReason",
+								"grossMonthlySalary",
+								"taxTableColor",
+								"identityDocumentVerified",
+								"identityDocumentRetainedUntil",
+								"loonheffingenVerklaringRetainedUntil",
+								"loonheffingenVerklaringOnFile",
+								"elstamRetrieved",
+								"steuerklasse",
+								"w4OnFile",
+								"i9VerifiedWithinThreeDays",
+								"newHireReportedDate",
+								"a1CertificateNumber",
+								"a1ValidUntil",
+								"postedWorker",
+								"thirtyPercentRulingGranted",
+								"thirtyPercentRulingRate",
+								"thirtyPercentCappedAtWntNorm",
+								"thirtyPercentRulingStartDate",
+								"thirtyPercentRulingEndDate",
+								"thirtyPercentRulingReducedNormApplies",
+								"nextcloudUserId",
+								"iban",
+								"tenaamstelling",
+								"loonheffingskortingToegepast",
+								"administrationId",
+								"isDga",
+								"gebruikelijkloonJustification",
+								"publicSectorRegime",
+								"ambtseedAfgelegdOp",
+								"nevenwerkzaamhedenGemeld",
+								"wntTopfunctionaris",
+								"wntUitzonderingReden",
+								"gender",
+								"straat",
+								"huisnummer",
+								"postcode",
+								"woonplaats",
+								"land",
+								"privateEmail",
+								"phone"
+							],
+							"title": "Employment & compliance"
+						}
+					},
+					{
+						"id": "own-fields",
+						"type": "data",
+						"title": "Own fields",
+						"icon": "FormTextbox",
+						"content": {
+							"columns": 3,
 							"exclude": [
+								"hourlyCostRateOverrideCents",
+								"hourlyCostRateOverrideReason",
+								"hourlyCostRateOverrideBy",
+								"hourlyCostRateOverrideAt",
+								"hourlyCostAdditions",
+								"managerUserId",
+								"deputyUserIds",
 								"employeeNumber",
+								"bsn",
 								"firstName",
 								"lastName",
 								"dateOfBirth",
-								"bsn"
+								"shareBirthday",
+								"startDate",
+								"endDate",
+								"incomeRelationshipNumber",
+								"endReason",
+								"grossMonthlySalary",
+								"taxTableColor",
+								"identityDocumentVerified",
+								"identityDocumentRetainedUntil",
+								"loonheffingenVerklaringRetainedUntil",
+								"loonheffingenVerklaringOnFile",
+								"elstamRetrieved",
+								"steuerklasse",
+								"w4OnFile",
+								"i9VerifiedWithinThreeDays",
+								"newHireReportedDate",
+								"a1CertificateNumber",
+								"a1ValidUntil",
+								"postedWorker",
+								"thirtyPercentRulingGranted",
+								"thirtyPercentRulingRate",
+								"thirtyPercentCappedAtWntNorm",
+								"thirtyPercentRulingStartDate",
+								"thirtyPercentRulingEndDate",
+								"thirtyPercentRulingReducedNormApplies",
+								"nextcloudUserId",
+								"iban",
+								"tenaamstelling",
+								"loonheffingskortingToegepast",
+								"administrationId",
+								"isDga",
+								"gebruikelijkloonJustification",
+								"publicSectorRegime",
+								"ambtseedAfgelegdOp",
+								"nevenwerkzaamhedenGemeld",
+								"wntTopfunctionaris",
+								"wntUitzonderingReden",
+								"gender",
+								"straat",
+								"huisnummer",
+								"postcode",
+								"woonplaats",
+								"land",
+								"privateEmail",
+								"phone"
 							],
-							"title": "Employment & compliance"
+							"title": "Own fields"
 						}
 					},
 					{
@@ -932,10 +1048,18 @@
 						"gridHeight": 7
 					},
 					{
+						"id": 28,
+						"widgetId": "own-fields",
+						"gridX": 0,
+						"gridY": 15,
+						"gridWidth": 12,
+						"gridHeight": 3
+					},
+					{
 						"id": 7,
 						"widgetId": "object-list",
 						"gridX": 0,
-						"gridY": 15,
+						"gridY": 18,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -943,7 +1067,7 @@
 						"id": 8,
 						"widgetId": "object-list-2",
 						"gridX": 6,
-						"gridY": 15,
+						"gridY": 18,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -951,7 +1075,7 @@
 						"id": 9,
 						"widgetId": "object-list-3",
 						"gridX": 0,
-						"gridY": 19,
+						"gridY": 22,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -959,7 +1083,7 @@
 						"id": 10,
 						"widgetId": "object-list-4",
 						"gridX": 6,
-						"gridY": 19,
+						"gridY": 22,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -967,7 +1091,7 @@
 						"id": 11,
 						"widgetId": "object-list-5",
 						"gridX": 0,
-						"gridY": 23,
+						"gridY": 26,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -975,7 +1099,7 @@
 						"id": 12,
 						"widgetId": "object-list-6",
 						"gridX": 0,
-						"gridY": 27,
+						"gridY": 30,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -983,7 +1107,7 @@
 						"id": 13,
 						"widgetId": "object-list-7",
 						"gridX": 0,
-						"gridY": 31,
+						"gridY": 34,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -991,7 +1115,7 @@
 						"id": 14,
 						"widgetId": "object-list-8",
 						"gridX": 0,
-						"gridY": 35,
+						"gridY": 38,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -999,7 +1123,7 @@
 						"id": 15,
 						"widgetId": "object-list-9",
 						"gridX": 0,
-						"gridY": 39,
+						"gridY": 42,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -1007,7 +1131,7 @@
 						"id": 17,
 						"widgetId": "object-list-10",
 						"gridX": 0,
-						"gridY": 43,
+						"gridY": 46,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -1015,7 +1139,7 @@
 						"id": 16,
 						"widgetId": "files",
 						"gridX": 0,
-						"gridY": 47,
+						"gridY": 50,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -1023,7 +1147,7 @@
 						"id": 18,
 						"widgetId": "employments",
 						"gridX": 0,
-						"gridY": 51,
+						"gridY": 54,
 						"gridWidth": 12,
 						"gridHeight": 5
 					},
@@ -1031,7 +1155,7 @@
 						"id": 19,
 						"widgetId": "history",
 						"gridX": 0,
-						"gridY": 56,
+						"gridY": 59,
 						"gridWidth": 12,
 						"gridHeight": 6
 					},
@@ -1039,7 +1163,7 @@
 						"id": 20,
 						"widgetId": "object-list-11",
 						"gridX": 0,
-						"gridY": 62,
+						"gridY": 65,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -1047,7 +1171,7 @@
 						"id": 21,
 						"widgetId": "object-list-12",
 						"gridX": 0,
-						"gridY": 66,
+						"gridY": 69,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -1055,7 +1179,7 @@
 						"id": 22,
 						"widgetId": "dossier-status",
 						"gridX": 0,
-						"gridY": 70,
+						"gridY": 73,
 						"gridWidth": 12,
 						"gridHeight": 5
 					},
@@ -1063,7 +1187,7 @@
 						"id": 23,
 						"widgetId": "object-list-13",
 						"gridX": 0,
-						"gridY": 75,
+						"gridY": 78,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -1071,7 +1195,7 @@
 						"id": 24,
 						"widgetId": "object-list-14",
 						"gridX": 0,
-						"gridY": 79,
+						"gridY": 82,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -1079,7 +1203,7 @@
 						"id": 25,
 						"widgetId": "object-list-15",
 						"gridX": 6,
-						"gridY": 79,
+						"gridY": 82,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -1087,7 +1211,7 @@
 						"id": 26,
 						"widgetId": "object-list-16",
 						"gridX": 0,
-						"gridY": 83,
+						"gridY": 86,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -1095,7 +1219,7 @@
 						"id": 27,
 						"widgetId": "cost-allocations",
 						"gridX": 6,
-						"gridY": 83,
+						"gridY": 86,
 						"gridWidth": 6,
 						"gridHeight": 4
 					}
@@ -1116,6 +1240,14 @@
 						},
 						"confirm": false,
 						"successMessage": "Filled the empty fields from the population register. Fields you had already filled were kept."
+					},
+					{
+						"id": "manage-fields",
+						"label": "Manage fields",
+						"type": "navigate",
+						"target": "/apps/openregister/schemas",
+						"icon": "FormTextbox",
+						"adminOnly": true
 					}
 				]
 			}
