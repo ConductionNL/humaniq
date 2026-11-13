@@ -93,9 +93,40 @@ class InitializeRegisterTest extends TestCase {
 	}//end testAnImportWithErrorsIsReportedAsAnIssue()
 
 	/**
+	 * An import that throws past the importer warns and logs, rather than
+	 * aborting the upgrade. Here the availability check answers the step but
+	 * fails when the importer asks again.
+	 *
+	 * @return void
+	 */
+	public function testAThrowingImportWarnsAndLogsTheError(): void {
+		$asked = 0;
+		$seen = $this->runStep([
+			'isInstalled' => static function (string $app) use (&$asked): bool {
+				$asked++;
+				if ($asked > 1) {
+					throw new \RuntimeException('app list unavailable');
+				}
+
+				return true;
+			},
+		]);
+
+		self::assertSame([['info', 'Initializing humaniq register...'], ['warning', 'Could not initialize humaniq register: app list unavailable']], $seen['output']);
+		self::assertSame(['Humaniq register initialization failed'], $seen['log']);
+		self::assertSame([], $seen['forced'], 'nothing may be imported when the import throws');
+		self::assertSame(2, $asked);
+		self::assertSame('Initialize humaniq register and schemas in OpenRegister', (new InitializeRegister(
+			$this->createMock(SettingsService::class),
+			new RegisterImporter($this->createMock(SettingsService::class), $this->createMock(ContainerInterface::class), new NullLogger()),
+			new NullLogger()
+		))->getName());
+	}//end testAThrowingImportWarnsAndLogsTheError()
+
+	/**
 	 * Run the step over one scenario.
 	 *
-	 * @param array<string, mixed> $scenario Whether OpenRegister is installed and what the import answers.
+	 * @param array<string, mixed> $scenario Whether OpenRegister is installed (or an isInstalled callback) and what the import answers.
 	 *
 	 * @return array{output: list<array{0: string, 1: string}>, log: list<string>, forced: list<bool>}
 	 */
@@ -143,7 +174,11 @@ class InitializeRegisterTest extends TestCase {
 			}
 		};
 		$appManager = $this->createMock(IAppManager::class);
-		$appManager->method('isInstalled')->willReturn($scenario['installed'] ?? true);
+		if (isset($scenario['isInstalled']) === true) {
+			$appManager->method('isInstalled')->willReturnCallback($scenario['isInstalled']);
+		} else {
+			$appManager->method('isInstalled')->willReturn($scenario['installed'] ?? true);
+		}
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($importer);
 		$output = [];
