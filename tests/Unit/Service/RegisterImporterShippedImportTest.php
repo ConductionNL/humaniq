@@ -38,6 +38,7 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Humaniq\Service\SettingsService
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\RegisterConfigReader
+ * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
  */
 class RegisterImporterShippedImportTest extends TestCase {
 
