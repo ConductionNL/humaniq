@@ -68,6 +68,7 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Humaniq\Standards\RuleCatalogue
  * @uses \OCA\Humaniq\Listener\ObjectUpdatingListener
  * @uses \OCA\Humaniq\Listener\SchemaWriteFilter
+ * @uses   \OCA\Humaniq\Service\ExpenseSettings
  */
 class ExpensePreSaveChainTest extends TestCase {
 

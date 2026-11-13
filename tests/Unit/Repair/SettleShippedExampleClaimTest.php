@@ -46,6 +46,7 @@ use Psr\Log\LoggerInterface;
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\PayrollExpenseFoldService
  * @uses   \OCA\Humaniq\Service\AllowanceSplitter
+ * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
  */
 class SettleShippedExampleClaimTest extends TestCase {
 

@@ -41,6 +41,7 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Humaniq\Service\RegisterImporter
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\RegisterConfigReader
+ * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
  */
 class InitializeRegisterTest extends TestCase {
 

@@ -63,6 +63,7 @@ use RuntimeException;
  * @uses   \OCA\Humaniq\Support\ReadsIcsValues
  * @uses \OCA\Humaniq\Service\CalDavBackendResolver
  * @uses \OCA\Humaniq\Service\IcsText
+ * @uses   \OCA\Humaniq\Service\CalendarSettings
  *
  * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-003
  */
