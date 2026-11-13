@@ -56,6 +56,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -82,14 +83,21 @@ class InterviewCalendarService {
 	 * @param CalendarSettings $calendars Target-calendar config (design.md D6).
 	 * @param InterviewRepository $repository Reads interviews and their applications and vacancies.
 	 * @param LoggerInterface $logger Logger.
+	 * @param IUserManager|null $users Names the interviewers as attendees (REQ-INTV-010); without it they are text only.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly CalendarSettings $calendars,
 		private readonly InterviewRepository $repository,
 		private readonly LoggerInterface $logger,
+		?IUserManager $users = null,
 	) {
-		$this->engine = new InterviewSyncEngine($this->repository, new InterviewIcsRenderer());
+		$attendees = null;
+		if ($users !== null) {
+			$attendees = new InterviewAttendees(users: $users);
+		}
+
+		$this->engine = new InterviewSyncEngine($this->repository, new InterviewIcsRenderer(), $attendees);
 		$this->orphanReconciler = new InterviewOrphanReconciler($logger);
 
 	}//end __construct()

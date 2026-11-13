@@ -66,10 +66,12 @@ class InterviewSyncEngine {
 	/**
 	 * @param InterviewRepository $repository Interview/Application/Vacancy data access + PUT-semantic persist.
 	 * @param InterviewIcsRenderer $icsRenderer ICS render/diff/date-parse helper.
+	 * @param InterviewAttendees|null $attendees  Names the organiser and the interviewers as attendees; without it the event carries the interviewers as text only.
 	 */
 	public function __construct(
 		private readonly InterviewRepository $repository,
 		private readonly InterviewIcsRenderer $icsRenderer,
+		private readonly ?InterviewAttendees $attendees = null,
 	) {
 
 	}//end __construct()
@@ -189,13 +191,39 @@ class InterviewSyncEngine {
 		$applicationId = (string)($interview['applicationId'] ?? '');
 		$summary = $this->repository->resolveSummary($run->applicationsById, $run->vacanciesById, $applicationId);
 		$location = trim((string)($interview['location'] ?? ''));
-		$interviewers = trim((string)($interview['interviewers'] ?? ''));
-
 		$storedUid = trim((string)($interview['calendarEventUid'] ?? ''));
 		$uid = ($storedUid !== '') ? $storedUid : (self::URI_PREFIX . $sync->id);
-		$ics = $this->icsRenderer->render($uid, ['dtstart' => $sync->dtstart, 'dtend' => $sync->dtend, 'summary' => $summary, 'location' => $location, 'interviewers' => $interviewers]);
-		return new PreparedInterviewEvent($storedUid, $uid, $uid . '.ics', $ics, (string)$sync->dtstart, (string)$sync->dtend, $summary, $location);
+		$event = ['dtstart' => $sync->dtstart, 'dtend' => $sync->dtend, 'summary' => $summary, 'location' => $location];
+		$attendees = null;
+		if ($this->attendees === null) {
+			$event['interviewers'] = $this->interviewersText(interviewers: ($interview['interviewers'] ?? ''));
+		} else {
+			// REQ-INTV-010: the interviewers are attendees, the calendar's owner organises.
+			$people = $this->attendees->forEvent(interviewers: ($interview['interviewers'] ?? null), principal: $run->target->principal);
+			$event['interviewers'] = $people['description'];
+			$event['organizer'] = $people['organizer'];
+			$event['attendees'] = $people['attendees'];
+			$attendees = $people['attendees'];
+		}
+
+		$ics = $this->icsRenderer->render($uid, $event);
+		return new PreparedInterviewEvent($storedUid, $uid, $uid . '.ics', $ics, (string)$sync->dtstart, (string)$sync->dtend, $summary, $location, $attendees);
 	}//end prepareEvent()
+
+	/**
+	 * The interviewers as description text, for an engine that names no attendees.
+	 *
+	 * @param mixed $interviewers The stored value: user ids, or text stored before they were.
+	 *
+	 * @return string
+	 */
+	private function interviewersText(mixed $interviewers): string {
+		if (is_array($interviewers) === true) {
+			return implode(', ', InterviewAttendees::ids(interviewers: $interviewers));
+		}
+
+		return trim((string)$interviewers);
+	}//end interviewersText()
 
 	/**
 	 * Create or update one VEVENT, identified by the prepared UID
@@ -290,7 +318,12 @@ class InterviewSyncEngine {
 	private function updateEventIfChanged(InterviewSyncRun $run, InterviewEventSync $sync): void {
 		$prepared = $sync->prepared;
 		$existingIcs = $this->fetchCalendarData($run->target, $prepared->objectUri);
-		if ($existingIcs !== null && $this->icsRenderer->unchanged($existingIcs, ['dtstart' => $prepared->dtstart, 'dtend' => $prepared->dtend, 'summary' => $prepared->summary, 'location' => $prepared->location]) === true) {
+		$wanted = ['dtstart' => $prepared->dtstart, 'dtend' => $prepared->dtend, 'summary' => $prepared->summary, 'location' => $prepared->location];
+		if ($prepared->attendees !== null) {
+			$wanted['attendees'] = $prepared->attendees;
+		}
+
+		if ($existingIcs !== null && $this->icsRenderer->unchanged($existingIcs, $wanted) === true) {
 			$this->rememberUid(sync: $sync);
 			$run->results[] = $this->outcome($sync->id, 'unchanged', 'Geen wijziging.');
 			return;

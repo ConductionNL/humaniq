@@ -51,6 +51,7 @@ use OCA\Humaniq\Listener\AdministrationAccessWriteGuard;
 use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
 use OCA\Humaniq\Listener\ChangeRequestListener;
 use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
+use OCA\Humaniq\Listener\InterviewInterviewersListener;
 use OCA\Humaniq\Listener\FieldAccessListener;
 use OCA\Humaniq\Listener\FrequentAbsenceListener;
 use OCA\Humaniq\Listener\HandoffIntakeListener;
@@ -512,6 +513,7 @@ class Application extends App implements IBootstrap {
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 		$this->registerApprovalsInboxListeners($dispatcher);
+		$this->registerInterviewListeners($dispatcher);
 		(new ManagerAccessListeners())->register(fn (array $on) => $this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $on['event'], listener: $on['listener'], registers: null, schemas: $on['schemas']));
 		$this->registerOvertimeCreditListener($dispatcher);
 		$this->registerExpensePayrollListeners($dispatcher);
@@ -980,6 +982,27 @@ class Application extends App implements IBootstrap {
 		}
 		$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: ObjectUpdatedEvent::class, listener: HandoffIntakeListener::class, registers: null, schemas: [HandoffIntakeListener::SLUG]);
 	}//end registerExpensePayrollListeners()
+
+	/**
+	 * An Interview's interviewers are Nextcloud users, checked on every save.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/interview-in-the-interviewers-calendars/specs/interview-scheduling/spec.md#requirement-an-interview-shall-be-a-calendar-event-with-the-interviewers-as-attendees-req-intv-010
+	 */
+	private function registerInterviewListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: InterviewInterviewersListener::class,
+				registers: null,
+				schemas: [InterviewInterviewersListener::SCHEMA_SLUG]
+			);
+		}
+	}//end registerInterviewListeners()
 
 	/**
 	 * self-service-approvals-inbox D1 and D2: a deputy record is judged before

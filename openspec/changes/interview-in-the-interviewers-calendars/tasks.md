@@ -1,10 +1,15 @@
 ## 1. Build
 
-- [ ] 1.1 `interviewers` on `Interview` in `lib/Settings/register.d/hr-ats.json` becomes a list of Nextcloud user ids, checked on save (REQ-INTV-010).
-- [ ] 1.2 `lib/Service/InterviewCalendarService.php` writes ORGANIZER and one ATTENDEE per interviewer, and never the candidate (REQ-INTV-010, REQ-INTV-005).
+- [x] 1.1 `interviewers` on `Interview` in `lib/Settings/register.d/hr-ats.json` becomes a list of Nextcloud user ids, checked on save (REQ-INTV-010).
+  > `Interview.interviewers` is an array of user ids (`items.referenceType: nextcloud-user`, Interview 0.2.0); `InterviewInterviewersListener` refuses free text and any id that is not a Nextcloud user, naming it, on create and update.
+- [x] 1.2 `lib/Service/InterviewCalendarService.php` writes ORGANIZER and one ATTENDEE per interviewer, and never the candidate (REQ-INTV-010, REQ-INTV-005).
+  > `InterviewAttendees` + `InterviewIcsRenderer`: ORGANIZER is the interview calendar owner's address, one ATTENDEE per interviewer with an email address; only Nextcloud users are ever named, the Application is not read. A changed attendee list counts as a change for the sync.
 - [ ] 1.3 Reschedule and cancel in `lib/Service/InterviewSyncEngine.php` reach the attendees' copies (REQ-INTV-010).
-- [ ] 1.4 A user picker for interviewers on InterviewDetail in `src/manifest.d/hr-ats.json`.
-- [ ] 1.5 Unit tests in `tests/Unit/Service/` for the attendee rendering and the PII boundary.
+  > Open: the sync writes through `CalDavBackend` directly, which does not run Nextcloud's iTIP scheduling, so the attendees' own copies are not created, moved or cancelled yet. That needs the write path moved to the scheduling-aware calendar API (or the scheduling plugin), and checking on a live instance.
+- [x] 1.4 A user picker for interviewers on InterviewDetail in `src/manifest.d/hr-ats.json`.
+  > The picker comes from the schema: an array whose items declare `referenceType: nextcloud-user` renders as a multi user picker in the detail form, so `src/manifest.d/hr-ats.json` needs no change.
+- [x] 1.5 Unit tests in `tests/Unit/Service/` for the attendee rendering and the PII boundary.
+  > `tests/Unit/Service/InterviewAttendeesTest.php` (attendees, organiser, the rendered lines, no candidate, change detection, legacy text) and `tests/Unit/Listener/InterviewInterviewersListenerTest.php`.
 
 ## 2. Hand-over
 
