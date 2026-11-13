@@ -9,7 +9,7 @@ Part of the Conduction ecosystem alongside [shillinq](https://github.com/Conduct
 ## Test coverage
 
 <!-- coverage:start -->
-Measured test coverage: 91.7% of statements (PHP 91.7% of 25,386 statements), at commit `ce8394ca` on 2026-11-11. The JavaScript frontend is not in this figure, because it has no coverage measurement yet. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
+Measured test coverage: 93.3% of statements (PHP 93.3% of 25,745 statements), at commit `3950f97c` on 2026-11-13. The JavaScript frontend is not in this figure, because it has no coverage measurement yet. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
 <!-- coverage:end -->
 
 ## Payroll engine — NOT certified (read this before production use)
