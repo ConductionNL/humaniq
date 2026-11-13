@@ -182,6 +182,39 @@ final class MigrateSchemaSlugTest extends TestCase {
 	}//end testAFailedReadDoesNothing()
 
 	/**
+	 * A failing UPDATE is logged with both slugs and counted as not renamed,
+	 * never thrown, so the rest of the upgrade still runs.
+	 *
+	 * @return void
+	 */
+	public function testAFailedRenameIsLoggedAndNotCounted(): void {
+		$result = $this->createMock(IResult::class);
+		$result->method('fetchAll')->willReturn([['slug' => 'GeneratedDocument']]);
+
+		$db = $this->createMock(IDBConnection::class);
+		$db->method('executeQuery')->willReturn($result);
+		$db->expects(self::once())->method('executeStatement')
+			->willThrowException(new \OCP\DB\Exception('write refused'));
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())->method('warning')->with(
+			'MigrateSchemaSlug: could not rename schema slug.',
+			['old' => 'GeneratedDocument', 'new' => 'HrGeneratedDocument', 'exception' => 'write refused']
+		);
+		$logger->expects(self::never())->method('info');
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects(self::once())->method('info')
+			->with('MigrateSchemaSlug: 0 schema slug(s) renamed, 0 refused.');
+
+		$step = $this->step($db, $logger);
+		$step->run($output);
+
+		self::assertSame('Namespace Humaniq schema slugs that collide across the fleet', $step->getName());
+
+	}//end testAFailedRenameIsLoggedAndNotCounted()
+
+	/**
 	 * Every mapped rename is carried by the descriptors and the register list.
 	 *
 	 * A rename lives in four places at once — the fragment descriptor, the mock
