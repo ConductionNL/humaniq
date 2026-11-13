@@ -1165,8 +1165,8 @@
   {
    "id": "ppl-bsn-iban-validation",
    "area": "people",
-   "name": "Have a BSN, IBAN and date of birth checked for validity when they are entered.",
-   "humaniq": "partial",
+   "name": "Have an IBAN and a date of birth checked for their format when they are entered.",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "partial",
@@ -1194,7 +1194,7 @@
    "feature": "employee-records",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Only IBAN gets a real check, and by the schema's own note it is a shape regex, not a mod-97 checksum. BSN has no elfproef or format check anywhere in lib/Standards or the schema. Date of birth gets only generic ISO date parsing.",
+   "note": "Reworded on 13 Nov to the deliberate spec (decision 407, REQ-ECR-003): a format check only. The IBAN is checked against its shape, not a mod-97 checksum, and the date of birth must be a valid ISO date. The BSN is stored as entered, with no length or eleven test (elfproef). A missing BSN makes payroll apply the anonymous rate. Competitor columns were read against the earlier wording, validity checks.",
    "screen": {
     "canvas": "design-system",
     "board": "HuMedewerker"
