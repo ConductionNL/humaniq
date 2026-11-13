@@ -5,7 +5,32 @@
             "Announcement": {
                 "slug": "Announcement",
                 "icon": "BullhornOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
+                "configuration": {
+                    "x-openregister-mcp": {
+                        "enabled": true,
+                        "tools": {
+                            "search": {
+                                "description": "Search the employer's announcements and policies (for example the expense policy or the working-from-home rules) by status or audience. Only published announcements are readable for employees. Use this to find the policy a question is about, and cite its title.",
+                                "scope": "read",
+                                "filters": [
+                                    "status",
+                                    "audience"
+                                ],
+                                "readOnlyHint": true,
+                                "destructiveHint": false,
+                                "idempotentHint": true
+                            },
+                            "get": {
+                                "description": "Get one announcement: its title, its text and its period. Attached policy documents are named on the announcement. Cite the title when you answer from it.",
+                                "scope": "read",
+                                "readOnlyHint": true,
+                                "destructiveHint": false,
+                                "idempotentHint": true
+                            }
+                        }
+                    }
+                },
                 "title": "Announcement",
                 "description": "A message or policy HR publishes to the employees of an administration or of chosen departments, for a period, optionally asking each employee to confirm they read it (self-service-announcements-and-digest D1).",
                 "type": "object",

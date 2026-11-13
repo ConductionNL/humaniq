@@ -5,7 +5,33 @@
             "Normfunctie": {
                 "slug": "Normfunctie",
                 "icon": "BriefcaseOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
+                "configuration": {
+                    "x-openregister-mcp": {
+                        "enabled": true,
+                        "tools": {
+                            "search": {
+                                "description": "Search the reference job catalogue (HR21 normfuncties and the employer's own functions) by function group, source or status. Use this to describe a job, its family and the CAO scale it maps to.",
+                                "scope": "read",
+                                "filters": [
+                                    "functiegroep",
+                                    "bron",
+                                    "status"
+                                ],
+                                "readOnlyHint": true,
+                                "destructiveHint": false,
+                                "idempotentHint": true
+                            },
+                            "get": {
+                                "description": "Get one reference job: its code, name, function group and family, and the CAO scale it maps to. It names no employee and holds no one's salary.",
+                                "scope": "read",
+                                "readOnlyHint": true,
+                                "destructiveHint": false,
+                                "idempotentHint": true
+                            }
+                        }
+                    }
+                },
                 "title": "Reference job",
                 "description": "A job function in your catalogue: a function from the HR21 reference library (VNG) or one of your own, mapped to a Cao Gemeenten schaal and optionally to a salary band. Retire a function instead of deleting it, so contracts that point at it keep their meaning.",
                 "type": "object",
