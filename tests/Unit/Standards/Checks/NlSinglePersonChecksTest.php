@@ -263,5 +263,19 @@ class NlSinglePersonChecksTest extends TestCase {
 		$this->assertNotContains('nl-single-person-mode-employee-count', $ruleIds);
 
 	}//end testRealRuleEngineIsSilentForStandardMode()
+	/**
+	 * A dga_single_person administratie without an administrationId has no
+	 * business key to count employees by: vacuous, even with no employees.
+	 *
+	 * @return void
+	 */
+	public function testSinglePersonModeWithoutAnAdministrationIdIsVacuous(): void {
+		$check = $this->checks['Administration']['nl-single-person-mode-employee-count'];
+
+		self::assertTrue($check(['mode' => 'dga_single_person', 'administrationId' => '  '], $this->context([])));
+		self::assertTrue($check(['mode' => 'dga_single_person'], $this->context([['id' => 'e1', 'administrationId' => '', 'isDga' => false]])));
+		self::assertFalse($check(['mode' => 'dga_single_person', 'administrationId' => 'ADM-001'], $this->context([])), 'Sanity: with a key, zero employees is flagged.');
+
+	}//end testSinglePersonModeWithoutAnAdministrationIdIsVacuous()
 
 }//end class
