@@ -10,8 +10,11 @@ declare(strict_types=1);
  * routes here — only the SPA shell + the bundled-manifest endpoint (ADR-024 §4).
  */
 
-return [
+// Every unversioned API route is also served under /api/v1/; see ApiPathAliases.
+return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
     'routes' => [
+        // The OpenAPI document of humaniq's own API, public, served under /api/v1/ too.
+        ['name' => 'openApi#show', 'url' => '/api/openapi.json', 'verb' => 'GET'],
         // SPA shell — boots the Vue manifest renderer.
         // First-time setup wizard (ADR-042) - the standard CnSetupWizard contract.
         ['name' => 'setup#status',    'url' => '/api/setup/status',            'verb' => 'GET'],
@@ -227,4 +230,4 @@ return [
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],
-];
+]);
