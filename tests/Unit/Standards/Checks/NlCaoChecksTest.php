@@ -511,4 +511,47 @@ class NlCaoChecksTest extends TestCase {
 		}
 	}//end testAnUnknownComponentIsFlagged()
 
+	/**
+	 * The pay-scale minimum is not judged when the employee cannot be
+	 * resolved or has no numeric salary.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-003
+	 */
+	public function testPayScaleVacuousForUnresolvableEmployeeOrSalary(): void {
+		$contract = ['employeeId' => 'emp-1', 'cao' => 'cao-generiek', 'caoSchaal' => 'generiek'];
+		$this->assertTrue($this->hasViolation(RuleEngine::evaluate('EmploymentContract', $contract, $this->context(100.00)), 'nl-cao-minimumloon-schaal'), 'Precondition: a low salary is flagged.');
+
+		$noEmployee = RuleEngine::evaluate('EmploymentContract', $contract, $this->context());
+		$otherEmployee = RuleEngine::evaluate('EmploymentContract', array_merge($contract, ['employeeId' => 'emp-2']), $this->context(100.00));
+		$context = $this->context(100.00);
+		$context['cao']['employeesById']['emp-1']['grossMonthlySalary'] = 'onbekend';
+		$noSalary = RuleEngine::evaluate('EmploymentContract', $contract, $context);
+
+		$this->assertFalse($this->hasViolation($noEmployee, 'nl-cao-minimumloon-schaal'));
+		$this->assertFalse($this->hasViolation($otherEmployee, 'nl-cao-minimumloon-schaal'));
+		$this->assertFalse($this->hasViolation($noSalary, 'nl-cao-minimumloon-schaal'));
+
+	}//end testPayScaleVacuousForUnresolvableEmployeeOrSalary()
+
+	/**
+	 * The CAO leave minimum is not judged without numeric contract hours.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-004
+	 */
+	public function testLeaveVacuousWithoutNumericContractHours(): void {
+		$balance = ['employeeId' => 'emp-1', 'leaveType' => 'holiday', 'contractHoursPerWeek' => 40, 'entitledHours' => 100, 'bovenwettelijkHours' => 0];
+		$context = $this->context(null, 'cao-generiek');
+		$this->assertTrue($this->hasViolation(RuleEngine::evaluate('LeaveBalance', $balance, $context), 'nl-cao-verlof-minimum'), 'Precondition: too little leave is flagged.');
+
+		foreach ([null, '', 'veertig'] as $hours) {
+			$violations = RuleEngine::evaluate('LeaveBalance', array_merge($balance, ['contractHoursPerWeek' => $hours]), $context);
+			$this->assertFalse($this->hasViolation($violations, 'nl-cao-verlof-minimum'), 'contractHoursPerWeek=' . var_export($hours, true));
+		}
+
+	}//end testLeaveVacuousWithoutNumericContractHours()
+
 }//end class
