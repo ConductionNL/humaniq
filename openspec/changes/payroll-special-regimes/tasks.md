@@ -1,8 +1,11 @@
 ## 1. Data
 
-- [ ] 1.1 Add `BenefitEntitlement` with its lifecycle, the `political-office` contract fields
+- [x] 1.1 Add `BenefitEntitlement` with its lifecycle, the `political-office` contract fields
       and the payslip fields. Verify: `occ app:update` imports the register and
       `npm run check:schema-l10n` exits 0.
+      (`register.d/hr-special-regimes.json`, `political-office` in `EmploymentContract.type`,
+      `BenefitEntitlement` on the register; check:schema-l10n and the l10n parity check exit 0;
+      `SpecialRegimesDeclarationTest`. The live `occ app:update` import was not run here.)
 - [ ] 1.2 Add the `specialRegimes` group to the tables with sources and `checkAgainst` on every
       unverified leaf. Verify: `TaxTables::load('nl-2026')` loads and a unit test reads each
       regime.
