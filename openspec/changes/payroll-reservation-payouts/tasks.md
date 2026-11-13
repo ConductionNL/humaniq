@@ -3,7 +3,7 @@
 - [ ] 1.1 Add the `bijzondereBeloningen` group to `lib/Standards/tables/nl-2026.json` with
       sources and `checkAgainst` on any unverified leaf, and document it in `SCHEMA.md`. Verify:
       `TaxTables::load('nl-2026')` loads and a unit test reads one band.
-- [ ] 1.2 Add the `band` op to the registry, the vocabulary and validator gate 2. Verify: unit
+- [x] 1.2 Add the `band` op to the registry, the vocabulary and validator gate 2. Verify: unit
       tests for the first, a middle and the open top band, and a validator test that an unknown
       op is still refused.
 - [ ] 1.3 Extend the pack with the two inputs, the special-rate binding and step, the
@@ -15,7 +15,7 @@
 
 ## 2. Payouts
 
-- [ ] 2.1 Add `ReservationPayoutService` with the annual wage rule (D3) and open-balance
+- [x] 2.1 Add `ReservationPayoutService` with the annual wage rule (D3) and open-balance
       arithmetic (D4). Verify: unit tests for a full prior year, a starter, and a reserve
       partly paid.
 - [ ] 2.2 Add the schedule fields and the due-payout step in the run, including leavers (D5,
