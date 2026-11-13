@@ -6,7 +6,7 @@
                 "slug": "LeaveRequest",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "CalendarClock",
-                "version": "0.6.0",
+                "version": "0.7.0",
                 "title": "Leave request",
                 "description": "An employee request for leave (verlofaanvraag): a period of holiday, sick, unpaid, special, care or parental leave submitted for manager approval. The request lifecycle (draft → submitted → approved/rejected, with the shared no-self-approval separation-of-duties guard) is fully declarative per ADR-031, mirroring the Timesheet and Expense workflows. Leave is the HR/labour surface the portaliq fleet review flagged as missing in humaniq; external employees create and track these requests through the shared external portal (ADR-046), while approval stays a back-office manager action.",
                 "type": "object",
@@ -114,21 +114,31 @@
                                 "requires": "OCA\\Humaniq\\Lifecycle\\LeaveTypeConditionGuard",
                             "description": "The employee submits the leave request for manager approval. A rejected request may be corrected and re-submitted. The LeaveTypeConditionGuard refuses a submit whose leave type needs a reason, needs a document, or limits how far ahead it may be requested, naming the condition that failed (REQ-LVM-T02). A draft is saved without those checks."
                             },
-                            "approve": {
+                            "approve-manager": {
                                 "from": [
                                     "submitted"
                                 ],
+                                "to": "manager-approved",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\LeaveApprovalStepGuard",
+                                "description": "The manager approves a request whose leave type needs HR as well; it moves on to HR (leave-approval-steps-and-history). The LeaveApprovalStepGuard refuses it for a type that needs no HR step, and self-approval."
+                            },
+                            "approve": {
+                                "from": [
+                                    "submitted",
+                                    "manager-approved"
+                                ],
                                 "to": "approved",
-                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
-                                "description": "A manager approves the submitted leave request. The NoSelfApprovalGuard rejects self-approval (the approver may not be the requesting employee)."
+                                "requires": "OCA\\Humaniq\\Lifecycle\\LeaveApprovalStepGuard",
+                                "description": "A manager approves a submitted request whose type needs no HR step, or HR approves a manager-approved one. The LeaveApprovalStepGuard refuses self-approval, a direct approve of a type that needs HR, an HR step by someone without HR rights, and an HR step by the manager who approved."
                             },
                             "reject": {
                                 "from": [
-                                    "submitted"
+                                    "submitted",
+                                    "manager-approved"
                                 ],
                                 "to": "rejected",
-                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
-                                "description": "A manager rejects the submitted leave request (with a rejectionReason). The NoSelfApprovalGuard rejects self-rejection. The employee may correct the request and re-submit."
+                                "requires": "OCA\\Humaniq\\Lifecycle\\LeaveApprovalStepGuard",
+                                "description": "The manager, or HR at the HR step, rejects the request (with a rejectionReason). The same guard as approve applies. The employee may correct the request and re-submit."
                             }
                         }
                     }
@@ -188,11 +198,12 @@
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Where this request has got to: draft, submitted, approved or rejected.", "x-notes": "Approval workflow status. Governed by the x-openregister-lifecycle state machine (draft → submitted → approved/rejected).",
-                        "x-enum-labels": {"draft": "Draft", "submitted": "Submitted", "approved": "Approved", "rejected": "Rejected"},
+                        "description": "Where this request has got to: draft, submitted, manager-approved (waiting for HR), approved or rejected.", "x-notes": "Approval workflow status. Governed by the x-openregister-lifecycle state machine (draft → submitted → [manager-approved →] approved/rejected).",
+                        "x-enum-labels": {"draft": "Draft", "submitted": "Submitted", "manager-approved": "Approved by manager", "approved": "Approved", "rejected": "Rejected"},
                         "enum": [
                             "draft",
                             "submitted",
+                            "manager-approved",
                             "approved",
                             "rejected"
                         ],
@@ -217,6 +228,21 @@
                         "nullable": true,
                         "title": "Approved at",
                         "description": "When the request was approved or rejected.", "x-notes": "ISO 8601 UTC timestamp of approval or rejection."
+                    },
+                    "decisions": {
+                        "type": "array",
+                        "title": "Decisions",
+                        "description": "Every decision on this request in order: which step, approved or rejected, by whom and when. Written by the server; kept when the request is submitted again.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "step": {"type": "string", "enum": ["manager", "hr"], "title": "Step"},
+                                "decision": {"type": "string", "enum": ["approved", "rejected"], "title": "Decision"},
+                                "by": {"type": "string", "title": "By"},
+                                "at": {"type": "string", "format": "date-time", "title": "At"},
+                                "remark": {"type": "string", "nullable": true, "title": "Remark"}
+                            }
+                        }
                     },
                     "rejectionReason": {
                         "type": "string",

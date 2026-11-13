@@ -3722,7 +3722,20 @@ OC.L10N.register(
         "Expense categories": "Declaratiecategorieën",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
-        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen."
+        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
+        "A request of this kind for more hours than this also needs HR after the manager. Leave empty for never.": "Een aanvraag van deze soort voor meer uren dan dit heeft na de manager ook HR nodig. Laat leeg voor nooit.",
+        "Approved by manager": "Goedgekeurd door manager",
+        "At": "Op",
+        "By": "Door",
+        "Decisions": "Besluiten",
+        "Every decision on this request in order: which step, approved or rejected, by whom and when. Written by the server; kept when the request is submitted again.": "Elk besluit over deze aanvraag op volgorde: welke stap, goedgekeurd of afgewezen, door wie en wanneer. Door de server geschreven; blijft bewaard als de aanvraag opnieuw wordt ingediend.",
+        "HR approval above hours": "HR-goedkeuring boven uren",
+        "Needs HR approval": "Goedkeuring door HR nodig",
+        "Remark": "Opmerking",
+        "The account of the employee's manager, who may read this record.": "Het account van de manager van de medewerker, die dit record mag lezen.",
+        "The accounts standing in for the manager today, who may read this record too.": "De accounts die vandaag voor de manager waarnemen en dit record ook mogen lezen.",
+        "When on, HR approves a request of this kind after the manager.": "Als dit aan staat, keurt HR een aanvraag van deze soort na de manager goed.",
+        "Where this request has got to: draft, submitted, manager-approved (waiting for HR), approved or rejected.": "Hoe ver deze aanvraag is: concept, ingediend, goedgekeurd door manager (wacht op HR), goedgekeurd of afgewezen."
     },
     "nplurals=2; plural=(n != 1);"
 )

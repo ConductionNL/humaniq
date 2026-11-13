@@ -3722,7 +3722,20 @@ OC.L10N.register(
         "Expense categories": "Expense categories",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.",
         "The expense categories could not be loaded.": "The expense categories could not be loaded.",
-        "The expense categories could not be saved.": "The expense categories could not be saved."
+        "The expense categories could not be saved.": "The expense categories could not be saved.",
+        "A request of this kind for more hours than this also needs HR after the manager. Leave empty for never.": "A request of this kind for more hours than this also needs HR after the manager. Leave empty for never.",
+        "Approved by manager": "Approved by manager",
+        "At": "At",
+        "By": "By",
+        "Decisions": "Decisions",
+        "Every decision on this request in order: which step, approved or rejected, by whom and when. Written by the server; kept when the request is submitted again.": "Every decision on this request in order: which step, approved or rejected, by whom and when. Written by the server; kept when the request is submitted again.",
+        "HR approval above hours": "HR approval above hours",
+        "Needs HR approval": "Needs HR approval",
+        "Remark": "Remark",
+        "The account of the employee's manager, who may read this record.": "The account of the employee's manager, who may read this record.",
+        "The accounts standing in for the manager today, who may read this record too.": "The accounts standing in for the manager today, who may read this record too.",
+        "When on, HR approves a request of this kind after the manager.": "When on, HR approves a request of this kind after the manager.",
+        "Where this request has got to: draft, submitted, manager-approved (waiting for HR), approved or rejected.": "Where this request has got to: draft, submitted, manager-approved (waiting for HR), approved or rejected."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1,17 +1,17 @@
 ## 1. History
 
-- [ ] 1.1 Add `decisions` and the `manager-approved` status to `LeaveRequest`, and
+- [x] 1.1 Add `decisions` and the `manager-approved` status to `LeaveRequest`, and
       `requiresHrApproval` and `hrApprovalAboveHours` to `LeaveType`. Verify:
       `occ maintenance:repair` imports the register and `npm run check:schema-l10n` exits 0.
-- [ ] 1.2 Add `LeaveRequestProcessStampListener` and register it. Verify: unit test per edge
+- [x] 1.2 Add `LeaveRequestProcessStampListener` and register it. Verify: unit test per edge
       in D1, that a client-supplied `approvedBy` is replaced by the session user, and that a
       resubmit keeps earlier decisions.
 
 ## 2. HR step
 
-- [ ] 2.1 Add the `approve-manager` transition and widen `approve` and `reject`. Verify:
+- [x] 2.1 Add the `approve-manager` transition and widen `approve` and `reject`. Verify:
       import as 1.1 and the lifecycle lists the new edges.
-- [ ] 2.2 Add `LeaveApprovalStepGuard`, delegating to `NoSelfApprovalGuard`. Verify: unit
+- [x] 2.2 Add `LeaveApprovalStepGuard`, delegating to `NoSelfApprovalGuard`. Verify: unit
       test that a type needing HR refuses `approve` from `submitted`, a type without refuses
       `approve-manager`, a non-HR user cannot approve from `manager-approved`, and the
       approving manager cannot also approve the HR step.
