@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Settings;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Settings\HumaniqAdminSettings;
 use OCP\App\IAppManager;
@@ -97,7 +98,10 @@ class HumaniqAdminSettingsTest extends TestCase {
 			}
 		);
 
-		$settings = new HumaniqAdminSettings($appManager, $initialState, $groupManager);
+		$registers = $this->createMock(SettingsService::class);
+		$registers->method('getRegisterSlug')->willReturn('humaniq-test');
+
+		$settings = new HumaniqAdminSettings($appManager, $initialState, $groupManager, $registers);
 		$response = $settings->getForm();
 
 		$this->assertInstanceOf(TemplateResponse::class, $response);
@@ -105,6 +109,7 @@ class HumaniqAdminSettingsTest extends TestCase {
 		$this->assertSame('1.2.3', $provided['version']);
 		$this->assertSame(['id' => 'humaniq-hr', 'exists' => true, 'members' => 6], $provided['roleGroups']['hr']);
 		$this->assertSame(['id' => 'humaniq-payroll', 'exists' => false, 'members' => null], $provided['roleGroups']['payroll']);
+		$this->assertSame('humaniq-test', $provided['registerSlug']);
 		$this->assertSame(Application::APP_ID, $settings->getSection());
 	}//end testTheFormProvidesTheRoleGroups()
 
@@ -129,7 +134,7 @@ class HumaniqAdminSettingsTest extends TestCase {
 			}
 		);
 
-		$settings = new HumaniqAdminSettings($this->createMock(IAppManager::class), $initialState, $groupManager);
+		$settings = new HumaniqAdminSettings($this->createMock(IAppManager::class), $initialState, $groupManager, $this->createMock(SettingsService::class));
 		$settings->getForm();
 
 		$this->assertSame(['id' => 'humaniq-hr', 'exists' => true, 'members' => null], $provided['roleGroups']['hr']);

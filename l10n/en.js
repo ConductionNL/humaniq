@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "humaniq",
     {
@@ -3722,7 +3718,20 @@ OC.L10N.register(
         "Expense categories": "Expense categories",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.",
         "The expense categories could not be loaded.": "The expense categories could not be loaded.",
-        "The expense categories could not be saved.": "The expense categories could not be saved."
+        "The expense categories could not be saved.": "The expense categories could not be saved.",
+        "Audit trail": "Audit trail",
+        "The newest views and changes of Humaniq records. Entries cannot be changed or removed.": "The newest views and changes of Humaniq records. Entries cannot be changed or removed.",
+        "No audit entries yet.": "No audit entries yet.",
+        "The audit trail could not be loaded.": "The audit trail could not be loaded.",
+        "Full audit trail": "Full audit trail",
+        "Download": "Download",
+        "{person} viewed {what} at {time}": "{person} viewed {what} at {time}",
+        "{person} changed {what} at {time}": "{person} changed {what} at {time}",
+        "{person} created {what} at {time}": "{person} created {what} at {time}",
+        "{person} deleted {what} at {time}": "{person} deleted {what} at {time}",
+        "{person}: {action} on {what} at {time}": "{person}: {action} on {what} at {time}",
+        "a record": "a record",
+        "someone": "someone"
     },
     "nplurals=2; plural=(n != 1);"
 )

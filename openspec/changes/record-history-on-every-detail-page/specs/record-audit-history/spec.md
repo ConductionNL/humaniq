@@ -18,6 +18,9 @@ Rows: `cmp-audit-trail` (humaniq matrix).
 - **THEN** the audit trail of that record has a `read` entry naming the adviser and the time
 
 #### Scenario: A payroll calculation leaves no read entries
+
+@e2e exclude a backend read flag inside one payroll operation, with no screen of its own; covered by the PHPUnit tests of PayrollRunService and PayrollMutationService
+
 - **GIVEN** a draft payroll run for 20 employees
 - **WHEN** a payroll officer calculates it
 - **THEN** the audit trail gains no `read` entry for those employees from the calculation
@@ -37,6 +40,9 @@ Rows: `cmp-audit-trail` (humaniq matrix). Board: `humaniq/HuMedewerker`.
 - **THEN** the history shows the change with who made it and when
 
 #### Scenario: A detail page without history fails the manifest check
+
+@e2e exclude a build-time check of the manifest files, not a browser journey; covered by `npm run check:manifest` and its failing-page test
+
 - **GIVEN** a `type: "detail"` page in the manifest without `sidebar.showMetadata: true`
 - **WHEN** the manifest check runs
 - **THEN** it exits with an error naming the page

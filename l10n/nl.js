@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "humaniq",
     {
@@ -3722,7 +3718,20 @@ OC.L10N.register(
         "Expense categories": "Declaratiecategorieën",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
-        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen."
+        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
+        "Audit trail": "Audittrail",
+        "The newest views and changes of Humaniq records. Entries cannot be changed or removed.": "De nieuwste inzages en wijzigingen van Humaniq-gegevens. Regels kunnen niet worden gewijzigd of verwijderd.",
+        "No audit entries yet.": "Nog geen auditregels.",
+        "The audit trail could not be loaded.": "De audittrail kon niet worden geladen.",
+        "Full audit trail": "Volledige audittrail",
+        "Download": "Downloaden",
+        "{person} viewed {what} at {time}": "{person} bekeek {what} om {time}",
+        "{person} changed {what} at {time}": "{person} wijzigde {what} om {time}",
+        "{person} created {what} at {time}": "{person} maakte {what} aan om {time}",
+        "{person} deleted {what} at {time}": "{person} verwijderde {what} om {time}",
+        "{person}: {action} on {what} at {time}": "{person}: {action} op {what} om {time}",
+        "a record": "een gegeven",
+        "someone": "iemand"
     },
     "nplurals=2; plural=(n != 1);"
 )

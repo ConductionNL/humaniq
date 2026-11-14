@@ -87,6 +87,31 @@
 						{{ categoryError }}
 					</p>
 				</CnSettingsSection>
+
+				<!-- Board section "Audittrail" (REQ-RAH-003): the ten newest
+				     entries of OpenRegister's readable audit list, narrowed to the
+				     humaniq register, each as one sentence. humaniq writes none. -->
+				<CnSettingsSection
+					:name="t('humaniq', 'Audit trail')"
+					:description="t('humaniq', 'The newest views and changes of Humaniq records. Entries cannot be changed or removed.')"
+					wide
+					data-testid="humaniq-admin-audit-trail">
+					<ol v-if="auditEntries.length > 0" class="humaniq-admin__audit">
+						<li v-for="(entry, index) in auditEntries" :key="entry.uuid || index">
+							{{ auditLine(entry) }}
+						</li>
+					</ol>
+					<p v-else-if="auditLoaded && !auditError" class="humaniq-admin__note">
+						{{ t('humaniq', 'No audit entries yet.') }}
+					</p>
+					<p v-if="auditError" class="humaniq-admin__note" role="alert">
+						{{ auditError }}
+					</p>
+					<p v-if="auditLinks" class="humaniq-admin__links">
+						<a :href="auditLinks.full">{{ t('humaniq', 'Full audit trail') }}</a>
+						<a :href="auditLinks.download">{{ t('humaniq', 'Download') }}</a>
+					</p>
+				</CnSettingsSection>
 			</div>
 		</CnAdminSettingsShell>
 	</div>
@@ -100,6 +125,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import { defineComponent } from 'vue'
+import { auditLinks, auditSentence, auditUrls, loadAuditEntries } from './auditTrail.js'
 import { allowedAfterToggle, loadCategories, saveCategories } from './expenseCategories.js'
 
 const CATEGORIES_URL = generateUrl('/apps/humaniq/api/expense-categories')
@@ -119,6 +145,10 @@ export default defineComponent({
 			expenseCategories: [],
 			savingCategories: false,
 			categoryError: '',
+			auditEntries: [],
+			auditLinks: null,
+			auditLoaded: false,
+			auditError: '',
 		}
 	},
 
@@ -158,6 +188,7 @@ export default defineComponent({
 	 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
 	 */
 	async mounted() {
+		this.loadAuditTrail()
 		try {
 			this.expenseCategories = await loadCategories(axios, CATEGORIES_URL)
 		} catch {
@@ -167,6 +198,36 @@ export default defineComponent({
 
 	methods: {
 		t,
+
+		/**
+		 * Read the Audittrail section's entries and links.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-the-admin-settings-shall-show-an-audittrail-section-across-the-humaniq-register-req-rah-003
+		 */
+		async loadAuditTrail() {
+			const urls = auditUrls(generateUrl, loadState('humaniq', 'registerSlug', 'humaniq'))
+			try {
+				const { registerId, entries } = await loadAuditEntries(axios, urls)
+				this.auditEntries = entries
+				this.auditLinks = auditLinks(urls, registerId)
+			} catch {
+				this.auditError = t('humaniq', 'The audit trail could not be loaded.')
+			} finally {
+				this.auditLoaded = true
+			}
+		},
+
+		/**
+		 * One audit entry as a sentence.
+		 *
+		 * @param {object} entry The entry.
+		 * @return {string}
+		 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-the-newest-entries-read-as-sentences
+		 */
+		auditLine(entry) {
+			return auditSentence(entry, (text, vars) => t('humaniq', text, vars), new Date())
+		},
 
 		/**
 		 * The label of an expense category.
@@ -349,6 +410,23 @@ export default defineComponent({
 
 .humaniq-admin__table .humaniq-admin__num {
 	text-align: end;
+}
+
+.humaniq-admin__audit {
+	margin: 0;
+	padding-inline-start: 20px;
+	line-height: 1.6;
+}
+
+.humaniq-admin__links {
+	display: flex;
+	gap: 16px;
+	margin-top: 12px;
+}
+
+.humaniq-admin__links a {
+	color: var(--color-primary-element);
+	text-decoration: underline;
 }
 
 .humaniq-admin__note {
