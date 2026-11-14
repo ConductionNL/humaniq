@@ -36,6 +36,7 @@ use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
 use OCA\Humaniq\Lifecycle\HandoffCloseGuard;
 use OCA\Humaniq\Lifecycle\HandoffReleaseGuard;
 use OCA\Humaniq\Lifecycle\HrReopenGuard;
+use OCA\Humaniq\Lifecycle\IkbSpendApprovalGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Humaniq\Lifecycle\LoonaangifteMessageGuard;
 use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
@@ -170,6 +171,7 @@ class Application extends App implements IBootstrap {
 
 		// hr-reopens-an-approved-claim: only HR outside the claim reopens an approved Expense.
 		$context->registerService(HrReopenGuard::class, static fn ($c): HrReopenGuard => new HrReopenGuard($c->get(\OCA\Humaniq\Service\HumaniqRoles::class), $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
+		$context->registerService(IkbSpendApprovalGuard::class, static fn ($c): IkbSpendApprovalGuard => new IkbSpendApprovalGuard(records: $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
 
 		// OpenRegister lifecycle guard for the PensionFiling `controleren` transition
 		// (pension-filing-upa-mvp) — denies review unless the referenced PayrollRun is

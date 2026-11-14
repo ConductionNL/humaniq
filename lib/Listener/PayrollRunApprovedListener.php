@@ -30,6 +30,7 @@ namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\OvertimeCreditService;
 use OCA\Humaniq\Service\PayrollExpenseFoldService;
+use OCA\Humaniq\Service\ReservationPayoutApprovalService;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -50,6 +51,7 @@ class PayrollRunApprovedListener implements IEventListener {
 	 * @param OvertimeCreditService          $credits  The credit.
 	 * @param LoggerInterface                $logger   The logger.
 	 * @param PayrollExpenseFoldService|null $expenses Marks the run's claims reimbursed (payroll-expenses-and-allowances D2).
+	 * @param ReservationPayoutApprovalService|null $reservations Marks the run's payouts paid and accrues and settles the IKB (payroll-reservation-payouts D4, D8).
 	 *
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
@@ -58,6 +60,7 @@ class PayrollRunApprovedListener implements IEventListener {
 		private readonly OvertimeCreditService $credits,
 		private readonly LoggerInterface $logger,
 		private readonly ?PayrollExpenseFoldService $expenses = null,
+		private readonly ?ReservationPayoutApprovalService $reservations = null,
 	) {
 	}//end __construct()
 
@@ -79,6 +82,7 @@ class PayrollRunApprovedListener implements IEventListener {
 		$runId = (string)$event->getNewObject()->getUuid();
 		$this->creditOvertime(runId: $runId);
 		$this->markClaimsReimbursed(runId: $runId);
+		$this->settleReservations(runId: $runId);
 	}//end handle()
 
 	/**
@@ -128,5 +132,26 @@ class PayrollRunApprovedListener implements IEventListener {
 			$this->logger->error('humaniq: marking the claims of payroll run ' . $runId . ' reimbursed failed: ' . $e->getMessage());
 		}
 	}//end markClaimsReimbursed()
+
+	/**
+	 * Mark the run's reserve payouts paid and accrue and settle the IKB, when wired; a failure is logged.
+	 *
+	 * @param string $runId The payroll run.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-holiday-allowance-shall-be-paid-out-on-the-administrations-schedule-and-on-leaving-req-rsp-002
+	 */
+	private function settleReservations(string $runId): void {
+		if ($this->reservations === null) {
+			return;
+		}
+
+		try {
+			$this->reservations->onRunApproved($runId);
+		} catch (\Throwable $e) {
+			$this->logger->error('humaniq: settling the reserves of payroll run ' . $runId . ' failed: ' . $e->getMessage());
+		}
+	}//end settleReservations()
 
 }//end class

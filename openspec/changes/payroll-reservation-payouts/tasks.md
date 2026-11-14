@@ -18,18 +18,18 @@
 - [x] 2.1 Add `ReservationPayoutService` with the annual wage rule (D3) and open-balance
       arithmetic (D4). Verify: unit tests for a full prior year, a starter, and a reserve
       partly paid.
-- [ ] 2.2 Add the schedule fields and the due-payout step in the run, including leavers (D5,
+- [x] 2.2 Add the schedule fields and the due-payout step in the run, including leavers (D5,
       D6). Verify: unit test that May pays June to May and a leaver's final period pays both
       reserves.
-- [ ] 2.3 Mark payouts paid and tick the offboarding checkbox on run approval. Verify: unit
+- [x] 2.3 Mark payouts paid and tick the offboarding checkbox on run approval. Verify: unit
       test that a replayed approval writes nothing twice.
 
 ## 3. IKB
 
-- [ ] 3.1 Add `IkbBudget`, `IkbSpendRequest` with its lifecycle and balance guard, and the
+- [x] 3.1 Add `IkbBudget`, `IkbSpendRequest` with its lifecycle and balance guard, and the
       contract rates. Verify: `occ app:update` imports them and a guard test refuses a request
       above the balance.
-- [ ] 3.2 Add accrual on approval and the three settlements (D8). Verify: unit tests that a
+- [x] 3.2 Add accrual on approval and the three settlements (D8). Verify: unit tests that a
       payout is a special payment, a leave spend adds hours without money, and an exempt goal
       writes one WKR row.
 

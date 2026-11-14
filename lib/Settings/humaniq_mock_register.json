@@ -16,7 +16,7 @@
       "humaniq": {
         "slug": "humaniq",
         "title": "Humaniq Register (demo)",
-        "version": "0.62.0",
+        "version": "0.63.0",
         "description": "Demo data for Humaniq Register. Generated from the register's own schemas: see hydra-gates/scripts/lib/generate_mock_register.py.",
         "authorization": {
           "read": [
@@ -10774,6 +10774,27 @@
             "type": "number",
             "description": "Individual choice budget (IKB) built up this period.",
             "x-notes": "ikbRate x the regular gross; added to IkbBudget.accrued on run approval (payroll-reservation-payouts D8).",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "ikbUntaxedPayment": {
+            "title": "Untaxed choice budget payment",
+            "type": "number",
+            "description": "Choice budget spent on an untaxed goal, paid with the net pay this period.",
+            "x-notes": "An exempt IkbGoal spend, recorded as a WkrDeclaration (payroll-reservation-payouts D8). Added to nettoPay after the calculation.",
             "authorization": {
               "read": [
                 "humaniq-hr",

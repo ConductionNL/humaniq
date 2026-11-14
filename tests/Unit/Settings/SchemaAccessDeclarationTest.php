@@ -64,7 +64,7 @@ class SchemaAccessDeclarationTest extends TestCase {
 	 */
 	private const SUBMITTED = [
 		'AttendanceRecord', 'CommuteArrangement', 'DsrRequest', 'EmployeeChangeRequest', 'Expense', 'KeyResult',
-		'LeaveRequest', 'LeaveTransaction', 'ManagerDeputy', 'Objective', 'Referral', 'SideActivity',
+		'IkbSpendRequest', 'LeaveRequest', 'LeaveTransaction', 'ManagerDeputy', 'Objective', 'Referral', 'SideActivity',
 		'Timesheet', 'TimeEntry',
 	];
 
@@ -73,7 +73,7 @@ class SchemaAccessDeclarationTest extends TestCase {
 	 *
 	 * @var array<int, string>
 	 */
-	private const REFERENCE = ['LeaveType'];
+	private const REFERENCE = ['IkbGoal', 'LeaveType'];
 
 	/**
 	 * The assembled register config.

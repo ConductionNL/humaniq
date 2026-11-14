@@ -195,6 +195,7 @@
                     "annualWageReference": {"title": "Annual wage for the special rate", "type": "number", "description": "The annual wage the special rate was chosen by: last year's wage, or the expected wage of this year.", "x-notes": "ReservationPayoutService::annualWageReference (payroll-reservation-payouts D3).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
                     "eindejaarsuitkeringReserved": {"title": "End-of-year payment reserved", "type": "number", "description": "End-of-year payment (thirteenth month) set aside this period.", "x-notes": "endOfYearRate of the taxable wage (payroll-reservation-payouts D7).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
                     "ikbAccrued": {"title": "Individual choice budget accrued", "type": "number", "description": "Individual choice budget (IKB) built up this period.", "x-notes": "ikbRate x the regular gross; added to IkbBudget.accrued on run approval (payroll-reservation-payouts D8).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
+                    "ikbUntaxedPayment": {"title": "Untaxed choice budget payment", "type": "number", "description": "Choice budget spent on an untaxed goal, paid with the net pay this period.", "x-notes": "An exempt IkbGoal spend, recorded as a WkrDeclaration (payroll-reservation-payouts D8). Added to nettoPay after the calculation.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
                     "wkrUsed": {"title": "WKR used", "type": "number", "description": "Allowances charged this period against the work-related costs budget.", "x-notes": "NL: designated WKR allowances charged this period against the vrije ruimte (nl-wkr-vrije-ruimte).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
                     "wkrVrijeRuimteRemaining": {"title": "WKR vrije ruimte remaining", "type": "number", "description": "What is left of the work-related costs budget after this payslip.", "x-notes": "NL: remaining WKR vrije ruimte after this payslip — must not go negative without eindheffing (nl-wkr-vrije-ruimte).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
                     "wkrEindheffingRate": {"title": "WKR eindheffing rate", "type": "number", "nullable": true, "description": "The 80% final levy rate applied to anything over the work-related costs budget.", "x-notes": "NL: 80% eindheffing rate applied to WKR excess (nl-wkr-eindheffing-80).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
@@ -778,6 +779,165 @@
                     },
                     "engineVersion": {"title": "Engine version", "type": "string", "description": "The tables id (e.g. \"nl-2026\") this assessment's vrije-ruimte/eindheffing figures were computed against."},
                     "assessedAt": {"title": "Assessed at", "type": "string", "format": "date-time", "description": "When this assessment was last calculated.", "x-notes": "When this assessment was (re)computed by WkrService::assess()."}
+                }
+            },
+            "ReservationPayout": {
+                "configuration": {
+                    "exportable": true
+                },
+                "slug": "ReservationPayout",
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        "humaniq-payroll",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "userId": "$userId"
+                            }
+                        }
+                    ],
+                    "create": [
+                        "humaniq-payroll"
+                    ],
+                    "update": [
+                        "humaniq-payroll"
+                    ],
+                    "delete": [
+                        "humaniq-payroll"
+                    ]
+                },
+                "icon": "CashFast",
+                "version": "0.1.0",
+                "title": "Reservation payout",
+                "description": "One payout of a reserve: the holiday allowance, the end-of-year payment or the individual choice budget, paid by a payroll run as a special payment over a basis period (payroll-reservation-payouts D4). The open reserve is always what the payslips of the basis period reserved minus these records; nothing keeps a second running balance.",
+                "type": "object",
+                "x-schema-org": "schema:PayAction",
+                "required": [
+                    "employeeId",
+                    "kind",
+                    "basisFrom",
+                    "basisTo",
+                    "amount",
+                    "payrollRunId",
+                    "status"
+                ],
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Who was paid."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "User",
+                        "description": "The account of the employee paid, who may read this record.",
+                        "x-notes": "Denormalized Employee.nextcloudUserId, as on Payslip."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration ID",
+                        "description": "Which administration paid it."
+                    },
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "vakantiegeld",
+                            "eindejaarsuitkering",
+                            "ikb"
+                        ],
+                        "x-enum-labels": {
+                            "vakantiegeld": "Holiday allowance",
+                            "eindejaarsuitkering": "End-of-year payment",
+                            "ikb": "Individual choice budget"
+                        },
+                        "title": "Kind",
+                        "description": "Which reserve was paid out."
+                    },
+                    "reason": {
+                        "type": "string",
+                        "enum": [
+                            "scheduled",
+                            "leaving",
+                            "per-period",
+                            "ikb-request",
+                            "ikb-remainder"
+                        ],
+                        "x-enum-labels": {
+                            "scheduled": "Scheduled",
+                            "leaving": "Leaving",
+                            "per-period": "Every period",
+                            "ikb-request": "Choice budget request",
+                            "ikb-remainder": "Remaining choice budget"
+                        },
+                        "title": "Reason",
+                        "description": "Why it was paid this period."
+                    },
+                    "basisFrom": {
+                        "type": "string",
+                        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+                        "title": "Basis from",
+                        "description": "The first period whose reserve this pays, YYYY-MM."
+                    },
+                    "basisTo": {
+                        "type": "string",
+                        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+                        "title": "Basis to",
+                        "description": "The last period whose reserve this pays, YYYY-MM."
+                    },
+                    "amount": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "title": "Amount (cents)",
+                        "description": "The amount paid, in cents.",
+                        "x-notes": "Cents, as ReservationPayoutService::openBalance() reads it."
+                    },
+                    "period": {
+                        "type": "string",
+                        "title": "Period",
+                        "description": "The period it was paid in, YYYY-MM."
+                    },
+                    "payrollRunId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "PayrollRun",
+                        "title": "Payroll run",
+                        "description": "The run that paid it."
+                    },
+                    "payslipId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true,
+                        "$ref": "Payslip",
+                        "title": "Payslip",
+                        "description": "The payslip it was paid on."
+                    },
+                    "ikbSpendRequestId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true,
+                        "$ref": "IkbSpendRequest",
+                        "title": "Choice budget request",
+                        "description": "The choice budget request this settles, for an IKB payout."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "calculated",
+                            "paid"
+                        ],
+                        "x-enum-labels": {
+                            "calculated": "Calculated",
+                            "paid": "Paid"
+                        },
+                        "default": "calculated",
+                        "title": "Status",
+                        "description": "Calculated while the run is a draft; paid once the run is approved."
+                    }
                 }
             }
         }
