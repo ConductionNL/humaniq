@@ -23,7 +23,7 @@ OC.L10N.register(
         "Teacher's account": "Account van de leraar",
         "Teaching": "Lesgevende taak",
         "The account of the employee's manager, who may read this record.": "Het account van de leidinggevende van de medewerker, die dit gegeven mag lezen.",
-        "The accounts standing in for the manager today, who may read this record too.": "De accounts die vandaag de leidinggevende vervangen en dit gegeven ook mogen lezen.",
+        "The accounts standing in for the manager today, who may read this record too.": "De accounts die vandaag voor de leidinggevende waarnemen en dit gegeven ook mogen lezen.",
         "The hours the teacher's contracts give for the school year.": "De uren die de contracten van de leraar voor het schooljaar geven.",
         "The planned hours per category.": "De geplande uren per categorie.",
         "The school the teacher is deployed at.": "De school waar de leraar wordt ingezet.",
