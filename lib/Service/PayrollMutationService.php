@@ -236,14 +236,82 @@ class PayrollMutationService {
 		$fromByEmployee = ($fromRun === null ? [] : $this->payslipCentsByEmployee($fromRunId));
 		$toByEmployee = $this->payslipCentsByEmployee($toRunId);
 
-		return [
+		$report = [
 			'fromRunId' => $fromRunId,
 			'toRunId' => $toRunId,
 			'fromPeriod' => ($fromRun === null ? null : (string)($fromRun['period'] ?? '')),
 			'toPeriod' => (string)($toRun['period'] ?? ''),
 			'administrationId' => (string)($toRun['administrationId'] ?? ''),
 		] + PayrollMutationTally::summarise($fromByEmployee, $toByEmployee);
+
+		return $this->withCauses(report: $report, fromRunId: (string)($fromRunId ?? ''), toRunId: $toRunId);
 	}//end buildReport()
+
+	/**
+	 * Add, to each changed employee's line, the payslip lines that differ
+	 * between the two runs (payroll-mutation-lineage D5). An employee whose
+	 * payslips have no lines gets `causes: null`: the causes are unknown.
+	 *
+	 * @param array<string, mixed> $report    The report with its `lines`.
+	 * @param string               $fromRunId The baseline run, '' for none.
+	 * @param string               $toRunId   The reviewed run.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.5
+	 */
+	private function withCauses(array $report, string $fromRunId, string $toRunId): array {
+		$changed = array_filter((array)($report['lines'] ?? []), static fn (array $line): bool => ($line['classification'] ?? '') === 'changed');
+		if ($changed === []) {
+			return $report;
+		}
+
+		$fromSlips = $this->payslipIdsByEmployee($fromRunId);
+		$toSlips = $this->payslipIdsByEmployee($toRunId);
+		$linesBySlip = [];
+		foreach ($this->loadAll('PayslipLine') as $line) {
+			$linesBySlip[(string)($line['payslipId'] ?? '')][] = $line;
+		}
+
+		foreach ($report['lines'] as $index => $line) {
+			if (($line['classification'] ?? '') !== 'changed') {
+				continue;
+			}
+
+			$employeeId = (string)$line['employeeId'];
+			$report['lines'][$index]['causes'] = PayslipLineCauses::between(
+				fromLines: ($linesBySlip[($fromSlips[$employeeId] ?? '')] ?? []),
+				toLines: ($linesBySlip[($toSlips[$employeeId] ?? '')] ?? [])
+			);
+		}
+
+		return $report;
+	}//end withCauses()
+
+	/**
+	 * This run's payslip ids, keyed by employeeId.
+	 *
+	 * @param string $runId The PayrollRun id.
+	 *
+	 * @return array<string, string>
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 */
+	private function payslipIdsByEmployee(string $runId): array {
+		$out = [];
+		if ($runId === '') {
+			return $out;
+		}
+
+		foreach ($this->loadAll('Payslip') as $payslip) {
+			$employeeId = (string)($payslip['employeeId'] ?? '');
+			if ((string)($payslip['payrollRunId'] ?? '') === $runId && $employeeId !== '') {
+				$out[$employeeId] = $this->idOf($payslip);
+			}
+		}
+
+		return $out;
+	}//end payslipIdsByEmployee()
 
 	/**
 	 * D4 — the PayrollRun of the SAME administration whose `period` is the

@@ -262,6 +262,32 @@
                     "caoComponentsUnresolved": {"title": "CAO components not paid", "type": "array", "items": {"type": "string"}, "nullable": true, "description": "Components the contract names that were not paid, because the agreement's figure is not confirmed or the component is unknown.", "x-notes": "payroll-cao-components D4: payroll-run-checks turns each into a warning.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}}
                 }
             },
+            "PayslipLine": {
+                "slug": "PayslipLine",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
+                "icon": "FormatListBulleted",
+                "version": "0.1.0",
+                "title": "Payslip Line",
+                "description": "One amount on a payslip and where it came from: the record that caused it and the last change to that record before the payslip was calculated. Written by the payroll run each time it calculates a payslip.",
+                "x-notes": "payroll-mutation-lineage D1: one line per component per payslip, replaced on every recalculation of a draft run (PayslipLineageService::replaceLines) and sealed with the payslip once the run leaves draft. The payslip's own summed fields stay the figures of record.",
+                "type": "object",
+                "x-schema-org": "schema:MonetaryAmount",
+                "required": ["payslipId", "employeeId", "component", "amount"],
+                "properties": {
+                    "payslipId": {"title": "Payslip ID", "type": "string", "format": "uuid", "$ref": "Payslip", "description": "The payslip this amount is part of."},
+                    "payrollRunId": {"title": "Payroll run ID", "type": "string", "format": "uuid", "$ref": "PayrollRun", "nullable": true, "description": "The payroll run that calculated the payslip."},
+                    "employeeId": {"title": "Employee ID", "type": "string", "format": "uuid", "$ref": "Employee", "description": "The employee the payslip is for."},
+                    "period": {"title": "Period", "type": "string", "nullable": true, "description": "The wage period of the payslip (YYYY-MM)."},
+                    "component": {"title": "Component", "type": "string", "enum": ["salary", "hourlyPay", "bijtelling", "sickPay", "retroAdjustment", "leaveBuySell", "loonbeslag"], "x-enum-labels": {"salary": "Salary", "hourlyPay": "Hourly pay", "bijtelling": "Company car addition", "sickPay": "Sick pay adjustment", "retroAdjustment": "Retroactive correction", "leaveBuySell": "Leave sale or purchase", "loonbeslag": "Wage garnishment"}, "description": "Which part of the payslip this amount is."},
+                    "amount": {"title": "Amount", "type": "number", "description": "The amount in euros. A negative amount lowers the pay."},
+                    "sourceSchema": {"title": "Source type", "type": "string", "nullable": true, "description": "The kind of record that caused this amount."},
+                    "sourceId": {"title": "Source ID", "type": "string", "nullable": true, "description": "The record that caused this amount."},
+                    "sourceKind": {"title": "Source kind", "type": "string", "nullable": true, "enum": ["raise", "correction", "leave-transaction", "case", "assignment", "garnishment", "timesheet", "claim", "allowance", "record-edit"], "x-enum-labels": {"raise": "Raise", "correction": "Correction", "leave-transaction": "Leave transaction", "case": "Sick leave case", "assignment": "Company car", "garnishment": "Garnishment", "timesheet": "Timesheet", "claim": "Claim", "allowance": "Allowance", "record-edit": "Edit to the employee record"}, "description": "How the record caused this amount."},
+                    "sourceAuditTrailId": {"title": "Audit entry", "type": "integer", "nullable": true, "description": "The audit trail entry of the last change to the record before the payslip was calculated. Empty when the audit trail could not be read."},
+                    "sourceChangedBy": {"title": "Changed by", "type": "string", "nullable": true, "description": "Who made that change."},
+                    "sourceChangedAt": {"title": "Changed at", "type": "string", "format": "date-time", "nullable": true, "description": "When that change was made."}
+                }
+            },
             "PayrollRun": {
                 "slug": "PayrollRun",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
@@ -501,7 +527,7 @@
                 "slug": "PayrollMutationReport",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "SwapHorizontal",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Payroll Mutation Report",
                 "description": "The persisted per-run payroll diff an accountant reviews before approving a run (payroll-mutation-reports): who joined/left and each shared employee's per-component cents delta between two PayrollRuns, plus the run-level roll-up totals. Produced ONLY by PayrollMutationService: a pure, read-only subtraction over the two runs' already-persisted Payslips, never a recomputation. Idempotently keyed on (fromRunId, toRunId): regenerating the same pair upserts this record in place.",
                 "type": "object",
@@ -552,7 +578,8 @@
                                 "loonheffingDelta": {"title": "Loonheffing delta", "type": "number", "description": "The difference between the two runs, in cents. A negative amount is a decrease.", "x-notes": "after minus before, in cents. Signed."},
                                 "employerCostBefore": {"title": "Employer cost before", "type": "number", "description": "Total employer cost in the earlier run, in cents: gross plus employer-borne premiums."},
                                 "employerCostAfter": {"title": "Employer cost after", "type": "number", "description": "Total employer cost in the later run, in cents."},
-                                "employerCostDelta": {"title": "Employer cost delta", "type": "number", "description": "The difference between the two runs, in cents. A negative amount is a decrease.", "x-notes": "after minus before, in cents. Signed."}
+                                "employerCostDelta": {"title": "Employer cost delta", "type": "number", "description": "The difference between the two runs, in cents. A negative amount is a decrease.", "x-notes": "after minus before, in cents. Signed."},
+                                "causes": {"title": "Causes", "type": "array", "nullable": true, "description": "The payslip lines that are new, gone or of a different amount between the two runs. Empty when the payslips have no lines, which means the causes are unknown.", "x-notes": "payroll-mutation-lineage D5: set on changed employees; null (never an empty list) when either payslip predates lineage, so no lineage is not read as no cause.", "items": {"type": "object", "properties": {"change": {"type": "string", "enum": ["new", "gone", "changed"]}, "component": {"type": "string"}, "sourceSchema": {"type": "string", "nullable": true}, "sourceId": {"type": "string", "nullable": true}, "sourceKind": {"type": "string", "nullable": true}, "amountBefore": {"type": "number", "nullable": true}, "amountAfter": {"type": "number", "nullable": true}}}}
                             }
                         }
                     }

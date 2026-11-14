@@ -29,6 +29,7 @@
     "OCA\\Humaniq\\Listener\\HrLifecycleEventListener::$gateway",
     "OCA\\Humaniq\\Listener\\LearniqCredentialListener::$gateway",
     "OCA\\Humaniq\\Listener\\ManagerAccessOrgChangeListener::$gateway",
+    "OCA\\Humaniq\\Listener\\PayrollAdjustmentLineGuard::$gateway",
     "OCA\\Humaniq\\Listener\\RecurringAllowanceStampListener::$gateway",
     "OCA\\Humaniq\\Listener\\ReferralListener::$gateway",
     "OCA\\Humaniq\\Listener\\RelationsCaseListener::$gateway",
