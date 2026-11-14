@@ -43,7 +43,9 @@
 
 ## 3. Verification
 
-- [ ] 3.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec`
+- [x] 3.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec`
       tags on the new classes (gate 16).
+      Done: a reason-bearing `@e2e exclude` on each of the six scenarios, naming the unit
+      tests that cover it; `@spec` on every new class, `StampsProcessFields` included.
 - [ ] 3.2 One live check: approve the seeded unpaid request as HR and read both decisions on
       `LeaveRequestDetail`; record the screenshot in the PR.

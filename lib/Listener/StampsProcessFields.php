@@ -19,6 +19,8 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
+ *
+ * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-approval-steps/spec.md#requirement-every-leave-decision-shall-be-stamped-on-the-request-by-the-server-req-las-001
  */
 
 declare(strict_types=1);
@@ -34,6 +36,8 @@ use OCP\EventDispatcher\Event;
  *
  * The using class has a `$logger` (LoggerInterface) and its own
  * stampCreating() and stampUpdating().
+ *
+ * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-approval-steps/spec.md#requirement-every-leave-decision-shall-be-stamped-on-the-request-by-the-server-req-las-001
  */
 trait StampsProcessFields {
 
