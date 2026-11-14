@@ -23,7 +23,7 @@
         "verified": true
       },
       "schijven": {
-        "belowAow": {
+          "belowAow": {
           "value": [
             {"tot": 38883, "percentage": 35.75, "a": 0, "c": 0},
             {"tot": 78426, "percentage": 37.56, "a": 38883, "c": 13900},
@@ -224,6 +224,88 @@
         "source": "Belastingdienst Nieuwsbrief Loonheffingen 2026",
         "verified": true,
         "note": "2025: EUR 35.468. Reduced norm for employees under 30 with a qualifying (NL-equivalent) master's degree -- Employee.thirtyPercentRulingReducedNormApplies gates which norm nl-30-regeling-salarisnorm compares against (30-procent-regeling)."
+      }
+    },
+    "bijzondereBeloningen": {
+      "wit": {
+        "value": {
+          "belowAow": {
+            "metKorting": [
+              {"tot": 11965, "percentage": 27.43},
+              {"tot": 25845, "percentage": 4.74},
+              {"tot": 29736, "percentage": 33.80},
+              {"tot": 38883, "percentage": 40.20},
+              {"tot": 45592, "percentage": 42.01},
+              {"tot": 78426, "percentage": 50.47},
+              {"tot": 132920, "percentage": 56.01},
+              {"tot": null, "percentage": 49.50}
+            ],
+            "zonderKorting": [
+              {"tot": 38883, "percentage": 35.75},
+              {"tot": 78426, "percentage": 37.56},
+              {"tot": null, "percentage": 49.50}
+            ]
+          },
+          "aowAge": {
+            "metKorting": [
+              {"tot": 11965, "percentage": 13.69},
+              {"tot": 25845, "percentage": 2.37},
+              {"tot": 29736, "percentage": 16.88},
+              {"tot": 38883, "percentage": 20.07},
+              {"tot": 45592, "percentage": 39.78},
+              {"tot": 46002, "percentage": 44.01},
+              {"tot": 59782, "percentage": 59.01},
+              {"tot": 78426, "percentage": 44.01},
+              {"tot": 132920, "percentage": 52.75},
+              {"tot": null, "percentage": 49.50}
+            ],
+            "zonderKorting": [
+              {"tot": 38883, "percentage": 17.85},
+              {"tot": 78426, "percentage": 37.56},
+              {"tot": null, "percentage": 49.50}
+            ]
+          }
+        },
+        "source": "Derived from RV2026 tabel 2 (schijven), tabel 3 (AHK afbouw) and tabel 6 (ARK opbouw/afbouw) as the marginal rate per jaarloon band; NOT transcribed from the published tabel bijzondere beloningen",
+        "verified": false,
+        "checkAgainst": "Belastingdienst - Tabel voor bijzondere beloningen 2026 (witte en groene tabel), per kolom met/zonder loonheffingskorting en jonger/AOW-leeftijd",
+        "note": "Bands over the annual wage (jaarloon, euro): the percentage of the first band whose tot reaches the annual wage; tot null is the open top band. Selected by the pack's band op (payroll-reservation-payouts D1/D2). Columns: belowAow/aowAge x metKorting/zonderKorting."
+      },
+      "groen": {
+        "value": {
+          "belowAow": {
+            "metKorting": [
+              {"tot": 29736, "percentage": 35.75},
+              {"tot": 38883, "percentage": 42.15},
+              {"tot": 78426, "percentage": 43.96},
+              {"tot": null, "percentage": 49.50}
+            ],
+            "zonderKorting": [
+              {"tot": 38883, "percentage": 35.75},
+              {"tot": 78426, "percentage": 37.56},
+              {"tot": null, "percentage": 49.50}
+            ]
+          },
+          "aowAge": {
+            "metKorting": [
+              {"tot": 29736, "percentage": 17.85},
+              {"tot": 38883, "percentage": 21.05},
+              {"tot": 46002, "percentage": 40.76},
+              {"tot": 59782, "percentage": 55.76},
+              {"tot": 78426, "percentage": 40.76},
+              {"tot": null, "percentage": 49.50}
+            ],
+            "zonderKorting": [
+              {"tot": 38883, "percentage": 17.85},
+              {"tot": 78426, "percentage": 37.56},
+              {"tot": null, "percentage": 49.50}
+            ]
+          }
+        },
+        "source": "Derived from RV2026 tabel 2 (schijven), tabel 3 (AHK afbouw) and tabel 6 (ARK opbouw/afbouw) as the marginal rate per jaarloon band; NOT transcribed from the published tabel bijzondere beloningen",
+        "verified": false,
+        "checkAgainst": "Belastingdienst - Tabel voor bijzondere beloningen 2026 (witte en groene tabel), per kolom met/zonder loonheffingskorting en jonger/AOW-leeftijd",
+        "note": "Bands over the annual wage (jaarloon, euro): the percentage of the first band whose tot reaches the annual wage; tot null is the open top band. Selected by the pack's band op (payroll-reservation-payouts D1/D2). Columns: belowAow/aowAge x metKorting/zonderKorting."
       }
     }
   },

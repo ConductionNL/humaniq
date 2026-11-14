@@ -461,6 +461,42 @@ final class TaxTables {
 	}//end vakantiebijslagRate()
 
 	/**
+	 * The special-rate bands (tabel bijzondere beloningen) of one column, and
+	 * whether the leaf may be used to tax a payment (payroll-reservation-payouts
+	 * D1, D3): `usable` is false while the leaf is unverified or a placeholder.
+	 *
+	 * @param string $colour     The table colour, `wit` or `groen`.
+	 * @param bool   $aow        Whether the employee has reached AOW age.
+	 * @param bool   $withKorting Whether the loonheffingskorting is applied.
+	 *
+	 * @return array{bands: array<int, array{totCents: int|null, percentage: float}>, usable: bool}
+	 *
+	 * @throws RuntimeException When the group, the colour or the column is missing.
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 */
+	public function bijzondereBeloningen(string $colour, bool $aow, bool $withKorting): array {
+		$leaf = $this->resolveLeaf(segments: ['bijzondereBeloningen', $colour, ($aow === true ? 'aowAge' : 'belowAow'), ($withKorting === true ? 'metKorting' : 'zonderKorting')]);
+		if (is_array($leaf['value']) === false) {
+			throw new RuntimeException('TaxTables (' . $this->id . '): bijzondereBeloningen.' . $colour . ' is geen bandenlijst.');
+		}
+
+		$bands = [];
+		foreach ($leaf['value'] as $band) {
+			$tot = ($band['tot'] ?? null);
+			$bands[] = [
+				'totCents' => ($tot === null ? null : self::euroToCents((float)$tot)),
+				'percentage' => (float)($band['percentage'] ?? 0),
+			];
+		}
+
+		$provenance = ($leaf['provenance'] ?? null);
+		$usable = is_array($provenance) === true && ($provenance['verified'] ?? false) === true && ($provenance['placeholder'] ?? false) === false;
+
+		return ['bands' => $bands, 'usable' => $usable];
+	}//end bijzondereBeloningen()
+
+	/**
 	 * The WML (Wet minimumloon) parameters: `referentiemaandloon`, the
 	 * verified full-time statutory reference monthly wage, cents-converted
 	 * (sick-pay-calc design.md D3 — the year-1 loondoorbetaling floor is

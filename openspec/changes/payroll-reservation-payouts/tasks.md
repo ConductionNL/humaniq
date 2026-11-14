@@ -1,6 +1,6 @@
 ## 1. Engine
 
-- [ ] 1.1 Add the `bijzondereBeloningen` group to `lib/Standards/tables/nl-2026.json` with
+- [x] 1.1 Add the `bijzondereBeloningen` group to `lib/Standards/tables/nl-2026.json` with
       sources and `checkAgainst` on any unverified leaf, and document it in `SCHEMA.md`. Verify:
       `TaxTables::load('nl-2026')` loads and a unit test reads one band.
 - [x] 1.2 Add the `band` op to the registry, the vocabulary and validator gate 2. Verify: unit
