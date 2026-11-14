@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "DossierRequirement": {
+                "configuration": {"exportable": true},
                 "slug": "DossierRequirement",
                 "icon": "ClipboardCheckOutline",
                 "version": "0.1.0",
@@ -128,6 +129,7 @@
                     "requirementCode"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-calculations": {
                         "daysUntilExpiry": {
                             "type": "number",
@@ -352,6 +354,7 @@
                 }
             },
             "RightToWorkCheck": {
+                "configuration": {"exportable": true},
                 "slug": "RightToWorkCheck",
                 "icon": "ShieldCheckOutline",
                 "version": "0.1.0",

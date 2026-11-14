@@ -33,7 +33,7 @@ app was missing (ConductionNL/nextcloud-vue#704; fixed app-side in hrmq#111).
 
 **Genuinely NOT done — the reason this stays open:**
 
-- 1.4 / 1.5 — the Composer-side vendor-drift check has no equivalent of the npm one.
+- ~~1.4 / 1.5 — the Composer-side vendor-drift check has no equivalent of the npm one.~~ Done 2026-11-13: `scripts/check-composer-deps-drift.js`.
 - 3.3 / 3.4 — `js/build-info.json` and the `--sidecar` mode; only local mode ships.
 - 5.1-5.6 — blocked on this host: `vendor/` is root-owned, so `composer install`
   cannot run. Worked around for measurement by repointing humaniq's own phpcs/phpmd
@@ -57,11 +57,13 @@ app was missing (ConductionNL/nextcloud-vue#704; fixed app-side in hrmq#111).
   `1.0.0-beta.215` installed vs `2.2.0-vue3.2` locked) — this is the "before" measurement the guard
   is supposed to catch, not an assumption
   Ticked on code (decision 399): the before value (`1.0.0-beta.215` installed vs `2.2.0-vue3.2` locked) is recorded under section 7, task 5.1.
-- [ ] 1.4 Add a Composer-side vendor-drift check (a `composer.json` script or a small PHP script
+- [x] 1.4 Add a Composer-side vendor-drift check (a `composer.json` script or a small PHP script
   under `scripts/`) that confirms `vendor/conduction/hydra-gates` exists at the `composer.lock`-pinned
   version and separately reports `is_writable('vendor')` — read-only, no `composer install` call
-- [ ] 1.5 Run it against the current checkout and record the actual output (expected: FAIL,
+  Done: `scripts/check-composer-deps-drift.js` (`npm run check:composer-drift`, also in `check:boot-integrity`) compares composer.lock's pinned version with `vendor/composer/installed.json` (Composer 1 and 2 shapes), requires the package directory, and reports vendor/ writability on its own line. Seven golden cases in `tests/js/buildScripts.golden.test.mjs`.
+- [x] 1.5 Run it against the current checkout and record the actual output (expected: FAIL,
   package absent, `vendor/` reported not writable — root-owned)
+  MEASURED 2026-11-13 on a fresh clone of `development`: before `composer install` it FAILS (`conduction/hydra-gates: locked v1.19.0, NOT INSTALLED.`, exit 1; vendor/ writable). After the install it PASSES (`v1.19.0 (matches composer.lock)`, exit 0). The root-owned vendor/ from 2026-08-19 no longer applies here (see 5.2).
 
 ## 2. Manifest-sentinel-resolution check
 
@@ -76,8 +78,9 @@ app was missing (ConductionNL/nextcloud-vue#704; fixed app-side in hrmq#111).
   `@workspace.*?` clauses checked (currently 44 per a manifest-wide count — the script counts its
   own input rather than hardcoding that number)
   Ticked on code (decision 399): `scripts/check-manifest-sentinels.mjs:119` records page id and path per clause and counts its own input.
-- [ ] 2.4 Run it against the current manifest and record the actual output (expected: PASS, 0 of N
+- [x] 2.4 Run it against the current manifest and record the actual output (expected: PASS, 0 of N
   clauses fail — the source-level logic is already correct; see design.md Decision 1). Record N.
+  MEASURED 2026-11-13 after `npm ci`: PASS, N = 61 (0 of 61 fail), exit 0. But the run printed `WARN — could not load the installed resolver; falling back to a structural check (grammar only, not behaviour)`, after `Window not available, EventBus can not be established!`. So this PASS checks the clause grammar, not the installed resolver's behaviour. Loading the resolver under plain Node is a follow-up.
 - [x] 2.5 Wire into `package.json` as `"check:manifest-sentinels"`, alongside the existing
   `validate-widget-keys.js`/`validate-manifest.js` scripts
   Ticked on code (decision 399): `package.json` `check:manifest-sentinels` and `check:boot-integrity`.

@@ -129,6 +129,25 @@ class PayrollMutationServiceTest extends TestCase {
 			}//end findAll()
 
 			/**
+			 * Every find() call: the one ObjectService read that leaves a `read` audit entry.
+			 *
+			 * @var array<int, array<int, mixed>>
+			 */
+			public array $found = [];
+
+			/**
+			 * A single-object read, recorded; it answers nothing.
+			 *
+			 * @param mixed ...$args The call's arguments.
+			 *
+			 * @return null
+			 */
+			public function find(mixed ...$args): mixed {
+				$this->found[] = $args;
+				return null;
+			}//end find()
+
+			/**
 			 * @param array<string, mixed> $object The object to save.
 			 * @param string|null $register Register slug (unused by the fake).
 			 * @param string|null $schema Schema name.
@@ -228,6 +247,35 @@ class PayrollMutationServiceTest extends TestCase {
 		];
 
 	}//end payslip()
+
+	/**
+	 * A mutation report reads both runs' payslips as lists, never one object at a
+	 * time, so it leaves no `read` audit entry for the employees it compares
+	 * (record-history-on-every-detail-page REQ-RAH-001, design D5).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-every-read-and-every-change-of-a-humaniq-record-shall-be-recorded-in-openregisters-audit-trail-req-rah-001
+	 */
+	public function testADiffMakesNoSingleObjectReadsThatWouldBeAudited(): void {
+		[$service, $fake] = $this->service(
+			[
+				'PayrollRun' => [
+					['id' => 'run-feb', 'period' => '2026-02', 'administrationId' => 'ADM-001'],
+					['id' => 'run-mar', 'period' => '2026-03', 'administrationId' => 'ADM-001'],
+				],
+				'Payslip' => [
+					$this->payslip('run-feb', 'emp-a', 3800.00, 3081.17, 718.83, 419.14, 231.80),
+					$this->payslip('run-mar', 'emp-a', 4000.00, 3220.00, 780.00, 440.00, 240.00),
+				],
+			]
+		);
+
+		$outcome = $service->diff('run-mar', 'run-feb');
+
+		$this->assertSame('ok', $outcome['status']);
+		$this->assertSame([], $fake->found);
+	}//end testADiffMakesNoSingleObjectReadsThatWouldBeAudited()
 
 	/**
 	 * The design.md worked example, scaled to euros (each cents figure / 100

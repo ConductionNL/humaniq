@@ -46,12 +46,12 @@ class RegisterLookupGateway {
 	 *
 	 * @param ContainerInterface $container  Resolves integriq's services.
 	 * @param IAppManager        $appManager Tells whether integriq is installed.
-	 * @param SettingsService    $settings   The configured source per register.
+	 * @param RegisterPrefillSettings $settings The configured source per register.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
-		private readonly SettingsService $settings,
+		private readonly RegisterPrefillSettings $settings,
 	) {
 
 	}//end __construct()
