@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "Shift": {
+                "configuration": {"exportable": true},
                 "slug": "Shift",
                 "icon": "TimelineClockOutline",
                 "version": "0.1.0",
@@ -36,6 +37,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "concept",
@@ -63,6 +65,7 @@
                 }
             },
             "RosterAssignment": {
+                "configuration": {"exportable": true},
                 "slug": "RosterAssignment",
                 "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "AccountClockOutline",

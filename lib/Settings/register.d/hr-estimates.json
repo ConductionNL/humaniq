@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "TimeEstimate": {
+                "configuration": {"exportable": true},
                 "slug": "TimeEstimate",
                 "icon": "ClockPlusOutline",
                 "version": "0.1.0",
@@ -24,6 +25,7 @@
                 }
             },
             "TimeEntry": {
+                "configuration": {"exportable": true},
                 "x-notes": "estimate-spent-and-remaining-on-an-hours-leaf: the booking gains the role it was worked in, so an estimate per role has something to count against. It is the ONLY field this change adds to TimeEntry: spent stays the sum of the entries and remaining is never stored anywhere.",
                 "properties": {
                     "role": {"type": "string", "nullable": true, "title": "Role", "description": "Which role these hours were worked in. Leave empty when the object is not split by role.", "x-notes": "Matched against TimeEstimate.role when the remainder is derived and when an enforced ceiling is applied (REQ-HL-EST-001/-004). A free string rather than an enum: a gemeente's roles are its own, and an enum here would make adding one a humaniq release."}

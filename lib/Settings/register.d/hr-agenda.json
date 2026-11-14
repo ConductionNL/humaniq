@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "EmployeeCompetence": {
+                "configuration": {"exportable": true},
                 "slug": "EmployeeCompetence",
                 "icon": "CertificateOutline",
                 "version": "0.1.0",
@@ -23,6 +24,7 @@
                 }
             },
             "HrResource": {
+                "configuration": {"exportable": true},
                 "slug": "HrResource",
                 "icon": "DoorOpen",
                 "version": "0.1.0",
@@ -43,6 +45,7 @@
                 }
             },
             "ResourceBooking": {
+                "configuration": {"exportable": true},
                 "slug": "ResourceBooking",
                 "icon": "CalendarCheck",
                 "version": "0.1.0",
@@ -65,6 +68,7 @@
                 }
             },
             "CalendarSubscription": {
+                "configuration": {"exportable": true},
                 "slug": "CalendarSubscription",
                 "icon": "CalendarSyncOutline",
                 "version": "0.1.0",
