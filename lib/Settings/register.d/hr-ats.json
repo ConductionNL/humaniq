@@ -1307,7 +1307,7 @@
             "Interview": {
                 "slug": "Interview",
                 "icon": "CalendarAccountOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Interview",
                 "description": "One interview round (gesprek) scheduled for an Application (interview-scheduling design.md D2). A separate schema, not fields on Application, because a single Application can go through more than one interview round, each with its own lifecycle and calendar identity. InterviewCalendarService projects every scheduled Interview onto one configured shared Nextcloud calendar as a VEVENT (design.md D1/D3); calendarEventUid is the system-managed, stored idempotency marker set on first sync.",
                 "type": "object",
@@ -1369,11 +1369,12 @@
                         "x-notes": "End of the interview slot. Rendered as the VEVENT DTEND by InterviewCalendarService."
                     },
                     "interviewers": {
-                        "type": "string",
+                        "type": "array",
+                        "items": {"type": "string", "referenceType": "nextcloud-user"},
                         "nullable": true,
                         "title": "Interviewers",
-                        "description": "Who will conduct the interview. Shown as plain text in the calendar item; no invitations are sent.",
-                        "x-notes": "Free-text interviewer name(s). Rendered as plain DESCRIPTION text only — never as an ATTENDEE/ORGANIZER property, so no iMIP scheduling mail is ever triggered (design.md D5)."
+                        "description": "The Nextcloud users who conduct the interview. Each is named on the calendar item as an attendee; the candidate never is.",
+                        "x-notes": "interview-in-the-interviewers-calendars (decision 390, REQ-INTV-010): Nextcloud user ids, checked on save by InterviewInterviewersListener. The synced event names the interview calendar's principal as ORGANIZER and each interviewer as an ATTENDEE; the candidate and the Application's personal fields never reach the event (REQ-INTV-005)."
                     },
                     "mode": {
                         "type": "string",
