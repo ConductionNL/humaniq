@@ -1,10 +1,9 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "humaniq",
     {
+        "2024": "2024",
+        "2025": "2025",
+        "2026": "2026",
         "Deployment plan": "Deployment plan",
         "Draft while the plan is made; confirmed once agreed.": "Draft while the plan is made; confirmed once agreed.",
         "From the CAO": "From the CAO",
@@ -34,9 +33,6 @@ OC.L10N.register(
         "The total of the plan lines.": "The total of the plan lines.",
         "Weeks": "Weeks",
         "Whether the norm comes from the CAO or was entered by hand.": "Whether the norm comes from the CAO or was entered by hand.",
-        "2024": "2024",
-        "2025": "2025",
-        "2026": "2026",
         "(Re)calculate": "(Re)calculate",
         "(Re)calculating the payroll run failed.": "(Re)calculating the payroll run failed.",
         "30%-ruling applied rate": "30%-ruling applied rate",
@@ -3752,7 +3748,13 @@ OC.L10N.register(
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.",
         "The expense categories could not be loaded.": "The expense categories could not be loaded.",
         "The expense categories could not be saved.": "The expense categories could not be saved.",
-        "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on."
+        "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on.",
+        "Access grants": "Access grants",
+        "Add integration": "Add integration",
+        "Connection": "Connection",
+        "Last checked": "Last checked",
+        "Status message": "Status message",
+        "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why.": "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why."
     },
     "nplurals=2; plural=(n != 1);"
 )
