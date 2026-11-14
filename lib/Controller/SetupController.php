@@ -183,14 +183,9 @@ class SetupController extends Controller {
 			return $this->loadDataset(actionId: $actionId);
 		}
 
-		if ($actionId === 'create-administrations') {
-			return $this->createAdministrations();
-		}
-
-		if ($actionId === 'skip-administrations') {
-			$this->setupAdministrations->skip();
-
-			return new JSONResponse(data: ['success' => true, 'message' => 'Administrations skipped.']);
+		$administrations = $this->administrationsAction(actionId: $actionId);
+		if ($administrations !== null) {
+			return $administrations;
 		}
 
 		// DECLINING IS AN ANSWER — see DEMO_DECIDED_KEY.
@@ -219,6 +214,28 @@ class SetupController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
 	public function saveConfig(): JSONResponse {
+		$refused = $this->refuseStoredChoices();
+		if ($refused !== null) {
+			return $refused;
+		}
+
+		$this->storeParams();
+		$this->applyWorkingMode();
+
+		return new JSONResponse(data: ['success' => true]);
+
+	}//end saveConfig()
+
+	/**
+	 * A 400 for a posted value the app reads back that it does not know, or null.
+	 *
+	 * Nothing is stored when one is refused.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-unknown-mode-is-not-stored
+	 */
+	private function refuseStoredChoices(): ?JSONResponse {
 		// 🔴 THE DATASET IS VALIDATED BEFORE IT IS STORED. Everything else is
 		// written as posted, because a `config-fields` step declares its own
 		// keys and this endpoint cannot know them. The dataset is different: the
@@ -244,12 +261,18 @@ class SetupController extends Controller {
 		// (the mode is written onto the administrations, the language picks the
 		// documents' language), so an unknown value is refused before anything
 		// is stored, like the dataset.
-		$refused = $this->refuseChoice(key: 'working_mode', known: SetupAdministrations::MODES)
+		return $this->refuseChoice(key: 'working_mode', known: SetupAdministrations::MODES)
 			?? $this->refuseChoice(key: 'default_language', known: ['nl', 'en']);
-		if ($refused !== null) {
-			return $refused;
-		}
+	}//end refuseStoredChoices()
 
+	/**
+	 * Store every posted value as app config, a scalar as is and anything else as JSON.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude First-time setup wizard backend (ADR-042); no per-app behavioural spec.
+	 */
+	private function storeParams(): void {
 		foreach ($this->request->getParams() as $key => $value) {
 			if ($key === '_route') {
 				continue;
@@ -262,15 +285,44 @@ class SetupController extends Controller {
 
 			$this->appConfig->setValueString(Application::APP_ID, (string)$key, $stored);
 		}
+	}//end storeParams()
 
+	/**
+	 * Write a posted working mode onto the wizard's administrations.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-werkwijze-step-shall-set-the-mode-of-the-wizards-administrations-req-fts-009
+	 */
+	private function applyWorkingMode(): void {
 		$mode = $this->request->getParam('working_mode');
 		if (is_string($mode) === true) {
 			$this->setupAdministrations->applyMode(mode: $mode);
 		}
+	}//end applyWorkingMode()
 
-		return new JSONResponse(data: ['success' => true]);
+	/**
+	 * Run the Administraties step's create or skip action, or null for any other action.
+	 *
+	 * @param string $actionId The action.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-administraties-step-shall-create-the-administrations-humaniq-starts-with-req-fts-008
+	 */
+	private function administrationsAction(string $actionId): ?JSONResponse {
+		if ($actionId === 'create-administrations') {
+			return $this->createAdministrations();
+		}
 
-	}//end saveConfig()
+		if ($actionId === 'skip-administrations') {
+			$this->setupAdministrations->skip();
+
+			return new JSONResponse(data: ['success' => true, 'message' => 'Administrations skipped.']);
+		}
+
+		return null;
+	}//end administrationsAction()
 
 	/**
 	 * A 400 for a posted value of a choice the app reads back that is not one of its options, or null.

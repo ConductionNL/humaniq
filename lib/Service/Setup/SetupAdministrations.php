@@ -99,22 +99,40 @@ class SetupAdministrations {
 		}
 
 		foreach (array_values($entries) as $index => $entry) {
-			$row = ($index + 1);
-			if (is_array($entry) === false) {
-				return 'Administration ' . $row . ' is not a set of fields.';
-			}
-
-			if (self::text(value: ($entry['name'] ?? null)) === '') {
-				return 'Administration ' . $row . ' has no name.';
-			}
-
-			if (self::text(value: ($entry['loonheffingennummer'] ?? null)) === '') {
-				return 'Administration ' . $row . ' has no loonheffingennummer.';
+			$refused = self::entryRefusal(entry: $entry, row: ($index + 1));
+			if ($refused !== null) {
+				return $refused;
 			}
 		}
 
 		return null;
 	}//end refusal()
+
+	/**
+	 * Why one posted administration is refused, or null when it is sound.
+	 *
+	 * @param mixed $entry The entry.
+	 * @param int   $row   Its 1-based position, for the message.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-entry-without-a-loonheffingennummer-is-refused
+	 */
+	private static function entryRefusal(mixed $entry, int $row): ?string {
+		if (is_array($entry) === false) {
+			return 'Administration ' . $row . ' is not a set of fields.';
+		}
+
+		if (self::text(value: ($entry['name'] ?? null)) === '') {
+			return 'Administration ' . $row . ' has no name.';
+		}
+
+		if (self::text(value: ($entry['loonheffingennummer'] ?? null)) === '') {
+			return 'Administration ' . $row . ' has no loonheffingennummer.';
+		}
+
+		return null;
+	}//end entryRefusal()
 
 	/**
 	 * Create or reuse each administration, grant the administrator `hr` on it, and make the first active.
@@ -134,20 +152,7 @@ class SetupAdministrations {
 			$number = self::text(value: $entry['loonheffingennummer']);
 			$found  = $this->byNumber(rows: $existing, number: $number);
 			if ($found === null) {
-				$found      = $this->row(
-					value: $this->objects()->saveObject(
-						object: [
-							'administrationId' => 'ADM-' . $number,
-							'name' => self::text(value: $entry['name']),
-							'loonheffingennummer' => $number,
-							'kvkNumber' => (self::text(value: ($entry['kvkNumber'] ?? null)) !== '' ? self::text(value: $entry['kvkNumber']) : null),
-							'active' => true,
-							'mode' => 'standard',
-						],
-						register: $this->settings->getRegisterSlug(),
-						schema: 'hrAdministration'
-					)
-				);
+				$found      = $this->createOne(entry: $entry, number: $number);
 				$existing[] = $found;
 			}
 
@@ -156,15 +161,56 @@ class SetupAdministrations {
 		}
 
 		$this->grantHr(keys: $keys, userId: $userId);
-		if ($keys !== [] && $keys[0] !== '') {
-			$this->administrations->setActiveAdministrationId(userId: $userId, administrationId: $keys[0]);
-		}
+		$this->activateFirst(keys: $keys, userId: $userId);
 
 		$this->appConfig->setValueString(Application::APP_ID, self::IDS_KEY, (string)json_encode(array_values(array_filter($objectIds))));
 		$this->appConfig->setValueString(Application::APP_ID, self::DECIDED_KEY, 'created');
 
 		return $keys;
 	}//end create()
+
+	/**
+	 * Create one administration in the standard working mode.
+	 *
+	 * @param array<string,mixed> $entry  The entry.
+	 * @param string              $number Its trimmed loonheffingennummer.
+	 *
+	 * @return array<string,mixed>|null The saved administration.
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-administraties-step-shall-create-the-administrations-humaniq-starts-with-req-fts-008
+	 */
+	private function createOne(array $entry, string $number): ?array {
+		$kvkNumber = self::text(value: ($entry['kvkNumber'] ?? null));
+
+		return $this->row(
+			value: $this->objects()->saveObject(
+				object: [
+					'administrationId' => 'ADM-' . $number,
+					'name' => self::text(value: $entry['name']),
+					'loonheffingennummer' => $number,
+					'kvkNumber' => ($kvkNumber !== '' ? $kvkNumber : null),
+					'active' => true,
+					'mode' => 'standard',
+				],
+				register: $this->settings->getRegisterSlug(),
+				schema: 'hrAdministration'
+			)
+		);
+	}//end createOne()
+
+	/**
+	 * Make the first administration the administrator's active one.
+	 *
+	 * @param array<int,string> $keys   The administrations' business keys, in order.
+	 * @param string            $userId The administrator.
+	 *
+	 * @return void
+	 */
+	private function activateFirst(array $keys, string $userId): void {
+		if ($keys !== [] && $keys[0] !== '') {
+			$this->administrations->setActiveAdministrationId(userId: $userId, administrationId: $keys[0]);
+		}
+	}//end activateFirst()
 
 	/**
 	 * Record that the Administraties step was skipped; nothing is created.
@@ -191,17 +237,8 @@ class SetupAdministrations {
 			throw new RuntimeException('Unknown working mode: ' . $mode);
 		}
 
-		$ids = json_decode($this->appConfig->getValueString(Application::APP_ID, self::IDS_KEY, '[]'), true);
-		if (is_array($ids) === false) {
-			return 0;
-		}
-
 		$written = 0;
-		foreach ($ids as $id) {
-			if (is_string($id) === false || $id === '') {
-				continue;
-			}
-
+		foreach ($this->createdIds() as $id) {
 			$this->objects()->patchObject(
 				objectId: $id,
 				data: ['mode' => $mode],
@@ -215,6 +252,20 @@ class SetupAdministrations {
 	}//end applyMode()
 
 	/**
+	 * The object ids of the administrations the Administraties step created or reused.
+	 *
+	 * @return array<int,string>
+	 */
+	private function createdIds(): array {
+		$ids = json_decode($this->appConfig->getValueString(Application::APP_ID, self::IDS_KEY, '[]'), true);
+		if (is_array($ids) === false) {
+			return [];
+		}
+
+		return array_values(array_filter($ids, fn (mixed $id): bool => is_string($id) === true && $id !== ''));
+	}//end createdIds()
+
+	/**
 	 * Give the administrator `hr` on each administration they do not already hold it on.
 	 *
 	 * @param array<int,string> $keys   The administrations' business keys.
@@ -223,13 +274,7 @@ class SetupAdministrations {
 	 * @return void
 	 */
 	private function grantHr(array $keys, string $userId): void {
-		$held = [];
-		foreach ($this->rows(schema: 'AdministrationAccess') as $row) {
-			if ((string)($row['userId'] ?? '') === $userId && (string)($row['role'] ?? '') === 'hr') {
-				$held[(string)($row['administrationId'] ?? '')] = true;
-			}
-		}
-
+		$held = $this->heldHr(userId: $userId);
 		foreach (array_unique($keys) as $key) {
 			if ($key === '' || isset($held[$key]) === true) {
 				continue;
@@ -242,6 +287,24 @@ class SetupAdministrations {
 			);
 		}
 	}//end grantHr()
+
+	/**
+	 * The administrations the user already holds `hr` on, as keys.
+	 *
+	 * @param string $userId The user.
+	 *
+	 * @return array<string,true>
+	 */
+	private function heldHr(string $userId): array {
+		$held = [];
+		foreach ($this->rows(schema: 'AdministrationAccess') as $row) {
+			if ((string)($row['userId'] ?? '') === $userId && (string)($row['role'] ?? '') === 'hr') {
+				$held[(string)($row['administrationId'] ?? '')] = true;
+			}
+		}
+
+		return $held;
+	}//end heldHr()
 
 	/**
 	 * The administration with this loonheffingennummer, or null.
