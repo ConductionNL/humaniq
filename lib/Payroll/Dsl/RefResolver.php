@@ -45,7 +45,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Payroll\Dsl;
 
-use DateTimeImmutable;
+use OCA\Humaniq\Payroll\PayPeriod;
 use RuntimeException;
 use Throwable;
 
@@ -196,29 +196,34 @@ final class RefResolver {
 
 	/**
 	 * Resolve an `@period.*` reference. The period is a supplied string, never
-	 * a clock read (REQ-JP-008).
+	 * a clock read (REQ-JP-008). Every grain `PayPeriod` knows resolves: a
+	 * month, a four-week period and a week.
 	 *
-	 * @param string $field The period field (`year` or `lastDay`).
+	 * @param string $field The period field (`year`, `lastDay` or `tijdvak`).
 	 * @param StepContext $ctx The run context.
 	 * @param string $ref The original reference (for errors).
 	 *
 	 * @return mixed
 	 *
 	 * @throws DslException When the field is unknown or the period is unparseable.
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	private function period(string $field, StepContext $ctx, string $ref): mixed {
-		$period = $ctx->period();
+		$id = $ctx->period();
 
 		try {
-			$first = new DateTimeImmutable($period . '-01');
+			$period = PayPeriod::parse($id);
 		} catch (Throwable $e) {
-			throw new DslException('Pack: onleesbare periode "' . $period . '" bij verwijzing "' . $ref . '".', 0, $e);
+			throw new DslException('Pack: onleesbare periode "' . $id . '" bij verwijzing "' . $ref . '".', 0, $e);
 		}
 
 		return match ($field) {
-			'year' => (int)$first->format('Y'),
-			'lastDay' => $first->modify('last day of this month')->format('Y-m-d'),
-			default => throw new DslException('Pack: onbekend periodeveld "' . $ref . '" (toegestaan: @period.year, @period.lastDay).'),
+			// The id's own year: the ISO year of a week or four-week period, whose first day may fall in December.
+			'year' => (int)substr($period->id, 0, 4),
+			'lastDay' => $period->lastDay->format('Y-m-d'),
+			'tijdvak' => $period->tijdvak,
+			default => throw new DslException('Pack: onbekend periodeveld "' . $ref . '" (toegestaan: @period.year, @period.lastDay, @period.tijdvak).'),
 		};
 
 	}//end period()

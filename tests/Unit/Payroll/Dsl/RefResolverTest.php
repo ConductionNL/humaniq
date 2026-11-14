@@ -150,7 +150,7 @@ class RefResolverTest extends TestCase {
 			'two segments' => ['@input.gross.monthly', 'Pack: verwijzing "@input.gross.monthly" moet precies één segment na @input hebben.'],
 			'unknown period field' => [
 				'@period.month',
-				'Pack: onbekend periodeveld "@period.month" (toegestaan: @period.year, @period.lastDay).',
+				'Pack: onbekend periodeveld "@period.month" (toegestaan: @period.year, @period.lastDay, @period.tijdvak).',
 			],
 			'missing table leaf' => [
 				'@table.loonheffing.nope',
@@ -166,7 +166,64 @@ class RefResolverTest extends TestCase {
 	}//end malformedRefs()
 
 	/**
-	 * A period that is not `YYYY-MM` cannot back `@period.*`.
+	 * Every grain resolves its year, last day and tijdvak through PayPeriod:
+	 * a month, a four-week period (P13 of a week-53 year still ends on the
+	 * Sunday of week 52, P14 is week 53 alone) and a week, whose ISO year
+	 * wins over the calendar year of its first day.
+	 *
+	 * @param string $period  The period id.
+	 * @param int    $year    The expected @period.year.
+	 * @param string $lastDay The expected @period.lastDay.
+	 * @param string $tijdvak The expected @period.tijdvak.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider grains
+	 */
+	public function testEachGrainResolvesItsPeriodFields(string $period, int $year, string $lastDay, string $tijdvak): void {
+		$refs = new RefResolver();
+		$ctx = new StepContext([], $this->tables(), $period, []);
+
+		$this->assertSame($year, $refs->resolve('@period.year', $ctx));
+		$this->assertSame($lastDay, $refs->resolve('@period.lastDay', $ctx));
+		$this->assertSame($tijdvak, $refs->resolve('@period.tijdvak', $ctx));
+
+	}//end testEachGrainResolvesItsPeriodFields()
+
+	/**
+	 * Period ids of each grain with their year, last day and tijdvak.
+	 *
+	 * @return array<string, array{0: string, 1: int, 2: string, 3: string}>
+	 */
+	public static function grains(): array {
+		return [
+			'month' => ['2026-05', 2026, '2026-05-31', 'maand'],
+			'first four-week period, starting in December' => ['2026-P01', 2026, '2026-01-25', 'vierweken'],
+			'period 13 of a week-53 year' => ['2026-P13', 2026, '2026-12-27', 'vierweken'],
+			'period 14, week 53 alone' => ['2026-P14', 2026, '2027-01-03', 'week'],
+			'week 1 starting in December' => ['2025-W01', 2025, '2025-01-05', 'week'],
+			'week 53' => ['2026-W53', 2026, '2027-01-03', 'week'],
+		];
+
+	}//end grains()
+
+	/**
+	 * A week 53 the year does not have cannot back `@period.*`.
+	 *
+	 * @return void
+	 */
+	public function testAWeek53TheYearLacksIsRejected(): void {
+		$ctx = new StepContext([], $this->tables(), '2025-W53', []);
+
+		$this->expectException(DslException::class);
+		$this->expectExceptionMessage('Pack: onleesbare periode "2025-W53" bij verwijzing "@period.tijdvak".');
+
+		(new RefResolver())->resolve('@period.tijdvak', $ctx);
+
+	}//end testAWeek53TheYearLacksIsRejected()
+
+	/**
+	 * A period that is not a pay period cannot back `@period.*`.
 	 *
 	 * @return void
 	 */

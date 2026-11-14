@@ -10,8 +10,9 @@
 
 ## 2. Engine
 
-- [ ] 2.1 Teach `RefResolver` `@period.tijdvak` and `@period.lastDay` for every id. Verify:
+- [x] 2.1 Teach `RefResolver` `@period.tijdvak` and `@period.lastDay` for every id. Verify:
       unit tests for each grain.
+  - Done: `RefResolver::period()` parses the id through `PayPeriod`: `@period.year` is the id's (ISO) year, `@period.lastDay` the period's last day, `@period.tijdvak` `maand`, `vierweken` or `week`; an unknown id or a week 53 the year lacks is refused as before. Tests: `RefResolverTest::testEachGrainResolvesItsPeriodFields` (6 grains), `testAWeek53TheYearLacksIsRejected`.
 - [ ] 2.2 Replace the monthly factor and caps in the pack with tijdvak bindings, add
       `maximumpremieloon.week` and new golden vectors. Verify: the nine fixtures pass unchanged
       and the four-weekly and weekly vectors pass through `PackValidator` gate 5.
