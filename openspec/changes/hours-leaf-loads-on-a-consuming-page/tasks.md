@@ -7,9 +7,15 @@
       entry and its comment.
 - [x] 1.2 Write `src/leaves.js` to import only the leaf registration and its
       widget: no router, no store, no app shell.
-- [ ] 1.3 Add a build test asserting `js/humaniq-leaves.js` exists after a
+- [x] 1.3 Add a build test asserting `js/humaniq-leaves.js` exists after a
       production build and stays under a stated size ceiling.
-- [ ] 1.4 Watch the test fail on the current tree before adding the entry.
+      Done: `tests/js/leavesBundleBuild.test.mjs` builds only the `leaves` entry in production
+      mode into a temporary directory (`tests/js/support/buildLeavesBundle.cjs`), asserts the
+      `<app id>-leaves.js` name, a 512 KB ceiling (232 KB alone, 320 KB in the full build, main
+      16.6 MB) and no router, store, manifest or app shell among its modules.
+- [x] 1.4 Watch the test fail on the current tree before adding the entry.
+      Done: with the entry removed it fails "webpack.config.js declares no leaves entry"; renamed
+      to `-leaf.js` it fails "expected humaniq-leaves.js, the build wrote humaniq-leaf.js".
 
 ## 2. Both halves, always (REQ-HLD-002)
 
