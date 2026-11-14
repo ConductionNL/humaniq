@@ -148,7 +148,7 @@ class RetentionExpiryService {
 			return ['eligible' => true, 'released' => false, 'floor' => $floor];
 		}
 
-		$released = $this->retentionService()->releaseLegalHold(
+		$released = $this->releaseHold(
 			object: $object,
 			reason: 'Statutaire bewaartermijn verstreken op ' . $floor . ' (compliance-retention-expiry).'
 		);
@@ -313,6 +313,27 @@ class RetentionExpiryService {
 
 		return true;
 	}//end persist()
+
+	/**
+	 * Release a legal hold through OpenRegister: `releaseHold(object, HoldOrder)` where
+	 * OpenRegister offers it, else the release's `releaseLegalHold(object, reason)`.
+	 *
+	 * @param object $object The OpenRegister ObjectEntity to release.
+	 * @param string $reason Why the hold is released.
+	 *
+	 * @return mixed The released entity.
+	 *
+	 * @psalm-suppress UndefinedClass HoldOrder exists only when OpenRegister is installed; it is checked with class_exists() first.
+	 */
+	private function releaseHold(object $object, string $reason): mixed {
+		$service = $this->retentionService();
+		$order   = 'OCA\OpenRegister\Service\HoldOrder';
+		if (method_exists($service, 'releaseHold') === true && class_exists($order) === true) {
+			return $service->releaseHold(object: $object, order: new $order(reason: $reason));
+		}
+
+		return $service->releaseLegalHold(object: $object, reason: $reason);
+	}//end releaseHold()
 
 	/**
 	 * @return mixed OpenRegister's RetentionService.
