@@ -30,13 +30,22 @@
 
 ## 3. Run
 
-- [ ] 3.1 Add the benefit pass and the extended payslip key. Verify: unit tests that a leaver
+- [x] 3.1 Add the benefit pass and the extended payslip key. Verify: unit tests that a leaver
       with an active entitlement gets a benefit payslip and a person with salary and benefit
       gets two payslips.
-- [ ] 3.2 Pass regime values for entitlements and office contracts, refusing unverified leaves.
+      (`PayrollRunService::payBenefits()` after the employee loop; benefit payslips keyed by
+      `benefitEntitlementId`, salary payslips by employee as before; `BenefitEntitlementPay`
+      for the period amount; `PayrollRunServiceSpecialRegimesTest`, `BenefitEntitlementPayTest`.)
+- [x] 3.2 Pass regime values for entitlements and office contracts, refusing unverified leaves.
       Verify: unit tests that an alderman's payslip has zero employee insurance and an
       unverified regime lists `regime-unverified`.
-- [ ] 3.3 Pay a lump-sum RVU through the special-rate path. Verify: unit test that the levy
+      (Entitlement kind and `political-office` contracts read `TaxTables::specialRegime()`;
+      table colour, insurances, Zvw mode and the RVU threshold and rate become inputs; the
+      payslip carries `specialRegime` and `rvuEindheffing`.)
+- [ ] 3.3 Pay a lump-sum RVU through the special-rate path.
+      Not built: the special-rate path comes from `payroll-reservation-payouts`, which is not
+      on development yet. Until it lands a lump-sum entitlement is listed `lump-sum-pending`
+      and never paid as a monthly wage. Verify: unit test that the levy
       threshold is multiplied by the months covered.
 
 ## 4. Pages and seed
