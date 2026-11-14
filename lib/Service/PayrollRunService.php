@@ -1273,6 +1273,8 @@ class PayrollRunService {
 	 * @param string $administrationId The administration.
 	 *
 	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	private function administrationRow(string $administrationId): array {
 		foreach ($this->loadAll('hrAdministration') as $administration) {

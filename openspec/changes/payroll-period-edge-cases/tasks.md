@@ -49,7 +49,8 @@
 
 ## 5. Verification
 
-- [ ] 5.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec` tags
+- [x] 5.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec` tags
       on every new method (gate 16).
+  - Done: each of the eight scenarios carries an `@e2e exclude` naming the unit test that asserts it (every outcome is server-side: a run, a statement, an audit finding); every new class and method carries `@spec`.
 - [ ] 5.2 One live check on a dev instance: calculate `2026-P13` for `ADM-005` and generate the
       2026 statement for the employee with an opening balance; record screenshots in the PR.

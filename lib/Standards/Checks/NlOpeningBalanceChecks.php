@@ -140,6 +140,8 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 * @param array<string, mixed> $context    The audit context.
 	 *
 	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private static function balanceFor(string $employeeId, int $year, array $context): ?array {
 		$balance = ($context['openingBalances']['byEmployeeYear'][trim($employeeId)][$year] ?? null);
@@ -153,6 +155,8 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 * @param string $id The period id.
 	 *
 	 * @return PayPeriod|null
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private static function period(string $id): ?PayPeriod {
 		try {
@@ -168,6 +172,8 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 * @param PayPeriod $period The period.
 	 *
 	 * @return int
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private static function yearOf(PayPeriod $period): int {
 		return (int)substr($period->id, 0, 4);

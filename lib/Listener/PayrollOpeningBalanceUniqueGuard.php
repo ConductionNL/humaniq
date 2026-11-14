@@ -42,6 +42,8 @@ use Psr\Log\LoggerInterface;
  * One opening balance per employee, administration and year.
  *
  * @template-implements IEventListener<Event>
+ *
+ * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
  */
 class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 
@@ -52,6 +54,8 @@ class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 	 *
 	 * @param HoursRegisterGateway $gateway Reads the stored balances and resolves schema ids.
 	 * @param LoggerInterface      $logger  Logs a balance that could not be checked.
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
@@ -95,6 +99,8 @@ class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 	 * @param Event $event The pre-save event.
 	 *
 	 * @return array{0: array<string, mixed>, 1: string|null}|null Null when the write is not a balance.
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function incoming(Event $event): ?array {
 		if ($event instanceof ObjectCreatingEvent) {
@@ -118,6 +124,8 @@ class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 	 * @param string|null          $uuid    Its id on an update.
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function duplicateOf(array $payload, ?string $uuid): bool {
 		$employeeId = trim((string)($payload['employeeId'] ?? ''));
@@ -147,6 +155,8 @@ class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 	 * @param object $entity The OpenRegister object.
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function isBalance(object $entity): bool {
 		return strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) === self::SCHEMA_SLUG;
