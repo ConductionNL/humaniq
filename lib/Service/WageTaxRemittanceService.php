@@ -73,15 +73,17 @@ class WageTaxRemittanceService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container       For the lazy ObjectService.
-	 * @param IAppManager        $appManager      To probe for shillinq.
-	 * @param SettingsService    $settingsService Register slug, payee and account.
-	 * @param LoggerInterface    $logger          The logger.
+	 * @param ContainerInterface         $container       For the lazy ObjectService.
+	 * @param IAppManager                $appManager      To probe for shillinq.
+	 * @param SettingsService            $settingsService Register slug.
+	 * @param PayrollBookkeepingSettings $bookkeeping     The payee and the wage tax liability account.
+	 * @param LoggerInterface            $logger          The logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		IAppManager $appManager,
 		private readonly SettingsService $settingsService,
+		private readonly PayrollBookkeepingSettings $bookkeeping,
 		private readonly LoggerInterface $logger,
 	) {
 		$this->payables = new ShillinqPayables(container: $container, appManager: $appManager, settingsService: $settingsService, logger: $logger);
@@ -156,13 +158,13 @@ class WageTaxRemittanceService {
 			return $this->finish(runId: $runId, fields: $base + ['status' => 'nothing-to-pay']);
 		}
 
-		$problem = $this->problemWith(reference: $reference, payeeId: $this->settingsService->getWageTaxPayeeId());
+		$problem = $this->problemWith(reference: $reference, payeeId: $this->bookkeeping->getWageTaxPayeeId());
 		if ($problem !== null) {
 			return $this->finish(runId: $runId, fields: $base + ['status' => 'failed', 'errorMessage' => $problem]);
 		}
 
 		try {
-			$payload = (new WageTaxPayable(amount: $amount, payeeId: $this->settingsService->getWageTaxPayeeId(), account: $this->settingsService->getGlPostAccountWageTaxLiability()))->build(run: $run, filing: $filing);
+			$payload = (new WageTaxPayable(amount: $amount, payeeId: $this->bookkeeping->getWageTaxPayeeId(), account: $this->bookkeeping->getGlPostAccountWageTaxLiability()))->build(run: $run, filing: $filing);
 		} catch (\InvalidArgumentException $e) {
 			return $this->finish(runId: $runId, fields: $base + ['status' => 'failed', 'errorMessage' => $e->getMessage()]);
 		}

@@ -76,29 +76,6 @@ class SettingsServiceTest extends TestCase {
 	}//end testTheRegisterSlug()
 
 	/**
-	 * Each ledger account has its own default, used when unset or blank.
-	 *
-	 * @return void
-	 */
-	public function testTheLedgerAccounts(): void {
-		$defaults = $this->settings([]);
-		self::assertSame(
-			['4001', '4002', '1701', '1702', '4010'],
-			[
-				$defaults->getGlPostAccountGross(),
-				$defaults->getGlPostAccountEmployerCharges(),
-				$defaults->getGlPostAccountWageTaxLiability(),
-				$defaults->getGlPostAccountNetWagesLiability(),
-				$defaults->getGlPostAccountReimbursements(),
-			]
-		);
-
-		$stored = $this->settings(['glpost_account_gross' => '8000', 'glpost_account_reimbursements' => '']);
-		self::assertSame('8000', $stored->getGlPostAccountGross());
-		self::assertSame('4010', $stored->getGlPostAccountReimbursements());
-	}//end testTheLedgerAccounts()
-
-	/**
 	 * The net-pay execution day and the signing deadline fall back on anything not positive.
 	 *
 	 * @return void
@@ -122,12 +99,10 @@ class SettingsServiceTest extends TestCase {
 	public function testIdentifiersAreReadAsStored(): void {
 		$settings = $this->settings([
 			'netpay_debtor_iban' => 'NL91ABNA0417164300',
-			'wagetax_payee_id' => ' bd-1 ',
 			'documents_template_contract' => 'tpl-9',
 		]);
 
 		self::assertSame('NL91ABNA0417164300', $settings->getNetPayDebtorIban());
-		self::assertSame('bd-1', $settings->getWageTaxPayeeId());
 		self::assertSame('tpl-9', $settings->getDocumentsTemplateId('contract'));
 		self::assertSame('', $settings->getDocumentsTemplateId('offer'));
 		self::assertSame('', $this->settings([])->getNetPayDebtorIban());
