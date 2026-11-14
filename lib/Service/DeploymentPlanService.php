@@ -155,6 +155,139 @@ class DeploymentPlanService {
 	}//end totals()
 
 	/**
+	 * The school view: every teacher placed in a unit during a school year, with their plan's planned, norm and difference.
+	 *
+	 * A teacher with a plan is listed with its totals; a placed teacher without
+	 * one is listed with `hasPlan` false. Rows with a plan come first, the
+	 * largest difference (the worst overload) first; teachers without a plan
+	 * follow by name. Only the teachers in `$readable` are listed, so the
+	 * caller's read access decides who appears. A row's `id` is its plan's id
+	 * (null without a plan), so a table row opens the plan.
+	 *
+	 * @param array<int, array<string, mixed>>    $assignments The unit's OrgAssignment rows (`employeeId`, `startDate`, `endDate`).
+	 * @param array<int, array<string, mixed>>    $plans       The unit's DeploymentPlan rows for the school year.
+	 * @param array<string, array<string, mixed>> $readable    The teachers the caller may read, by employee id.
+	 * @param string                              $schoolYear  The school year, `YYYY-YYYY`.
+	 *
+	 * @return array<int, array<string, mixed>>|null The rows, or null for a malformed school year.
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-a-school-leader-shall-see-every-teacher-s-plan-for-their-school-req-edu-002
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#scenario-room-in-the-team
+	 */
+	public function schoolView(array $assignments, array $plans, array $readable, string $schoolYear): ?array {
+		$year = self::schoolYearBounds(schoolYear: $schoolYear);
+		if ($year === null) {
+			return null;
+		}
+
+		[$yearStart, $yearEnd] = $year;
+		$placed = [];
+		foreach ($assignments as $assignment) {
+			$employeeId = (string)($assignment['employeeId'] ?? '');
+			if ($employeeId === '' || isset($readable[$employeeId]) === false) {
+				continue;
+			}
+
+			if (self::coveredDays(contract: $assignment, yearStart: $yearStart, yearEnd: $yearEnd) > 0) {
+				$placed[$employeeId] = true;
+			}
+		}
+
+		$plansByEmployee = [];
+		foreach ($plans as $plan) {
+			$employeeId = (string)($plan['employeeId'] ?? '');
+			if (isset($placed[$employeeId]) === true && (string)($plan['schoolYear'] ?? '') === $schoolYear) {
+				$plansByEmployee[$employeeId] = $plan;
+			}
+		}
+
+		$withPlan = [];
+		$withoutPlan = [];
+		foreach (array_keys($placed) as $employeeId) {
+			$employeeId = (string)$employeeId;
+			$row = [
+				'employeeId' => $employeeId,
+				'name'       => self::employeeName(employee: $readable[$employeeId]),
+			];
+			if (isset($plansByEmployee[$employeeId]) === false) {
+				$withoutPlan[] = array_merge($row, ['id' => null, 'hasPlan' => false, 'planId' => null, 'status' => null, 'plannedHours' => null, 'normHours' => null, 'normSource' => null, 'differenceHours' => null, 'overload' => false]);
+				continue;
+			}
+
+			$plan = $plansByEmployee[$employeeId];
+			$totals = $this->totals(plan: $plan);
+			$norm = null;
+			if (is_numeric($plan['normHours'] ?? null) === true) {
+				$norm = (float)$plan['normHours'];
+			}
+
+			$withPlan[] = array_merge(
+				$row,
+				[
+					'id'              => ($plan['id'] ?? null),
+					'hasPlan'         => true,
+					'planId'          => ($plan['id'] ?? null),
+					'status'          => ($plan['status'] ?? null),
+					'plannedHours'    => $totals['plannedHours'],
+					'normHours'       => $norm,
+					'normSource'      => ($plan['normSource'] ?? null),
+					'differenceHours' => $totals['differenceHours'],
+					'overload'        => $totals['overload'],
+				]
+			);
+		}//end foreach
+
+		usort(
+			$withPlan,
+			static function (array $left, array $right): int {
+				$byDifference = (($right['differenceHours'] ?? -INF) <=> ($left['differenceHours'] ?? -INF));
+				if ($byDifference !== 0) {
+					return $byDifference;
+				}
+
+				return strcmp((string)$left['name'], (string)$right['name']);
+			}
+		);
+		usort($withoutPlan, static fn (array $left, array $right): int => strcmp((string)$left['name'], (string)$right['name']));
+
+		return array_merge($withPlan, $withoutPlan);
+	}//end schoolView()
+
+	/**
+	 * The school year a day falls in (`YYYY-YYYY`, 1 August to 31 July).
+	 *
+	 * @param DateTimeImmutable $day The day.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-a-school-leader-shall-see-every-teacher-s-plan-for-their-school-req-edu-002
+	 */
+	public static function schoolYearOf(DateTimeImmutable $day): string {
+		$year = (int)$day->format('Y');
+		if ((int)$day->format('n') < 8) {
+			$year--;
+		}
+
+		return $year.'-'.($year + 1);
+	}//end schoolYearOf()
+
+	/**
+	 * A teacher's display name.
+	 *
+	 * @param array<string, mixed> $employee The Employee row.
+	 *
+	 * @return string
+	 */
+	private static function employeeName(array $employee): string {
+		$name = trim((string)($employee['firstName'] ?? '').' '.(string)($employee['lastName'] ?? ''));
+		if ($name === '') {
+			$name = (string)($employee['name'] ?? ($employee['id'] ?? ''));
+		}
+
+		return $name;
+	}//end employeeName()
+
+	/**
 	 * The hours of one line.
 	 *
 	 * @param array<string, mixed> $line The line.
