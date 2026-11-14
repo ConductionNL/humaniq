@@ -64,7 +64,7 @@ class PensionBaseTest extends TestCase {
 				'employerContribution' => 600.0,
 				'employeeContribution' => 225.0,
 			],
-			PensionBase::of(wage: 4000.0, hoursPerWeek: 40.0, fullTimeHoursWeek: 40.0, scheme: self::SCHEME)
+			PensionBase::of(earnings: ['wage' => 4000.0, 'hoursPerWeek' => 40.0, 'fullTimeHoursWeek' => 40.0], scheme: self::SCHEME)
 		);
 	}
 
@@ -74,7 +74,7 @@ class PensionBaseTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPartTimerHasTheFranchiseInProportionToTheirHours(): void {
-		$figures = PensionBase::of(wage: 2400.0, hoursPerWeek: 24.0, fullTimeHoursWeek: 40.0, scheme: self::SCHEME);
+		$figures = PensionBase::of(earnings: ['wage' => 2400.0, 'hoursPerWeek' => 24.0, 'fullTimeHoursWeek' => 40.0], scheme: self::SCHEME);
 
 		$this->assertSame(0.6, $figures['partTimeFactor']);
 		$this->assertSame(2400.0, $figures['pensionableWage']);
@@ -89,7 +89,7 @@ class PensionBaseTest extends TestCase {
 	 * @return void
 	 */
 	public function testASalaryAboveTheMaximumIsCappedBeforeTheFranchiseComesOff(): void {
-		$figures = PensionBase::of(wage: 15000.0, hoursPerWeek: 40.0, fullTimeHoursWeek: 40.0, scheme: self::SCHEME);
+		$figures = PensionBase::of(earnings: ['wage' => 15000.0, 'hoursPerWeek' => 40.0, 'fullTimeHoursWeek' => 40.0], scheme: self::SCHEME);
 
 		$this->assertSame(10000.0, $figures['pensionableWage']);
 		$this->assertSame(9000.0, $figures['pensionBase']);
@@ -102,7 +102,7 @@ class PensionBaseTest extends TestCase {
 	 * @return void
 	 */
 	public function testAWageUnderTheFranchiseHasNoBaseAndNoContribution(): void {
-		$figures = PensionBase::of(wage: 800.0, hoursPerWeek: 40.0, fullTimeHoursWeek: 40.0, scheme: self::SCHEME);
+		$figures = PensionBase::of(earnings: ['wage' => 800.0, 'hoursPerWeek' => 40.0, 'fullTimeHoursWeek' => 40.0], scheme: self::SCHEME);
 
 		$this->assertSame(0.0, $figures['pensionBase']);
 		$this->assertSame(0.0, $figures['employerContribution']);
@@ -115,7 +115,7 @@ class PensionBaseTest extends TestCase {
 	 * @return void
 	 */
 	public function testMoreHoursThanAFullTimeWeekCountAsFullTime(): void {
-		$this->assertSame(1.0, PensionBase::of(wage: 4000.0, hoursPerWeek: 45.0, fullTimeHoursWeek: 40.0, scheme: self::SCHEME)['partTimeFactor']);
+		$this->assertSame(1.0, PensionBase::of(earnings: ['wage' => 4000.0, 'hoursPerWeek' => 45.0, 'fullTimeHoursWeek' => 40.0], scheme: self::SCHEME)['partTimeFactor']);
 	}
 
 	/**
@@ -124,7 +124,7 @@ class PensionBaseTest extends TestCase {
 	 * @return void
 	 */
 	public function testAMissingFigureCountsAsZero(): void {
-		$figures = PensionBase::of(wage: 3000.0, hoursPerWeek: 40.0, fullTimeHoursWeek: 40.0, scheme: ['maxPensionableSalary' => 120000, 'franchise' => 'n/a']);
+		$figures = PensionBase::of(earnings: ['wage' => 3000.0, 'hoursPerWeek' => 40.0, 'fullTimeHoursWeek' => 40.0], scheme: ['maxPensionableSalary' => 120000, 'franchise' => 'n/a']);
 
 		$this->assertSame(3000.0, $figures['pensionBase']);
 		$this->assertSame(0.0, $figures['employerContribution']);
@@ -138,6 +138,6 @@ class PensionBaseTest extends TestCase {
 	public function testNoHoursPerWeekHasNoPartTimeFactor(): void {
 		$this->expectException(\InvalidArgumentException::class);
 
-		PensionBase::of(wage: 3000.0, hoursPerWeek: 0.0, fullTimeHoursWeek: 40.0, scheme: self::SCHEME);
+		PensionBase::of(earnings: ['wage' => 3000.0, 'hoursPerWeek' => 0.0, 'fullTimeHoursWeek' => 40.0], scheme: self::SCHEME);
 	}
 }//end class

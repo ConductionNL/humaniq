@@ -73,19 +73,19 @@ class PensionMessageService {
 		$outcome = ['scheme' => null, 'messageFormat' => '', 'lines' => [], 'findings' => []];
 		$period = self::periodDates(period: (string)($filing['period'] ?? ''));
 		if ($period === null) {
-			$outcome['findings'][] = self::finding(kind: 'period', employeeId: '', problem: 'De pensioenaangifte heeft geen geldige periode (JJJJ-MM).');
+			$outcome['findings'][] = self::finding(kind: 'period', problem: 'De pensioenaangifte heeft geen geldige periode (JJJJ-MM).');
 			return $outcome;
 		}
 
 		$fund = (string)($filing['fund'] ?? '');
-		$scheme = $this->schemeFor(administrationId: (string)($filing['administrationId'] ?? ''), fund: $fund, period: $period);
+		$scheme = $this->schemeFor(of: ['administrationId' => (string)($filing['administrationId'] ?? ''), 'fund' => $fund], period: $period);
 		if ($scheme === null) {
-			$outcome['findings'][] = self::finding(kind: 'no-scheme', employeeId: '', problem: 'Er is geen pensioenregeling voor fonds ' . $fund . ' die geldt in ' . (string)$filing['period'] . '.');
+			$outcome['findings'][] = self::finding(kind: 'no-scheme', problem: 'Er is geen pensioenregeling voor fonds ' . $fund . ' die geldt in ' . (string)$filing['period'] . '.');
 		}
 
 		$run = $this->approvedRun(runId: trim((string)($filing['payrollRunId'] ?? '')));
 		if ($run === null) {
-			$outcome['findings'][] = self::finding(kind: 'run-not-approved', employeeId: '', problem: 'De pensioenaangifte verwijst niet naar een goedgekeurde, geboekte of betaalde loonrun.');
+			$outcome['findings'][] = self::finding(kind: 'run-not-approved', problem: 'De pensioenaangifte verwijst niet naar een goedgekeurde, geboekte of betaalde loonrun.');
 		}
 
 		if ($scheme === null || $run === null) {
@@ -95,7 +95,7 @@ class PensionMessageService {
 		$outcome['scheme'] = $scheme;
 		$outcome['messageFormat'] = (string)($scheme['messageFormat'] ?? '');
 		foreach ($this->gateway->findFiltered('Payslip', ['payrollRunId' => (string)($run['id'] ?? '')]) as $slip) {
-			$line = $this->line(slip: $slip, scheme: $scheme, period: $period);
+			$line = $this->line(slip: $slip, filing: ['scheme' => $scheme, 'period' => $period]);
 			if (isset($line['finding']) === true) {
 				$outcome['findings'][] = $line['finding'];
 				continue;
@@ -110,13 +110,13 @@ class PensionMessageService {
 	/**
 	 * One employee's line, or the finding that keeps it out.
 	 *
-	 * @param array<string, mixed>        $slip   The payslip.
-	 * @param array<string, mixed>        $scheme The scheme.
-	 * @param array{0: string, 1: string} $period The first and last day of the period.
+	 * @param array<string, mixed>                                                      $slip   The payslip.
+	 * @param array{scheme: array<string, mixed>, period: array{0: string, 1: string}} $filing The scheme and the first and last day of the period.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function line(array $slip, array $scheme, array $period): array {
+	private function line(array $slip, array $filing): array {
+		['scheme' => $scheme, 'period' => $period] = $filing;
 		$employeeId = (string)($slip['employeeId'] ?? '');
 		$employee = ($this->gateway->findObjectData($employeeId, 'Employee') ?? []);
 		$name = trim((string)($employee['firstName'] ?? '') . ' ' . (string)($employee['lastName'] ?? ''));
@@ -126,15 +126,18 @@ class PensionMessageService {
 
 		$contract = $this->contractOf(employeeId: $employeeId, period: $period);
 		if ($contract === []) {
-			return ['finding' => self::finding(kind: 'no-contract', employeeId: $employeeId, problem: $name . ' heeft geen arbeidsovereenkomst in deze periode, dus de deeltijdfactor ontbreekt.')];
+			return ['finding' => self::forEmployee(finding: self::finding(kind: 'no-contract', problem: $name . ' heeft geen arbeidsovereenkomst in deze periode, dus de deeltijdfactor ontbreekt.'), employeeId: $employeeId)];
 		}
 
 		$hours = ($contract['hoursPerWeek'] ?? null);
 		if (is_numeric($hours) === false || (float)$hours <= 0.0) {
-			return ['finding' => self::finding(kind: 'no-part-time-factor', employeeId: $employeeId, problem: $name . ' heeft een arbeidsovereenkomst zonder uren per week, dus de deeltijdfactor ontbreekt.')];
+			return ['finding' => self::forEmployee(finding: self::finding(kind: 'no-part-time-factor', problem: $name . ' heeft een arbeidsovereenkomst zonder uren per week, dus de deeltijdfactor ontbreekt.'), employeeId: $employeeId)];
 		}
 
-		$figures = PensionBase::of(wage: (float)($slip['grossPay'] ?? 0), hoursPerWeek: (float)$hours, fullTimeHoursWeek: $this->fullTimeHoursWeek, scheme: $scheme);
+		$figures = PensionBase::of(
+			earnings: ['wage' => (float)($slip['grossPay'] ?? 0), 'hoursPerWeek' => (float)$hours, 'fullTimeHoursWeek' => $this->fullTimeHoursWeek],
+			scheme: $scheme
+		);
 
 		return array_merge(
 			[
@@ -151,16 +154,15 @@ class PensionMessageService {
 	 * The fund's scheme for the administration that applies in the period;
 	 * the latest started one when several do.
 	 *
-	 * @param string                      $administrationId The administration.
-	 * @param string                      $fund             The fund.
-	 * @param array{0: string, 1: string} $period           The first and last day of the period.
+	 * @param array{administrationId: string, fund: string} $of     The administration and the fund.
+	 * @param array{0: string, 1: string}                   $period The first and last day of the period.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function schemeFor(string $administrationId, string $fund, array $period): ?array {
+	private function schemeFor(array $of, array $period): ?array {
 		$found = null;
-		foreach ($this->gateway->findFiltered('PensionScheme', ['administrationId' => $administrationId, 'fund' => $fund]) as $scheme) {
-			if (self::covers(from: (string)($scheme['validFrom'] ?? ''), until: (string)($scheme['validUntil'] ?? ''), period: $period) === false) {
+		foreach ($this->gateway->findFiltered('PensionScheme', $of) as $scheme) {
+			if (self::covers(span: [(string)($scheme['validFrom'] ?? ''), (string)($scheme['validUntil'] ?? '')], period: $period) === false) {
 				continue;
 			}
 
@@ -205,7 +207,7 @@ class PensionMessageService {
 		$covering = [];
 		foreach ($this->gateway->findFiltered('EmploymentContract', ['employeeId' => $employeeId]) as $contract) {
 			$start = (string)($contract['startDate'] ?? '');
-			if (self::covers(from: $start, until: (string)($contract['endDate'] ?? ''), period: $period) === true) {
+			if (self::covers(span: [$start, (string)($contract['endDate'] ?? '')], period: $period) === true) {
 				$covering[$start . '|' . (string)($contract['id'] ?? '')] = $contract;
 			}
 		}
@@ -217,13 +219,14 @@ class PensionMessageService {
 	/**
 	 * Whether a dated span overlaps the period; an empty end is open.
 	 *
-	 * @param string                      $from   The first day, Y-m-d.
-	 * @param string                      $until  The last day, Y-m-d, or ''.
+	 * @param array{0: string, 1: string} $span   The first day, Y-m-d, and the last day, Y-m-d, or ''.
 	 * @param array{0: string, 1: string} $period The first and last day of the period.
 	 *
 	 * @return bool
 	 */
-	private static function covers(string $from, string $until, array $period): bool {
+	private static function covers(array $span, array $period): bool {
+		[$from, $until] = $span;
+
 		return $from !== '' && $from <= $period[1] && ($until === '' || $until >= $period[0]);
 	}//end covers()
 
@@ -244,15 +247,28 @@ class PensionMessageService {
 	}//end periodDates()
 
 	/**
-	 * A blocking finding.
+	 * A blocking finding about the filing.
 	 *
-	 * @param string $kind       What is missing.
-	 * @param string $employeeId The employee, or '' for the filing.
-	 * @param string $problem    The sentence the filing shows.
+	 * @param string $kind    What is missing.
+	 * @param string $problem The sentence the filing shows.
 	 *
 	 * @return array{kind: string, severity: string, employeeId: string, problem: string}
 	 */
-	private static function finding(string $kind, string $employeeId, string $problem): array {
-		return ['kind' => $kind, 'severity' => 'blocking', 'employeeId' => $employeeId, 'problem' => $problem];
+	private static function finding(string $kind, string $problem): array {
+		return ['kind' => $kind, 'severity' => 'blocking', 'employeeId' => '', 'problem' => $problem];
 	}//end finding()
+
+	/**
+	 * A finding about one employee.
+	 *
+	 * @param array{kind: string, severity: string, employeeId: string, problem: string} $finding    The finding.
+	 * @param string                                                                     $employeeId The employee.
+	 *
+	 * @return array{kind: string, severity: string, employeeId: string, problem: string}
+	 */
+	private static function forEmployee(array $finding, string $employeeId): array {
+		$finding['employeeId'] = $employeeId;
+
+		return $finding;
+	}//end forEmployee()
 }//end class

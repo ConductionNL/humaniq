@@ -47,10 +47,10 @@ final class PensionBase {
 	/**
 	 * The pension figures of one employee for one month.
 	 *
-	 * @param float                $wage              The period's gross wage.
-	 * @param float                $hoursPerWeek      The contract's hours per week.
-	 * @param float                $fullTimeHoursWeek The hours per week of a full-time employee.
-	 * @param array<string, mixed> $scheme            The PensionScheme.
+	 * @param array{wage: float, hoursPerWeek: float, fullTimeHoursWeek: float} $earnings The period's gross wage, the
+	 *                                                                                  contract's hours per week and the
+	 *                                                                                  hours per week of a full-time employee.
+	 * @param array<string, mixed>                                              $scheme   The PensionScheme.
 	 *
 	 * @return array{partTimeFactor: float, pensionableWage: float, pensionBase: float, employerContribution: float, employeeContribution: float}
 	 *
@@ -58,7 +58,8 @@ final class PensionBase {
 	 *
 	 * @spec openspec/changes/filings-pension-upa-message/specs/pension-upa-message/spec.md#REQ-PUM-001
 	 */
-	public static function of(float $wage, float $hoursPerWeek, float $fullTimeHoursWeek, array $scheme): array {
+	public static function of(array $earnings, array $scheme): array {
+		['wage' => $wage, 'hoursPerWeek' => $hoursPerWeek, 'fullTimeHoursWeek' => $fullTimeHoursWeek] = $earnings;
 		if ($hoursPerWeek <= 0.0 || $fullTimeHoursWeek <= 0.0) {
 			throw new \InvalidArgumentException('A part-time factor needs positive hours per week and a positive full-time week.');
 		}
