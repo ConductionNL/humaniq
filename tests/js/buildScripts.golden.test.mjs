@@ -137,6 +137,22 @@ function runCase(spec) {
 	}
 }
 
+const LOCK = (version) => ({ 'composer.lock': json({ packages: [{ name: 'other/pkg', version: '1.0.0' }], 'packages-dev': [{ name: 'conduction/hydra-gates', version }] }) })
+/**
+ * vendor/ with hydra-gates installed at a version, in a Composer 2 or Composer 1 installed.json.
+ *
+ * @param {string} version The installed version.
+ * @param {string} shape 'v2' or 'v1'.
+ * @return {object} The files.
+ */
+function INSTALLED(version, shape = 'v2') {
+	const packages = [{ name: 'conduction/hydra-gates', version }]
+	return {
+		'vendor/composer/installed.json': json(shape === 'v2' ? { packages, dev: true } : packages),
+		'vendor/conduction/hydra-gates/composer.json': json({ name: 'conduction/hydra-gates' }),
+	}
+}
+
 const sidecar = (info) => ({ 'js/build-info.json': typeof info === 'string' ? info : json(info) })
 const OTHER_HASH = 'cdf62f3c03fbe8c3d1f8e8f1ebc1d8b5f3a3c0e0b6c79b1d4cbf3a0a2c4a1a01'
 
@@ -162,6 +178,14 @@ const CASES = {
 	'l10n-js: catalogue does not parse': { script: 'build-l10n-js.js', files: { ...L10N, 'l10n/nl.json': '{ nope' } },
 	'l10n-js: catalogue without translations': { script: 'build-l10n-js.js', files: { ...L10N, 'l10n/nl.json': json({ pluralForm: 'x' }) } },
 	'l10n-js: info.xml without an id': { script: 'build-l10n-js.js', files: { ...L10N, 'appinfo/info.xml': '<info></info>' } },
+
+	'composer drift: matches': { script: 'check-composer-deps-drift.js', files: { ...LOCK('v1.19.0'), ...INSTALLED('v1.19.0') } },
+	'composer drift: matches a Composer 1 installed.json': { script: 'check-composer-deps-drift.js', files: { ...LOCK('v1.19.0'), ...INSTALLED('v1.19.0', 'v1') } },
+	'composer drift: other version installed': { script: 'check-composer-deps-drift.js', files: { ...LOCK('v1.19.0'), ...INSTALLED('v1.18.2') } },
+	'composer drift: not installed': { script: 'check-composer-deps-drift.js', files: LOCK('v1.19.0') },
+	'composer drift: recorded but the directory is gone': { script: 'check-composer-deps-drift.js', files: { ...LOCK('v1.19.0'), 'vendor/composer/installed.json': json({ packages: [{ name: 'conduction/hydra-gates', version: 'v1.19.0' }] }) } },
+	'composer drift: not in the lockfile': { script: 'check-composer-deps-drift.js', files: { 'composer.lock': json({ packages: [] }), ...INSTALLED('v1.19.0') } },
+	'composer drift: no lockfile': { script: 'check-composer-deps-drift.js', files: INSTALLED('v1.19.0') },
 
 	'bundle sidecar: missing': { script: 'check-bundle-freshness.js', args: ['--sidecar'], files: SRC },
 	'bundle sidecar: unreadable': { script: 'check-bundle-freshness.js', args: ['--sidecar'], files: { ...SRC, ...sidecar('{ nope') } },

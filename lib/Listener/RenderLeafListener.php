@@ -21,14 +21,15 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/hours-leaf/spec.md#requirement-both-halves-of-the-leaf-agree
  * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-006
  */
 
-// SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>.
-// SPDX-License-Identifier: EUPL-1.2
 declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
