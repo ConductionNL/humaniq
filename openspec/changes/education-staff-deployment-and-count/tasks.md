@@ -1,15 +1,20 @@
 ## 1. Plan
 
-- [ ] 1.1 Add the `hr-deployment.json` fragment with `DeploymentPlan`, its lifecycle and
+- [x] 1.1 Add the `hr-deployment.json` fragment with `DeploymentPlan`, its lifecycle and
       calculations, and list it in `humaniq_register.json`. Verify: `occ maintenance:repair`
       imports it and `npm run check:schema-l10n` exits 0.
-- [ ] 1.2 Add `CaoRegistry::annualNormHours()`, null for unverified or placeholder values.
+      Done: `check:schema-l10n` exits 0; the live `occ maintenance:repair` import is not run in
+      this lane. `plannedHours` is stamped by `DeploymentPlanTotalsListener` (the calculation
+      language has no sum over an array) and `differenceHours` is the calculation.
+- [x] 1.2 Add `CaoRegistry::annualNormHours()`, null for unverified or placeholder values.
       Verify: unit test that today's CAO PO file answers null and a verified fixture answers
       1659.
 - [ ] 1.3 Verify the CAO PO normjaartaak against the PO-Raad CAO text and record the source.
       Verify: the leaf's `verified` flips only with a primary-source citation in `source`.
-- [ ] 1.4 Add `DeploymentPlanService::normFor()`. Verify: unit test for a full-time contract,
+- [x] 1.4 Add `DeploymentPlanService::normFor()`. Verify: unit test for a full-time contract,
       a 0.6 contract, and a contract starting in January (half the school year).
+      Done as `normFor(array $contracts, string $schoolYear)`: it takes the teacher's
+      contracts, so the caller (the school view, 2.1) reads them through its RBAC reader.
 
 ## 2. School view
 
