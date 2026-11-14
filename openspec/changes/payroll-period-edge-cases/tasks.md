@@ -32,9 +32,10 @@
       with mass import. Verify: `occ app:update` imports it and `npm run check:manifest` exits
       0.
   - Done: schema `PayrollOpeningBalance` (D5 fields) in `register.d/hr-opening-balance.json`, register 0.64.0. `PayrollOpeningBalanceUniqueGuard` refuses a second balance per employee, administration and year on create and update, and fails closed. Pages `OpeningBalances` (index, mass import on) and `OpeningBalanceDetail` in `manifest.d/hr-opening-balance.json`, menu entry under Payroll; en/nl strings. `npm run check:manifest` passes. Tests: `PayrollOpeningBalanceUniqueGuardTest` (5). Not run here: `occ app:update` (needs a live instance).
-- [ ] 3.2 Add opening balances to `upsertJaaropgaaf()` and `WkrService`. Verify: unit tests
+- [x] 3.2 Add opening balances to `upsertJaaropgaaf()` and `WkrService`. Verify: unit tests
       that six months of opening balance plus six humaniq payslips give a twelve-period
       statement.
+  - Done: `HrDocumentService::upsertJaaropgaaf()` adds the employee's balance for the year (gross, loonheffing, Zvw withheld, holiday allowance reserved, pension, periods) and stamps `includesOpeningBalance` and `openingBalanceSource` (Jaaropgaaf schema 0.2.0); without a balance the statement is unchanged. `WkrService` adds each balance's `grossWage` to the loonsom of its administration and year. Tests: `HrDocumentServiceTest::testGenerateJaaropgaafAddsTheOpeningBalanceOfTheYear` (6 + 6 = 12 periods), `WkrServiceTest::testAnOpeningBalanceCountsTowardsTheFiscalWageBill`; the document golden re-recorded for the one added read.
 - [ ] 3.3 Add `nl-openingsbalans-overlap` and `nl-openingsbalans-ontbreekt`. Verify:
       `occ humaniq:rules:audit` reports a seeded overlap.
 

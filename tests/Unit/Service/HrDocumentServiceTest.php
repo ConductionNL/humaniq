@@ -1118,6 +1118,46 @@ class HrDocumentServiceTest extends TestCase {
 	}//end testGenerateJaaropgaafAggregatesMultiplePayslipsInTheYearWithZvwModeFilterAndYearBoundary()
 
 	/**
+	 * payroll-period-edge-cases D6: a July switch gives a full-year
+	 * statement. Six months of opening balance from the previous package
+	 * plus six humaniq payslips make twelve periods, and the statement says
+	 * it includes the balance and where it came from. Another year's balance
+	 * is not counted.
+	 *
+	 * @return void
+	 */
+	public function testGenerateJaaropgaafAddsTheOpeningBalanceOfTheYear(): void {
+		$payslips = [];
+		foreach (['07', '08', '09', '10', '11', '12'] as $month) {
+			$payslips[] = $this->payslip(['id' => 'ps-' . $month, 'period' => '2026-' . $month, 'grossPay' => 4000.0, 'loonheffing' => 1000.0, 'nettoPay' => 2900.0, 'zvw' => 100.0, 'zvwMode' => 'inhouding', 'vakantiegeldReserved' => 320.0]);
+		}
+
+		$balances = [
+			['id' => 'ob-2025', 'employeeId' => 'emp-1', 'administrationId' => 'ADM-001', 'year' => 2025, 'grossWage' => 99999.0, 'loonheffing' => 99999.0, 'payPeriodCount' => 12, 'source' => 'Older package'],
+			['id' => 'ob-2026', 'employeeId' => 'emp-1', 'administrationId' => 'ADM-001', 'year' => 2026, 'lastPeriodInPrevious' => '2026-06', 'grossWage' => 22800.0, 'loonheffing' => 5400.0, 'zvwWithheld' => 550.0, 'vakantiegeldReserved' => 1824.0, 'pensionContribution' => 600.0, 'payPeriodCount' => 6, 'source' => 'Vorig pakket'],
+		];
+		[$service, $fake] = $this->service(
+			['Employee' => [$this->employee()], 'Payslip' => $payslips, 'PayrollOpeningBalance' => $balances],
+			documentService: $this->fakeDocumentService(),
+			configuredTemplateId: 'T1'
+		);
+
+		self::assertSame('generated', $service->generateJaaropgaaf('emp-1', 2026)['status']);
+
+		$jaaropgaaf = $this->savedFor($fake, 'Jaaropgaaf')[0];
+		self::assertSame(12, $jaaropgaaf['payPeriodCount']);
+		self::assertSame(22800.0 + 24000.0, $jaaropgaaf['totalGrossPay']);
+		self::assertSame(5400.0 + 6000.0, $jaaropgaaf['totalLoonheffing']);
+		self::assertSame(550.0 + 600.0, $jaaropgaaf['totalZvwWithheld']);
+		self::assertSame(1824.0 + 1920.0, $jaaropgaaf['totalVakantiegeldReserved']);
+		self::assertSame(600.0, $jaaropgaaf['totalPensionContribution']);
+		// The previous package's net pay is not part of the balance.
+		self::assertSame(17400.0, $jaaropgaaf['totalNettoPay']);
+		self::assertTrue($jaaropgaaf['includesOpeningBalance']);
+		self::assertSame('Vorig pakket', $jaaropgaaf['openingBalanceSource']);
+	}//end testGenerateJaaropgaafAddsTheOpeningBalanceOfTheYear()
+
+	/**
 	 * @return void
 	 */
 	public function testGenerateJaaropgaafReaggregationUpdatesTheExistingObjectRatherThanDuplicating(): void {

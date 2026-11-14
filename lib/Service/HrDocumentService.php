@@ -924,6 +924,18 @@ class HrDocumentService {
 			$payPeriodCount++;
 		}//end foreach
 
+		// payroll-period-edge-cases D6: the year-to-date figures a previous
+		// package paid before humaniq took over count towards the statement.
+		$opening = $this->openingBalanceOf(employeeId: $employeeId, year: $year);
+		if ($opening !== null) {
+			$totalGrossPay += (float)($opening['grossWage'] ?? 0);
+			$totalLoonheffing += (float)($opening['loonheffing'] ?? 0);
+			$totalZvwWithheld += (float)($opening['zvwWithheld'] ?? 0);
+			$totalPensionContribution += (float)($opening['pensionContribution'] ?? 0);
+			$totalVakantiegeldReserved += (float)($opening['vakantiegeldReserved'] ?? 0);
+			$payPeriodCount += (int)($opening['payPeriodCount'] ?? 0);
+		}
+
 		if ($payPeriodCount === 0) {
 			return null;
 		}
@@ -945,6 +957,11 @@ class HrDocumentService {
 			'aggregatedAt' => gmdate('Y-m-d\TH:i:s\Z'),
 		];
 
+		if ($opening !== null) {
+			$fields['includesOpeningBalance'] = true;
+			$fields['openingBalanceSource'] = (string)($opening['source'] ?? '');
+		}
+
 		$existing = $this->findJaaropgaaf($employeeId, $year);
 		if ($existing !== null) {
 			return $this->saveJaaropgaaf($existing, $fields);
@@ -952,6 +969,26 @@ class HrDocumentService {
 
 		return $this->createJaaropgaaf($fields);
 	}//end upsertJaaropgaaf()
+
+	/**
+	 * The employee's opening balance for the year, if one was imported.
+	 *
+	 * @param string $employeeId The Employee id.
+	 * @param int    $year       The kalenderjaar.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 */
+	private function openingBalanceOf(string $employeeId, int $year): ?array {
+		foreach ($this->loadAll('PayrollOpeningBalance') as $balance) {
+			if (trim((string)($balance['employeeId'] ?? '')) === $employeeId && (int)($balance['year'] ?? 0) === $year) {
+				return $balance;
+			}
+		}
+
+		return null;
+	}//end openingBalanceOf()
 
 	/**
 	 * The active (pending/generated) GeneratedDocument for one idempotency

@@ -235,6 +235,34 @@ class WkrServiceTest extends TestCase {
 	}//end testWithinBudgetAssessmentIsClean()
 
 	/**
+	 * payroll-period-edge-cases D6: the gross wage a previous package paid
+	 * this year counts towards the fiscal wage bill of its administration
+	 * and year, so the work-related costs budget covers the whole year. A
+	 * balance of another administration or year is not added.
+	 *
+	 * @return void
+	 */
+	public function testAnOpeningBalanceCountsTowardsTheFiscalWageBill(): void {
+		[$service] = $this->service(
+			[
+				'PayrollRun' => [['id' => 'run-1', 'administrationId' => 'ADM-001']],
+				'Payslip' => [['id' => 'ps-1', 'payrollRunId' => 'run-1', 'period' => '2026-07', 'grossPay' => 100000.00, 'wkrUsed' => 0.00]],
+				'PayrollOpeningBalance' => [
+					['id' => 'ob-1', 'employeeId' => 'emp-1', 'administrationId' => 'ADM-001', 'year' => 2026, 'grossWage' => 100000.00],
+					['id' => 'ob-2', 'employeeId' => 'emp-2', 'administrationId' => 'ADM-002', 'year' => 2026, 'grossWage' => 55555.00],
+					['id' => 'ob-3', 'employeeId' => 'emp-1', 'administrationId' => 'ADM-001', 'year' => 2025, 'grossWage' => 77777.00],
+				],
+				'WkrDeclaration' => [],
+			]
+		);
+
+		$assessment = $service->assess('ADM-001', 2026)['assessment'];
+
+		self::assertSame(200000.00, $assessment['fiscaleLoonsom']);
+		self::assertSame(4000.00, $assessment['vrijeRuimte']);
+	}//end testAnOpeningBalanceCountsTowardsTheFiscalWageBill()
+
+	/**
 	 * REQ-WKR-004 exposure scenario — used exceeds available: fiscale loonsom
 	 * €200.000 -> vrije ruimte €4.000,00; declarations totalling €4.500,00
 	 * exceed it by €500,00, so the assessment records the 80% eindheffing

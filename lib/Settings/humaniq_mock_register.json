@@ -5436,6 +5436,18 @@
             "description": "The employer's payroll tax number, taken from the settings when this statement was produced.",
             "x-notes": "Employer loonheffingennummer, snapshotted from configuration at aggregation time."
           },
+          "includesOpeningBalance": {
+            "title": "Includes opening balance",
+            "type": "boolean",
+            "nullable": true,
+            "description": "The totals include the year-to-date figures of the previous payroll package."
+          },
+          "openingBalanceSource": {
+            "title": "Opening balance source",
+            "type": "string",
+            "nullable": true,
+            "description": "The previous payroll package those figures came from."
+          },
           "aggregatedAt": {
             "type": "string",
             "format": "date-time",
