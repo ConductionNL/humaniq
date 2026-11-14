@@ -55,6 +55,7 @@ class InterviewIcsRenderer {
 	 * @return string
 	 *
 	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-005
+	 * @spec openspec/changes/interview-in-the-interviewers-calendars/specs/interview-scheduling/spec.md
 	 */
 	public function render(string $uid, array $event): string {
 		$dtstamp = gmdate('Ymd\THis\Z');
