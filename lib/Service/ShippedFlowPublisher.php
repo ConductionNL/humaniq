@@ -155,13 +155,13 @@ class ShippedFlowPublisher {
 	 */
 	private function publishOne(array $declared, iterable $stored): array {
 		$name = (string)$declared['declaration']['name'];
-		$flow = $this->storedFlow(name: $name, schema: $declared['schema'], stored: $stored);
+		$flow = $this->storedFlow(declared: $declared, stored: $stored);
 		if ($flow === null) {
 			return ['flow' => $name, 'status' => 'not-imported', 'detail' => 'Not imported on this instance yet.'];
 		}
 
 		try {
-			return $this->publishStored(flow: $flow, name: $name, declaration: $declared['declaration']);
+			return $this->publishStored(flow: $flow, declared: $declared);
 		} catch (Throwable $e) {
 			$this->logger->warning('Humaniq: shipped flow "' . $name . '" could not be published', ['exception' => $e->getMessage()]);
 			return ['flow' => $name, 'status' => 'failed', 'detail' => $e->getMessage()];
@@ -172,13 +172,14 @@ class ShippedFlowPublisher {
 	/**
 	 * Publish an imported flow's shipped head when that is safe.
 	 *
-	 * @param object               $flow        The stored flow.
-	 * @param string               $name        The flow name, for the report.
-	 * @param array<string, mixed> $declaration The shipped declaration.
+	 * @param object                                                   $flow     The stored flow.
+	 * @param array{schema: string, declaration: array<string, mixed>} $declared The shipped declaration and its schema.
 	 *
 	 * @return array{flow: string, status: string, detail: string} The report.
 	 */
-	private function publishStored(object $flow, string $name, array $declaration): array {
+	private function publishStored(object $flow, array $declared): array {
+		$name        = (string)$declared['declaration']['name'];
+		$declaration = $declared['declaration'];
 		$versions  = $this->container->get('OCA\OpenRegister\Service\Flow\FlowVersionService');
 		$published = $this->container->get('OCA\OpenRegister\Service\Flow\FlowPublishedGraph')->graphOf((string)$flow->getUuid());
 
@@ -209,13 +210,14 @@ class ShippedFlowPublisher {
 	/**
 	 * Find a stored flow by its import identity.
 	 *
-	 * @param string           $name   The flow name.
-	 * @param string           $schema The trigger schema slug.
-	 * @param iterable<object> $stored The app's stored flows.
+	 * @param array{schema: string, declaration: array<string, mixed>} $declared The shipped declaration (its name) and its trigger schema slug.
+	 * @param iterable<object>                                         $stored   The app's stored flows.
 	 *
 	 * @return object|null The flow, or null when not imported.
 	 */
-	private function storedFlow(string $name, string $schema, iterable $stored): ?object {
+	private function storedFlow(array $declared, iterable $stored): ?object {
+		$name   = (string)$declared['declaration']['name'];
+		$schema = $declared['schema'];
 		foreach ($stored as $candidate) {
 			if ((string)$candidate->getName() === $name && (string)$candidate->getTriggerSchema() === $schema) {
 				return $candidate;
