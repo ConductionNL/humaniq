@@ -1,0 +1,37 @@
+{
+    "x-humaniq-fragment": "hr-opening-balance",
+    "components": {
+        "schemas": {
+            "PayrollOpeningBalance": {
+                "configuration": {"exportable": true},
+                "slug": "PayrollOpeningBalance",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-payroll"], "update": ["humaniq-payroll"], "delete": ["humaniq-payroll"]},
+                "icon": "ScaleBalance",
+                "version": "0.1.0",
+                "title": "Opening balance",
+                "description": "The year-to-date figures an employee brings from the previous payroll package when an administration switches to humaniq during the year. The annual statement and the work-related costs assessment add them to humaniq's own payslips. One per employee, administration and year.",
+                "x-notes": "payroll-period-edge-cases D5: imported with the library's mass import on the OpeningBalances page, no endpoint (ADR-022). PayrollOpeningBalanceUniqueGuard refuses a second balance for the same employeeId, administrationId and year.",
+                "type": "object",
+                "x-schema-org": "schema:MonetaryAmount",
+                "required": ["employeeId", "administrationId", "year", "lastPeriodInPrevious", "grossWage", "loonheffing", "payPeriodCount", "source"],
+                "properties": {
+                    "employeeId": {"title": "Employee", "type": "string", "format": "uuid", "$ref": "Employee", "description": "The employee the figures belong to."},
+                    "administrationId": {"title": "Administration ID", "type": "string", "description": "The administration the figures were paid under."},
+                    "year": {"title": "Year", "type": "integer", "minimum": 2000, "maximum": 2100, "description": "The calendar year the figures cover."},
+                    "lastPeriodInPrevious": {"title": "Last period in the previous package", "type": "string", "pattern": "^\\d{4}-((0[1-9]|1[0-2])|P(0[1-9]|1[0-4])|W(0[1-9]|[1-4]\\d|5[0-3]))$", "description": "The last period the previous package paid, for example 2026-06. humaniq pays from the next one."},
+                    "grossWage": {"title": "Gross wage", "type": "number", "description": "Taxable wage paid so far this year."},
+                    "loonheffing": {"title": "Loonheffing", "type": "number", "description": "Payroll tax withheld so far this year."},
+                    "zvwWithheld": {"title": "Zvw withheld", "type": "number", "nullable": true, "description": "Health insurance contribution withheld from the employee so far this year."},
+                    "zvwBijdrageloon": {"title": "Zvw contribution wage", "type": "number", "nullable": true, "description": "The wage the health insurance contribution was charged over so far this year."},
+                    "premieloon": {"title": "Premium wage", "type": "number", "nullable": true, "description": "The wage the employee insurance contributions were charged over so far this year."},
+                    "vakantiegeldReserved": {"title": "Holiday allowance reserved", "type": "number", "nullable": true, "description": "Holiday allowance set aside so far this year."},
+                    "vakantiegeldPaid": {"title": "Holiday allowance paid", "type": "number", "nullable": true, "description": "Holiday allowance paid out so far this year."},
+                    "pensionContribution": {"title": "Pension contribution", "type": "number", "nullable": true, "description": "Employee pension contribution withheld so far this year."},
+                    "payPeriodCount": {"title": "Periods paid", "type": "integer", "minimum": 0, "description": "How many pay periods the previous package paid this year."},
+                    "source": {"title": "Source", "type": "string", "description": "The name of the previous payroll package."},
+                    "importedAt": {"title": "Imported at", "type": "string", "format": "date-time", "nullable": true, "description": "When the figures were imported."}
+                }
+            }
+        }
+    }
+}

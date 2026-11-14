@@ -28,9 +28,10 @@
 
 ## 3. Opening balances
 
-- [ ] 3.1 Add `PayrollOpeningBalance` with its uniqueness rule and the `OpeningBalances` page
+- [x] 3.1 Add `PayrollOpeningBalance` with its uniqueness rule and the `OpeningBalances` page
       with mass import. Verify: `occ app:update` imports it and `npm run check:manifest` exits
       0.
+  - Done: schema `PayrollOpeningBalance` (D5 fields) in `register.d/hr-opening-balance.json`, register 0.64.0. `PayrollOpeningBalanceUniqueGuard` refuses a second balance per employee, administration and year on create and update, and fails closed. Pages `OpeningBalances` (index, mass import on) and `OpeningBalanceDetail` in `manifest.d/hr-opening-balance.json`, menu entry under Payroll; en/nl strings. `npm run check:manifest` passes. Tests: `PayrollOpeningBalanceUniqueGuardTest` (5). Not run here: `occ app:update` (needs a live instance).
 - [ ] 3.2 Add opening balances to `upsertJaaropgaaf()` and `WkrService`. Verify: unit tests
       that six months of opening balance plus six humaniq payslips give a twelve-period
       statement.
