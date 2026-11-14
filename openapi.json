@@ -208,6 +208,10 @@
             "description": "First-time setup wizard endpoints."
         },
         {
+            "name": "sign-in-settings",
+            "description": "The Inloggen admin section: Nextcloud's own sign-in settings."
+        },
+        {
             "name": "survey",
             "description": "Survey endpoints. Opening and the results are for HR or an administrator; answering is for the invited employee only, which the service checks against the caller's own invitation."
         },
@@ -4078,6 +4082,115 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/settings/sign-in": {
+            "get": {
+                "operationId": "sign-in-settings-show",
+                "summary": "`GET /api/settings/sign-in`: the sign-in methods and the password policy",
+                "description": "`GET /api/settings/sign-in`: the sign-in methods (`user_saml`, `user_oidc`, whether enabled and their provider names) and Nextcloud's password policy values, or `available: false` when the password policy app is not enabled. Needs an administrator.",
+                "tags": [
+                    "sign-in-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "sign-in-settings-update",
+                "summary": "`PUT /api/settings/sign-in`: save the password policy in Nextcloud's password policy app",
+                "description": "`PUT /api/settings/sign-in`: save password policy values in Nextcloud's password policy app; humaniq stores none of its own. 400 for an unknown key or a bad value, 409 when the password policy app is not enabled. Needs an administrator.",
+                "tags": [
+                    "sign-in-settings"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "passwordPolicy": {
+                                        "type": "object",
+                                        "description": "The values to save, by key.",
+                                        "properties": {
+                                            "minLength": {
+                                                "type": "integer",
+                                                "minimum": 1,
+                                                "maximum": 255
+                                            },
+                                            "enforceUpperLowerCase": {
+                                                "type": "boolean"
+                                            },
+                                            "enforceNumericCharacters": {
+                                                "type": "boolean"
+                                            },
+                                            "enforceSpecialCharacters": {
+                                                "type": "boolean"
+                                            },
+                                            "enforceHaveIBeenPwned": {
+                                                "type": "boolean"
+                                            },
+                                            "maximumLoginAttempts": {
+                                                "type": "integer",
+                                                "minimum": 0,
+                                                "maximum": 255,
+                                                "description": "Lock the account after this many failed sign-in attempts; 0 locks never."
+                                            }
+                                        },
+                                        "additionalProperties": false
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
                     }
                 }
             }
