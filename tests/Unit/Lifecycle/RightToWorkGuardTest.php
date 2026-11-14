@@ -178,4 +178,25 @@ class RightToWorkGuardTest extends TestCase {
 		return new RightToWorkGuard($gateway, new RightToWorkService());
 	}//end guard()
 
+	/**
+	 * An onboarding without an employee, or without a valid start date, cannot
+	 * be judged and is refused before any check is read.
+	 *
+	 * @return void
+	 */
+	public function testAnOnboardingWithoutEmployeeOrValidStartDateIsRefused(): void {
+		$message = 'Deze onboarding heeft geen medewerker of geen geldige startdatum, dus de right-to-work-controle kan niet worden beoordeeld.';
+		$passing = [['employeeId' => self::EMPLOYEE, 'result' => 'passed']];
+
+		foreach ([
+			'no employee' => array_merge($this->onboarding(), ['employeeId' => '  ']),
+			'no start date' => array_merge($this->onboarding(), ['startDate' => '']),
+			'not a date' => array_merge($this->onboarding(), ['startDate' => 'next monday']),
+		] as $case => $onboarding) {
+			$result = $this->guard($passing)->check($onboarding, 'gereed_melden', 'hr');
+			$this->assertFalse($result->isAllowed(), $case);
+			$this->assertSame($message, $result->getMessage(), $case);
+		}
+	}//end testAnOnboardingWithoutEmployeeOrValidStartDateIsRefused()
+
 }//end class

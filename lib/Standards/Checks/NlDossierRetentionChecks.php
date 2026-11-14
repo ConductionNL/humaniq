@@ -3,6 +3,9 @@
 /**
  * NL Dossier Retention Checks
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * hrmq#99 hole #2 (consume-not-rebuild correction): nothing in this
  * corpus previously flagged the OPPOSITE direction from every existing
  * bewaarplicht-floor check (`nl-id-bewaarplicht-5jaar` and siblings check
@@ -35,9 +38,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

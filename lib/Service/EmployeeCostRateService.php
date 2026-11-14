@@ -3,6 +3,9 @@
 /**
  * Employee Cost Rate Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Resolves what one hour of an employee's time COSTS THE EMPLOYER — the
  * number a domain app multiplies by logged hours to get a cost allocation
  * (ADR-081 decision 4).
@@ -61,9 +64,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  */

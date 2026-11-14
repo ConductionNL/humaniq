@@ -4,6 +4,7 @@
         "schemas": {
             "Expense": {
                 "slug": "Expense",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "ReceiptOutline",
                 "version": "0.10.0",
                 "title": "Expense",
@@ -481,6 +482,7 @@
             },
             "CommuteArrangement": {
                 "slug": "CommuteArrangement",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr"]},
                 "icon": "CarOutline",
                 "version": "0.1.0",
                 "title": "Commuting arrangement",
@@ -757,6 +759,7 @@
             },
             "RecurringAllowance": {
                 "slug": "RecurringAllowance",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "CashSync",
                 "version": "0.1.0",
                 "title": "Recurring allowance",

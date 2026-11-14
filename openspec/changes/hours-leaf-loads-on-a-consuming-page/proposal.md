@@ -94,3 +94,7 @@ looked correct doing it.
   delete two bespoke compositions that reach into humaniq's register. Shillinq
   already reads `TimeEntry.domainObjectRef` in `SubjectCostService`, so its
   cost-of-a-case query starts returning rows for the same reason.
+
+## Matrix rows
+
+Rows: `plt-hours-leaf`, `tim-log-against-object` (humaniq `openspec/parity/capabilities.json`).

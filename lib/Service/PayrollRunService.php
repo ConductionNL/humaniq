@@ -3,6 +3,9 @@
 /**
  * Payroll Run Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Turns the pure `PayrollCalculator` into draft payroll runs (design.md D4/D5):
  * creates at most one `PayrollRun` per (period, administrationId) — the
  * netpay/glpost probe-before-create idempotency pattern — generates one
@@ -136,9 +139,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

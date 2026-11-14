@@ -44,16 +44,9 @@ on:
     branches: [main, master, development, beta]
   workflow_dispatch:
 
-# Explicit permissions rather than the broad default token. A caller CAPS what
-# the reusable workflow can request, so these match what shared quality.yml
-# declares for its jobs: contents to read the tree, actions to manage its own
-# runs (cache/artifact cleanup).
+# Read-only by default; the write grants sit on the job that needs them.
 permissions:
-  contents: write
-  actions: write
-  # The shared workflow's sig-floor-raise job opens a pull request with the
-  # raised SIG score floor after a push to development (gate 123).
-  pull-requests: write
+  contents: read
 
 jobs:
   quality:
@@ -67,6 +60,17 @@ jobs:
     # trigger. They are semantic-analysis runs, not a quality pipeline — no
     # PHPCS, no PHPStan, no Psalm, no PHPUnit, no ESLint, no license or SBOM
     # check has ever run against this repo.
+    # Explicit permissions rather than the broad default token. A caller CAPS what
+    # the reusable workflow can request, so these match what shared quality.yml
+    # declares for its jobs: contents to read the tree, actions to manage its own
+    # runs (cache/artifact cleanup).
+    #
+    # The shared workflow's sig-floor-raise job opens a pull request with the
+    # raised SIG score floor after a push to development (gate 123).
+    permissions:
+      contents: write
+      actions: write
+      pull-requests: write
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: humaniq
@@ -304,6 +308,10 @@ jobs:
       # new duplicated fragment of 6+ lines fails. Units the change does not
       # touch, or touches without making worse, are inherited and do not count.
       hydra-gates-sig-blocking: true
+      # Maintainability floor: no rating in .maintainability-floor.json may drop
+      # more than 0.01 against the merge base (pull request) or below the
+      # committed floor (push). The floor is raised after improving merges.
+      enable-maintainability-floor: true
 
       # ── Deliberately NOT enabled ─────────────────────────────────────────
       # enable-newman: there is no tests/integration/ and no Postman

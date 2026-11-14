@@ -3,6 +3,9 @@
 /**
  * Unit tests for MigrateAppConfigKeys.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The step carries `oc_appconfig` across the `hrmq` -> `humaniq` app-id
  * rename. Nextcloud namespaces app config by app id, and there is no in-place
  * app-id upgrade — the new id is discovered as a different app — so without
@@ -30,9 +33,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

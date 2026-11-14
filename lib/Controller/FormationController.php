@@ -36,7 +36,7 @@ use OCA\Humaniq\Service\FormationAbsenceSources;
 use OCA\Humaniq\Service\FormationOccupancyService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\RbacObjectReader;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\WorkforceReportSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -55,14 +55,14 @@ class FormationController extends Controller {
 	 * @param HoursRegisterGateway      $gateway   Loads the records the count needs.
 	 * @param FormationOccupancyService $occupancy The pure count.
 	 * @param RbacObjectReader          $rbac      Resolves the unit or place under the caller's RBAC.
-	 * @param SettingsService           $settings  The net-FTE leave types and sickness threshold.
+	 * @param WorkforceReportSettings   $settings  The net-FTE leave types and sickness threshold.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly HoursRegisterGateway $gateway,
 		private readonly FormationOccupancyService $occupancy,
 		private readonly RbacObjectReader $rbac,
-		private readonly SettingsService $settings,
+		private readonly WorkforceReportSettings $settings,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()

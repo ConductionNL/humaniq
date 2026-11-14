@@ -235,6 +235,42 @@ final class MigrateSchemaApplicationIdTest extends TestCase {
 	}//end testAFailingUpdateIsLoggedNotThrown()
 
 	/**
+	 * A failed read of the OLD application id is logged and treated as
+	 * "nothing to move": no UPDATE runs.
+	 *
+	 * @return void
+	 */
+	public function testAFailedReadOfTheOldAppIdMovesNothing(): void {
+		$underNew = $this->createMock(IResult::class);
+		$underNew->method('fetchAll')->willReturn([['slug' => 'case']]);
+
+		$db = $this->createMock(IDBConnection::class);
+		$db->method('executeQuery')->willReturnCallback(
+			static function (string $sql, array $params) use ($underNew): IResult {
+				if ($params === ['hrmq']) {
+					throw new \OCP\DB\Exception('old read failed');
+				}
+
+				return $underNew;
+			}
+		);
+		$db->expects(self::never())->method('executeStatement');
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())->method('warning')->with(
+			'MigrateSchemaApplicationId: could not read schemas on the old application id; skipping.',
+			['exception' => 'old read failed']
+		);
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects(self::once())->method('info')
+			->with('MigrateSchemaApplicationId: no schemas on the old application id; nothing to do.');
+
+		(new MigrateSchemaApplicationId($db, $logger))->run($output);
+
+	}//end testAFailedReadOfTheOldAppIdMovesNothing()
+
+	/**
 	 * The shipped ids are a repair step's, and they actually differ.
 	 *
 	 * @return void

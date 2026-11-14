@@ -31,6 +31,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\IUser;
@@ -43,6 +44,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \OCA\Humaniq\Listener\ExpensePayoutFieldsListener
  * @uses   \OCA\Humaniq\Service\HoursRegisterGateway
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
+ * @uses \OCA\Humaniq\Listener\SchemaWriteFilter
  */
 class ExpensePayoutFieldsListenerTest extends TestCase {
 
@@ -376,5 +378,25 @@ class ExpensePayoutFieldsListenerTest extends TestCase {
 			$event->getModifiedData()
 		);
 	}//end testAnUpdateDuringAShippedImportKeepsWhatIsPaid()
+
+	/**
+	 * humaniq's own writes, other schemas and other events pass untouched.
+	 *
+	 * @return void
+	 */
+	public function testOwnWritesOtherSchemasAndOtherEventsPass(): void {
+		$internal = new ObjectCreatingEvent($this->entity('Expense', array_merge(self::APPROVED, ['status' => 'paid'])));
+		$this->marker->runInternal(fn () => $this->listener()->handle($internal));
+		self::assertFalse($internal->isPropagationStopped());
+		self::assertSame([], $internal->getModifiedData());
+
+		$other = new ObjectCreatingEvent($this->entity('Asset', array_merge(self::APPROVED, ['status' => 'paid'])));
+		$this->listener()->handle($other);
+		self::assertFalse($other->isPropagationStopped());
+		self::assertSame([], $other->getModifiedData());
+
+		$this->listener()->handle(new ObjectCreatedEvent($this->entity('Expense', array_merge(self::APPROVED, ['status' => 'paid']))));
+		$this->addToAssertionCount(1);
+	}//end testOwnWritesOtherSchemasAndOtherEventsPass()
 
 }//end class

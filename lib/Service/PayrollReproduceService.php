@@ -3,6 +3,9 @@
 /**
  * Payroll Reproduce Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `occ humaniq:payroll:reproduce --payslip <uuid>` (audit-trail-payroll
  * design.md D1, REQ-AUDP-002, fixing hrmq#98): reloads a sealed Payslip's
  * stored `engineInputSnapshot` — NEVER the live Employee/EmploymentContract
@@ -30,9 +33,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

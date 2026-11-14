@@ -3,6 +3,9 @@
 /**
  * Unit tests for PayrollRetentionGuardService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * hrmq#99 (consume-not-rebuild correction): pins that `syncLegalHold()`
  * DERIVES NO retention duration itself -- it only reads an already-known
  * ceiling (a populated `retainedUntil` field, or OpenRegister's own computed
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -228,6 +228,51 @@ class PayrollRetentionGuardServiceTest extends TestCase {
 		$this->assertSame([], $retentionService->placeLegalHoldCalls);
 
 	}//end testPlaceStatutoryFloorHoldNoOpWhenPeriodFieldUnparseable()
+
+	/**
+	 * Golden for `placeStatutoryFloorHold()`: every outcome, allowed and
+	 * refused -- the exact hold reason and ceiling when it holds, no hold for
+	 * a non-object, an active hold kept as is, no guess for an unparseable
+	 * period, and a failed persist reported as not held with the ceiling.
+	 *
+	 * @return void
+	 */
+	public function testPlaceStatutoryFloorHoldGolden(): void {
+		$retentionService = $this->fakeRetentionService(hasActiveLegalHold: false);
+		$objectMapper = $this->fakeObjectMapper();
+		$service = $this->buildService($retentionService, $objectMapper);
+
+		$this->assertSame(
+			['held' => true, 'ceiling' => '2031-12-31'],
+			$service->placeStatutoryFloorHold($this->fakeEntity(['loonperiode' => '2026-P03'], []), 'LoonaangifteFiling', 'loonperiode', 5, 'Wet LB art. 1')
+		);
+		$this->assertSame(
+			[['reason' => 'Statutaire bewaarplicht (hrmq#99): Wet LB art. 1, tot 2031-12-31 (periode 2026-P03 + 5 jaar).']],
+			array_map(static fn (array $call): array => ['reason' => $call['reason']], $retentionService->placeLegalHoldCalls)
+		);
+		$this->assertCount(1, $objectMapper->saved);
+
+		$this->assertSame(['held' => false, 'ceiling' => null], $service->placeStatutoryFloorHold(null, 'Payslip', 'period', 7, 'AWR art. 52 lid 4'));
+		$this->assertSame(['held' => false, 'ceiling' => null], $service->placeStatutoryFloorHold($this->fakeEntity(['period' => 'mei'], []), 'Payslip', 'period', 7, 'AWR art. 52 lid 4'));
+		$this->assertCount(1, $retentionService->placeLegalHoldCalls, 'Neither refusal places a hold.');
+
+		$held = $this->buildService($this->fakeRetentionService(hasActiveLegalHold: true), $this->fakeObjectMapper());
+		$this->assertSame(['held' => true, 'ceiling' => null], $held->placeStatutoryFloorHold($this->fakeEntity(['period' => '2026-08'], []), 'Payslip', 'period', 7, 'AWR art. 52 lid 4'));
+
+		$failingMapper = new class {
+			/**
+			 * @param object $object The entity to persist.
+			 *
+			 * @return object
+			 */
+			public function update(object $object): object {
+				throw new \RuntimeException('database gone');
+			}//end update()
+		};
+		$failing = $this->buildService($this->fakeRetentionService(hasActiveLegalHold: false), $failingMapper);
+		$this->assertSame(['held' => false, 'ceiling' => '2033-12-31'], $failing->placeStatutoryFloorHold($this->fakeEntity(['period' => '2026-08'], []), 'Payslip', 'period', 7, 'AWR art. 52 lid 4'));
+
+	}//end testPlaceStatutoryFloorHoldGolden()
 
 	/**
 	 * `isUnderActiveRetention()` is true when an active legal hold exists.

@@ -2,6 +2,10 @@
 
 - [ ] 1.1 Declare "Indiensttreding" on `Onboarding` in `hr-onboarding.json`. Verify: the flow
       imports disabled through `occ maintenance:repair` and shows on `Flows`.
+- [ ] 1.1a Add the manager's onboarding steps (workplace and buddy, first month's programme,
+      probation talk) to `Onboarding` in `hr-onboarding.json` and give them to the unit's
+      manager in "Indiensttreding". Verify: `OnboardingDetail` lists the steps per owner (HR,
+      IT, manager), as drawn on HuInwerken.
 - [ ] 1.2 Declare "Uitdiensttreding" on `Offboarding`. Verify: as 1.1.
 - [ ] 1.3 Declare "Verlofaanvraag blijft liggen" on `LeaveRequest`. Verify: as 1.1.
 - [ ] 1.4 Generalise `RepublishLoonrunFlow` to every declared humaniq flow. Verify: unit test

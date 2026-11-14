@@ -42,6 +42,16 @@ class VacancyMatchService {
 	private const PREFERRED_POINTS = 10.0;
 
 	/**
+	 * The points pool of each competence part.
+	 *
+	 * @var array<string, float>
+	 */
+	private const POOLS = [
+		'required' => self::REQUIRED_POINTS,
+		'preferred' => self::PREFERRED_POINTS,
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param RecordStoreInterface $gateway Reads the register.
@@ -74,42 +84,43 @@ class VacancyMatchService {
 	/**
 	 * Score one candidate.
 	 *
-	 * @param array{education: ?int, experience: ?float, required: list<string>, preferred: list<string>} $requirements    The vacancy's requirements.
-	 * @param int|null                                                                                       $educationLevel  The candidate's level, null when unknown.
-	 * @param float|null                                                                                     $experienceYears The candidate's years, null when unknown.
-	 * @param list<string>                                                                                   $competences     The competence codes the candidate holds.
+	 * @param array{education: ?int, experience: ?float, required: list<string>, preferred: list<string>} $requirements The vacancy's requirements.
+	 * @param MatchCandidate                                                                                 $candidate    The candidate: education level and years (null when unknown) and the competence codes held.
 	 *
 	 * @return array{total: int, points: array{education: float, experience: float, required: float, preferred: float}, missing: list<string>}
 	 *
 	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
 	 */
-	public static function score(array $requirements, ?int $educationLevel, ?float $experienceYears, array $competences): array {
-		$missing = [];
-		$education = self::EDUCATION_POINTS;
-		if ($requirements['education'] !== null) {
-			$education = self::educationPoints(minimum: $requirements['education'], level: $educationLevel, missing: $missing);
-		}
-
-		$experience = self::EXPERIENCE_POINTS;
-		if ($requirements['experience'] !== null && $requirements['experience'] > 0.0) {
-			$experience = self::experiencePoints(minimum: $requirements['experience'], years: $experienceYears, missing: $missing);
-		}
-
-		$held = self::codes($competences);
-		$required = self::share(pool: self::REQUIRED_POINTS, codes: $requirements['required'], held: $held, missing: $missing);
-		$preferred = self::share(pool: self::PREFERRED_POINTS, codes: $requirements['preferred'], held: $held, missing: $missing);
+	public static function score(array $requirements, MatchCandidate $candidate): array {
+		$scoring = new CandidateScoring();
+		$scoring->requirements = $requirements;
+		$scoring->candidate = $candidate;
+		$scoring->held = self::codes($candidate->competences);
+		$points = self::points(scoring: $scoring);
 
 		return [
-			'total' => (int)round($education + $experience + $required + $preferred),
-			'points' => [
-				'education' => $education,
-				'experience' => $experience,
-				'required' => $required,
-				'preferred' => $preferred,
-			],
-			'missing' => $missing,
+			'total' => (int)round($points['education'] + $points['experience'] + $points['required'] + $points['preferred']),
+			'points' => $points,
+			'missing' => $scoring->missing,
 		];
 	}//end score()
+
+	/**
+	 * The points per part, collecting what is missing in this order:
+	 * education, experience, required and preferred competences.
+	 *
+	 * @param CandidateScoring $scoring The candidate being scored.
+	 *
+	 * @return array{education: float, experience: float, required: float, preferred: float}
+	 */
+	private static function points(CandidateScoring $scoring): array {
+		return [
+			'education' => ($scoring->requirements['education'] === null ? self::EDUCATION_POINTS : self::educationPoints(scoring: $scoring)),
+			'experience' => (($scoring->requirements['experience'] !== null && $scoring->requirements['experience'] > 0.0) ? self::experiencePoints(scoring: $scoring) : self::EXPERIENCE_POINTS),
+			'required' => self::share(scoring: $scoring, part: 'required'),
+			'preferred' => self::share(scoring: $scoring, part: 'preferred'),
+		];
+	}//end points()
 
 	/**
 	 * The ranked matches for one vacancy: applicants still in play or in the
@@ -150,18 +161,37 @@ class VacancyMatchService {
 				continue;
 			}
 
-			$education = self::intOrNull($application['educationLevel'] ?? null);
-			$years = self::floatOrNull($application['experienceYears'] ?? null);
-			$codes = self::codes($application['competenceCodes'] ?? []);
-			if ($education === null && $years === null && $codes === []) {
-				continue;
+			$candidate = self::applicantCandidate(application: $application);
+			if ($candidate !== null) {
+				$rows[] = self::row(candidate: $candidate, result: self::score(requirements: $requirements, candidate: $candidate));
 			}
-
-			$rows[] = self::row(kind: 'applicant', id: (string)($application['id'] ?? ''), name: (string)($application['candidateName'] ?? ''), result: self::score($requirements, $education, $years, $codes));
 		}
 
 		return $rows;
 	}//end applicants()
+
+	/**
+	 * An applicant as a candidate, or null when the application has no
+	 * profile at all to score.
+	 *
+	 * @param array<string, mixed> $application The application.
+	 *
+	 * @return MatchCandidate|null
+	 */
+	private static function applicantCandidate(array $application): ?MatchCandidate {
+		$candidate = new MatchCandidate();
+		$candidate->educationLevel = self::intOrNull($application['educationLevel'] ?? null);
+		$candidate->experienceYears = self::floatOrNull($application['experienceYears'] ?? null);
+		$candidate->competences = self::codes($application['competenceCodes'] ?? []);
+		if ($candidate->educationLevel === null && $candidate->experienceYears === null && $candidate->competences === []) {
+			return null;
+		}
+
+		$candidate->kind = 'applicant';
+		$candidate->id = (string)($application['id'] ?? '');
+		$candidate->name = (string)($application['candidateName'] ?? '');
+		return $candidate;
+	}//end applicantCandidate()
 
 	/**
 	 * Colleagues holding at least one competence that is current today.
@@ -174,17 +204,37 @@ class VacancyMatchService {
 	private function employees(array $requirements, string $today): array {
 		$rows = [];
 		foreach ($this->heldCompetences(today: $today) as $employeeId => $codes) {
-			$employee = $this->gateway->findObjectData((string)$employeeId, 'Employee');
-			if ($employee === null) {
-				continue;
+			$candidate = $this->employeeCandidate(employeeId: (string)$employeeId, codes: $codes);
+			if ($candidate !== null) {
+				$rows[] = self::row(candidate: $candidate, result: self::score(requirements: $requirements, candidate: $candidate));
 			}
-
-			$name = trim((string)($employee['firstName'] ?? '') . ' ' . (string)($employee['lastName'] ?? ''));
-			$rows[] = self::row(kind: 'employee', id: (string)$employeeId, name: $name, result: self::score($requirements, null, null, $codes));
 		}
 
 		return $rows;
 	}//end employees()
+
+	/**
+	 * A colleague as a candidate, with no education or experience known, or
+	 * null when the Employee is not found.
+	 *
+	 * @param string       $employeeId The employee.
+	 * @param list<string> $codes      The competence codes current today.
+	 *
+	 * @return MatchCandidate|null
+	 */
+	private function employeeCandidate(string $employeeId, array $codes): ?MatchCandidate {
+		$employee = $this->gateway->findObjectData($employeeId, 'Employee');
+		if ($employee === null) {
+			return null;
+		}
+
+		$candidate = new MatchCandidate();
+		$candidate->kind = 'employee';
+		$candidate->id = $employeeId;
+		$candidate->name = trim((string)($employee['firstName'] ?? '') . ' ' . (string)($employee['lastName'] ?? ''));
+		$candidate->competences = $codes;
+		return $candidate;
+	}//end employeeCandidate()
 
 	/**
 	 * The competence codes each colleague holds on the day, by employee, in first-seen order.
@@ -246,18 +296,16 @@ class VacancyMatchService {
 	/**
 	 * One row of the list, flat for a table.
 	 *
-	 * @param string                                                                                                               $kind   Applicant or employee.
-	 * @param string                                                                                                               $id     The record id.
-	 * @param string                                                                                                               $name   The person's name.
-	 * @param array{total: int, points: array{education: float, experience: float, required: float, preferred: float}, missing: list<string>} $result The score.
+	 * @param MatchCandidate                                                                                                       $candidate The candidate: kind, id and name.
+	 * @param array{total: int, points: array{education: float, experience: float, required: float, preferred: float}, missing: list<string>} $result    The score.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private static function row(string $kind, string $id, string $name, array $result): array {
+	private static function row(MatchCandidate $candidate, array $result): array {
 		return [
-			'kind' => $kind,
-			'id' => $id,
-			'name' => $name,
+			'kind' => $candidate->kind,
+			'id' => $candidate->id,
+			'name' => $candidate->name,
 			'total' => $result['total'],
 			'educationPoints' => $result['points']['education'],
 			'experiencePoints' => $result['points']['experience'],
@@ -270,15 +318,15 @@ class VacancyMatchService {
 	/**
 	 * Education points: all or nothing against the minimum.
 	 *
-	 * @param integer      $minimum The minimum level.
-	 * @param integer|null $level   The candidate's level.
-	 * @param list<string> $missing Collects what is missing.
+	 * @param CandidateScoring $scoring The candidate being scored, against a vacancy with a minimum level; collects what is missing.
 	 *
 	 * @return float
 	 */
-	private static function educationPoints(int $minimum, ?int $level, array &$missing): float {
+	private static function educationPoints(CandidateScoring $scoring): float {
+		$minimum = (int)$scoring->requirements['education'];
+		$level = $scoring->candidate->educationLevel;
 		if ($level === null) {
-			$missing[] = 'education unknown';
+			$scoring->missing[] = 'education unknown';
 			return 0.0;
 		}
 
@@ -286,59 +334,73 @@ class VacancyMatchService {
 			return self::EDUCATION_POINTS;
 		}
 
-		$missing[] = 'education level ' . $minimum;
+		$scoring->missing[] = 'education level ' . $minimum;
 		return 0.0;
 	}//end educationPoints()
 
 	/**
 	 * Experience points: pro rata up to the minimum.
 	 *
-	 * @param float        $minimum The minimum years.
-	 * @param float|null   $years   The candidate's years.
-	 * @param list<string> $missing Collects what is missing.
+	 * @param CandidateScoring $scoring The candidate being scored, against a vacancy with a minimum above zero; collects what is missing.
 	 *
 	 * @return float
 	 */
-	private static function experiencePoints(float $minimum, ?float $years, array &$missing): float {
+	private static function experiencePoints(CandidateScoring $scoring): float {
+		$minimum = (float)$scoring->requirements['experience'];
+		$years = $scoring->candidate->experienceYears;
 		if ($years === null) {
-			$missing[] = 'experience unknown';
+			$scoring->missing[] = 'experience unknown';
 			return 0.0;
 		}
 
 		if ($years < $minimum) {
-			$missing[] = $minimum . ' years of experience';
+			$scoring->missing[] = $minimum . ' years of experience';
 		}
 
 		return round(self::EXPERIENCE_POINTS * min(1.0, $years / $minimum), 1);
 	}//end experiencePoints()
 
 	/**
-	 * A pool of points shared equally over the codes, earned per code held.
+	 * A pool of points shared equally over the codes a part asks for, earned
+	 * per code held; in full when the part asks for none.
 	 *
-	 * @param float        $pool    The points in the pool.
-	 * @param list<string> $codes   The codes asked for.
-	 * @param list<string> $held    The codes held.
-	 * @param list<string> $missing Collects what is missing.
+	 * @param CandidateScoring $scoring The candidate being scored; collects what is missing.
+	 * @param string           $part    `required` or `preferred`.
 	 *
 	 * @return float
 	 */
-	private static function share(float $pool, array $codes, array $held, array &$missing): float {
-		if ($codes === []) {
-			return $pool;
+	private static function share(CandidateScoring $scoring, string $part): float {
+		if ($scoring->requirements[$part] === []) {
+			return self::POOLS[$part];
 		}
 
+		return round(self::earned(scoring: $scoring, part: $part), 1);
+	}//end share()
+
+	/**
+	 * The points earned of a part's pool, one equal share per code held; a
+	 * code not held is missing.
+	 *
+	 * @param CandidateScoring $scoring The candidate being scored; collects what is missing.
+	 * @param string           $part    `required` or `preferred`, asking for at least one code.
+	 *
+	 * @return float
+	 */
+	private static function earned(CandidateScoring $scoring, string $part): float {
+		$pool = self::POOLS[$part];
+		$codes = $scoring->requirements[$part];
 		$earned = 0.0;
 		foreach ($codes as $code) {
-			if (in_array($code, $held, true) === true) {
+			if (in_array($code, $scoring->held, true) === true) {
 				$earned += ($pool / count($codes));
 				continue;
 			}
 
-			$missing[] = $code;
+			$scoring->missing[] = $code;
 		}
 
-		return round($earned, 1);
-	}//end share()
+		return $earned;
+	}//end earned()
 
 	/**
 	 * Clean competence codes.

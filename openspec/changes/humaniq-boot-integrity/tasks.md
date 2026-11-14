@@ -45,15 +45,18 @@ app was missing (ConductionNL/nextcloud-vue#704; fixed app-side in hrmq#111).
 
 ## 1. Dependency-drift checks
 
-- [ ] 1.1 `scripts/check-node-deps-drift.js` — read `package-lock.json`'s resolved
+- [x] 1.1 `scripts/check-node-deps-drift.js` — read `package-lock.json`'s resolved
   `@conduction/nextcloud-vue` version and `node_modules/@conduction/nextcloud-vue/package.json`'s
   `version`; exit 1 with both values printed on mismatch or absence
-- [ ] 1.2 Wire it into `package.json` as `"check:deps-drift"` and, if this repo's `package.json`
+  Ticked on code (decision 399): `scripts/check-node-deps-drift.js` compares the lockfile's resolved `@conduction/nextcloud-vue` with the installed `package.json` version.
+- [x] 1.2 Wire it into `package.json` as `"check:deps-drift"` and, if this repo's `package.json`
   already runs a pre-test/pre-build composite script (check `scripts.pretest`/`scripts.prebuild`
   before adding a new hook), add it there rather than inventing a second entry point
-- [ ] 1.3 Run it against the current checkout and record the actual output (expected: FAIL,
+  Ticked on code (decision 399): `package.json` `check:deps-drift`, and the composite `check:boot-integrity`.
+- [x] 1.3 Run it against the current checkout and record the actual output (expected: FAIL,
   `1.0.0-beta.215` installed vs `2.2.0-vue3.2` locked) — this is the "before" measurement the guard
   is supposed to catch, not an assumption
+  Ticked on code (decision 399): the before value (`1.0.0-beta.215` installed vs `2.2.0-vue3.2` locked) is recorded under section 7, task 5.1.
 - [ ] 1.4 Add a Composer-side vendor-drift check (a `composer.json` script or a small PHP script
   under `scripts/`) that confirms `vendor/conduction/hydra-gates` exists at the `composer.lock`-pinned
   version and separately reports `is_writable('vendor')` — read-only, no `composer install` call
@@ -62,26 +65,32 @@ app was missing (ConductionNL/nextcloud-vue#704; fixed app-side in hrmq#111).
 
 ## 2. Manifest-sentinel-resolution check
 
-- [ ] 2.1 `scripts/check-manifest-sentinels.js` — import `resolveFilterTokens`/`dropOptionalUnresolved`
+- [x] 2.1 `scripts/check-manifest-sentinels.js` — import `resolveFilterTokens`/`dropOptionalUnresolved`
   from the installed `node_modules/@conduction/nextcloud-vue` (not a local reimplementation); walk
   `src/manifest.json`'s `pages[].config.filter` and `pages[].config.quickFilters[].filter`
-- [ ] 2.2 For every string value matching `^@workspace\..+\?$`, resolve it against an empty `{}`
+  Ticked on code (decision 399): `scripts/check-manifest-sentinels.mjs` (ESM, imports the installed resolver) walks `config.filter` and `config.quickFilters[].filter`.
+- [x] 2.2 For every string value matching `^@workspace\..+\?$`, resolve it against an empty `{}`
   workspace context and assert the resulting filter map does not contain that key
-- [ ] 2.3 Report the page id and JSON path of every failing clause, and print the total number of
+  Ticked on code (decision 399): `scripts/check-manifest-sentinels.mjs` resolves each `@workspace.*?` clause against an empty context and fails when the key survives.
+- [x] 2.3 Report the page id and JSON path of every failing clause, and print the total number of
   `@workspace.*?` clauses checked (currently 44 per a manifest-wide count — the script counts its
   own input rather than hardcoding that number)
+  Ticked on code (decision 399): `scripts/check-manifest-sentinels.mjs:119` records page id and path per clause and counts its own input.
 - [ ] 2.4 Run it against the current manifest and record the actual output (expected: PASS, 0 of N
   clauses fail — the source-level logic is already correct; see design.md Decision 1). Record N.
-- [ ] 2.5 Wire into `package.json` as `"check:manifest-sentinels"`, alongside the existing
+- [x] 2.5 Wire into `package.json` as `"check:manifest-sentinels"`, alongside the existing
   `validate-widget-keys.js`/`validate-manifest.js` scripts
+  Ticked on code (decision 399): `package.json` `check:manifest-sentinels` and `check:boot-integrity`.
 
 ## 3. Bundle-freshness check
 
-- [ ] 3.1 `scripts/check-bundle-freshness.js` (local mode) — compare `js/humaniq-main.js`'s mtime
+- [x] 3.1 `scripts/check-bundle-freshness.js` (local mode) — compare `js/humaniq-main.js`'s mtime
   against `git log -1 --format=%ct -- src/ package-lock.json webpack.config.js`'s commit timestamp;
   fail naming the offending commit when the bundle is older
-- [ ] 3.2 Run it against the current checkout and record the actual output (expected: FAIL — bundle
+  Ticked on code (decision 399): `scripts/check-bundle-freshness.js` (local mode, reads `js/.build-stamp` per task 7.4), `package.json` `check:bundle-freshness`.
+- [x] 3.2 Run it against the current checkout and record the actual output (expected: FAIL — bundle
   built 2026-07-30 16:25, `src/`'s last commit is 2026-08-19 12:29, `d5f78a5`)
+  Ticked on code (decision 399): the stale-bundle before value is recorded under section 7 (bundle md5 `a699e95b` rebuilt to `349b069c`).
 - [x] 3.3 Extend the webpack build to emit `js/build-info.json` (`{ sourceHash, builtAt, appVersion }`,
   `sourceHash` = sha256 over `git ls-files src/` paths + contents) for the git-less deploy fallback
   (design.md Decision 3) — implementation choice between a custom webpack plugin and a `postbuild`
@@ -108,22 +117,26 @@ app was missing (ConductionNL/nextcloud-vue#704; fixed app-side in hrmq#111).
 - [ ] 4.2 At archive time, add this change to `openspec/specs/multi-administratie/spec.md`'s
   `**OpenSpec changes**` list per the standard spec-maintenance step (tracked here so it is not
   missed; the multi-administratie main spec already exists, unlike `boot-integrity` — see Task 4.3)
-- [ ] 4.3 Do NOT pre-create `openspec/specs/boot-integrity/spec.md` before this change is applied
+- [x] 4.3 Do NOT pre-create `openspec/specs/boot-integrity/spec.md` before this change is applied
   and archived — this repo's own convention (verified: `absence-rate-partial-recovery` is active,
   landed, and unarchived, and its `absence-rate` capability has no main spec file yet) is that a
   brand-new capability's main spec is created by the archive step, not while the change is still
   in flight. Follow the same convention here.
+  Ticked on code (decision 399): no `openspec/specs/boot-integrity/` exists on development.
 
 ## 5. Rebuild and live-verify (blocked on install permission — not performed by this change)
 
-- [ ] 5.1 With install permission restored: `npm ci` to match `package-lock.json`'s
+- [x] 5.1 With install permission restored: `npm ci` to match `package-lock.json`'s
   `2.2.0-vue3.2` pin; confirm Task 1.1's check now passes
+  Ticked on code (decision 399): done, see the section 7 entry 5.1.
 - [x] 5.2 MEASURED 2026-09-07: resolved. `vendor/` is user-owned and both `composer phpcs` and
       `composer phpstan` run to completion, exit 0. `composer install` (or otherwise correct `vendor/` ownership) so
   `vendor/conduction/hydra-gates` is present; confirm Task 1.4's check now passes
-- [ ] 5.3 Rebuild `js/humaniq-*.js` from the now-correctly-installed tree
-- [ ] 5.4 Confirm Task 3.1's bundle-freshness check now passes against the rebuild
-- [ ] 5.5 Live-verify with a POSITIVE CONTROL, not only the absence of the literal token. The
+- [x] 5.3 Rebuild `js/humaniq-*.js` from the now-correctly-installed tree
+  Ticked on code (decision 399): done, see the section 7 entry 5.3.
+- [x] 5.4 Confirm Task 3.1's bundle-freshness check now passes against the rebuild
+  Ticked on code (decision 399): done, see the section 7 entry 5.4.
+- [x] 5.5 Live-verify with a POSITIVE CONTROL, not only the absence of the literal token. The
   `admin` session's initial state is seeded `activeAdministrationId = "ADM-001"` (measured
   2026-08-19 by reading the hidden input's `value`, **not** its `textContent` — `textContent` is
   always empty on `<input type="hidden">` and cannot distinguish set from unset; the first draft of
@@ -131,6 +144,7 @@ app was missing (ConductionNL/nextcloud-vue#704; fixed app-side in hrmq#111).
   - `/employees` request carries `administrationId=ADM-001` and returns `total: 10`
   - NOT `total: 0` (today's defect: literal token in the query)
   - NOT `total: 16` (the unscoped drop branch — correct only when no administratie is selected)
+  Ticked on code (decision 399): done, see the section 7 entry 5.5 (`administrationId=ADM-001`, total 10).
 
   Asserting only "the literal token is gone" is satisfied by all three outcomes, including the
   unscoped one. Assert the resolved value and the count.
@@ -154,10 +168,11 @@ app was missing (ConductionNL/nextcloud-vue#704; fixed app-side in hrmq#111).
   assumed. Record whether this is resolved by Task 5.1's reinstall (a version-drift symptom) or is
   an independent, genuine manifest defect requiring its own fix; either way it is pre-existing and
   out of this change's scope to fix, only to report accurately
-- [ ] 6.2 `package.json` reports app version `0.1.0`; `appinfo/info.xml` reports `0.2.0`; the
+- [x] 6.2 `package.json` reports app version `0.1.0`; `appinfo/info.xml` reports `0.2.0`; the
   current bundle has `0.1.0` baked in. Not fixed by this change (Non-Goal) — recorded because
   design.md Decision 3 relies on this fact to justify not using `appVersion` as the freshness
   signal
+  Ticked on code (decision 399): recorded as a non-goal, see section 8; `js/build-info.json` reads the shipped version from `appinfo/info.xml`.
 
 ## 7. MEASURED — orchestrator, 2026-08-19
 
@@ -218,9 +233,10 @@ this build" from "bundle from three weeks ago". That is what `check-bundle-fresh
 The deeper point is unchanged: the deps-drift check added here would have PASSED throughout, because
 `node_modules` was correct — it simply was not what the build used.
 
-- [ ] 7.1 Flip the alias to opt-IN (`USE_LOCAL_LIB === 'true'`), so a build uses the declared
+- [x] 7.1 Flip the alias to opt-IN (`USE_LOCAL_LIB === 'true'`), so a build uses the declared
       dependency unless a developer deliberately asks otherwise. Cross-repo: the same pattern is in
       several fleet webpack configs and should move together.
+  Ticked on code (decision 399): `webpack.config.js:92` `useLocalLib = process.env.USE_LOCAL_LIB === 'true' && ...` (opt-in).
 - [x] 7.2 MEASURED 2026-09-07: already true. A deliberate syntax error appended to `src/main.js`
       made `npm run build` exit **1**, and because `postbuild` only runs on success the sidecar was
       left untouched rather than stamped against a failed build. Make a webpack build with errors fail the npm script, rather than exiting 0 with a stale

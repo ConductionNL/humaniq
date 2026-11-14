@@ -3,6 +3,9 @@
 /**
  * NL Verzuim (Wet verbetering poortwachter) Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable checks for the Dutch sickness/re-integration rules of the labour
  * corpus (lib/Standards/rules/labour.json, framework nl-poortwachter /
  * bw7-10), mapped onto the SickLeaveCase object type (leave-verzuim-mvp):
@@ -47,9 +50,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

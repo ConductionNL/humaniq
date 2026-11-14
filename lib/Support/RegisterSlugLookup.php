@@ -3,6 +3,9 @@
 /**
  * RegisterSlugLookup — ask this instance which slug the humaniq register answers to.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The register was renamed from `hrmq` to `humaniq` by
  * {@see \OCA\Humaniq\Repair\MigrateRegisterSlug}. That step runs PER INSTANCE,
  * so both slugs are live across the estate at once, and neither name is
@@ -51,9 +54,6 @@
  * check denies; a report says it checked nothing and why. What no caller may
  * do is read with the canonical slug anyway and present the empty result as
  * real emptiness.
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
  * @category Support
  * @package  OCA\Humaniq\Support

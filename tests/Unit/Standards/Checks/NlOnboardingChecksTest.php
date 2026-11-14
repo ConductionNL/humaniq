@@ -316,5 +316,51 @@ class NlOnboardingChecksTest extends TestCase {
 		$this->assertFalse(($this->checks['nl-onboarding-loonheffingenverklaring'])($case, $this->context()));
 
 	}//end testLoonheffingenverklaringFailsClosedWhenEmployeeIdDangling()
+	/**
+	 * With a contract resolved but a startDate or proeftijdEndDate that is not
+	 * a date, the cap cannot be computed: branch (a) does not flag.
+	 *
+	 * @return void
+	 */
+	public function testProeftijdSatisfiedWhenADateIsUnparseable(): void {
+		$context = $this->context([], ['employee-visser' => ['type' => 'permanent']]);
+		$check = $this->checks['nl-onboarding-proeftijd-bewaking'];
+
+		$this->assertFalse($check($this->onboarding(['proeftijdEndDate' => '2026-12-01', 'status' => 'contract_getekend']), $context), 'Sanity: five months exceeds the permanent two-month cap.');
+		$this->assertTrue($check($this->onboarding(['startDate' => 'na de zomer', 'proeftijdEndDate' => '2026-12-01', 'status' => 'contract_getekend']), $context));
+		$this->assertTrue($check($this->onboarding(['proeftijdEndDate' => 'eind van het jaar', 'status' => 'contract_getekend']), $context));
+
+	}//end testProeftijdSatisfiedWhenADateIsUnparseable()
+
+	/**
+	 * A fixed-term contract whose duration is not decidable (no parseable
+	 * start or end date) gets the shorter one-month cap.
+	 *
+	 * @return void
+	 */
+	public function testProeftijdFixedTermWithUndecidableDurationGetsTheOneMonthCap(): void {
+		$check = $this->checks['nl-onboarding-proeftijd-bewaking'];
+		$withinOneMonth = $this->onboarding(['proeftijdEndDate' => '2026-08-01', 'status' => 'contract_getekend']);
+		$withinTwoMonths = $this->onboarding(['proeftijdEndDate' => '2026-08-15', 'status' => 'contract_getekend']);
+
+		foreach ([['startDate' => '2026-07-01', 'endDate' => null], ['startDate' => null, 'endDate' => '2029-07-01']] as $dates) {
+			$context = $this->context([], ['employee-visser' => array_merge(['type' => 'temporary'], $dates)]);
+			$this->assertTrue($check($withinOneMonth, $context));
+			$this->assertFalse($check($withinTwoMonths, $context));
+		}
+
+	}//end testProeftijdFixedTermWithUndecidableDurationGetsTheOneMonthCap()
+
+	/**
+	 * A running proeftijd whose end date is not a date cannot be overdue.
+	 *
+	 * @return void
+	 */
+	public function testProeftijdSatisfiedWhenRunningWithAnUnparseableEndDate(): void {
+		$case = $this->onboarding(['status' => 'proeftijd_lopend', 'startDate' => '2020-01-01', 'proeftijdEndDate' => 'onbekend']);
+
+		$this->assertTrue(($this->checks['nl-onboarding-proeftijd-bewaking'])($case, $this->context()));
+
+	}//end testProeftijdSatisfiedWhenRunningWithAnUnparseableEndDate()
 
 }//end class

@@ -24,7 +24,8 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\FlowGraphKeypaths;
 use OCA\Humaniq\Service\LoonrunFlowRepairService;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
+use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -123,8 +124,8 @@ class LoonrunFlowRepairOutcomesTest extends TestCase {
 	 * @return LoonrunFlowRepairService
 	 */
 	private function service(bool $available, ?object $flow, ?array $published): LoonrunFlowRepairService {
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('isOpenRegisterAvailable')->willReturn($available);
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('isInstalled')->willReturnCallback(static fn (string $app): bool => $app === 'openregister' && $available);
 		$test = $this;
 		$services = [
 			'OCA\OpenRegister\Db\FlowMapper' => new class($test, $flow) {
@@ -165,7 +166,7 @@ class LoonrunFlowRepairOutcomesTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(static fn (string $id): object => $services[$id]);
 
-		return new LoonrunFlowRepairService($settings, $container, new FlowGraphKeypaths(), new NullLogger());
+		return new LoonrunFlowRepairService(new OpenRegisterAvailability($apps), $container, new FlowGraphKeypaths(), new NullLogger());
 	}//end service()
 
 	/**

@@ -3,6 +3,9 @@
 /**
  * Interview Calendar Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Projects scheduled recruiting Interviews onto one configured shared
  * Nextcloud calendar as timed VEVENTs (interview-scheduling design.md
  * D1-D6) — a fork of `LeaveCalendarService` for a second object type. humaniq
@@ -44,9 +47,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/interview-scheduling/spec.md
@@ -68,11 +68,6 @@ use Throwable;
 class InterviewCalendarService {
 
 	/**
-	 * @var InterviewRepository
-	 */
-	private readonly InterviewRepository $repository;
-
-	/**
 	 * @var InterviewSyncEngine
 	 */
 	private readonly InterviewSyncEngine $engine;
@@ -84,15 +79,16 @@ class InterviewCalendarService {
 
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService/CalDavBackend resolution.
-	 * @param SettingsService $settingsService Target-calendar config (design.md D6).
+	 * @param CalendarSettings $calendars Target-calendar config (design.md D6).
+	 * @param InterviewRepository $repository Reads interviews and their applications and vacancies.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly CalendarSettings $calendars,
+		private readonly InterviewRepository $repository,
 		private readonly LoggerInterface $logger,
 	) {
-		$this->repository = new InterviewRepository($container, $settingsService, $logger);
 		$this->engine = new InterviewSyncEngine($this->repository, new InterviewIcsRenderer());
 		$this->orphanReconciler = new InterviewOrphanReconciler($logger);
 
@@ -193,8 +189,8 @@ class InterviewCalendarService {
 	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-006
 	 */
 	private function resolveTarget(): InterviewCalendarTarget|string {
-		$principal = $this->settingsService->getInterviewCalendarPrincipal();
-		$uri = $this->settingsService->getInterviewCalendarUri();
+		$principal = $this->calendars->getInterviewCalendarPrincipal();
+		$uri = $this->calendars->getInterviewCalendarUri();
 		if ($principal === '' || $uri === '') {
 			return 'interview_calendar_principal/interview_calendar_uri is niet geconfigureerd.';
 		}

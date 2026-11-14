@@ -3,6 +3,9 @@
 /**
  * Leave Calendar Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Projects approved absence (LeaveRequest/SickLeaveCase) onto one configured
  * shared Nextcloud calendar as all-day VEVENTs (design.md D1-D6). humaniq holds
  * no calendar storage of its own — the sync is a stateless, idempotent
@@ -35,9 +38,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -104,12 +104,14 @@ class LeaveCalendarService {
 
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService/CalDavBackend resolution.
-	 * @param SettingsService $settingsService Target-calendar config (design.md D6).
+	 * @param SettingsService $settingsService Register slug.
+	 * @param CalendarSettings $calendars Target-calendar config (design.md D6).
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
+		private readonly CalendarSettings $calendars,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -140,8 +142,8 @@ class LeaveCalendarService {
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-006
 	 */
 	public function sync(?string $from = null): array {
-		$principal = $this->settingsService->getLeaveCalendarPrincipal();
-		$uri = $this->settingsService->getLeaveCalendarUri();
+		$principal = $this->calendars->getLeaveCalendarPrincipal();
+		$uri = $this->calendars->getLeaveCalendarUri();
 		if ($principal === '' || $uri === '') {
 			return [$this->skipOutcome('leave_calendar_principal/leave_calendar_uri is niet geconfigureerd.')];
 		}

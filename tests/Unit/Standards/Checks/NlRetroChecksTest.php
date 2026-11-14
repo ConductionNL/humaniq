@@ -344,5 +344,28 @@ class NlRetroChecksTest extends TestCase {
 		$this->assertContains('PayrollAdjustment', RuleEngine::supportedTypes());
 
 	}//end testRuleIsRegisteredAndEnforceable()
+	/**
+	 * A contract that records no valid Awf tariff has it derived (Wab): a
+	 * written permanent contract recomputes on the low tariff, any other
+	 * contract on the high one. The consistent fixture's deltas were
+	 * computed on the low tariff.
+	 *
+	 * @return void
+	 */
+	public function testRecomputeDerivesTheAwfTariffFromAContractWithoutOne(): void {
+		[$adjustment, $context] = $this->consistentAdjustmentAndContext();
+		$check = NlRetroChecks::checks()['PayrollAdjustment']['nl-retro-adjustment-consistency'];
+		$withContract = static function (array $contract) use ($context): array {
+			$context['retro']['contractsByEmployeeId']['emp-1'] = $contract;
+			return $context;
+		};
+
+		$this->assertTrue($check($adjustment, $withContract(['type' => 'permanent', 'writtenContract' => true])), 'Written permanent: low.');
+		$this->assertTrue($check($adjustment, $withContract(['type' => 'permanent', 'writtenContract' => true, 'awfTariff' => 'laag'])), 'An unknown tariff value is derived too.');
+		$this->assertFalse($check($adjustment, $withContract(['type' => 'permanent', 'writtenContract' => false])), 'Unwritten permanent: high.');
+		$this->assertFalse($check($adjustment, $withContract(['type' => 'temporary', 'writtenContract' => true])), 'Temporary: high.');
+		$this->assertFalse($check($adjustment, $withContract([])), 'Nothing recorded: high.');
+
+	}//end testRecomputeDerivesTheAwfTariffFromAContractWithoutOne()
 
 }//end class

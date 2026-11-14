@@ -3,6 +3,9 @@
 /**
  * Loonrun Flow Repair Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The v1 `Loonrun` declaration shipped its switch-gate condition as
  * `{"var": "review.outcome"}`. OpenRegister's `UserTaskNode::placeOutcome()`
  * writes the outcome bag INTO the item's record (`json.<outcomeKey>`), and
@@ -42,9 +45,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -91,7 +91,7 @@ class LoonrunFlowRepairService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService OpenRegister availability.
+	 * @param OpenRegisterAvailability $openRegister OpenRegister availability.
 	 * @param ContainerInterface $container Resolves OpenRegister's flow store lazily.
 	 * @param FlowGraphKeypaths $keypaths The graph arithmetic.
 	 * @param LoggerInterface $logger The logger.
@@ -99,7 +99,7 @@ class LoonrunFlowRepairService {
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly OpenRegisterAvailability $openRegister,
 		private readonly ContainerInterface $container,
 		private readonly FlowGraphKeypaths $keypaths,
 		private readonly LoggerInterface $logger,
@@ -115,7 +115,7 @@ class LoonrunFlowRepairService {
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function repair(): array {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+		if ($this->openRegister->isAvailable() === false) {
 			return ['status' => 'skipped', 'detail' => 'OpenRegister is not installed or enabled.'];
 		}
 

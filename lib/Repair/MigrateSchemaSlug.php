@@ -3,6 +3,9 @@
 /**
  * Renames this app's OpenRegister schema SLUGS in place, before the import.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * WHY A REPAIR STEP AT ALL. The same reason {@see MigrateRegisterSlug} needs
  * one, one level down: `ImportHandler` resolves a schema by
  * `(application, slug)` and its not-found branch is not an error path, it is
@@ -51,9 +54,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -143,12 +143,7 @@ class MigrateSchemaSlug implements IRepairStep {
 			);
 		}
 
-		$renamed = 0;
-		foreach ($plan['renames'] as $old => $new) {
-			if ($this->renameSlug(old: $old, new: $new) === true) {
-				$renamed++;
-			}
-		}
+		$renamed = $this->decisions->countRenamed(renames: $plan['renames'], rename: $this->renameSlug(...));
 
 		$output->info(
 			sprintf(

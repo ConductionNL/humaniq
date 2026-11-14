@@ -30,7 +30,9 @@ or enforced anywhere by this change.
 
 ## Requirements
 
-### REQ-ABP-001: The Administration catalog SHALL record which client administraties are legally obligated to affiliate with ABP
+### Requirement: The Administration catalog SHALL record which client administraties are legally obligated to affiliate with ABP (REQ-ABP-001)
+
+The Administration catalog SHALL record which client administraties are legally obligated to affiliate with ABP.
 
 `lib/Settings/register.d/hr-administratie.json`'s `Administration` schema
 gained `abpAansluitingsplichtig` (boolean, default `false`), an admin-set
@@ -53,7 +55,9 @@ shipped `multi-administratie` `Administration` schema.
 - **WHEN** the row is read
 - **THEN** `abpAansluitingsplichtig` remains whatever an admin explicitly set — no automatic derivation from the CAO or any other field occurs
 
-### REQ-ABP-002: A new corpus rule SHALL require an ABP filing for every approved run of an ABP-obligated administratie
+### Requirement: A new corpus rule SHALL require an ABP filing for every approved run of an ABP-obligated administratie (REQ-ABP-002)
+
+A new corpus rule SHALL require an ABP filing for every approved run of an ABP-obligated administratie.
 
 `lib/Standards/rules/payroll.json` gained `nl-abp-fund-required` under the
 existing `nl-pensioenaangifte` framework (the same framework the three
@@ -70,7 +74,9 @@ was bumped from `2026-07.26` to `2026-07.27`.
 - **THEN** the RuleCatalogue loads without error and reports `nl-abp-fund-required` as enforced (a `CheckProvider` predicate exists for it)
 - **AND** `nl-upa-monthly-completeness` still reports exactly the same coverage it did before this change
 
-### REQ-ABP-003: A new auto-discovered NlAbpChecks provider SHALL enforce nl-abp-fund-required, fund- and tenant-scoped
+### Requirement: A new auto-discovered NlAbpChecks provider SHALL enforce nl-abp-fund-required, fund- and tenant-scoped (REQ-ABP-003)
+
+A new auto-discovered NlAbpChecks provider SHALL enforce nl-abp-fund-required, fund- and tenant-scoped.
 
 `lib/Standards/Checks/NlAbpChecks.php` (implements `CheckProvider`) registers
 the `nl-abp-fund-required` predicate on `PayrollRun`, reading three indexes
@@ -113,7 +119,9 @@ the run's own `(period, administrationId)` pair is absent from
 - **WHEN** the audit runs
 - **THEN** `nl-upa-monthly-completeness` reports no violation for the `ADM-003` run (the period is globally filed), while `nl-abp-fund-required` still reports its violation (the `ADM-003` administratie itself never filed) — demonstrating the two rules are not redundant
 
-### REQ-ABP-004: Seed data SHALL prove both the satisfied and violated branches of the new rule
+### Requirement: Seed data SHALL prove both the satisfied and violated branches of the new rule (REQ-ABP-004)
+
+Seed data SHALL prove both the satisfied and violated branches of the new rule.
 
 `lib/Settings/register.d/hr-seed.json` flipped the existing `ADM-001`
 `Administration` row to `abpAansluitingsplichtig: true` (its two existing

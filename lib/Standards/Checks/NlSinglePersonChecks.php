@@ -3,6 +3,9 @@
 /**
  * NL Single-Person-Mode Headcount Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * single-person-modes (design.md D4): a recommended-severity, auto-discovered
  * data-quality lamp over the `Administration.mode` toggle (REQ-SPM-001) --
  * the `nl-administratie-scope-consistency` posture (NlAdministratieChecks)
@@ -37,9 +40,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

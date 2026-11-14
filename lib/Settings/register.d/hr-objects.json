@@ -4,8 +4,9 @@
         "schemas": {
             "Employee": {
                 "slug": "Employee",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}, {"group": "authenticated", "match": {"deputyUserIds": {"$contains": "$userId"}}}], "create": ["humaniq-hr"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr"]},
                 "icon": "AccountTieOutline",
-                "version": "0.14.0",
+                "version": "0.15.0",
                 "title": "Employee",
                 "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",
                 "type": "object",
@@ -15,6 +16,8 @@
                     "startDate"
                 ],
                 "properties": {
+                    "managerUserId": {"type": "string", "nullable": true, "title": "Manager", "description": "The account of the employee's manager, who may read this record.", "x-notes": "Stamped by humaniq on every save and refreshed by the manager access pass (ManagerAccessStamps): the nextcloudUserId of the manager the org resolution gives today for the record's employee. Never taken from the request. Read by the managerUserId authorization rule."},
+                    "deputyUserIds": {"type": "array", "items": {"type": "string"}, "nullable": true, "title": "Deputies", "description": "The accounts standing in for the manager today, who may read this record too.", "x-notes": "Stamped with managerUserId: the deputies of ManagerDeputy records active today for that manager. Refreshed by the manager access pass when a deputy period starts or ends. Read by the deputyUserIds $contains authorization rule."},
                     "employeeNumber": {"title": "Employee number", "type": "string", "description": "Internal employee number."},
                     "bsn": {"title": "BSN", "type": "string", "description": "Dutch citizen service number. Without it, payroll has to apply the anonymous rate.", "x-notes": "Burgerservicenummer (NL tax identification). Presence drives the anoniementarief check (nl-anoniementarief).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}], "update": ["humaniq-hr"]}},
                     "firstName": {"title": "First name", "type": "string", "description": "Given name."},
@@ -69,6 +72,7 @@
             },
             "EmploymentContract": {
                 "slug": "EmploymentContract",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr"]},
                 "icon": "FileSign",
                 "version": "0.13.0",
                 "title": "Employment Contract",
@@ -117,6 +121,7 @@
             },
             "Payslip": {
                 "slug": "Payslip",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "ReceiptTextOutline",
                 "version": "0.18.0",
                 "configuration": {
@@ -259,6 +264,7 @@
             },
             "PayrollRun": {
                 "slug": "PayrollRun",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "CogPlayOutline",
                 "version": "0.5.0",
                 "configuration": {
@@ -345,6 +351,7 @@
             },
             "PayrollRunFinding": {
                 "slug": "PayrollRunFinding",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "AlertCircleOutline",
                 "version": "0.1.0",
                 "title": "Payroll run finding",
@@ -492,6 +499,7 @@
             },
             "PayrollMutationReport": {
                 "slug": "PayrollMutationReport",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "SwapHorizontal",
                 "version": "0.1.0",
                 "title": "Payroll Mutation Report",
@@ -552,6 +560,7 @@
             },
             "LoonaangifteFiling": {
                 "slug": "LoonaangifteFiling",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "FileSendOutline",
                 "version": "0.5.0",
                 "title": "Wage Tax Filing",
@@ -690,6 +699,7 @@
             },
             "WkrDeclaration": {
                 "slug": "WkrDeclaration",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "GiftOutline",
                 "version": "0.1.0",
                 "title": "WKR Declaration",
@@ -720,6 +730,7 @@
             },
             "WkrAssessment": {
                 "slug": "WkrAssessment",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "CalculatorVariantOutline",
                 "version": "0.1.0",
                 "title": "WKR Assessment",

@@ -3,6 +3,9 @@
 /**
  * Humaniq Migrate Asset Dialect Repair Step
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * hrmq-asset-fleet-merge (tasks.md section 13, blocking defect): the
  * Asset/AssetAssignment schema rename shipped without a data migration.
  * OpenRegister's register-config seed import is create-only, so it never
@@ -32,9 +35,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
@@ -45,7 +45,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Repair;
 
 use OCA\Humaniq\Service\AssetDialectMigrationService;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -59,14 +59,14 @@ class MigrateAssetDialect implements IRepairStep {
 
 	/**
 	 * @param AssetDialectMigrationService $migrationService The migration.
-	 * @param SettingsService $settingsService Availability check.
+	 * @param OpenRegisterAvailability $openRegister Availability check.
 	 * @param LoggerInterface $logger The logger.
 	 *
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function __construct(
 		private readonly AssetDialectMigrationService $migrationService,
-		private readonly SettingsService $settingsService,
+		private readonly OpenRegisterAvailability $openRegister,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -93,7 +93,7 @@ class MigrateAssetDialect implements IRepairStep {
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function run(IOutput $output): void {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+		if ($this->openRegister->isAvailable() === false) {
 			$output->warning('OpenRegister is not installed or enabled. Skipping Asset dialect migration.');
 			return;
 		}

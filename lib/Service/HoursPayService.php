@@ -107,13 +107,9 @@ class HoursPayService {
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 */
 	public function payFor(array $employee, array $contract, array $timesheets, array $entries, ?array $nonWorkingDates): array {
-		$run = new HoursPayRun();
-		$run->contract = $contract;
+		$run = $this->startRun(employee: $employee, contract: $contract);
 		$run->entries = $entries;
 		$run->nonWorkingDates = $nonWorkingDates;
-		$run->salaried = (is_numeric($employee['grossMonthlySalary'] ?? null) === true && (float)$employee['grossMonthlySalary'] > 0.0);
-		$run->rate = $this->hourlyRate(employee: $employee, contract: $contract, salaried: $run->salaried);
-		$run->pay = ['hourlyCents' => 0, 'overtimeCents' => 0, 'hoursPaid' => 0.0, 'overtimeHours' => 0.0, 'hourlyRate' => $run->rate, 'surchargeUnresolved' => false, 'timesheetIds' => [], 'timeCredits' => []];
 		foreach ($timesheets as $timesheet) {
 			$this->payTimesheet(run: $run, timesheet: $timesheet);
 		}
@@ -127,6 +123,24 @@ class HoursPayService {
 
 		return $run->pay;
 	}//end payFor()
+
+	/**
+	 * A run for one employee under one contract, with its hourly rate and no pay yet.
+	 *
+	 * @param array<string, mixed> $employee The Employee.
+	 * @param array<string, mixed> $contract The covering EmploymentContract.
+	 *
+	 * @return HoursPayRun
+	 */
+	private function startRun(array $employee, array $contract): HoursPayRun {
+		$run = new HoursPayRun();
+		$run->contract = $contract;
+		$run->salaried = (is_numeric($employee['grossMonthlySalary'] ?? null) === true && (float)$employee['grossMonthlySalary'] > 0.0);
+		$run->rate = $this->hourlyRate(run: $run, employee: $employee);
+		$run->pay = ['hourlyCents' => 0, 'overtimeCents' => 0, 'hoursPaid' => 0.0, 'overtimeHours' => 0.0, 'hourlyRate' => $run->rate, 'surchargeUnresolved' => false, 'timesheetIds' => [], 'timeCredits' => []];
+
+		return $run;
+	}//end startRun()
 
 	/**
 	 * Add one timesheet: its hours less overtime for an hourly employee, its
@@ -147,13 +161,26 @@ class HoursPayService {
 		}
 
 		$run->pay['overtimeHours'] += $overtimeHours;
-		$settled = $this->settleOvertime(entries: $overtime, contract: $run->contract, rate: $run->rate, nonWorkingDates: $run->nonWorkingDates);
+		$settled = $this->settleOvertime(run: $run, entries: $overtime);
+		$this->addSettlement(run: $run, settled: ($settled + ['timesheetId' => $timesheetId]));
+	}//end payTimesheet()
+
+	/**
+	 * Add one timesheet's settled overtime to the pay: its cents, whether a
+	 * surcharge did not resolve, and its time-off credit when there is one.
+	 *
+	 * @param HoursPayRun                                                         $run     The pay being added up.
+	 * @param array{cents: int, credit: float, unresolved: bool, timesheetId: string} $settled The timesheet's settlement.
+	 *
+	 * @return void
+	 */
+	private function addSettlement(HoursPayRun $run, array $settled): void {
 		$run->pay['overtimeCents'] += $settled['cents'];
 		$run->pay['surchargeUnresolved'] = ($run->pay['surchargeUnresolved'] || $settled['unresolved']);
 		if ($settled['credit'] > 0.0) {
-			$run->pay['timeCredits'][] = ['timesheetId' => $timesheetId, 'hours' => round($settled['credit'], 2)];
+			$run->pay['timeCredits'][] = ['timesheetId' => $settled['timesheetId'], 'hours' => round($settled['credit'], 2)];
 		}
-	}//end payTimesheet()
+	}//end addSettlement()
 
 	/**
 	 * Stamp the timesheets this run paid, and clear the stamp of one it paid
@@ -198,36 +225,45 @@ class HoursPayService {
 	 * Settle one timesheet's overtime entries: the pay in cents, the hours to
 	 * credit as time off, and whether a surcharge did not resolve.
 	 *
-	 * @param list<array<string, mixed>> $entries         The overtime entries.
-	 * @param array<string, mixed>       $contract        The contract.
-	 * @param float|null                 $rate            The hourly rate.
-	 * @param list<string>|null          $nonWorkingDates The calendar dates.
+	 * @param HoursPayRun                $run     The pay being added up: its contract, hourly rate and calendar dates.
+	 * @param list<array<string, mixed>> $entries The overtime entries.
 	 *
 	 * @return array{cents: int, credit: float, unresolved: bool}
 	 */
-	private function settleOvertime(array $entries, array $contract, ?float $rate, ?array $nonWorkingDates): array {
-		$credit = 0.0;
-		$cents = 0;
-		$unresolved = false;
-		$default = $this->terms->overtimeCompensationFor($contract);
+	private function settleOvertime(HoursPayRun $run, array $entries): array {
+		$settled = ['cents' => 0, 'credit' => 0.0, 'unresolved' => false];
+		$default = $this->terms->overtimeCompensationFor($run->contract);
 		foreach ($entries as $entry) {
-			$hours = (float)($entry['hours'] ?? 0);
-			$percentage = $this->surcharge(contract: $contract, category: self::categoryOf(date: (string)($entry['date'] ?? ''), nonWorkingDates: $nonWorkingDates));
-			if ($percentage === null) {
-				$unresolved = true;
-			}
-
-			$factor = ((100 + ($percentage ?? 0.0)) / 100);
-			if (($entry['overtimeCompensation'] ?? $default) === 'time') {
-				$credit += ($hours * $factor);
-				continue;
-			}
-
-			$cents += (int)round($hours * ($rate ?? 0.0) * $factor * 100);
+			$entry['overtimeCompensation'] = ($entry['overtimeCompensation'] ?? $default);
+			$one = $this->settleEntry(run: $run, entry: $entry);
+			$settled['cents'] += $one['cents'];
+			$settled['credit'] += $one['credit'];
+			$settled['unresolved'] = ($settled['unresolved'] || $one['unresolved']);
 		}
 
-		return ['cents' => $cents, 'credit' => $credit, 'unresolved' => $unresolved];
+		return $settled;
 	}//end settleOvertime()
+
+	/**
+	 * Settle one overtime entry at the surcharge factor for its day: in money
+	 * at the hourly rate, or as time off when its compensation is time.
+	 *
+	 * @param HoursPayRun          $run   The pay being added up: its contract, hourly rate and calendar dates.
+	 * @param array<string, mixed> $entry The overtime entry, its compensation already defaulted.
+	 *
+	 * @return array{cents: int, credit: float, unresolved: bool}
+	 */
+	private function settleEntry(HoursPayRun $run, array $entry): array {
+		$hours = (float)($entry['hours'] ?? 0);
+		$percentage = $this->surcharge(contract: $run->contract, category: self::categoryOf(date: (string)($entry['date'] ?? ''), nonWorkingDates: $run->nonWorkingDates));
+		$unresolved = ($percentage === null);
+		$factor = ((100 + ($percentage ?? 0.0)) / 100);
+		if ($entry['overtimeCompensation'] === 'time') {
+			return ['cents' => 0, 'credit' => ($hours * $factor), 'unresolved' => $unresolved];
+		}
+
+		return ['cents' => (int)round($hours * ($run->rate ?? 0.0) * $factor * 100), 'credit' => 0.0, 'unresolved' => $unresolved];
+	}//end settleEntry()
 
 	/**
 	 * The surcharge percentage for one category, or null when it does not resolve.
@@ -251,21 +287,32 @@ class HoursPayService {
 	 * The hourly rate: the salary over the contracted monthly hours for a
 	 * salaried employee, the contract's hourly wage otherwise.
 	 *
+	 * @param HoursPayRun          $run      The pay being added up: its contract and whether the employee is salaried.
 	 * @param array<string, mixed> $employee The employee.
-	 * @param array<string, mixed> $contract The contract.
-	 * @param bool                 $salaried Whether the employee has a monthly salary.
 	 *
 	 * @return float|null Null when neither gives a rate.
 	 */
-	private function hourlyRate(array $employee, array $contract, bool $salaried): ?float {
-		if ($salaried === true) {
-			$monthlyHours = ((float)($contract['hoursPerWeek'] ?? 0) * 52 / 12);
-			return ($monthlyHours > 0.0 ? (float)$employee['grossMonthlySalary'] / $monthlyHours : null);
+	private function hourlyRate(HoursPayRun $run, array $employee): ?float {
+		if ($run->salaried === true) {
+			return $this->salariedRate(run: $run, employee: $employee);
 		}
 
-		$wage = ($contract['hourlyWage'] ?? null);
+		$wage = ($run->contract['hourlyWage'] ?? null);
 		return (is_numeric($wage) === true && (float)$wage > 0.0 ? (float)$wage : null);
 	}//end hourlyRate()
+
+	/**
+	 * A salaried employee's hourly rate: the salary over the contracted monthly hours.
+	 *
+	 * @param HoursPayRun          $run      The pay being added up: its contract.
+	 * @param array<string, mixed> $employee The employee.
+	 *
+	 * @return float|null Null when the contract has no hours.
+	 */
+	private function salariedRate(HoursPayRun $run, array $employee): ?float {
+		$monthlyHours = ((float)($run->contract['hoursPerWeek'] ?? 0) * 52 / 12);
+		return ($monthlyHours > 0.0 ? (float)$employee['grossMonthlySalary'] / $monthlyHours : null);
+	}//end salariedRate()
 
 	/**
 	 * The overtime category of a day.

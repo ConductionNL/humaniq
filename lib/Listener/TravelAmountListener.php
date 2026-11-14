@@ -3,6 +3,9 @@
 /**
  * Humaniq TravelAmountListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` and
  * `ObjectUpdatingEvent` for `Expense` and `CommuteArrangement`
  * (expenses-travel-calculation D1 and D2).
@@ -27,9 +30,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
@@ -40,9 +40,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Service\ExpenseSettings;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
-use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\TravelAllowanceCalculator;
 use OCA\Humaniq\Standards\Checks\NlTravelExpenseChecks;
 use OCP\EventDispatcher\Event;
@@ -84,14 +84,14 @@ class TravelAmountListener implements IEventListener {
 	 *
 	 * @param HoursRegisterGateway      $gateway    Resolves slugs, the employee and the manager.
 	 * @param TravelAllowanceCalculator $calculator The arithmetic.
-	 * @param SettingsService           $settings   The employer's rate.
+	 * @param ExpenseSettings           $settings   The employer's rate.
 	 * @param InternalWriteMarker       $marker     Tells humaniq's own writes apart.
 	 * @param LoggerInterface           $logger     Logger.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly TravelAllowanceCalculator $calculator,
-		private readonly SettingsService $settings,
+		private readonly ExpenseSettings $settings,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,
 	) {

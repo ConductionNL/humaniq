@@ -3,6 +3,9 @@
 /**
  * Leave Coverage Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Says what approving one leave request would leave the department with.
  *
  * WHY IT WARNS AND NEVER REFUSES
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -96,40 +96,75 @@ class LeaveCoverageService {
 		array $memberEmployeeIds,
 		array $otherRequests,
 	): array {
-		$start = DateValues::datePart(value: ($request['startDate'] ?? null));
-		$end = DateValues::datePart(value: ($request['endDate'] ?? null));
-		if ($start === null || $end === null || $start > $end) {
+		$check = $this->coverageCheck(request: $request, orgUnit: $orgUnit);
+		if ($check === null) {
 			return $this->noWarning();
 		}
 
+		$check->memberEmployeeIds = $memberEmployeeIds;
 		$standing = $this->standingRequests(request: $request, otherRequests: $otherRequests);
+		$check->entries = $this->composeSchedule(check: $check, requests: $standing);
 
-		$entries = $this->schedule->compose(
-			requests: $standing,
-			memberEmployeeIds: $memberEmployeeIds,
-			from: $start,
-			to: $end
-		);
+		return $this->warningFor(check: $check);
+	}//end warning()
 
-		$dates = [];
-		$cursor = $start;
-		$step = new DateInterval('P1D');
-		while ($cursor <= $end) {
-			$short = $this->shortfallOn(
-				orgUnit: $orgUnit,
-				entries: $entries,
-				memberEmployeeIds: $memberEmployeeIds,
-				date: $cursor,
-				requester: trim((string)($request['employeeId'] ?? ''))
-			);
-
-			if ($short !== null) {
-				$dates[] = $short;
-			}
-
-			$cursor = $cursor->add($step);
+	/**
+	 * A check of the request's dates against the unit, or null when the
+	 * request has no valid date range.
+	 *
+	 * @param array<string, mixed> $request The LeaveRequest about to be approved.
+	 * @param array<string, mixed> $orgUnit The OrgUnit the requester is placed in.
+	 *
+	 * @return LeaveCoverageCheck|null
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
+	 */
+	private function coverageCheck(array $request, array $orgUnit): ?LeaveCoverageCheck {
+		$start = DateValues::datePart(value: ($request['startDate'] ?? null));
+		$end = DateValues::datePart(value: ($request['endDate'] ?? null));
+		if ($start === null || $end === null || $start > $end) {
+			return null;
 		}
 
+		$check = new LeaveCoverageCheck();
+		$check->orgUnit = $orgUnit;
+		$check->requester = trim((string)($request['employeeId'] ?? ''));
+		$check->from = $start;
+		$check->to = $end;
+
+		return $check;
+	}//end coverageCheck()
+
+	/**
+	 * The unit's schedule over the request's dates.
+	 *
+	 * @param LeaveCoverageCheck               $check    The check: its members and dates.
+	 * @param array<int, array<string, mixed>> $requests The requests to compose the schedule from.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
+	 */
+	private function composeSchedule(LeaveCoverageCheck $check, array $requests): array {
+		return $this->schedule->compose(
+			requests: $requests,
+			memberEmployeeIds: $check->memberEmployeeIds,
+			from: $check->from,
+			to: $check->to
+		);
+	}//end composeSchedule()
+
+	/**
+	 * The warning for the dates below the minimum, or no warning when none is.
+	 *
+	 * @param LeaveCoverageCheck $check The check.
+	 *
+	 * @return array{belowMinimum: bool, dates: array<int, array<string, mixed>>, message: string}
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
+	 */
+	private function warningFor(LeaveCoverageCheck $check): array {
+		$dates = $this->shortDates(check: $check);
 		if ($dates === []) {
 			return $this->noWarning();
 		}
@@ -139,7 +174,32 @@ class LeaveCoverageService {
 			'dates' => $dates,
 			'message' => $this->message(dates: $dates),
 		];
-	}//end warning()
+	}//end warningFor()
+
+	/**
+	 * The shortfall of every day of the request that falls below the minimum.
+	 *
+	 * @param LeaveCoverageCheck $check The check.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
+	 */
+	private function shortDates(LeaveCoverageCheck $check): array {
+		$dates = [];
+		$cursor = $check->from;
+		$step = new DateInterval('P1D');
+		while ($cursor <= $check->to) {
+			$short = $this->shortfallOn(check: $check, date: $cursor);
+			if ($short !== null) {
+				$dates[] = $short;
+			}
+
+			$cursor = $cursor->add($step);
+		}
+
+		return $dates;
+	}//end shortDates()
 
 	/**
 	 * Every other request, plus the one under consideration counted as approved.
@@ -176,31 +236,22 @@ class LeaveCoverageService {
 	 *
 	 * A date the unit administers no minimum for is never short.
 	 *
-	 * @param array<string, mixed> $orgUnit The OrgUnit the requester is placed in.
-	 * @param array<int, array<string, mixed>> $entries The composed schedule.
-	 * @param array<int, string> $memberEmployeeIds The employees placed in that unit.
-	 * @param DateTimeImmutable $date The date.
-	 * @param string $requester The requesting employee, left out of `othersAway`.
+	 * @param LeaveCoverageCheck $check The check: the unit, its schedule and members, and the requester.
+	 * @param DateTimeImmutable  $date  The date.
 	 *
 	 * @return array<string, mixed>|null The shortfall, or null.
 	 *
 	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
 	 */
-	private function shortfallOn(
-		array $orgUnit,
-		array $entries,
-		array $memberEmployeeIds,
-		DateTimeImmutable $date,
-		string $requester
-	): ?array {
-		$minimum = $this->minimumOn(orgUnit: $orgUnit, date: $date);
+	private function shortfallOn(LeaveCoverageCheck $check, DateTimeImmutable $date): ?array {
+		$minimum = $this->minimumOn(orgUnit: $check->orgUnit, date: $date);
 		if ($minimum === null) {
 			return null;
 		}
 
 		$presence = $this->schedule->presenceOn(
-			entries: $entries,
-			memberEmployeeIds: $memberEmployeeIds,
+			entries: $check->entries,
+			memberEmployeeIds: $check->memberEmployeeIds,
 			date: $date
 		);
 
@@ -208,20 +259,51 @@ class LeaveCoverageService {
 			return null;
 		}
 
-		return [
-			'date' => $date->format('Y-m-d'),
-			'present' => $presence['present'],
-			'minimum' => $minimum,
-			'othersAway' => array_values(
-				array_filter(
-					$presence['away'],
-					static function (string $employeeId) use ($requester): bool {
-						return ($employeeId !== $requester);
-					}
-				)
-			),
-		];
+		return $this->shortfall(check: $check, found: (['date' => $date->format('Y-m-d'), 'minimum' => $minimum] + $presence));
 	}//end shortfallOn()
+
+	/**
+	 * The shortfall on one date: who is present against the minimum, and
+	 * which others are away.
+	 *
+	 * @param LeaveCoverageCheck                                                   $check The check: the requester.
+	 * @param array{date: string, minimum: int, present: int, away: array<int, string>} $found The date, its minimum and its presence.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
+	 */
+	private function shortfall(LeaveCoverageCheck $check, array $found): array {
+		return [
+			'date' => $found['date'],
+			'present' => $found['present'],
+			'minimum' => $found['minimum'],
+			'othersAway' => $this->othersAway(check: $check, away: $found['away']),
+		];
+	}//end shortfall()
+
+	/**
+	 * The employees away on a date, less the requester.
+	 *
+	 * @param LeaveCoverageCheck $check The check: the requester.
+	 * @param array<int, string> $away  The employees away that date.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
+	 */
+	private function othersAway(LeaveCoverageCheck $check, array $away): array {
+		$requester = $check->requester;
+
+		return array_values(
+			array_filter(
+				$away,
+				static function (string $employeeId) use ($requester): bool {
+					return ($employeeId !== $requester);
+				}
+			)
+		);
+	}//end othersAway()
 
 	/**
 	 * The administered minimum for one date, or null when the unit has none

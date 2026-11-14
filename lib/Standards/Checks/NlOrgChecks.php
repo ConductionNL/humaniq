@@ -3,6 +3,9 @@
 /**
  * NL Organisational Structure Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable checks for the two hr-org-core organisational-integrity rules of
  * the labour corpus (lib/Standards/rules/labour.json), mapped onto the
  * OrgUnit / OrgAssignment object types (org-chart-basic):
@@ -43,9 +46,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

@@ -3,6 +3,9 @@
 /**
  * Working Hours Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The one answer to "how many hours does this person work on this date".
  *
  * WHY THIS EXISTS
@@ -51,9 +54,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -289,13 +289,26 @@ class WorkingHoursService {
 	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-001
 	 */
 	public function assertPatternsDoNotOverlap(array $patterns): void {
+		foreach ($this->windowsByEmployee(patterns: $patterns) as $employeeId => $windows) {
+			(new WorkingPatternWindows())->assertNoOverlap(employeeId: $employeeId, windows: $windows);
+		}
+	}//end assertPatternsDoNotOverlap()
+
+	/**
+	 * Each employee's pattern windows (`from` date, `until` or 9999-12-31),
+	 * in pattern order. A pattern without an employee or a start date cannot
+	 * overlap anything: the schema refuses it before this service sees it.
+	 *
+	 * @param array<array<string, mixed>> $patterns WorkingPattern objects (plain arrays).
+	 *
+	 * @return array<int|string, array<int, array{from: string, until: string}>>
+	 */
+	private function windowsByEmployee(array $patterns): array {
 		$byEmployee = [];
 		foreach ($patterns as $pattern) {
 			$employeeId = $this->stringOrNull(value: ($pattern['employeeId'] ?? null));
 			$validFrom = $this->stringOrNull(value: ($pattern['validFrom'] ?? null));
 			if ($employeeId === null || $validFrom === null) {
-				// A pattern without an employee or a start date cannot overlap
-				// anything: the schema refuses it before this service sees it.
 				continue;
 			}
 
@@ -305,23 +318,8 @@ class WorkingHoursService {
 			];
 		}
 
-		foreach ($byEmployee as $employeeId => $windows) {
-			$count = count($windows);
-			for ($i = 0; $i < $count; $i++) {
-				for ($j = ($i + 1); $j < $count; $j++) {
-					$a = $windows[$i];
-					$b = $windows[$j];
-					if ($a['from'] <= substr($b['until'], 0, 10) && $b['from'] <= substr($a['until'], 0, 10)) {
-						throw new OverlappingWorkingPatternException(
-							'Two working patterns for employee ' . $employeeId
-							. ' cover the same days (' . $a['from'] . ' and ' . $b['from']
-							. '). End the running pattern before writing a new one.'
-						);
-					}
-				}
-			}
-		}
-	}//end assertPatternsDoNotOverlap()
+		return $byEmployee;
+	}//end windowsByEmployee()
 
 	/**
 	 * Contracted hours expressed in calendar-day equivalents, the basis
