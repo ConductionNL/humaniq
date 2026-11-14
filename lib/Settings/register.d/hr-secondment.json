@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "Secondment": {
+                "configuration": {"exportable": true},
                 "slug": "Secondment",
                 "icon": "AccountArrowRightOutline",
                 "version": "0.1.0",
@@ -115,6 +116,7 @@
                 }
             },
             "SideActivity": {
+                "configuration": {"exportable": true},
                 "slug": "SideActivity",
                 "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "BriefcaseOutline",

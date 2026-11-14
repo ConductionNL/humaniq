@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "PayrollAdjustment": {
+                "configuration": {"exportable": true},
                 "slug": "PayrollAdjustment",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "CashSync",

@@ -12,11 +12,13 @@
 
 ## 2. Schemas
 
-- [ ] 2.1 Add `configuration.exportable: true` to every schema in
+- [x] 2.1 Add `configuration.exportable: true` to every schema in
       `lib/Settings/register.d/*.json` except `SickLeaveCase` and `DsrRequest`; bump the
       register version. Verify: `occ maintenance:repair` imports it and
       `GET /api/schemas/{id}` returns `configuration.exportable` for `Employee`.
-- [ ] 2.2 Add a unit test over the register fragments that fails when a schema in
+      (Built: 99 schemas across 45 fragments, register 0.62.0, mock register kept in step. The live
+      import check was not run here.)
+- [x] 2.2 Add a unit test over the register fragments that fails when a schema in
       `hr-verzuim.json` or `hr-dsr.json` is exportable (REQ-HLE-002).
 
 ## 3. Tests and hand-over
