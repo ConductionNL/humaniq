@@ -708,6 +708,12 @@
 				"route": "PensionFilings"
 			},
 			{
+				"id": "PensionSchemes",
+				"label": "Pension schemes",
+				"icon": "PiggyBank",
+				"route": "PensionSchemes"
+			},
+			{
 				"id": "WntDisclosures",
 				"label": "WNT disclosures",
 				"icon": "ScaleBalance",
@@ -779,6 +785,12 @@
 						]
 					}
 				}
+			},
+			{
+				"id": "BenefitEntitlements",
+				"label": "Benefit entitlements",
+				"icon": "CashClock",
+				"route": "BenefitEntitlements"
 			}
 		]
 	},

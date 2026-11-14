@@ -92,6 +92,7 @@
                     "WageCostAllocation",
                     "Payslip",
                     "PensionFiling",
+                    "PensionScheme",
                     "PerformanceReview",
                     "PersonnelDocument",
                     "ReceiptExtraction",
@@ -123,7 +124,8 @@
                     "Survey",
                     "SurveyInvitation",
                     "SurveyResponse",
-                    "WageTaxRemittance"
+                    "WageTaxRemittance",
+                    "BenefitEntitlement"
                 ]
             }
         },
