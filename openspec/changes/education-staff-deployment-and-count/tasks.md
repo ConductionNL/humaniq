@@ -39,6 +39,11 @@
 
 - [ ] 3.1 Obtain the current IPTO file specification from OCW and DUO and record its version.
       Verify: the specification document is linked in the service docblock.
+      Searched 2026-11-14: no public IPTO field specification on duo.nl or from OCW. DUO's
+      open-data notes say IPTO (Integrale Personeelstelling Onderwijs) covers voortgezet
+      onderwijs, and payroll vendors describe a CSV generated for the party OCW contracts to run
+      it. The specification has to be requested from DUO/OCW; 3.2 and 3.3 wait on it. Check
+      whether a PO school is in scope at all before building the export.
 - [ ] 3.2 Add `brinNummer` to `hrAdministration` and `IptoExportService`. Verify: unit test
       against a fixture built from the specification's own example.
       Partly done, left open on 3.1: `brinNummer` is on `hrAdministration` and
