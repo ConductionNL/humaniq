@@ -40,6 +40,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "draft",
@@ -213,6 +214,9 @@
                 }
             },
             "EmploymentContract": {
+                "configuration": {
+                    "exportable": true
+                },
                 "properties": {
                     "officeRole": {
                         "type": "string",
@@ -250,6 +254,9 @@
                 }
             },
             "Payslip": {
+                "configuration": {
+                    "exportable": true
+                },
                 "properties": {
                     "benefitEntitlementId": {
                         "type": "string",
