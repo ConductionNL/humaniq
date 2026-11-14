@@ -43,11 +43,15 @@
 
 ## 4. Demo data (REQ-HLD-004)
 
-- [ ] 4.1 Replace the placeholder `domainObjectType` and `domainObjectRef` in
+- [x] 4.1 Replace the placeholder `domainObjectType` and `domainObjectRef` in
       `lib/Settings/humaniq_mock_register.json` with a real `register:schema`
       pair and the uuid of a seeded object, with non-zero hours.
-- [ ] 4.2 Unit test that no seeded `TimeEntry` carries a placeholder
+      Done: the three seeded rows are booked on seeded `humaniq:EmployeeRelationsCase` cases
+      (2.0 and 1.5 hours on the first, 1.0 on the second), referenced with the
+      `@ref:EmployeeRelationsCase:<slug>` token the importer resolves to the case's uuid.
+- [x] 4.2 Unit test that no seeded `TimeEntry` carries a placeholder
       reference.
+      Done: `tests/Unit/Settings/DemoTimeEntryHostTest.php`; seen failing on the old rows.
 
 ## 5. The journey (REQ-HLD-005)
 
