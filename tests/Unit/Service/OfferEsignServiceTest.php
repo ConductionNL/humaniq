@@ -3,6 +3,9 @@
 /**
  * Unit tests for OfferEsignService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pins the offer-esign contract: the aanbod-stage guard (REQ-OFFR-002), the
  * duck-typed skip when docudesk is absent and its stability across repeated
  * calls (REQ-OFFR-004), the dataRefs/adHocData assembly with no Employee ref
@@ -29,9 +32,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/offer-esign/spec.md
@@ -41,6 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\DocudeskTemplates;
 use OCA\Humaniq\Service\OfferApplicationRepository;
 use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\OfferLetterService;
@@ -571,7 +572,7 @@ class OfferEsignServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$letterService = new OfferLetterService($container, $settings);
+		$letterService = new OfferLetterService($container, $settings, new DocudeskTemplates($container, $settings));
 		$applications = new OfferApplicationRepository($container, $settings, $logger);
 		$signingRecovery = new OfferSigningRecoveryService($userMgr, $logger);
 

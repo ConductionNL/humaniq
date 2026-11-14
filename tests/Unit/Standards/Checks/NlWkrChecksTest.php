@@ -273,4 +273,46 @@ class NlWkrChecksTest extends TestCase {
 
 	}//end testRealRuleEngineIsSilentWhenExposureIsCorrectlyRecorded()
 
+	/**
+	 * The shipped example rows: one declaration inside the vrije ruimte and
+	 * its assessment, exactly as seeded.
+	 *
+	 * @return void
+	 */
+	public function testTheSeededExampleRows(): void {
+		self::assertSame(
+			[
+				'WkrDeclaration' => [
+					[
+						'administrationId' => 'ADM-001',
+						'year' => 2026,
+						'date' => '2026-06-15',
+						'description' => 'Personeelsuitje juni',
+						'amount' => 300.00,
+						'wkrCategory' => 'vrije-ruimte',
+						'employeeId' => null,
+						'sourceReference' => 'INV-2026-0612',
+					],
+				],
+				'WkrAssessment' => [
+					[
+						'administrationId' => 'ADM-001',
+						'year' => 2026,
+						'fiscaleLoonsom' => 200000.00,
+						'vrijeRuimte' => 4000.00,
+						'vrijeRuimteUsed' => 300.00,
+						'vrijeRuimteRemaining' => 3700.00,
+						'excess' => 0.00,
+						'eindheffingRate' => null,
+						'eindheffingDue' => 0.00,
+						'status' => 'binnen-vrije-ruimte',
+						'engineVersion' => 'nl-2026',
+						'assessedAt' => '2026-07-15T00:00:00Z',
+					],
+				],
+			],
+			NlWkrChecks::seedObjects()
+		);
+	}//end testTheSeededExampleRows()
+
 }//end class

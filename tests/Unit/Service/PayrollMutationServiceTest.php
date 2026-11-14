@@ -3,6 +3,9 @@
 /**
  * Unit tests for PayrollMutationService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pins the payroll-mutation-reports service contract (design.md D1-D7): the
  * design.md worked example (A changed / B left / C entered -> the exact
  * run-level deltas), the per-component integer-cents exactness of the
@@ -31,9 +34,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -474,5 +474,116 @@ class PayrollMutationServiceTest extends TestCase {
 		$this->assertSame('run-2', $reports[0]['toRunId']);
 
 	}//end testPersistIsIdempotentPerRunPair()
+
+	/**
+	 * Characterisation of the whole report: key order, lines sorted by
+	 * employeeId with every component's before/after/delta, all four
+	 * classifications and the run-level roll-up.
+	 *
+	 * @return void
+	 */
+	public function testReportShapeCoversEveryClassification(): void {
+		[$service] = $this->service(
+			[
+				'PayrollRun' => [
+					['id' => 'run-feb', 'period' => '2026-02', 'administrationId' => 'ADM-001'],
+					['id' => 'run-mar', 'period' => '2026-03', 'administrationId' => 'ADM-001'],
+				],
+				'Payslip' => [
+					$this->payslip('run-feb', 'emp-d', 100.00, 80.00, 20.00, 5.00, 5.00),
+					$this->payslip('run-feb', 'emp-b', 200.00, 150.00, 50.00, 10.00, 10.00),
+					$this->payslip('run-feb', 'emp-a', 300.00, 250.00, 50.00, 20.00, 10.00),
+					$this->payslip('run-mar', 'emp-a', 310.00, 255.00, 55.00, 20.00, 11.00),
+					$this->payslip('run-mar', 'emp-d', 100.00, 80.00, 20.00, 5.00, 5.00),
+					$this->payslip('run-mar', 'emp-c', 50.00, 40.00, 10.00, 2.50, 2.50),
+				],
+			]
+		);
+
+		$report = $service->diff('run-mar', 'run-feb')['report'];
+
+		self::assertSame(
+			[
+				'fromRunId' => 'run-feb',
+				'toRunId' => 'run-mar',
+				'fromPeriod' => '2026-02',
+				'toPeriod' => '2026-03',
+				'administrationId' => 'ADM-001',
+				'enteredCount' => 1,
+				'leftCount' => 1,
+				'changedCount' => 1,
+				'unchangedCount' => 1,
+				'grossDelta' => -140.0,
+				'netDelta' => -105.0,
+				'loonheffingDelta' => -35.0,
+				'employerCostDelta' => -14.0,
+				'totalWageCostDelta' => -154.0,
+				'lines' => [
+					[
+						'employeeId' => 'emp-a',
+						'classification' => 'changed',
+						'grossPayBefore' => 300.0, 'grossPayAfter' => 310.0, 'grossPayDelta' => 10.0,
+						'nettoPayBefore' => 250.0, 'nettoPayAfter' => 255.0, 'nettoPayDelta' => 5.0,
+						'loonheffingBefore' => 50.0, 'loonheffingAfter' => 55.0, 'loonheffingDelta' => 5.0,
+						'employerCostBefore' => 30.0, 'employerCostAfter' => 31.0, 'employerCostDelta' => 1.0,
+					],
+					[
+						'employeeId' => 'emp-b',
+						'classification' => 'left',
+						'grossPayBefore' => 200.0, 'grossPayAfter' => 0.0, 'grossPayDelta' => -200.0,
+						'nettoPayBefore' => 150.0, 'nettoPayAfter' => 0.0, 'nettoPayDelta' => -150.0,
+						'loonheffingBefore' => 50.0, 'loonheffingAfter' => 0.0, 'loonheffingDelta' => -50.0,
+						'employerCostBefore' => 20.0, 'employerCostAfter' => 0.0, 'employerCostDelta' => -20.0,
+					],
+					[
+						'employeeId' => 'emp-c',
+						'classification' => 'entered',
+						'grossPayBefore' => 0.0, 'grossPayAfter' => 50.0, 'grossPayDelta' => 50.0,
+						'nettoPayBefore' => 0.0, 'nettoPayAfter' => 40.0, 'nettoPayDelta' => 40.0,
+						'loonheffingBefore' => 0.0, 'loonheffingAfter' => 10.0, 'loonheffingDelta' => 10.0,
+						'employerCostBefore' => 0.0, 'employerCostAfter' => 5.0, 'employerCostDelta' => 5.0,
+					],
+					[
+						'employeeId' => 'emp-d',
+						'classification' => 'unchanged',
+						'grossPayBefore' => 100.0, 'grossPayAfter' => 100.0, 'grossPayDelta' => 0.0,
+						'nettoPayBefore' => 80.0, 'nettoPayAfter' => 80.0, 'nettoPayDelta' => 0.0,
+						'loonheffingBefore' => 20.0, 'loonheffingAfter' => 20.0, 'loonheffingDelta' => 0.0,
+						'employerCostBefore' => 10.0, 'employerCostAfter' => 10.0, 'employerCostDelta' => 0.0,
+					],
+				],
+			],
+			$report
+		);
+
+	}//end testReportShapeCoversEveryClassification()
+
+	/**
+	 * Characterisation of the prior-run resolution: the latest strictly
+	 * earlier period of the same administration wins, the first such run on
+	 * a tie; other administrations, blank periods and later periods never.
+	 *
+	 * @return void
+	 */
+	public function testPriorRunIsTheFirstLatestEarlierRunOfTheAdministration(): void {
+		[$service] = $this->service(
+			[
+				'PayrollRun' => [
+					['id' => 'run-1', 'period' => '2026-01', 'administrationId' => 'ADM-001'],
+					['id' => 'run-2', 'period' => '2026-02', 'administrationId' => 'ADM-002'],
+					['id' => 'run-3', 'period' => '', 'administrationId' => 'ADM-001'],
+					['id' => 'run-4', 'period' => '2026-02', 'administrationId' => 'ADM-001'],
+					['id' => 'run-5', 'period' => '2026-02', 'administrationId' => 'ADM-001'],
+					['id' => 'run-6', 'period' => '2026-04', 'administrationId' => 'ADM-001'],
+					['id' => 'run-7', 'period' => '2026-03', 'administrationId' => 'ADM-001'],
+				],
+			]
+		);
+
+		self::assertSame('run-4', $service->diff('run-7')['report']['fromRunId']);
+		self::assertSame('run-4', $service->diff('run-7', '  ')['report']['fromRunId']);
+		self::assertNull($service->diff('run-1')['report']['fromRunId']);
+
+	}//end testPriorRunIsTheFirstLatestEarlierRunOfTheAdministration()
 
 }//end class

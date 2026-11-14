@@ -73,7 +73,7 @@ final class HoursPayRun {
 	/**
 	 * The pay so far.
 	 *
-	 * @var array<string, mixed>
+	 * @var array{hourlyCents: int, overtimeCents: int, hoursPaid: float, overtimeHours: float, hourlyRate: ?float, surchargeUnresolved: bool, timesheetIds: list<string>, timeCredits: list<array{timesheetId: string, hours: float}>}
 	 */
-	public array $pay = [];
+	public array $pay = ['hourlyCents' => 0, 'overtimeCents' => 0, 'hoursPaid' => 0.0, 'overtimeHours' => 0.0, 'hourlyRate' => null, 'surchargeUnresolved' => false, 'timesheetIds' => [], 'timeCredits' => []];
 }//end class

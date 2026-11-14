@@ -30,7 +30,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\CallerContext;
-use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\PayrollDeskAccess;
 use OCA\Humaniq\Service\ThirdPartyPaymentServices;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
@@ -53,19 +53,13 @@ class ThirdPartyReportController extends Controller {
 	private readonly CallerContext $caller;
 
 	/**
-	 * Whether the caller is HR or payroll.
-	 *
-	 * @var HumaniqRoles
-	 */
-	private readonly HumaniqRoles $roles;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param IRequest                   $request     The request.
 	 * @param SettingsService            $settings    The register slug.
 	 * @param ThirdPartyPaymentServices $payments Assembles the report and generates the statement.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
+	 * @param PayrollDeskAccess $access Who may use this endpoint and which administrations they can read.
 	 *
 	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-001
 	 */
@@ -74,10 +68,10 @@ class ThirdPartyReportController extends Controller {
 		private readonly SettingsService $settings,
 		private readonly ThirdPartyPaymentServices $payments,
 		CallerContext $caller,
+		private readonly PayrollDeskAccess $access,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 		$this->caller = $caller;
-		$this->roles = $caller->roles;
 	}//end __construct()
 
 	/**
@@ -185,12 +179,7 @@ class ThirdPartyReportController extends Controller {
 	 * @return string|null
 	 */
 	private function allowedCaller(): ?string {
-		$uid = $this->caller->userSession->getUser()?->getUID();
-		if ($this->roles->isHr($uid) === false && $this->roles->isPayroll($uid) === false) {
-			return null;
-		}
-
-		return (string)$uid;
+		return $this->access->hrOrPayrollUid();
 	}//end allowedCaller()
 
 	/**
@@ -210,21 +199,7 @@ class ThirdPartyReportController extends Controller {
 	 * @return bool
 	 */
 	private function administrationReadable(string $administrationId): bool {
-		if ($this->settings->isOpenRegisterAvailable() === false) {
-			return false;
-		}
-
-		try {
-			$rows = $this->objects()
-				->setRegister($this->settings->getRegisterSlug())
-				->setSchema('hrAdministration')
-				->findAll(['filters' => ['administrationId' => $administrationId], 'limit' => 1]);
-		} catch (\Throwable $e) {
-			$this->caller->logger->warning('ThirdPartyReportController: an administration lookup failed and is answered as not readable.', ['exceptionClass' => $e::class]);
-			return false;
-		}
-
-		return (is_array($rows) === true && $rows !== []);
+		return $this->access->administrationReadable($administrationId, 'ThirdPartyReportController');
 	}//end administrationReadable()
 
 	/**

@@ -4,6 +4,7 @@
         "schemas": {
             "EmployeeChangeRequest": {
                 "slug": "EmployeeChangeRequest",
+                "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr"]},
                 "icon": "PencilOutline",
                 "version": "0.1.0",
                 "title": "Change request",

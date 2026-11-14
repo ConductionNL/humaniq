@@ -92,36 +92,71 @@ class CostAllocationService {
 	 * The shares of one employee's cost in a period, in the order of design
 	 * D2: fixed split, hours, placement, unallocated.
 	 *
-	 * @param string               $employeeId The employee.
-	 * @param string               $period     The wage period, YYYY-MM.
-	 * @param array<string, mixed> $inputs     The inputs from inputs().
+	 * @param string            $employeeId The employee.
+	 * @param CostAllocationRun $run        The run: its wage period (YYYY-MM) and the inputs from inputs().
 	 *
 	 * @return list<array{costCenter: string|null, projectId: string|null, percentage: float, allocationSource: string}>
 	 *
 	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-001
 	 */
-	public function splitFor(string $employeeId, string $period, array $inputs): array {
-		[$from, $until] = $this->periodBounds($period);
-		$allocation = $this->coveringAllocation(employeeId: $employeeId, allocations: $inputs['allocations'], from: $from, until: $until);
-		$placement = $this->placementCostCenters(employeeId: $employeeId, inputs: $inputs, from: $from, until: $until);
+	public function splitFor(string $employeeId, CostAllocationRun $run): array {
+		$split = new CostAllocationSplit();
+		$split->employeeId = $employeeId;
+		$split->inputs = $run->inputs;
+		$bounds = $this->periodBounds($run->period);
+		$split->from = $bounds[0];
+		$split->until = $bounds[1];
+		$split->allocation = $this->coveringAllocation(split: $split);
+		$split->placement = $this->placementCostCenters(split: $split);
 
-		if ($allocation !== null && ($allocation['basis'] ?? 'fixed') === 'fixed') {
-			$shares = $this->shares->fixedShares($allocation);
-			if ($shares !== []) {
-				return $shares;
-			}
-		}
-
-		if ($allocation !== null && ($allocation['basis'] ?? '') === 'hours') {
-			$fallback = (count($placement) === 1 ? $placement[0] : null);
-			$shares = $this->shares->hoursShares(entries: ($inputs['hoursByEmployee'][$employeeId] ?? []), fallbackCostCenter: $fallback);
-			if ($shares !== []) {
-				return $shares;
-			}
-		}
-
-		return $this->placementShares($placement);
+		return ($this->fixedShares(split: $split) ?? $this->hoursShares(split: $split) ?? $this->placementShares($split->placement));
 	}//end splitFor()
+
+	/**
+	 * The fixed split of a covering fixed allocation, or null when there is
+	 * none or it splits nothing.
+	 *
+	 * @param CostAllocationSplit $split The split: its covering allocation.
+	 *
+	 * @return list<array<string, mixed>>|null
+	 */
+	private function fixedShares(CostAllocationSplit $split): ?array {
+		$allocation = $split->allocation;
+		if ($allocation === null || ($allocation['basis'] ?? 'fixed') !== 'fixed') {
+			return null;
+		}
+
+		$shares = $this->shares->fixedShares($allocation);
+		return ($shares === [] ? null : $shares);
+	}//end fixedShares()
+
+	/**
+	 * The split by the period's approved hours of a covering hours
+	 * allocation, or null when there is none or no hours count.
+	 *
+	 * @param CostAllocationSplit $split The split: its employee, inputs, covering allocation and placements.
+	 *
+	 * @return list<array<string, mixed>>|null
+	 */
+	private function hoursShares(CostAllocationSplit $split): ?array {
+		if ($split->allocation === null || ($split->allocation['basis'] ?? '') !== 'hours') {
+			return null;
+		}
+
+		$shares = $this->shares->hoursShares(entries: ($split->inputs['hoursByEmployee'][$split->employeeId] ?? []), fallbackCostCenter: self::soleCostCenter(split: $split));
+		return ($shares === [] ? null : $shares);
+	}//end hoursShares()
+
+	/**
+	 * The placements' cost centre when there is exactly one, else null.
+	 *
+	 * @param CostAllocationSplit $split The split: its placements' cost centres.
+	 *
+	 * @return string|null
+	 */
+	private static function soleCostCenter(CostAllocationSplit $split): ?string {
+		return (count($split->placement) === 1 ? $split->placement[0] : null);
+	}//end soleCostCenter()
 
 	/**
 	 * The shares of the placements' cost centres, split equally; one
@@ -149,34 +184,45 @@ class CostAllocationService {
 	 * split by the shares in cents, the rounding remainder on the largest
 	 * share, so the lines add up to the payslip exactly (design D3).
 	 *
-	 * @param list<array<string, mixed>> $shares       The shares from splitFor().
-	 * @param int                        $grossCents   The payslip's gross, in cents.
-	 * @param int                        $chargesCents The payslip's employer charges, in cents.
+	 * @param list<array<string, mixed>> $shares  The shares from splitFor().
+	 * @param array<string, mixed>       $payslip The payslip: its grossCents and chargesCents.
 	 *
 	 * @return list<array<string, mixed>>
 	 *
 	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-001
 	 */
-	public function linesFor(array $shares, int $grossCents, int $chargesCents): array {
+	public function linesFor(array $shares, array $payslip): array {
 		$weights = array_map(static fn (array $share): float => max(0.0, (float)$share['percentage']), $shares);
-		$gross = $this->shares->splitCents(total: $grossCents, weights: $weights);
-		$charges = $this->shares->splitCents(total: $chargesCents, weights: $weights);
+		$gross = $this->shares->splitCents(total: (int)$payslip['grossCents'], weights: $weights);
+		$charges = $this->shares->splitCents(total: (int)$payslip['chargesCents'], weights: $weights);
 
 		$lines = [];
 		foreach ($shares as $i => $share) {
-			$lines[] = [
-				'costCenter' => $share['costCenter'],
-				'projectId' => $share['projectId'],
-				'percentage' => (float)$share['percentage'],
-				'gross' => round(($gross[$i] / 100), 2),
-				'employerCharges' => round(($charges[$i] / 100), 2),
-				'totalCost' => round((($gross[$i] + $charges[$i]) / 100), 2),
-				'allocationSource' => $share['allocationSource'],
-			];
+			$lines[] = self::line(share: $share, cents: ['gross' => $gross[$i], 'charges' => $charges[$i]]);
 		}
 
 		return $lines;
 	}//end linesFor()
+
+	/**
+	 * One allocation line: a share with its part of the gross and charges.
+	 *
+	 * @param array<string, mixed>             $share The share.
+	 * @param array{gross: int, charges: int} $cents Its gross and employer charges, in cents.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function line(array $share, array $cents): array {
+		return [
+			'costCenter' => $share['costCenter'],
+			'projectId' => $share['projectId'],
+			'percentage' => (float)$share['percentage'],
+			'gross' => round(($cents['gross'] / 100), 2),
+			'employerCharges' => round(($cents['charges'] / 100), 2),
+			'totalCost' => round((($cents['gross'] + $cents['charges']) / 100), 2),
+			'allocationSource' => $share['allocationSource'],
+		];
+	}//end line()
 
 	/**
 	 * Replace a run's allocation lines with the lines of its payslips.
@@ -238,9 +284,9 @@ class CostAllocationService {
 	 */
 	private function writeLinesOf(CostAllocationRun $run, array $payslip): int {
 		$employeeId = (string)($payslip['employeeId'] ?? '');
-		$shares = $this->splitFor(employeeId: $employeeId, period: $run->period, inputs: $run->inputs);
+		$shares = $this->splitFor(employeeId: $employeeId, run: $run);
 		$written = 0;
-		foreach ($this->linesFor($shares, (int)$payslip['grossCents'], (int)$payslip['chargesCents']) as $line) {
+		foreach ($this->linesFor(shares: $shares, payslip: $payslip) as $line) {
 			$this->gateway->save(payload: array_merge($line, self::lineReferences(run: $run, payslip: $payslip)), schema: self::LINE_SCHEMA);
 			$written++;
 		}
@@ -310,18 +356,13 @@ class CostAllocationService {
 	/**
 	 * The employee's allocation covering any day of the period, or null.
 	 *
-	 * @param string                     $employeeId  The employee.
-	 * @param list<array<string, mixed>> $allocations Every CostAllocation.
-	 * @param string                     $from        The period's first day.
-	 * @param string                     $until       The period's last day.
+	 * @param CostAllocationSplit $split The split: the employee, every CostAllocation and the period.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function coveringAllocation(string $employeeId, array $allocations, string $from, string $until): ?array {
-		foreach ($allocations as $allocation) {
-			if ((string)($allocation['employeeId'] ?? '') === $employeeId
-				&& $this->overlaps(start: (string)($allocation['startDate'] ?? ''), end: (string)($allocation['endDate'] ?? ''), from: $from, until: $until) === true
-			) {
+	private function coveringAllocation(CostAllocationSplit $split): ?array {
+		foreach ($split->inputs['allocations'] as $allocation) {
+			if ((string)($allocation['employeeId'] ?? '') === $split->employeeId && $this->overlaps(record: $allocation, split: $split) === true) {
 				return $allocation;
 			}
 		}
@@ -333,23 +374,18 @@ class CostAllocationService {
 	 * The distinct cost centres of the placements covering any day of the
 	 * period, in placement order.
 	 *
-	 * @param string               $employeeId The employee.
-	 * @param array<string, mixed> $inputs     The inputs.
-	 * @param string               $from       The period's first day.
-	 * @param string               $until      The period's last day.
+	 * @param CostAllocationSplit $split The split: the employee, the inputs and the period.
 	 *
 	 * @return list<string>
 	 */
-	private function placementCostCenters(string $employeeId, array $inputs, string $from, string $until): array {
+	private function placementCostCenters(CostAllocationSplit $split): array {
 		$found = [];
-		foreach ($inputs['assignments'] as $assignment) {
-			if ((string)($assignment['employeeId'] ?? '') !== $employeeId
-				|| $this->overlaps(start: (string)($assignment['startDate'] ?? ''), end: (string)($assignment['endDate'] ?? ''), from: $from, until: $until) === false
-			) {
+		foreach ($split->inputs['assignments'] as $assignment) {
+			if ($this->placedInPeriod(assignment: $assignment, split: $split) === false) {
 				continue;
 			}
 
-			$costCenter = $this->shares->codeOrNull($inputs['unitsById'][(string)($assignment['orgUnitId'] ?? '')]['costCenter'] ?? null);
+			$costCenter = $this->shares->codeOrNull($split->inputs['unitsById'][(string)($assignment['orgUnitId'] ?? '')]['costCenter'] ?? null);
 			if ($costCenter !== null && in_array($costCenter, $found, true) === false) {
 				$found[] = $costCenter;
 			}
@@ -359,23 +395,33 @@ class CostAllocationService {
 	}//end placementCostCenters()
 
 	/**
-	 * Whether a dated record covers any day between two dates: active on
-	 * the first day, or starting within the range.
+	 * Whether a placement is the employee's and covers any day of the period.
 	 *
-	 * @param string $start The record's start date, or '' for always.
-	 * @param string $end   The record's end date, or '' for open-ended.
-	 * @param string $from  The range's first day.
-	 * @param string $until The range's last day.
+	 * @param array<string, mixed> $assignment The OrgAssignment.
+	 * @param CostAllocationSplit  $split      The split: the employee and the period.
 	 *
 	 * @return bool
 	 */
-	private function overlaps(string $start, string $end, string $from, string $until): bool {
-		$record = ['startDate' => $start, 'endDate' => $end];
-		if ($this->orgResolution->isActiveOn($record, $from) === true) {
+	private function placedInPeriod(array $assignment, CostAllocationSplit $split): bool {
+		return (string)($assignment['employeeId'] ?? '') === $split->employeeId && $this->overlaps(record: $assignment, split: $split) === true;
+	}//end placedInPeriod()
+
+	/**
+	 * Whether a dated record covers any day of the period: active on its
+	 * first day, or starting within it.
+	 *
+	 * @param array<string, mixed> $record The record: its startDate ('' for always) and endDate ('' for open-ended).
+	 * @param CostAllocationSplit  $split  The split: the period's first and last day.
+	 *
+	 * @return bool
+	 */
+	private function overlaps(array $record, CostAllocationSplit $split): bool {
+		$start = (string)($record['startDate'] ?? '');
+		if ($this->orgResolution->isActiveOn(['startDate' => $start, 'endDate' => (string)($record['endDate'] ?? '')], $split->from) === true) {
 			return true;
 		}
 
-		return (trim($start) !== '' && $start > $from && $start <= $until);
+		return (trim($start) !== '' && $start > $split->from && $start <= $split->until);
 	}//end overlaps()
 
 	/**

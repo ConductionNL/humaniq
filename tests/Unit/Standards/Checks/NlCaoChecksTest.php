@@ -3,6 +3,9 @@
 /**
  * Unit tests for the below-CAO-minimum checks (NlCaoChecks).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Drives the two cao-library predicates through the REAL RuleEngine +
  * RuleCatalogue + CaoRegistry corpus (not the raw closures) so the test also
  * proves the corpus rules exist, are machine-checkable, and are reachable —
@@ -27,9 +30,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/cao-library/spec.md#REQ-CAO-003
@@ -46,6 +46,7 @@ use OCA\Humaniq\Standards\Checks\NlCaoChecks;
 use OCA\Humaniq\Standards\RuleCatalogue;
 use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 /**
  * Tests for NlCaoChecks, driven through the real RuleEngine.
@@ -510,5 +511,101 @@ class NlCaoChecksTest extends TestCase {
 			$this->assertFalse($this->hasViolation(RuleEngine::evaluate('EmploymentContract', array_merge(['employeeId' => 'emp-1'], $contract), $this->context()), 'nl-cao-component-onbekend'), json_encode($contract));
 		}
 	}//end testAnUnknownComponentIsFlagged()
+
+	/**
+	 * The pay-scale minimum is not judged when the employee cannot be
+	 * resolved or has no numeric salary.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-003
+	 */
+	public function testPayScaleVacuousForUnresolvableEmployeeOrSalary(): void {
+		$contract = ['employeeId' => 'emp-1', 'cao' => 'cao-generiek', 'caoSchaal' => 'generiek'];
+		$this->assertTrue($this->hasViolation(RuleEngine::evaluate('EmploymentContract', $contract, $this->context(100.00)), 'nl-cao-minimumloon-schaal'), 'Precondition: a low salary is flagged.');
+
+		$noEmployee = RuleEngine::evaluate('EmploymentContract', $contract, $this->context());
+		$otherEmployee = RuleEngine::evaluate('EmploymentContract', array_merge($contract, ['employeeId' => 'emp-2']), $this->context(100.00));
+		$context = $this->context(100.00);
+		$context['cao']['employeesById']['emp-1']['grossMonthlySalary'] = 'onbekend';
+		$noSalary = RuleEngine::evaluate('EmploymentContract', $contract, $context);
+
+		$this->assertFalse($this->hasViolation($noEmployee, 'nl-cao-minimumloon-schaal'));
+		$this->assertFalse($this->hasViolation($otherEmployee, 'nl-cao-minimumloon-schaal'));
+		$this->assertFalse($this->hasViolation($noSalary, 'nl-cao-minimumloon-schaal'));
+
+	}//end testPayScaleVacuousForUnresolvableEmployeeOrSalary()
+
+	/**
+	 * The CAO leave minimum is not judged without numeric contract hours.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-004
+	 */
+	public function testLeaveVacuousWithoutNumericContractHours(): void {
+		$balance = ['employeeId' => 'emp-1', 'leaveType' => 'holiday', 'contractHoursPerWeek' => 40, 'entitledHours' => 100, 'bovenwettelijkHours' => 0];
+		$context = $this->context(null, 'cao-generiek');
+		$this->assertTrue($this->hasViolation(RuleEngine::evaluate('LeaveBalance', $balance, $context), 'nl-cao-verlof-minimum'), 'Precondition: too little leave is flagged.');
+
+		foreach ([null, '', 'veertig'] as $hours) {
+			$violations = RuleEngine::evaluate('LeaveBalance', array_merge($balance, ['contractHoursPerWeek' => $hours]), $context);
+			$this->assertFalse($this->hasViolation($violations, 'nl-cao-verlof-minimum'), 'contractHoursPerWeek=' . var_export($hours, true));
+		}
+
+	}//end testLeaveVacuousWithoutNumericContractHours()
+	/**
+	 * A CAO whose leaf groups are missing or not `{value, verified}` objects
+	 * still seeds a row: its values project as empty, its verification flags
+	 * as false, and only well-formed `basedOn` citations reach the source
+	 * summary. The registry is seeded through its memo (the
+	 * CaoOvertimeGoldenTest precedent), since the shipped corpus has no such
+	 * CAO.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-006
+	 */
+	public function testSeedObjectsProjectsMalformedLeavesAsEmptyAndUnverified(): void {
+		$cache = new ReflectionProperty(CaoRegistry::class, 'cache');
+		$cache->setValue(
+			null,
+			[
+				'cao-kaal' => [
+					'name' => 'Kale cao',
+					'sector' => 'Test',
+					'version' => '2026.1',
+					'effectiveDate' => '2026-01-01',
+					'payScales' => 'zie cao-tekst',
+					'allowances' => ['value' => 'n.v.t.', 'verified' => true],
+					'leaveEntitlement' => ['value' => ['minHoursPerYear' => 200], 'verified' => true, 'placeholder' => true],
+					'basedOn' => [['doc' => 'Cao-tekst 2026'], ['doc' => '  '], 'los'],
+				],
+			]
+		);
+
+		$this->assertSame(
+			[
+				'Cao' => [
+					[
+						'caoId' => 'cao-kaal',
+						'name' => 'Kale cao',
+						'sector' => 'Test',
+						'version' => '2026.1',
+						'effectiveDate' => '2026-01-01',
+						'payScales' => [],
+						'payScalesVerified' => false,
+						'allowances' => [],
+						'leaveEntitlement' => ['minHoursPerYear' => 200],
+						'leaveEntitlementVerified' => false,
+						'workingTime' => [],
+						'source' => 'Cao-tekst 2026',
+					],
+				],
+			],
+			NlCaoChecks::seedObjects()
+		);
+
+	}//end testSeedObjectsProjectsMalformedLeavesAsEmptyAndUnverified()
 
 }//end class

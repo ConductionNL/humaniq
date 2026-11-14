@@ -3,6 +3,9 @@
 /**
  * Unit tests for MigrateAssetDialect.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The repair step is the UNCONDITIONAL half of this migration's delivery: the
  * `occ humaniq:assets:migrate-dialect` command is opt-in and a human has to know
  * to run it, whereas this runs on every upgrade. It was the one new class in
@@ -30,9 +33,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
@@ -44,7 +44,8 @@ namespace OCA\Humaniq\Tests\Unit\Repair;
 
 use OCA\Humaniq\Repair\MigrateAssetDialect;
 use OCA\Humaniq\Service\AssetDialectMigrationService;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
+use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -128,16 +129,16 @@ class MigrateAssetDialectTest extends TestCase {
 	}//end outputDouble()
 
 	/**
-	 * A SettingsService double reporting OpenRegister's availability.
+	 * The availability check over an app manager reporting whether OpenRegister is installed.
 	 *
-	 * @param bool $available What `isOpenRegisterAvailable()` returns.
+	 * @param bool $available Whether the openregister app is installed.
 	 *
-	 * @return SettingsService The double.
+	 * @return OpenRegisterAvailability
 	 */
-	private function settings(bool $available): SettingsService {
-		$double = $this->createMock(SettingsService::class);
-		$double->method('isOpenRegisterAvailable')->willReturn($available);
-		return $double;
+	private function settings(bool $available): OpenRegisterAvailability {
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('isInstalled')->willReturnCallback(static fn (string $app): bool => $app === 'openregister' && $available);
+		return new OpenRegisterAvailability($apps);
 	}//end settings()
 
 	/**

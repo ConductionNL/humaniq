@@ -32,6 +32,7 @@ use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
 use OCA\Humaniq\Listener\ExpensePayoutFieldsListener;
 use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\TravelAmountListener;
+use OCA\Humaniq\Service\ExpenseSettings;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OrgResolutionService;
@@ -44,6 +45,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCP\AppFramework\Services\IAppConfig;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -64,6 +66,9 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Humaniq\Service\TravelAllowanceCalculator
  * @uses   \OCA\Humaniq\Standards\Checks\NlTravelExpenseChecks
  * @uses   \OCA\Humaniq\Standards\RuleCatalogue
+ * @uses \OCA\Humaniq\Listener\ObjectUpdatingListener
+ * @uses \OCA\Humaniq\Listener\SchemaWriteFilter
+ * @uses   \OCA\Humaniq\Service\ExpenseSettings
  */
 class ExpensePreSaveChainTest extends TestCase {
 
@@ -84,8 +89,11 @@ class ExpensePreSaveChainTest extends TestCase {
 	private function chain(): array {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
-		$settings->method('getMileageRatePerKm')->willReturn(null);
-		$settings->method('getExpenseReimbursementRoute')->willReturn('payroll');
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getAppValueString')->willReturnCallback(
+			static fn (string $key): string => ['mileage_rate_per_km' => '', 'expense_reimbursement_route' => 'payroll'][$key]
+		);
+		$expenseSettings = new ExpenseSettings($config);
 		$store = new FakeObjectStore();
 		$store->seed('Employee', self::EMPLOYEE, ['nextcloudUserId' => 'pjansen', 'administrationId' => 'ADM-001']);
 		$gateway = new HoursRegisterGateway(
@@ -103,9 +111,9 @@ class ExpensePreSaveChainTest extends TestCase {
 		$marker = new InternalWriteMarker();
 
 		return [
-			new TravelAmountListener(gateway: $gateway, calculator: new TravelAllowanceCalculator(), settings: $settings, marker: $marker, logger: new NullLogger()),
+			new TravelAmountListener(gateway: $gateway, calculator: new TravelAllowanceCalculator(), settings: $expenseSettings, marker: $marker, logger: new NullLogger()),
 			new ApprovalDecisionStampListener($session),
-			new ExpenseRouteListener(settings: $settings, marker: $marker),
+			new ExpenseRouteListener(settings: $expenseSettings, marker: $marker),
 			new ExpensePayoutFieldsListener(gateway: $gateway, marker: $marker, userSession: $session),
 		];
 	}//end chain()

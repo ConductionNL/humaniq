@@ -248,4 +248,29 @@ class RosterCompetenceGuardTest extends TestCase {
 		$this->assertStringContainsString('niet worden gecontroleerd', (string)$result->getMessage());
 	}//end testFailsClosedWhenTheRosterCannotBeChecked()
 
+	/**
+	 * More refusals than the message names point the planner at the occ
+	 * command for the full list; up to the limit, they do not.
+	 *
+	 * @return void
+	 */
+	public function testMoreFindingsThanNamedPointAtTheFullList(): void {
+		$pointer = ' Voer occ humaniq:roster:check uit voor de volledige lijst.';
+		$rows = $this->boaRoster([]);
+		$template = $rows['RosterAssignment'][0];
+		$rows['RosterAssignment'] = [];
+		foreach (['2026-07-13', '2026-07-14', '2026-07-15', '2026-07-16'] as $i => $date) {
+			$rows['RosterAssignment'][] = array_merge($template, ['id' => 'ra-'.($i + 1), 'date' => $date, 'plannedStart' => $date.'T22:00:00']);
+		}
+
+		$four = $this->guardWithRows($rows)->check(['id' => 'roster-w28'], 'publiceren', 'planner');
+		$this->assertFalse($four->isAllowed());
+		$this->assertStringEndsWith($pointer, (string)$four->getMessage());
+
+		$rows['RosterAssignment'] = array_slice($rows['RosterAssignment'], 0, 3);
+		$three = $this->guardWithRows($rows)->check(['id' => 'roster-w28'], 'publiceren', 'planner');
+		$this->assertFalse($three->isAllowed());
+		$this->assertStringNotContainsString('occ humaniq:roster:check', (string)$three->getMessage());
+	}//end testMoreFindingsThanNamedPointAtTheFullList()
+
 }//end class

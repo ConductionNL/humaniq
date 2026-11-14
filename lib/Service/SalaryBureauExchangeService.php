@@ -89,26 +89,55 @@ class SalaryBureauExchangeService {
 			return ['status' => 'refused-engine', 'handoffId' => '', 'mutationCount' => 0, 'message' => 'Deze administratie wordt door humaniq verloond; er is geen overdracht.'];
 		}
 
-		$handoffs = $this->gateway->findFiltered('PayrollHandoff', ['administrationId' => $administrationId]);
-		$current = $this->handoffOf(handoffs: $handoffs, period: $period);
-		if ($current !== null && (string)($current['status'] ?? '') !== 'concept') {
-			return ['status' => 'refused-not-concept', 'handoffId' => (string)$current['id'], 'mutationCount' => (int)($current['mutationCount'] ?? 0), 'message' => 'Deze overdracht is al klaargezet of verzonden; heropen hem eerst.'];
+		$run = new HandoffCompilation();
+		$run->administrationId = $administrationId;
+		$run->period = $period;
+		$run->userId = $userId;
+		$run->handoffs = $this->gateway->findFiltered('PayrollHandoff', ['administrationId' => $administrationId]);
+		$run->current = $this->handoffOf(handoffs: $run->handoffs, period: $period);
+
+		return ($this->notConceptRefusal(run: $run) ?? $this->compileConcept(run: $run));
+	}//end compile()
+
+	/**
+	 * The refusal when the period's handoff is no longer a concept, or null.
+	 *
+	 * @param HandoffCompilation $run The compilation: the period's handoff.
+	 *
+	 * @return array{status: string, handoffId: string, mutationCount: int, message: string}|null
+	 */
+	private function notConceptRefusal(HandoffCompilation $run): ?array {
+		$current = $run->current;
+		if ($current === null || (string)($current['status'] ?? '') === 'concept') {
+			return null;
 		}
 
-		$handoffId = $this->clearConcept($current);
-		$mutations = $this->mutationsOf(administrationId: $administrationId, period: $period, baseline: $this->baseline(handoffs: $handoffs, period: $period, exceptId: $handoffId));
+		return ['status' => 'refused-not-concept', 'handoffId' => (string)$current['id'], 'mutationCount' => (int)($current['mutationCount'] ?? 0), 'message' => 'Deze overdracht is al klaargezet of verzonden; heropen hem eerst.'];
+	}//end notConceptRefusal()
 
-		$payload = array_merge(($current ?? []), ['administrationId' => $administrationId, 'period' => $period, 'status' => 'concept', 'compiledBy' => $userId, 'compiledAt' => gmdate('Y-m-d\TH:i:s\Z'), 'mutationCount' => count($mutations)]);
+	/**
+	 * Clear the period's concept, then save the handoff and its mutations
+	 * against what earlier handoffs sent.
+	 *
+	 * @param HandoffCompilation $run The compilation.
+	 *
+	 * @return array{status: string, handoffId: string, mutationCount: int}
+	 */
+	private function compileConcept(HandoffCompilation $run): array {
+		$run->handoffId = $this->clearConcept($run->current);
+		$mutations = $this->mutationsOf(run: $run, baseline: $this->baseline(run: $run));
+
+		$payload = array_merge(($run->current ?? []), ['administrationId' => $run->administrationId, 'period' => $run->period, 'status' => 'concept', 'compiledBy' => $run->userId, 'compiledAt' => gmdate('Y-m-d\TH:i:s\Z'), 'mutationCount' => count($mutations)]);
 		unset($payload['id']);
-		$saved = $this->gateway->save(payload: $payload, schema: 'PayrollHandoff', uuid: ($handoffId === '' ? null : $handoffId));
+		$saved = $this->gateway->save(payload: $payload, schema: 'PayrollHandoff', uuid: ($run->handoffId === '' ? null : $run->handoffId));
 		$handoffId = (string)$saved->getUuid();
 
 		foreach ($mutations as $mutation) {
-			$this->gateway->save(payload: array_merge($mutation, ['handoffId' => $handoffId, 'administrationId' => $administrationId]), schema: 'PayrollHandoffMutation');
+			$this->gateway->save(payload: array_merge($mutation, ['handoffId' => $handoffId, 'administrationId' => $run->administrationId]), schema: 'PayrollHandoffMutation');
 		}
 
 		return ['status' => 'compiled', 'handoffId' => $handoffId, 'mutationCount' => count($mutations)];
-	}//end compile()
+	}//end compileConcept()
 
 	/**
 	 * The administration's handoff of a period, or null.
@@ -151,13 +180,14 @@ class SalaryBureauExchangeService {
 	/**
 	 * The mutations of every employee of the administration in the period.
 	 *
-	 * @param string                              $administrationId The administration.
-	 * @param string                              $period           The period.
-	 * @param array<string, array<string, mixed>> $baseline         What earlier handoffs sent, per employee.
+	 * @param HandoffCompilation                  $run      The administration and period.
+	 * @param array<string, array<string, mixed>> $baseline What earlier handoffs sent, per employee.
 	 *
 	 * @return list<array<string, mixed>>
 	 */
-	private function mutationsOf(string $administrationId, string $period, array $baseline): array {
+	private function mutationsOf(HandoffCompilation $run, array $baseline): array {
+		$administrationId = $run->administrationId;
+		$period = $run->period;
 		$mutations = [];
 		foreach ($this->employeesIn(administrationId: $administrationId, period: $period) as $employee) {
 			$employeeId = (string)$employee['id'];
@@ -285,17 +315,16 @@ class SalaryBureauExchangeService {
 	 * What earlier handoffs sent, per employee: their mutations' sent state
 	 * folded in period order. A handoff still in concept sent nothing.
 	 *
-	 * @param list<array<string, mixed>> $handoffs The administration's handoffs.
-	 * @param string                     $period   The period being compiled.
-	 * @param string                     $exceptId The handoff being compiled.
+	 * @param HandoffCompilation $run The administration's handoffs, the period being compiled and the handoff being compiled.
 	 *
 	 * @return array<string, array<string, mixed>>
 	 */
-	private function baseline(array $handoffs, string $period, string $exceptId): array {
+	private function baseline(HandoffCompilation $run): array {
+		$handoffs = $run->handoffs;
 		usort($handoffs, static fn (array $a, array $b): int => strcmp((string)($a['period'] ?? ''), (string)($b['period'] ?? '')));
 		$sent = [];
 		foreach ($handoffs as $handoff) {
-			if ((string)$handoff['id'] === $exceptId || ($handoff['status'] ?? '') === 'concept' || (string)($handoff['period'] ?? '') > $period) {
+			if ($this->isEarlierSent(run: $run, handoff: $handoff) === false) {
 				continue;
 			}
 
@@ -307,6 +336,19 @@ class SalaryBureauExchangeService {
 
 		return $sent;
 	}//end baseline()
+
+	/**
+	 * Whether a handoff counts for the baseline: another one, out of
+	 * concept, of this period or before.
+	 *
+	 * @param HandoffCompilation   $run     The period being compiled and the handoff being compiled.
+	 * @param array<string, mixed> $handoff The handoff.
+	 *
+	 * @return bool
+	 */
+	private function isEarlierSent(HandoffCompilation $run, array $handoff): bool {
+		return ((string)$handoff['id'] === $run->handoffId || ($handoff['status'] ?? '') === 'concept' || (string)($handoff['period'] ?? '') > $run->period) === false;
+	}//end isEarlierSent()
 
 	/**
 	 * The employees of the administration employed in any day of the period.

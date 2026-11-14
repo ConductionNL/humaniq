@@ -50,12 +50,12 @@ class RouteDistanceService {
 	 *
 	 * @param ContainerInterface $container  Resolves integriq's services.
 	 * @param IAppManager        $appManager Tells whether integriq is installed.
-	 * @param SettingsService    $settings   The configured source.
+	 * @param ExpenseSettings    $settings   The configured source.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
-		private readonly SettingsService $settings,
+		private readonly ExpenseSettings $settings,
 	) {
 
 	}//end __construct()

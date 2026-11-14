@@ -3,6 +3,9 @@
 /**
  * Payroll GL Post Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Posts one balanced loonjournaalpost per approved PayrollRun into shillinq's
  * JournalEntry register (payroll-glpost-shillinq). humaniq holds no bookkeeping
  * machinery of its own (design.md D1): the only artefact this service writes
@@ -29,9 +32,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

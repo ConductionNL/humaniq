@@ -3,6 +3,9 @@
 /**
  * Humaniq TimeEntryStampListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` /
  * `ObjectUpdatingEvent` / `ObjectDeletingEvent` for the `TimeEntry` schema
  * (hours-process-redesign Decisions 3 + 5). One listener, two concerns:
@@ -40,9 +43,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -171,25 +171,47 @@ class TimeEntryStampListener implements IEventListener {
 			return;
 		}
 
-		if ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent) {
-			if ($this->isTimeEntry($event->getObject()) === true) {
-				$incoming = ($event->getObject()->getObject() ?? []);
-				$event->setModifiedData($this->stamp(incoming: $incoming, stored: null, isCreate: true));
-			}
-
-			return;
-		}
-
-		if ($event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) {
-			if ($this->isTimeEntry($event->getNewObject()) === false) {
-				return;
-			}
-
-			$incoming = ($event->getNewObject()->getObject() ?? []);
-			$stored = $event->getOldObject()?->getObject();
-			$event->setModifiedData($this->stamp(incoming: $incoming, stored: $stored, isCreate: false));
+		if ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent || $event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) {
+			$this->stampWrite(event: $event);
 		}
 	}//end dispatch()
+
+	/**
+	 * Stamp a create or update of a TimeEntry.
+	 *
+	 * @param \OCA\OpenRegister\Event\ObjectCreatingEvent|\OCA\OpenRegister\Event\ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return void
+	 *
+	 * @throws HoursWriteRefusedException On any deliberate refusal.
+	 */
+	private function stampWrite(\OCA\OpenRegister\Event\ObjectCreatingEvent|\OCA\OpenRegister\Event\ObjectUpdatingEvent $event): void {
+		$write = $this->writeOf(event: $event);
+		if ($write !== null) {
+			$event->setModifiedData($this->stamp(write: $write));
+		}
+	}//end stampWrite()
+
+	/**
+	 * The write an event carries, or null when it is not a TimeEntry's.
+	 *
+	 * @param \OCA\OpenRegister\Event\ObjectCreatingEvent|\OCA\OpenRegister\Event\ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return TimeEntryWrite|null
+	 */
+	private function writeOf(\OCA\OpenRegister\Event\ObjectCreatingEvent|\OCA\OpenRegister\Event\ObjectUpdatingEvent $event): ?TimeEntryWrite {
+		$entity = ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent) ? $event->getObject() : $event->getNewObject();
+		if ($this->isTimeEntry($entity) === false) {
+			return null;
+		}
+
+		$write = new TimeEntryWrite();
+		$write->isCreate = ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent);
+		$write->incoming = ($entity->getObject() ?? []);
+		$write->stored = ($event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) ? $event->getOldObject()?->getObject() : null;
+
+		return $write;
+	}//end writeOf()
 
 	/**
 	 * Whether the entity is a TimeEntry (slug gate, defence in depth under
@@ -206,9 +228,7 @@ class TimeEntryStampListener implements IEventListener {
 	/**
 	 * Compute the stamped values for a create/update write.
 	 *
-	 * @param array<string, mixed> $incoming The incoming payload.
-	 * @param array<string, mixed>|null $stored The stored payload (update only).
-	 * @param bool $isCreate Whether this is a create write.
+	 * @param TimeEntryWrite $write The write; what is resolved for it is set on it.
 	 *
 	 * @return array<string, mixed> The modified-data map to merge into the write.
 	 *
@@ -216,33 +236,22 @@ class TimeEntryStampListener implements IEventListener {
 	 *
 	 * @spec openspec/specs/time-entry-capture/spec.md#Requirement:-humaniq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
 	 */
-	private function stamp(array $incoming, ?array $stored, bool $isCreate): array {
+	private function stamp(TimeEntryWrite $write): array {
 		// 1. Employee resolution (Decision 5.1): explicit id (HR entry) or
 		// the acting user's own Employee (self-service).
-		[$employeeId, $employee] = $this->resolveEmployee($incoming, $stored);
+		$resolved = $this->resolveEmployee($write->incoming, $write->stored);
+		$write->employeeId = $resolved[0];
+		$write->employee = $resolved[1];
 
 		// 2. Hours derivation (Decision 5.5) — refuses impossible spans.
-		[$startedAt, $hours] = $this->hoursDeriver->derive(incoming: $incoming, stored: $stored);
+		$derived = $this->hoursDeriver->derive(incoming: $write->incoming, stored: $write->stored);
+		$write->startedAt = $derived[0];
+		$write->hours = $derived[1];
 
 		// 3. Parent timesheet resolution + mutability guard (Decisions 5.6 + 3).
-		$timesheetId = $this->resolveTimesheet($incoming, $stored, $employeeId, $startedAt);
+		$write->timesheetId = $this->resolveTimesheet(write: $write);
 
-		// 4. Identity + cost-centre stamps (Decision 5.2-5.4).
-		$modified = [
-			'employeeId' => $employeeId,
-			'timesheetId' => $timesheetId,
-			'hours' => $hours,
-			'userId' => $this->nullableTrim($employee['nextcloudUserId'] ?? null),
-			'administrationId' => $this->nullableTrim($employee['administrationId'] ?? null),
-			// The entry's own start date is the chain's reference date; null
-			// when it does not resolve to exactly one answer (never guessed).
-			'costCenter' => $this->gateway->uniqueCostCenterFor($employeeId, gmdate('Y-m-d', $startedAt)),
-			// Stamped rather than required, so a clocked entry written before
-			// `date` existed gains one on its next write instead of needing a
-			// data migration, and both shapes end up answering "which day?"
-			// the same way.
-			'date' => gmdate('Y-m-d', $startedAt),
-		];
+		$modified = $this->stamps(write: $write);
 
 		// 5. Provenance, stamped on create and never trusted raw from the
 		// client. THIS ALLOWLIST IS LOAD-BEARING and it silently swallowed the
@@ -251,12 +260,39 @@ class TimeEntryStampListener implements IEventListener {
 		// all. The timer was running, invisible, and every layer reported
 		// success. `timer` is admitted here, and ONLY for a write that really is
 		// a running timer, so a finished booking cannot dress itself up as one.
-		if ($isCreate === true) {
-			$modified['origin'] = $this->originFor(incoming: $incoming, stored: $stored);
+		if ($write->isCreate === true) {
+			$modified['origin'] = $this->originFor(incoming: $write->incoming, stored: $write->stored);
 		}
 
 		return $modified;
 	}//end stamp()
+
+	/**
+	 * 4. Identity + cost-centre stamps (Decision 5.2-5.4).
+	 *
+	 * @param TimeEntryWrite $write The write, its employee, start, hours and parent resolved.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/time-entry-capture/spec.md#Requirement:-humaniq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
+	 */
+	private function stamps(TimeEntryWrite $write): array {
+		return [
+			'employeeId' => $write->employeeId,
+			'timesheetId' => $write->timesheetId,
+			'hours' => $write->hours,
+			'userId' => $this->nullableTrim($write->employee['nextcloudUserId'] ?? null),
+			'administrationId' => $this->nullableTrim($write->employee['administrationId'] ?? null),
+			// The entry's own start date is the chain's reference date; null
+			// when it does not resolve to exactly one answer (never guessed).
+			'costCenter' => $this->gateway->uniqueCostCenterFor($write->employeeId, gmdate('Y-m-d', $write->startedAt)),
+			// Stamped rather than required, so a clocked entry written before
+			// `date` existed gains one on its next write instead of needing a
+			// data migration, and both shapes end up answering "which day?"
+			// the same way.
+			'date' => gmdate('Y-m-d', $write->startedAt),
+		];
+	}//end stamps()
 
 	/**
 	 * The provenance to stamp on a create.
@@ -327,10 +363,7 @@ class TimeEntryStampListener implements IEventListener {
 	 * Resolve the parent Timesheet (find-or-create on the month grain) and
 	 * enforce the mutability guard on every parent involved.
 	 *
-	 * @param array<string, mixed> $incoming The incoming payload.
-	 * @param array<string, mixed>|null $stored The stored payload (update only).
-	 * @param string $employeeId The resolved employee id.
-	 * @param int $startedAt The UTC start timestamp of the booking.
+	 * @param TimeEntryWrite $write The write, its employee and start resolved.
 	 *
 	 * @return string The parent timesheet uuid.
 	 *
@@ -338,35 +371,62 @@ class TimeEntryStampListener implements IEventListener {
 	 *
 	 * @spec openspec/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
 	 */
-	private function resolveTimesheet(
-		array $incoming,
-		?array $stored,
-		string $employeeId,
-		int $startedAt,
-	): string {
-		// Editing an entry that already belongs to a locked timesheet is
-		// refused regardless of what the write tries to change.
-		$storedParentId = $stored === null ? '' : trim((string)($stored['timesheetId'] ?? ''));
-		if ($storedParentId !== '') {
-			$this->assertParentMutable($storedParentId);
-		}
+	private function resolveTimesheet(TimeEntryWrite $write): string {
+		$storedParentId = $this->guardedStoredParent(write: $write);
 
-		$timesheetId = trim((string)($incoming['timesheetId'] ?? ''));
+		$timesheetId = trim((string)($write->incoming['timesheetId'] ?? ''));
 		if ($timesheetId === '') {
 			$timesheetId = $storedParentId;
 		}
 
-		if ($timesheetId !== '') {
-			if ($timesheetId !== $storedParentId) {
-				// Explicit (re)parent — the target must be mutable too.
-				$this->assertParentMutable($timesheetId);
-			}
-
-			return $timesheetId;
+		if ($timesheetId === '') {
+			return $this->findOrCreateTimesheet($write->employeeId, gmdate('Y-m', $write->startedAt));
 		}
 
-		return $this->findOrCreateTimesheet($employeeId, gmdate('Y-m', $startedAt));
+		$this->guardReparent(timesheetId: $timesheetId, storedParentId: $storedParentId);
+		return $timesheetId;
 	}//end resolveTimesheet()
+
+	/**
+	 * The stored entry's parent, refused when it is locked.
+	 *
+	 * Editing an entry that already belongs to a locked timesheet is
+	 * refused regardless of what the write tries to change.
+	 *
+	 * @param TimeEntryWrite $write The write.
+	 *
+	 * @return string The stored parent uuid, or '' for none.
+	 *
+	 * @throws HoursWriteRefusedException When the stored parent is locked.
+	 *
+	 * @spec openspec/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
+	 */
+	private function guardedStoredParent(TimeEntryWrite $write): string {
+		$storedParentId = $write->stored === null ? '' : trim((string)($write->stored['timesheetId'] ?? ''));
+		if ($storedParentId !== '') {
+			$this->assertParentMutable($storedParentId);
+		}
+
+		return $storedParentId;
+	}//end guardedStoredParent()
+
+	/**
+	 * Explicit (re)parent — the target must be mutable too.
+	 *
+	 * @param string $timesheetId    The parent the write books into.
+	 * @param string $storedParentId The stored parent, already guarded, or ''.
+	 *
+	 * @return void
+	 *
+	 * @throws HoursWriteRefusedException When the new parent is locked.
+	 *
+	 * @spec openspec/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
+	 */
+	private function guardReparent(string $timesheetId, string $storedParentId): void {
+		if ($timesheetId !== $storedParentId) {
+			$this->assertParentMutable($timesheetId);
+		}
+	}//end guardReparent()
 
 	/**
 	 * Find the employee's draft/rejected Timesheet for a period, creating a

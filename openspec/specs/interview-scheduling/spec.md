@@ -19,7 +19,9 @@ Close the gap `recruiting-ats-basic`'s `uitnodigen` transition docblock states p
 
 @e2e exclude backend occ/service/controller integration with the Nextcloud CalDAV store; no e2e suite exists yet for humaniq's manifest surfaces (tracked by active change humaniq-test-coverage-baseline)
 
-### REQ-INTV-001: Interview is a scheduling record tied to one Application
+### Requirement: Interview is a scheduling record tied to one Application (REQ-INTV-001)
+
+An Interview SHALL be a scheduling record tied to exactly one Application.
 
 `Interview` (`lib/Settings/register.d/hr-ats.json`) is a new schema — not fields bolted onto `Application` — carrying `applicationId` (uuid, `$ref: Application`, required), `scheduledStart` and `scheduledEnd` (`date-time`, required), `interviewers` (nullable free text), `mode` (enum `onsite|phone|video`, default `onsite`), `location` (nullable), `status` (enum `scheduled|completed|cancelled`, default `scheduled`, governed by an `x-openregister-lifecycle` state machine with transitions `voltooien` (`scheduled -> completed`) and `annuleren` (`scheduled -> cancelled`)), and `calendarEventUid` (nullable, system-managed, never user-editable). A separate schema is required because a single Application can go through more than one interview round, each with its own lifecycle and calendar identity.
 
@@ -33,7 +35,9 @@ Close the gap `recruiting-ats-basic`'s `uitnodigen` transition docblock states p
 - **WHEN** the available lifecycle transitions are inspected
 - **THEN** only `voltooien` and `annuleren` are available, both terminal, and no other status edge exists
 
-### REQ-INTV-002: A configured shared calendar SHALL be the sync target, resolved duck-typed
+### Requirement: A configured shared calendar SHALL be the sync target, resolved duck-typed (REQ-INTV-002)
+
+A configured shared calendar SHALL be the sync target, resolved duck-typed.
 
 `SettingsService` exposes `getInterviewCalendarPrincipal()` (app-config key `interview_calendar_principal`) and `getInterviewCalendarUri()` (key `interview_calendar_uri`), both defaulting to the empty string and kept separate from `leave_calendar_principal`/`leave_calendar_uri` so interviews and absence can target different shared calendars. `InterviewCalendarService` reaches the CalDAV store exclusively through a duck-typed, container-resolved `OCA\DAV\CalDAV\CalDavBackend` (string class name, try/catch, `method_exists` probes) — the same investigated OCP surface that blocks `leave-calendar-nc` (create-only, rejects duplicate UIDs on NC 28-34) blocks an idempotent interview upsert too, and OpenRegister's `CalendarLinkService::createAndLinkEvent()` is rejected as the sync path because it resolves the target calendar from the acting user's own session, never a configured shared calendar.
 
@@ -43,7 +47,9 @@ Close the gap `recruiting-ats-basic`'s `uitnodigen` transition docblock states p
 - **WHEN** `occ humaniq:interview:sync` runs
 - **THEN** the run ends `skipped-no-calendar` even though the leave calendar sync would succeed
 
-### REQ-INTV-003: Scheduling SHALL upsert one deterministic event, identified by a stored calendarEventUid
+### Requirement: Scheduling SHALL upsert one deterministic event, identified by a stored calendarEventUid (REQ-INTV-003)
+
+Scheduling SHALL upsert one deterministic event, identified by a stored calendarEventUid.
 
 For each Interview with `status: scheduled`, `InterviewCalendarService` upserts one VEVENT into the configured calendar: `calendarEventUid` null derives UID `hrmq-interview-{uuid}` and object URI `hrmq-interview-{uuid}.ics` (uuid = the Interview's OpenRegister object id), creates the calendar object, and persists the derived UID back onto the Interview's `calendarEventUid` field (the `OfferApplicationRepository::save()` PUT-semantic field-merge idiom — every other Interview field is carried forward unchanged); `calendarEventUid` already set looks the event up by that stored UID and calls `updateCalendarObject` only when the rendered DTSTART/DTEND/SUMMARY/LOCATION differ from the stored event, so a no-op resync writes nothing. Running the sync twice in a row with no data change produces zero calendar writes on the second run.
 
@@ -62,7 +68,9 @@ For each Interview with `status: scheduled`, `InterviewCalendarService` upserts 
 - **WHEN** the sync runs twice in a row
 - **THEN** the second run reports `unchanged` for that Interview and issues no create/update call
 
-### REQ-INTV-004: Cancellation SHALL remove the event; completion SHALL keep it as history
+### Requirement: Cancellation SHALL remove the event; completion SHALL keep it as history (REQ-INTV-004)
+
+Cancellation SHALL remove the event; completion SHALL keep it as history.
 
 The sync deletes the calendar object of any Interview whose `status` is `cancelled` (via `deleteCalendarObject`, looked up by the stored `calendarEventUid`), and does NOT re-upsert or delete the calendar object of any Interview whose `status` is `completed` — a completed Interview's last-synced event stays on the calendar as completed history. For Interviews hard-deleted from the register, the sync reconciles orphans by listing the configured calendar's objects and deleting every `hrmq-interview-*.ics` URI whose embedded uuid is not among the complete live Interview-id set, regardless of any `--from` bound; objects without the `hrmq-interview-` URI prefix are never touched.
 
@@ -81,7 +89,9 @@ The sync deletes the calendar object of any Interview whose `status` is `cancell
 - **WHEN** the sync runs
 - **THEN** the orphaned event is deleted and manually created user events on the same calendar are untouched
 
-### REQ-INTV-005: AVG boundary — candidate name and role are shown, Application PII is not
+### Requirement: AVG boundary — candidate name and role are shown, Application PII is not (REQ-INTV-005)
+
+The interview SHALL show the candidate's name and the role, and SHALL NOT show the Application's personal data.
 
 Events render SUMMARY exactly `Sollicitatiegesprek — {candidateName} ({vacancyTitle})`, resolved from the referenced Application and its Vacancy, falling back to `Sollicitatiegesprek — kandidaat` when the Application cannot be resolved. `interviewers` renders as plain text inside the DESCRIPTION property, and no event carries an ATTENDEE or ORGANIZER property (so no iMIP scheduling mail is ever triggered). No event of any Interview carries the referenced Application's `email`, `phone`, `cvFile`, `motivation`, `talentPoolOptIn`, `rejectedDate`, or `retentionExpiryDate` in any ICS property — the loading path (`InterviewRepository::loadApplicationIndex()`) never reads those fields into memory at all.
 
@@ -100,7 +110,9 @@ Events render SUMMARY exactly `Sollicitatiegesprek — {candidateName} ({vacancy
 - **WHEN** its event is rendered
 - **THEN** the SUMMARY is `Sollicitatiegesprek — kandidaat` and no raw id or uuid appears in the SUMMARY
 
-### REQ-INTV-006: Absent calendar stack SHALL degrade to a recorded skip
+### Requirement: Absent calendar stack SHALL degrade to a recorded skip (REQ-INTV-006)
+
+Absent calendar stack SHALL degrade to a recorded skip.
 
 Availability is duck-typed per run: `OCA\DAV\CalDAV\CalDavBackend` resolvable from the container AND `getCalendarByUri(principal, uri)` returning a calendar for the configured `interview_calendar_principal`/`interview_calendar_uri` values. Any miss (backend unresolvable, either config key unset, calendar deleted or URI wrong) ends the run `skipped-no-calendar` with an explanatory message — never an exception, nothing above INFO in the log. humaniq gains no info.xml or composer dependency on the calendar or dav apps from this change.
 
@@ -114,7 +126,9 @@ Availability is duck-typed per run: `OCA\DAV\CalDAV\CalDavBackend` resolvable fr
 - **WHEN** `occ humaniq:interview:sync` runs
 - **THEN** the command exits `0`, reports `skipped-no-calendar` with the unresolved principal/URI, and throws no exception
 
-### REQ-INTV-007: An occ command SHALL mirror the leave-calendar sync trigger
+### Requirement: An occ command SHALL mirror the leave-calendar sync trigger (REQ-INTV-007)
+
+An occ command SHALL mirror the leave-calendar sync trigger.
 
 `lib/Command/InterviewCalendarSyncCommand.php` registers `humaniq:interview:sync` with optional `--from DATE` in `appinfo/info.xml` `<commands>` (next to `humaniq:calendar:sync`). `--from` bounds the upsert set to Interviews whose `scheduledStart` is on or after DATE; omitted means all `scheduled` Interviews (capped by the ObjectService load limit). Reconciliation always uses the full live-id set regardless of `--from`. The command prints one outcome line per touched Interview (`created|updated|removed|unchanged|failed|skipped`) plus a summary, and exits `0` when no source ended `failed` (a fully skipped run is a healthy `0`) and `1` otherwise.
 
@@ -128,7 +142,9 @@ Availability is duck-typed per run: `OCA\DAV\CalDAV\CalDavBackend` resolvable fr
 - **WHEN** the command runs
 - **THEN** that Interview's line shows `failed` with the error message and the command exits `1`
 
-### REQ-INTV-008: A guarded manifest action SHALL trigger a single-Interview sync
+### Requirement: A guarded manifest action SHALL trigger a single-Interview sync (REQ-INTV-008)
+
+A guarded manifest action SHALL trigger a single-Interview sync.
 
 `InterviewDetail` exposes an `api-call` action ("Sync naar agenda") that calls `POST /api/interviews/sync` (`interviewId` as a body param, the established `request-offer-signature`/`payroll#calculate` shape used by every other guarded humaniq manifest action) backed by `InterviewController::sync()`. The endpoint rejects the request unless the acting user is an admin or a member of the established HR-role check (the `isAdminOrHr()` precedent shared with `PayrollController`/`LoonbeslagController`/`OfferController`) — BEFORE any resolve; the posted `interviewId` then resolves through OpenRegister's ObjectService under the caller's ambient RBAC (unresolvable/unauthorized collapses to the same 404, the `OfferController::authorizeApplication()` no-admin-idor shape). An authorized call invokes `InterviewCalendarService::syncOne()` for exactly the one Interview identified and returns its outcome.
 
@@ -142,7 +158,9 @@ Availability is duck-typed per run: `OCA\DAV\CalDAV\CalDavBackend` resolvable fr
 - **WHEN** they call the sync endpoint directly
 - **THEN** the request is rejected and no calendar object is created or modified
 
-### REQ-INTV-009: Interview pages SHALL nest under the existing recruiting menu group
+### Requirement: Interview pages SHALL nest under the existing recruiting menu group (REQ-INTV-009)
+
+Interview pages SHALL nest under the existing recruiting menu group.
 
 `Interviews` (list) and `InterviewDetail` pages are children of the existing `OnboardingAtsGroup` menu group in `src/manifest.json`, alongside `Onboardings`/`Vacancies`/`Applications`/`Offboardings` — no new top-level menu group is added for this change, per ADR-001. `ApplicationDetail` gains an `object-list` widget ("Gesprekken") resolving `Interview.applicationId` for the current Application, so an interview round is reachable from its Application without a separate navigation path.
 

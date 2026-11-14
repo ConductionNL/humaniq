@@ -64,6 +64,7 @@
             },
             "RosterAssignment": {
                 "slug": "RosterAssignment",
+                "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "AccountClockOutline",
                 "version": "0.1.0",
                 "title": "Roster assignment",

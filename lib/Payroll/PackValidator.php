@@ -3,6 +3,9 @@
 /**
  * Pack Validator
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Every gate an uploaded pack must pass before it can pay anybody
  * (jurisdiction-packs design.md D11, ADR-101 decision 4). All of them BLOCK at
  * upload; none of them is optional, because the payload of that endpoint
@@ -39,9 +42,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -277,37 +277,85 @@ final class PackValidator {
 	 * @throws DslException When an op, reference or handler does not resolve.
 	 */
 	private function declarations(JurisdictionPack $pack, TaxTables $tables): void {
-		$scope = [
+		$check = $this->declarationCheck(pack: $pack, tables: $tables);
+		foreach ($pack->bindings() as $binding) {
+			$this->declareBinding(binding: $binding, check: $check);
+		}
+
+		foreach ($pack->steps() as $step) {
+			$this->declareStep(step: $step, check: $check);
+		}
+
+		$check->where = '"grossRef"';
+		$this->refs(refs: [$pack->grossRef()], check: $check);
+
+	}//end declarations()
+
+	/**
+	 * A declaration check over the pack's inputs, with no binding or step declared yet.
+	 *
+	 * @param JurisdictionPack $pack   The pack.
+	 * @param TaxTables        $tables The tables.
+	 *
+	 * @return PackDeclarationCheck
+	 */
+	private function declarationCheck(JurisdictionPack $pack, TaxTables $tables): PackDeclarationCheck {
+		$check = new PackDeclarationCheck();
+		$check->tables = $tables;
+		$check->scope = [
 			'input' => array_keys($pack->inputs()),
 			'binding' => [],
 			'step' => [],
 		];
 
-		foreach ($pack->bindings() as $binding) {
-			$id = $this->declaredId($binding, 'binding');
-			if (array_key_exists('incidence', $binding) === true) {
-				throw new DslException('Pack: binding "' . $id . '" declareert incidence; alleen stappen doen dat (een binding is geen geld).');
-			}
+		return $check;
+	}//end declarationCheck()
 
-			$using = ($binding['using'] ?? null);
-			if (is_array($using) === false) {
-				throw new DslException('Pack: binding "' . $id . '" mist het veld "using".');
-			}
-
-			$this->spec($using, $scope, $tables, 'binding "' . $id . '"');
-			$scope['binding'][] = $id;
+	/**
+	 * Check one binding, then declare it: no incidence, a `using` spec that
+	 * passes gates 2, 3 and 4.
+	 *
+	 * @param array<string, mixed> $binding The binding.
+	 * @param PackDeclarationCheck $check   The check so far.
+	 *
+	 * @return void
+	 *
+	 * @throws DslException When the binding is malformed or its spec does not resolve.
+	 */
+	private function declareBinding(array $binding, PackDeclarationCheck $check): void {
+		$id = $this->declaredId($binding, 'binding');
+		if (array_key_exists('incidence', $binding) === true) {
+			throw new DslException('Pack: binding "' . $id . '" declareert incidence; alleen stappen doen dat (een binding is geen geld).');
 		}
 
-		foreach ($pack->steps() as $step) {
-			$id = $this->declaredId($step, 'step');
-			$this->incidence($step, $id);
-			$this->spec($step, $scope, $tables, 'stap "' . $id . '"');
-			$scope['step'][] = $id;
+		$using = ($binding['using'] ?? null);
+		if (is_array($using) === false) {
+			throw new DslException('Pack: binding "' . $id . '" mist het veld "using".');
 		}
 
-		$this->refs([$pack->grossRef()], $scope, $tables, '"grossRef"');
+		$check->where = 'binding "' . $id . '"';
+		$this->spec(spec: $using, check: $check);
+		$check->scope['binding'][] = $id;
+	}//end declareBinding()
 
-	}//end declarations()
+	/**
+	 * Check one step, then declare it: one known incidence, a spec that
+	 * passes gates 2, 3 and 4.
+	 *
+	 * @param array<string, mixed> $step  The step.
+	 * @param PackDeclarationCheck $check The check so far.
+	 *
+	 * @return void
+	 *
+	 * @throws DslException When the step is malformed or its spec does not resolve.
+	 */
+	private function declareStep(array $step, PackDeclarationCheck $check): void {
+		$id = $this->declaredId($step, 'step');
+		$this->incidence($step, $id);
+		$check->where = 'stap "' . $id . '"';
+		$this->spec(spec: $step, check: $check);
+		$check->scope['step'][] = $id;
+	}//end declareStep()
 
 	/**
 	 * A declaration's id.
@@ -353,18 +401,41 @@ final class PackValidator {
 	/**
 	 * Gate 2 + 4 for one spec, plus its references (gate 3).
 	 *
-	 * @param array<string, mixed> $spec The declared spec.
-	 * @param array<string, array<int, string>> $scope The ids declared so far.
-	 * @param TaxTables $tables The tables.
-	 * @param string $where A label for error messages.
+	 * @param array<string, mixed> $spec  The declared spec.
+	 * @param PackDeclarationCheck $check The ids declared so far, the tables and the label for error messages.
 	 *
 	 * @return void
 	 *
 	 * @throws DslException When the op, its keys, its handler or its refs are invalid.
 	 */
-	private function spec(array $spec, array $scope, TaxTables $tables, string $where): void {
+	private function spec(array $spec, PackDeclarationCheck $check): void {
 		$op = (string)($spec['op'] ?? '');
+		$isPredicate = $this->isKnownPredicate(op: $op, check: $check);
 
+		if ($isPredicate === false) {
+			$this->keys(spec: $spec, check: $check);
+		}
+
+		if ($op === 'phpStep') {
+			$this->handler($spec, $check->where);
+		}
+
+		$this->refs(refs: $this->collect($spec), check: $check);
+
+	}//end spec()
+
+	/**
+	 * Whether a known op is a predicate; `derive` and an unknown op are refused.
+	 *
+	 * @param string               $op    The declared op.
+	 * @param PackDeclarationCheck $check The check: the label for error messages.
+	 *
+	 * @return bool True for a predicate, false for a step op.
+	 *
+	 * @throws DslException When the op is `derive` or unknown.
+	 */
+	private function isKnownPredicate(string $op, PackDeclarationCheck $check): bool {
+		$where = $check->where;
 		if ($op === 'derive') {
 			throw new DslException('Pack: ' . $where . ' gebruikt "derive" als op; "derive" hoort op de binding zelf, de berekening staat in "using".');
 		}
@@ -377,37 +448,28 @@ final class PackValidator {
 			);
 		}
 
-		if ($isPredicate === false) {
-			$this->keys($spec, $op, $where);
-		}
-
-		if ($op === 'phpStep') {
-			$this->handler($spec, $where);
-		}
-
-		$this->refs($this->collect($spec), $scope, $tables, $where);
-
-	}//end spec()
+		return $isPredicate;
+	}//end isKnownPredicate()
 
 	/**
 	 * Reject any key outside the op's allow-list — this is what refuses a step
 	 * carrying a class path, a callable or an inline code string (REQ-JP-005).
 	 *
-	 * @param array<string, mixed> $spec The declared spec.
-	 * @param string $op The op name.
-	 * @param string $where A label for error messages.
+	 * @param array<string, mixed> $spec  The declared spec.
+	 * @param PackDeclarationCheck $check The check: the label for error messages.
 	 *
 	 * @return void
 	 *
 	 * @throws DslException When an unknown key is present.
 	 */
-	private function keys(array $spec, string $op, string $where): void {
+	private function keys(array $spec, PackDeclarationCheck $check): void {
+		$op = (string)($spec['op'] ?? '');
 		$allowed = array_merge(self::COMMON_KEYS, (self::OP_KEYS[$op] ?? []));
 
 		foreach (array_keys($spec) as $key) {
 			if (in_array((string)$key, $allowed, true) === false) {
 				throw new DslException(
-					'Pack: ' . $where . ' declareert het onbekende veld "' . $key . '" voor op "' . $op . '". Een pack levert uitsluitend data — nooit code, een class-pad of een callable.'
+					'Pack: ' . $check->where . ' declareert het onbekende veld "' . $key . '" voor op "' . $op . '". Een pack levert uitsluitend data — nooit code, een class-pad of een callable.'
 				);
 			}
 		}
@@ -445,22 +507,20 @@ final class PackValidator {
 	 * Gate 3 — every reference resolves, and names only things declared
 	 * EARLIER (so the graph is acyclic by construction).
 	 *
-	 * @param array<int, string> $refs The references to check.
-	 * @param array<string, array<int, string>> $scope The ids declared so far.
-	 * @param TaxTables $tables The tables.
-	 * @param string $where A label for error messages.
+	 * @param array<int, string>   $refs  The references to check.
+	 * @param PackDeclarationCheck $check The ids declared so far, the tables and the label for error messages.
 	 *
 	 * @return void
 	 *
 	 * @throws DslException When a reference does not resolve.
 	 */
-	private function refs(array $refs, array $scope, TaxTables $tables, string $where): void {
+	private function refs(array $refs, PackDeclarationCheck $check): void {
 		foreach ($refs as $ref) {
 			foreach ($this->inner($ref) as $nested) {
-				$this->ref($nested, $scope, $tables, $where);
+				$this->ref(ref: $nested, check: $check);
 			}
 
-			$this->ref($ref, $scope, $tables, $where);
+			$this->ref(ref: $ref, check: $check);
 		}
 
 	}//end refs()
@@ -468,40 +528,53 @@ final class PackValidator {
 	/**
 	 * Check one reference.
 	 *
-	 * @param string $ref The reference.
-	 * @param array<string, array<int, string>> $scope The ids declared so far.
-	 * @param TaxTables $tables The tables.
-	 * @param string $where A label for error messages.
+	 * @param string               $ref   The reference.
+	 * @param PackDeclarationCheck $check The ids declared so far, the tables and the label for error messages.
 	 *
 	 * @return void
 	 *
 	 * @throws DslException When the reference does not resolve.
 	 */
-	private function ref(string $ref, array $scope, TaxTables $tables, string $where): void {
+	private function ref(string $ref, PackDeclarationCheck $check): void {
 		$body = ltrim(substr($ref, 1));
 		$namespace = strtok($body, '.[');
 
 		if (in_array((string)$namespace, RefResolver::NAMESPACES, true) === false) {
-			throw new DslException('Pack: ' . $where . ' gebruikt de onbekende verwijzing "' . $ref . '" (toegestaan: @' . implode(', @', RefResolver::NAMESPACES) . ').');
+			throw new DslException('Pack: ' . $check->where . ' gebruikt de onbekende verwijzing "' . $ref . '" (toegestaan: @' . implode(', @', RefResolver::NAMESPACES) . ').');
 		}
 
 		if ($namespace === 'table') {
-			$this->tableRef($ref, $tables, $where);
+			$this->tableRef(ref: $ref, check: $check);
 			return;
 		}
 
-		if (in_array($namespace, ['period', 'pack'], true) === true) {
-			return;
-		}
-
-		$name = (string)strtok('.[');
-		if (in_array($name, ($scope[$namespace] ?? []), true) === false) {
-			throw new DslException(
-				'Pack: ' . $where . ' verwijst naar "' . $ref . '", die niet eerder is gedeclareerd. Een stap mag alleen naar eerdere stappen/bindings verwijzen (geen forward refs, dus geen cycles).'
-			);
+		if (in_array($namespace, ['period', 'pack'], true) === false) {
+			$this->declaredEarlier(ref: $ref, check: $check);
 		}
 
 	}//end ref()
+
+	/**
+	 * Refuse a reference to a binding, step or input that is not declared
+	 * before the declaration being checked.
+	 *
+	 * @param string               $ref   The reference, its namespace input, binding or step.
+	 * @param PackDeclarationCheck $check The ids declared so far and the label for error messages.
+	 *
+	 * @return void
+	 *
+	 * @throws DslException When the reference names nothing declared earlier.
+	 */
+	private function declaredEarlier(string $ref, PackDeclarationCheck $check): void {
+		$body = ltrim(substr($ref, 1));
+		$namespace = strtok($body, '.[');
+		$name = (string)strtok('.[');
+		if (in_array($name, ($check->scope[$namespace] ?? []), true) === false) {
+			throw new DslException(
+				'Pack: ' . $check->where . ' verwijst naar "' . $ref . '", die niet eerder is gedeclareerd. Een stap mag alleen naar eerdere stappen/bindings verwijzen (geen forward refs, dus geen cycles).'
+			);
+		}
+	}//end declaredEarlier()
 
 	/**
 	 * Resolve a STATIC `@table.*` reference against the corpus. A reference
@@ -509,15 +582,14 @@ final class PackValidator {
 	 * gate 5's self-test dry-run covers those, since it executes every branch
 	 * the pack's own vectors reach.
 	 *
-	 * @param string $ref The reference.
-	 * @param TaxTables $tables The tables.
-	 * @param string $where A label for error messages.
+	 * @param string               $ref   The reference.
+	 * @param PackDeclarationCheck $check The tables and the label for error messages.
 	 *
 	 * @return void
 	 *
 	 * @throws DslException When the leaf does not exist.
 	 */
-	private function tableRef(string $ref, TaxTables $tables, string $where): void {
+	private function tableRef(string $ref, PackDeclarationCheck $check): void {
 		if (str_contains($ref, '[') === true) {
 			return;
 		}
@@ -529,9 +601,9 @@ final class PackValidator {
 		}
 
 		try {
-			$tables->resolveLeaf(explode('.', $path), $cents);
+			$check->tables->resolveLeaf(explode('.', $path), $cents);
 		} catch (RuntimeException $e) {
-			throw new DslException('Pack: ' . $where . ' verwijst naar de onbekende tabelwaarde "' . $ref . '" (' . $e->getMessage() . ').', 0, $e);
+			throw new DslException('Pack: ' . $check->where . ' verwijst naar de onbekende tabelwaarde "' . $ref . '" (' . $e->getMessage() . ').', 0, $e);
 		}
 
 	}//end tableRef()

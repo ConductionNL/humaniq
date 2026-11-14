@@ -28,7 +28,9 @@ expectation per the 2026-07-12 deep research (Spectr insights
 
 ## Requirements
 
-### REQ-MHS-001: The `Employee` schema SHALL carry an optional `nextcloudUserId` account link
+### Requirement: The `Employee` schema SHALL carry an optional `nextcloudUserId` account link (REQ-MHS-001)
+
+The `Employee` schema SHALL carry an optional `nextcloudUserId` account link.
 
 `lib/Settings/register.d/hr-objects.json`: `Employee` gains `nextcloudUserId` (string, nullable) — the Nextcloud user id of this employee's account, when they have one. HR maintains it on the employee record; it stays null for portal-only external employees (portaliq scoping remains UUID-claim based per ADR-046 A4 and is untouched). Employee schema `version` bumps 0.1.0 → 0.2.0. `required` list unchanged.
 
@@ -37,7 +39,7 @@ expectation per the 2026-07-12 deep research (Spectr insights
 - **WHEN** an Employee is written with `nextcloudUserId: "admin"`
 - **THEN** creation succeeds; **AND** an Employee written without the property remains valid (optional, nullable)
 
-### REQ-MHS-002: Timesheet, TimeEntry, Expense, LeaveRequest, Payslip **and LeaveBalance** SHALL carry an optional denormalized `userId`
+### Requirement: Timesheet, TimeEntry, Expense, LeaveRequest, Payslip **and LeaveBalance** SHALL carry an optional denormalized `userId` (REQ-MHS-002)
 
 Property `userId` (string, nullable — the Nextcloud user id of the employee the record belongs
 to, a denormalized copy of the linked Employee's `nextcloudUserId`) on: `Timesheet` and
@@ -98,7 +100,9 @@ keeps `userId: null` and never appears on a personal surface (fail-closed).
 - **WHEN** the `admin` user opens `/mijn`
 - **THEN** that balance is not listed in "Mijn verlofsaldo" (fail-closed)
 
-### REQ-MHS-003: The manifest SHALL add the two frozen ADR-001 top menu slots without restructuring the rest
+### Requirement: The manifest SHALL add the two frozen ADR-001 top menu slots without restructuring the rest (REQ-MHS-003)
+
+The manifest SHALL add the two frozen ADR-001 top menu slots without restructuring the rest.
 
 **Amended (this change): the `Mijn HR` group entry routes to the personal dashboard.** The
 menu contract of the original requirement stands — `Dashboard` (order 10) first, group
@@ -120,7 +124,7 @@ conditions for the personal surface (see `hrmq-personal-dashboard` REQ-PDB-003).
 - **THEN** the `Mijn HR` entry navigates to `/mijn` on title click and still exposes its
   children under the collapse chevron
 
-### REQ-MHS-004: The four Mijn pages SHALL list only the current user's records via an `@me` base filter
+### Requirement: The four Mijn pages SHALL list only the current user's records via an `@me` base filter (REQ-MHS-004)
 
 The Mijn pages each carry `config.filter: { "userId": "@me" }` (resolved to the signed-in
 Nextcloud uid at fetch time by the renderer's shared token grammar) plus the administration
@@ -171,7 +175,9 @@ authored in their manifest fragments.
 - **WHEN** `npm run check:manifest` runs
 - **THEN** it exits 0
 
-### REQ-MHS-005: The Dashboard page SHALL surface self-service and approver KPIs from the built-in widget set
+### Requirement: The Dashboard page SHALL surface self-service and approver KPIs from the built-in widget set (REQ-MHS-005)
+
+The Dashboard page SHALL surface self-service and approver KPIs from the built-in widget set.
 
 New `type: dashboard` page `Dashboard` (route `/dashboard`) using `config.widgets` + `config.layout` with exactly this widget set (all from the schema's built-in widget enum — no custom widgets):
 1. `stat` "Mijn ingediende uren" — Timesheet count, `filter: { "userId": "@me", "status": "submitted" }`, route `MijnUren`.
@@ -191,7 +197,9 @@ New `type: dashboard` page `Dashboard` (route `/dashboard`) using `config.widget
 - **WHEN** the user activates the "Te beoordelen declaraties" stat
 - **THEN** the router navigates to `ExpenseApproval`
 
-### REQ-MHS-006: Seed data SHALL make the dev-instance `admin` login land on populated Mijn HR pages
+### Requirement: Seed data SHALL make the dev-instance `admin` login land on populated Mijn HR pages (REQ-MHS-006)
+
+Seed data SHALL make the dev-instance `admin` login land on populated Mijn HR pages.
 
 `lib/Settings/register.d/hr-seed.json` is extended (existing objects extended, not duplicated): (1) a new seed `Employee` with slug `employee-jansen` — the Employee the existing seeds already reference — carrying `nextcloudUserId: "admin"` and placeholder person/payroll values; (2) `userId: "admin"` added to `timesheet-jansen-2026-05` and `expense-jansen-hotel`; (3) one new `LeaveRequest` (`leave-jansen-zomer`, holiday 2026-08-03 → 2026-08-14, status submitted) and one new `Payslip` (`payslip-jansen-2026-05`, period 2026-05, placeholder gross/net) both with `employeeId: "employee-jansen"` and `userId: "admin"`. The De Vries and Bakker objects deliberately stay unstamped so the `@me` filter's exclusion is demonstrable.
 
@@ -204,7 +212,9 @@ New `type: dashboard` page `Dashboard` (route `/dashboard`) using `config.widget
 - **WHEN** `admin` opens each of the four Mijn pages
 - **THEN** each lists at least one record
 
-### REQ-MHS-007: Every Mijn surface SHALL live under the `/mijn/...` route prefix, with a redirect from the legacy path
+### Requirement: Every Mijn surface SHALL live under the `/mijn/...` route prefix, with a redirect from the legacy path (REQ-MHS-007)
+
+Every Mijn surface SHALL live under the `/mijn/...` route prefix, with a redirect from the legacy path.
 
 `MijnGebruikelijkLoon` — the only Mijn page outside the prefix — moves from
 `/mijn-hr/gebruikelijk-loon` to `/mijn/gebruikelijk-loon` (route value edited in the base

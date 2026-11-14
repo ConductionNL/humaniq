@@ -37,3 +37,7 @@ employee's administration, judged by the manager's own Employee record as well a
 
 - Records stamped before this change keep their stamp until their next server-side write. A
   separate repair step restamps open records.
+
+## Matrix rows
+
+Rows: `ess-manager-team` (humaniq `openspec/parity/capabilities.json`).

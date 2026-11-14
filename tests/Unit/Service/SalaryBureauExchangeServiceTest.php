@@ -152,6 +152,27 @@ class SalaryBureauExchangeServiceTest extends TestCase {
 	}//end testARevertedEditIsNotSentAndARecompileReplaces()
 
 	/**
+	 * A handoff that went out is not compiled again; a handoff still in
+	 * concept, or one of a later period, is no baseline for another period.
+	 *
+	 * @return void
+	 */
+	public function testOnlyEarlierSentHandoffsAreTheBaseline(): void {
+		$april = $this->service->compile(administrationId: 'ADM-006', period: '2026-04', userId: 'hr-1');
+		$this->markSent('2026-04');
+		self::assertSame(
+			['status' => 'refused-not-concept', 'handoffId' => $april['handoffId'], 'mutationCount' => 2, 'message' => 'Deze overdracht is al klaargezet of verzonden; heropen hem eerst.'],
+			$this->service->compile(administrationId: 'ADM-006', period: '2026-04', userId: 'hr-2')
+		);
+
+		$employee = $this->store->find('emp-b', schema: 'Employee')->getObject();
+		$this->store->seed('Employee', 'emp-b', array_merge($employee, ['iban' => 'NL02RABO0123456789']));
+		self::assertSame(1, $this->service->compile(administrationId: 'ADM-006', period: '2026-05', userId: 'hr-1')['mutationCount']);
+		self::assertSame(1, $this->service->compile(administrationId: 'ADM-006', period: '2026-06', userId: 'hr-1')['mutationCount'], 'May is still a concept: June compares with April.');
+		self::assertSame(2, $this->service->compile(administrationId: 'ADM-006', period: '2026-03', userId: 'hr-1')['mutationCount'], 'April is later: March starts everyone.');
+	}//end testOnlyEarlierSentHandoffsAreTheBaseline()
+
+	/**
 	 * The engine's administrations have no handoff.
 	 *
 	 * @return void

@@ -116,6 +116,7 @@
             },
             "SideActivity": {
                 "slug": "SideActivity",
+                "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "BriefcaseOutline",
                 "version": "0.1.0",
                 "title": "Side activity",

@@ -33,7 +33,9 @@ namespace OCA\Humaniq\Tests\Unit\Standards;
 
 use OCA\Humaniq\Standards\RuleCatalogue;
 use OCA\Humaniq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\TableCheckEvaluator;
 use OCA\Humaniq\Standards\Violation;
+use OCA\Humaniq\Tests\Unit\Standards\Fixtures\ThrowingDecisionTableEvaluator;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -51,6 +53,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @uses \OCA\Humaniq\Standards\Checks\CompChecks
  * @uses \OCA\Humaniq\Standards\Checks\EuUsPayrollChecks
+ * @uses \OCA\Humaniq\Standards\Checks\FilingDates
  * @uses \OCA\Humaniq\Standards\Checks\NlAbpChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlAbsenceChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlAdministratieChecks
@@ -92,6 +95,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Humaniq\Standards\Checks\PayrollSampleFields
  * @uses \OCA\Humaniq\Standards\Checks\RetroRecompute
  * @uses \OCA\Humaniq\Standards\RuleCatalogue
+ * @uses \OCA\Humaniq\Standards\TableCheckEvaluator
  * @uses \OCA\Humaniq\Standards\TableCheckRegistry
  * @uses \OCA\Humaniq\Standards\Violation
  * @uses   \OCA\Humaniq\Standards\Checks\WorkingTimeRules
@@ -136,6 +140,44 @@ final class RuleEngineTest extends TestCase {
 	private function ruleIds(array $violations): array {
 		return array_map(static fn (Violation $violation): string => $violation->ruleId, $violations);
 	}//end ruleIds()
+
+	/**
+	 * A check whose predicate throws is reported as VIOLATED, not skipped and
+	 * not allowed to escape: a refused decision table (an unimplemented hit
+	 * policy, a malformed expression) must not let an object through
+	 * unflagged, and must not take the whole audit down either.
+	 *
+	 * The stand-in evaluator is the only way to reach this: every shipped
+	 * table is accepted by the real evaluator.
+	 *
+	 * @return void
+	 */
+	public function testACheckWhosePredicateThrowsIsReportedAsViolated(): void {
+		$balance = [
+			'employeeId' => 'employee-jansen',
+			'year' => 2026,
+			'leaveType' => 'holiday',
+			'entitledHours' => 160,
+			'bovenwettelijkHours' => 40,
+			'usedHours' => 56,
+			'contractHoursPerWeek' => 40,
+			'expiryDate' => '2027-07-01',
+		];
+
+		$clean = $this->ruleIds(RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']));
+		$this->assertSame([], $clean, 'the fixture is compliant while the real evaluator answers');
+
+		try {
+			TableCheckEvaluator::overrideEvaluatorClass(ThrowingDecisionTableEvaluator::class);
+			$refused = $this->ruleIds(RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']));
+		} finally {
+			TableCheckEvaluator::reset();
+		}
+
+		$this->assertNotSame([], $refused, 'a refused table flags its rule rather than passing the object');
+		$this->assertContains('nl-verlof-wettelijk-minimum', $refused);
+
+	}//end testACheckWhosePredicateThrowsIsReportedAsViolated()
 
 	/**
 	 * The NL-only `nl-loonaangifte-termijn` rule fires under an NL audit and not

@@ -4,6 +4,7 @@
     "schemas": {
       "JurisdictionPack": {
         "slug": "JurisdictionPack",
+        "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
         "title": "Jurisdiction pack",
         "description": "An UPLOADED jurisdiction pack (jurisdiction-packs design.md D7). Bundled packs: including NL. Live in code under lib/Standards/packs/ and are NEVER imported as objects; this schema is the second home, for packs an admin uploads. Both homes are resolved by the same (jurisdiction, taxYear) key, and bundled wins by default: a pack stored here may only claim a key a bundled pack already owns when an admin explicitly activated it as a recorded override. Activation is recorded on THIS object, never read from the author-supplied document.",
         "type": "object",
@@ -80,6 +81,7 @@
       },
       "TaxTableSet": {
         "slug": "TaxTableSet",
+        "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
         "title": "Tax table set",
         "description": "Tax tables an administrator uploaded together with a payroll pack, for a year the app does not ship yet. The tables that come with the app always win for their own year.",
         "x-notes": "payroll-pack-and-cao-updates design.md D1: the uploaded second home of a TaxTables corpus. TaxTables::load() reads a bundled lib/Standards/tables/{id}.json first and asks for an active set here only for an id no bundled file owns. Written by TaxTableSetService only after the tables and the pack that uses them passed every gate together; never edited through the object API.",
