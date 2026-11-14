@@ -18,9 +18,14 @@
 
 ## 2. School view
 
-- [ ] 2.1 Add `GET /api/deployment/org-units/{id}`. Verify: controller test that an
+- [x] 2.1 Add `GET /api/deployment/org-units/{id}`. Verify: controller test that an
       unreadable unit answers 404 and a teacher without a plan is listed as such;
       `hydra-gate-route-auth` and `hydra-gate-no-admin-idor` pass.
+      Done: `DeploymentController::orgUnit` reads the unit and each placed teacher through
+      `RbacObjectReader` and the plans as the caller; the composition and ordering
+      (largest difference first, teachers without a plan last) is
+      `DeploymentPlanService::schoolView`. Route-auth passes; no-admin-idor reports no
+      finding on this controller (its one finding is a pre-existing one elsewhere).
 - [ ] 2.2 Add `DeploymentPlans`, `DeploymentPlanDetail`, `Taakbeleid` and the menu entry.
       Verify: `npm run check:manifest` and `npm run lint` exit 0.
 
