@@ -424,6 +424,16 @@ function buildProbeBundle(entryPath, outDir) {
 	return new Promise((resolve, reject) => {
 		process.env.NODE_ENV = "production";
 		process.env.USE_LOCAL_LIB = "false";
+		// @nextcloud/webpack-vue-config names the bundle from npm_package_name
+		// and npm_package_version, which only `npm run` sets. Run bare
+		// (`node tests/validate-widget-keys.js`) they were undefined, the
+		// config threw before building, and every layer-3 key was reported
+		// UNRESOLVED. Take them from package.json when npm did not set them.
+		const pkg = JSON.parse(
+			fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf8"),
+		);
+		process.env.npm_package_name ??= pkg.name;
+		process.env.npm_package_version ??= pkg.version;
 
 		// Fresh require every run — this script is always invoked as its own
 		// `node tests/validate-widget-keys.js` process, so there is no stale

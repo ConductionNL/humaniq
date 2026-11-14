@@ -3749,7 +3749,13 @@
         "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
         "The account of the employee's manager, who may read this record.": "Het account van de leidinggevende van de medewerker, die dit gegeven mag lezen.",
         "The accounts standing in for the manager today, who may read this record too.": "De accounts die vandaag voor de leidinggevende waarnemen en dit gegeven ook mogen lezen.",
-        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort."
+        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort.",
+        "Access grants": "Toegangsrechten",
+        "Add integration": "Koppeling toevoegen",
+        "Connection": "Koppeling",
+        "Last checked": "Laatst gecontroleerd",
+        "Status message": "Statusmelding",
+        "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why.": "De externe systemen waarmee humaniq gegevens uitwisselt, en of elk ervan werkt. Een koppeling die nog niet beschikbaar is, zegt waarom."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
