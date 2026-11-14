@@ -3,6 +3,9 @@
 /**
  * Humaniq Leave Approval Step Guard
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The lifecycle guard on `approve-manager`, `approve` and `reject` of a leave
  * request. It first asks NoSelfApprovalGuard (nobody decides on their own
  * request), then decides which step applies:
@@ -23,9 +26,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @version GIT: <git-id>
  *
