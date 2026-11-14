@@ -1,0 +1,219 @@
+{
+    "x-humaniq-fragment": "hr-deployment",
+    "components": {
+        "schemas": {
+            "DeploymentPlan": {
+                "slug": "DeploymentPlan",
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "employeeUserId": "$userId"
+                            }
+                        }
+                    ],
+                    "create": [
+                        "humaniq-hr"
+                    ],
+                    "update": [
+                        "humaniq-hr"
+                    ],
+                    "delete": [
+                        "humaniq-hr"
+                    ]
+                },
+                "icon": "CalendarClock",
+                "version": "0.1.0",
+                "title": "Deployment plan",
+                "description": "A teacher's planned hours for one school year, against the norm for their contract.",
+                "x-notes": "education-staff-deployment-and-count D1. One plan per teacher per school year (1 August to 31 July). Line hours and plannedHours are stamped by DeploymentPlanTotalsListener on every save; differenceHours is calculated from them. The norm comes from DeploymentPlanService::normFor (CAO annual norm prorated to the contracts) when the CAO figure is verified, else HR enters it and normSource is handmatig. NoSelfApprovalGuard stops the teacher (employeeUserId) confirming their own plan.",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "employeeId",
+                    "orgUnitId",
+                    "schoolYear",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "transitions": {
+                            "vaststellen": {
+                                "from": [
+                                    "concept"
+                                ],
+                                "to": "vastgesteld",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "A school leader or HR confirms the plan. The teacher cannot confirm their own plan."
+                            },
+                            "heropenen": {
+                                "from": [
+                                    "vastgesteld"
+                                ],
+                                "to": "concept",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "The plan is opened again for changes."
+                            }
+                        }
+                    },
+                    "x-openregister-calculations": {
+                        "differenceHours": {
+                            "type": "number",
+                            "materialise": true,
+                            "title": "Difference",
+                            "description": "plannedHours minus normHours; above zero is an overload.",
+                            "expression": {
+                                "-": [
+                                    {
+                                        "coalesce": [
+                                            {
+                                                "prop": "plannedHours"
+                                            },
+                                            0
+                                        ]
+                                    },
+                                    {
+                                        "prop": "normHours"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Teacher",
+                        "description": "The teacher this plan is for."
+                    },
+                    "employeeUserId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Teacher's account",
+                        "description": "The teacher's Nextcloud account.",
+                        "x-notes": "Denormalised uid of the teacher: the teacher may read their own plan, and NoSelfApprovalGuard refuses them on vaststellen."
+                    },
+                    "orgUnitId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "OrgUnit",
+                        "title": "School",
+                        "description": "The school the teacher is deployed at."
+                    },
+                    "schoolYear": {
+                        "type": "string",
+                        "pattern": "^[0-9]{4}-[0-9]{4}$",
+                        "title": "School year",
+                        "description": "The school year, for example 2026-2027 (1 August to 31 July)."
+                    },
+                    "normHours": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Norm hours",
+                        "description": "The hours the teacher's contracts give for the school year."
+                    },
+                    "normSource": {
+                        "type": "string",
+                        "nullable": true,
+                        "enum": [
+                            "cao",
+                            "handmatig"
+                        ],
+                        "x-enum-labels": {
+                            "cao": "From the CAO",
+                            "handmatig": "Entered by hand"
+                        },
+                        "title": "Norm source",
+                        "description": "Whether the norm comes from the CAO or was entered by hand."
+                    },
+                    "lines": {
+                        "type": "array",
+                        "title": "Plan lines",
+                        "description": "The planned hours per category.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "category": {
+                                    "type": "string",
+                                    "enum": [
+                                        "lesgevend",
+                                        "lesgebonden",
+                                        "schooltaak",
+                                        "professionalisering",
+                                        "duurzame-inzetbaarheid"
+                                    ],
+                                    "x-enum-labels": {
+                                        "lesgevend": "Teaching",
+                                        "lesgebonden": "Lesson-related tasks",
+                                        "schooltaak": "School tasks",
+                                        "professionalisering": "Professional development",
+                                        "duurzame-inzetbaarheid": "Sustainable employability"
+                                    },
+                                    "title": "Category"
+                                },
+                                "subject": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "title": "Subject"
+                                },
+                                "educationLevel": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "title": "Education level"
+                                },
+                                "hoursPerWeek": {
+                                    "type": "number",
+                                    "nullable": true,
+                                    "minimum": 0,
+                                    "title": "Hours per week"
+                                },
+                                "weeks": {
+                                    "type": "number",
+                                    "nullable": true,
+                                    "minimum": 0,
+                                    "title": "Weeks"
+                                },
+                                "hours": {
+                                    "type": "number",
+                                    "nullable": true,
+                                    "minimum": 0,
+                                    "title": "Hours",
+                                    "description": "Hours per week times weeks for a teaching line; the hours themselves for any other line."
+                                }
+                            },
+                            "required": [
+                                "category"
+                            ]
+                        }
+                    },
+                    "plannedHours": {
+                        "type": "number",
+                        "readOnly": true,
+                        "title": "Planned hours",
+                        "description": "The total of the plan lines."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "concept",
+                            "vastgesteld"
+                        ],
+                        "x-enum-labels": {
+                            "concept": "Draft",
+                            "vastgesteld": "Confirmed"
+                        },
+                        "title": "Status",
+                        "description": "Draft while the plan is made; confirmed once agreed."
+                    }
+                }
+            }
+        }
+    }
+}

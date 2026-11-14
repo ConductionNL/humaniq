@@ -3140,6 +3140,10 @@
 				],
 				"register": "humaniq",
 				"schema": "OrgUnit",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
 				"widgets": [
 					{
 						"content": {
@@ -3448,10 +3452,18 @@
 								"projectId",
 								"billable",
 								"costCenter",
-								"userId"
+								"userId",
+								"domainObjectType",
+								"domainObjectRef"
 							],
 							"overrides": {
 								"costCenter": {
+									"editable": false
+								},
+								"domainObjectRef": {
+									"editable": false
+								},
+								"domainObjectType": {
 									"editable": false
 								},
 								"hours": {
@@ -11598,7 +11610,8 @@
 				"register": "humaniq",
 				"schema": "SurveyInvitation",
 				"sidebar": {
-					"enabled": false
+					"enabled": true,
+					"showMetadata": true
 				},
 				"widgets": [
 					{

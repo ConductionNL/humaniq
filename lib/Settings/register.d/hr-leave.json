@@ -20,6 +20,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-notifications": {
                             "leave-approved": {
                                 "trigger": {
@@ -261,6 +262,7 @@
                     "entitledHours"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-calculations": {
                         "remainingHours": {
                             "type": "number",
@@ -466,6 +468,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-notifications": {
                             "leave-transaction-approved": {
                                 "trigger": {

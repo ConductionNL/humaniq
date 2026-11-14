@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "Employee": {
+                "configuration": {"exportable": true},
                 "slug": "Employee",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}, {"group": "authenticated", "match": {"deputyUserIds": {"$contains": "$userId"}}}], "create": ["humaniq-hr"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr"]},
                 "icon": "AccountTieOutline",
@@ -72,6 +73,7 @@
                 }
             },
             "EmploymentContract": {
+                "configuration": {"exportable": true},
                 "slug": "EmploymentContract",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr"]},
                 "icon": "FileSign",
@@ -128,6 +130,7 @@
                 "version": "0.19.0",
                 "exportable": true,
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-notifications": {
                         "payslip-ready": {
                             "trigger": {
@@ -271,6 +274,7 @@
                 "icon": "CogPlayOutline",
                 "version": "0.5.0",
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-flows": [
                         {
                             "name": "Loonrun",
@@ -369,6 +373,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "open",
@@ -501,6 +506,7 @@
                 }
             },
             "PayrollMutationReport": {
+                "configuration": {"exportable": true},
                 "slug": "PayrollMutationReport",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "SwapHorizontal",
@@ -574,6 +580,7 @@
                     "deadline"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "concept",
@@ -701,6 +708,7 @@
                 }
             },
             "WkrDeclaration": {
+                "configuration": {"exportable": true},
                 "slug": "WkrDeclaration",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "GiftOutline",
@@ -732,6 +740,7 @@
                 }
             },
             "WkrAssessment": {
+                "configuration": {"exportable": true},
                 "slug": "WkrAssessment",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "CalculatorVariantOutline",

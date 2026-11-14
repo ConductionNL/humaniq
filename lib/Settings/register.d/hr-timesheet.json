@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "TimeEntry": {
+                "configuration": {"exportable": true},
                 "slug": "TimeEntry",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "ClockPlusOutline",
@@ -171,6 +172,7 @@
                     "period"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-notifications": {
                             "timesheet-approved": {
                                 "trigger": {

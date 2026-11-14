@@ -18,6 +18,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-notifications": {
                             "expense-approved": {
                                 "trigger": {
@@ -498,6 +499,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "draft",
@@ -775,6 +777,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "draft",
@@ -923,6 +926,7 @@
                 }
             },
             "WpmReport": {
+                "configuration": {"exportable": true},
                 "slug": "WpmReport",
                 "icon": "ChartBar",
                 "version": "0.1.0",
@@ -1075,6 +1079,7 @@
                 }
             },
             "ReceiptExtraction": {
+                "configuration": {"exportable": true},
                 "slug": "ReceiptExtraction",
                 "icon": "TextRecognition",
                 "version": "0.1.0",
