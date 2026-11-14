@@ -867,7 +867,7 @@
 				},
 				{
 					"id": "Integraties",
-					"label": "Integrations",
+					"label": "Access grants",
 					"icon": "PowerPlugOutline",
 					"route": "IntegrationAccounts"
 				},

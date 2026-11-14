@@ -57,6 +57,7 @@ use OCA\Humaniq\Listener\FrequentAbsenceListener;
 use OCA\Humaniq\Listener\HandoffIntakeListener;
 use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
+use OCA\Humaniq\Listener\OfferHrAssistantListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
 use OCA\Humaniq\Listener\ManagerAccessListeners;
 use OCA\Humaniq\Listener\ManagerDeputyListener;
@@ -157,6 +158,10 @@ class Application extends App implements IBootstrap {
 		// problem details). Registered first: Nextcloud runs afterController in
 		// reverse order, so it sees the final response of every other middleware.
 		$context->registerMiddleware(class: ApiContractMiddleware::class);
+
+		// self-service-policy-assistant D2: offer Hermiq the HR-vraagbaak template.
+		// The event is named by string, so humaniq installs without Hermiq.
+		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);
 		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class)));
 		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
 		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);

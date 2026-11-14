@@ -56,9 +56,13 @@ class McpSurfaceTest extends TestCase {
 	 * @var list<string>
 	 */
 	private const ALLOWED = [
+		'Announcement',
 		'Asset',
 		'AssetAssignment',
+		'Cao',
 		'Expense',
+		'LeaveType',
+		'Normfunctie',
 		'OrgUnit',
 		'Timesheet',
 		'Vacancy',
@@ -130,13 +134,16 @@ class McpSurfaceTest extends TestCase {
 	}
 
 	/**
-	 * The surface is exactly the six argued schemas, no more and no fewer.
+	 * The surface is exactly the argued schemas, no more and no fewer: the six
+	 * of the MCP surface, and the four reference schemas the HR question
+	 * assistant answers from (self-service-policy-assistant D1). None of those
+	 * four holds a salary, a BSN, a health value or an identified employee.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/humaniq-mcp-surface/spec.md
 	 */
-	public function testTheMcpSurfaceIsExactlyTheSixAllowlistedSchemas(): void {
+	public function testTheMcpSurfaceIsExactlyTheAllowlistedSchemas(): void {
 		$declared = array_keys($this->mcpBlocks());
 		sort($declared);
 
@@ -146,7 +153,7 @@ class McpSurfaceTest extends TestCase {
 			'the MCP surface moved; every addition needs its exclusion argument re-made'
 		);
 
-	}//end testTheMcpSurfaceIsExactlyTheSixAllowlistedSchemas()
+	}//end testTheMcpSurfaceIsExactlyTheAllowlistedSchemas()
 
 	/**
 	 * No refused schema has quietly grown a block.
@@ -281,21 +288,21 @@ class McpSurfaceTest extends TestCase {
 	}//end testEveryVerbCarriesAUsefulDescription()
 
 	/**
-	 * The surface is 12 derived tools: six schemas, search and get each.
+	 * The surface is 20 derived tools: ten schemas, search and get each.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/humaniq-mcp-surface/spec.md
 	 */
-	public function testTheDerivedSurfaceIsTwelveTools(): void {
+	public function testTheDerivedSurfaceIsTwentyTools(): void {
 		$tools = 0;
 		foreach ($this->mcpBlocks() as $block) {
 			$this->assertTrue(($block['enabled'] ?? false), 'a declared block that is not enabled derives nothing');
 			$tools += count((($block['tools'] ?? []) ?: []));
 		}
 
-		$this->assertSame(12, $tools);
+		$this->assertSame(20, $tools);
 
-	}//end testTheDerivedSurfaceIsTwelveTools()
+	}//end testTheDerivedSurfaceIsTwentyTools()
 
 }//end class
