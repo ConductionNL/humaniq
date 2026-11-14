@@ -352,6 +352,12 @@
 					"route": "MijnVerlofKopenVerkopen"
 				},
 				{
+					"icon": "WalletOutline",
+					"id": "MijnKeuzebudget",
+					"label": "My choice budget",
+					"route": "MijnKeuzebudget"
+				},
+				{
 					"icon": "ScaleBalance",
 					"id": "MijnGebruikelijkLoon",
 					"label": "My customary wage",
@@ -697,6 +703,24 @@
 					"route": "LeaveBalances"
 				},
 				{
+					"icon": "WalletPlusOutline",
+					"id": "IkbSpendRequests",
+					"label": "Choice budget requests",
+					"route": "IkbSpendRequests"
+				},
+				{
+					"icon": "WalletOutline",
+					"id": "IkbBudgets",
+					"label": "Choice budgets",
+					"route": "IkbBudgets"
+				},
+				{
+					"icon": "TargetAccount",
+					"id": "IkbGoals",
+					"label": "Choice budget goals",
+					"route": "IkbGoals"
+				},
+				{
 					"icon": "CalendarRemoveOutline",
 					"id": "VerlofVervaltBinnenkort",
 					"label": "Leave that lapses soon",
@@ -849,6 +873,12 @@
 					"id": "Payslips",
 					"label": "Payslips",
 					"route": "Payslips"
+				},
+				{
+					"icon": "CashFast",
+					"id": "ReservationPayouts",
+					"label": "Reserve payouts",
+					"route": "ReservationPayouts"
 				},
 				{
 					"icon": "FileCertificateOutline",
@@ -15486,6 +15516,209 @@
 			"type": "index"
 		},
 		{
+			"config": {
+				"_note": "payroll-reservation-payouts D8.",
+				"columns": [
+					"employeeId",
+					"year",
+					"goal",
+					"amount",
+					"hours",
+					"settlementPeriod",
+					"status"
+				],
+				"description": "Requests to spend the individual choice budget: as a payout, as extra leave or on a goal HR allows. The payroll run of the settlement period settles an approved request.",
+				"filters": [
+					"status",
+					"goal",
+					"year"
+				],
+				"register": "humaniq",
+				"schema": "IkbSpendRequest",
+				"sort": {
+					"field": "settlementPeriod",
+					"order": "desc"
+				}
+			},
+			"id": "IkbSpendRequests",
+			"route": "/ikb-requests",
+			"title": "Choice budget requests",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-reservation-payouts D8: approve is guarded by IkbSpendApprovalGuard (no self-approval, never above the balance); settle is not a button, the payroll run settles the request when its run is approved.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "submit",
+							"from": [
+								"draft",
+								"rejected"
+							],
+							"label": "Submit",
+							"to": "submitted"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted"
+							],
+							"label": "Approve",
+							"to": "approved"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"submitted"
+							],
+							"label": "Reject",
+							"to": "rejected"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "IkbSpendRequest",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"managerUserId",
+								"deputyUserIds",
+								"settledInRunId"
+							],
+							"title": "Request"
+						},
+						"icon": "WalletPlusOutline",
+						"id": "data",
+						"title": "Request",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "IkbSpendRequestDetail",
+			"route": "/ikb-requests/:id",
+			"title": "Choice budget request",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "payroll-reservation-payouts D8: written by run approval, never by hand.",
+				"allowCreate": false,
+				"columns": [
+					"employeeId",
+					"year",
+					"accrued",
+					"spent",
+					"balance"
+				],
+				"description": "Each employee's individual choice budget per year: built up on every approved payslip, used by settled requests.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"year"
+				],
+				"register": "humaniq",
+				"schema": "IkbBudget",
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				}
+			},
+			"id": "IkbBudgets",
+			"route": "/ikb-budgets",
+			"title": "Choice budgets",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-reservation-payouts D8.",
+				"columns": [
+					"name",
+					"taxTreatment",
+					"wkrCategory",
+					"active"
+				],
+				"description": "What employees may spend the choice budget on besides a payout or extra leave, and how each is taxed.",
+				"filters": [
+					"taxTreatment",
+					"active"
+				],
+				"register": "humaniq",
+				"schema": "IkbGoal",
+				"sort": {
+					"field": "name",
+					"order": "asc"
+				}
+			},
+			"id": "IkbGoals",
+			"route": "/ikb-goals",
+			"title": "Choice budget goals",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-reservation-payouts D8: self-service.",
+				"columns": [
+					"year",
+					"goal",
+					"amount",
+					"hours",
+					"settlementPeriod",
+					"status"
+				],
+				"description": "Your requests to spend your individual choice budget: pay it out, buy extra leave or spend it on a goal your employer allows.",
+				"filter": {
+					"userId": "@me"
+				},
+				"register": "humaniq",
+				"schema": "IkbSpendRequest",
+				"sort": {
+					"field": "settlementPeriod",
+					"order": "desc"
+				}
+			},
+			"id": "MijnKeuzebudget",
+			"route": "/mijn/keuzebudget",
+			"title": "My choice budget",
+			"type": "index"
+		},
+		{
 			"actions": [
 				{
 					"icon": "PlusCircleOutline",
@@ -15985,6 +16218,102 @@
 			"id": "PayrollRunFindingDetail",
 			"route": "/payroll-run-findings/:id",
 			"title": "Payroll run finding",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "payroll-reservation-payouts D4: written by the run, paid on run approval.",
+				"allowCreate": false,
+				"columns": [
+					"employeeId",
+					"kind",
+					"reason",
+					"basisFrom",
+					"basisTo",
+					"amount",
+					"period",
+					"status"
+				],
+				"description": "Holiday allowance, end-of-year payment and choice budget paid out by the payroll runs, with the periods each covers. Amounts in cents.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"kind",
+					"reason",
+					"status",
+					"period"
+				],
+				"register": "humaniq",
+				"schema": "ReservationPayout",
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				}
+			},
+			"id": "ReservationPayouts",
+			"route": "/reservation-payouts",
+			"title": "Reserve payouts",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-reservation-payouts D4.",
+				"layout": [
+					{
+						"gridHeight": 7,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 7,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "ReservationPayout",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"payrollRunId",
+								"payslipId",
+								"ikbSpendRequestId"
+							],
+							"title": "Payout"
+						},
+						"icon": "CashFast",
+						"id": "data",
+						"title": "Payout",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "ReservationPayoutDetail",
+			"route": "/reservation-payouts/:id",
+			"title": "Reserve payout",
 			"type": "detail"
 		},
 		{

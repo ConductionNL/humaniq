@@ -540,6 +540,26 @@
 		"route": "/mijn/verlof-kopen-verkopen"
 	},
 	{
+		"id": "IkbSpendRequests",
+		"route": "/ikb-requests"
+	},
+	{
+		"id": "IkbSpendRequestDetail",
+		"route": "/ikb-requests/:id"
+	},
+	{
+		"id": "IkbBudgets",
+		"route": "/ikb-budgets"
+	},
+	{
+		"id": "IkbGoals",
+		"route": "/ikb-goals"
+	},
+	{
+		"id": "MijnKeuzebudget",
+		"route": "/mijn/keuzebudget"
+	},
+	{
 		"id": "Loonbeslagen",
 		"route": "/loonbeslagen"
 	},
@@ -586,6 +606,14 @@
 	{
 		"id": "PayrollRunFindingDetail",
 		"route": "/payroll-run-findings/:id"
+	},
+	{
+		"id": "ReservationPayouts",
+		"route": "/reservation-payouts"
+	},
+	{
+		"id": "ReservationPayoutDetail",
+		"route": "/reservation-payouts/:id"
 	},
 	{
 		"id": "KeyResultDetail",

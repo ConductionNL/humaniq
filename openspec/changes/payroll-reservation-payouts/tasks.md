@@ -35,9 +35,9 @@
 
 ## 4. Pages and seed
 
-- [ ] 4.1 Add payout and IKB pages, a self-service IKB page, and the new payslip fields.
+- [x] 4.1 Add payout and IKB pages, a self-service IKB page, and the new payslip fields.
       Verify: `npm run check:manifest` exits 0.
-- [ ] 4.2 Seed the IKB rate, one request and the schedule. Verify: `npm run check:seed-refs`
+- [x] 4.2 Seed the IKB rate, one request and the schedule. Verify: `npm run check:seed-refs`
       exits 0.
 
 ## 5. Verification

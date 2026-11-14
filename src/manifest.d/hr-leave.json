@@ -366,6 +366,170 @@
 				},
 				"description": "Your own leave buy/sell transactions (leave-buy-sell, IKB-style)."
 			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "IkbSpendRequest",
+			"params": {
+				"id": "IkbSpendRequests",
+				"route": "/ikb-requests",
+				"title": "Choice budget requests",
+				"columns": [
+					"employeeId",
+					"year",
+					"goal",
+					"amount",
+					"hours",
+					"settlementPeriod",
+					"status"
+				],
+				"sort": {
+					"field": "settlementPeriod",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"goal",
+					"year"
+				],
+				"description": "Requests to spend the individual choice budget: as a payout, as extra leave or on a goal HR allows. The payroll run of the settlement period settles an approved request.",
+				"note": "payroll-reservation-payouts D8."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "IkbSpendRequest",
+			"params": {
+				"id": "IkbSpendRequestDetail",
+				"route": "/ikb-requests/:id",
+				"title": "Choice budget request",
+				"dataTitle": "Request",
+				"dataIcon": "WalletPlusOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"exclude": [
+					"employeeId",
+					"managerUserId",
+					"deputyUserIds",
+					"settledInRunId"
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "submit",
+							"from": [
+								"draft",
+								"rejected"
+							],
+							"to": "submitted",
+							"label": "Submit"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted"
+							],
+							"to": "approved",
+							"label": "Approve"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"submitted"
+							],
+							"to": "rejected",
+							"label": "Reject"
+						}
+					]
+				},
+				"note": "payroll-reservation-payouts D8: approve is guarded by IkbSpendApprovalGuard (no self-approval, never above the balance); settle is not a button, the payroll run settles the request when its run is approved."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "IkbBudget",
+			"params": {
+				"id": "IkbBudgets",
+				"route": "/ikb-budgets",
+				"title": "Choice budgets",
+				"columns": [
+					"employeeId",
+					"year",
+					"accrued",
+					"spent",
+					"balance"
+				],
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				},
+				"filters": [
+					"year"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"allowCreate": false,
+				"description": "Each employee's individual choice budget per year: built up on every approved payslip, used by settled requests.",
+				"note": "payroll-reservation-payouts D8: written by run approval, never by hand."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "IkbGoal",
+			"params": {
+				"id": "IkbGoals",
+				"route": "/ikb-goals",
+				"title": "Choice budget goals",
+				"columns": [
+					"name",
+					"taxTreatment",
+					"wkrCategory",
+					"active"
+				],
+				"sort": {
+					"field": "name",
+					"order": "asc"
+				},
+				"filters": [
+					"taxTreatment",
+					"active"
+				],
+				"description": "What employees may spend the choice budget on besides a payout or extra leave, and how each is taxed.",
+				"note": "payroll-reservation-payouts D8."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "IkbSpendRequest",
+			"params": {
+				"id": "MijnKeuzebudget",
+				"route": "/mijn/keuzebudget",
+				"title": "My choice budget",
+				"columns": [
+					"year",
+					"goal",
+					"amount",
+					"hours",
+					"settlementPeriod",
+					"status"
+				],
+				"sort": {
+					"field": "settlementPeriod",
+					"order": "desc"
+				},
+				"filter": {
+					"userId": "@me"
+				},
+				"description": "Your requests to spend your individual choice budget: pay it out, buy extra leave or spend it on a goal your employer allows.",
+				"note": "payroll-reservation-payouts D8: self-service."
+			}
 		}
 	]
 }

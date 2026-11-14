@@ -2155,6 +2155,7 @@
                 "startDate": "2024-01-01",
                 "endDate": null,
                 "hoursPerWeek": 36,
+                "ikbRate": 10,
                 "hourlyWage": 24.36,
                 "salaryBandId": "@ref:salaryband-a",
                 "salaryStep": 2,
@@ -2568,6 +2569,10 @@
                 "aangifteContactName": "Example: Payroll desk",
                 "aangifteContactPhone": "020 123 4567",
                 "active": true,
+                "holidayAllowancePayout": "yearly",
+                "holidayAllowanceMonth": 5,
+                "endOfYearMonth": 12,
+                "ikbPayOutRemainder": false,
                 "frequentAbsenceThreshold": 3,
                 "frequentAbsenceWindowMonths": 12,
                 "abpAansluitingsplichtig": true,
@@ -3526,6 +3531,50 @@
                 "awfOverrunPercentYearToDate": 41,
                 "statementProvided": true,
                 "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "IkbGoal",
+                    "slug": "ikbgoal-vakbond"
+                },
+                "name": "Vakbondscontributie",
+                "description": "De contributie van je vakbond, met het jaaroverzicht van de bond als bewijs.",
+                "taxTreatment": "exempt",
+                "wkrCategory": "gericht-vrijgesteld",
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "IkbBudget",
+                    "slug": "ikbbudget-jansen-2026"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "userId": "admin",
+                "administrationId": "ADM-001",
+                "year": 2026,
+                "accrued": 1900.0,
+                "spent": 0.0,
+                "balance": 1900.0,
+                "accruedRunIds": [],
+                "_note": "payroll-reservation-payouts (design.md Seed data): five months of 10% of 3800.00, so the approved 800.00 payout below fits the balance."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "IkbSpendRequest",
+                    "slug": "ikbrequest-jansen-uitbetaling"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "userId": "admin",
+                "year": 2026,
+                "goal": "payout",
+                "amount": 800.0,
+                "settlementPeriod": "2026-06",
+                "status": "approved",
+                "approvedBy": null,
+                "_note": "payroll-reservation-payouts (design.md Seed data): an approved payout request settling in 2026-06, paid at the special rate once the special-rate table is verified."
             }
         ]
     }
