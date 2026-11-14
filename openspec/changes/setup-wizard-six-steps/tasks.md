@@ -29,21 +29,21 @@
 - [ ] 3.1 `status()`: report the six step ids, each done once answered or skipped (app-config
       keys `administrations_decided`, `working_mode`, `default_language`, existing demo and
       templates keys). Verify: unit tests for fresh, skipped and answered per step.
-- [ ] 3.2 `runAction('create-administrations')`: validate every entry first (400 on a missing
+- [x] 3.2 `runAction('create-administrations')`: validate every entry first (400 on a missing
       name or loonheffingennummer, nothing created), then create or reuse `hrAdministration` by
       loonheffingennummer through ObjectService, add an `AdministrationAccess` row of role `hr`
       for the admin, make the first the admin's active administration, and remember the ids.
       Verify: unit tests for create two, rerun without duplicates, refused entry.
-- [ ] 3.3 `saveConfig()`: refuse an unknown `working_mode` or `default_language` with 400 before
+- [x] 3.3 `saveConfig()`: refuse an unknown `working_mode` or `default_language` with 400 before
       storing; on a valid `working_mode`, write `mode` on the remembered administrations.
       Verify: unit tests for both refusals and for the mode write.
-- [ ] 3.4 The health check names the imported schema count, the background job state and the
+- [x] 3.4 The health check names the imported schema count, the background job state and the
       loaded payroll tables year, and reports a failure as failed. Verify: unit test with a
       failed import.
 
 ## 4. Language fallback
 
-- [ ] 4.1 A language resolver used by humaniq's notifications and generated documents: the
+- [x] 4.1 A language resolver used by humaniq's notifications and generated documents: the
       employee's Nextcloud language, else `default_language`, else `nl`. Verify: unit tests for
       both REQ-FTS-010 scenarios.
 

@@ -7,7 +7,7 @@
 			"params": {
 				"id": "IntegrationAccounts",
 				"route": "/configuratie/integraties",
-				"title": "Integrations",
+				"title": "Access grants",
 				"columns": [
 					"name",
 					"purpose",

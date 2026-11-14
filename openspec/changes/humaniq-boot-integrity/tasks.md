@@ -291,10 +291,17 @@ So the manifest is fine and the local script has an ESM-resolution weakness. Two
 attributed to one cause were three separate things, and "consistent with" did a lot of unearned work
 in that sentence.
 
-- [ ] 7.5 Convert `tests/validate-widget-keys.js` to `.mjs` with a dynamic import, matching the fix
+- [x] 7.5 Convert `tests/validate-widget-keys.js` to `.mjs` with a dynamic import, matching the fix
       already applied to `check-manifest-sentinels`. Not done here: it is a pre-existing local-only
       script defect, CI is green on the gate that matters, and changing a validator at the end of a
       long session is how a green run stops meaning anything.
+  Done differently, after measuring (2026-11-14): with `node_modules` matching the lockfile the bare
+  run failed with `TypeError [ERR_INVALID_ARG_TYPE]` in `@nextcloud/webpack-vue-config`, which names
+  the bundle from `npm_package_name` and `npm_package_version`; only `npm run` sets those, so the
+  probe build threw and every layer-3 key was reported UNRESOLVED. Not an ESM resolution: a `.mjs`
+  would have failed the same way. The probe build now takes the two from `package.json` when npm did
+  not set them. Measured: `node tests/validate-widget-keys.js` and `npm run check:widget-keys` both
+  exit 0 (21 keys), and the bare run still exits 1 naming an unknown widget type put in a fragment.
 
 
 ## 8. Measured 2026-09-07, still genuinely open
