@@ -800,6 +800,14 @@
 		"route": "/niet-werkdagen/:id"
 	},
 	{
+		"id": "BenefitEntitlements",
+		"route": "/benefit-entitlements"
+	},
+	{
+		"id": "BenefitEntitlementDetail",
+		"route": "/benefit-entitlements/:id"
+	},
+	{
 		"id": "DeploymentPlans",
 		"route": "/deployment-plans"
 	},

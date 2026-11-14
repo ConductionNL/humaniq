@@ -6,7 +6,7 @@
                 "slug": "LeaveRequest",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "CalendarClock",
-                "version": "0.6.0",
+                "version": "0.7.0",
                 "title": "Leave request",
                 "description": "An employee request for leave (verlofaanvraag): a period of holiday, sick, unpaid, special, care or parental leave submitted for manager approval. The request lifecycle (draft → submitted → approved/rejected, with the shared no-self-approval separation-of-duties guard) is fully declarative per ADR-031, mirroring the Timesheet and Expense workflows. Leave is the HR/labour surface the portaliq fleet review flagged as missing in humaniq; external employees create and track these requests through the shared external portal (ADR-046), while approval stays a back-office manager action.",
                 "type": "object",
@@ -19,6 +19,188 @@
                     "status"
                 ],
                 "configuration": {
+                    "x-openregister-flows": [
+                        {
+                            "name": "Verlofaanvraag blijft liggen",
+                            "app": "humaniq",
+                            "description": "Starts when a leave request is updated and continues only while it is submitted (platform-hr-workflows). It waits five days, reads the request again, and when nobody has decided it yet tells the HR group and gives HR a task to follow it up; a request approved or rejected in the meantime ends the run without a message. The flow arrives disabled per the engine's adoption contract: enable it deliberately, re-point the HR group (humaniq-hr) if your HR team uses another, and change the wait step's duration to the number of days your organisation allows.",
+                            "trigger": "object.updated",
+                            "triggerRegister": "humaniq",
+                            "executionMode": "async",
+                            "limits": {
+                                "maxTransitions": 50
+                            },
+                            "nodes": [
+                                {
+                                    "id": "start",
+                                    "type": "openregister.trigger-object",
+                                    "config": {
+                                        "event": "object.updated",
+                                        "register": "humaniq",
+                                        "schema": "LeaveRequest"
+                                    }
+                                },
+                                {
+                                    "id": "only-submitted",
+                                    "type": "openregister.switch",
+                                    "config": {},
+                                    "exits": [
+                                        {
+                                            "id": "submitted",
+                                            "condition": {
+                                                "==": [
+                                                    {
+                                                        "var": "json.status"
+                                                    },
+                                                    "submitted"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": "other"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "wait",
+                                    "type": "openregister.wait",
+                                    "config": {
+                                        "for": "5 days"
+                                    }
+                                },
+                                {
+                                    "id": "reread",
+                                    "type": "openregister.object-read",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "LeaveRequest",
+                                        "filters": {
+                                            "@self": {
+                                                "uuid": "{{ id }}"
+                                            }
+                                        },
+                                        "limit": 1,
+                                        "fanOut": false,
+                                        "output": "current"
+                                    }
+                                },
+                                {
+                                    "id": "still-submitted",
+                                    "type": "openregister.switch",
+                                    "config": {},
+                                    "exits": [
+                                        {
+                                            "id": "submitted",
+                                            "condition": {
+                                                "==": [
+                                                    {
+                                                        "var": "json.current.0.status"
+                                                    },
+                                                    "submitted"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": "other"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "notify-hr",
+                                    "type": "openregister.send-notification",
+                                    "config": {
+                                        "recipients": [
+                                            "humaniq-hr"
+                                        ],
+                                        "title": "Verlofaanvraag wacht op een besluit",
+                                        "message": "De verlofaanvraag van {{ startDate }} tot {{ endDate }} is ingediend en nog niet beoordeeld. HR heeft een taak om dit op te volgen."
+                                    }
+                                },
+                                {
+                                    "id": "hr-follow-up",
+                                    "type": "openregister.user-task",
+                                    "config": {
+                                        "title": "Verlofaanvraag {{ startDate }} tot {{ endDate }} opvolgen",
+                                        "description": "Deze verlofaanvraag is ingediend en na de wachttijd nog niet beoordeeld. Neem contact op met de leidinggevende ({{ managerUserId }}) zodat er een besluit komt.",
+                                        "performerType": "group",
+                                        "candidateGroups": [
+                                            "humaniq-hr"
+                                        ],
+                                        "outcomes": [
+                                            "gedaan"
+                                        ],
+                                        "outcomeKey": "escalation"
+                                    }
+                                },
+                                {
+                                    "id": "end",
+                                    "type": "openregister.end",
+                                    "config": {}
+                                },
+                                {
+                                    "id": "end-not-submitted",
+                                    "type": "openregister.end",
+                                    "config": {}
+                                },
+                                {
+                                    "id": "end-decided",
+                                    "type": "openregister.end",
+                                    "config": {}
+                                }
+                            ],
+                            "edges": [
+                                {
+                                    "id": "e-start",
+                                    "from": "start",
+                                    "to": "only-submitted"
+                                },
+                                {
+                                    "id": "e-submitted",
+                                    "from": "only-submitted",
+                                    "fromExit": "submitted",
+                                    "to": "wait"
+                                },
+                                {
+                                    "id": "e-not-submitted",
+                                    "from": "only-submitted",
+                                    "fromExit": "other",
+                                    "to": "end-not-submitted"
+                                },
+                                {
+                                    "id": "e-waited",
+                                    "from": "wait",
+                                    "to": "reread"
+                                },
+                                {
+                                    "id": "e-reread",
+                                    "from": "reread",
+                                    "to": "still-submitted"
+                                },
+                                {
+                                    "id": "e-still",
+                                    "from": "still-submitted",
+                                    "fromExit": "submitted",
+                                    "to": "notify-hr"
+                                },
+                                {
+                                    "id": "e-decided",
+                                    "from": "still-submitted",
+                                    "fromExit": "other",
+                                    "to": "end-decided"
+                                },
+                                {
+                                    "id": "e-notified",
+                                    "from": "notify-hr",
+                                    "to": "hr-follow-up"
+                                },
+                                {
+                                    "id": "e-followed",
+                                    "from": "hr-follow-up",
+                                    "to": "end"
+                                }
+                            ]
+                        }
+                    ],
                     "exportable": true,
                     "x-openregister-notifications": {
                             "leave-approved": {
