@@ -80,7 +80,6 @@ use OCA\Humaniq\Support\FleetAppId;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use OCA\Humaniq\Support\ResolvesObjectService;
 use OCA\Humaniq\Support\NormalisesRows;
 
@@ -104,38 +103,11 @@ class HrDocumentService {
 	private const DOCUMENT_APP = 'filinq';
 
 	/**
-	 * filinq's rendering service, named relative to that app's root and
-	 * resolved by string FQCN only (no compile-time import -- design.md D2).
-	 *
-	 * @var string
-	 */
-	private const DOCUMENT_SERVICE_CLASS = 'Service\DocumentService';
-
-	/**
-	 * filinq's template lookup service, named relative to that app's root.
-	 *
-	 * @var string
-	 */
-	private const TEMPLATE_SERVICE_CLASS = 'Service\TemplateService';
-
-	/**
 	 * OpenRegister's file-storage service (read-only reuse, not docudesk).
 	 *
 	 * @var string
 	 */
 	private const OBJECT_FILE_SERVICE_FQCN = 'OCA\OpenRegister\Service\FileService';
-
-	/**
-	 * The docudesk template namespace humaniq's own templates live under
-	 * (design.md Context: TemplateService validates it as a lowercase NC app
-	 * id; "multiple apps maintain their own template collections").
-	 *
-	 * @var string
-	 */
-	// FROZEN at the old app id: docudesk stores this app's templates under this
-	// namespace. Renaming it would make every existing HR-document template
-	// unreachable and generation would silently produce nothing.
-	private const TEMPLATE_NAMESPACE = 'hrmq';
 
 	/**
 	 * This app's own generation-log schema.
@@ -216,6 +188,7 @@ class HrDocumentService {
 	 * @param SettingsService $settingsService Register slug, template config, and employer block.
 	 * @param PayrollRetentionGuardService $retentionGuard Reads a source's already-known retention ceiling and inherits a legal hold onto a generated PDF (hrmq#99 hole #1).
 	 * @param LoggerInterface $logger Logger.
+	 * @param DocudeskTemplates $docudesk docudesk service resolution, template selection and render options.
 	 * @param UwvNotificationData $uwvData The 42-week notification's fields.
 	 */
 	public function __construct(
@@ -224,6 +197,7 @@ class HrDocumentService {
 		private readonly SettingsService $settingsService,
 		private readonly PayrollRetentionGuardService $retentionGuard,
 		private readonly LoggerInterface $logger,
+		private readonly DocudeskTemplates $docudesk,
 		private readonly UwvNotificationData $uwvData = new UwvNotificationData(),
 	) {
 
@@ -1053,76 +1027,38 @@ class HrDocumentService {
 			return false;
 		}
 
-		try {
-			$this->documentService();
-			$this->templateService();
-		} catch (\Throwable $e) {
-			return false;
-		}
-
-		return true;
+		return $this->docudesk->available();
 	}//end docudeskAvailable()
 
 	/**
-	 * Template selection: config-UUID first, then namespace/category
-	 * discovery, fail closed on zero/multiple matches (design.md D3).
+	 * Template selection, shared with `OfferLetterService` (design.md D3).
 	 *
 	 * @param string $documentType The document type.
 	 *
 	 * @return array{templateId: string|null, error: string|null}
 	 */
 	private function selectTemplate(string $documentType): array {
-		$configured = trim($this->settingsService->getDocumentsTemplateId($documentType));
-		if ($configured !== '') {
-			return ['templateId' => $configured, 'error' => null];
-		}
-
-		try {
-			$templates = $this->templateService()->getTemplatesByNamespace(self::TEMPLATE_NAMESPACE);
-		} catch (\Throwable $e) {
-			return ['templateId' => null, 'error' => 'Kon docudesk-sjablonen niet opzoeken: ' . $e->getMessage()];
-		}
-
-		$matches = [];
-		foreach ($this->normaliseRows($templates) as $template) {
-			if ((string)($template['category'] ?? '') === $documentType) {
-				$matches[] = $template;
-			}
-		}
-
-		if (count($matches) === 0) {
-			return [
-				'templateId' => null,
-				'error' => sprintf(
-					'Geen docudesk-sjabloon gevonden voor "%s" in namespace "hrmq"; genereren is geweigerd.',
-					$documentType
-				),
-			];
-		}
-
-		if (count($matches) > 1) {
-			$names = array_map(
-				static fn (array $t): string => (string)($t['name'] ?? ($t['id'] ?? ($t['@self']['id'] ?? '?'))),
-				$matches
-			);
-
-			return [
-				'templateId' => null,
-				'error' => sprintf(
-					'Meerdere docudesk-sjablonen (%s) voor "%s" in namespace "hrmq"; genereren is geweigerd (nooit gokken tussen sjablonen die officiële documenten opleveren).',
-					implode(', ', $names),
-					$documentType
-				),
-			];
-		}
-
-		$id = (string)($matches[0]['id'] ?? $matches[0]['@self']['id'] ?? '');
-		if ($id === '') {
-			return ['templateId' => null, 'error' => 'Het gevonden docudesk-sjabloon heeft geen id.'];
-		}
-
-		return ['templateId' => $id, 'error' => null];
+		return $this->docudesk->selectTemplate($documentType);
 	}//end selectTemplate()
+
+	/**
+	 * The `options` payload for the docudesk render call (design.md D2).
+	 *
+	 * @param string $documentType The document type.
+	 * @param string|null $userId The acting user id, or null for 'system'.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function buildOptions(string $documentType, ?string $userId): array {
+		return $this->docudesk->renderOptions($documentType, $userId);
+	}//end buildOptions()
+
+	/**
+	 * @return mixed docudesk's DocumentService, resolved by string FQCN only (design.md D2).
+	 */
+	private function documentService(): mixed {
+		return $this->docudesk->documentService();
+	}//end documentService()
 
 	/**
 	 * The `dataRefs` payload for the docudesk render call (design.md D2,
@@ -1155,31 +1091,6 @@ class HrDocumentService {
 
 		return $refs;
 	}//end buildDataRefs()
-
-	/**
-	 * The `options` payload for the docudesk render call (design.md D2):
-	 * `adHocData` carries only the configured employer block and generation
-	 * metadata -- never flattened Employee/Contract field values.
-	 *
-	 * @param string $documentType The document type.
-	 * @param string|null $userId The acting user id, or null for 'system'.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function buildOptions(string $documentType, ?string $userId): array {
-		return [
-			'format' => 'pdf',
-			'userId' => ($userId !== null && trim($userId) !== '') ? $userId : 'system',
-			'adHocData' => [
-				'employer' => $this->settingsService->getDocumentsEmployerBlock(),
-				'document' => [
-					'type' => $documentType,
-					'requestedAt' => gmdate('Y-m-d\TH:i:s\Z'),
-				],
-			],
-		];
-
-	}//end buildOptions()
 
 	/**
 	 * The stored PDF's file name (design.md D4): `{documentType}-{employeeNumber}-{YYYY-MM-DD}.pdf`.
@@ -1356,30 +1267,6 @@ class HrDocumentService {
 	private function fileService(): mixed {
 		return $this->container->get(self::OBJECT_FILE_SERVICE_FQCN);
 	}//end fileService()
-
-	/**
-	 * @return mixed docudesk's DocumentService, resolved by string FQCN only (design.md D2).
-	 */
-	private function documentService(): mixed {
-		// Throws when no candidate namespace resolves, preserving the
-		// container->get() contract the *Available() probes below rely on:
-		// a null return here would read as "resolved fine" and let the
-		// caller proceed against nothing.
-		return FleetAppId::getService($this->container, self::DOCUMENT_APP, self::DOCUMENT_SERVICE_CLASS)
-			?? throw new RuntimeException('filinq service '.self::DOCUMENT_SERVICE_CLASS.' is not available under any known namespace.');
-	}//end documentService()
-
-	/**
-	 * @return mixed docudesk's TemplateService, resolved by string FQCN only (design.md D2).
-	 */
-	private function templateService(): mixed {
-		// Throws when no candidate namespace resolves, preserving the
-		// container->get() contract the *Available() probes below rely on:
-		// a null return here would read as "resolved fine" and let the
-		// caller proceed against nothing.
-		return FleetAppId::getService($this->container, self::DOCUMENT_APP, self::TEMPLATE_SERVICE_CLASS)
-			?? throw new RuntimeException('filinq service '.self::TEMPLATE_SERVICE_CLASS.' is not available under any known namespace.');
-	}//end templateService()
 
 	/**
 	 * @return string The configured humaniq register slug.

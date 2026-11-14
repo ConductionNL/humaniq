@@ -210,47 +210,74 @@ class PersonnelBudgetService {
 	 * @return array<string, mixed>
 	 */
 	private function placeLine(array $place, array $budgetRun): array {
-		['mutations' => $mutations, 'rows' => $rows, 'year' => $year, 'raise' => $raise] = $budgetRun;
-		$placeId = (string)($place['id'] ?? '');
-		$unit = $this->find(rows: (array)($rows['orgUnits'] ?? []), id: (string)($place['orgUnitId'] ?? ''));
-		$minimum = $this->scaleMinimum(place: $place, normfuncties: (array)($rows['normfuncties'] ?? []));
-		$line = [
-			'placeId' => $placeId, 'title' => (string)($place['title'] ?? ''), 'proposed' => (($place['proposed'] ?? false) === true),
-			'orgUnitId' => (string)($place['orgUnitId'] ?? ''), 'unitName' => (string)($unit['name'] ?? ''),
-			'costCenter' => (string)($unit['costCenter'] ?? ''), 'normfunctieId' => (string)($place['normfunctieId'] ?? ''),
-			'scaleMinimum' => $minimum, 'occupiedCost' => 0.0, 'vacantCost' => 0.0, 'unpriced' => false, 'fteByMonth' => [],
-		];
-		for ($month = 1; $month <= 12; $month++) {
-			$day = sprintf('%04d-%02d-01', $year, $month);
-			$budgeted = $this->budgetedOn(place: $place, mutations: $mutations, day: $day);
-			$occupied = $this->occupiedOn(placeId: $placeId, rows: $rows, day: $day, raise: $raise);
-			$vacant = max(0.0, ($budgeted - $occupied['fte']));
-			$line['occupiedCost'] += $occupied['cost'];
-			$line['vacantCost'] += ($minimum === null) ? 0.0 : ($vacant * $minimum * $raise);
-			$line['unpriced'] = ($line['unpriced'] || ($minimum === null && $vacant > 0.0));
-			$line['fteByMonth'][] = ['month' => substr($day, 0, 7), 'budgeted' => round($budgeted, 4), 'occupied' => round($occupied['fte'], 4), 'vacant' => round($vacant, 4)];
+		$month = new PersonnelBudgetMonth();
+		$month->rows = $budgetRun['rows'];
+		$month->mutations = $budgetRun['mutations'];
+		$month->raise = $budgetRun['raise'];
+		$month->place = $place;
+		$line = $this->emptyLine(month: $month);
+		for ($number = 1; $number <= 12; $number++) {
+			$month->day = sprintf('%04d-%02d-01', $budgetRun['year'], $number);
+			$line = $this->withMonth(line: $line, month: $month);
 		}
 
 		return $line;
 	}//end placeLine()
 
 	/**
-	 * The place's budgeted FTE on a day, with the scenario's changes.
+	 * The place's line before any month: who and where, and its scale
+	 * minimum, which is set on the month.
 	 *
-	 * @param array<string, mixed> $place The place.
-	 * @param array<int, array<string, mixed>> $mutations The scenario's mutations.
-	 * @param string $day The first of a month.
+	 * @param PersonnelBudgetMonth $month The place being budgeted; its scale minimum is set.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function emptyLine(PersonnelBudgetMonth $month): array {
+		$place = $month->place;
+		$unit = $this->find(rows: (array)($month->rows['orgUnits'] ?? []), id: (string)($place['orgUnitId'] ?? ''));
+		$month->minimum = $this->scaleMinimum(place: $place, normfuncties: (array)($month->rows['normfuncties'] ?? []));
+		return [
+			'placeId' => (string)($place['id'] ?? ''), 'title' => (string)($place['title'] ?? ''), 'proposed' => (($place['proposed'] ?? false) === true),
+			'orgUnitId' => (string)($place['orgUnitId'] ?? ''), 'unitName' => (string)($unit['name'] ?? ''),
+			'costCenter' => (string)($unit['costCenter'] ?? ''), 'normfunctieId' => (string)($place['normfunctieId'] ?? ''),
+			'scaleMinimum' => $month->minimum, 'occupiedCost' => 0.0, 'vacantCost' => 0.0, 'unpriced' => false, 'fteByMonth' => [],
+		];
+	}//end emptyLine()
+
+	/**
+	 * The line with one month added: its budgeted, occupied and vacant FTE,
+	 * the occupied cost and the vacant cost at the scale minimum.
+	 *
+	 * @param array<string, mixed> $line  The line so far.
+	 * @param PersonnelBudgetMonth $month The place and the month.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withMonth(array $line, PersonnelBudgetMonth $month): array {
+		$minimum = $month->minimum;
+		$budgeted = $this->budgetedOn(month: $month);
+		$occupied = $this->occupiedOn(month: $month);
+		$vacant = max(0.0, ($budgeted - $occupied['fte']));
+		$line['occupiedCost'] += $occupied['cost'];
+		$line['vacantCost'] += ($minimum === null) ? 0.0 : ($vacant * $minimum * $month->raise);
+		$line['unpriced'] = ($line['unpriced'] || ($minimum === null && $vacant > 0.0));
+		$line['fteByMonth'][] = ['month' => substr($month->day, 0, 7), 'budgeted' => round($budgeted, 4), 'occupied' => round($occupied['fte'], 4), 'vacant' => round($vacant, 4)];
+
+		return $line;
+	}//end withMonth()
+
+	/**
+	 * The place's budgeted FTE on the month's first day, with the scenario's changes.
+	 *
+	 * @param PersonnelBudgetMonth $month The place, the scenario's mutations and the day.
 	 *
 	 * @return float
 	 */
-	private function budgetedOn(array $place, array $mutations, string $day): float {
-		$fte = $this->runsOn(row: $place, from: 'validFrom', until: 'validUntil', day: $day) ? (float)($place['budgetedFte'] ?? 0) : 0.0;
-		$placeId = (string)($place['id'] ?? '');
-		foreach ($mutations as $mutation) {
-			$target = trim((string)($mutation['formatieplaatsId'] ?? ''));
-			$targetId = ($target === '') ? 'new:' . (string)($mutation['id'] ?? '') : $target;
-			$from = (string)($this->progression->date(value: ($mutation['effectiveDate'] ?? null))?->format('Y-m-d') ?? '9999-12-31');
-			if ($targetId === $placeId && $from <= $day) {
+	private function budgetedOn(PersonnelBudgetMonth $month): float {
+		$place = $month->place;
+		$fte = $this->runsOn(span: [($place['validFrom'] ?? null), ($place['validUntil'] ?? null)], day: $month->day) ? (float)($place['budgetedFte'] ?? 0) : 0.0;
+		foreach ($month->mutations as $mutation) {
+			if ($this->changesPlaceBy(mutation: $mutation, month: $month) === true) {
 				$fte += (float)($mutation['fteDelta'] ?? 0);
 			}
 		}
@@ -259,47 +286,78 @@ class PersonnelBudgetService {
 	}//end budgetedOn()
 
 	/**
-	 * The occupied FTE and its monthly cost on a day.
+	 * Whether a mutation changes the month's place by its first day: it
+	 * targets the place (a new place is `new:` and the mutation id) and is
+	 * effective on or before the day; without a date it never is.
 	 *
-	 * @param string $placeId The place.
-	 * @param array<string, mixed> $rows The rows.
-	 * @param string $day The first of a month.
-	 * @param float $raise The CAO raise factor.
+	 * @param array<string, mixed> $mutation The mutation.
+	 * @param PersonnelBudgetMonth $month    The place and the day.
+	 *
+	 * @return bool
+	 */
+	private function changesPlaceBy(array $mutation, PersonnelBudgetMonth $month): bool {
+		$target = trim((string)($mutation['formatieplaatsId'] ?? ''));
+		$targetId = ($target === '') ? 'new:' . (string)($mutation['id'] ?? '') : $target;
+		$from = (string)($this->progression->date(value: ($mutation['effectiveDate'] ?? null))?->format('Y-m-d') ?? '9999-12-31');
+
+		return ($targetId === (string)($month->place['id'] ?? '') && $from <= $month->day);
+	}//end changesPlaceBy()
+
+	/**
+	 * The occupied FTE of the place and its monthly cost on the month's first day.
+	 *
+	 * @param PersonnelBudgetMonth $month The place, the rows, the day and the raise factor.
 	 *
 	 * @return array{fte: float, cost: float}
 	 */
-	private function occupiedOn(string $placeId, array $rows, string $day, float $raise): array {
-		$contracts = (array)($rows['contracts'] ?? []);
+	private function occupiedOn(PersonnelBudgetMonth $month): array {
+		$placeId = (string)($month->place['id'] ?? '');
 		$out = ['fte' => 0.0, 'cost' => 0.0];
-		foreach ($contracts as $contract) {
-			if ((string)($contract['formatieplaatsId'] ?? '') !== $placeId || $this->runsOn(row: $contract, from: 'startDate', until: 'endDate', day: $day) === false) {
+		foreach ((array)($month->rows['contracts'] ?? []) as $contract) {
+			if ((string)($contract['formatieplaatsId'] ?? '') !== $placeId || $this->contractRunsOn(contract: $contract, day: $month->day) === false) {
 				continue;
 			}
 
-			$employeeId = (string)($contract['employeeId'] ?? '');
-			$hours = (float)($contract['hoursPerWeek'] ?? 0);
-			$allHours = $this->hoursOn(employeeId: $employeeId, contracts: $contracts, day: $day);
-			$share = ($allHours > 0.0) ? ($hours / $allHours) : 0.0;
-			$out['fte'] += ($this->fullTimeHoursWeek > 0.0) ? ($hours / $this->fullTimeHoursWeek) : 0.0;
-			$out['cost'] += ($this->salaryOn(employeeId: $employeeId, rows: $rows, day: $day) * $raise * $share);
+			$part = $this->contractPart(contract: $contract, month: $month);
+			$out['fte'] += $part['fte'];
+			$out['cost'] += $part['cost'];
 		}
 
 		return $out;
 	}//end occupiedOn()
 
 	/**
-	 * The employee's contracted hours on a day, across all their contracts.
+	 * The FTE one contract fills and the share of the employee's salary it costs.
 	 *
-	 * @param string $employeeId The employee.
-	 * @param array<int, array<string, mixed>> $contracts The contracts.
-	 * @param string $day The day.
+	 * @param array<string, mixed> $contract The contract, running on the day.
+	 * @param PersonnelBudgetMonth $month    The rows, the day and the raise factor.
+	 *
+	 * @return array{fte: float, cost: float}
+	 */
+	private function contractPart(array $contract, PersonnelBudgetMonth $month): array {
+		$employeeId = (string)($contract['employeeId'] ?? '');
+		$hours = (float)($contract['hoursPerWeek'] ?? 0);
+		$allHours = $this->hoursOn(employeeId: $employeeId, month: $month);
+		$share = ($allHours > 0.0) ? ($hours / $allHours) : 0.0;
+
+		return [
+			'fte' => ($this->fullTimeHoursWeek > 0.0) ? ($hours / $this->fullTimeHoursWeek) : 0.0,
+			'cost' => ($this->salaryOn(employeeId: $employeeId, month: $month) * $month->raise * $share),
+		];
+	}//end contractPart()
+
+	/**
+	 * The employee's contracted hours on the day, across all their contracts.
+	 *
+	 * @param string               $employeeId The employee.
+	 * @param PersonnelBudgetMonth $month      The contracts and the day.
 	 *
 	 * @return float
 	 */
-	private function hoursOn(string $employeeId, array $contracts, string $day): float {
+	private function hoursOn(string $employeeId, PersonnelBudgetMonth $month): float {
 		$hours = 0.0;
-		foreach ($contracts as $contract) {
-			if ((string)($contract['employeeId'] ?? '') === $employeeId && $this->runsOn(row: $contract, from: 'startDate', until: 'endDate', day: $day) === true) {
+		foreach ((array)($month->rows['contracts'] ?? []) as $contract) {
+			if ((string)($contract['employeeId'] ?? '') === $employeeId && $this->contractRunsOn(contract: $contract, day: $month->day) === true) {
 				$hours += (float)($contract['hoursPerWeek'] ?? 0);
 			}
 		}
@@ -308,21 +366,19 @@ class PersonnelBudgetService {
 	}//end hoursOn()
 
 	/**
-	 * The monthly salary on a day: the latest approved, not yet applied raise from its date, else the current salary.
+	 * The monthly salary on the day: the latest approved, not yet applied raise from its date, else the current salary.
 	 *
-	 * @param string $employeeId The employee.
-	 * @param array<string, mixed> $rows The rows.
-	 * @param string $day The day.
+	 * @param string               $employeeId The employee.
+	 * @param PersonnelBudgetMonth $month      The rows and the day.
 	 *
 	 * @return float
 	 */
-	private function salaryOn(string $employeeId, array $rows, string $day): float {
-		$salary = (float)($this->find(rows: (array)($rows['employees'] ?? []), id: $employeeId)['grossMonthlySalary'] ?? 0);
+	private function salaryOn(string $employeeId, PersonnelBudgetMonth $month): float {
+		$salary = (float)($this->find(rows: (array)($month->rows['employees'] ?? []), id: $employeeId)['grossMonthlySalary'] ?? 0);
 		$latest = '';
-		foreach ((array)($rows['compAdjustments'] ?? []) as $adjustment) {
-			$from = (string)($this->progression->date(value: ($adjustment['effectiveDate'] ?? null))?->format('Y-m-d') ?? '');
-			$applies = ((string)($adjustment['employeeId'] ?? '') === $employeeId && ($adjustment['status'] ?? '') === 'approved' && is_numeric($adjustment['proposedSalary'] ?? null));
-			if ($applies === true && $from !== '' && $from <= $day && $from >= $latest) {
+		foreach ((array)($month->rows['compAdjustments'] ?? []) as $adjustment) {
+			$from = $this->approvedRaiseFrom(adjustment: $adjustment, employeeId: $employeeId);
+			if ($from !== '' && $from <= $month->day && $from >= $latest) {
 				$latest = $from;
 				$salary = ((float)$adjustment['proposedSalary'] / 100.0);
 			}
@@ -330,6 +386,22 @@ class PersonnelBudgetService {
 
 		return $salary;
 	}//end salaryOn()
+
+	/**
+	 * The date an approved raise for the employee with a proposed salary
+	 * takes effect, or '' when the adjustment is not one or has no date.
+	 *
+	 * @param array<string, mixed> $adjustment The CompAdjustment.
+	 * @param string               $employeeId The employee.
+	 *
+	 * @return string
+	 */
+	private function approvedRaiseFrom(array $adjustment, string $employeeId): string {
+		$from = (string)($this->progression->date(value: ($adjustment['effectiveDate'] ?? null))?->format('Y-m-d') ?? '');
+		$applies = ((string)($adjustment['employeeId'] ?? '') === $employeeId && ($adjustment['status'] ?? '') === 'approved' && is_numeric($adjustment['proposedSalary'] ?? null));
+
+		return ($applies === true ? $from : '');
+	}//end approvedRaiseFrom()
 
 	/**
 	 * The monthly scale minimum of the place's reference job, or null when not sourced.
@@ -351,18 +423,29 @@ class PersonnelBudgetService {
 	}//end scaleMinimum()
 
 	/**
-	 * Whether a row with a from and until date applies on a day.
+	 * Whether a contract applies on a day.
 	 *
-	 * @param array<string, mixed> $row The row.
-	 * @param string $from The start field.
-	 * @param string $until The end field.
-	 * @param string $day The day (Y-m-d).
+	 * @param array<string, mixed> $contract The contract.
+	 * @param string               $day      The day (Y-m-d).
 	 *
 	 * @return bool
 	 */
-	private function runsOn(array $row, string $from, string $until, string $day): bool {
-		$start = $this->progression->date(value: ($row[$from] ?? null))?->format('Y-m-d');
-		$end = $this->progression->date(value: ($row[$until] ?? null))?->format('Y-m-d');
+	private function contractRunsOn(array $contract, string $day): bool {
+		return $this->runsOn(span: [($contract['startDate'] ?? null), ($contract['endDate'] ?? null)], day: $day);
+	}//end contractRunsOn()
+
+	/**
+	 * Whether a span of a from and an until date applies on a day; a missing
+	 * date does not limit it.
+	 *
+	 * @param array{0: mixed, 1: mixed} $span The raw from and until values.
+	 * @param string                    $day  The day (Y-m-d).
+	 *
+	 * @return bool
+	 */
+	private function runsOn(array $span, string $day): bool {
+		$start = $this->progression->date(value: $span[0])?->format('Y-m-d');
+		$end = $this->progression->date(value: $span[1])?->format('Y-m-d');
 
 		return ($start === null || $start <= $day) && ($end === null || $end >= $day);
 	}//end runsOn()

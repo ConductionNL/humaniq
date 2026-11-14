@@ -147,36 +147,7 @@ export default defineComponent({
 		 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
 		 */
 		roles() {
-			return [
-				{
-					id: 'hr',
-					label: t('humaniq', 'HR'),
-					group: this.groupId('hr', 'humaniq-hr'),
-					may: t('humaniq', 'employees, contracts, leave, absence, GDPR requests'),
-					members: this.memberCount('hr'),
-				},
-				{
-					id: 'payroll',
-					label: t('humaniq', 'Payroll administration'),
-					group: this.groupId('payroll', 'humaniq-payroll'),
-					may: t('humaniq', 'calculate and approve payroll runs, tax returns, payments'),
-					members: this.memberCount('payroll'),
-				},
-				{
-					id: 'manager',
-					label: t('humaniq', 'Manager'),
-					group: t('humaniq', 'from the org chart'),
-					may: t('humaniq', 'own team: approve leave, hours and reviews'),
-					members: '',
-				},
-				{
-					id: 'employee',
-					label: t('humaniq', 'Employee'),
-					group: t('humaniq', 'everyone'),
-					may: t('humaniq', 'own details, payslips, leave and expense claims'),
-					members: '',
-				},
-			]
+			return [...this.groupRoles(), ...this.derivedRoles()]
 		},
 	},
 
@@ -234,6 +205,85 @@ export default defineComponent({
 				this.categoryError = t('humaniq', 'The expense categories could not be saved.')
 			} finally {
 				this.savingCategories = false
+			}
+		},
+
+		/**
+		 * The two roles that are Nextcloud groups: HR and payroll, each with
+		 * its group id and member count from the server.
+		 *
+		 * @return {Array<{id: string, label: string, group: string, may: string, members: string}>}
+		 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
+		 */
+		groupRoles() {
+			return [
+				this.groupRole('hr', {
+					label: t('humaniq', 'HR'),
+					may: t('humaniq', 'employees, contracts, leave, absence, GDPR requests'),
+				}),
+				this.groupRole('payroll', {
+					label: t('humaniq', 'Payroll administration'),
+					may: t('humaniq', 'calculate and approve payroll runs, tax returns, payments'),
+				}),
+			]
+		},
+
+		/**
+		 * The two roles without a group to count: managers follow from the org
+		 * chart, employees from their own account.
+		 *
+		 * @return {Array<{id: string, label: string, group: string, may: string, members: string}>}
+		 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
+		 */
+		derivedRoles() {
+			return [
+				this.derivedRole('manager', {
+					label: t('humaniq', 'Manager'),
+					group: t('humaniq', 'from the org chart'),
+					may: t('humaniq', 'own team: approve leave, hours and reviews'),
+				}),
+				this.derivedRole('employee', {
+					label: t('humaniq', 'Employee'),
+					group: t('humaniq', 'everyone'),
+					may: t('humaniq', 'own details, payslips, leave and expense claims'),
+				}),
+			]
+		},
+
+		/**
+		 * A role row for a role group (`humaniq-<key>` unless the server
+		 * reported another id).
+		 *
+		 * @param {string} key The role key in the initial state.
+		 * @param {{label: string, may: string}} texts The role's name and what it may do.
+		 * @return {{id: string, label: string, group: string, may: string, members: string}}
+		 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
+		 */
+		groupRole(key, texts) {
+			return {
+				id: key,
+				label: texts.label,
+				group: this.groupId(key, 'humaniq-' + key),
+				may: texts.may,
+				members: this.memberCount(key),
+			}
+		},
+
+		/**
+		 * A role row for a role without a group: nothing to count.
+		 *
+		 * @param {string} key The role id.
+		 * @param {{label: string, group: string, may: string}} texts The role's name, where it comes from and what it may do.
+		 * @return {{id: string, label: string, group: string, may: string, members: string}}
+		 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
+		 */
+		derivedRole(key, texts) {
+			return {
+				id: key,
+				label: texts.label,
+				group: texts.group,
+				may: texts.may,
+				members: '',
 			}
 		},
 

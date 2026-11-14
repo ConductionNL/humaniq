@@ -258,6 +258,25 @@ class PayrollRetentionGuardService {
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
 	 */
 	public function placeStatutoryFloorHold(mixed $object, string $schema, string $periodField, int $years, string $lawReference): array {
+		return $this->placeFloorHold(
+			object: $object,
+			floor: new StatutoryFloorHold(schema: $schema, periodField: $periodField, years: $years, lawReference: $lawReference)
+		);
+	}//end placeStatutoryFloorHold()
+
+	/**
+	 * Place the statutory-floor legal hold described by `$floor` (see
+	 * `placeStatutoryFloorHold()`): nothing for a non-object, an active hold
+	 * kept as is, otherwise derived from the period field.
+	 *
+	 * @param mixed              $object The OpenRegister ObjectEntity to place the hold on.
+	 * @param StatutoryFloorHold $floor  The period field, the years and the citation.
+	 *
+	 * @return array{held: bool, ceiling: string|null} Whether a hold is (now) active and its derived ceiling date.
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 */
+	public function placeFloorHold(mixed $object, StatutoryFloorHold $floor): array {
 		if (is_object($object) === false) {
 			return ['held' => false, 'ceiling' => null];
 		}
@@ -266,28 +285,55 @@ class PayrollRetentionGuardService {
 			return ['held' => true, 'ceiling' => null];
 		}
 
-		[$periodYear, $periodValue] = $this->extractPeriodYear($object, $periodField);
+		return $this->holdFromPeriod(object: $object, floor: $floor);
+	}//end placeFloorHold()
+
+	/**
+	 * Derive "31 December of (period year + years)" from the period field and
+	 * place and persist the hold; no hold when the period carries no year.
+	 *
+	 * @param object             $object The ObjectEntity without an active hold.
+	 * @param StatutoryFloorHold $floor  The period field, the years and the citation.
+	 *
+	 * @return array{held: bool, ceiling: string|null}
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 */
+	private function holdFromPeriod(object $object, StatutoryFloorHold $floor): array {
+		[$periodYear, $periodValue] = $this->extractPeriodYear($object, $floor->periodField);
 		if ($periodYear === null) {
 			return ['held' => false, 'ceiling' => null];
 		}
 
-		$ceiling = sprintf('%04d-12-31', ($periodYear + $years));
-		$reason = sprintf(
-			'Statutaire bewaarplicht (hrmq#99): %s, tot %s (periode %s + %d jaar).',
-			$lawReference,
-			$ceiling,
-			$periodValue,
-			$years
-		);
+		$ceiling = sprintf('%04d-12-31', ($periodYear + $floor->years));
+		$held = $this->retentionService()->placeLegalHold(object: $object, reason: $this->floorReason(floor: $floor, period: [$ceiling, $periodValue]));
 
-		$held = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
-
-		if ($this->persist(held: $held, schema: $schema) === false) {
+		if ($this->persist(held: $held, schema: $floor->schema) === false) {
 			return ['held' => false, 'ceiling' => $ceiling];
 		}
 
 		return ['held' => true, 'ceiling' => $ceiling];
-	}//end placeStatutoryFloorHold()
+	}//end holdFromPeriod()
+
+	/**
+	 * The reason recorded on a statutory-floor hold.
+	 *
+	 * @param StatutoryFloorHold      $floor  The citation and the years.
+	 * @param array{0: string, 1: string} $period The ceiling date and the raw period value.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 */
+	private function floorReason(StatutoryFloorHold $floor, array $period): string {
+		return sprintf(
+			'Statutaire bewaarplicht (hrmq#99): %s, tot %s (periode %s + %d jaar).',
+			$floor->lawReference,
+			$period[0],
+			$period[1],
+			$floor->years
+		);
+	}//end floorReason()
 
 	/**
 	 * Extract a 4-digit year from a period-shaped field

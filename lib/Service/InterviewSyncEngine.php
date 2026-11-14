@@ -53,6 +53,17 @@ class InterviewSyncEngine {
 	private const URI_PREFIX = 'hrmq-interview-';
 
 	/**
+	 * The statuses a sync leaves alone, with the outcome message. design.md
+	 * D4: a completed Interview's last-synced event stays on the calendar as
+	 * completed history -- no further sync touches it.
+	 *
+	 * @var array<string, string>
+	 */
+	private const LEFT_ALONE = [
+		'completed' => 'Interview is voltooid; kalenderafspraak blijft ongewijzigd als geschiedenis.',
+	];
+
+	/**
 	 * @param InterviewRepository $repository Interview/Application/Vacancy data access + PUT-semantic persist.
 	 * @param InterviewIcsRenderer $icsRenderer ICS render/diff/date-parse helper.
 	 */
@@ -78,101 +89,138 @@ class InterviewSyncEngine {
 	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-004
 	 */
 	public function syncInterview(InterviewSyncRun $run, array $interview, string $id): void {
+		$sync = new InterviewEventSync();
+		$sync->interview = $interview;
+		$sync->id = $id;
 		$status = (string)($interview['status'] ?? '');
-
 		if ($status === 'cancelled') {
-			$this->removeInterviewEvent($run, $interview, $id);
+			$this->removeInterviewEvent(run: $run, sync: $sync);
 			return;
 		}
 
-		if ($status === 'completed') {
-			// design.md D4: a completed Interview's last-synced event stays
-			// on the calendar as completed history -- no further sync
-			// touches it.
-			$run->results[] = $this->outcome($id, 'unchanged', 'Interview is voltooid; kalenderafspraak blijft ongewijzigd als geschiedenis.');
+		if ($status === 'scheduled') {
+			$this->syncScheduledInterview(run: $run, sync: $sync);
 			return;
 		}
 
-		if ($status !== 'scheduled') {
-			$run->results[] = $this->outcome($id, 'unchanged', 'Onbekende status; overgeslagen.');
-			return;
-		}
-
-		$this->syncScheduledInterview($run, $interview, $id);
+		$run->results[] = $this->outcome($id, 'unchanged', (self::LEFT_ALONE[$status] ?? 'Onbekende status; overgeslagen.'));
 
 	}//end syncInterview()
 
 	/**
 	 * Validate/bound/render one `scheduled` Interview, then upsert it.
 	 *
-	 * @param InterviewSyncRun $run The target, indexes and bound of the run, collecting the outcomes.
-	 * @param array<string, mixed> $interview The Interview object.
-	 * @param string $id The Interview id.
+	 * @param InterviewSyncRun   $run  The target, indexes and bound of the run, collecting the outcomes.
+	 * @param InterviewEventSync $sync The Interview being synced.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-003
 	 */
-	private function syncScheduledInterview(InterviewSyncRun $run, array $interview, string $id): void {
-		$scheduledStart = trim((string)($interview['scheduledStart'] ?? ''));
-		$scheduledEnd = trim((string)($interview['scheduledEnd'] ?? ''));
-		if ($scheduledStart === '' || $scheduledEnd === '') {
-			$run->results[] = $this->outcome($id, 'failed', 'Interview mist scheduledStart/scheduledEnd; kan niet gesynchroniseerd worden.');
+	private function syncScheduledInterview(InterviewSyncRun $run, InterviewEventSync $sync): void {
+		if ($this->scheduleIsUsable(run: $run, sync: $sync) === false) {
 			return;
+		}
+
+		$sync->prepared = $this->prepareEvent(run: $run, sync: $sync);
+		$this->upsertInterviewEvent(run: $run, sync: $sync);
+
+	}//end syncScheduledInterview()
+
+	/**
+	 * Whether the Interview has a start and end, inside the run's bound, that
+	 * read as date-times. A missing or unreadable one appends a `failed`
+	 * outcome; one before the bound is left alone without an outcome.
+	 *
+	 * @param InterviewSyncRun   $run  The run: its bound, collecting the outcomes.
+	 * @param InterviewEventSync $sync The Interview being synced; its compact start and end are set.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-003
+	 */
+	private function scheduleIsUsable(InterviewSyncRun $run, InterviewEventSync $sync): bool {
+		$scheduledStart = trim((string)($sync->interview['scheduledStart'] ?? ''));
+		$scheduledEnd = trim((string)($sync->interview['scheduledEnd'] ?? ''));
+		if ($scheduledStart === '' || $scheduledEnd === '') {
+			$run->results[] = $this->outcome($sync->id, 'failed', 'Interview mist scheduledStart/scheduledEnd; kan niet gesynchroniseerd worden.');
+			return false;
 		}
 
 		if ($run->from !== null && $this->icsRenderer->scheduledStartOnOrAfter($scheduledStart, $run->from) === false) {
 			// Out of the --from bound; an already-synced event stays untouched.
-			return;
+			return false;
 		}
 
-		$dtstart = $this->icsRenderer->compactDateTime($scheduledStart);
-		$dtend = $this->icsRenderer->compactDateTime($scheduledEnd);
-		if ($dtstart === null || $dtend === null) {
-			$run->results[] = $this->outcome($id, 'failed', 'Interview scheduledStart/scheduledEnd is geen geldige datum/tijd.');
-			return;
+		return $this->readTimes(run: $run, sync: $sync);
+	}//end scheduleIsUsable()
+
+	/**
+	 * Read the Interview's start and end as compact date-times, or append a
+	 * `failed` outcome when either does not read.
+	 *
+	 * @param InterviewSyncRun   $run  The run, collecting the outcomes.
+	 * @param InterviewEventSync $sync The Interview being synced; its compact start and end are set.
+	 *
+	 * @return bool
+	 */
+	private function readTimes(InterviewSyncRun $run, InterviewEventSync $sync): bool {
+		$sync->dtstart = $this->icsRenderer->compactDateTime(trim((string)($sync->interview['scheduledStart'] ?? '')));
+		$sync->dtend = $this->icsRenderer->compactDateTime(trim((string)($sync->interview['scheduledEnd'] ?? '')));
+		if ($sync->dtstart === null || $sync->dtend === null) {
+			$run->results[] = $this->outcome($sync->id, 'failed', 'Interview scheduledStart/scheduledEnd is geen geldige datum/tijd.');
+			return false;
 		}
 
+		return true;
+	}//end readTimes()
+
+	/**
+	 * Render the Interview's event under its stored UID, or under the
+	 * deterministic one when none is stored yet.
+	 *
+	 * @param InterviewSyncRun   $run  The run: its application and vacancy indexes.
+	 * @param InterviewEventSync $sync The Interview being synced, its start and end read.
+	 *
+	 * @return PreparedInterviewEvent
+	 */
+	private function prepareEvent(InterviewSyncRun $run, InterviewEventSync $sync): PreparedInterviewEvent {
+		$interview = $sync->interview;
 		$applicationId = (string)($interview['applicationId'] ?? '');
 		$summary = $this->repository->resolveSummary($run->applicationsById, $run->vacanciesById, $applicationId);
 		$location = trim((string)($interview['location'] ?? ''));
 		$interviewers = trim((string)($interview['interviewers'] ?? ''));
 
 		$storedUid = trim((string)($interview['calendarEventUid'] ?? ''));
-		$uid = ($storedUid !== '') ? $storedUid : (self::URI_PREFIX . $id);
-		$ics = $this->icsRenderer->render($uid, ['dtstart' => $dtstart, 'dtend' => $dtend, 'summary' => $summary, 'location' => $location, 'interviewers' => $interviewers]);
-		$prepared = new PreparedInterviewEvent($storedUid, $uid, $uid . '.ics', $ics, $dtstart, $dtend, $summary, $location);
-
-		$this->upsertInterviewEvent($run, $interview, $id, $prepared);
-
-	}//end syncScheduledInterview()
+		$uid = ($storedUid !== '') ? $storedUid : (self::URI_PREFIX . $sync->id);
+		$ics = $this->icsRenderer->render($uid, ['dtstart' => $sync->dtstart, 'dtend' => $sync->dtend, 'summary' => $summary, 'location' => $location, 'interviewers' => $interviewers]);
+		return new PreparedInterviewEvent($storedUid, $uid, $uid . '.ics', $ics, (string)$sync->dtstart, (string)$sync->dtend, $summary, $location);
+	}//end prepareEvent()
 
 	/**
 	 * Create or update one VEVENT, identified by the prepared UID
 	 * (design.md D3): probe `getCalendarObjectByUID`; absent ⇒ create;
 	 * present ⇒ diff and update only when changed.
 	 *
-	 * @param InterviewSyncRun $run The run: its target, collecting the outcomes.
-	 * @param array<string, mixed> $interview The Interview object (pre-write).
-	 * @param string $id The Interview id.
-	 * @param PreparedInterviewEvent $prepared The rendered event + its UID identity.
+	 * @param InterviewSyncRun   $run  The run: its target, collecting the outcomes.
+	 * @param InterviewEventSync $sync The Interview being synced, its event prepared.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-003
 	 */
-	private function upsertInterviewEvent(InterviewSyncRun $run, array $interview, string $id, PreparedInterviewEvent $prepared): void {
-		[$probeSucceeded, $existingPath] = $this->probeExistingPath($run, $prepared->uid, $id);
+	private function upsertInterviewEvent(InterviewSyncRun $run, InterviewEventSync $sync): void {
+		[$probeSucceeded, $existingPath] = $this->probeExistingPath($run, $sync->prepared->uid, $sync->id);
 		if ($probeSucceeded === false) {
 			return;
 		}
 
 		if ($existingPath === null) {
-			$this->createEvent($run, $interview, $id, $prepared);
+			$this->createEvent(run: $run, sync: $sync);
 			return;
 		}
 
-		$this->updateEventIfChanged($run, $interview, $id, $prepared);
+		$this->updateEventIfChanged(run: $run, sync: $sync);
 
 	}//end upsertInterviewEvent()
 
@@ -205,30 +253,25 @@ class InterviewSyncEngine {
 	 * Create the calendar object and, unless the UID was already stored,
 	 * persist it back onto the Interview (design.md D3).
 	 *
-	 * @param InterviewSyncRun $run The run: its target, collecting the outcomes.
-	 * @param array<string, mixed> $interview The Interview object (pre-write).
-	 * @param string $id The Interview id.
-	 * @param PreparedInterviewEvent $prepared The rendered event + its UID identity.
+	 * @param InterviewSyncRun   $run  The run: its target, collecting the outcomes.
+	 * @param InterviewEventSync $sync The Interview being synced, its event prepared.
 	 *
 	 * @return void
 	 */
-	private function createEvent(InterviewSyncRun $run, array $interview, string $id, PreparedInterviewEvent $prepared): void {
+	private function createEvent(InterviewSyncRun $run, InterviewEventSync $sync): void {
 		try {
 			if (method_exists($run->target->backend, 'createCalendarObject') === false) {
 				throw new RuntimeException('CalDavBackend::createCalendarObject is not available.');
 			}
 
-			$run->target->backend->createCalendarObject($run->target->calendarId, $prepared->objectUri, $prepared->ics);
+			$run->target->backend->createCalendarObject($run->target->calendarId, $sync->prepared->objectUri, $sync->prepared->ics);
 		} catch (Throwable $e) {
-			$run->results[] = $this->outcome($id, 'failed', 'Aanmaken kalenderafspraak mislukt: ' . $e->getMessage());
+			$run->results[] = $this->outcome($sync->id, 'failed', 'Aanmaken kalenderafspraak mislukt: ' . $e->getMessage());
 			return;
 		}
 
-		if ($prepared->storedUid === '') {
-			$this->repository->persistCalendarEventUid($interview, $id, $prepared->uid);
-		}
-
-		$run->results[] = $this->outcome($id, 'created', 'Kalenderafspraak aangemaakt.');
+		$this->rememberUid(sync: $sync);
+		$run->results[] = $this->outcome($sync->id, 'created', 'Kalenderafspraak aangemaakt.');
 
 	}//end createEvent()
 
@@ -239,42 +282,65 @@ class InterviewSyncEngine {
 	 * defensive self-heal path for a prior sync that created the event but
 	 * crashed before persisting).
 	 *
-	 * @param InterviewSyncRun $run The run: its target, collecting the outcomes.
-	 * @param array<string, mixed> $interview The Interview object (pre-write).
-	 * @param string $id The Interview id.
-	 * @param PreparedInterviewEvent $prepared The rendered event + its UID identity.
+	 * @param InterviewSyncRun   $run  The run: its target, collecting the outcomes.
+	 * @param InterviewEventSync $sync The Interview being synced, its event prepared.
 	 *
 	 * @return void
 	 */
-	private function updateEventIfChanged(InterviewSyncRun $run, array $interview, string $id, PreparedInterviewEvent $prepared): void {
+	private function updateEventIfChanged(InterviewSyncRun $run, InterviewEventSync $sync): void {
+		$prepared = $sync->prepared;
 		$existingIcs = $this->fetchCalendarData($run->target, $prepared->objectUri);
 		if ($existingIcs !== null && $this->icsRenderer->unchanged($existingIcs, ['dtstart' => $prepared->dtstart, 'dtend' => $prepared->dtend, 'summary' => $prepared->summary, 'location' => $prepared->location]) === true) {
-			if ($prepared->storedUid === '') {
-				$this->repository->persistCalendarEventUid($interview, $id, $prepared->uid);
-			}
-
-			$run->results[] = $this->outcome($id, 'unchanged', 'Geen wijziging.');
+			$this->rememberUid(sync: $sync);
+			$run->results[] = $this->outcome($sync->id, 'unchanged', 'Geen wijziging.');
 			return;
 		}
 
+		if ($this->writeUpdate(run: $run, sync: $sync) === false) {
+			return;
+		}
+
+		$this->rememberUid(sync: $sync);
+		$run->results[] = $this->outcome($sync->id, 'updated', 'Kalenderafspraak bijgewerkt.');
+
+	}//end updateEventIfChanged()
+
+	/**
+	 * Write the prepared event over the existing calendar object, or append
+	 * a `failed` outcome when that fails.
+	 *
+	 * @param InterviewSyncRun   $run  The run: its target, collecting the outcomes.
+	 * @param InterviewEventSync $sync The Interview being synced, its event prepared.
+	 *
+	 * @return bool Whether the object was updated.
+	 */
+	private function writeUpdate(InterviewSyncRun $run, InterviewEventSync $sync): bool {
 		try {
 			if (method_exists($run->target->backend, 'updateCalendarObject') === false) {
 				throw new RuntimeException('CalDavBackend::updateCalendarObject is not available.');
 			}
 
-			$run->target->backend->updateCalendarObject($run->target->calendarId, $prepared->objectUri, $prepared->ics);
+			$run->target->backend->updateCalendarObject($run->target->calendarId, $sync->prepared->objectUri, $sync->prepared->ics);
 		} catch (Throwable $e) {
-			$run->results[] = $this->outcome($id, 'failed', 'Bijwerken kalenderafspraak mislukt: ' . $e->getMessage());
-			return;
+			$run->results[] = $this->outcome($sync->id, 'failed', 'Bijwerken kalenderafspraak mislukt: ' . $e->getMessage());
+			return false;
 		}
 
-		if ($prepared->storedUid === '') {
-			$this->repository->persistCalendarEventUid($interview, $id, $prepared->uid);
+		return true;
+	}//end writeUpdate()
+
+	/**
+	 * Persist the event's UID onto the Interview when it was not stored yet.
+	 *
+	 * @param InterviewEventSync $sync The Interview being synced, its event prepared.
+	 *
+	 * @return void
+	 */
+	private function rememberUid(InterviewEventSync $sync): void {
+		if ($sync->prepared->storedUid === '') {
+			$this->repository->persistCalendarEventUid($sync->interview, $sync->id, $sync->prepared->uid);
 		}
-
-		$run->results[] = $this->outcome($id, 'updated', 'Kalenderafspraak bijgewerkt.');
-
-	}//end updateEventIfChanged()
+	}//end rememberUid()
 
 	/**
 	 * Delete the event of a cancelled Interview (design.md D4), looked up
@@ -284,45 +350,73 @@ class InterviewSyncEngine {
 	 * pointer; humaniq's own audit log is the record of what happened, not the
 	 * calendar).
 	 *
-	 * @param InterviewSyncRun $run The run: its target, collecting the outcomes.
-	 * @param array<string, mixed> $interview The Interview object.
-	 * @param string $id The Interview id.
+	 * @param InterviewSyncRun   $run  The run: its target, collecting the outcomes.
+	 * @param InterviewEventSync $sync The Interview being synced.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-004
 	 */
-	private function removeInterviewEvent(InterviewSyncRun $run, array $interview, string $id): void {
-		$storedUid = trim((string)($interview['calendarEventUid'] ?? ''));
+	private function removeInterviewEvent(InterviewSyncRun $run, InterviewEventSync $sync): void {
+		$storedUid = trim((string)($sync->interview['calendarEventUid'] ?? ''));
 		if ($storedUid === '') {
-			$run->results[] = $this->outcome($id, 'unchanged', 'Geen kalenderafspraak om te verwijderen.');
+			$run->results[] = $this->outcome($sync->id, 'unchanged', 'Geen kalenderafspraak om te verwijderen.');
 			return;
 		}
 
-		[$probeSucceeded, $existingPath] = $this->probeExistingPath($run, $storedUid, $id);
+		$this->removeStoredEvent(run: $run, sync: $sync);
+
+	}//end removeInterviewEvent()
+
+	/**
+	 * Delete the event under the Interview's stored UID when the calendar
+	 * still holds it.
+	 *
+	 * @param InterviewSyncRun   $run  The run: its target, collecting the outcomes.
+	 * @param InterviewEventSync $sync The Interview being synced, with a stored UID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-004
+	 */
+	private function removeStoredEvent(InterviewSyncRun $run, InterviewEventSync $sync): void {
+		[$probeSucceeded, $existingPath] = $this->probeExistingPath($run, trim((string)$sync->interview['calendarEventUid']), $sync->id);
 		if ($probeSucceeded === false) {
 			return;
 		}
 
 		if ($existingPath === null) {
-			$run->results[] = $this->outcome($id, 'unchanged', 'Geen kalenderafspraak (meer) aanwezig.');
+			$run->results[] = $this->outcome($sync->id, 'unchanged', 'Geen kalenderafspraak (meer) aanwezig.');
 			return;
 		}
 
+		$this->deleteEvent(run: $run, sync: $sync);
+	}//end removeStoredEvent()
+
+	/**
+	 * Delete the calendar object under the Interview's stored UID.
+	 *
+	 * @param InterviewSyncRun   $run  The run: its target, collecting the outcomes.
+	 * @param InterviewEventSync $sync The Interview being synced, with a stored UID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-004
+	 */
+	private function deleteEvent(InterviewSyncRun $run, InterviewEventSync $sync): void {
 		try {
 			if (method_exists($run->target->backend, 'deleteCalendarObject') === false) {
 				throw new RuntimeException('CalDavBackend::deleteCalendarObject is not available.');
 			}
 
-			$run->target->backend->deleteCalendarObject($run->target->calendarId, $storedUid . '.ics');
+			$run->target->backend->deleteCalendarObject($run->target->calendarId, trim((string)$sync->interview['calendarEventUid']) . '.ics');
 		} catch (Throwable $e) {
-			$run->results[] = $this->outcome($id, 'failed', 'Verwijderen kalenderafspraak mislukt: ' . $e->getMessage());
+			$run->results[] = $this->outcome($sync->id, 'failed', 'Verwijderen kalenderafspraak mislukt: ' . $e->getMessage());
 			return;
 		}
 
-		$run->results[] = $this->outcome($id, 'removed', 'Kalenderafspraak verwijderd.');
-
-	}//end removeInterviewEvent()
+		$run->results[] = $this->outcome($sync->id, 'removed', 'Kalenderafspraak verwijderd.');
+	}//end deleteEvent()
 
 	/**
 	 * Fetch a calendar object's raw ICS text, or null on any resolution

@@ -66,68 +66,104 @@ class SurveyResults {
 	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
 	 */
 	public function compute(array $survey, array $responses, array $unitNames): array {
-		$min = max(3, (int)($survey['minGroupSize'] ?? self::DEFAULT_MIN));
-		$questions = array_values(array_filter((array)($survey['questions'] ?? []), static fn (mixed $question): bool => is_array($question) === true && trim((string)($question['key'] ?? '')) !== ''));
-		[$units, $notes] = $this->breakdown(questions: $questions, responses: $responses, min: $min, unitNames: $unitNames);
+		$run = new SurveyResultsRun();
+		$run->min = max(3, (int)($survey['minGroupSize'] ?? self::DEFAULT_MIN));
+		$run->questions = array_values(array_filter((array)($survey['questions'] ?? []), static fn (mixed $question): bool => is_array($question) === true && trim((string)($question['key'] ?? '')) !== ''));
+		$run->unitNames = $unitNames;
+		[$units, $notes] = $this->breakdown(run: $run, responses: $responses);
 		usort($units, static fn (array $one, array $two): int => [$one['unitId'] === 'other', $one['name']] <=> [$two['unitId'] === 'other', $two['name']]);
-		$overall = (count($responses) >= $min) ? $this->summaries($questions, $responses, true) : [];
+		$overall = $this->overall(run: $run, responses: $responses);
 		if ($overall === [] && $responses !== []) {
 			$notes[] = 'Fewer responses than the minimum group size: no results are shown yet.';
 		}
 
-		return ['responses' => count($responses), 'minGroupSize' => $min, 'overall' => $overall, 'units' => $units, 'notes' => $notes, 'rows' => $this->rows($overall, $units)];
+		return ['responses' => count($responses), 'minGroupSize' => $run->min, 'overall' => $overall, 'units' => $units, 'notes' => $notes, 'rows' => $this->rows($overall, $units)];
 	}//end compute()
+
+	/**
+	 * The overall summaries, with free text, or none below the minimum group size.
+	 *
+	 * @param SurveyResultsRun           $run       The survey's questions and minimum group size.
+	 * @param list<array<string, mixed>> $responses Its responses.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function overall(SurveyResultsRun $run, array $responses): array {
+		$run->withText = true;
+
+		return (count($responses) >= $run->min) ? $this->summaries(run: $run, responses: $responses) : [];
+	}//end overall()
 
 	/**
 	 * The per-department results, with departments below the minimum folded
 	 * into Other, and Other left out when it is itself too small.
 	 *
-	 * @param list<array<string, mixed>> $questions The questions.
+	 * @param SurveyResultsRun           $run       The survey's questions, minimum group size and department names.
 	 * @param list<array<string, mixed>> $responses The responses.
-	 * @param int                        $min       The minimum group size.
-	 * @param array<string, string>      $unitNames Department names by id.
 	 *
 	 * @return array{0: list<array<string, mixed>>, 1: list<string>}
 	 */
-	private function breakdown(array $questions, array $responses, int $min, array $unitNames): array {
-		$byUnit = [];
-		foreach ($responses as $response) {
-			$byUnit[(string)($response['orgUnitId'] ?? '')][] = $response;
-		}
-
-		$units = [];
+	private function breakdown(SurveyResultsRun $run, array $responses): array {
 		$other = [];
-		foreach ($byUnit as $unitId => $group) {
-			if ($unitId !== '' && count($group) >= $min) {
-				$units[] = ['unitId' => (string)$unitId, 'name' => ($unitNames[(string)$unitId] ?? (string)$unitId), 'responses' => count($group), 'questions' => $this->summaries($questions, $group, false)];
+		foreach ($this->byUnit(responses: $responses) as $unitId => $group) {
+			if ($unitId !== '' && count($group) >= $run->min) {
+				$run->units[] = ['unitId' => (string)$unitId, 'name' => ($run->unitNames[(string)$unitId] ?? (string)$unitId), 'responses' => count($group), 'questions' => $this->summaries(run: $run, responses: $group)];
 				continue;
 			}
 
 			$other = array_merge($other, $group);
 		}
 
+		return $this->withOther(run: $run, other: $other);
+	}//end breakdown()
+
+	/**
+	 * The responses per department id, '' for none.
+	 *
+	 * @param list<array<string, mixed>> $responses The responses.
+	 *
+	 * @return array<string, list<array<string, mixed>>>
+	 */
+	private function byUnit(array $responses): array {
+		$byUnit = [];
+		foreach ($responses as $response) {
+			$byUnit[(string)($response['orgUnitId'] ?? '')][] = $response;
+		}
+
+		return $byUnit;
+	}//end byUnit()
+
+	/**
+	 * The department results with Other added when it reaches the minimum,
+	 * or a note that it was left out.
+	 *
+	 * @param SurveyResultsRun           $run   The survey's questions, minimum group size and department results.
+	 * @param list<array<string, mixed>> $other The responses of departments too small or without one.
+	 *
+	 * @return array{0: list<array<string, mixed>>, 1: list<string>}
+	 */
+	private function withOther(SurveyResultsRun $run, array $other): array {
 		$notes = [];
-		if ($other !== [] && count($other) >= $min) {
-			$units[] = ['unitId' => 'other', 'name' => 'Other', 'responses' => count($other), 'questions' => $this->summaries($questions, $other, false)];
+		if ($other !== [] && count($other) >= $run->min) {
+			$run->units[] = ['unitId' => 'other', 'name' => 'Other', 'responses' => count($other), 'questions' => $this->summaries(run: $run, responses: $other)];
 		} else if ($other !== []) {
 			$notes[] = 'Departments with too few responses are left out of the breakdown; their answers count in the overall figures.';
 		}
 
-		return [$units, $notes];
-	}//end breakdown()
+		return [$run->units, $notes];
+	}//end withOther()
 
 	/**
 	 * One summary per question.
 	 *
-	 * @param list<array<string, mixed>> $questions The questions.
+	 * @param SurveyResultsRun           $run       The questions, and whether free text is returned (overall only).
 	 * @param list<array<string, mixed>> $responses The responses.
-	 * @param bool                       $withText  Whether free text is returned (overall only).
 	 *
 	 * @return list<array<string, mixed>>
 	 */
-	private function summaries(array $questions, array $responses, bool $withText): array {
+	private function summaries(SurveyResultsRun $run, array $responses): array {
 		$out = [];
-		foreach ($questions as $question) {
+		foreach ($run->questions as $question) {
 			$key = (string)$question['key'];
 			$values = [];
 			foreach ($responses as $response) {
@@ -137,7 +173,7 @@ class SurveyResults {
 				}
 			}
 
-			$out[] = $this->summary(question: $question, values: $values, withText: $withText);
+			$out[] = $this->summary(question: $question, values: $values, withText: $run->withText);
 		}
 
 		return $out;

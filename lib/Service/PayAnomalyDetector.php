@@ -104,28 +104,55 @@ class PayAnomalyDetector {
 	public function detect(array $payslip, array $history, array $thresholds = [], bool $raiseApplied = false): array {
 		$earlier = $this->earlier(payslip: $payslip, history: $history);
 		if (count($earlier) < self::MIN_HISTORY) {
-			return [[
-				'kind' => 'deviation',
-				'severity' => 'info',
-				'component' => null,
-				'currentValue' => null,
-				'baselineValue' => null,
-				'explanation' => null,
-				'message' => 'Te weinig eerdere loonstroken (' . count($earlier) . ') om met de eigen geschiedenis te vergelijken.',
-			]];
+			return [$this->tooLittleHistory(count: count($earlier))];
 		}
 
-		$explanation = $this->explanation(payslip: $payslip, earlier: $earlier, raiseApplied: $raiseApplied);
+		$check = new PayAnomalyCheck();
+		$check->payslip = $payslip;
+		$check->earlier = $earlier;
+		$check->thresholds = $thresholds;
+		$check->explanation = $this->explanation(check: $check, raiseApplied: $raiseApplied);
+
+		return $this->findings(check: $check);
+	}//end detect()
+
+	/**
+	 * The finding that there is too little history to compare with.
+	 *
+	 * @param int $count The number of earlier payslips.
+	 *
+	 * @return array{kind: string, severity: string, component: string|null, currentValue: float|null, baselineValue: float|null, explanation: string|null, message: string}
+	 */
+	private function tooLittleHistory(int $count): array {
+		return [
+			'kind' => 'deviation',
+			'severity' => 'info',
+			'component' => null,
+			'currentValue' => null,
+			'baselineValue' => null,
+			'explanation' => null,
+			'message' => 'Te weinig eerdere loonstroken (' . $count . ') om met de eigen geschiedenis te vergelijken.',
+		];
+	}//end tooLittleHistory()
+
+	/**
+	 * The finding of every component outside its threshold, in component order.
+	 *
+	 * @param PayAnomalyCheck $check The payslip being checked.
+	 *
+	 * @return list<array{kind: string, severity: string, component: string|null, currentValue: float|null, baselineValue: float|null, explanation: string|null, message: string}>
+	 */
+	private function findings(PayAnomalyCheck $check): array {
 		$findings = [];
-		foreach (self::DEFAULT_THRESHOLDS as $component => $default) {
-			$finding = $this->componentFinding(component: $component, payslip: $payslip, basis: ['earlier' => $earlier, 'threshold' => ($thresholds[$component] ?? $default), 'explanation' => $explanation]);
+		foreach (array_keys(self::DEFAULT_THRESHOLDS) as $component) {
+			$finding = $this->componentFinding(check: $check, component: $component);
 			if ($finding !== null) {
 				$findings[] = $finding;
 			}
 		}
 
 		return $findings;
-	}//end detect()
+	}//end findings()
 
 	/**
 	 * Threshold overrides from the `payroll_check_thresholds` setting: JSON
@@ -156,36 +183,62 @@ class PayAnomalyDetector {
 	 * One component's finding, or null when it is within its threshold or
 	 * cannot be read.
 	 *
-	 * @param string                                                                                                          $component The component.
-	 * @param array<string, mixed>                                                                                            $payslip   The payslip.
-	 * @param array{earlier: list<array<string, mixed>>, threshold: array{relative: float, absolute: float}, explanation: string|null} $basis     The baseline payslips, the threshold and the named cause (or null).
+	 * @param PayAnomalyCheck $check     The payslip, its baseline, the thresholds and the named cause (or null).
+	 * @param string          $component The component.
 	 *
 	 * @return array{kind: string, severity: string, component: string|null, currentValue: float|null, baselineValue: float|null, explanation: string|null, message: string}|null
 	 */
-	private function componentFinding(string $component, array $payslip, array $basis): ?array {
-		['threshold' => $threshold, 'explanation' => $explanation] = $basis;
-		$current = self::valueOf(payslip: $payslip, component: $component);
-		$values = self::readable(component: $component, payslips: $basis['earlier']);
+	private function componentFinding(PayAnomalyCheck $check, string $component): ?array {
+		$current = self::valueOf(payslip: $check->payslip, component: $component);
+		$values = self::readable(component: $component, payslips: $check->earlier);
 		if ($current === null || count($values) < self::MIN_HISTORY) {
 			return null;
 		}
 
 		sort($values);
-		$baseline = (float)$this->percentile->value($values, 50.0);
-		if (abs($current - $baseline) <= max(((float)$threshold['relative']) * abs($baseline), (float)$threshold['absolute'])) {
+		$reading = ['component' => $component, 'current' => $current, 'baseline' => (float)$this->percentile->value($values, 50.0)];
+		if ($this->withinThreshold(check: $check, reading: $reading) === true) {
 			return null;
 		}
 
+		return $this->deviation(check: $check, reading: $reading);
+	}//end componentFinding()
+
+	/**
+	 * Whether a reading is within its component's threshold: the relative
+	 * share of the baseline or the absolute floor, whichever is larger.
+	 *
+	 * @param PayAnomalyCheck                                            $check   The threshold overrides.
+	 * @param array{component: string, current: float, baseline: float} $reading The component, its current value and its baseline.
+	 *
+	 * @return bool
+	 */
+	private function withinThreshold(PayAnomalyCheck $check, array $reading): bool {
+		$threshold = ($check->thresholds[$reading['component']] ?? self::DEFAULT_THRESHOLDS[$reading['component']]);
+
+		return abs($reading['current'] - $reading['baseline']) <= max(((float)$threshold['relative']) * abs($reading['baseline']), (float)$threshold['absolute']);
+	}//end withinThreshold()
+
+	/**
+	 * The deviation finding of a reading outside its threshold; a warning
+	 * unless a cause explains it.
+	 *
+	 * @param PayAnomalyCheck                                            $check   The named cause (or null).
+	 * @param array{component: string, current: float, baseline: float} $reading The component, its current value and its baseline.
+	 *
+	 * @return array{kind: string, severity: string, component: string|null, currentValue: float|null, baselineValue: float|null, explanation: string|null, message: string}
+	 */
+	private function deviation(PayAnomalyCheck $check, array $reading): array {
 		return [
 			'kind' => 'deviation',
-			'severity' => ($explanation === null ? 'warning' : 'info'),
-			'component' => $component,
-			'currentValue' => round($current, 2),
-			'baselineValue' => round($baseline, 2),
-			'explanation' => $explanation,
-			'message' => sprintf('%s is %.2f, de mediaan van de eerdere loonstroken is %.2f.', $component, $current, $baseline),
+			'severity' => ($check->explanation === null ? 'warning' : 'info'),
+			'component' => $reading['component'],
+			'currentValue' => round($reading['current'], 2),
+			'baselineValue' => round($reading['baseline'], 2),
+			'explanation' => $check->explanation,
+			'message' => sprintf('%s is %.2f, de mediaan van de eerdere loonstroken is %.2f.', $reading['component'], $reading['current'], $reading['baseline']),
 		];
-	}//end componentFinding()
+	}//end deviation()
 
 	/**
 	 * The component's readable values on the given payslips, in their order.
@@ -226,16 +279,15 @@ class PayAnomalyDetector {
 	/**
 	 * The causes this payslip carries and none of the baseline did.
 	 *
-	 * @param array<string, mixed>       $payslip      The payslip.
-	 * @param list<array<string, mixed>> $earlier      The baseline payslips.
-	 * @param bool                       $raiseApplied Whether a raise was applied this period.
+	 * @param PayAnomalyCheck $check        The payslip and its baseline.
+	 * @param bool            $raiseApplied Whether a raise was applied this period.
 	 *
 	 * @return string|null
 	 */
-	private function explanation(array $payslip, array $earlier, bool $raiseApplied): ?string {
+	private function explanation(PayAnomalyCheck $check, bool $raiseApplied): ?string {
 		$causes = [];
 		foreach (self::CAUSES as $field => $words) {
-			if (self::carries(payslip: $payslip, field: $field) === true && array_filter($earlier, static fn (array $previous): bool => self::carries(payslip: $previous, field: $field)) === []) {
+			if ($this->isNewCause(check: $check, field: $field) === true) {
 				$causes[] = $words;
 			}
 		}
@@ -244,8 +296,32 @@ class PayAnomalyDetector {
 			$causes[] = 'een doorgevoerde loonsverhoging';
 		}
 
-		return ($causes === [] ? null : 'Verklaard door ' . implode(', ', $causes) . '.');
+		return self::explained(causes: $causes);
 	}//end explanation()
+
+	/**
+	 * The sentence that names the causes, or null when there are none.
+	 *
+	 * @param list<string> $causes The causes, in words.
+	 *
+	 * @return string|null
+	 */
+	private static function explained(array $causes): ?string {
+		return ($causes === [] ? null : 'Verklaard door ' . implode(', ', $causes) . '.');
+	}//end explained()
+
+	/**
+	 * Whether the payslip carries a cause none of the baseline payslips did.
+	 *
+	 * @param PayAnomalyCheck $check The payslip and its baseline.
+	 * @param string          $field The cause's field.
+	 *
+	 * @return bool
+	 */
+	private function isNewCause(PayAnomalyCheck $check, string $field): bool {
+		return self::carries(payslip: $check->payslip, field: $field) === true
+			&& array_filter($check->earlier, static fn (array $previous): bool => self::carries(payslip: $previous, field: $field)) === [];
+	}//end isNewCause()
 
 	/**
 	 * Whether a payslip carries a cause.

@@ -204,23 +204,26 @@ class WkrService {
 	 * @return array<string, array<int, array<string, float>>>
 	 */
 	private function buildAggregate(): array {
-		$runsById = [];
-		foreach ($this->loadAll('PayrollRun') as $run) {
-			$id = $this->idOf($run);
-			if ($id !== '') {
-				$runsById[$id] = (string)($run['administrationId'] ?? '');
-			}
-		}
+		$aggregate = new WkrAggregate();
+		$this->addPayslips($aggregate, $this->administrationIdsByRun());
+		$this->addDeclarations($aggregate);
 
-		$aggregate = [];
+		return $aggregate->toArray();
+	}//end buildAggregate()
 
+	/**
+	 * Add every attributable Payslip's grossPay and wkrUsed to the bucket of
+	 * its effective administrationId and wage year; a payslip without either
+	 * is left out.
+	 *
+	 * @param WkrAggregate $aggregate The aggregate being built.
+	 * @param array<string, string> $runsById Run administrationIds keyed by run id.
+	 *
+	 * @return void
+	 */
+	private function addPayslips(WkrAggregate $aggregate, array $runsById): void {
 		foreach ($this->loadAll('Payslip') as $payslip) {
-			$administrationId = trim((string)($payslip['administrationId'] ?? ''));
-			if ($administrationId === '') {
-				$runId = (string)($payslip['payrollRunId'] ?? '');
-				$administrationId = trim((string)($runsById[$runId] ?? ''));
-			}
-
+			$administrationId = $this->payslipAdministrationId($payslip, $runsById);
 			if ($administrationId === '') {
 				continue;
 			}
@@ -230,14 +233,22 @@ class WkrService {
 				continue;
 			}
 
-			$bucket = &$aggregate[$administrationId][$year];
-			$bucket['loonsom'] = (($bucket['loonsom'] ?? 0.0) + ((float)($payslip['grossPay'] ?? 0)));
-			$bucket['payslipWkrUsed'] = (($bucket['payslipWkrUsed'] ?? 0.0) + ((float)($payslip['wkrUsed'] ?? 0)));
-			$bucket['vrijeRuimteDeclared'] = ($bucket['vrijeRuimteDeclared'] ?? 0.0);
-			$bucket['eindheffingDeclared'] = ($bucket['eindheffingDeclared'] ?? 0.0);
-			unset($bucket);
-		}//end foreach
+			$aggregate->at($administrationId, $year)
+				->add('loonsom', (float)($payslip['grossPay'] ?? 0))
+				->add('payslipWkrUsed', (float)($payslip['wkrUsed'] ?? 0));
+		}
+	}//end addPayslips()
 
+	/**
+	 * Add every counted WkrDeclaration's amount to its (administrationId,
+	 * year) bucket; declarations without an administration or year, and
+	 * gericht-vrijgesteld ones, are left out.
+	 *
+	 * @param WkrAggregate $aggregate The aggregate being built.
+	 *
+	 * @return void
+	 */
+	private function addDeclarations(WkrAggregate $aggregate): void {
 		foreach ($this->loadAll('WkrDeclaration') as $declaration) {
 			$administrationId = trim((string)($declaration['administrationId'] ?? ''));
 			$year = (int)($declaration['year'] ?? 0);
@@ -246,23 +257,46 @@ class WkrService {
 				continue;
 			}
 
-			$bucket = &$aggregate[$administrationId][$year];
-			$bucket['loonsom'] = ($bucket['loonsom'] ?? 0.0);
-			$bucket['payslipWkrUsed'] = ($bucket['payslipWkrUsed'] ?? 0.0);
-			$bucket['vrijeRuimteDeclared'] = ($bucket['vrijeRuimteDeclared'] ?? 0.0);
-			$bucket['eindheffingDeclared'] = ($bucket['eindheffingDeclared'] ?? 0.0);
+			$aggregate->at($administrationId, $year)->addDeclared($category, (float)($declaration['amount'] ?? 0));
+		}
+	}//end addDeclarations()
 
-			if ($category === 'vrije-ruimte') {
-				$bucket['vrijeRuimteDeclared'] += ((float)($declaration['amount'] ?? 0));
-			} elseif ($category === 'eindheffing') {
-				$bucket['eindheffingDeclared'] += ((float)($declaration['amount'] ?? 0));
+	/**
+	 * Each PayrollRun's administrationId, keyed by run id (runs without an id
+	 * are left out).
+	 *
+	 * @return array<string, string>
+	 */
+	private function administrationIdsByRun(): array {
+		$runsById = [];
+		foreach ($this->loadAll('PayrollRun') as $run) {
+			$id = $this->idOf($run);
+			if ($id !== '') {
+				$runsById[$id] = (string)($run['administrationId'] ?? '');
 			}
+		}
 
-			unset($bucket);
-		}//end foreach
+		return $runsById;
+	}//end administrationIdsByRun()
 
-		return $aggregate;
-	}//end buildAggregate()
+	/**
+	 * A Payslip's effective administrationId: its own field, else its
+	 * `payrollRunId` -> PayrollRun.administrationId; '' when neither is set.
+	 *
+	 * @param array<string, mixed> $payslip The payslip row.
+	 * @param array<string, string> $runsById Run administrationIds keyed by run id.
+	 *
+	 * @return string
+	 */
+	private function payslipAdministrationId(array $payslip, array $runsById): string {
+		$administrationId = trim((string)($payslip['administrationId'] ?? ''));
+		if ($administrationId !== '') {
+			return $administrationId;
+		}
+
+		$runId = (string)($payslip['payrollRunId'] ?? '');
+		return trim((string)($runsById[$runId] ?? ''));
+	}//end payslipAdministrationId()
 
 	/**
 	 * Derive a calendar year from a wage period (`YYYY-MM`/`YYYY-Pnn`) — the

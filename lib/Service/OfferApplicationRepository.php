@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\Humaniq\Support\NormalisesRows;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -43,6 +44,7 @@ use OCA\Humaniq\Support\ResolvesObjectService;
 class OfferApplicationRepository {
 
 	use ConvertsRowsToArrays;
+	use NormalisesRows;
 	use ResolvesObjectService;
 
 	/**
@@ -132,12 +134,7 @@ class OfferApplicationRepository {
 			return [];
 		}
 
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
+		return $this->normaliseRows($rows);
 	}//end loadAll()
 
 	/**

@@ -358,4 +358,46 @@ class WorkingHoursServiceTest extends TestCase {
 		$this->assertSame(7.0, $this->service->dayEquivalents(hours: 40.0, fullTimeHoursWeek: 40.0));
 		$this->assertSame(0.0, $this->service->dayEquivalents(hours: 40.0, fullTimeHoursWeek: 0.0));
 	}//end testDayEquivalentsUseTheFullTimeWeek()
+
+	/**
+	 * Characterisation of the overlap refusal: patterns without an employee
+	 * or start are left out, an open end runs to 9999-12-31, timestamps are
+	 * compared on their date, the first overlapping pair of the first
+	 * employee is the one named, and a numeric employee id is named as is.
+	 *
+	 * @return void
+	 */
+	public function testOverlapRefusalNamesTheFirstOverlappingPair(): void {
+		$patterns = [
+			['employeeId' => 'emp-a', 'validFrom' => '2026-01-01T00:00:00+00:00', 'validUntil' => '2026-01-31T23:59:59+00:00'],
+			['employeeId' => '', 'validFrom' => '2026-01-01'],
+			['employeeId' => 'emp-a', 'validFrom' => ' '],
+			['employeeId' => 'emp-a', 'validFrom' => '2026-02-01', 'validUntil' => '  '],
+			['employeeId' => 'emp-a', 'validFrom' => '2026-01-31'],
+			['employeeId' => '42', 'validFrom' => '2026-01-01'],
+			['employeeId' => '42', 'validFrom' => '2026-01-01'],
+		];
+
+		try {
+			$this->service->assertPatternsDoNotOverlap(patterns: $patterns);
+			$this->fail('An overlap was expected.');
+		} catch (OverlappingWorkingPatternException $e) {
+			$this->assertSame(
+				'Two working patterns for employee emp-a cover the same days (2026-01-01 and 2026-01-31). End the running pattern before writing a new one.',
+				$e->getMessage()
+			);
+		}
+
+		try {
+			$this->service->assertPatternsDoNotOverlap(patterns: array_slice($patterns, 5));
+			$this->fail('An overlap was expected.');
+		} catch (OverlappingWorkingPatternException $e) {
+			$this->assertSame(
+				'Two working patterns for employee 42 cover the same days (2026-01-01 and 2026-01-01). End the running pattern before writing a new one.',
+				$e->getMessage()
+			);
+		}
+
+		$this->service->assertPatternsDoNotOverlap(patterns: array_slice($patterns, 0, 4));
+	}//end testOverlapRefusalNamesTheFirstOverlappingPair()
 }//end class

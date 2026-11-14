@@ -117,17 +117,30 @@ class CostAllocationGuardListener implements IEventListener {
 			return 'Een vaste kostenverdeling heeft minstens een kostenplaats met een percentage nodig.';
 		}
 
-		$hundredths = 0;
-		foreach ($splits as $split) {
-			$hundredths += (int)round(((float)($split['percentage'] ?? 0)) * 100);
-		}
-
+		$hundredths = self::percentageHundredths($splits);
 		if ($hundredths !== 10000) {
 			return sprintf('De percentages tellen op tot %s%%, niet tot 100%%.', rtrim(rtrim(number_format(($hundredths / 100), 2, '.', ''), '0'), '.'));
 		}
 
 		return null;
 	}//end splitsRefusal()
+
+	/**
+	 * The splits' percentages summed in hundredths of a percent, so the
+	 * 100% check never meets float drift.
+	 *
+	 * @param array<int|string, mixed> $splits The fixed splits.
+	 *
+	 * @return int
+	 */
+	private static function percentageHundredths(array $splits): int {
+		$hundredths = 0;
+		foreach ($splits as $split) {
+			$hundredths += (int)round(((float)($split['percentage'] ?? 0)) * 100);
+		}
+
+		return $hundredths;
+	}//end percentageHundredths()
 
 	/**
 	 * Why the allocation overlaps a stored one of the same employee, or null.
@@ -147,12 +160,43 @@ class CostAllocationGuardListener implements IEventListener {
 			return null;
 		}
 
-		$end = trim((string)($payload['endDate'] ?? ''));
+		return $this->overlapWith(payload: $payload, rows: $this->otherAllocationsOf(employeeId: $employeeId, uuid: $uuid));
+	}//end overlapRefusal()
+
+	/**
+	 * The employee's stored allocations, without the one being updated.
+	 *
+	 * @param string $employeeId The employee.
+	 * @param string|null $uuid The uuid being updated, null on create.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function otherAllocationsOf(string $employeeId, ?string $uuid): array {
+		$rows = [];
 		foreach ($this->gateway->findFiltered('CostAllocation', ['employeeId' => $employeeId]) as $row) {
 			if ($uuid !== null && (string)($row['id'] ?? '') === $uuid) {
 				continue;
 			}
 
+			$rows[] = $row;
+		}
+
+		return $rows;
+	}//end otherAllocationsOf()
+
+	/**
+	 * Why the allocation overlaps the first of the stored rows it shares a
+	 * day with, or null.
+	 *
+	 * @param array<string, mixed> $payload The incoming allocation.
+	 * @param array<int, array<string, mixed>> $rows The other stored allocations.
+	 *
+	 * @return string|null
+	 */
+	private function overlapWith(array $payload, array $rows): ?string {
+		$start = trim((string)($payload['startDate'] ?? ''));
+		$end = trim((string)($payload['endDate'] ?? ''));
+		foreach ($rows as $row) {
 			$rowStart = trim((string)($row['startDate'] ?? ''));
 			if ($this->overlaps(start: $start, end: $end, rowStart: $rowStart, rowEnd: trim((string)($row['endDate'] ?? ''))) === true) {
 				return sprintf('Deze medewerker heeft al een kostenverdeling vanaf %s die deze periode overlapt. Beëindig die eerst.', ($rowStart === '' ? '?' : $rowStart));
@@ -160,7 +204,7 @@ class CostAllocationGuardListener implements IEventListener {
 		}
 
 		return null;
-	}//end overlapRefusal()
+	}//end overlapWith()
 
 	/**
 	 * Whether two date ranges share a day; an empty end is open-ended, an
@@ -188,17 +232,32 @@ class CostAllocationGuardListener implements IEventListener {
 	 */
 	private function incoming(Event $event): ?array {
 		if ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent) {
-			$entity = $event->getObject();
-			return ($this->isCostAllocation($entity) === true ? [($entity->getObject() ?? []), null] : null);
+			return $this->costAllocationWrite(entity: $event->getObject(), isUpdate: false);
 		}
 
 		if ($event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) {
-			$entity = $event->getNewObject();
-			return ($this->isCostAllocation($entity) === true ? [($entity->getObject() ?? []), (string)$entity->getUuid()] : null);
+			return $this->costAllocationWrite(entity: $event->getNewObject(), isUpdate: true);
 		}
 
 		return null;
 	}//end incoming()
+
+	/**
+	 * The payload and uuid (an update's only) of a written entity, or null
+	 * when it is not a CostAllocation.
+	 *
+	 * @param object $entity The ObjectEntity being written.
+	 * @param bool $isUpdate Whether the write updates a stored object.
+	 *
+	 * @return array{0: array<string, mixed>, 1: string|null}|null
+	 */
+	private function costAllocationWrite(object $entity, bool $isUpdate): ?array {
+		if ($this->isCostAllocation($entity) === false) {
+			return null;
+		}
+
+		return [($entity->getObject() ?? []), ($isUpdate === true ? (string)$entity->getUuid() : null)];
+	}//end costAllocationWrite()
 
 	/**
 	 * Whether the entity is a CostAllocation.

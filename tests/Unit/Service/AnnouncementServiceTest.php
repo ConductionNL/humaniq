@@ -91,6 +91,34 @@ class AnnouncementServiceTest extends TestCase {
 	}//end testAnEmployeeSeesWhatIsPublishedToThemToday()
 
 	/**
+	 * Golden audience matrix: another administration's employee, an employee
+	 * who left and an announcement of another administration are kept apart
+	 * both ways; a visible row carries every field.
+	 *
+	 * @return void
+	 */
+	public function testTheAudienceMatrix(): void {
+		$this->store->seed('Employee', 'emp-elders', ['firstName' => 'Els', 'lastName' => 'Elders', 'nextcloudUserId' => 'els', 'administrationId' => 'ADM-002']);
+		$this->store->seed('Announcement', 'ann-adm2', ['title' => 'Alleen ADM-002', 'body' => 'Elders.', 'audience' => 'administration', 'status' => 'gepubliceerd', 'administrationId' => 'ADM-002', 'publishFrom' => '2026-10-05', 'publishUntil' => '2026-10-05']);
+		$this->store->seed('Announcement', 'ann-open', ['title' => 'Voor iedereen', 'body' => 'Overal.', 'status' => 'gepubliceerd']);
+
+		self::assertSame(
+			['anna' => ['ann-all', 'ann-bz', 'ann-open'], 'els' => ['ann-adm2', 'ann-open'], 'oud' => [], 'bram' => ['ann-all', 'ann-open']],
+			[
+				'anna' => $this->ids($this->service()->mine('anna', self::TODAY)),
+				'els' => $this->ids($this->service()->mine('els', self::TODAY)),
+				'oud' => $this->ids($this->service()->mine('oud', self::TODAY)),
+				'bram' => $this->ids($this->service()->mine('bram', self::TODAY)),
+			]
+		);
+		self::assertSame(
+			['id' => 'ann-adm2', 'title' => 'Alleen ADM-002', 'body' => 'Elders.', 'publishFrom' => '2026-10-05', 'publishUntil' => '2026-10-05', 'requiresConfirmation' => false, 'confirmed' => false, 'confirmedAt' => null],
+			$this->service()->mine('els', self::TODAY)[0]
+		);
+		self::assertSame(['Els Elders'], array_column($this->service()->overview('ann-adm2', '2027-01-01')['rows'], 'name'), 'The overview takes the audience, not the publication period.');
+	}//end testTheAudienceMatrix()
+
+	/**
 	 * A row carries what the page shows, and the caller's own confirmation.
 	 *
 	 * @return void
