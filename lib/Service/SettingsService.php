@@ -271,19 +271,6 @@ class SettingsService {
 	}//end isRetentionExpiryEnabled()
 
 	/**
-	 * reporting-pay-transparency: the fewest women and the fewest men a group
-	 * needs before the pay transparency report shows its figures. App config
-	 * key `pay_transparency_minimum_group`, default 5.
-	 *
-	 * @return int
-	 *
-	 * @spec openspec/specs/pay-transparency/spec.md#REQ-PTR-002
-	 */
-	public function getPayTransparencyMinimumGroup(): int {
-		return max(1, $this->appConfig->getValueInt(Application::APP_ID, 'pay_transparency_minimum_group', 5));
-	}//end getPayTransparencyMinimumGroup()
-
-	/**
 	 * The annual bovenwettelijk (above-statutory) leave hours LeaveAccrualJob
 	 * accrues 1/12 of per month (leave-accrual-job design.md D3), configurable
 	 * via app config key `leave_bovenwettelijk_annual_hours`. Defaults to `0`

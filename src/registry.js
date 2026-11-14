@@ -120,6 +120,7 @@ import VacancyQuestionsWidget from './widgets/VacancyQuestionsWidget.vue'
 import YearTransitionWidget from './widgets/YearTransitionWidget.vue'
 import { proposeRaiseForSelection } from './dialogs/proposeRaiseForSelection.js'
 import { registerTrainingAttended, registerTrainingNotAttended } from './dialogs/registerTrainingAttendance.js'
+import { openIntegriqConnections } from './services/connectionRegistry.js'
 import EndpointTableWidget from './widgets/EndpointTableWidget.js'
 
 export default {
@@ -160,6 +161,12 @@ export default {
 	registerTrainingNotAttended: {
 		kind: 'handler',
 		handler: registerTrainingNotAttended,
+	},
+	// platform-integrations-catalogue: the Integrations page's Add integration
+	// header action leaves for integriq's Connections overview.
+	openIntegriqConnections: {
+		kind: 'handler',
+		handler: openIntegriqConnections,
 	},
 
 	ProformaPayslip: {
