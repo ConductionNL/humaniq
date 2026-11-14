@@ -273,7 +273,8 @@ class PayrollRunService {
 
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
-	 * @param SettingsService $settingsService Register slug + employer-level payroll config.
+	 * @param SettingsService $settingsService Register slug.
+	 * @param EmployerPremiumSettings $premiums The employer's Aof tariff and Whk percentage.
 	 * @param PayrollCalculator $calculator The pure gross-to-net calculator.
 	 * @param SickPayCalculator $sickPayCalculator The pure loondoorbetaling-bij-ziekte calculator (sick-pay-calc).
 	 * @param PayrollRetentionGuardService $retentionGuard Places the AWR art. 52 lid 4 statutory-retention legal hold on every sealed Payslip (hrmq#99 regression fix -- see `savePayslip()`).
@@ -292,6 +293,7 @@ class PayrollRunService {
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
+		private readonly EmployerPremiumSettings $premiums,
 		private readonly PayrollCalculator $calculator,
 		private readonly SickPayCalculator $sickPayCalculator,
 		private readonly PayrollRetentionGuardService $retentionGuard,
@@ -540,8 +542,8 @@ class PayrollRunService {
 	 */
 	private function withRunInputs(array $state): array {
 		$period = $state['period'];
-		$state['aofTariff'] = $this->settingsService->getPayrollAofTariff();
-		$state['whkPercentage'] = $this->settingsService->getPayrollWhkPercentage($state['tables']->werknemersverzekeringen()['whkDefault']);
+		$state['aofTariff'] = $this->premiums->getPayrollAofTariff();
+		$state['whkPercentage'] = $this->premiums->getPayrollWhkPercentage($state['tables']->werknemersverzekeringen()['whkDefault']);
 		$state['contracts'] = $this->contractsByEmployeeKey();
 		$state['sickCases'] = $this->openSickCasesByEmployeeKey();
 		$state['existing'] = $this->enginePayslipsByEmployeeId($state['runId']);

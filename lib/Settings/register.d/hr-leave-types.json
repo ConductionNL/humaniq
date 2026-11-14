@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "LeaveType": {
+                "configuration": {"exportable": true},
                 "slug": "LeaveType",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", "authenticated"], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "CalendarStarOutline",

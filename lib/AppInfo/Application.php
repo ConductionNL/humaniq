@@ -71,6 +71,7 @@ use OCA\Humaniq\Listener\ReferralListener;
 use OCA\Humaniq\Listener\ExpenseCategoryGuardListener;
 use OCA\Humaniq\Listener\ExpenseManagerStampListener;
 use OCA\Humaniq\Listener\ExpensePayoutFieldsListener;
+use OCA\Humaniq\Listener\DeploymentPlanTotalsListener;
 use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\PayrollRunApprovedListener;
 use OCA\Humaniq\Listener\CaoComponentOverrideListener;
@@ -979,7 +980,7 @@ class Application extends App implements IBootstrap {
 	 */
 	private function registerExpensePayrollListeners(IEventDispatcher $dispatcher): void {
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
-			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG, PayrollRunFindingStampListener::class => PayrollRunFindingStampListener::SLUG, CaoComponentOverrideListener::class => CaoComponentOverrideListener::SLUG, CostAllocationGuardListener::class => CostAllocationGuardListener::COSTALLOCATION_SLUG, ExpenseCategoryGuardListener::class => ExpenseCategoryGuardListener::SLUG, ExpenseManagerStampListener::class => ExpenseManagerStampListener::SLUG, ExpensePayoutFieldsListener::class => ExpensePayoutFieldsListener::SLUG] as $listener => $slug) {
+			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG, PayrollRunFindingStampListener::class => PayrollRunFindingStampListener::SLUG, CaoComponentOverrideListener::class => CaoComponentOverrideListener::SLUG, CostAllocationGuardListener::class => CostAllocationGuardListener::COSTALLOCATION_SLUG, ExpenseCategoryGuardListener::class => ExpenseCategoryGuardListener::SLUG, ExpenseManagerStampListener::class => ExpenseManagerStampListener::SLUG, ExpensePayoutFieldsListener::class => ExpensePayoutFieldsListener::SLUG, DeploymentPlanTotalsListener::class => DeploymentPlanTotalsListener::SLUG] as $listener => $slug) {
 				$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: $listener, registers: null, schemas: [$slug]);
 			}
 		}

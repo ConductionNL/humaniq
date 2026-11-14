@@ -13,20 +13,27 @@
 
 ## 2. Both halves, always (REQ-HLD-002)
 
-- [ ] 2.1 Extend `scripts/check-integration-parity.js`, or add a unit test
+- [x] 2.1 Extend `scripts/check-integration-parity.js`, or add a unit test
       beside it, so every leaf registered server-side must have a client
       registration reachable from the leaves bundle.
-- [ ] 2.2 Mutation-check it: register a second leaf server-side only, confirm
+- [x] 2.2 Mutation-check it: register a second leaf server-side only, confirm
       the test names that leaf id, then remove it.
+      Done: a third pass in `scripts/check-integration-parity.js` follows relative imports from
+      `src/leaves.js`; `tests/js/integrationParityLeavesBundle.test.mjs` covers the repo and four
+      fixture trees. Mutation-checked on the real tree with a server-only `humaniq-second` and with
+      `registerHoursLeaf` dropped from `src/leaves.js`; both fail naming the leaf.
 
 ## 3. The host contract (REQ-HLD-003)
 
-- [ ] 3.1 Document the three host props the leaf needs in
+- [x] 3.1 Document the three host props the leaf needs in
       `docs/features/`, with the OpenRegister mount contract it relies on.
-- [ ] 3.2 Render a named unresolvable-host state in `CnHoursWidget.vue` when
+- [x] 3.2 Render a named unresolvable-host state in `CnHoursWidget.vue` when
       register, schema or object id is missing, never a total of zero.
-- [ ] 3.3 Add Dutch and English strings for that state.
-- [ ] 3.4 Unit test the complete host and each incomplete one.
+- [x] 3.3 Add Dutch and English strings for that state.
+- [x] 3.4 Unit test the complete host and each incomplete one.
+      Done: `src/integrations/hoursHost.mjs` holds the rule; `CnHoursWidget.vue` shows
+      `hq-hours-no-host` instead of figures, controls and the booking dialog;
+      `tests/js/hoursHost.test.mjs`; doc in `docs/features/hours-leaf.md`.
 
 ## 4. Demo data (REQ-HLD-004)
 

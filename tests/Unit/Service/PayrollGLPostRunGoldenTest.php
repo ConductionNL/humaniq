@@ -20,9 +20,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\PayrollBookkeepingSettings;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -291,12 +293,8 @@ class PayrollGLPostRunGoldenTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getGlPostAccountGross')->willReturn('4001');
-		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
-		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
 
-		$outcome = (new PayrollGLPostService($container, $appManager, $settings, new NullLogger()))->postRun($case['run']);
+		$outcome = (new PayrollGLPostService($container, $appManager, $settings, new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)), new NullLogger()))->postRun($case['run']);
 
 		return ['outcome' => $outcome, 'writes' => $store->writes];
 	}//end runCase()

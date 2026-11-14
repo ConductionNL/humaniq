@@ -145,6 +145,12 @@ if (is_file($humaniqNcRoot . '/lib/base.php') === true) {
 // loaded via composer.json autoload, and skipped entirely when the real classes
 // are already resolvable (e.g. a full server checkout with OpenRegister installed
 // via the base.php include above) — the real classes always win.
+// RetentionService::placeHold()/releaseHold() take a HoldOrder (openregister,
+// since 2026-11-10). Load the test-only mirror when OpenRegister is absent.
+if (class_exists('OCA\\OpenRegister\\Service\\HoldOrder') === false) {
+	require __DIR__ . '/stubs/OpenRegisterHoldOrderStub.php';
+}
+
 if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') === false) {
 	require __DIR__ . '/stubs/OpenRegisterLifecycleStub.php';
 }

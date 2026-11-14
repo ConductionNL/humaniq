@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "Cao": {
+                "configuration": {"exportable": true},
                 "slug": "Cao",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "FileDocumentMultipleOutline",

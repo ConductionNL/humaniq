@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "TrainingRecord": {
+                "configuration": {"exportable": true},
                 "slug": "TrainingRecord",
                 "icon": "SchoolOutline",
                 "version": "0.1.1",
