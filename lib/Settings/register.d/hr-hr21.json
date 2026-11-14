@@ -3,11 +3,11 @@
     "components": {
         "schemas": {
             "Normfunctie": {
-                "configuration": {"exportable": true},
                 "slug": "Normfunctie",
                 "icon": "BriefcaseOutline",
                 "version": "0.4.0",
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-mcp": {
                         "enabled": true,
                         "tools": {

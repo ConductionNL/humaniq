@@ -3,11 +3,11 @@
     "components": {
         "schemas": {
             "Announcement": {
-                "configuration": {"exportable": true},
                 "slug": "Announcement",
                 "icon": "BullhornOutline",
                 "version": "0.2.0",
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-mcp": {
                         "enabled": true,
                         "tools": {
