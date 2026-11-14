@@ -5,6 +5,9 @@
 OC.L10N.register(
     "humaniq",
     {
+        "2024": "2024",
+        "2025": "2025",
+        "2026": "2026",
         "Deployment plan": "Deployment plan",
         "Draft while the plan is made; confirmed once agreed.": "Draft while the plan is made; confirmed once agreed.",
         "From the CAO": "From the CAO",
@@ -34,9 +37,6 @@ OC.L10N.register(
         "The total of the plan lines.": "The total of the plan lines.",
         "Weeks": "Weeks",
         "Whether the norm comes from the CAO or was entered by hand.": "Whether the norm comes from the CAO or was entered by hand.",
-        "2024": "2024",
-        "2025": "2025",
-        "2026": "2026",
         "(Re)calculate": "(Re)calculate",
         "(Re)calculating the payroll run failed.": "(Re)calculating the payroll run failed.",
         "30%-ruling applied rate": "30%-ruling applied rate",
@@ -3752,7 +3752,14 @@ OC.L10N.register(
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.",
         "The expense categories could not be loaded.": "The expense categories could not be loaded.",
         "The expense categories could not be saved.": "The expense categories could not be saved.",
-        "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on."
+        "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on.",
+        "Workplace and buddy arranged": "Workplace and buddy arranged",
+        "First month's programme shared": "First month's programme shared",
+        "Probation talk planned": "Probation talk planned",
+        "Whether the hire's manager arranged a workplace and a buddy. Ticked when the manager marks the task done in the onboarding flow.": "Whether the hire's manager arranged a workplace and a buddy. Ticked when the manager marks the task done in the onboarding flow.",
+        "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.": "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.",
+        "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.": "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.",
+        "IT": "IT"
     },
     "nplurals=2; plural=(n != 1);"
 )

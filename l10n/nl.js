@@ -5,6 +5,9 @@
 OC.L10N.register(
     "humaniq",
     {
+        "2024": "2024",
+        "2025": "2025",
+        "2026": "2026",
         "Deployment plan": "Inzetplan",
         "Draft while the plan is made; confirmed once agreed.": "Concept zolang het plan wordt gemaakt; vastgesteld zodra het is afgesproken.",
         "From the CAO": "Uit de cao",
@@ -34,9 +37,6 @@ OC.L10N.register(
         "The total of the plan lines.": "Het totaal van de planregels.",
         "Weeks": "Weken",
         "Whether the norm comes from the CAO or was entered by hand.": "Of de norm uit de cao komt of met de hand is ingevoerd.",
-        "2024": "2024",
-        "2025": "2025",
-        "2026": "2026",
         "(Re)calculate": "(Her)berekenen",
         "(Re)calculating the payroll run failed.": "(Her)berekenen van de loonrun is mislukt.",
         "30%-ruling applied rate": "Toegepast 30%-percentage",
@@ -3752,7 +3752,14 @@ OC.L10N.register(
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
         "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
-        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort."
+        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort.",
+        "Workplace and buddy arranged": "Werkplek en buddy geregeld",
+        "First month's programme shared": "Programma eerste maand gedeeld",
+        "Probation talk planned": "Proeftijdgesprek gepland",
+        "Whether the hire's manager arranged a workplace and a buddy. Ticked when the manager marks the task done in the onboarding flow.": "Of de leidinggevende van de nieuwe medewerker een werkplek en een buddy heeft geregeld. Wordt aangevinkt als de leidinggevende de taak in de onboardingflow als gedaan markeert.",
+        "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.": "Of de leidinggevende van de nieuwe medewerker het programma van de eerste maand heeft gedeeld. Wordt aangevinkt als de leidinggevende de taak in de onboardingflow als gedaan markeert.",
+        "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.": "Of de leidinggevende van de nieuwe medewerker het gesprek aan het einde van de proeftijd heeft gepland. Wordt aangevinkt als de leidinggevende de taak in de onboardingflow als gedaan markeert.",
+        "IT": "IT"
     },
     "nplurals=2; plural=(n != 1);"
 )

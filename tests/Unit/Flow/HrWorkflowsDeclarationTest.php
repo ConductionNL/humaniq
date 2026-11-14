@@ -259,6 +259,9 @@ class HrWorkflowsDeclarationTest extends TestCase {
 		self::assertSame(
 			[
 				'itProvisioned'      => true,
+				'werkplekEnBuddyGeregeld'     => true,
+				'eersteMaandProgrammaGedeeld' => true,
+				'proeftijdgesprekGepland'     => true,
 				'assetsIngeleverd'   => true,
 				'toegangIngetrokken' => true,
 				'exitGesprekDone'    => '{{ exitGesprekDatum }}',
@@ -309,5 +312,49 @@ class HrWorkflowsDeclarationTest extends TestCase {
 		self::assertSame(['==' => [['var' => 'json.current.0.status'], 'submitted']], $nodes['still-submitted']['exits'][0]['condition']);
 
 	}//end testTheEscalationWaitsAndRechecks()
+
+	/**
+	 * The manager's three onboarding steps go to the employee's own manager,
+	 * read from the employee before the first one (platform-hr-workflows 1.1a).
+	 *
+	 * @return void
+	 */
+	public function testTheManagerStepsGoToTheEmployeesManager(): void {
+		$flow  = $this->flow($this->schema('hr-onboarding.json', 'Onboarding'), 'Indiensttreding');
+		$nodes = $this->nodes($flow);
+
+		$read = $nodes['read-employee'];
+		self::assertSame('openregister.object-read', $read['type']);
+		self::assertSame(['@self' => ['uuid' => '{{ employeeId }}']], $read['config']['filters']);
+		self::assertSame('employee', $read['config']['output']);
+		self::assertFalse($read['config']['fanOut'], 'a fan-out would put the employee\'s id where the case id is');
+
+		$managerTasks = array_values(
+			array_filter(
+				$nodes,
+				static fn (array $node): bool => $node['type'] === 'openregister.user-task' && str_starts_with($node['id'], 'manager-')
+			)
+		);
+		self::assertSame(
+			['Werkplek en buddy regelen', 'Programma eerste maand delen', 'Proeftijdgesprek plannen'],
+			array_map(static fn (array $node): string => $node['config']['title'], $managerTasks)
+		);
+		foreach ($managerTasks as $task) {
+			self::assertSame('{{ employee.0.managerUserId }}', $task['config']['assignee'], $task['id']);
+		}
+
+		$order = [];
+		foreach ($flow['edges'] as $edge) {
+			$order[$edge['from']][] = $edge['to'];
+		}
+
+		// The manager's steps follow the IT step whichever way it went.
+		self::assertSame(['read-employee'], $order['tick-it']);
+		self::assertContains('read-employee', $order['it-gate']);
+		self::assertSame(['manager-workplace'], $order['read-employee']);
+		self::assertSame(['manager-programme'], $order['tick-workplace']);
+		self::assertSame(['manager-probation'], $order['tick-programme']);
+		self::assertSame(['end'], $order['tick-probation']);
+	}//end testTheManagerStepsGoToTheEmployeesManager()
 
 }//end class

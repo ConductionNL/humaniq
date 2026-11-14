@@ -5,7 +5,7 @@
             "Onboarding": {
                 "slug": "Onboarding",
                 "icon": "AccountPlus",
-                "version": "0.4.0",
+                "version": "0.5.0",
                 "title": "Onboarding case",
                 "description": "A deterministic onboarding case (one per hire): the concrete legal gates for a new employee's first week. Contract signed, WID identity check, BSN/IBAN validated, IT provisioned, pensioen aangemeld. As checklist boolean/date fields, governed by a simplified six-state declarative lifecycle (onboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/onboarding-wizard draft's 13-state machine and 15-step wizard stepper: no OnboardingStep/WIDCheck/BSNValidatie/Reminder side entities, no wizard stepper UI (follow-up nc-vue widget, design.md D6), no BSN elfproef/IBAN modulus-97 validation services, no IT auto-provisioning, no reminder/escalation engine. The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOnboardingChecks.php), except the right-to-work check, which RightToWorkGuard enforces at write time on gereed_melden and starten (people-dossier-completeness). Guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
                 "type": "object",
@@ -20,7 +20,7 @@
                         {
                             "name": "Indiensttreding",
                             "app": "humaniq",
-                            "description": "Starts when an onboarding case is created (platform-hr-workflows). The IT contact group gets a task to provide the new hire's account; marking it done ticks IT provisioned on the case, marking it not applicable leaves the case as it is. The flow arrives disabled per the engine's adoption contract: enable it deliberately and re-point the IT task's candidate group from admin to your IT contact group. Tasks for the hire's own manager are not part of this flow yet.",
+                            "description": "Starts when an onboarding case is created (platform-hr-workflows). The IT contact group gets a task to provide the new hire's account; marking it done ticks IT provisioned on the case, marking it not applicable leaves the case as it is. Then the hire's own manager (the employee's managerUserId) gets three tasks in turn: arrange a workplace and a buddy, share the first month's programme and plan the probation talk; each one marked done ticks its field on the case. The manager is read from the employee when the step is entered, which needs OpenRegister to resolve item fields in a task's performer (ConductionNL/openregister#10565); the admin group is the fallback candidate. The flow arrives disabled per the engine's adoption contract: enable it deliberately and re-point the candidate groups from admin to your IT contact and HR groups.",
                             "trigger": "object.created",
                             "triggerRegister": "humaniq",
                             "executionMode": "async",
@@ -95,12 +95,197 @@
                                     }
                                 },
                                 {
-                                    "id": "end",
-                                    "type": "openregister.end",
-                                    "config": {}
+                                    "id": "read-employee",
+                                    "type": "openregister.object-read",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "Employee",
+                                        "filters": {
+                                            "@self": {
+                                                "uuid": "{{ employeeId }}"
+                                            }
+                                        },
+                                        "limit": 1,
+                                        "fanOut": false,
+                                        "output": "employee"
+                                    }
                                 },
                                 {
-                                    "id": "end-skipped",
+                                    "id": "manager-workplace",
+                                    "type": "openregister.user-task",
+                                    "config": {
+                                        "title": "Werkplek en buddy regelen",
+                                        "description": "Regel een werkplek en een buddy voor de nieuwe medewerker die op {{ startDate }} begint. Kies gedaan als beide geregeld zijn; dan wordt dat aangevinkt op het onboardingdossier.",
+                                        "performerType": "user",
+                                        "assignee": "{{ employee.0.managerUserId }}",
+                                        "candidateGroups": [
+                                            "admin"
+                                        ],
+                                        "outcomes": [
+                                            "gedaan",
+                                            "niet-van-toepassing"
+                                        ],
+                                        "outcomeKey": "managerWorkplace"
+                                    }
+                                },
+                                {
+                                    "id": "manager-workplace-gate",
+                                    "type": "openregister.switch",
+                                    "config": {},
+                                    "exits": [
+                                        {
+                                            "id": "gedaan",
+                                            "condition": {
+                                                "==": [
+                                                    {
+                                                        "var": "json.managerWorkplace.outcome"
+                                                    },
+                                                    "gedaan"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": "overgeslagen"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "tick-workplace",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "Onboarding",
+                                        "operation": "update",
+                                        "match": [
+                                            {
+                                                "property": "uuid",
+                                                "value": "{{ id }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "uuid": "{{ id }}",
+                                            "werkplekEnBuddyGeregeld": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "manager-programme",
+                                    "type": "openregister.user-task",
+                                    "config": {
+                                        "title": "Programma eerste maand delen",
+                                        "description": "Deel het programma van de eerste maand met de nieuwe medewerker. Kies gedaan als het gedeeld is.",
+                                        "performerType": "user",
+                                        "assignee": "{{ employee.0.managerUserId }}",
+                                        "candidateGroups": [
+                                            "admin"
+                                        ],
+                                        "outcomes": [
+                                            "gedaan",
+                                            "niet-van-toepassing"
+                                        ],
+                                        "outcomeKey": "managerProgramme"
+                                    }
+                                },
+                                {
+                                    "id": "manager-programme-gate",
+                                    "type": "openregister.switch",
+                                    "config": {},
+                                    "exits": [
+                                        {
+                                            "id": "gedaan",
+                                            "condition": {
+                                                "==": [
+                                                    {
+                                                        "var": "json.managerProgramme.outcome"
+                                                    },
+                                                    "gedaan"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": "overgeslagen"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "tick-programme",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "Onboarding",
+                                        "operation": "update",
+                                        "match": [
+                                            {
+                                                "property": "uuid",
+                                                "value": "{{ id }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "uuid": "{{ id }}",
+                                            "eersteMaandProgrammaGedeeld": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "manager-probation",
+                                    "type": "openregister.user-task",
+                                    "config": {
+                                        "title": "Proeftijdgesprek plannen",
+                                        "description": "Plan het gesprek aan het einde van de proeftijd ({{ proeftijdEndDate }}). Kies gedaan als het gepland is.",
+                                        "performerType": "user",
+                                        "assignee": "{{ employee.0.managerUserId }}",
+                                        "candidateGroups": [
+                                            "admin"
+                                        ],
+                                        "outcomes": [
+                                            "gedaan",
+                                            "niet-van-toepassing"
+                                        ],
+                                        "outcomeKey": "managerProbation"
+                                    }
+                                },
+                                {
+                                    "id": "manager-probation-gate",
+                                    "type": "openregister.switch",
+                                    "config": {},
+                                    "exits": [
+                                        {
+                                            "id": "gedaan",
+                                            "condition": {
+                                                "==": [
+                                                    {
+                                                        "var": "json.managerProbation.outcome"
+                                                    },
+                                                    "gedaan"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": "overgeslagen"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "tick-probation",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "Onboarding",
+                                        "operation": "update",
+                                        "match": [
+                                            {
+                                                "property": "uuid",
+                                                "value": "{{ id }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "uuid": "{{ id }}",
+                                            "proeftijdgesprekGepland": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "end",
                                     "type": "openregister.end",
                                     "config": {}
                                 }
@@ -126,11 +311,82 @@
                                     "id": "e-it-skip",
                                     "from": "it-gate",
                                     "fromExit": "overgeslagen",
-                                    "to": "end-skipped"
+                                    "to": "read-employee"
                                 },
                                 {
                                     "id": "e-ticked",
                                     "from": "tick-it",
+                                    "to": "read-employee"
+                                },
+                                {
+                                    "id": "e-read-employee",
+                                    "from": "read-employee",
+                                    "to": "manager-workplace"
+                                },
+                                {
+                                    "id": "e-workplace",
+                                    "from": "manager-workplace",
+                                    "to": "manager-workplace-gate"
+                                },
+                                {
+                                    "id": "e-workplace-done",
+                                    "from": "manager-workplace-gate",
+                                    "fromExit": "gedaan",
+                                    "to": "tick-workplace"
+                                },
+                                {
+                                    "id": "e-workplace-skip",
+                                    "from": "manager-workplace-gate",
+                                    "fromExit": "overgeslagen",
+                                    "to": "manager-programme"
+                                },
+                                {
+                                    "id": "e-workplace-ticked",
+                                    "from": "tick-workplace",
+                                    "to": "manager-programme"
+                                },
+                                {
+                                    "id": "e-programme",
+                                    "from": "manager-programme",
+                                    "to": "manager-programme-gate"
+                                },
+                                {
+                                    "id": "e-programme-done",
+                                    "from": "manager-programme-gate",
+                                    "fromExit": "gedaan",
+                                    "to": "tick-programme"
+                                },
+                                {
+                                    "id": "e-programme-skip",
+                                    "from": "manager-programme-gate",
+                                    "fromExit": "overgeslagen",
+                                    "to": "manager-probation"
+                                },
+                                {
+                                    "id": "e-programme-ticked",
+                                    "from": "tick-programme",
+                                    "to": "manager-probation"
+                                },
+                                {
+                                    "id": "e-probation",
+                                    "from": "manager-probation",
+                                    "to": "manager-probation-gate"
+                                },
+                                {
+                                    "id": "e-probation-done",
+                                    "from": "manager-probation-gate",
+                                    "fromExit": "gedaan",
+                                    "to": "tick-probation"
+                                },
+                                {
+                                    "id": "e-probation-skip",
+                                    "from": "manager-probation-gate",
+                                    "fromExit": "overgeslagen",
+                                    "to": "end"
+                                },
+                                {
+                                    "id": "e-probation-ticked",
+                                    "from": "tick-probation",
                                     "to": "end"
                                 }
                             ]
@@ -269,6 +525,24 @@
                         "default": false,
                         "title": "IT provisioned",
                         "description": "Whether the Nextcloud/IT account was provisioned for the hire. Records the outcome only: OCS auto-provisioning is a non-goal."
+                    },
+                    "werkplekEnBuddyGeregeld": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Workplace and buddy arranged",
+                        "description": "Whether the hire's manager arranged a workplace and a buddy. Ticked when the manager marks the task done in the onboarding flow."
+                    },
+                    "eersteMaandProgrammaGedeeld": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "First month's programme shared",
+                        "description": "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow."
+                    },
+                    "proeftijdgesprekGepland": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Probation talk planned",
+                        "description": "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow."
                     },
                     "pensioenAangemeld": {
                         "type": "boolean",

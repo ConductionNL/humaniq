@@ -8880,7 +8880,7 @@
 		},
 		{
 			"config": {
-				"_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), except the right-to-work check: people-dossier-completeness (2026-09-29) adds RightToWorkGuard on gereed_melden and starten (REQ-DCP-004) and a Right-to-work checks object-list (RightToWorkCheck.onboardingId = @objectId) where HR records the check; a pass ticks widCheckDone. Audit history is a sidebar tab.",
+				"_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), except the right-to-work check: people-dossier-completeness (2026-09-29) adds RightToWorkGuard on gereed_melden and starten (REQ-DCP-004) and a Right-to-work checks object-list (RightToWorkCheck.onboardingId = @objectId) where HR records the check; a pass ticks widCheckDone. Audit history is a sidebar tab. platform-hr-workflows 1.1a (2026-11-14): the checklist is split per owner, as HuInwerken draws it: HR (contract, identity, BSN, IBAN, pension, notes), IT (itProvisioned) and Manager (workplace and buddy, first month's programme, probation talk), each ticked by its task in the Indiensttreding flow.",
 				"layout": [
 					{
 						"gridHeight": 5,
@@ -8899,7 +8899,7 @@
 						"widgetId": "data-2"
 					},
 					{
-						"gridHeight": 13,
+						"gridHeight": 20,
 						"gridWidth": 4,
 						"gridX": 8,
 						"gridY": 0,
@@ -8910,7 +8910,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 17,
+						"gridY": 24,
 						"id": 4,
 						"widgetId": "files"
 					},
@@ -8918,9 +8918,25 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 13,
+						"gridY": 20,
 						"id": 5,
 						"widgetId": "object-list"
+					},
+					{
+						"gridHeight": 3,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 13,
+						"id": 6,
+						"widgetId": "data-it"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 16,
+						"id": 7,
+						"widgetId": "data-manager"
 					}
 				],
 				"lifecycleActions": {
@@ -8999,7 +9015,10 @@
 								"ibanVerified",
 								"itProvisioned",
 								"pensioenAangemeld",
-								"notes"
+								"notes",
+								"werkplekEnBuddyGeregeld",
+								"eersteMaandProgrammaGedeeld",
+								"proeftijdgesprekGepland"
 							],
 							"title": "Case"
 						},
@@ -9017,15 +9036,42 @@
 								"widCheckDate",
 								"bsnValidated",
 								"ibanVerified",
-								"itProvisioned",
 								"pensioenAangemeld",
 								"notes"
 							],
-							"title": "Checklist"
+							"title": "HR"
 						},
 						"icon": "CheckDecagramOutline",
 						"id": "data-2",
-						"title": "Checklist",
+						"title": "HR",
+						"type": "data"
+					},
+					{
+						"content": {
+							"columns": 2,
+							"include": [
+								"itProvisioned"
+							],
+							"title": "IT"
+						},
+						"icon": "AccountKeyOutline",
+						"id": "data-it",
+						"title": "IT",
+						"type": "data"
+					},
+					{
+						"content": {
+							"columns": 2,
+							"include": [
+								"werkplekEnBuddyGeregeld",
+								"eersteMaandProgrammaGedeeld",
+								"proeftijdgesprekGepland"
+							],
+							"title": "Manager"
+						},
+						"icon": "AccountTieOutline",
+						"id": "data-manager",
+						"title": "Manager",
 						"type": "data"
 					},
 					{
