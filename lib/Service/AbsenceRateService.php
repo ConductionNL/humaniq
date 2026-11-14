@@ -381,12 +381,7 @@ class AbsenceRateService {
 			return null;
 		}
 
-		$window = $this->caseWindow(
-			case: $case,
-			firstSickDay: $firstSickDay,
-			periodStart: $period->start,
-			periodEnd: $period->end
-		);
+		$window = $this->caseWindow(sickCase: $case, period: $period);
 		if ($window === null) {
 			return null;
 		}
@@ -397,40 +392,50 @@ class AbsenceRateService {
 	/**
 	 * The intersection of one case's own window with the reporting period.
 	 *
-	 * The case window closes on `recoveredDate` ONLY when the case actually
-	 * recovered. A reopened case (`heropenen` clears `recoveredDate`) is open
-	 * again, and a stale `recoveredDate` left on a `gemeld` case must not
-	 * truncate it -- the lifecycle status is the authority, not the date field.
-	 *
-	 * @param array<string, mixed> $case The SickLeaveCase.
-	 * @param DateTimeImmutable $firstSickDay The case anchor date.
-	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
-	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
+	 * @param array<string, mixed> $sickCase The SickLeaveCase, with a first sick day.
+	 * @param AbsencePeriod        $period   The period, inclusive.
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}|null Clipped window, or null when the case does not overlap the period at all.
 	 *
 	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
-	private function caseWindow(
-		array $case,
-		DateTimeImmutable $firstSickDay,
-		DateTimeImmutable $periodStart,
-		DateTimeImmutable $periodEnd,
-	): ?array {
-		$caseEnd = $periodEnd;
-		$recovered = $this->progression->date(value: ($case['recoveredDate'] ?? null));
-		if ($recovered !== null && ($case['status'] ?? null) === 'hersteld') {
-			$caseEnd = $recovered;
-		}
+	private function caseWindow(array $sickCase, AbsencePeriod $period): ?array {
+		$firstSickDay = $this->progression->date(value: ($sickCase['firstSickDay'] ?? null));
+		$caseEnd = $this->caseEnd(sickCase: $sickCase, period: $period);
 
-		$windowStart = ($firstSickDay > $periodStart) ? $firstSickDay : $periodStart;
-		$windowEnd = ($caseEnd < $periodEnd) ? $caseEnd : $periodEnd;
+		// The later start and the earlier end; on a tie the period's own day.
+		$windowStart = max($period->start, $firstSickDay);
+		$windowEnd = min($period->end, $caseEnd);
 		if ($windowStart > $windowEnd) {
 			return null;
 		}
 
 		return [$windowStart, $windowEnd];
 	}//end caseWindow()
+
+	/**
+	 * The last day of a case inside the reporting period's reach.
+	 *
+	 * The case window closes on `recoveredDate` ONLY when the case actually
+	 * recovered. A reopened case (`heropenen` clears `recoveredDate`) is open
+	 * again, and a stale `recoveredDate` left on a `gemeld` case must not
+	 * truncate it -- the lifecycle status is the authority, not the date field.
+	 *
+	 * @param array<string, mixed> $sickCase The SickLeaveCase.
+	 * @param AbsencePeriod        $period   The period, inclusive.
+	 *
+	 * @return DateTimeImmutable The recovered date of a recovered case, else the period's end.
+	 *
+	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-002
+	 */
+	private function caseEnd(array $sickCase, AbsencePeriod $period): DateTimeImmutable {
+		$recovered = $this->progression->date(value: ($sickCase['recoveredDate'] ?? null));
+		if ($recovered !== null && ($sickCase['status'] ?? null) === 'hersteld') {
+			return $recovered;
+		}
+
+		return $period->end;
+	}//end caseEnd()
 
 	/**
 	 * Available day-equivalents one contract contributes to a period.

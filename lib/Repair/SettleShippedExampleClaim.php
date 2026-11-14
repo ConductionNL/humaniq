@@ -31,8 +31,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Repair;
 
 use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Service\RecordStoreInterface;
-use OCA\Humaniq\Service\SettingsService;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -95,13 +95,13 @@ class SettleShippedExampleClaim implements IRepairStep {
 	 *
 	 * @param RecordStoreInterface $gateway The register.
 	 * @param InternalWriteMarker $marker Marks the write as humaniq's own.
-	 * @param SettingsService $settingsService Availability check.
+	 * @param OpenRegisterAvailability $openRegister Availability check.
 	 * @param LoggerInterface $logger Records the settled claim.
 	 */
 	public function __construct(
 		private readonly RecordStoreInterface $gateway,
 		private readonly InternalWriteMarker $marker,
-		private readonly SettingsService $settingsService,
+		private readonly OpenRegisterAvailability $openRegister,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -128,7 +128,7 @@ class SettleShippedExampleClaim implements IRepairStep {
 	 * @spec openspec/changes/settle-the-shipped-example-claim/specs/humaniq-expenses/spec.md#Requirement:-The-shipped-example-claim-SHALL-be-settled-once-on-tenants-that-imported-it-as-payable
 	 */
 	public function run(IOutput $output): void {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+		if ($this->openRegister->isAvailable() === false) {
 			$output->warning('OpenRegister is not installed or enabled. Skipping the example claim.');
 			return;
 		}

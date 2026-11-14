@@ -32,6 +32,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * PayrollVerifyCommand over a RuleAuditService double.
  *
  * @covers \OCA\Humaniq\Command\PayrollVerifyCommand
+ * @uses \OCA\Humaniq\Command\CommandOptions
  */
 class PayrollVerifyCommandTest extends TestCase {
 

@@ -409,5 +409,62 @@ class NlTravelExpenseChecksTest extends TestCase {
 		$this->assertFalse($checks($expense, []), 'EUR 0,30/km still violates when $context is empty -- the predicate does not depend on context.');
 
 	}//end testPredicateContractToleratesMissingContext()
+	/**
+	 * The rate is read from the corpus on every call: taxFreeRatePerKm()
+	 * returns it, and a corpus that raises it to EUR 0,30/km clears a claim
+	 * the shipped EUR 0,23/km flags.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
+	 */
+	public function testTheRateIsReadFromTheCorpusOnEveryCall(): void {
+		$check = NlTravelExpenseChecks::checks()['Expense'][self::RULE_ID];
+		$claim = ['category' => 'travel', 'travelType' => 'business', 'distanceKm' => 100, 'amount' => 30];
+
+		$this->assertSame(0.23, NlTravelExpenseChecks::taxFreeRatePerKm());
+		$this->assertFalse($check($claim));
+
+		CatalogueOverride::rewrite(
+			self::RULE_ID,
+			static function (array $rule): array {
+				$rule['parameters']['rateEurPerKm'] = '0.30';
+				return $rule;
+			}
+		);
+		$this->assertSame(0.30, NlTravelExpenseChecks::taxFreeRatePerKm());
+		$this->assertTrue($check($claim));
+		$this->assertFalse($check(array_merge($claim, ['amount' => 31])));
+
+	}//end testTheRateIsReadFromTheCorpusOnEveryCall()
+
+	/**
+	 * Without a readable corpus rate (rule missing, parameters not an object,
+	 * or a non-numeric rate) there is no rate to hold a claim to: the rate is
+	 * null and even a far over-rate claim passes vacuously.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableCorpusRateMakesTheCheckVacuous(): void {
+		$check = NlTravelExpenseChecks::checks()['Expense'][self::RULE_ID];
+		$overRate = ['category' => 'travel', 'travelType' => 'commute', 'distanceKm' => 10, 'amount' => 50];
+		$shapes = [
+			'missing' => null,
+			'no-parameters' => static fn (array $rule): array => array_merge($rule, ['parameters' => null]),
+			'text-rate' => static fn (array $rule): array => array_merge($rule, ['parameters' => ['rateEurPerKm' => 'zie besluit']]),
+		];
+
+		foreach ($shapes as $shape => $rewrite) {
+			if ($rewrite === null) {
+				CatalogueOverride::without(self::RULE_ID);
+			} else {
+				CatalogueOverride::rewrite(self::RULE_ID, $rewrite);
+			}
+
+			$this->assertNull(NlTravelExpenseChecks::taxFreeRatePerKm(), $shape);
+			$this->assertTrue($check($overRate), $shape);
+		}
+
+	}//end testAnUnreadableCorpusRateMakesTheCheckVacuous()
 
 }//end class

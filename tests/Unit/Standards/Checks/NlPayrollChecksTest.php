@@ -518,4 +518,101 @@ class NlPayrollChecksTest extends TestCase {
 
 	}//end testTheExtraHoursSignalFlagsARunningOverrun()
 
+	// ------------------------------------------------------------------ edge cases
+
+	/**
+	 * A granted ruling with a start date but no end date is flagged.
+	 *
+	 * @return void
+	 */
+	public function testGrantedRulingWithStartButNoEndDateIsFlagged(): void {
+		$check = $this->checks['Employee']['nl-30-regeling-looptijd-5jaar'];
+
+		self::assertFalse($check($this->employee(['thirtyPercentRulingEndDate' => null])));
+		self::assertFalse($check($this->employee(['thirtyPercentRulingEndDate' => 'geen datum'])));
+
+	}//end testGrantedRulingWithStartButNoEndDateIsFlagged()
+
+	/**
+	 * A non-numeric monthly salary leaves the salary norm vacuous.
+	 *
+	 * @return void
+	 */
+	public function testNonNumericSalaryIsVacuousForTheSalaryNorm(): void {
+		$check = $this->checks['Employee']['nl-30-regeling-salarisnorm'];
+
+		self::assertTrue($check($this->employee(['grossMonthlySalary' => 'onbekend'])));
+		self::assertTrue($check($this->employee(['grossMonthlySalary' => null])));
+
+	}//end testNonNumericSalaryIsVacuousForTheSalaryNorm()
+
+	/**
+	 * A tampered exemption is not judged when the employee cannot be resolved.
+	 *
+	 * @return void
+	 */
+	public function testExemptionOnADanglingEmployeeIsVacuous(): void {
+		$check = $this->checks['Payslip']['nl-30-regeling-aftoppingsgrens-bedrag'];
+		$payslip = ['employeeId' => 'emp-1', 'period' => '2026-02', 'grossPay' => 3800.00, 'thirtyPercentRulingExemption' => 1300.00];
+
+		self::assertFalse($check($payslip, $this->context([$this->employee()])), 'Precondition: tampered amount is flagged when resolvable.');
+		self::assertTrue($check($payslip, $this->context([])));
+		self::assertTrue($check(array_merge($payslip, ['employeeId' => 'emp-unknown']), $this->context([$this->employee()])));
+
+	}//end testExemptionOnADanglingEmployeeIsVacuous()
+
+	/**
+	 * A non-numeric ruling rate on the employee leaves the exemption vacuous.
+	 *
+	 * @return void
+	 */
+	public function testExemptionWithANonNumericRateIsVacuous(): void {
+		$check = $this->checks['Payslip']['nl-30-regeling-aftoppingsgrens-bedrag'];
+		$payslip = ['employeeId' => 'emp-1', 'period' => '2026-02', 'grossPay' => 3800.00, 'thirtyPercentRulingExemption' => 1300.00];
+
+		self::assertTrue($check($payslip, $this->context([$this->employee(['thirtyPercentRulingRate' => null])])));
+		self::assertTrue($check($payslip, $this->context([$this->employee(['thirtyPercentRulingRate' => 'dertig'])])));
+
+	}//end testExemptionWithANonNumericRateIsVacuous()
+
+	/**
+	 * An unparseable period, or a year without a tax table, leaves the
+	 * exemption vacuous instead of throwing.
+	 *
+	 * @return void
+	 */
+	public function testExemptionWithoutAResolvableTaxTableIsVacuous(): void {
+		$check = $this->checks['Payslip']['nl-30-regeling-aftoppingsgrens-bedrag'];
+		$context = $this->context([$this->employee()]);
+		$payslip = ['employeeId' => 'emp-1', 'grossPay' => 3800.00, 'thirtyPercentRulingExemption' => 1300.00];
+
+		self::assertFalse($check(array_merge($payslip, ['period' => '2026-02']), $context), 'Precondition: tampered amount is flagged for 2026.');
+		self::assertTrue($check(array_merge($payslip, ['period' => 'februari']), $context));
+		self::assertTrue($check($payslip, $context));
+		self::assertTrue($check(array_merge($payslip, ['period' => '1999-02']), $context));
+
+	}//end testExemptionWithoutAResolvableTaxTableIsVacuous()
+
+	/**
+	 * The eu-a1-posted-worker check: an A1 certificate valid for at most 24
+	 * months from the start date passes; longer, inverted or undated fails.
+	 *
+	 * @return void
+	 */
+	public function testPostedWorkerA1CertificateWindow(): void {
+		$check = $this->checks['Employee']['eu-a1-posted-worker'];
+		$posted = ['postedWorker' => true, 'a1CertificateNumber' => 'A1-123', 'startDate' => '2026-01-01', 'a1ValidUntil' => '2027-06-30'];
+
+		self::assertTrue($check(['postedWorker' => false]));
+		self::assertTrue($check([]));
+		self::assertTrue($check($posted));
+		self::assertTrue($check(array_merge($posted, ['a1ValidUntil' => '2028-01-01'])), 'Exactly 24 months is allowed.');
+		self::assertFalse($check(array_merge($posted, ['a1ValidUntil' => '2028-01-02'])), 'One day beyond 24 months is flagged.');
+		self::assertFalse($check(array_merge($posted, ['a1ValidUntil' => '2025-12-31'])), 'Valid-until before the start date is flagged.');
+		self::assertFalse($check(array_merge($posted, ['startDate' => null])), 'An undated start is flagged.');
+		self::assertFalse($check(array_merge($posted, ['a1CertificateNumber' => '  '])), 'A blank certificate number is flagged.');
+		self::assertFalse($check(array_merge($posted, ['a1ValidUntil' => null])), 'A missing valid-until is flagged.');
+
+	}//end testPostedWorkerA1CertificateWindow()
+
 }//end class

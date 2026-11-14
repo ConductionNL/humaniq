@@ -120,19 +120,48 @@ class HrDocumentSigningService {
 			return $this->outcome($document, 'skipped-no-docudesk', 'De documentenapp is niet beschikbaar; er is niets verstuurd.');
 		}
 
-		$employee = ($this->register->findObjectData((string)($document['employeeId'] ?? ''), 'Employee') ?? []);
-		$signers = $this->signers((string)$document['documentType'], $employee, $actingUserId);
-		if ($signers === null) {
-			return $this->failed(document: $document, message: 'no-nextcloud-user-for-employee: de medewerker heeft geen Nextcloud-account en kan daarom niet ondertekenen.');
-		}
-
-		$fileId = $this->fileId($document);
-		if ($fileId === null) {
-			return $this->failed(document: $document, message: 'Het opgeslagen PDF-bestand van dit document is niet gevonden. Genereer het document opnieuw.');
-		}
-
-		return $this->raise($document, $signers, $fileId, trim((string)($employee['firstName'] ?? '') . ' ' . (string)($employee['lastName'] ?? '')));
+		return $this->raiseFor(request: $this->signatureRequest(document: $document, actingUserId: $actingUserId));
 	}//end requestSignature()
+
+	/**
+	 * The signing request of a document, with the employee it is about.
+	 *
+	 * @param array<string, mixed> $document     The document, with its `id`.
+	 * @param string               $actingUserId The HR user asking.
+	 *
+	 * @return HrSignatureRequest
+	 */
+	private function signatureRequest(array $document, string $actingUserId): HrSignatureRequest {
+		$request = new HrSignatureRequest();
+		$request->document = $document;
+		$request->actingUserId = $actingUserId;
+		$request->employee = ($this->register->findObjectData((string)($document['employeeId'] ?? ''), 'Employee') ?? []);
+
+		return $request;
+	}//end signatureRequest()
+
+	/**
+	 * Raise the request once its signers and stored PDF resolve; store the
+	 * failure on the document when either does not.
+	 *
+	 * @param HrSignatureRequest $request The request.
+	 *
+	 * @return array{status: string, message: string, signingRequestId: string|null, signingStatus: string|null}
+	 */
+	private function raiseFor(HrSignatureRequest $request): array {
+		$signers = $this->signers(request: $request);
+		if ($signers === null) {
+			return $this->failed(document: $request->document, message: 'no-nextcloud-user-for-employee: de medewerker heeft geen Nextcloud-account en kan daarom niet ondertekenen.');
+		}
+
+		$fileId = $this->fileId($request->document);
+		if ($fileId === null) {
+			return $this->failed(document: $request->document, message: 'Het opgeslagen PDF-bestand van dit document is niet gevonden. Genereer het document opnieuw.');
+		}
+
+		$employee = $request->employee;
+		return $this->raise(document: $request->document, signing: ['fileId' => $fileId, 'signers' => $signers, 'subject' => trim((string)($employee['firstName'] ?? '') . ' ' . (string)($employee['lastName'] ?? ''))]);
+	}//end raiseFor()
 
 	/**
 	 * Why the document cannot go out for signing in its state: not a signable
@@ -203,15 +232,13 @@ class HrDocumentSigningService {
 	/**
 	 * Raise the request and store its id and status.
 	 *
-	 * @param array<string, mixed>             $document The document.
-	 * @param list<array<string, string|int>>  $signers  The signers, in order.
-	 * @param int                              $fileId   The stored PDF.
-	 * @param string                           $subject  The employee's name.
+	 * @param array<string, mixed>                                                            $document The document.
+	 * @param array{fileId: int, signers: list<array<string, string|int>>, subject: string} $signing  The stored PDF, the signers in order and the employee's name.
 	 *
 	 * @return array{status: string, message: string, signingRequestId: string|null, signingStatus: string|null}
 	 */
-	private function raise(array $document, array $signers, int $fileId, string $subject): array {
-		$created = $this->signing->create($this->requestFields(document: $document, signing: ['fileId' => $fileId, 'signers' => $signers, 'subject' => $subject]));
+	private function raise(array $document, array $signing): array {
+		$created = $this->signing->create($this->requestFields(document: $document, signing: $signing));
 
 		$document = $this->saveDocument(
 			$document,
@@ -262,19 +289,61 @@ class HrDocumentSigningService {
 	}//end requestFields()
 
 	/**
-	 * The signers for a document type, or null when the employee must sign and has no account.
+	 * The signers of the request's document type, or null when the employee
+	 * must sign and has no account.
 	 *
-	 * @param string               $type         The document type.
-	 * @param array<string, mixed> $employee     The employee.
-	 * @param string               $actingUserId The HR user asking.
+	 * @param HrSignatureRequest $request The request.
 	 *
 	 * @return list<array<string, string|int>>|null
 	 */
-	private function signers(string $type, array $employee, string $actingUserId): ?array {
+	private function signers(HrSignatureRequest $request): ?array {
+		$uids = $this->signerUids(request: $request);
+		if ($uids === null) {
+			return null;
+		}
+
+		$signers = [];
+		foreach ($uids as $order => $uid) {
+			$signers[] = $this->signer(uid: $uid, order: $order);
+		}
+
+		return $signers;
+	}//end signers()
+
+	/**
+	 * One signer: the Nextcloud user with display name and email, and their turn.
+	 *
+	 * @param string $uid   The Nextcloud user id.
+	 * @param int    $order The signer's turn, from 0.
+	 *
+	 * @return array<string, string|int>
+	 */
+	private function signer(string $uid, int $order): array {
+		$user = $this->users->get($uid);
+
+		return [
+			'userId' => $uid,
+			'displayName' => (string)($user?->getDisplayName() ?? $uid),
+			'email' => (string)($user?->getEMailAddress() ?? ''),
+			'order' => $order,
+		];
+	}//end signer()
+
+	/**
+	 * Who signs, in order: the administration's signatory (else the HR user
+	 * asking), then the employee when the type needs them; null when the
+	 * employee must sign and has no account.
+	 *
+	 * @param HrSignatureRequest $request The request.
+	 *
+	 * @return list<string>|null
+	 */
+	private function signerUids(HrSignatureRequest $request): ?array {
+		$employee = $request->employee;
 		$administration = ($this->register->findFiltered('hrAdministration', ['administrationId' => (string)($employee['administrationId'] ?? '')])[0] ?? []);
 		$signatory = trim((string)($administration['signatoryUserId'] ?? ''));
-		$uids = [($signatory === '' ? $actingUserId : $signatory)];
-		if (self::SIGNABLE[$type] === true) {
+		$uids = [($signatory === '' ? $request->actingUserId : $signatory)];
+		if (self::SIGNABLE[(string)$request->document['documentType']] === true) {
 			$own = trim((string)($employee['nextcloudUserId'] ?? ''));
 			if ($own === '') {
 				return null;
@@ -283,19 +352,8 @@ class HrDocumentSigningService {
 			$uids[] = $own;
 		}
 
-		$signers = [];
-		foreach ($uids as $order => $uid) {
-			$user = $this->users->get($uid);
-			$signers[] = [
-				'userId' => $uid,
-				'displayName' => (string)($user?->getDisplayName() ?? $uid),
-				'email' => (string)($user?->getEMailAddress() ?? ''),
-				'order' => $order,
-			];
-		}
-
-		return $signers;
-	}//end signers()
+		return $uids;
+	}//end signerUids()
 
 	/**
 	 * The Nextcloud file id of the document's stored PDF.

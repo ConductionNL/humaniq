@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\DocudeskTemplates;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\SettingsService;
@@ -563,7 +564,7 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 			);
 		}
 
-		return [new HrDocumentService($container, $appManager, $settings, $guard, $logger), $objects];
+		return [new HrDocumentService($container, $appManager, $settings, $guard, $logger, new DocudeskTemplates($container, $settings)), $objects];
 
 	}//end service()
 

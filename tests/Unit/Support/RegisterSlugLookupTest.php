@@ -156,6 +156,79 @@ class RegisterSlugLookupTest extends TestCase {
 	}//end preContractLookup()
 
 	/**
+	 * A register mapper that throws answers nothing: the lookup reports the
+	 * register as unknown rather than letting a database error surface through
+	 * a slug lookup that every caller treats as a yes/no question.
+	 *
+	 * @return void
+	 */
+	public function testAThrowingRegisterMapperAnswersNull(): void {
+		$mapper = new class {
+
+			/**
+			 * @param list<string> $slugs The candidate slugs.
+			 *
+			 * @return array<string, list<string>>
+			 *
+			 * @throws RuntimeException Always.
+			 *
+			 * @SuppressWarnings(PHPMD.UnusedFormalParameter) -- the signature mirrors the real mapper.
+			 */
+			public function findIdsBySlugs(array $slugs): array {
+				throw new RuntimeException('register table unavailable');
+			}//end findIdsBySlugs()
+
+		};
+
+		$this->assertNull($this->lookupOverMapper($mapper)->slugOrNull());
+
+	}//end testAThrowingRegisterMapperAnswersNull()
+
+	/**
+	 * A mapper answering with something that is not a map of slugs is not a
+	 * register row either — an OpenRegister whose mapper changed shape reads
+	 * as "cannot answer", never as a canonical guess.
+	 *
+	 * @return void
+	 */
+	public function testAMapperAnsweringWithANonArrayIsNoRow(): void {
+		$mapper = new class {
+
+			/**
+			 * @param list<string> $slugs The candidate slugs.
+			 *
+			 * @return mixed
+			 *
+			 * @SuppressWarnings(PHPMD.UnusedFormalParameter) -- the signature mirrors the real mapper.
+			 */
+			public function findIdsBySlugs(array $slugs): mixed {
+				return 'humaniq';
+			}//end findIdsBySlugs()
+
+		};
+
+		$this->assertNull($this->lookupOverMapper($mapper)->slugOrNull());
+
+	}//end testAMapperAnsweringWithANonArrayIsNoRow()
+
+	/**
+	 * A lookup whose container holds only the given register mapper, so the
+	 * table fallback is the path under test.
+	 *
+	 * @param object $mapper The register mapper double.
+	 *
+	 * @return RegisterSlugLookup
+	 */
+	private function lookupOverMapper(object $mapper): RegisterSlugLookup {
+		$container = new FakeContainer(['OCA\OpenRegister\Db\RegisterMapper' => $mapper]);
+
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('');
+
+		return new RegisterSlugLookup($container, $appConfig);
+	}//end lookupOverMapper()
+
+	/**
 	 * THE CASE THIS FALLBACK EXISTS FOR.
 	 *
 	 * An OpenRegister older than the published contract (anything before

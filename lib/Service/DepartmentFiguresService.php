@@ -68,13 +68,13 @@ class DepartmentFiguresService {
 	/**
 	 * @param AnalyticsService   $analytics   Loads the administration's rows and resolves period windows.
 	 * @param UnitMembership     $membership  Unit trees and placements.
-	 * @param SettingsService    $settings    The small-unit threshold.
+	 * @param WorkforceReportSettings $settings The small-unit threshold.
 	 * @param DepartmentFigureCalculators $calculators Frequency and wage cost, the absence rate and the month windows.
 	 */
 	public function __construct(
 		private readonly AnalyticsService $analytics,
 		private readonly UnitMembership $membership,
-		private readonly SettingsService $settings,
+		private readonly WorkforceReportSettings $settings,
 		private readonly DepartmentFigureCalculators $calculators,
 	) {
 	}//end __construct()

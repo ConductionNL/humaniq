@@ -47,6 +47,8 @@ use PHPUnit\Framework\TestCase;
  * @uses   \OCA\Humaniq\Service\AbsenceProgression
  * @uses   \OCA\Humaniq\Service\WorkingHoursService
  * @uses   \OCA\Humaniq\Service\PatternDayEquivalents
+ * @uses \OCA\Humaniq\Service\EmployeeWorkingTime
+ * @uses \OCA\Humaniq\Service\WorkingDay
  *
  * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-001
  */

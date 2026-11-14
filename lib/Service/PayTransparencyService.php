@@ -110,30 +110,68 @@ class PayTransparencyService {
 	 * @return array<int, array{gender: string, category: string, hourly: float, variable: float}>
 	 */
 	private function people(array $rows, int $year): array {
-		$categoryOf = self::categoriesOf(rows: $rows);
-		$slipsOf = self::slipsInYear(rows: $rows, year: $year);
+		$run = new PayTransparencyYear();
+		$run->rows = $rows;
+		$run->year = $year;
+		$run->categoryOf = self::categoriesOf(rows: $rows);
+		$run->slipsOf = self::slipsInYear(rows: $rows, year: $year);
 		$people = [];
 		foreach (($rows['employees'] ?? []) as $employee) {
-			$employeeId = (string)($employee['id'] ?? '');
-			$slips = ($slipsOf[$employeeId] ?? []);
-			if ($employeeId === '' || $slips === []) {
-				continue;
+			$person = $this->person(run: $run, employee: $employee);
+			if ($person !== null) {
+				$people[] = $person;
 			}
-
-			$contract = $this->contractInYear(contracts: ($rows['contracts'] ?? []), employeeId: $employeeId, year: $year);
-			$pay = $this->pay(slips: $slips, contract: $contract, monthlySalary: (float)($employee['grossMonthlySalary'] ?? 0));
-			if ($pay !== null) {
-				$people[] = [
-					'gender' => (string)($employee['gender'] ?? ''),
-					'category' => ($categoryOf[(string)($contract['normfunctieId'] ?? '')] ?? self::UNCATEGORISED),
-					'hourly' => $pay['hourly'],
-					'variable' => $pay['variable'],
-				];
-			}
-		}//end foreach
+		}
 
 		return $people;
 	}//end people()
+
+	/**
+	 * One employee's gender, category, hourly and variable pay, or null when
+	 * the employee has no pay or no hours in the year.
+	 *
+	 * @param PayTransparencyYear  $run      The year's rows.
+	 * @param array<string, mixed> $employee The employee.
+	 *
+	 * @return array{gender: string, category: string, hourly: float, variable: float}|null
+	 */
+	private function person(PayTransparencyYear $run, array $employee): ?array {
+		$earnings = $this->earningsOf(run: $run, employee: $employee);
+		if ($earnings === null || $this->addUp(earnings: $earnings) === false) {
+			return null;
+		}
+
+		return [
+			'gender' => (string)($employee['gender'] ?? ''),
+			'category' => ($run->categoryOf[(string)($earnings->contract['normfunctieId'] ?? '')] ?? self::UNCATEGORISED),
+			'hourly' => ($earnings->gross / $earnings->hours),
+			'variable' => $earnings->variable,
+		];
+	}//end person()
+
+	/**
+	 * The employee's payslips and contract in the year, or null for an
+	 * employee without an id or without payslips.
+	 *
+	 * @param PayTransparencyYear  $run      The year's rows.
+	 * @param array<string, mixed> $employee The employee.
+	 *
+	 * @return EmployeeEarnings|null
+	 */
+	private function earningsOf(PayTransparencyYear $run, array $employee): ?EmployeeEarnings {
+		$employeeId = (string)($employee['id'] ?? '');
+		$slips = ($run->slipsOf[$employeeId] ?? []);
+		if ($employeeId === '' || $slips === []) {
+			return null;
+		}
+
+		$earnings = new EmployeeEarnings();
+		$earnings->employee = $employee;
+		$earnings->slips = $slips;
+		$earnings->contract = $this->contractInYear(run: $run, employeeId: $employeeId);
+
+		return $earnings;
+	}//end earningsOf()
 
 	/**
 	 * The pay category of each normfunctie, by id.
@@ -171,66 +209,96 @@ class PayTransparencyService {
 	}//end slipsInYear()
 
 	/**
-	 * Hourly and variable pay from a year's payslips; null without hours.
+	 * Add up a year's payslips: the gross, the hours and the variable pay.
+	 * False without hours or without pay.
 	 *
 	 * Hours are the payslips' hoursWorked, or the contract's hours per week
 	 * times the weeks of a month for each payslip without them. Variable pay
 	 * is what a payslip pays above the monthly salary.
 	 *
-	 * @param array<int, array<string, mixed>> $slips         The year's payslips.
-	 * @param array<string, mixed>|null        $contract      The contract in the year.
-	 * @param float                            $monthlySalary The employee's gross monthly salary.
+	 * @param EmployeeEarnings $earnings The employee's payslips and contract; the totals are set.
 	 *
-	 * @return array{hourly: float, variable: float}|null
+	 * @return bool
 	 */
-	private function pay(array $slips, ?array $contract, float $monthlySalary): ?array {
-		$gross = 0.0;
-		$hours = 0.0;
-		$variable = 0.0;
-		$weekly = (float)($contract['hoursPerWeek'] ?? 0);
-		foreach ($slips as $slip) {
-			$slipGross = (float)($slip['grossPay'] ?? 0);
-			$slipHours = (float)($slip['hoursWorked'] ?? 0);
-			$gross += $slipGross;
-			$hours += $slipHours > 0 ? $slipHours : ($weekly * self::WEEKS_PER_MONTH);
-			if ($monthlySalary > 0 && $slipGross > $monthlySalary) {
-				$variable += ($slipGross - $monthlySalary);
-			}
+	private function addUp(EmployeeEarnings $earnings): bool {
+		foreach ($earnings->slips as $slip) {
+			$this->addSlip(earnings: $earnings, slip: $slip);
 		}
 
-		if ($hours <= 0 || $gross <= 0) {
-			return null;
-		}
+		return ($earnings->hours > 0 && $earnings->gross > 0);
+	}//end addUp()
 
-		return ['hourly' => ($gross / $hours), 'variable' => $variable];
-	}//end pay()
+	/**
+	 * Add one payslip's gross, hours and pay above the monthly salary.
+	 *
+	 * @param EmployeeEarnings     $earnings The totals so far, the employee and the contract.
+	 * @param array<string, mixed> $slip     The payslip.
+	 *
+	 * @return void
+	 */
+	private function addSlip(EmployeeEarnings $earnings, array $slip): void {
+		$monthlySalary = (float)($earnings->employee['grossMonthlySalary'] ?? 0);
+		$slipGross = (float)($slip['grossPay'] ?? 0);
+		$slipHours = (float)($slip['hoursWorked'] ?? 0);
+		$earnings->gross += $slipGross;
+		$earnings->hours += $slipHours > 0 ? $slipHours : ((float)($earnings->contract['hoursPerWeek'] ?? 0) * self::WEEKS_PER_MONTH);
+		if ($monthlySalary > 0 && $slipGross > $monthlySalary) {
+			$earnings->variable += ($slipGross - $monthlySalary);
+		}
+	}//end addSlip()
 
 	/**
 	 * The employee's latest contract that runs at some point in the year.
 	 *
-	 * @param array<int, array<string, mixed>> $contracts  All contracts.
-	 * @param string                           $employeeId The employee.
-	 * @param int                              $year       The year.
+	 * @param PayTransparencyYear $run        The year's contracts.
+	 * @param string              $employeeId The employee.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function contractInYear(array $contracts, string $employeeId, int $year): ?array {
+	private function contractInYear(PayTransparencyYear $run, string $employeeId): ?array {
 		$found = null;
-		foreach ($contracts as $contract) {
-			$start = (string)($contract['startDate'] ?? '');
-			$end = (string)($contract['endDate'] ?? '');
-			$runs = $start <= $year . '-12-31' && ($end === '' || $end >= $year . '-01-01');
-			if ((string)($contract['employeeId'] ?? '') !== $employeeId || $runs === false) {
-				continue;
-			}
-
-			if ($found === null || $start > (string)($found['startDate'] ?? '')) {
+		foreach ($this->contractsInYear(run: $run, employeeId: $employeeId) as $contract) {
+			if ($found === null || (string)($contract['startDate'] ?? '') > (string)($found['startDate'] ?? '')) {
 				$found = $contract;
 			}
 		}
 
 		return $found;
 	}//end contractInYear()
+
+	/**
+	 * The employee's contracts that run at some point in the year, in their order.
+	 *
+	 * @param PayTransparencyYear $run        The year's contracts.
+	 * @param string              $employeeId The employee.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function contractsInYear(PayTransparencyYear $run, string $employeeId): array {
+		$year = $run->year;
+
+		return array_values(
+			array_filter(
+				($run->rows['contracts'] ?? []),
+				static fn (array $contract): bool => (string)($contract['employeeId'] ?? '') === $employeeId && self::runsInYear(contract: $contract, year: $year)
+			)
+		);
+	}//end contractsInYear()
+
+	/**
+	 * Whether a contract runs at some point in the year.
+	 *
+	 * @param array<string, mixed> $contract The contract.
+	 * @param int                  $year     The year.
+	 *
+	 * @return bool
+	 */
+	private static function runsInYear(array $contract, int $year): bool {
+		$start = (string)($contract['startDate'] ?? '');
+		$end = (string)($contract['endDate'] ?? '');
+
+		return $start <= $year . '-12-31' && ($end === '' || $end >= $year . '-01-01');
+	}//end runsInYear()
 
 	/**
 	 * The gap indicators of a group, or tooSmall without figures.

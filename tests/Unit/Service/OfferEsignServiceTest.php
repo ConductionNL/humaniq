@@ -41,6 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\DocudeskTemplates;
 use OCA\Humaniq\Service\OfferApplicationRepository;
 use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\OfferLetterService;
@@ -571,7 +572,7 @@ class OfferEsignServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$letterService = new OfferLetterService($container, $settings);
+		$letterService = new OfferLetterService($container, $settings, new DocudeskTemplates($container, $settings));
 		$applications = new OfferApplicationRepository($container, $settings, $logger);
 		$signingRecovery = new OfferSigningRecoveryService($userMgr, $logger);
 

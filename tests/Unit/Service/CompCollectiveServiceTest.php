@@ -36,8 +36,9 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\CompCollectiveService;
 use OCA\Humaniq\Service\CompCycleApprover;
 use OCA\Humaniq\Service\HoursRegisterGateway;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
+use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -239,10 +240,10 @@ class CompCollectiveServiceTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->with('OCA\OpenRegister\Service\Lifecycle\TransitionEngine')->willReturn($engine);
 
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('isOpenRegisterAvailable')->willReturn(true);
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('isInstalled')->willReturn(true);
 
-		return new CompCycleApprover($this->gateway(), $container, $settings, $this->createMock(LoggerInterface::class));
+		return new CompCycleApprover($this->gateway(), $container, new OpenRegisterAvailability($apps), $this->createMock(LoggerInterface::class));
 	}//end approver()
 
 	/**

@@ -1165,8 +1165,8 @@
   {
    "id": "ppl-bsn-iban-validation",
    "area": "people",
-   "name": "Have a BSN, IBAN and date of birth checked for validity when they are entered.",
-   "humaniq": "partial",
+   "name": "Have an IBAN and a date of birth checked for their format when they are entered.",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "partial",
@@ -1194,7 +1194,7 @@
    "feature": "employee-records",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Only IBAN gets a real check, and by the schema's own note it is a shape regex, not a mod-97 checksum. BSN has no elfproef or format check anywhere in lib/Standards or the schema. Date of birth gets only generic ISO date parsing.",
+   "note": "Reworded on 13 Nov to the deliberate spec (decision 407, REQ-ECR-003): a format check only. The IBAN is checked against its shape, not a mod-97 checksum, and the date of birth must be a valid ISO date. The BSN is stored as entered, with no length or eleven test (elfproef). A missing BSN makes payroll apply the anonymous rate. Competitor columns were read against the earlier wording, validity checks.",
    "screen": {
     "canvas": "design-system",
     "board": "HuMedewerker"
@@ -1673,9 +1673,9 @@
     "personio": "not checked: not settled: searched help centre for collective agreement and legislation rule updates; the turn of the year articles (https://support.personio.de/hc/en-us/articles/23183076578717-Overview-of-the-turn-of-the-year) cover German payroll law only, nothing on shipped collective agreement rule updates."
    },
    "built": {
-    "requirement": "openspec/specs/payroll-pack-and-table-updates :: An administrator SHALL upload a pack together with its tax tables (REQ-PKU-001)",
+    "requirement": ["openspec/specs/payroll-pack-and-table-updates :: An administrator SHALL upload a pack together with its tax tables (REQ-PKU-001)", "openspec/specs/cao-library :: The CAO corpus SHALL be loadable, versioned code data with sourced leaves (REQ-CAO-001)", "openspec/specs/cao-library :: Salary below the contract's CAO minimum scale SHALL be a violation (REQ-CAO-003)"],
     "state": "built",
-    "evidence": "Legislation half built: a pack with its tax tables is uploaded and checked on Configuration > Payroll packs without a release (lib/Service/JurisdictionPackService.php upload() with tables, lib/Service/TaxTableSetService.php, src/widgets/PayrollPacksWidget.vue). CAO revisions still arrive as data in an app release (cao-library non-goal, recorded in the change's proposal Out of scope), so the matrix cell stays partial. Tests: tests/Unit/Service/PackUploadServiceTest.php.",
+    "evidence": "Legislation half built: a pack with its tax tables is uploaded and checked on Configuration > Payroll packs without a release (lib/Service/JurisdictionPackService.php upload() with tables, lib/Service/TaxTableSetService.php, src/widgets/PayrollPacksWidget.vue). CAO revisions arrive as versioned data in an app update and apply without configuring anything (cao-library REQ-CAO-001; REQ-CAO-003 enforces a verified minimum on a new sector CAO without a code change); there is no upload for a CAO revision on its own. Tests: tests/Unit/Service/PackUploadServiceTest.php.",
     "reachedOn": "Configuration > Payroll packs",
     "owner": "ConductionNL/humaniq",
     "change": "2026-09-30-payroll-pack-and-cao-updates",
@@ -2444,12 +2444,13 @@
     "afas": "https://help.afas.nl/help/NL/SE/App_Script_Empl_Config.htm: a draaiboek indienst/uitdienst generates workflows for internal tasks such as preparing a laptop or issuing an access pass when the onboarding workflow is registered."
    },
    "built": {
-    "requirement": ["openspec/specs/onboarding-wizard :: A new `hr-onboarding` fragment SHALL define the `Onboarding` schema (REQ-OBW-001)", "openspec/specs/onboarding-wizard :: New onboarding pages SHALL surface the case, its checklist, and the lifecycle under the `Onboarding & ATS` menu group (REQ-OBW-005)"],
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-onboarding.json Onboarding schema (employeeId, startDate, proeftijdEndDate, status, contractSigned, widCheckDone, widCheckDate, bsnValidated, ibanVerified, itProvisioned, pensioenAangemeld, notes) spans HR (contract/WID/BSN/IBAN checks), IT (itProvisioned) and benefits (pensioenAangemeld); src/manifest.d/hr-onboarding.json:11 OnboardingDetail 'Checklist' widget groups the six gate booleans, audit-enforced by lib/Standards/Checks/NlOnboardingChecks.php; lifecycleActions contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren",
+    "requirement": ["openspec/specs/onboarding-wizard :: A new `hr-onboarding` fragment SHALL define the `Onboarding` schema (REQ-OBW-001)", "openspec/specs/onboarding-wizard :: New onboarding pages SHALL surface the case, its checklist, and the lifecycle under the `Onboarding & ATS` menu group (REQ-OBW-005)", "openspec/changes/platform-hr-workflows/specs/hr-workflows :: humaniq SHALL ship adoptable onboarding and offboarding flows (REQ-HWF-001)"],
+    "state": "specified",
+    "evidence": "Not built: no checklist step is the manager's, and no step is handed to its owner as a task (REQ-HWF-001, platform-hr-workflows task 1.1a); the HR and IT checks are built. (12 Nov, decision 389) Was: lib/Settings/register.d/hr-onboarding.json Onboarding schema (employeeId, startDate, proeftijdEndDate, status, contractSigned, widCheckDone, widCheckDate, bsnValidated, ibanVerified, itProvisioned, pensioenAangemeld, notes) spans HR (contract/WID/BSN/IBAN checks), IT (itProvisioned) and benefits (pensioenAangemeld); src/manifest.d/hr-onboarding.json:11 OnboardingDetail 'Checklist' widget groups the six gate booleans, audit-enforced by lib/Standards/Checks/NlOnboardingChecks.php; lifecycleActions contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren",
     "reachedOn": "Onboardings /onboardings (menu Personeel), OnboardingDetail /onboardings/:id",
     "owner": "ConductionNL/humaniq",
-    "change": "2026-07-13-onboarding-wizard-mvp"
+    "change": "2026-07-13-onboarding-wizard-mvp",
+    "plan": "openspec/changes/platform-hr-workflows"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3543,6 +3544,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360007584818-Track-your-working-hours: record working time as you work or add entries later via browser, mobile app or a shared device."
    },
    "built": {
+    "plan": "openspec/changes/a-time-entry-can-be-booked-to-a-day",
     "state": "built",
     "evidence": "src/manifest.d/hr-timesheet.json page MijnUren (route /mijn/uren) includeFields startedAt/endedAt/breakMinutes/description/projectId/billable; lib/Listener/TimeEntryStampListener.php stamps userId/administrationId/costCenter server-side; hours derived from start/end/break by TimeEntryHoursDeriver.php",
     "reachedOn": "MijnUren /mijn/uren (menu My HR > My hours), self-service create form",
@@ -6312,7 +6314,7 @@
     "personio": "not checked: not settled: the help centre says Personio Payroll is Germany only (https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, updated 2026-09-25) and Dutch pay is run in Loket (https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration), while https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26) announces 'Personio Payroll, powered by Loket', managed payroll delivery for the Netherlands; no page states whether the unemployment premium differentiation is applied (the Loket integration syncs contract duration type, https://support.personio.de/hc/en-us/articles/35527484814621-Loket-integration-Summary-of-supported-attributes)."
    },
    "built": {
-    "requirement": ["openspec/specs/awf-premium-review :: BBL apprentices and young part-timers SHALL get the low premium (REQ-AWF-101)", "openspec/specs/awf-premium-review :: The low premium SHALL be reviewed on early ending and extra hours (REQ-AWF-102)"],
+    "requirement": ["openspec/changes/matrix-rows-without-a-requirement/specs/awf-premium-review :: A permanent written contract SHALL get the low unemployment premium and a flexible contract the high one (REQ-AWF-103)", "openspec/specs/awf-premium-review :: BBL apprentices and young part-timers SHALL get the low premium (REQ-AWF-101)", "openspec/specs/awf-premium-review :: The low premium SHALL be reviewed on early ending and extra hours (REQ-AWF-102)"],
     "state": "built",
     "evidence": "lib/Payroll/AwfTariffResolver.php resolves the Awf rate for the run (PayrollRunService), the retro recalculation (RetroAdjustmentService) and the audit (NlPayrollChecks::expectedAwfTariff): low for a permanent written contract, for a signed BBL contract without an uitzendbeding and for an employee under 21 at the start of the period paid at most 52 hours a month (48 a four weeks); high for an early end. lib/Service/AwfReviewService.php reviews the low rate (early end within two months; after the year, more than 30 percent extra paid hours at 30 contracted hours a week or less, lib/Payroll/AwfHoursReview.php) and writes awf-herziening PayrollAdjustments the run settles as employer charges. Payslip.awfTariff/awfTariffBasis and the year-to-date fields; rule nl-awf-herziening-uren-signaal. Thresholds from the Handboek Loonheffingen 2026 (maart 2026) par. 7.2-7.2.3. Tests: tests/Unit/Payroll/AwfTariffResolverTest.php, tests/Unit/Service/AwfReviewServiceTest.php, PayrollRunServiceTest (testABblApprenticeIsChargedTheLowPremium and three more), RetroAdjustmentServiceTest::testTheRecalculationUsesTheSharedAwfResolution, NlPayrollChecksTest.",
     "reachedOn": "every payroll run (employer charges and the rate with its reason on the payslip, review adjustments settled in the run); audited by occ humaniq:rules:audit",
@@ -6894,7 +6896,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/21453114449053-Set-up-employee-data-change-approval-workflows: admins define which changes to employee information need manual approval, based on the profile section updated, and which are approved automatically."
    },
    "built": {
-    "requirement": "openspec/specs/employee-change-approval :: An employee SHALL see their own record and ask for a change (REQ-ECR-003)",
+    "requirement": ["openspec/specs/employee-change-approval :: An employee SHALL see their own record and ask for a change (REQ-ECR-003)", "openspec/specs/employee-change-approval :: A guarded change SHALL take effect only after its approver approves it (REQ-ECR-001)"],
     "state": "built",
     "change": "2026-09-29-people-record-change-approval",
     "evidence": "Employee gains straat, huisnummer, postcode, woonplaats, land (hr-objects.json 0.9.0); My HR > My details (preset nextcloudUserId = @me on the Employees list) and My HR > My change requests (a userId = @me preset on the ChangeRequests list; create form with the flat address and bank fields, employee filled from the account). An address change applies at once, a bank account change waits for HR. Tests: EmployeeChangeRequestFlowTest::testAnAddressChangeAppliesAtOnce, ::testABankAccountChangeWaitsForHrAndIsAppliedOnce.",
@@ -7537,13 +7539,14 @@
     "personio": "not checked: not settled: searched help centre for billable hours and utilisation; project time tracking has no billable flag (https://support.personio.de/hc/en-us/articles/360001981757-Set-up-project-based-time-tracking)."
    },
    "built": {
-    "requirement": "openspec/specs/humaniq-dashboard-steering-indicators :: The Billable-ratio widget SHALL render billable vs. total Timesheet hours per period via OpenRegister's own aggregation (REQ-DSI-002)",
-    "state": "built",
-    "evidence": "src/manifest.json:484-506 'Billable ratio' chart and the kpi-billable-ratio tile both bind to the guarded /apps/humaniq/api/analytics/trends endpoint (lib/Service/AnalyticsService.php:171 and :274-300 billableRatioSeries()); AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId. The figure is one percentage per administration per period, not broken down per person or team as the row asks. The earlier unscoped reading came from the stale page-level _note at src/manifest.json:406.",
+    "requirement": ["openspec/specs/humaniq-dashboard-steering-indicators :: The Billable-ratio widget SHALL render billable vs. total Timesheet hours per period via OpenRegister's own aggregation (REQ-DSI-002)", "openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators :: The billable share SHALL be readable per team and per person (REQ-DSI-010)"],
+    "state": "specified",
+    "evidence": "Not built: the billable share per team and per person (REQ-DSI-010); only one ratio per administration is shown. (12 Nov, decision 389) Was: src/manifest.json:484-506 'Billable ratio' chart and the kpi-billable-ratio tile both bind to the guarded /apps/humaniq/api/analytics/trends endpoint (lib/Service/AnalyticsService.php:171 and :274-300 billableRatioSeries()); AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId. The figure is one percentage per administration per period, not broken down per person or team as the row asks. The earlier unscoped reading came from the stale page-level _note at src/manifest.json:406.",
     "reachedOn": "Dashboard, Billable ratio widgets (main landing page)",
     "owner": "ConductionNL/humaniq",
     "readOn": "2026-09-26",
-    "change": "2026-08-20-hrmq-dashboard-steering-indicators"
+    "change": "2026-08-20-hrmq-dashboard-steering-indicators",
+    "plan": "openspec/changes/matrix-rows-without-a-requirement"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -10051,7 +10054,10 @@
    "originUrl": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2",
    "screen": {
     "canvas": "design-system",
-    "board": "HuDeclaratie"
+    "board": [
+   "HuDeclaratie",
+   "HuBtwOverzicht"
+  ]
    }
   },
   {

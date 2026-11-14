@@ -133,7 +133,7 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 	 * @return bool
 	 */
 	private static function submittedByDeadline(array $o): bool {
-		return self::onOrBefore($o, 'submittedDate', 'deadline');
+		return FilingDates::onOrBeforeDeadline($o, 'submittedDate');
 
 	}//end submittedByDeadline()
 
@@ -145,7 +145,7 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 	 * @return bool
 	 */
 	private static function retainedSevenYears(array $o): bool {
-		return self::retainedYearsAfterPeriod($o, 7);
+		return FilingDates::retainedYearsAfterPeriod($o, 7);
 
 	}//end retainedSevenYears()
 
@@ -367,44 +367,4 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 		$lastDay = (int)date('t', mktime(0, 0, 0, $followingMonth, 1, $followingYear));
 		return sprintf('%04d-%02d-%02d', $followingYear, $followingMonth, $lastDay);
 	}//end expectedDeadline()
-
-	/**
-	 * True when the date at $dateKey is present and on or before the date at
-	 * $limitKey.
-	 *
-	 * @param array<string, mixed> $o The filing.
-	 * @param string $dateKey Actual-date field.
-	 * @param string $limitKey Deadline field.
-	 *
-	 * @return bool
-	 */
-	private static function onOrBefore(array $o, string $dateKey, string $limitKey): bool {
-		$date = strtotime((string)($o[$dateKey] ?? ''));
-		$limit = strtotime((string)($o[$limitKey] ?? ''));
-		if ($date === false || $limit === false) {
-			return false;
-		}
-
-		return $date <= $limit;
-	}//end onOrBefore()
-
-	/**
-	 * True when the retention date is at least $years after the end of the year
-	 * of the filing period.
-	 *
-	 * @param array<string, mixed> $o The filing.
-	 * @param int $years Minimum retention years.
-	 *
-	 * @return bool
-	 */
-	private static function retainedYearsAfterPeriod(array $o, int $years): bool {
-		$retain = strtotime((string)($o['retainedUntil'] ?? ''));
-		$period = (string)($o['period'] ?? '');
-		if ($retain === false || preg_match('/^(\d{4})/', $period, $m) !== 1) {
-			return false;
-		}
-
-		$required = mktime(0, 0, 0, 12, 31, ((int)$m[1] + $years));
-		return $retain >= $required;
-	}//end retainedYearsAfterPeriod()
 }//end class

@@ -248,6 +248,26 @@ class HrDocumentSigningServiceTest extends TestCase {
 	}//end testTheOutcomesAndTheRequestFields()
 
 	/**
+	 * The raised request names the employee as its subject and each signer
+	 * with display name, email and order.
+	 *
+	 * @return void
+	 */
+	public function testTheSubjectAndTheSignerRows(): void {
+		$this->service()->requestSignature($this->document('arbeidsovereenkomst'), 'hr.adviseur');
+
+		$request = $this->signing->created[0];
+		self::assertSame('Sanne de Boer', $request['subjectLabel']);
+		self::assertSame(
+			[
+				['userId' => 'directie', 'displayName' => 'Directie', 'email' => 'directie@example.nl', 'order' => 0],
+				['userId' => 's.deboer', 'displayName' => 'S.deboer', 'email' => 's.deboer@example.nl', 'order' => 1],
+			],
+			$request['signers']
+		);
+	}//end testTheSubjectAndTheSignerRows()
+
+	/**
 	 * Scenario: a werkgeversverklaring needs only the employer; without a
 	 * signatory the acting HR user signs for the employer.
 	 *

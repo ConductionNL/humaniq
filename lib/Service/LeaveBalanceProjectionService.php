@@ -44,6 +44,7 @@ namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\Humaniq\Support\NormalisesRows;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -56,6 +57,7 @@ use RuntimeException;
 class LeaveBalanceProjectionService {
 
 	use ConvertsRowsToArrays;
+	use NormalisesRows;
 
 	/**
 	 * Max objects loaded per type when scanning for the requests behind a balance.
@@ -430,12 +432,7 @@ class LeaveBalanceProjectionService {
 			return [];
 		}
 
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
+		return $this->normaliseRows($rows);
 
 	}//end loadAll()
 

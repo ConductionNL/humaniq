@@ -82,14 +82,6 @@ class PayrollMutationService {
 	private const LIMIT = 10000;
 
 	/**
-	 * The four headline components a mutation line/roll-up carries, and the
-	 * component key used for `lines[*].{component}Before/After/Delta`.
-	 *
-	 * @var array<int, string>
-	 */
-	private const COMPONENTS = ['grossPay', 'nettoPay', 'loonheffing', 'employerCost'];
-
-	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param SettingsService $settingsService Register slug source.
 	 * @param LoggerInterface $logger Logger.
@@ -244,88 +236,14 @@ class PayrollMutationService {
 		$fromByEmployee = ($fromRun === null ? [] : $this->payslipCentsByEmployee($fromRunId));
 		$toByEmployee = $this->payslipCentsByEmployee($toRunId);
 
-		$employeeIds = array_unique(array_merge(array_keys($fromByEmployee), array_keys($toByEmployee)));
-		sort($employeeIds);
-
-		$lines = [];
-		$counts = ['entered' => 0, 'left' => 0, 'changed' => 0, 'unchanged' => 0];
-		$rollup = ['grossPay' => 0, 'nettoPay' => 0, 'loonheffing' => 0, 'employerCost' => 0];
-
-		foreach ($employeeIds as $employeeId) {
-			$from = ($fromByEmployee[$employeeId] ?? null);
-			$to = ($toByEmployee[$employeeId] ?? null);
-
-			$classification = $this->classify($from, $to);
-			$counts[$classification]++;
-
-			$line = ['employeeId' => $employeeId, 'classification' => $classification];
-			foreach (self::COMPONENTS as $component) {
-				$beforeCents = (int)($from[$component] ?? 0);
-				$afterCents = (int)($to[$component] ?? 0);
-				$deltaCents = ($afterCents - $beforeCents);
-
-				$rollup[$component] += $deltaCents;
-
-				$line[$component . 'Before'] = $this->euros($beforeCents);
-				$line[$component . 'After'] = $this->euros($afterCents);
-				$line[$component . 'Delta'] = $this->euros($deltaCents);
-			}
-
-			$lines[] = $line;
-		}//end foreach
-
-		$totalWageCostDeltaCents = ($rollup['grossPay'] + $rollup['employerCost']);
-
 		return [
 			'fromRunId' => $fromRunId,
 			'toRunId' => $toRunId,
 			'fromPeriod' => ($fromRun === null ? null : (string)($fromRun['period'] ?? '')),
 			'toPeriod' => (string)($toRun['period'] ?? ''),
 			'administrationId' => (string)($toRun['administrationId'] ?? ''),
-			'enteredCount' => $counts['entered'],
-			'leftCount' => $counts['left'],
-			'changedCount' => $counts['changed'],
-			'unchangedCount' => $counts['unchanged'],
-			'grossDelta' => $this->euros($rollup['grossPay']),
-			'netDelta' => $this->euros($rollup['nettoPay']),
-			'loonheffingDelta' => $this->euros($rollup['loonheffing']),
-			'employerCostDelta' => $this->euros($rollup['employerCost']),
-			'totalWageCostDelta' => $this->euros($totalWageCostDeltaCents),
-			'lines' => $lines,
-		];
-
+		] + PayrollMutationTally::summarise($fromByEmployee, $toByEmployee);
 	}//end buildReport()
-
-	/**
-	 * Classify one employee's membership across the two payslip sets
-	 * (design.md D1): entered/left when present only in one side, changed
-	 * when any of the four headline components differ, unchanged when all
-	 * four are equal. A first-run `$from === null` always yields `entered`.
-	 *
-	 * @param array<string, int>|null $from The employee's `from`-side cents components, or null.
-	 * @param array<string, int>|null $to The employee's `to`-side cents components, or null.
-	 *
-	 * @return string `entered`|`left`|`changed`|`unchanged`.
-	 *
-	 * @spec openspec/specs/payroll-mutation-reports/spec.md#REQ-MUT-001
-	 */
-	private function classify(?array $from, ?array $to): string {
-		if ($from === null) {
-			return 'entered';
-		}
-
-		if ($to === null) {
-			return 'left';
-		}
-
-		foreach (self::COMPONENTS as $component) {
-			if ((int)($from[$component] ?? 0) !== (int)($to[$component] ?? 0)) {
-				return 'changed';
-			}
-		}
-
-		return 'unchanged';
-	}//end classify()
 
 	/**
 	 * D4 — the PayrollRun of the SAME administration whose `period` is the
@@ -341,34 +259,62 @@ class PayrollMutationService {
 	 * @spec openspec/specs/payroll-mutation-reports/spec.md#REQ-MUT-006
 	 */
 	private function resolvePriorRun(array $toRun, array $runsById): ?array {
+		$periods = self::earlierPeriods($this->otherRunsOfAdministration($toRun, $runsById), (string)($toRun['period'] ?? ''));
+		if ($periods === []) {
+			return null;
+		}
+
+		// Latest period first; the sort is stable, so on a tie the run met
+		// first wins.
+		arsort($periods);
+
+		return $runsById[array_key_first($periods)];
+	}//end resolvePriorRun()
+
+	/**
+	 * The other PayrollRuns of `$toRun`'s administration, by id.
+	 *
+	 * @param array<string, mixed> $toRun The reviewed PayrollRun.
+	 * @param array<string, array<string, mixed>> $runsById All PayrollRuns, by id.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function otherRunsOfAdministration(array $toRun, array $runsById): array {
 		$administrationId = (string)($toRun['administrationId'] ?? '');
-		$toPeriod = (string)($toRun['period'] ?? '');
 		$toRunId = $this->idOf($toRun);
 
-		$best = null;
-		$bestPeriod = null;
+		$runs = [];
 		foreach ($runsById as $candidateId => $candidate) {
-			if ($candidateId === $toRunId) {
+			if ($candidateId === $toRunId || (string)($candidate['administrationId'] ?? '') !== $administrationId) {
 				continue;
 			}
 
-			if ((string)($candidate['administrationId'] ?? '') !== $administrationId) {
-				continue;
-			}
+			$runs[$candidateId] = $candidate;
+		}
 
+		return $runs;
+	}//end otherRunsOfAdministration()
+
+	/**
+	 * The periods of the runs whose period is set and strictly before
+	 * `$toPeriod` (string compare on the seeded YYYY-MM convention), by id.
+	 *
+	 * @param array<string, array<string, mixed>> $runs Candidate PayrollRuns, by id.
+	 * @param string $toPeriod The reviewed run's period.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function earlierPeriods(array $runs, string $toPeriod): array {
+		$periods = [];
+		foreach ($runs as $candidateId => $candidate) {
 			$period = (string)($candidate['period'] ?? '');
-			if ($period === '' || $period >= $toPeriod) {
-				continue;
-			}
-
-			if ($bestPeriod === null || $period > $bestPeriod) {
-				$best = $candidate;
-				$bestPeriod = $period;
+			if ($period !== '' && $period < $toPeriod) {
+				$periods[$candidateId] = $period;
 			}
 		}
 
-		return $best;
-	}//end resolvePriorRun()
+		return $periods;
+	}//end earlierPeriods()
 
 	/**
 	 * This run's payslips (`payrollRunId === $runId`), keyed by employeeId,
@@ -478,19 +424,6 @@ class PayrollMutationService {
 	private function cents(mixed $euros): int {
 		return (int)round(((float)$euros) * 100);
 	}//end cents()
-
-	/**
-	 * Convert integer cents to a euro float rounded to 2 decimals — the
-	 * write/output-time boundary (class docblock), mirroring
-	 * `PayrollRunService::euros()`.
-	 *
-	 * @param int $cents The cents amount.
-	 *
-	 * @return float
-	 */
-	private function euros(int $cents): float {
-		return round(($cents / 100), 2);
-	}//end euros()
 
 	/**
 	 * The object id of a row, falling back to `@self.id`.

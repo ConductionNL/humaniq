@@ -78,6 +78,7 @@ use OCA\Humaniq\Listener\PayrollRunFindingStampListener;
 use OCA\Humaniq\Listener\RecurringAllowanceStampListener;
 use OCA\Humaniq\Listener\RelationsCaseListener;
 use OCA\Humaniq\Listener\AnnouncementConfirmationListener;
+use OCA\Humaniq\Middleware\ApiContractMiddleware;
 use OCA\Humaniq\Service\AnnouncementService;
 use OCA\Humaniq\Listener\SideActivityListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
@@ -150,6 +151,10 @@ class Application extends App implements IBootstrap {
 	 * @spec exclude composition root — registers services owned by many capabilities (rule engine, lifecycle guards, jurisdiction packs, hours process); each registration cites its own change in the adjacent comment
 	 */
 	public function register(IRegistrationContext $context): void {
+		// The API contract (version header, deprecation of unversioned paths,
+		// problem details). Registered first: Nextcloud runs afterController in
+		// reverse order, so it sees the final response of every other middleware.
+		$context->registerMiddleware(class: ApiContractMiddleware::class);
 		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class)));
 		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
 		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
