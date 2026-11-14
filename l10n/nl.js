@@ -3749,6 +3749,8 @@ OC.L10N.register(
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
         "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
         "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort.",
+        "Own fields": "Eigen velden",
+        "Manage fields": "Velden beheren",
         "Access grants": "Toegangsrechten",
         "Add integration": "Koppeling toevoegen",
         "Connection": "Koppeling",

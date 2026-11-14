@@ -3749,6 +3749,8 @@ OC.L10N.register(
         "The expense categories could not be loaded.": "The expense categories could not be loaded.",
         "The expense categories could not be saved.": "The expense categories could not be saved.",
         "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on.",
+        "Own fields": "Own fields",
+        "Manage fields": "Manage fields",
         "Access grants": "Access grants",
         "Add integration": "Add integration",
         "Connection": "Connection",
