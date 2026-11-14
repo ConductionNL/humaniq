@@ -3717,7 +3717,8 @@
         "Expense categories": "Declaratiecategorieën",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
-        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen."
+        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
+        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
