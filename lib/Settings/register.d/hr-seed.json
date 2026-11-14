@@ -699,6 +699,44 @@
             {
                 "@self": {
                     "register": "humaniq",
+                    "schema": "PensionScheme",
+                    "slug": "pensionscheme-adm-001-pfab-2026"
+                },
+                "administrationId": "ADM-001",
+                "fund": "pfab",
+                "schemeCode": "PFAB-OP-2026",
+                "messageFormat": "upa",
+                "franchise": 18475,
+                "maxPensionableSalary": 137800,
+                "employerPercentage": 14.0,
+                "employeePercentage": 7.0,
+                "validFrom": "2026-01-01",
+                "validUntil": "2026-12-31",
+                "source": "filings-pension-upa-message seed: an example figure, not checked against the fund's published rates.",
+                "verified": false
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "PensionScheme",
+                    "slug": "pensionscheme-adm-001-abp-2026"
+                },
+                "administrationId": "ADM-001",
+                "fund": "abp",
+                "schemeCode": "ABP-OP-NP-2026",
+                "messageFormat": "apg",
+                "franchise": 19700,
+                "maxPensionableSalary": 137800,
+                "employerPercentage": 18.2,
+                "employeePercentage": 7.8,
+                "validFrom": "2026-01-01",
+                "validUntil": "2026-12-31",
+                "source": "filings-pension-upa-message seed: an example figure, not checked against the fund's published rates.",
+                "verified": false
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
                     "schema": "LeaveRequest",
                     "slug": "leave-jansen-zomer"
                 },
