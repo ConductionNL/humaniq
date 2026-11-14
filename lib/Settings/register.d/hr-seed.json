@@ -700,6 +700,62 @@
                 "@self": {
                     "register": "humaniq",
                     "schema": "LeaveRequest",
+                    "slug": "leave-devries-onbetaald"
+                },
+                "employeeId": "@ref:employee-devries",
+                "leaveType": "unpaid",
+                "startDate": "2026-12-07",
+                "endDate": "2026-12-11",
+                "hours": 40,
+                "reason": "Mantelzorg voor een familielid.",
+                "status": "manager-approved",
+                "submittedAt": "2026-11-02T09:00:00Z",
+                "decisions": [
+                    {
+                        "step": "manager",
+                        "decision": "approved",
+                        "by": "manager-pietersen",
+                        "at": "2026-11-03T10:00:00Z",
+                        "remark": "Akkoord, HR beslist over onbetaald verlof."
+                    }
+                ],
+                "userId": "admin",
+                "managerUserId": "manager-pietersen",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveRequest",
+                    "slug": "leave-bakker-kerst"
+                },
+                "employeeId": "@ref:employee-bakker",
+                "leaveType": "holiday",
+                "startDate": "2026-12-28",
+                "endDate": "2026-12-31",
+                "hours": 32,
+                "reason": "Kerstvakantie.",
+                "status": "approved",
+                "submittedAt": "2026-11-01T09:00:00Z",
+                "approvedBy": "manager-pietersen",
+                "approvedAt": "2026-11-02T09:30:00Z",
+                "decisions": [
+                    {
+                        "step": "manager",
+                        "decision": "approved",
+                        "by": "manager-pietersen",
+                        "at": "2026-11-02T09:30:00Z",
+                        "remark": null
+                    }
+                ],
+                "userId": "admin",
+                "managerUserId": "manager-pietersen",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveRequest",
                     "slug": "leave-jansen-zomer"
                 },
                 "employeeId": "@ref:employee-jansen",

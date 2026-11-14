@@ -56,8 +56,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use DateTimeImmutable;
-use DateTimeZone;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCP\EventDispatcher\Event;
@@ -73,6 +71,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
  */
 class TimesheetProcessStampListener implements IEventListener {
+
+	use StampsProcessFields;
 
 	/**
 	 * Lower-cased slug of the schema this listener stamps.
@@ -135,23 +135,11 @@ class TimesheetProcessStampListener implements IEventListener {
 	 * @spec openspec/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
 	 */
 	public function handle(Event $event): void {
-		try {
-			if ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent) {
-				$this->stampCreating(event: $event);
-				return;
-			}
-
-			if ($event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) {
-				$this->stampUpdating(event: $event);
-			}
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'humaniq: TimesheetProcessStampListener could not stamp a Timesheet write',
-				['exception' => $e->getMessage()]
-			);
-			$this->refuse($event, 'De urenstaat kon niet worden verwerkt; probeer het later opnieuw.');
-		}//end try
-
+		$this->stampOrRefuse(
+			event: $event,
+			failure: 'humaniq: TimesheetProcessStampListener could not stamp a Timesheet write',
+			refusal: 'De urenstaat kon niet worden verwerkt; probeer het later opnieuw.'
+		);
 	}//end handle()
 
 	/**
@@ -405,45 +393,5 @@ class TimesheetProcessStampListener implements IEventListener {
 		}//end try
 
 	}//end deriveIdentityCaches()
-
-	/**
-	 * Current UTC timestamp in ISO 8601 (the TimeEntryEventService format).
-	 *
-	 * @return string The timestamp.
-	 */
-	private function now(): string {
-		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
-	}//end now()
-
-	/**
-	 * Refuse the write with a structured, user-facing error.
-	 *
-	 * @param object $event The pre-save event.
-	 * @param string $message The Dutch user-facing message.
-	 *
-	 * @return void
-	 */
-	private function refuse(object $event, string $message): void {
-		if (method_exists($event, 'setErrors') === true) {
-			$event->setErrors(['message' => $message]);
-		}
-
-		if (method_exists($event, 'stopPropagation') === true) {
-			$event->stopPropagation();
-		}
-	}//end refuse()
-
-	/**
-	 * Trim to a non-empty string or null.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return string|null The trimmed value, or null.
-	 */
-	private function nullableTrim(mixed $value): ?string {
-		$trimmed = trim((string)($value ?? ''));
-
-		return $trimmed === '' ? null : $trimmed;
-	}//end nullableTrim()
 
 }//end class

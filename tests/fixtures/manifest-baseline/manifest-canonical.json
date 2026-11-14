@@ -691,6 +691,21 @@
 					}
 				},
 				{
+					"icon": "CheckDecagramOutline",
+					"id": "HrVerlofgoedkeuring",
+					"label": "HR leave approval",
+					"query": {
+						"_order": "[{\"key\":\"submittedAt\",\"order\":\"asc\"}]",
+						"status": "manager-approved"
+					},
+					"route": "LeaveRequests",
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
+				},
+				{
 					"icon": "CalendarWeekendOutline",
 					"id": "LeaveBalances",
 					"label": "Leave balances",
@@ -5790,7 +5805,7 @@
 		},
 		{
 			"config": {
-				"_note": "leave-verzuim-mvp (2026-07-12): drives the EXISTING LeaveRequest lifecycle from portal-schemas (submit -> approve/reject, guarded server-side by NoSelfApprovalGuard) -- nothing on the schema changes here, only its UI. TimesheetDetail pattern: the data widget is SPLIT into 'Request' (leaveType/startDate/endDate/hours/reason -- what is being requested) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), both excluding employeeId since Related already resolves and links the requesting Employee by name. Files sits full-width below for supporting documents (e.g. a bijzonder-verlof invitation). NO stat KPI tile: unlike Timesheet's hours-sum or Expense's amount-sum, a leave request has no single numeric headline worth a dedicated stat (hours is optional and nullable). lifecycleActions expose exactly submit/approve/reject -- no invented cancel/withdraw edge (PayrollRunDetail _note precedent: never claim a transition the backend does not guard). Audit history is a sidebar tab. leave-hours-from-the-working-pattern (2026-09-30): 'What this leave costs' and 'Day by day' read GET /api/leave/requests/{id}/cost (endpoint-table, the detail-page registry widget for endpoint rows): the hours per year with their basis (pattern, pattern-only when openregister's working calendar is unread, contract-average without a pattern, explicit for a request's own hours) and each day with why it costs what it costs (working day, public holiday, day off, weekend).",
+				"_note": "leave-verzuim-mvp (2026-07-12): drives the EXISTING LeaveRequest lifecycle from portal-schemas (submit -> approve/reject, guarded server-side by NoSelfApprovalGuard) -- nothing on the schema changes here, only its UI. TimesheetDetail pattern: the data widget is SPLIT into 'Request' (leaveType/startDate/endDate/hours/reason -- what is being requested) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), both excluding employeeId since Related already resolves and links the requesting Employee by name. Files sits full-width below for supporting documents (e.g. a bijzonder-verlof invitation). NO stat KPI tile: unlike Timesheet's hours-sum or Expense's amount-sum, a leave request has no single numeric headline worth a dedicated stat (hours is optional and nullable). lifecycleActions expose exactly submit/approve/reject -- no invented cancel/withdraw edge (PayrollRunDetail _note precedent: never claim a transition the backend does not guard). Audit history is a sidebar tab. leave-hours-from-the-working-pattern (2026-09-30): 'What this leave costs' and 'Day by day' read GET /api/leave/requests/{id}/cost (endpoint-table, the detail-page registry widget for endpoint rows): the hours per year with their basis (pattern, pattern-only when openregister's working calendar is unread, contract-average without a pattern, explicit for a request's own hours) and each day with why it costs what it costs (working day, public holiday, day off, weekend). leave-approval-steps-and-history (2026-11-14): a Decisions timeline over the request's own `decisions` list (each step, approved or rejected, by whom and when; written by LeaveRequestProcessStampListener), and the approve-manager action for leave types that need HR after the manager; approve and reject now also run from manager-approved (LeaveApprovalStepGuard decides which edge applies).",
 				"layout": [
 					{
 						"gridHeight": 5,
@@ -5839,6 +5854,14 @@
 						"gridY": 13,
 						"id": 6,
 						"widgetId": "leave-cost-days"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 19,
+						"id": 7,
+						"widgetId": "decisions"
 					}
 				],
 				"lifecycleActions": {
@@ -5854,9 +5877,18 @@
 							"to": "submitted"
 						},
 						{
-							"action": "approve",
+							"action": "approve-manager",
 							"from": [
 								"submitted"
+							],
+							"label": "Approve as manager",
+							"to": "manager-approved"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted",
+								"manager-approved"
 							],
 							"label": "Approve",
 							"to": "approved"
@@ -5864,7 +5896,8 @@
 						{
 							"action": "reject",
 							"from": [
-								"submitted"
+								"submitted",
+								"manager-approved"
 							],
 							"label": "Reject",
 							"to": "rejected"
@@ -5991,6 +6024,24 @@
 						"id": "leave-cost-days",
 						"title": "Day by day",
 						"type": "endpoint-table"
+					},
+					{
+						"content": {
+							"lists": [
+								{
+									"dateField": "at",
+									"detailField": "decision",
+									"field": "decisions",
+									"labelField": "step"
+								}
+							],
+							"order": "asc",
+							"title": "Decisions"
+						},
+						"icon": "Timeline",
+						"id": "decisions",
+						"title": "Decisions",
+						"type": "timeline"
 					}
 				]
 			},

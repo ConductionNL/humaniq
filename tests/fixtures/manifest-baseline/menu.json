@@ -466,6 +466,21 @@
 				}
 			},
 			{
+				"id": "HrVerlofgoedkeuring",
+				"label": "HR leave approval",
+				"icon": "CheckDecagramOutline",
+				"route": "LeaveRequests",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				},
+				"query": {
+					"_order": "[{\"key\":\"submittedAt\",\"order\":\"asc\"}]",
+					"status": "manager-approved"
+				}
+			},
+			{
 				"id": "LeaveBalances",
 				"label": "Leave balances",
 				"icon": "CalendarWeekendOutline",
