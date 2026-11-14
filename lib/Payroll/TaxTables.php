@@ -600,6 +600,30 @@ final class TaxTables {
 			throw new RuntimeException('TaxTables (' . $this->id . '): ontbrekende parameter "specialRegimes.' . $regime . '".');
 		}
 
+		[$threshold, $rate] = $this->finalLevyOf(node: $node, regime: $regime);
+
+		return [
+			'taxTableColor' => (string)$this->leaf(['specialRegimes', $regime, 'taxTableColor', 'value']),
+			'werknemersverzekeringen' => (bool)$this->leaf(['specialRegimes', $regime, 'werknemersverzekeringen', 'value']),
+			'zvwMode' => (string)$this->leaf(['specialRegimes', $regime, 'zvwMode', 'value']),
+			'thresholdPerMonthCents' => $threshold,
+			'finalLevyRate' => $rate,
+			'unverified' => self::unverifiedLeaves(node: $node, regime: $regime),
+		];
+
+	}//end specialRegime()
+
+	/**
+	 * The paths of a regime's value leaves that are not verified, or still a placeholder.
+	 *
+	 * @param array<string, mixed> $node   The regime's node.
+	 * @param string               $regime The regime key.
+	 *
+	 * @return list<string>
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private static function unverifiedLeaves(array $node, string $regime): array {
 		$unverified = [];
 		foreach ($node as $key => $leaf) {
 			if (is_array($leaf) === false || array_key_exists('value', $leaf) === false) {
@@ -611,23 +635,29 @@ final class TaxTables {
 			}
 		}
 
-		$threshold = 0;
-		$rate      = 0.0;
-		if (array_key_exists('thresholdPerMonth', $node) === true || array_key_exists('finalLevyRate', $node) === true) {
-			$threshold = self::euroToCents((float)$this->leaf(['specialRegimes', $regime, 'thresholdPerMonth', 'value']));
-			$rate      = (float)$this->leaf(['specialRegimes', $regime, 'finalLevyRate', 'value']);
+		return $unverified;
+	}//end unverifiedLeaves()
+
+	/**
+	 * A regime's final-levy threshold in cents and rate, or zero for a regime without one.
+	 *
+	 * @param array<string, mixed> $node   The regime's node.
+	 * @param string               $regime The regime key.
+	 *
+	 * @return array{0: int, 1: float}
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private function finalLevyOf(array $node, string $regime): array {
+		if (array_key_exists('thresholdPerMonth', $node) === false && array_key_exists('finalLevyRate', $node) === false) {
+			return [0, 0.0];
 		}
 
 		return [
-			'taxTableColor' => (string)$this->leaf(['specialRegimes', $regime, 'taxTableColor', 'value']),
-			'werknemersverzekeringen' => (bool)$this->leaf(['specialRegimes', $regime, 'werknemersverzekeringen', 'value']),
-			'zvwMode' => (string)$this->leaf(['specialRegimes', $regime, 'zvwMode', 'value']),
-			'thresholdPerMonthCents' => $threshold,
-			'finalLevyRate' => $rate,
-			'unverified' => $unverified,
+			self::euroToCents((float)$this->leaf(['specialRegimes', $regime, 'thresholdPerMonth', 'value'])),
+			(float)$this->leaf(['specialRegimes', $regime, 'finalLevyRate', 'value']),
 		];
-
-	}//end specialRegime()
+	}//end finalLevyOf()
 
 	/**
 	 * Convert a euro amount to integer cents using this class's own rule

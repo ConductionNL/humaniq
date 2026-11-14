@@ -71,8 +71,7 @@ final class BenefitEntitlementPay {
 			return false;
 		}
 
-		$own = trim((string)($entitlement['administrationId'] ?? ''));
-		if ($own !== '' && $administrationId !== '' && $own !== $administrationId) {
+		if (self::inAdministration(entitlement: $entitlement, administrationId: $administrationId) === false) {
 			return false;
 		}
 
@@ -80,6 +79,37 @@ final class BenefitEntitlementPay {
 			return trim((string)($entitlement['lumpSumPeriod'] ?? '')) === $period;
 		}
 
+		return self::coversMonth(entitlement: $entitlement, period: $period);
+	}//end paysIn()
+
+	/**
+	 * Whether an entitlement belongs to the administration the run is for; one
+	 * without an administration, or a run without one, belongs everywhere.
+	 *
+	 * @param array<string, mixed> $entitlement      The BenefitEntitlement.
+	 * @param string               $administrationId The run's administration.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private static function inAdministration(array $entitlement, string $administrationId): bool {
+		$own = trim((string)($entitlement['administrationId'] ?? ''));
+
+		return $own === '' || $administrationId === '' || $own === $administrationId;
+	}//end inAdministration()
+
+	/**
+	 * Whether the period lies between the entitlement's start month and its end month, if any.
+	 *
+	 * @param array<string, mixed> $entitlement The BenefitEntitlement.
+	 * @param string               $period      The run period (YYYY-MM).
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private static function coversMonth(array $entitlement, string $period): bool {
 		$first = self::monthOf((string)($entitlement['startDate'] ?? ''));
 		if ($first === null || $first > $period) {
 			return false;
@@ -88,7 +118,7 @@ final class BenefitEntitlementPay {
 		$last = self::monthOf((string)($entitlement['endDate'] ?? ''));
 
 		return $last === null || $last >= $period;
-	}//end paysIn()
+	}//end coversMonth()
 
 	/**
 	 * The regime key an entitlement's kind selects, or null for an unknown kind.
@@ -175,14 +205,34 @@ final class BenefitEntitlementPay {
 		}
 
 		$month = self::monthNumber(startDate: (string)($entitlement['startDate'] ?? ''), period: $period);
-		foreach ((array)($entitlement['schedule'] ?? []) as $stretch) {
+		$percentage = self::scheduledPercentage(schedule: (array)($entitlement['schedule'] ?? []), month: $month);
+		if ($percentage === null) {
+			return ['cents' => 0, 'reason' => 'no-amount (het schema dekt maand ' . $month . ' van de uitkering niet)'];
+		}
+
+		return self::amount(euros: ((float)$reference * $percentage / 100), offset: $offset, what: 'schedule');
+	}//end grossFor()
+
+	/**
+	 * The percentage of the first schedule stretch covering a month of the
+	 * entitlement, or null when none covers it.
+	 *
+	 * @param array<int|string, mixed> $schedule The entitlement's schedule.
+	 * @param int                      $month    The month of the entitlement, from 1.
+	 *
+	 * @return float|null
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private static function scheduledPercentage(array $schedule, int $month): ?float {
+		foreach ($schedule as $stretch) {
 			if (is_array($stretch) === true && $month >= (int)($stretch['fromMonth'] ?? 0) && $month <= (int)($stretch['toMonth'] ?? 0)) {
-				return self::amount(euros: ((float)$reference * (float)($stretch['percentage'] ?? 0.0) / 100), offset: $offset, what: 'schedule');
+				return (float)($stretch['percentage'] ?? 0.0);
 			}
 		}
 
-		return ['cents' => 0, 'reason' => 'no-amount (het schema dekt maand ' . $month . ' van de uitkering niet)'];
-	}//end grossFor()
+		return null;
+	}//end scheduledPercentage()
 
 	/**
 	 * A euro amount less the offset, in cents, never below zero.

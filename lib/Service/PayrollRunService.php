@@ -625,17 +625,9 @@ class PayrollRunService {
 			return $slip;
 		}
 
-		// payroll-special-regimes D5: a political-office contract is paid
-		// under its regime, and not at all while the regime is unverified.
-		$slip['regimeKey'] = BenefitEntitlementPay::regimeOfContract($slip['contract']);
-		$slip['regime'] = null;
-		if ($slip['regimeKey'] !== null) {
-			$read = BenefitEntitlementPay::readRegime(tables: $state['tables'], regime: $slip['regimeKey']);
-			$slip['regime'] = $read['regime'];
-			$slip['skip'] = $read['reason'];
-			if ($slip['skip'] !== null) {
-				return $slip;
-			}
+		$slip = $this->withContractRegime(state: $state, slip: $slip);
+		if ($slip['skip'] !== null) {
+			return $slip;
 		}
 
 		$slip = $this->withHoursPay(state: $state, slip: $slip);
@@ -643,6 +635,30 @@ class PayrollRunService {
 
 		return $slip;
 	}//end eligibleSlip()
+
+	/**
+	 * The slip with its contract's special regime, if any: a political-office
+	 * contract is paid under its regime, and not at all while the regime is
+	 * unverified (payroll-special-regimes D5).
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The slip, with its contract.
+	 *
+	 * @return array<string, mixed> The slip with `regimeKey`, `regime` and, when unverified, `skip`.
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private function withContractRegime(array $state, array $slip): array {
+		$slip['regimeKey'] = BenefitEntitlementPay::regimeOfContract($slip['contract']);
+		$slip['regime'] = null;
+		if ($slip['regimeKey'] !== null) {
+			$read = BenefitEntitlementPay::readRegime(tables: $state['tables'], regime: $slip['regimeKey']);
+			$slip['regime'] = $read['regime'];
+			$slip['skip'] = $read['reason'];
+		}
+
+		return $slip;
+	}//end withContractRegime()
 
 	/**
 	 * Why a slip cannot be calculated from its contract and tax table colour.
@@ -892,17 +908,7 @@ class PayrollRunService {
 	 */
 	private function calculationInput(array $state, array $slip): CalculationInput {
 		$employee = $slip['employee'];
-		$regime = ($slip['regime'] ?? null);
-		$taxTableColor = $slip['taxTableColor'];
-		$insured = (($employee['isDga'] ?? false) !== true);
-		$zvwMode = 'werkgeversheffing';
-		if ($regime !== null) {
-			// payroll-special-regimes D2/D5: the regime's sourced leaves set
-			// the table colour, the insurances and the Zvw mode.
-			$taxTableColor = (string)$regime['taxTableColor'];
-			$insured = ($insured === true && $regime['werknemersverzekeringen'] === true);
-			$zvwMode = (string)$regime['zvwMode'];
-		}
+		[$taxTableColor, $insured, $zvwMode] = self::regimeElection(slip: $slip, insured: (($employee['isDga'] ?? false) !== true));
 
 		return new CalculationInput(
 			wage: new CalculationWage(grossMonthlySalaryCents: $slip['grossCents'], dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null), period: $state['period'], jurisdiction: $state['jurisdiction']),
@@ -912,6 +918,31 @@ class PayrollRunService {
 			)
 		);
 	}//end calculationInput()
+
+	/**
+	 * The table colour, whether the employee is insured and the Zvw mode: the
+	 * slip's own, or what its special regime's sourced leaves set
+	 * (payroll-special-regimes D2/D5).
+	 *
+	 * @param array<string, mixed> $slip    The slip.
+	 * @param bool                 $insured Whether the employee is insured without a regime.
+	 *
+	 * @return array{0: string, 1: bool, 2: string}
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private static function regimeElection(array $slip, bool $insured): array {
+		$regime = ($slip['regime'] ?? null);
+		if ($regime === null) {
+			return [$slip['taxTableColor'], $insured, 'werkgeversheffing'];
+		}
+
+		return [
+			(string)$regime['taxTableColor'],
+			($insured === true && $regime['werknemersverzekeringen'] === true),
+			(string)$regime['zvwMode'],
+		];
+	}//end regimeElection()
 
 	/**
 	 * Save a calculated slip's payslip and add it to the run's tallies.
@@ -1621,13 +1652,7 @@ class PayrollRunService {
 	 * @spec openspec/changes/payroll-special-regimes
 	 */
 	private function payBenefits(array &$state, array $employees): ?array {
-		$byKey = [];
-		foreach ($employees as $employee) {
-			foreach ($this->employeeKeys($employee) as $key) {
-				$byKey[$key] = $employee;
-			}
-		}
-
+		$byKey = $this->employeesByKey(employees: $employees);
 		foreach ($this->loadAll('BenefitEntitlement') as $entitlement) {
 			if (BenefitEntitlementPay::paysIn(entitlement: $entitlement, period: $state['period'], administrationId: $state['administrationId']) === false) {
 				continue;
@@ -1648,6 +1673,26 @@ class PayrollRunService {
 
 		return null;
 	}//end payBenefits()
+
+	/**
+	 * The employees by every key a benefit entitlement may name them by.
+	 *
+	 * @param array<int, array<string, mixed>> $employees The employees.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private function employeesByKey(array $employees): array {
+		$byKey = [];
+		foreach ($employees as $employee) {
+			foreach ($this->employeeKeys($employee) as $key) {
+				$byKey[$key] = $employee;
+			}
+		}
+
+		return $byKey;
+	}//end employeesByKey()
 
 	/**
 	 * One entitlement's benefit slip: its regime, gross and calculation, or
@@ -1697,6 +1742,20 @@ class PayrollRunService {
 	 * @spec openspec/changes/payroll-special-regimes
 	 */
 	private function benefitSkipReason(array $state, array $slip): ?string {
+		return ($this->benefitKindSkipReason(slip: $slip) ?? $this->benefitPaySkipReason(state: $state, slip: $slip));
+	}//end benefitSkipReason()
+
+	/**
+	 * Why a benefit cannot be paid by this run at all: no person, an unknown
+	 * kind of benefit, or a lump sum.
+	 *
+	 * @param array<string, mixed> $slip The benefit slip.
+	 *
+	 * @return string|null The reason, or null.
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private function benefitKindSkipReason(array $slip): ?string {
 		$entitlement = $slip['entitlement'];
 		if ($slip['employee'] === []) {
 			return 'no-person (de uitkering verwijst naar geen bekende persoon)';
@@ -1712,7 +1771,22 @@ class PayrollRunService {
 			return 'lump-sum-pending (een uitkering ineens vraagt het bijzonder tarief, dat deze loonrun nog niet berekent)';
 		}
 
-		$amount = BenefitEntitlementPay::grossFor(entitlement: $entitlement, period: $state['period']);
+		return null;
+	}//end benefitKindSkipReason()
+
+	/**
+	 * Why this period's benefit cannot be paid: no amount, an unverified
+	 * regime, or no verified identity.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The benefit slip.
+	 *
+	 * @return string|null The reason, or null.
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private function benefitPaySkipReason(array $state, array $slip): ?string {
+		$amount = BenefitEntitlementPay::grossFor(entitlement: $slip['entitlement'], period: $state['period']);
 		if ($amount['reason'] !== null) {
 			return $amount['reason'];
 		}
@@ -1728,7 +1802,7 @@ class PayrollRunService {
 		}
 
 		return null;
-	}//end benefitSkipReason()
+	}//end benefitPaySkipReason()
 
 	/**
 	 * The calculation input of a benefit: the regime's table colour,
