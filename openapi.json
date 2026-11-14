@@ -220,6 +220,10 @@
             "description": "Start, stop and resolve the calling user's running timer."
         },
         {
+            "name": "timesheet-week",
+            "description": "The week view of a timesheet: bookings, leave and sickness, and the hours per kind."
+        },
+        {
             "name": "travel",
             "description": "Route distance and the mobility report."
         },
@@ -4594,6 +4598,54 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/timesheets/week": {
+            "get": {
+                "operationId": "timesheet-week",
+                "summary": "`GET /api/timesheets/week` — the week view of one timesheet",
+                "description": "`GET /api/timesheets/week` — the week view of one timesheet: the booked entries beside read-only lines for approved leave and sickness, in hours from the working pattern, and per ISO week the project, non-project and absence hours against the contract hours. A timesheet the caller may not read answers 404, the same as one that does not exist. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "timesheet-week"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "required": true,
+                        "description": "The timesheet uuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"

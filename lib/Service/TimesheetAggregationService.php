@@ -63,11 +63,19 @@ class TimesheetAggregationService {
 	 * @param ContainerInterface $container The DI container (lazy OpenRegister lookup).
 	 * @param InternalWriteMarker $marker The request-scoped internal-writer marker.
 	 * @param SettingsService $settingsService The humaniq settings (register slug).
+	 * @param TimeActivityCatalog|null $activities The activity kinds; without it every
+	 *  entry is classified by its project alone.
+	 * @param TimesheetWeekService|null $weekService The absence lines; without it
+	 *  absenceHours is left as stored.
+	 *
+	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly InternalWriteMarker $marker,
 		private readonly SettingsService $settingsService,
+		private readonly ?TimeActivityCatalog $activities = null,
+		private readonly ?TimesheetWeekService $weekService = null,
 	) {
 
 	}//end __construct()
@@ -95,7 +103,11 @@ class TimesheetAggregationService {
 			return null;
 		}
 
-		$aggregates = $this->computeAggregates($this->findEntries($timesheetId));
+		$entries = $this->findEntries($timesheetId);
+		$aggregates = $this->computeAggregates($entries, ($this->activities?->kindsByCode() ?? []));
+		if ($this->weekService !== null) {
+			$aggregates['absenceHours'] = $this->absenceHoursOf($stored, $entries);
+		}
 
 		$unchanged = true;
 		foreach ($aggregates as $field => $value) {
@@ -132,22 +144,33 @@ class TimesheetAggregationService {
 	 * Public so the unit tests assert the recomputed VALUES (sum,
 	 * homogeneous-vs-null, all-billable) — not merely that a write occurred.
 	 *
+	 * Hours split by kind (project and non-project) follow the entry's
+	 * activity, or, without one, whether it names a project
+	 * ({@see EntryKind}). An entry of an absence
+	 * activity counts in neither: absence comes from its own records.
+	 *
 	 * @param array<int, array<string, mixed>> $entries The TimeEntry payloads.
+	 * @param array<string, string> $activityKinds Kind by activity code.
 	 *
-	 * @return array<string, mixed> hours, overtimeHours, entryCount, projectId, costCenter, billable.
+	 * @return array<string, mixed> hours, overtimeHours, entryCount, projectId, costCenter, billable, projectHours, nonProjectHours.
 	 *
+	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-002
 	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
-	public function computeAggregates(array $entries): array {
+	public function computeAggregates(array $entries, array $activityKinds = []): array {
 		$hours = 0.0;
 		$overtimeHours = 0.0;
+		$byKind = [TimeActivityCatalog::KIND_PROJECT => 0.0, TimeActivityCatalog::KIND_NON_PROJECT => 0.0, TimeActivityCatalog::KIND_ABSENCE => 0.0];
+		$entryKind = new EntryKind(kinds: $activityKinds);
 		$billable = (count($entries) > 0);
 		$projects = [];
 		$costCenters = [];
 
 		foreach ($entries as $entry) {
 			$hours += (float)($entry['hours'] ?? 0);
+			$kind = $entryKind->kindOf(entry: $entry);
+			$byKind[$kind] = ($byKind[$kind] + (float)($entry['hours'] ?? 0));
 			if (($entry['overtime'] ?? false) === true) {
 				$overtimeHours += (float)($entry['hours'] ?? 0);
 			}
@@ -167,8 +190,30 @@ class TimesheetAggregationService {
 			'projectId' => $this->homogeneousOrNull($projects),
 			'costCenter' => $this->homogeneousOrNull($costCenters),
 			'billable' => $billable,
+			'projectHours' => round($byKind[TimeActivityCatalog::KIND_PROJECT], 2),
+			'nonProjectHours' => round($byKind[TimeActivityCatalog::KIND_NON_PROJECT], 2),
 		];
 	}//end computeAggregates()
+
+	/**
+	 * The absence hours of the timesheet's period, or the stored value when
+	 * the absence records cannot be read: a display total must not stop the
+	 * hours aggregates from being kept.
+	 *
+	 * @param array<string, mixed>             $timesheet The stored Timesheet.
+	 * @param array<int, array<string, mixed>> $entries   Its entries.
+	 *
+	 * @return float The absence hours.
+	 *
+	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 */
+	private function absenceHoursOf(array $timesheet, array $entries): float {
+		try {
+			return $this->weekService->absenceHoursFor($timesheet, $entries);
+		} catch (\Throwable $e) {
+			return (float)($timesheet['absenceHours'] ?? 0.0);
+		}
+	}//end absenceHoursOf()
 
 	/**
 	 * The single value every entry shares, or null (mixed, empty, or no

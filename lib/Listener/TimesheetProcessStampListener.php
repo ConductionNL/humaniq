@@ -106,6 +106,11 @@ class TimesheetProcessStampListener implements IEventListener {
 		'paidInPeriod',
 		'overtimeCreditHours',
 		'overtimeCreditedAt',
+		// time-non-project-activities D3: the hours per kind, recomputed by
+		// TimesheetAggregationService.
+		'projectHours',
+		'nonProjectHours',
+		'absenceHours',
 	];
 
 	/**

@@ -6,7 +6,7 @@
                 "slug": "TimeEntry",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "ClockPlusOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Time entry",
                 "description": "One individual booking of worked hours (urenregistratie): when the work started and ended, what it was, and optionally which project it was for. Bookings are collected automatically into the employee's monthly timesheet, which is what gets submitted for approval.",
                 "x-notes": "hours-process-redesign Decision 1: the booking granularity split out of the former all-in-one Timesheet schema. English property names per fleet decision; NL only via l10n labels (verb surface 'uren boeken'). No status and no lifecycle here — the process lives on the parent Timesheet, and entry mutability is governed by the parent's state (Decision 3, enforced by TimeEntryStampListener). Concurrency: the aggregate listener recomputes from truth on every entry write, so a stale intermediate total is self-healed by the next write (accepted for dev-stage volumes).",
@@ -76,6 +76,14 @@
                         "maxLength": 2000,
                         "title": "Description",
                         "description": "What was worked on."
+                    },
+                    "activityCode": {
+                        "type": "string",
+                        "order": 45,
+                        "nullable": true,
+                        "title": "Activity",
+                        "description": "What kind of work this was when it was not for a project, such as training or an internal meeting.",
+                        "x-notes": "time-non-project-activities D1: the code of a TimeActivity, a plain string like LeaveRequest.leaveType (an administered code, never rewritten once entries carry it). A project booking keeps its projectId; a non-project booking carries an activity instead. TimeEntryStampListener refuses an activity of kind absence: leave and sickness reach the timesheet from their own records (D2). An entry without an activity counts as project work when it names a project and as non-project work (overhead) otherwise."
                     },
                     "projectId": {
                         "type": "string",
@@ -155,11 +163,89 @@
                     }
                 }
             },
+            "TimeActivity": {
+                "slug": "TimeActivity",
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        "humaniq-payroll",
+                        "authenticated"
+                    ],
+                    "create": [
+                        "humaniq-hr"
+                    ],
+                    "update": [
+                        "humaniq-hr"
+                    ],
+                    "delete": [
+                        "humaniq-hr"
+                    ]
+                },
+                "icon": "ShapeOutline",
+                "version": "0.1.0",
+                "title": "Time activity",
+                "description": "A kind of work hours can be booked on, administered rather than enumerated: project work, work outside a project such as training or an internal meeting, or absence. Absence activities are never booked by hand; leave and sickness reach the timesheet from their own records.",
+                "x-notes": "time-non-project-activities D1: data, not an enum on TimeEntry, for the reason LeaveType became an object: an employer adds its own kinds by writing an object. TimeEntry.activityCode holds the code.",
+                "type": "object",
+                "required": [
+                    "code",
+                    "label",
+                    "kind"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "title": "Code",
+                        "description": "The short code a time entry carries, for example opleiding.",
+                        "x-notes": "Stable identifier. TimeEntry.activityCode holds this value, which is why a code is never rewritten once entries carry it."
+                    },
+                    "label": {
+                        "type": "string",
+                        "title": "Label",
+                        "description": "What this activity is called on screen."
+                    },
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "project",
+                            "non-project",
+                            "absence"
+                        ],
+                        "x-enum-labels": {
+                            "project": "Project work",
+                            "non-project": "Non-project work",
+                            "absence": "Absence"
+                        },
+                        "default": "non-project",
+                        "title": "Kind",
+                        "description": "Whether this is project work, work outside a project, or absence. Absence is never booked by hand."
+                    },
+                    "billableDefault": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Billable by default",
+                        "description": "Whether hours on this activity are billable unless the booking says otherwise."
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "default": true,
+                        "title": "Active",
+                        "description": "Whether this activity is offered on new bookings. A retired activity still resolves on the entries that already carry it."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration this activity belongs to. Leave empty for every administration.",
+                        "x-notes": "Denormalized administratie key (REQ-MULTI-001), plain string, NOT a $ref (ADR-062 rule 7)."
+                    }
+                }
+            },
             "Timesheet": {
                 "slug": "Timesheet",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr"]},
                 "icon": "ClockCheckOutline",
-                "version": "0.9.0",
+                "version": "0.10.0",
                 "title": "Timesheet",
                 "description": "The monthly collection of an employee's hour bookings (urenstaat). Totals are kept up to date automatically while the employee books; once submitted, a manager approves or rejects the whole month.",
                 "x-notes": "hours-process-redesign Decision 2: the period aggregate half of the former all-in-one schema — the approval lifecycle stays here and only here (a TimeEntry has none). The approval lifecycle is the correctly-homed HR/labour surface pipelinq's 'Timesheet approval' deep-link previously pointed at shillinq for; shillinq's UrenRegistratie is an append-only billing time-log with no approval state. hours/entryCount/projectId/costCenter/billable are server-recomputed aggregates (TimesheetAggregateListener, REQ-TEC-004) and the process fields are stamped on lifecycle edges (TimesheetProcessStampListener) — none of them is readOnly because humaniq's own listeners must write them and OpenRegister enforces readOnly on every UPDATE with no backend bypass; forms hide them via page-level includeFields allowlists instead. Two listeners write this schema (stamp + aggregate); both are recompute-style, so a stale intermediate total from concurrent entry writes is self-healed by the next write (accepted for dev-stage volumes).",
@@ -455,6 +541,27 @@
                         "description": "The part of the hours marked as overtime, calculated from the bookings.",
                         "x-notes": "Server-recomputed aggregate beside hours (TimesheetAggregationService, time-hours-and-overtime-to-payroll D3). Inert to client input."
                     },
+                    "projectHours": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Project hours",
+                        "description": "The hours booked to projects this period.",
+                        "x-notes": "time-non-project-activities D3: server-recomputed by TimesheetAggregationService from the entries whose activity is of kind project, or which name a project and carry no activity. Inert to client input (TimesheetProcessStampListener AGGREGATE_FIELDS)."
+                    },
+                    "nonProjectHours": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Non-project hours",
+                        "description": "The hours booked to work outside projects this period, such as training and internal meetings.",
+                        "x-notes": "time-non-project-activities D3: server-recomputed from the entries whose activity is of kind non-project, or which carry neither an activity nor a project. Inert to client input."
+                    },
+                    "absenceHours": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Absence hours",
+                        "description": "The hours of approved leave and sickness this period, taken from the leave requests and sick reports and the working pattern.",
+                        "x-notes": "time-non-project-activities D2/D3: composed by TimesheetWeekService from approved LeaveRequest and SickLeaveCase records at recompute time, never booked as entries. Inert to client input."
+                    },
                     "payrollRunId": {
                         "type": "string",
                         "format": "uuid",
@@ -490,6 +597,80 @@
                     }
                 }
             }
-        }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeActivity",
+                    "slug": "timeactivity-project"
+                },
+                "code": "project",
+                "label": "Project",
+                "kind": "project",
+                "billableDefault": true,
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeActivity",
+                    "slug": "timeactivity-opleiding"
+                },
+                "code": "opleiding",
+                "label": "Training",
+                "kind": "non-project",
+                "billableDefault": false,
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeActivity",
+                    "slug": "timeactivity-intern-overleg"
+                },
+                "code": "intern-overleg",
+                "label": "Internal meeting",
+                "kind": "non-project",
+                "billableDefault": false,
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeActivity",
+                    "slug": "timeactivity-overhead"
+                },
+                "code": "overhead",
+                "label": "Overhead",
+                "kind": "non-project",
+                "billableDefault": false,
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeActivity",
+                    "slug": "timeactivity-verlof"
+                },
+                "code": "verlof",
+                "label": "Leave",
+                "kind": "absence",
+                "billableDefault": false,
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeActivity",
+                    "slug": "timeactivity-ziekte"
+                },
+                "code": "ziekte",
+                "label": "Sickness",
+                "kind": "absence",
+                "billableDefault": false,
+                "active": true
+            }
+        ]
     }
 }

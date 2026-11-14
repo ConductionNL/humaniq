@@ -29,8 +29,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\TimeActivityCatalog;
 use OCA\Humaniq\Service\TimesheetAggregationService;
+use OCA\Humaniq\Service\TimesheetWeekService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use PHPUnit\Framework\TestCase;
@@ -133,6 +136,96 @@ class TimesheetAggregationServiceTest extends TestCase {
 		$this->assertNull($aggregates['costCenter']);
 		$this->assertFalse($aggregates['billable']);
 	}//end testEmptyEntrySetZeroesTheAggregates()
+
+	/**
+	 * Project and non-project hours follow the entry's activity, or its
+	 * project without one, and add up with the booked hours.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 */
+	public function testHoursPerKindAddUpWithTheBookedHours(): void {
+		$aggregates = $this->service->computeAggregates(
+			[
+				['hours' => 6.5, 'projectId' => 'project-alpha'],
+				['hours' => 2, 'activityCode' => 'opleiding'],
+				['hours' => 1.5, 'activityCode' => 'intern-overleg', 'projectId' => 'project-alpha'],
+				['hours' => 3, 'activityCode' => 'project', 'projectId' => 'project-beta'],
+				['hours' => 1],
+			],
+			['opleiding' => 'non-project', 'intern-overleg' => 'non-project', 'project' => 'project']
+		);
+
+		$this->assertSame(9.5, $aggregates['projectHours']);
+		$this->assertSame(4.5, $aggregates['nonProjectHours'], 'training, an internal meeting and an entry naming nothing');
+		$this->assertSame($aggregates['hours'], round($aggregates['projectHours'] + $aggregates['nonProjectHours'], 2));
+	}//end testHoursPerKindAddUpWithTheBookedHours()
+
+	/**
+	 * The recompute stores the absence hours the week view composes, and the
+	 * activity kinds from the catalogue.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 */
+	public function testRecomputeStoresTheAbsenceHoursAndKinds(): void {
+		$this->store->seed('Timesheet', 'ts-1', ['employeeId' => 'employee-jansen', 'period' => '2026-05', 'status' => 'draft']);
+		$this->store->seed('TimeEntry', 'entry-1', ['timesheetId' => 'ts-1', 'hours' => 2.0, 'activityCode' => 'opleiding', 'projectId' => 'p']);
+
+		$records = $this->createMock(RecordStoreInterface::class);
+		$records->method('loadAll')->willReturn([['code' => 'opleiding', 'kind' => 'non-project']]);
+		$weeks = $this->createMock(TimesheetWeekService::class);
+		$weeks->expects($this->once())->method('absenceHoursFor')
+			->with($this->callback(static fn (array $timesheet): bool => $timesheet['period'] === '2026-05'), $this->countOf(1))
+			->willReturn(8.0);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
+		$service = new TimesheetAggregationService(
+			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $this->store]),
+			marker: $this->marker,
+			settingsService: $settings,
+			activities: new TimeActivityCatalog($records),
+			weekService: $weeks
+		);
+
+		$service->recomputeForTimesheet('ts-1');
+
+		$persisted = $this->store->state->objects['Timesheet']['ts-1'];
+		$this->assertSame(0.0, $persisted['projectHours'], 'the activity wins over the project');
+		$this->assertSame(2.0, $persisted['nonProjectHours']);
+		$this->assertSame(8.0, $persisted['absenceHours']);
+	}//end testRecomputeStoresTheAbsenceHoursAndKinds()
+
+	/**
+	 * When the absence records cannot be read the stored absence hours stay,
+	 * and the hours aggregates are still kept.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableAbsenceKeepsTheStoredAbsenceHours(): void {
+		$this->store->seed('Timesheet', 'ts-1', ['employeeId' => 'employee-jansen', 'period' => '2026-05', 'absenceHours' => 5.0]);
+		$this->store->seed('TimeEntry', 'entry-1', ['timesheetId' => 'ts-1', 'hours' => 3.0]);
+
+		$weeks = $this->createMock(TimesheetWeekService::class);
+		$weeks->method('absenceHoursFor')->willThrowException(new \RuntimeException('register down'));
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
+		$service = new TimesheetAggregationService(
+			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $this->store]),
+			marker: $this->marker,
+			settingsService: $settings,
+			weekService: $weeks
+		);
+
+		$aggregates = $service->recomputeForTimesheet('ts-1');
+
+		$this->assertSame(5.0, $aggregates['absenceHours']);
+		$this->assertSame(3.0, $this->store->state->objects['Timesheet']['ts-1']['hours']);
+	}//end testAnUnreadableAbsenceKeepsTheStoredAbsenceHours()
 
 	/**
 	 * recomputeForTimesheet persists the values onto the stored timesheet,
