@@ -37,13 +37,13 @@
 - [x] 3.3 `saveConfig()`: refuse an unknown `working_mode` or `default_language` with 400 before
       storing; on a valid `working_mode`, write `mode` on the remembered administrations.
       Verify: unit tests for both refusals and for the mode write.
-- [ ] 3.4 The health check names the imported schema count, the background job state and the
+- [x] 3.4 The health check names the imported schema count, the background job state and the
       loaded payroll tables year, and reports a failure as failed. Verify: unit test with a
       failed import.
 
 ## 4. Language fallback
 
-- [ ] 4.1 A language resolver used by humaniq's notifications and generated documents: the
+- [x] 4.1 A language resolver used by humaniq's notifications and generated documents: the
       employee's Nextcloud language, else `default_language`, else `nl`. Verify: unit tests for
       both REQ-FTS-010 scenarios.
 

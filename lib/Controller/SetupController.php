@@ -40,6 +40,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCA\Humaniq\Service\Setup\SetupAdministrations;
+use OCA\Humaniq\Service\Setup\SetupHealthCheck;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Service\DemoDataService;
 
@@ -93,6 +94,7 @@ class SetupController extends Controller {
 	 * @param DemoDataService $demoDataService Imports the shipped demo dataset.
 	 * @param SetupAdministrations $setupAdministrations Creates the Administraties step's administrations and writes the working mode.
 	 * @param IUserSession    $userSession     The administrator running the wizard.
+	 * @param SetupHealthCheck $healthCheck    The Klaar step's health check.
 	 *
 	 * @return void
 	 */
@@ -103,6 +105,7 @@ class SetupController extends Controller {
 		private readonly DemoDataService $demoDataService,
 		private readonly SetupAdministrations $setupAdministrations,
 		private readonly IUserSession $userSession,
+		private readonly SetupHealthCheck $healthCheck,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -129,6 +132,7 @@ class SetupController extends Controller {
 	 *       additionally admit delegated settings admins.
 	 *
 	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
 	public function status(): JSONResponse {
@@ -150,6 +154,10 @@ class SetupController extends Controller {
 					'demo-data'      => ['done' => ($demoDecided === true || $picked !== '')],
 					'done'           => ['done' => true],
 				],
+				// The Klaar step's health check: what the import left, whether
+				// background jobs run, which payroll tables are loaded. A
+				// failure reads as failed, never as passed.
+				'health'    => $this->healthCheck->check(),
 			]
 		);
 
