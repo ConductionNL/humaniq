@@ -640,6 +640,14 @@
 		"route": "/pension-filings/:id"
 	},
 	{
+		"id": "PensionSchemes",
+		"route": "/pension-schemes"
+	},
+	{
+		"id": "PensionSchemeDetail",
+		"route": "/pension-schemes/:id"
+	},
+	{
 		"id": "ReviewCycles",
 		"route": "/review-cycles"
 	},

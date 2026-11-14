@@ -911,6 +911,12 @@
 					"route": "PensionFilings"
 				},
 				{
+					"icon": "PiggyBank",
+					"id": "PensionSchemes",
+					"label": "Pension schemes",
+					"route": "PensionSchemes"
+				},
+				{
 					"icon": "ScaleBalance",
 					"id": "WntDisclosures",
 					"label": "WNT disclosures",
@@ -16721,6 +16727,96 @@
 			"id": "PensionFilingDetail",
 			"route": "/pension-filings/:id",
 			"title": "Pension filing",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "filings-pension-upa-message (2026-11-14): D1. Administered data, sourced and dated like the tax tables; a figure stays advisory until verified. An ABP-obliged administration holds an abp scheme on the APG format.",
+				"allowExport": true,
+				"columns": [
+					"fund",
+					"schemeCode",
+					"messageFormat",
+					"franchise",
+					"maxPensionableSalary",
+					"employerPercentage",
+					"employeePercentage",
+					"validFrom",
+					"verified"
+				],
+				"description": "The pension scheme of each fund: the delivery format, the franchise, the maximum pensionable salary and the contribution percentages a pension filing is reported with.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"fund",
+					"messageFormat",
+					"verified"
+				],
+				"register": "humaniq",
+				"schema": "PensionScheme",
+				"sort": {
+					"field": "validFrom",
+					"order": "desc"
+				}
+			},
+			"id": "PensionSchemes",
+			"route": "/pension-schemes",
+			"title": "Pension schemes",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "filings-pension-upa-message (2026-11-14): D1. A plain configuration record, no lifecycle.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "PensionScheme",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Pension scheme"
+						},
+						"icon": "PiggyBank",
+						"id": "data",
+						"title": "Pension scheme",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "PensionSchemeDetail",
+			"route": "/pension-schemes/:id",
+			"title": "Pension scheme",
 			"type": "detail"
 		},
 		{
