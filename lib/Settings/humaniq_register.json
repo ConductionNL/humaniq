@@ -109,6 +109,7 @@
                     "EmployeeRelationsCase",
                     "SickLeaveCase",
                     "Stagiair",
+                    "TimeActivity",
                     "TimeEntry",
                     "TimeEstimate",
                     "Timesheet",

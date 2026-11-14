@@ -1,10 +1,9 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "humaniq",
     {
+        "2024": "2024",
+        "2025": "2025",
+        "2026": "2026",
         "Deployment plan": "Deployment plan",
         "Draft while the plan is made; confirmed once agreed.": "Draft while the plan is made; confirmed once agreed.",
         "From the CAO": "From the CAO",
@@ -34,9 +33,6 @@ OC.L10N.register(
         "The total of the plan lines.": "The total of the plan lines.",
         "Weeks": "Weeks",
         "Whether the norm comes from the CAO or was entered by hand.": "Whether the norm comes from the CAO or was entered by hand.",
-        "2024": "2024",
-        "2025": "2025",
-        "2026": "2026",
         "(Re)calculate": "(Re)calculate",
         "(Re)calculating the payroll run failed.": "(Re)calculating the payroll run failed.",
         "30%-ruling applied rate": "30%-ruling applied rate",
@@ -3752,6 +3748,30 @@ OC.L10N.register(
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.",
         "The expense categories could not be loaded.": "The expense categories could not be loaded.",
         "The expense categories could not be saved.": "The expense categories could not be saved.",
+        "Absence hours": "Absence hours",
+        "Billable by default": "Billable by default",
+        "Contract hours": "Contract hours",
+        "Hours and absence by day": "Hours and absence by day",
+        "No bookings, leave or sickness in this period": "No bookings, leave or sickness in this period",
+        "No hours or contract hours in this period": "No hours or contract hours in this period",
+        "Non-project hours": "Non-project hours",
+        "Non-project work": "Non-project work",
+        "Non-project": "Non-project",
+        "Project hours": "Project hours",
+        "Project work": "Project work",
+        "The administration this activity belongs to. Leave empty for every administration.": "The administration this activity belongs to. Leave empty for every administration.",
+        "The hours booked to projects this period.": "The hours booked to projects this period.",
+        "The hours booked to work outside projects this period, such as training and internal meetings.": "The hours booked to work outside projects this period, such as training and internal meetings.",
+        "The hours of approved leave and sickness this period, taken from the leave requests and sick reports and the working pattern.": "The hours of approved leave and sickness this period, taken from the leave requests and sick reports and the working pattern.",
+        "The short code a time entry carries, for example opleiding.": "The short code a time entry carries, for example opleiding.",
+        "Time activity": "Time activity",
+        "Week by week": "Week by week",
+        "Week": "Week",
+        "What kind of work this was when it was not for a project, such as training or an internal meeting.": "What kind of work this was when it was not for a project, such as training or an internal meeting.",
+        "What this activity is called on screen.": "What this activity is called on screen.",
+        "Whether hours on this activity are billable unless the booking says otherwise.": "Whether hours on this activity are billable unless the booking says otherwise.",
+        "Whether this activity is offered on new bookings. A retired activity still resolves on the entries that already carry it.": "Whether this activity is offered on new bookings. A retired activity still resolves on the entries that already carry it.",
+        "Whether this is project work, work outside a project, or absence. Absence is never booked by hand.": "Whether this is project work, work outside a project, or absence. Absence is never booked by hand.",
         "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on."
     },
     "nplurals=2; plural=(n != 1);"

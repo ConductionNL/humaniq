@@ -50,6 +50,9 @@
 								"period",
 								"hours",
 								"overtimeHours",
+								"projectHours",
+								"nonProjectHours",
+								"absenceHours",
 								"entryCount",
 								"description",
 								"billable"
@@ -66,6 +69,15 @@
 									"editable": false
 								},
 								"billable": {
+									"editable": false
+								},
+								"projectHours": {
+									"editable": false
+								},
+								"nonProjectHours": {
+									"editable": false
+								},
+								"absenceHours": {
 									"editable": false
 								}
 							}
@@ -169,6 +181,91 @@
 						"type": "files",
 						"title": "Approval documents",
 						"icon": "FolderOutline"
+					},
+					{
+						"id": "week-totals",
+						"type": "endpoint-table",
+						"title": "Week by week",
+						"icon": "CalendarWeek",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/timesheets/week",
+								"params": {
+									"id": "@objectId"
+								},
+								"responsePath": "weeks"
+							},
+							"columns": [
+								{
+									"key": "week",
+									"label": "Week",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "projectHours",
+									"label": "Project"
+								},
+								{
+									"key": "nonProjectHours",
+									"label": "Non-project"
+								},
+								{
+									"key": "absenceHours",
+									"label": "Absence"
+								},
+								{
+									"key": "bookedHours",
+									"label": "Total"
+								},
+								{
+									"key": "contractHours",
+									"label": "Contract hours"
+								}
+							],
+							"emptyText": "No hours or contract hours in this period"
+						}
+					},
+					{
+						"id": "week-lines",
+						"type": "endpoint-table",
+						"title": "Hours and absence by day",
+						"icon": "CalendarMonthOutline",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/timesheets/week",
+								"params": {
+									"id": "@objectId"
+								},
+								"responsePath": "lines"
+							},
+							"columns": [
+								{
+									"key": "date",
+									"label": "Date"
+								},
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "activityCode",
+									"label": "Activity"
+								},
+								{
+									"key": "projectId",
+									"label": "Project"
+								},
+								{
+									"key": "hours",
+									"label": "Hours"
+								},
+								{
+									"key": "source",
+									"label": "From"
+								}
+							],
+							"emptyText": "No bookings, leave or sickness in this period"
+						}
 					}
 				],
 				"layout": [
@@ -216,9 +313,25 @@
 						"id": 6,
 						"widgetId": "files",
 						"gridX": 0,
+						"gridY": 25,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 7,
+						"widgetId": "week-totals",
+						"gridX": 0,
 						"gridY": 15,
 						"gridWidth": 12,
 						"gridHeight": 4
+					},
+					{
+						"id": 8,
+						"widgetId": "week-lines",
+						"gridX": 0,
+						"gridY": 19,
+						"gridWidth": 12,
+						"gridHeight": 6
 					}
 				],
 				"lifecycleActions": {
@@ -258,7 +371,8 @@
 							"label": "Reopen"
 						}
 					]
-				}
+				},
+				"_weekNote": "time-non-project-activities D2/D3: 'Week by week' and 'Hours and absence by day' read GET /api/timesheets/week (endpoint-table): the booked entries beside read-only lines for approved leave and sickness, in hours from the working pattern, and per ISO week the project, non-project and absence hours against the contract hours, so an under- or over-booked week shows before submitting. Leave and sickness are composed from their own records, never booked twice. The contract hours are the working pattern's (the working calendar is not read there)."
 			}
 		},
 		{
@@ -280,6 +394,7 @@
 					"endedAt",
 					"hours",
 					"description",
+					"activityCode",
 					"projectId",
 					"billable"
 				],
@@ -295,10 +410,12 @@
 					"endedAt",
 					"breakMinutes",
 					"description",
+					"activityCode",
 					"projectId",
 					"billable"
 				],
-				"_fieldOrderNote": "Field order is declared once on the TimeEntry SCHEMA (property `order`: start 10, end 20, break 30, description 40, project 50, billable 60), not per page — fieldsFromSchema sorts by overrides.order > prop.order > ALPHABETICAL, so a schema with no order renders every form as an alphabetical wall. That is exactly what happened here: the booking form showed End before Start (breakMinutes, description, endedAt, projectId, startedAt), which the e2e caught by filling the two datetime inputs positionally and getting a span the server correctly refused. Declaring order on the schema fixes every surface at once; no page-level override is needed."
+				"_fieldOrderNote": "Field order is declared once on the TimeEntry SCHEMA (property `order`: start 10, end 20, break 30, description 40, project 50, billable 60), not per page — fieldsFromSchema sorts by overrides.order > prop.order > ALPHABETICAL, so a schema with no order renders every form as an alphabetical wall. That is exactly what happened here: the booking form showed End before Start (breakMinutes, description, endedAt, projectId, startedAt), which the e2e caught by filling the two datetime inputs positionally and getting a span the server correctly refused. Declaring order on the schema fixes every surface at once; no page-level override is needed.",
+				"_activityNote": "time-non-project-activities D1/D2: activityCode lets a booking say it was training, an internal meeting or overhead instead of naming a project. An activity of kind absence (leave, sickness) is refused by TimeEntryStampListener: those hours come from the leave request or sick report and show on the timesheet's week view."
 			}
 		}
 	],
