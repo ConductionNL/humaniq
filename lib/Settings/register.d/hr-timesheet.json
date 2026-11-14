@@ -6,10 +6,10 @@
                 "slug": "TimeEntry",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "ClockPlusOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Time entry",
                 "description": "One individual booking of worked hours (urenregistratie): when the work started and ended, what it was, and optionally which project it was for. Bookings are collected automatically into the employee's monthly timesheet, which is what gets submitted for approval.",
-                "x-notes": "hours-process-redesign Decision 1: the booking granularity split out of the former all-in-one Timesheet schema. English property names per fleet decision; NL only via l10n labels (verb surface 'uren boeken'). No status and no lifecycle here — the process lives on the parent Timesheet, and entry mutability is governed by the parent's state (Decision 3, enforced by TimeEntryStampListener). Concurrency: the aggregate listener recomputes from truth on every entry write, so a stale intermediate total is self-healed by the next write (accepted for dev-stage volumes).",
+                "x-notes": "hours-process-redesign Decision 1: the booking granularity split out of the former all-in-one Timesheet schema. English property names per fleet decision; NL only via l10n labels (verb surface 'uren boeken'). No status and no lifecycle here — the process lives on the parent Timesheet, and entry mutability is governed by the parent's state (Decision 3, enforced by TimeEntryStampListener). approvalState/approvedAt are a read-only copy of the parent's state for one-schema queries (time-entry-approval-state), never a lifecycle of their own. Concurrency: the aggregate listener recomputes from truth on every entry write, so a stale intermediate total is self-healed by the next write (accepted for dev-stage volumes).",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [],
@@ -152,6 +152,31 @@
                         "title": "Overtime compensation",
                         "description": "Paid out or taken as time off. Leave empty to follow your collective agreement.",
                         "x-notes": "time-hours-and-overtime-to-payroll D3: null means the default, the CAO's compensationPreference when that leaf is confirmed (tijd-voor-tijd is time), else pay."
+                    },
+                    "approvalState": {
+                        "type": "string",
+                        "order": 160,
+                        "enum": [
+                            "draft",
+                            "submitted",
+                            "approved",
+                            "rejected"
+                        ],
+                        "x-enum-labels": {"draft": "Draft", "submitted": "Submitted", "approved": "Approved", "rejected": "Rejected"},
+                        "default": "draft",
+                        "facetable": true,
+                        "title": "Approval state",
+                        "description": "Where the timesheet of these hours is in the approval process.",
+                        "x-notes": "time-entry-approval-state D1-D3: a copy of the parent Timesheet's status, so approved billable hours of one project and period are one TimeEntry query (projectId, date, billable, approvalState). Server-stamped and inert to client input: TimeEntryStampListener sets it from the parent on every entry write (always draft or rejected, the only states an entry can be written in), and TimesheetEntryStateListener carries every timesheet edge (submit, approve, reject, reopen) down to the entries. The timesheet stays the authority; the RestampTimeEntryApprovalState repair step re-stamps every entry from it."
+                    },
+                    "approvedAt": {
+                        "type": "string",
+                        "order": 170,
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Approved at",
+                        "description": "When the timesheet of these hours was approved.",
+                        "x-notes": "time-entry-approval-state D1: the parent Timesheet's approvedAt while its status is approved, null in every other state. Server-stamped with approvalState and inert to client input."
                     }
                 }
             },
