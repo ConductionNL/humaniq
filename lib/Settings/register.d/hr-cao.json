@@ -3,11 +3,36 @@
     "components": {
         "schemas": {
             "Cao": {
-                "configuration": {"exportable": true},
                 "slug": "Cao",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "FileDocumentMultipleOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
+                "configuration": {
+                    "exportable": true,
+                    "x-openregister-mcp": {
+                        "enabled": true,
+                        "tools": {
+                            "search": {
+                                "description": "Search the collective labour agreements (CAO) the employer applies, by id or sector. Use this to explain what an agreement says about working time, allowances or holiday entitlement, and cite the agreement and its version.",
+                                "scope": "read",
+                                "filters": [
+                                    "caoId",
+                                    "sector"
+                                ],
+                                "readOnlyHint": true,
+                                "destructiveHint": false,
+                                "idempotentHint": true
+                            },
+                            "get": {
+                                "description": "Get one collective labour agreement: its name, sector, version, effective date, and its reference figures for pay scales, allowances, holiday entitlement and working time. These are the agreement's figures, never an employee's own pay.",
+                                "scope": "read",
+                                "readOnlyHint": true,
+                                "destructiveHint": false,
+                                "idempotentHint": true
+                            }
+                        }
+                    }
+                },
                 "title": "Collective labour agreement",
                 "description": "A read-only reference projection of one collective labour agreement (collectieve arbeidsovereenkomst) from the maintained CAO corpus (lib/Standards/cao/{caoId}.json), seeded idempotently from CaoRegistry by NlCaoChecks::seedObjects() (cao-library). The corpus is the single authoring source; these objects are a derived display surface for the read-only Caos reference page and MUST NOT be hand-edited (allowCreate:false on the manifest pages). An EmploymentContract references a CAO by its caoId, not by this object's UUID.",
                 "type": "object",

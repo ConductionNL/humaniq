@@ -7,9 +7,15 @@
       entry and its comment.
 - [x] 1.2 Write `src/leaves.js` to import only the leaf registration and its
       widget: no router, no store, no app shell.
-- [ ] 1.3 Add a build test asserting `js/humaniq-leaves.js` exists after a
+- [x] 1.3 Add a build test asserting `js/humaniq-leaves.js` exists after a
       production build and stays under a stated size ceiling.
-- [ ] 1.4 Watch the test fail on the current tree before adding the entry.
+      Done: `tests/js/leavesBundleBuild.test.mjs` builds only the `leaves` entry in production
+      mode into a temporary directory (`tests/js/support/buildLeavesBundle.cjs`), asserts the
+      `<app id>-leaves.js` name, a 512 KB ceiling (232 KB alone, 320 KB in the full build, main
+      16.6 MB) and no router, store, manifest or app shell among its modules.
+- [x] 1.4 Watch the test fail on the current tree before adding the entry.
+      Done: with the entry removed it fails "webpack.config.js declares no leaves entry"; renamed
+      to `-leaf.js` it fails "expected humaniq-leaves.js, the build wrote humaniq-leaf.js".
 
 ## 2. Both halves, always (REQ-HLD-002)
 
@@ -37,11 +43,15 @@
 
 ## 4. Demo data (REQ-HLD-004)
 
-- [ ] 4.1 Replace the placeholder `domainObjectType` and `domainObjectRef` in
+- [x] 4.1 Replace the placeholder `domainObjectType` and `domainObjectRef` in
       `lib/Settings/humaniq_mock_register.json` with a real `register:schema`
       pair and the uuid of a seeded object, with non-zero hours.
-- [ ] 4.2 Unit test that no seeded `TimeEntry` carries a placeholder
+      Done: the three seeded rows are booked on seeded `humaniq:EmployeeRelationsCase` cases
+      (2.0 and 1.5 hours on the first, 1.0 on the second), referenced with the
+      `@ref:EmployeeRelationsCase:<slug>` token the importer resolves to the case's uuid.
+- [x] 4.2 Unit test that no seeded `TimeEntry` carries a placeholder
       reference.
+      Done: `tests/Unit/Settings/DemoTimeEntryHostTest.php`; seen failing on the old rows.
 
 ## 5. The journey (REQ-HLD-005)
 
