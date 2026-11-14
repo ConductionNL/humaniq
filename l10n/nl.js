@@ -3722,7 +3722,10 @@ OC.L10N.register(
         "Expense categories": "Declaratiecategorieën",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
-        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen."
+        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
+        "Make employer statement": "Werkgeversverklaring maken",
+        "Making the employer statement failed.": "Het maken van de werkgeversverklaring is mislukt.",
+        "The employer statement is being made.": "De werkgeversverklaring wordt gemaakt."
     },
     "nplurals=2; plural=(n != 1);"
 )

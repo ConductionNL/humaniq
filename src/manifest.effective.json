@@ -8630,6 +8630,21 @@
 						"successMessage": "The employment contract is being generated.",
 						"type": "api-call",
 						"url": "/api/documents/generate"
+					},
+					{
+						"confirm": true,
+						"errorMessage": "Making the employer statement failed.",
+						"icon": "FileCertificateOutline",
+						"id": "generate-werkgeversverklaring",
+						"label": "Make employer statement",
+						"method": "POST",
+						"params": {
+							"contractId": "@objectId",
+							"documentType": "werkgeversverklaring"
+						},
+						"successMessage": "The employer statement is being made.",
+						"type": "api-call",
+						"url": "/api/documents/generate"
 					}
 				],
 				"layout": [
