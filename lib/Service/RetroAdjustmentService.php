@@ -49,6 +49,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Payroll\AwfTariffResolver;
+use OCA\Humaniq\Payroll\PayPeriod;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
@@ -167,7 +168,7 @@ class RetroAdjustmentService {
 	 * @return string|null The refusal message.
 	 */
 	private function correctionRefusal(RetroCorrection $correction): ?string {
-		if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $correction->originalPeriod) !== 1) {
+		if (self::isMonth(period: $correction->originalPeriod) === false) {
 			return 'Ongeldige originele periode "' . $correction->originalPeriod . '" (verwacht JJJJ-MM).';
 		}
 
@@ -717,4 +718,23 @@ class RetroAdjustmentService {
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
+	/**
+	 * Whether a period id is a month. Read through PayPeriod; this path
+	 * still converts by month, so four-weekly and weekly ids wait for the
+	 * run's conversions to move to the period's share of the year.
+	 *
+	 * @param string $period The period id.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private static function isMonth(string $period): bool {
+		try {
+			return PayPeriod::parse(id: $period)->tijdvak === PayPeriod::TIJDVAK_MAAND;
+		} catch (\InvalidArgumentException) {
+			return false;
+		}
+	}//end isMonth()
+
 }//end class

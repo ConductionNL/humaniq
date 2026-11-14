@@ -2126,6 +2126,40 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testTheEngineStaysOutOfAnOutsourcedAdministration()
 
 	/**
+	 * payroll-period-edge-cases REQ-PPE-001: a monthly administration
+	 * refuses a four-weekly period and writes nothing; a four-weekly one
+	 * gets past the period check with it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	public function testARunTakesOnlyPeriodsOfTheAdministrationsFrequency(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [],
+				'EmploymentContract' => [],
+				'PayrollRun' => [],
+				'Payslip' => [],
+				'hrAdministration' => [
+					['id' => 'adm-1', 'administrationId' => 'ADM-001', 'name' => 'Monthly'],
+					['id' => 'adm-5', 'administrationId' => 'ADM-005', 'name' => 'Four-weekly', 'payFrequency' => 'four-weekly'],
+				],
+			]
+		);
+
+		$refused = $service->runFor('2026-P05', 'ADM-001');
+		self::assertSame('failed', $refused['status']);
+		self::assertSame('Ongeldige periode "2026-P05": "2026-P05" is not a monthly period: this administration pays monthly.', $refused['message']);
+		self::assertSame([], $fake->saved);
+
+		$accepted = $service->runFor('2026-P05', 'ADM-005');
+		self::assertStringNotContainsString('Ongeldige periode', (string)$accepted['message']);
+
+		self::assertSame('failed', $service->runFor('2026-05', 'ADM-005')['status']);
+	}//end testARunTakesOnlyPeriodsOfTheAdministrationsFrequency()
+
+	/**
 	 * filings-premium-differentiation REQ-AWF-101: a signed BBL
 	 * praktijkovereenkomst is charged the low Awf rate, and the payslip says
 	 * so and why.
