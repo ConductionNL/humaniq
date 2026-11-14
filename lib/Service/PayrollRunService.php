@@ -163,6 +163,7 @@ namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use OCA\Humaniq\Payroll\AwfHoursReview;
+use OCA\Humaniq\Payroll\PayPeriod;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\CalculationLevies;
@@ -331,8 +332,9 @@ class PayrollRunService {
 			$administrationId = self::DEFAULT_ADMINISTRATION;
 		}
 
-		if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period) !== 1) {
-			return $this->outcome('', $period, $administrationId, 'failed', 'Ongeldige periode "' . $period . '" (verwacht JJJJ-MM).');
+		$refusal = $this->periodRefusal(period: $period, administrationId: $administrationId);
+		if ($refusal !== null) {
+			return $this->outcome('', $period, $administrationId, 'failed', $refusal);
 		}
 
 		$outsourced = $this->bureauRefusal(runId: '', period: $period, administrationId: $administrationId);
@@ -1262,6 +1264,38 @@ class PayrollRunService {
 
 		return null;
 	}//end bureauRefusal()
+
+	/**
+	 * Why a period cannot be run for an administration, or null: the id must
+	 * be a period of the administration's pay frequency (monthly when it
+	 * names none).
+	 *
+	 * @param string $period           The period id.
+	 * @param string $administrationId The administration.
+	 *
+	 * @return string|null The refusal message.
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private function periodRefusal(string $period, string $administrationId): ?string {
+		$frequency = '';
+		$week53    = '';
+		foreach ($this->loadAll('hrAdministration') as $administration) {
+			if ((string)($administration['administrationId'] ?? '') === $administrationId) {
+				$frequency = (string)($administration['payFrequency'] ?? '');
+				$week53    = (string)($administration['week53Handling'] ?? '');
+				break;
+			}
+		}
+
+		try {
+			PayPeriod::forFrequency(id: $period, frequency: $frequency, week53Handling: $week53);
+		} catch (\InvalidArgumentException $e) {
+			return 'Ongeldige periode "' . $period . '": ' . $e->getMessage();
+		}
+
+		return null;
+	}//end periodRefusal()
 
 	/**
 	 * Split the run's wage costs over cost centres and projects; a failing
