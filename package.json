@@ -62,7 +62,10 @@
   },
   "overrides": {
     "@noble/hashes": "1.4.0",
-    "dompurify": "$dompurify"
+    "dompurify": "$dompurify",
+    "webdav": {
+      "minimatch": "^11.0.1"
+    }
   },
   "devDependencies": {
     "@nextcloud/browserslist-config": "^3.0.1",
