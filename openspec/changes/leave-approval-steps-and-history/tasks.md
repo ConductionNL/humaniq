@@ -26,10 +26,20 @@
       from `manager-approved` too, and the menu entry "HR leave approval" over
       `LeaveRequests` with `status: manager-approved` (the same index-with-query shape as
       the other two approval queues).
-- [ ] 2.5 Show the coverage warning from `GET /api/leave/coverage` on `LeaveRequestDetail`
+- [x] 2.5 Show the coverage warning from `GET /api/leave/coverage` on `LeaveRequestDetail`
       before Approve, and store what the approver accepted in `coverageWarningAccepted`
       (`src/manifest.d/hr-leave.json`, REQ-LVM-S02). Verify: `npm run check:manifest` exits 0
       and approving the seeded thin-coverage request records the warning.
+      Done: the composition behind `GET /api/leave/coverage` moved into
+      `LeaveCoverageWarning` (the endpoint answers exactly as before), and
+      `LeaveRequestProcessStampListener` uses it on `approve-manager` and `approve` to
+      stamp `coverageWarningAccepted` (now a server-only field) with the warning the
+      approver could read, null when there was none; a warning that cannot be composed
+      never refuses the approval. `LeaveRequestDetail` shows "Coverage if approved", an
+      endpoint table over the warning's dates, beside Approval, which now shows the
+      recorded warning read-only. Unit tests: `LeaveCoverageWarningCompositionTest`, five
+      new cases in `LeaveRequestProcessStampListenerTest`. The live half of the verify
+      (approving the seeded thin-coverage request) is left for 3.2.
 
 ## 3. Verification
 

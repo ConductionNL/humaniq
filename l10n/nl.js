@@ -3769,7 +3769,12 @@ OC.L10N.register(
         "Connection": "Koppeling",
         "Last checked": "Laatst gecontroleerd",
         "Status message": "Statusmelding",
-        "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why.": "De externe systemen waarmee humaniq gegevens uitwisselt, en of elk ervan werkt. Een koppeling die nog niet beschikbaar is, zegt waarom."
+        "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why.": "De externe systemen waarmee humaniq gegevens uitwisselt, en of elk ervan werkt. Een koppeling die nog niet beschikbaar is, zegt waarom.",
+        "Coverage if approved": "Bezetting bij goedkeuren",
+        "Present after approval": "Aanwezig na goedkeuren",
+        "Minimum": "Minimum",
+        "Also away": "Ook afwezig",
+        "Approving this request keeps enough colleagues present.": "Goedkeuren van deze aanvraag laat genoeg collega's aanwezig."
     },
     "nplurals=2; plural=(n != 1);"
 )

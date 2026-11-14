@@ -73,6 +73,7 @@
     "OCA\\Humaniq\\Service\\JurisdictionPackService::$gateway",
     "OCA\\Humaniq\\Service\\LearningPeopleFeed::$gateway",
     "OCA\\Humaniq\\Service\\LeaveCostService::$gateway",
+    "OCA\\Humaniq\\Service\\LeaveCoverageWarning::$gateway",
     "OCA\\Humaniq\\Service\\LoonaangifteCorrectionService::$gateway",
     "OCA\\Humaniq\\Service\\LoonaangifteMessageService::$gateway",
     "OCA\\Humaniq\\Service\\ManagerAccessStamps::$gateway",

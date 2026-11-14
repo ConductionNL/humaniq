@@ -25,6 +25,7 @@ namespace OCA\Humaniq\Tests\Unit\Listener;
 
 use OCA\Humaniq\Listener\LeaveRequestProcessStampListener;
 use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\LeaveCoverageWarning;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
@@ -36,14 +37,34 @@ use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use RuntimeException;
 
 /**
  * @covers \OCA\Humaniq\Listener\LeaveRequestProcessStampListener
+ * @uses \OCA\Humaniq\Service\HoursRegisterGateway
+ * @uses \OCA\Humaniq\Service\OrgResolutionService
  */
 class LeaveRequestProcessStampListenerTest extends TestCase {
 
 	private const EARLIER = ['step' => 'manager', 'decision' => 'rejected', 'by' => 'manager0', 'at' => '2026-10-01T09:00:00Z', 'remark' => 'Te kort dag'];
+
+	/**
+	 * What the coverage warning answers, or the exception it throws; null: no warning.
+	 *
+	 * @var string|RuntimeException|null
+	 */
+	private string|RuntimeException|null $warning = null;
+
+	/**
+	 * The requests the coverage warning was asked about.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $askedAbout = [];
+
+	private ?LoggerInterface $logger = null;
 
 	private function listener(string $uid = 'manager1'): LeaveRequestProcessStampListener {
 		$user = $this->createMock(IUser::class);
@@ -60,8 +81,22 @@ class LeaveRequestProcessStampListenerTest extends TestCase {
 				orgResolution: new OrgResolutionService()
 			),
 			userSession: $session,
-			logger: new NullLogger()
+			logger: $this->logger ?? new NullLogger(),
+			coverage: $this->coverageWarning()
 		);
+	}
+
+	private function coverageWarning(): LeaveCoverageWarning {
+		$coverage = $this->createMock(LeaveCoverageWarning::class);
+		$coverage->method('acceptedOnApproval')->willReturnCallback(function (array $request): ?string {
+			$this->askedAbout[] = $request;
+			if ($this->warning instanceof RuntimeException) {
+				throw $this->warning;
+			}
+
+			return $this->warning;
+		});
+		return $coverage;
 	}
 
 	private static function entity(array $payload, string $schema = 'LeaveRequest'): ObjectEntity {
@@ -87,7 +122,7 @@ class LeaveRequestProcessStampListenerTest extends TestCase {
 		$this->listener()->handle($event);
 
 		$this->assertSame(
-			['status' => 'draft', 'decisions' => [], 'submittedAt' => null, 'approvedBy' => null, 'approvedAt' => null, 'rejectionReason' => null],
+			['status' => 'draft', 'decisions' => [], 'submittedAt' => null, 'approvedBy' => null, 'approvedAt' => null, 'rejectionReason' => null, 'coverageWarningAccepted' => null],
 			$event->getModifiedData()
 		);
 	}
@@ -153,5 +188,52 @@ class LeaveRequestProcessStampListenerTest extends TestCase {
 		$this->listener()->handle($event);
 
 		$this->assertSame([], $event->getModifiedData());
+	}
+
+	public function testApprovingRecordsTheCoverageWarningThatWasThere(): void {
+		$this->warning = 'Op maandag 3 augustus is 1 van de minimaal 2 aanwezig; Jansen is al afwezig.';
+		$modified = $this->update(
+			['status' => 'approved', 'coverageWarningAccepted' => 'client text'],
+			['status' => 'submitted', 'employeeId' => 'emp-1', 'startDate' => '2026-08-03', 'endDate' => '2026-08-07']
+		);
+
+		$this->assertSame($this->warning, $modified['coverageWarningAccepted']);
+		$this->assertCount(1, $this->askedAbout);
+		$this->assertSame(['emp-1', '2026-08-03', '2026-08-07'], [$this->askedAbout[0]['employeeId'], $this->askedAbout[0]['startDate'], $this->askedAbout[0]['endDate']]);
+	}
+
+	public function testTheManagerStepRecordsTheWarningItAccepted(): void {
+		$this->warning = 'Op maandag 3 augustus is 1 van de minimaal 2 aanwezig.';
+		$modified = $this->update(['status' => 'manager-approved'], ['status' => 'submitted', 'employeeId' => 'emp-1']);
+
+		$this->assertSame($this->warning, $modified['coverageWarningAccepted']);
+	}
+
+	public function testApprovingWithoutAWarningRecordsNoneWhateverTheClientSends(): void {
+		$modified = $this->update(['status' => 'approved', 'coverageWarningAccepted' => 'client text'], ['status' => 'submitted']);
+
+		$this->assertNull($modified['coverageWarningAccepted']);
+	}
+
+	public function testRejectingAsksNoWarningAndKeepsTheStoredOne(): void {
+		$modified = $this->update(
+			['status' => 'rejected', 'coverageWarningAccepted' => 'client text'],
+			['status' => 'manager-approved', 'coverageWarningAccepted' => 'accepted by the manager']
+		);
+
+		$this->assertSame('accepted by the manager', $modified['coverageWarningAccepted']);
+		$this->assertSame([], $this->askedAbout);
+	}
+
+	public function testAWarningThatCannotBeComposedDoesNotRefuseTheApproval(): void {
+		$this->warning = new RuntimeException('register offline');
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with($this->stringContains('coverage warning'));
+		$this->logger = $logger;
+
+		$modified = $this->update(['status' => 'approved'], ['status' => 'submitted']);
+
+		$this->assertNull($modified['coverageWarningAccepted']);
+		$this->assertSame('manager1', $modified['approvedBy']);
 	}
 }

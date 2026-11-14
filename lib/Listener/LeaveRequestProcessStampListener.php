@@ -15,11 +15,17 @@
  * | edge                               | stamps                                                   |
  * |------------------------------------|----------------------------------------------------------|
  * | to `submitted`                     | `submittedAt`; clears `approvedBy` and `approvedAt`      |
- * | `submitted` to `manager-approved`  | appends the manager's decision                           |
- * | to `approved`                      | `approvedBy`, `approvedAt`; appends the step's decision  |
+ * | `submitted` to `manager-approved`  | appends the manager's decision; `coverageWarningAccepted`|
+ * | to `approved`                      | `approvedBy`, `approvedAt`; appends the step's decision; |
+ * |                                    | `coverageWarningAccepted`                                |
  * | to `rejected`                      | `approvedBy`, `approvedAt`, `rejectionReason`; appends   |
  *
  * `decisions` is never cleared, so a resubmitted request keeps its history.
+ * `coverageWarningAccepted` is the coverage warning the approver could read on
+ * the request when they approved it, composed by LeaveCoverageWarning exactly
+ * as `GET /api/leave/coverage` shows it, or null when there was none
+ * (REQ-LVM-S02). It warns and never refuses: when the warning cannot be
+ * composed the approval still lands, with nothing recorded.
  * The only client values accepted are the decision remark (`decisionRemark`,
  * not stored on its own) and `rejectionReason`.
  *
@@ -42,10 +48,12 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\LeaveCoverageWarning;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Stamps who decided a leave request, and when, inside the carrying write.
@@ -63,7 +71,7 @@ class LeaveRequestProcessStampListener implements IEventListener {
 	/**
 	 * Fields only the server writes.
 	 */
-	public const PROCESS_FIELDS = ['submittedAt', 'approvedBy', 'approvedAt', 'rejectionReason', 'decisions'];
+	public const PROCESS_FIELDS = ['submittedAt', 'approvedBy', 'approvedAt', 'rejectionReason', 'decisions', 'coverageWarningAccepted'];
 
 	/**
 	 * Constructor.
@@ -71,11 +79,13 @@ class LeaveRequestProcessStampListener implements IEventListener {
 	 * @param HoursRegisterGateway $gateway     Resolves schema slugs and reads the stored request.
 	 * @param IUserSession         $userSession The deciding user.
 	 * @param LoggerInterface      $logger      PSR logger.
+	 * @param LeaveCoverageWarning $coverage    The coverage warning an approval accepts (REQ-LVM-S02).
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly LeaveCoverageWarning $coverage,
 	) {
 	}//end __construct()
 
@@ -110,7 +120,7 @@ class LeaveRequestProcessStampListener implements IEventListener {
 		}
 
 		$modified = ['status' => 'draft', 'decisions' => []];
-		foreach (['submittedAt', 'approvedBy', 'approvedAt', 'rejectionReason'] as $field) {
+		foreach (['submittedAt', 'approvedBy', 'approvedAt', 'rejectionReason', 'coverageWarningAccepted'] as $field) {
 			$modified[$field] = null;
 		}
 
@@ -192,8 +202,11 @@ class LeaveRequestProcessStampListener implements IEventListener {
 
 		return match ($to) {
 			'submitted' => ['submittedAt' => $this->now(), 'approvedBy' => null, 'approvedAt' => null],
-			'manager-approved' => ['decision' => ['step' => 'manager', 'decision' => 'approved']],
-			'approved', 'rejected' => $this->verdict(from: $from, incoming: $incoming),
+			'manager-approved' => [
+				'decision' => ['step' => 'manager', 'decision' => 'approved'],
+				'coverageWarningAccepted' => $this->acceptedWarning(request: array_merge($stored, $incoming)),
+			],
+			'approved', 'rejected' => $this->verdict(from: $from, incoming: $incoming, stored: $stored),
 			default => [],
 		};
 	}//end stampEdge()
@@ -203,10 +216,11 @@ class LeaveRequestProcessStampListener implements IEventListener {
 	 *
 	 * @param string               $from     The stored status.
 	 * @param array<string, mixed> $incoming The incoming payload, its status `approved` or `rejected`.
+	 * @param array<string, mixed> $stored   The stored request.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function verdict(string $from, array $incoming): array {
+	private function verdict(string $from, array $incoming, array $stored): array {
 		$to = strtolower(trim((string)($incoming['status'] ?? '')));
 		$step = 'manager';
 		if ($from === 'manager-approved') {
@@ -222,8 +236,34 @@ class LeaveRequestProcessStampListener implements IEventListener {
 			$stamps['rejectionReason'] = self::nullableTrim(value: ($incoming['rejectionReason'] ?? null));
 		}
 
+		if ($to === 'approved') {
+			$stamps['coverageWarningAccepted'] = $this->acceptedWarning(request: array_merge($stored, $incoming));
+		}
+
 		return $stamps;
 	}//end verdict()
+
+	/**
+	 * The coverage warning the approver accepts by approving, or null (REQ-LVM-S02).
+	 *
+	 * @param array<string, mixed> $request The request as it will be stored.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
+	 */
+	private function acceptedWarning(array $request): ?string {
+		try {
+			return $this->coverage->acceptedOnApproval(request: $request);
+		} catch (Throwable $exception) {
+			// A warning never refuses: the approval lands, unrecorded.
+			$this->logger->warning(
+				'humaniq: the coverage warning of a leave request could not be composed on approval',
+				['exception' => $exception]
+			);
+			return null;
+		}
+	}//end acceptedWarning()
 
 	/**
 	 * One entry of the decision history: the step and decision, by whom, when, and the remark.

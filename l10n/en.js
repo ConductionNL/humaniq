@@ -3769,7 +3769,12 @@ OC.L10N.register(
         "Connection": "Connection",
         "Last checked": "Last checked",
         "Status message": "Status message",
-        "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why.": "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why."
+        "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why.": "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why.",
+        "Coverage if approved": "Coverage if approved",
+        "Present after approval": "Present after approval",
+        "Minimum": "Minimum",
+        "Also away": "Also away",
+        "Approving this request keeps enough colleagues present.": "Approving this request keeps enough colleagues present."
     },
     "nplurals=2; plural=(n != 1);"
 )
