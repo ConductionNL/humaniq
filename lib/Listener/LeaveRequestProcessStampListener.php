@@ -41,8 +41,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use DateTimeImmutable;
-use DateTimeZone;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -57,6 +55,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
  */
 class LeaveRequestProcessStampListener implements IEventListener {
+
+	use StampsProcessFields;
 
 	public const LEAVE_REQUEST_SLUG = 'leaverequest';
 
@@ -89,22 +89,11 @@ class LeaveRequestProcessStampListener implements IEventListener {
 	 * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
 	 */
 	public function handle(Event $event): void {
-		try {
-			if ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent) {
-				$this->stampCreating(event: $event);
-				return;
-			}
-
-			if ($event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) {
-				$this->stampUpdating(event: $event);
-			}
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'humaniq: LeaveRequestProcessStampListener could not stamp a LeaveRequest write',
-				['exception' => $e->getMessage()]
-			);
-			$this->refuse(event: $event, message: 'De verlofaanvraag kon niet worden verwerkt; probeer het later opnieuw.');
-		}//end try
+		$this->stampOrRefuse(
+			event: $event,
+			failure: 'humaniq: LeaveRequestProcessStampListener could not stamp a LeaveRequest write',
+			refusal: 'De verlofaanvraag kon niet worden verwerkt; probeer het later opnieuw.'
+		);
 	}//end handle()
 
 	/**
@@ -176,19 +165,25 @@ class LeaveRequestProcessStampListener implements IEventListener {
 			$modified['decisions'] = [];
 		}
 
-		return array_merge($modified, $this->stampEdge(incoming: $incoming, stored: $stored, decisions: $modified['decisions']));
+		$edge = $this->stampEdge(incoming: $incoming, stored: $stored);
+		$decision = ($edge['decision'] ?? null);
+		unset($edge['decision']);
+		if ($decision !== null) {
+			$modified['decisions'] = array_values([...$modified['decisions'], $this->decisionEntry(decision: $decision, incoming: $incoming)]);
+		}
+
+		return array_merge($modified, $edge);
 	}//end stampUpdate()
 
 	/**
-	 * The stamps of the lifecycle edge in the write, or none.
+	 * The stamps of a status change, with the decision to record under `decision`.
 	 *
-	 * @param array<string, mixed>   $incoming  The written request.
-	 * @param array<string, mixed>   $stored    The request as stored.
-	 * @param array<int, mixed>      $decisions The stored decisions.
+	 * @param array<string, mixed> $incoming The incoming payload.
+	 * @param array<string, mixed> $stored   The stored request.
 	 *
-	 * @return array<string, mixed>
+	 * @return array<string, mixed> Stamps to merge, and `decision` (`step`, `decision`) when a decision was made.
 	 */
-	private function stampEdge(array $incoming, array $stored, array $decisions): array {
+	private function stampEdge(array $incoming, array $stored): array {
 		$from = strtolower(trim((string)($stored['status'] ?? '')));
 		$to   = strtolower(trim((string)($incoming['status'] ?? '')));
 		if ($from === $to) {
@@ -197,23 +192,22 @@ class LeaveRequestProcessStampListener implements IEventListener {
 
 		return match ($to) {
 			'submitted' => ['submittedAt' => $this->now(), 'approvedBy' => null, 'approvedAt' => null],
-			'manager-approved' => ['decisions' => $this->withDecision(decisions: $decisions, step: 'manager', decision: 'approved', incoming: $incoming)],
-			'approved', 'rejected' => $this->verdict(from: $from, to: $to, incoming: $incoming, decisions: $decisions),
+			'manager-approved' => ['decision' => ['step' => 'manager', 'decision' => 'approved']],
+			'approved', 'rejected' => $this->verdict(from: $from, incoming: $incoming),
 			default => [],
 		};
 	}//end stampEdge()
 
 	/**
-	 * The stamps of a final decision.
+	 * The stamps of a final approval or rejection, by the manager or, after the manager, by HR.
 	 *
-	 * @param string               $from      The stored status.
-	 * @param string               $to        approved or rejected.
-	 * @param array<string, mixed> $incoming  The written request.
-	 * @param array<int, mixed>    $decisions The stored decisions.
+	 * @param string               $from     The stored status.
+	 * @param array<string, mixed> $incoming The incoming payload, its status `approved` or `rejected`.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function verdict(string $from, string $to, array $incoming, array $decisions): array {
+	private function verdict(string $from, array $incoming): array {
+		$to = strtolower(trim((string)($incoming['status'] ?? '')));
 		$step = 'manager';
 		if ($from === 'manager-approved') {
 			$step = 'hr';
@@ -222,7 +216,7 @@ class LeaveRequestProcessStampListener implements IEventListener {
 		$stamps = [
 			'approvedBy' => $this->userId(),
 			'approvedAt' => $this->now(),
-			'decisions' => $this->withDecision(decisions: $decisions, step: $step, decision: $to, incoming: $incoming),
+			'decision' => ['step' => $step, 'decision' => $to],
 		];
 		if ($to === 'rejected') {
 			$stamps['rejectionReason'] = self::nullableTrim(value: ($incoming['rejectionReason'] ?? null));
@@ -232,31 +226,27 @@ class LeaveRequestProcessStampListener implements IEventListener {
 	}//end verdict()
 
 	/**
-	 * The decisions with this one appended.
+	 * One entry of the decision history: the step and decision, by whom, when, and the remark.
 	 *
-	 * @param array<int, mixed>    $decisions The stored decisions.
-	 * @param string               $step      manager or hr.
-	 * @param string               $decision  approved or rejected.
-	 * @param array<string, mixed> $incoming  The written request, for the remark.
+	 * @param array{step: string, decision: string} $decision The step and the decision.
+	 * @param array<string, mixed>                  $incoming The incoming payload.
 	 *
-	 * @return array<int, mixed>
+	 * @return array<string, mixed>
 	 */
-	private function withDecision(array $decisions, string $step, string $decision, array $incoming): array {
+	private function decisionEntry(array $decision, array $incoming): array {
 		$remark = self::nullableTrim(value: ($incoming['decisionRemark'] ?? ($incoming['rejectionReason'] ?? null)));
-		if ($decision === 'approved') {
+		if ($decision['decision'] === 'approved') {
 			$remark = self::nullableTrim(value: ($incoming['decisionRemark'] ?? null));
 		}
 
-		$decisions[] = [
-			'step' => $step,
-			'decision' => $decision,
+		return [
+			'step' => $decision['step'],
+			'decision' => $decision['decision'],
 			'by' => (string)($this->userId() ?? ''),
 			'at' => $this->now(),
 			'remark' => $remark,
 		];
-
-		return array_values($decisions);
-	}//end withDecision()
+	}//end decisionEntry()
 
 	/**
 	 * Whether the written object is a LeaveRequest.
@@ -278,46 +268,4 @@ class LeaveRequestProcessStampListener implements IEventListener {
 		return self::nullableTrim(value: $this->userSession->getUser()?->getUID());
 	}//end userId()
 
-	/**
-	 * Now, as an ISO 8601 UTC timestamp.
-	 *
-	 * @return string
-	 */
-	private function now(): string {
-		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
-	}//end now()
-
-	/**
-	 * Refuse the write with a message.
-	 *
-	 * @param object $event   The event.
-	 * @param string $message The message.
-	 *
-	 * @return void
-	 */
-	private function refuse(object $event, string $message): void {
-		if (method_exists($event, 'setErrors') === true) {
-			$event->setErrors(['message' => $message]);
-		}
-
-		if (method_exists($event, 'stopPropagation') === true) {
-			$event->stopPropagation();
-		}
-	}//end refuse()
-
-	/**
-	 * A trimmed string, or null when empty.
-	 *
-	 * @param mixed $value The value.
-	 *
-	 * @return string|null
-	 */
-	private static function nullableTrim(mixed $value): ?string {
-		$trimmed = trim((string)($value ?? ''));
-		if ($trimmed === '') {
-			return null;
-		}
-
-		return $trimmed;
-	}//end nullableTrim()
 }//end class

@@ -86,7 +86,11 @@ final class LeaveApprovalStepGuard implements LifecycleGuardInterface {
 		}
 
 		if ((string)($object['status'] ?? '') === self::STATUS_MANAGER_APPROVED) {
-			return $this->hrStep(object: $object, action: $action, userId: $userId);
+			if ($action === self::ACTION_APPROVE_MANAGER) {
+				return GuardResult::deny('De manager heeft deze aanvraag al goedgekeurd; HR beslist nu.');
+			}
+
+			return $this->hrStep(object: $object, userId: $userId);
 		}
 
 		return $this->managerStep(object: $object, action: $action);
@@ -124,17 +128,12 @@ final class LeaveApprovalStepGuard implements LifecycleGuardInterface {
 	/**
 	 * HR's step, from `manager-approved`: HR rights, and not the manager who approved.
 	 *
-	 * @param array<string, mixed> $object The leave request.
-	 * @param string               $action The action.
+	 * @param array<string, mixed> $object The leave request, waiting for HR.
 	 * @param string               $userId The acting user.
 	 *
 	 * @return GuardResult
 	 */
-	private function hrStep(array $object, string $action, string $userId): GuardResult {
-		if ($action === self::ACTION_APPROVE_MANAGER) {
-			return GuardResult::deny('De manager heeft deze aanvraag al goedgekeurd; HR beslist nu.');
-		}
-
+	private function hrStep(array $object, string $userId): GuardResult {
 		if ($this->groupManager->isAdmin($userId) === false) {
 			return GuardResult::deny('Alleen HR mag deze stap nemen.');
 		}
