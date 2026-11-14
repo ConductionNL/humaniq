@@ -106,15 +106,15 @@ final class PayPeriod {
 	 */
 	public static function parse(string $id): self {
 		if (preg_match('/^(\d{4})-(0[1-9]|1[0-2])$/', $id, $month) === 1) {
-			return self::month(id: $id, year: (int)$month[1], month: (int)$month[2]);
+			return self::month(year: (int)$month[1], month: (int)$month[2]);
 		}
 
 		if (preg_match('/^(\d{4})-P(0[1-9]|1[0-4])$/', $id, $fourWeekly) === 1) {
-			return self::fourWeekly(id: $id, year: (int)$fourWeekly[1], period: (int)$fourWeekly[2]);
+			return self::fourWeekly(year: (int)$fourWeekly[1], period: (int)$fourWeekly[2]);
 		}
 
 		if (preg_match('/^(\d{4})-W(0[1-9]|[1-4]\d|5[0-3])$/', $id, $week) === 1) {
-			return self::week(id: $id, year: (int)$week[1], week: (int)$week[2]);
+			return self::week(year: (int)$week[1], week: (int)$week[2]);
 		}
 
 		throw new InvalidArgumentException(sprintf('"%s" is not a pay period: use YYYY-MM, YYYY-Pnn or YYYY-Wnn.', $id));
@@ -200,13 +200,13 @@ final class PayPeriod {
 	/**
 	 * A calendar month.
 	 *
-	 * @param string $id    The id.
-	 * @param int    $year  The year.
-	 * @param int    $month The month.
+	 * @param int $year  The year.
+	 * @param int $month The month.
 	 *
 	 * @return self
 	 */
-	private static function month(string $id, int $year, int $month): self {
+	private static function month(int $year, int $month): self {
+		$id = sprintf('%04d-%02d', $year, $month);
 		$first = new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month));
 
 		return new self(id: $id, tijdvak: self::TIJDVAK_MAAND, firstDay: $first, lastDay: $first->modify('last day of this month'), week53: false);
@@ -215,15 +215,15 @@ final class PayPeriod {
 	/**
 	 * A four-weekly period, or period 14 for week 53 alone.
 	 *
-	 * @param string $id     The id.
-	 * @param int    $year   The ISO year.
-	 * @param int    $period 1 to 14.
+	 * @param int $year   The ISO year.
+	 * @param int $period 1 to 14.
 	 *
 	 * @return self
 	 *
 	 * @throws InvalidArgumentException For period 14 in a year without week 53.
 	 */
-	private static function fourWeekly(string $id, int $year, int $period): self {
+	private static function fourWeekly(int $year, int $period): self {
+		$id = sprintf('%04d-P%02d', $year, $period);
 		$hasWeek53 = self::yearHasWeek53(year: $year);
 		if ($period === 14) {
 			if ($hasWeek53 === false) {
@@ -245,15 +245,15 @@ final class PayPeriod {
 	/**
 	 * An ISO week.
 	 *
-	 * @param string $id   The id.
-	 * @param int    $year The ISO year.
-	 * @param int    $week 1 to 53.
+	 * @param int $year The ISO year.
+	 * @param int $week 1 to 53.
 	 *
 	 * @return self
 	 *
 	 * @throws InvalidArgumentException For week 53 in a year without one.
 	 */
-	private static function week(string $id, int $year, int $week): self {
+	private static function week(int $year, int $week): self {
+		$id = sprintf('%04d-W%02d', $year, $week);
 		if ($week === 53 && self::yearHasWeek53(year: $year) === false) {
 			throw new InvalidArgumentException(sprintf('"%s" does not exist: %d has no ISO week 53.', $id, $year));
 		}
