@@ -17,6 +17,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "concept",
@@ -126,6 +127,7 @@
                 }
             },
             "KeyResult": {
+                "configuration": {"exportable": true},
                 "slug": "KeyResult",
                 "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "TargetVariant",

@@ -16,6 +16,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "aangenomen",
@@ -184,6 +185,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-flows": [
                         {
                             "name": "Toegang intrekken na laatste werkdag",
@@ -357,6 +359,7 @@
                     "delete": ["humaniq-hr"]
                 },
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-flows": [
                         {
                             "name": "Exit interviews anonymiseren",
