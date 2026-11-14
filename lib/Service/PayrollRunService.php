@@ -500,6 +500,7 @@ class PayrollRunService {
 			'administrationId' => (string)($run['administrationId'] ?? ''),
 			'jurisdiction' => $this->runJurisdiction($run),
 		];
+		$state['week53Extended'] = $this->extendsWithWeek53(period: $state['period'], administrationId: $state['administrationId']);
 
 		try {
 			$state['pack'] = $this->packs->resolve($state['jurisdiction'], $state['period']);
@@ -825,6 +826,7 @@ class PayrollRunService {
 	private function calculateSlip(array $state, array $slip): array {
 		$slip['input'] = $this->calculationInput(state: $state, slip: $slip);
 		$slip['result'] = $this->calculator->calculate($slip['input'], $state['tables']);
+		$slip = $this->withWeek53(state: $state, slip: $slip);
 
 		// 30-procent-regeling (design.md D5): independently re-derive the
 		// exemption amount (the same cappedRate formula, in PHP -- the
@@ -1266,6 +1268,107 @@ class PayrollRunService {
 	}//end bureauRefusal()
 
 	/**
+	 * The administration's hrAdministration row, or an empty one.
+	 *
+	 * @param string $administrationId The administration.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function administrationRow(string $administrationId): array {
+		foreach ($this->loadAll('hrAdministration') as $administration) {
+			if ((string)($administration['administrationId'] ?? '') === $administrationId) {
+				return $administration;
+			}
+		}
+
+		return [];
+	}//end administrationRow()
+
+	/**
+	 * Whether the run is a period 13 that also pays ISO week 53: a four-week
+	 * period 13 of a year with week 53, at an administration that extends
+	 * period 13 (the default) rather than paying a separate period 14
+	 * (payroll-period-edge-cases D3).
+	 *
+	 * @param string $period           The period id.
+	 * @param string $administrationId The administration.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 */
+	private function extendsWithWeek53(string $period, string $administrationId): bool {
+		try {
+			$pay = PayPeriod::parse($period);
+		} catch (\InvalidArgumentException $e) {
+			return false;
+		}
+
+		if ($pay->tijdvak !== PayPeriod::TIJDVAK_VIERWEKEN || $pay->week53 === false) {
+			return false;
+		}
+
+		return (string)($this->administrationRow(administrationId: $administrationId)['week53Handling'] ?? '') !== PayPeriod::WEEK53_SEPARATE;
+	}//end extendsWithWeek53()
+
+	/**
+	 * On an extended period 13, calculate week 53 as its own one-week
+	 * tijdvak and make the slip's result the sum of both calculations; the
+	 * payslip shows each part (D3). The week's wage is a quarter of the four
+	 * weeks' salary and car benefit. An hourly employee's week 53 is not
+	 * calculated: approved hours are selected per month.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The calculated slip.
+	 *
+	 * @return array<string, mixed> The slip, with `week53` when week 53 was calculated.
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 */
+	private function withWeek53(array $state, array $slip): array {
+		if (($state['week53Extended'] ?? false) !== true || ($slip['salaried'] ?? false) !== true) {
+			return $slip;
+		}
+
+		$fourWeeks = $slip['result'];
+		$weekCents = (int)round(($this->periodCents(monthlyAmount: (float)$slip['grossMonthly'], period: $state['period']) + (int)($slip['bijtellingCents'] ?? 0)) / 4);
+		$weekInput = $this->calculationInput(
+			state: array_merge($state, ['period' => substr($state['period'], 0, 4) . '-W53']),
+			slip: array_merge($slip, ['grossCents' => $weekCents])
+		);
+		$week = $this->calculator->calculate($weekInput, $state['tables']);
+
+		$slip['week53'] = ['fourWeeks' => $fourWeeks, 'week' => $week];
+		$slip['result'] = CalculationResult::combined(fourWeeks: $fourWeeks, week53: $week);
+
+		return $slip;
+	}//end withWeek53()
+
+	/**
+	 * One calculation of an extended period 13, as the payslip shows it.
+	 *
+	 * @param CalculationResult $result  The calculation.
+	 * @param string            $tijdvak The tijdvak it was taxed with.
+	 * @param string            $weeks   The ISO weeks it covers.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 */
+	private function week53Part(CalculationResult $result, string $tijdvak, string $weeks): array {
+		return [
+			'weeks' => $weeks,
+			'tijdvak' => $tijdvak,
+			'grossPay' => $this->euros($result->grossPayCents),
+			'loonheffing' => $this->euros($result->loonheffingCents),
+			'volksverzekeringen' => $this->euros($result->volksverzekeringenCents),
+			'zvw' => $this->euros($result->zvwCents),
+			'werknemersverzekeringen' => $this->euros($result->werknemersverzekeringenCents),
+			'nettoPay' => $this->euros($result->nettoPayCents),
+		];
+	}//end week53Part()
+
+	/**
 	 * How many periods of the period's tijdvak make a year: 12, 13 or 52. An
 	 * id PayPeriod cannot read counts as a month, as it did before
 	 * (payroll-period-edge-cases D4).
@@ -1335,15 +1438,9 @@ class PayrollRunService {
 	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	private function periodRefusal(string $period, string $administrationId): ?string {
-		$frequency = '';
-		$week53    = '';
-		foreach ($this->loadAll('hrAdministration') as $administration) {
-			if ((string)($administration['administrationId'] ?? '') === $administrationId) {
-				$frequency = (string)($administration['payFrequency'] ?? '');
-				$week53    = (string)($administration['week53Handling'] ?? '');
-				break;
-			}
-		}
+		$administration = $this->administrationRow(administrationId: $administrationId);
+		$frequency      = (string)($administration['payFrequency'] ?? '');
+		$week53         = (string)($administration['week53Handling'] ?? '');
 
 		try {
 			PayPeriod::forFrequency(id: $period, frequency: $frequency, week53Handling: $week53);
@@ -1521,6 +1618,14 @@ class PayrollRunService {
 		if ($periodsPerYear !== 12) {
 			// The factor monthly figures were scaled by; absent on a monthly payslip.
 			$payload['tijdvakFactor'] = $periodsPerYear;
+		}
+
+		if (isset($slip['week53']) === true) {
+			// Extended period 13 (D3): the amounts above are the sum of these two.
+			$payload['week53'] = [
+				'fourWeeks' => $this->week53Part(result: $slip['week53']['fourWeeks'], tijdvak: PayPeriod::TIJDVAK_VIERWEKEN, weeks: '49-52'),
+				'week' => $this->week53Part(result: $slip['week53']['week'], tijdvak: PayPeriod::TIJDVAK_WEEK, weeks: '53'),
+			];
 		}
 
 		return $payload;

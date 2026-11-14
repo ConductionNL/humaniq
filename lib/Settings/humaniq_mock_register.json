@@ -10435,6 +10435,28 @@
               ]
             }
           },
+          "week53": {
+            "title": "Week 53",
+            "type": "object",
+            "nullable": true,
+            "description": "On a period 13 that also pays ISO week 53: the calculation for weeks 49 to 52 (four-weekly tijdvak) and the one for week 53 (weekly tijdvak). The payslip's amounts are their sum. Empty otherwise.",
+            "x-notes": "payroll-period-edge-cases D3 (extend-period-13): each part carries weeks, tijdvak, grossPay, loonheffing, volksverzekeringen, zvw, werknemersverzekeringen and nettoPay.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
           "loonheffing": {
             "title": "Loonheffing",
             "type": "number",

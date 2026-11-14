@@ -2203,6 +2203,63 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testAFourWeeklyPayslipScalesTheMonthlyFigures()
 
 	/**
+	 * payroll-period-edge-cases D3, separate-period-14: the run for
+	 * `2026-P14` covers week 53 alone and taxes it with the weekly tijdvak:
+	 * a week's salary (3800 x 12 / 52) and the weekly loonheffing of the
+	 * pack's W20 vector for that same wage.
+	 *
+	 * @return void
+	 */
+	public function testASeparatePeriod14IsWeek53TaxedAsOneWeek(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+				'hrAdministration' => [['id' => 'adm-1', 'administrationId' => 'ADM-001', 'name' => 'Four-weekly', 'payFrequency' => 'four-weekly', 'week53Handling' => 'separate-period-14']],
+			]
+		);
+
+		self::assertSame('calculated', $service->runFor('2026-P14')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		self::assertSame(52, $payslip['tijdvakFactor']);
+		self::assertSame(876.92, $payslip['grossPay']);
+		self::assertSame(165.88, $payslip['loonheffing']);
+		self::assertArrayNotHasKey('week53', $payslip);
+		self::assertSame('failed', $service->runFor('2025-P14')['status'], '2025 has no week 53');
+	}//end testASeparatePeriod14IsWeek53TaxedAsOneWeek()
+
+	/**
+	 * payroll-period-edge-cases D3, extend-period-13 (the default): the
+	 * payslip of `2026-P13` carries one calculation for weeks 49 to 52 with
+	 * the four-weekly tijdvak and one for week 53 with the weekly tijdvak, on
+	 * a quarter of the four weeks' salary and car benefit, and its amounts
+	 * are their sum. Paying week 53 as period 14 leaves period 13 four weeks.
+	 *
+	 * @return void
+	 */
+	public function testAnExtendedPeriod13AddsWeek53AsAOneWeekCalculation(): void {
+		$four = [['id' => 'adm-1', 'administrationId' => 'ADM-001', 'name' => 'Four-weekly', 'payFrequency' => 'four-weekly']];
+		$payslip = $this->periodPayslip(period: '2026-P13', administrations: $four);
+
+		self::assertSame(['weeks' => '49-52', 'tijdvak' => 'vierweken', 'grossPay' => 3944.23], array_slice($payslip['week53']['fourWeeks'], 0, 3));
+		// (3507.69 + 436.54) / 4.
+		self::assertSame(['weeks' => '53', 'tijdvak' => 'week', 'grossPay' => 986.06], array_slice($payslip['week53']['week'], 0, 3));
+		foreach (['grossPay', 'loonheffing', 'volksverzekeringen', 'zvw', 'werknemersverzekeringen'] as $field) {
+			self::assertEqualsWithDelta($payslip['week53']['fourWeeks'][$field] + $payslip['week53']['week'][$field], $payslip[$field], 0.001, $field);
+		}
+
+		// The week is taxed as a week: the four weeks' loonheffing over 13 periods would differ.
+		self::assertGreaterThan(0.0, $payslip['week53']['week']['loonheffing']);
+		self::assertNotEqualsWithDelta(round($payslip['week53']['fourWeeks']['loonheffing'] / 4, 2), $payslip['week53']['week']['loonheffing'], 0.001);
+
+		$separate = [array_merge($four[0], ['week53Handling' => 'separate-period-14'])];
+		self::assertArrayNotHasKey('week53', $this->periodPayslip(period: '2026-P13', administrations: $separate), 'with a separate period 14, period 13 is four weeks');
+	}//end testAnExtendedPeriod13AddsWeek53AsAOneWeekCalculation()
+
+	/**
 	 * The payslip of a run for the period, for the anchor employee with a
 	 * company car and a wage garnishment.
 	 *

@@ -20,9 +20,11 @@
 - [x] 2.3 Switch the run's monthly conversions to `shareOfYear` (D4). Verify: unit test that a
       monthly payslip is byte-identical to before.
   - Done: `PayrollRunService` scales by `PayPeriod::periodsPerYear()` (12/13/52, the same as `shareOfYear`): `hoursWorked` = hours a week x 52 / periods, the bijtelling = yearly / periods, the salaried gross and the garnishment's `beslagvrijeVoet` = monthly x 12 / periods (unchanged for a month); the holiday calendar range and the sick-pay year-one test use the period's first and last day; `ChecksPeriodCoverage` covers a four-week period or a week by its days (other inputs read as before). A non-monthly payslip records `tijdvakFactor` (new `Payslip` property, schema 0.19.0; absent on a monthly one). Tests: `PayrollRunServiceTest::testAMonthlyPayslipIsUnchangedByThePeriodShare` (golden written by the code before the change: car, garnishment, hours), `testAFourWeeklyPayslipScalesTheMonthlyFigures`. Left: an hourly employee's approved hours are still selected per month (`HoursPayService` reads month-keyed timesheets).
-- [ ] 2.4 Add week-53 handling for both settings (D3). Verify: unit tests that an extended
+- [x] 2.4 Add week-53 handling for both settings (D3). Verify: unit tests that an extended
       `2026-P13` payslip carries a four-week and a one-week calculation, and a `2026-P14` run
       covers week 53 only.
+
+  - Done: `separate-period-14`: `2026-P14` parses as week 53 alone with tijdvak `week`, so the run pays a week's salary and the weekly loonheffing (2.2/2.3). `extend-period-13`: `PayrollRunService::withWeek53()` calculates week 53 as `YYYY-W53` on a quarter of the four weeks' salary and car benefit, `CalculationResult::combined()` sums both calculations into the payslip's amounts, and the payslip's new `week53` block (schema 0.19.0) shows each part with its weeks and tijdvak. Left: an hourly employee's week 53 is not calculated (approved hours are selected per month). Tests: `PayrollRunServiceTest::testASeparatePeriod14IsWeek53TaxedAsOneWeek`, `testAnExtendedPeriod13AddsWeek53AsAOneWeekCalculation`, `CalculationResultCombinedTest` (2).
 
 ## 3. Opening balances
 
