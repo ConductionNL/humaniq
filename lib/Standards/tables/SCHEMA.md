@@ -85,6 +85,21 @@ against the uploaded tables before either is stored
 (payroll-pack-and-cao-updates design.md D1 and D2). Once a release ships the
 same year as a file here, the file wins and the upload is no longer read.
 
+## Special regimes
+
+The optional `specialRegimes` group holds the treatment of pay that is not
+ordinary wage from a current employment (payroll-special-regimes design.md D2),
+one object per regime key: `rvu` (early-retirement benefit), `wachtgeld`
+(post-office allowance) and `politiek-ambt` (political office holder in office).
+Each regime has the leaves `taxTableColor` (`wit` or `groen`),
+`werknemersverzekeringen` (boolean) and `zvwMode` (`werkgeversheffing` or
+`inhouding`); `rvu` also has `thresholdPerMonth` (euro) and `finalLevyRate`
+(percentage). `TaxTables::specialRegime()` reads a regime and lists every leaf
+that is unverified or a placeholder; the payroll run pays nothing under a regime
+while that list is not empty and reports the person as `regime-unverified`.
+The group is not a required group, so an uploaded table set without it still
+loads; a run that needs a regime it lacks refuses that payslip.
+
 ## Formula notes
 
 A table file may carry a `_notes` object documenting the formula chain the

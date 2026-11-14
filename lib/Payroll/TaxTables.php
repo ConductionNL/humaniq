@@ -575,6 +575,61 @@ final class TaxTables {
 	}//end bijtellingPrivegebruikAuto()
 
 	/**
+	 * The treatment of one special regime from the `specialRegimes` table group
+	 * (payroll-special-regimes design.md D2): the tax table colour, whether
+	 * employee insurances apply, the Zvw mode and, for the early-retirement
+	 * regime, the monthly final-levy threshold in cents and the final-levy rate
+	 * on the percentage scale (0-100). A regime without the threshold leaves
+	 * reports 0 for both, which the pack reads as "no final levy".
+	 *
+	 * `unverified` lists the dotted path of every leaf of the regime that is
+	 * unverified or a placeholder; the run refuses to pay under a regime while
+	 * that list is not empty.
+	 *
+	 * @param string $regime The regime key (`rvu`, `wachtgeld`, `politiek-ambt`).
+	 *
+	 * @return array{taxTableColor: string, werknemersverzekeringen: bool, zvwMode: string, thresholdPerMonthCents: int, finalLevyRate: float, unverified: list<string>}
+	 *
+	 * @throws \RuntimeException When the tables carry no such regime or it lacks a required leaf.
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	public function specialRegime(string $regime): array {
+		$node = $this->leaf(['specialRegimes', $regime]);
+		if (is_array($node) === false) {
+			throw new RuntimeException('TaxTables (' . $this->id . '): ontbrekende parameter "specialRegimes.' . $regime . '".');
+		}
+
+		$unverified = [];
+		foreach ($node as $key => $leaf) {
+			if (is_array($leaf) === false || array_key_exists('value', $leaf) === false) {
+				continue;
+			}
+
+			if (($leaf['verified'] ?? false) !== true || ($leaf['placeholder'] ?? false) === true) {
+				$unverified[] = 'specialRegimes.' . $regime . '.' . $key;
+			}
+		}
+
+		$threshold = 0;
+		$rate      = 0.0;
+		if (array_key_exists('thresholdPerMonth', $node) === true || array_key_exists('finalLevyRate', $node) === true) {
+			$threshold = self::euroToCents((float)$this->leaf(['specialRegimes', $regime, 'thresholdPerMonth', 'value']));
+			$rate      = (float)$this->leaf(['specialRegimes', $regime, 'finalLevyRate', 'value']);
+		}
+
+		return [
+			'taxTableColor' => (string)$this->leaf(['specialRegimes', $regime, 'taxTableColor', 'value']),
+			'werknemersverzekeringen' => (bool)$this->leaf(['specialRegimes', $regime, 'werknemersverzekeringen', 'value']),
+			'zvwMode' => (string)$this->leaf(['specialRegimes', $regime, 'zvwMode', 'value']),
+			'thresholdPerMonthCents' => $threshold,
+			'finalLevyRate' => $rate,
+			'unverified' => $unverified,
+		];
+
+	}//end specialRegime()
+
+	/**
 	 * Convert a euro amount to integer cents using this class's own rule
 	 * (jurisdiction-packs design.md D4: the euro-to-cents conversion stays
 	 * exactly where it is today rather than being reimplemented in the
