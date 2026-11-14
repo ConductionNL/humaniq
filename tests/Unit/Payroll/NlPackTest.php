@@ -71,8 +71,9 @@ class NlPackTest extends TestCase {
 	}//end testTheBundledNlPackPassesEveryUploadGateIncludingItsNineGoldenVectors()
 
 	/**
-	 * REQ-JP-006 / 30-procent-regeling: the NL pack's self-test block is the 10
-	 * existing fixtures (the original 9 plus the 30%-ruling anchor) —
+	 * REQ-JP-006 / 30-procent-regeling / payroll-special-regimes: the NL pack's
+	 * self-test block is the 12 existing fixtures (the original 9, the
+	 * 30%-ruling anchor, the withheld Zvw and the RVU final levy) —
 	 * referenced, never copied. If a fixture is added, it belongs here too.
 	 *
 	 * @return void
@@ -80,7 +81,7 @@ class NlPackTest extends TestCase {
 	public function testTheNlPackDeclaresAllTenGoldenFixturesAsItsOwnVectors(): void {
 		$vectors = $this->pack()->selfTest()['vectors'];
 
-		$this->assertCount(10, $vectors);
+		$this->assertCount(12, $vectors);
 		$this->assertSame(
 			[
 				'payroll-2026/anchor.json',
@@ -93,6 +94,8 @@ class NlPackTest extends TestCase {
 				'payroll-2026/bijtelling-anchor.json',
 				'payroll-2026/dga-anchor.json',
 				'payroll-2026/thirty-percent-ruling-anchor.json',
+				'payroll-2026/zvw-inhouding.json',
+				'payroll-2026/rvu-final-levy.json',
 			],
 			array_column($vectors, '$fixture')
 		);
@@ -116,8 +119,10 @@ class NlPackTest extends TestCase {
 
 	/**
 	 * REQ-JP-003: no pack declares a net step — net is the interpreter's fold.
-	 * NL's only `reduces-net` step is loonheffing, which is exactly why the
-	 * fold reproduces `tvl - loonheffing` without the interpreter knowing
+	 * NL's `reduces-net` steps are loonheffing and the withheld Zvw
+	 * contribution, which runs only in `inhouding` mode
+	 * (payroll-special-regimes D3), which is exactly why the fold reproduces
+	 * `tvl - loonheffing` for an ordinary wage without the interpreter knowing
 	 * anything about the Netherlands.
 	 *
 	 * @return void
@@ -131,7 +136,7 @@ class NlPackTest extends TestCase {
 			}
 		}
 
-		$this->assertSame(['loonheffing'], $reducers);
+		$this->assertSame(['loonheffing', 'zvwInhouding'], $reducers);
 
 	}//end testLoonheffingIsTheOnlyStepThatReducesNet()
 

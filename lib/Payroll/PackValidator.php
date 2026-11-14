@@ -814,13 +814,16 @@ final class PackValidator {
 	 *
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-006
 	 * @spec openspec/specs/30-procent-regeling/spec.md#REQ-30P-003
+	 * @spec openspec/changes/payroll-special-regimes
 	 */
 	private function inputFrom(array $input, JurisdictionPack $pack): CalculationInput {
 		return new CalculationInput(
 			wage: new CalculationWage(grossMonthlySalaryCents: (int)round(((float)$input['grossMonthly'] * 100)), dateOfBirth: (string)$input['dateOfBirth'], period: (string)$input['period'], jurisdiction: $pack->jurisdiction()),
 			levies: new CalculationLevies(
 				wageTax: new WageTaxElection(taxTableColor: (string)$input['taxTableColor'], loonheffingskortingToegepast: (bool)$input['loonheffingskortingToegepast'], thirtyPercentRulingRate: (float)($input['thirtyPercentRulingRate'] ?? 0.0)),
-				insurance: new InsuranceTariffs(awfTariff: (string)$input['awfTariff'], aofTariff: (string)$input['aofTariff'], whkPercentage: (float)$input['whkPercentage'], verzekeringsplichtig: (bool)($input['verzekeringsplichtig'] ?? true))
+				insurance: new InsuranceTariffs(awfTariff: (string)$input['awfTariff'], aofTariff: (string)$input['aofTariff'], whkPercentage: (float)$input['whkPercentage'], verzekeringsplichtig: (bool)($input['verzekeringsplichtig'] ?? true), zvwMode: (string)($input['zvwMode'] ?? 'werkgeversheffing')),
+				rvuThresholdCents: (int)round(((float)($input['rvuThreshold'] ?? 0.0) * 100)),
+				rvuFinalLevyRate: (float)($input['rvuFinalLevyRate'] ?? 0.0)
 			)
 		);
 

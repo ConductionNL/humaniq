@@ -790,5 +790,13 @@
 	{
 		"id": "NonWorkingTimeDetail",
 		"route": "/niet-werkdagen/:id"
+	},
+	{
+		"id": "BenefitEntitlements",
+		"route": "/benefit-entitlements"
+	},
+	{
+		"id": "BenefitEntitlementDetail",
+		"route": "/benefit-entitlements/:id"
 	}
 ]
