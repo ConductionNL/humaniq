@@ -95,6 +95,20 @@ class InterviewCalendarService {
 		?IUserManager $users = null,
 		?IManager $calendarManager = null,
 	) {
+		$this->engine = $this->engineFor(users: $users, calendarManager: $calendarManager);
+		$this->orphanReconciler = new InterviewOrphanReconciler($logger);
+
+	}//end __construct()
+
+	/**
+	 * The sync engine, naming attendees and inviting them when the managers are there.
+	 *
+	 * @param IUserManager|null $users           Names the interviewers as attendees.
+	 * @param IManager|null     $calendarManager Delivers an event to its attendees' own calendars.
+	 *
+	 * @return InterviewSyncEngine
+	 */
+	private function engineFor(?IUserManager $users, ?IManager $calendarManager): InterviewSyncEngine {
 		$attendees = null;
 		if ($users !== null) {
 			$attendees = new InterviewAttendees(users: $users);
@@ -105,10 +119,8 @@ class InterviewCalendarService {
 			$scheduler = new SchedulingCalendarWriter(calendars: $calendarManager);
 		}
 
-		$this->engine = new InterviewSyncEngine($this->repository, new InterviewIcsRenderer(), $attendees, $scheduler);
-		$this->orphanReconciler = new InterviewOrphanReconciler($logger);
-
-	}//end __construct()
+		return new InterviewSyncEngine($this->repository, new InterviewIcsRenderer(), $attendees, $scheduler);
+	}//end engineFor()
 
 	/**
 	 * Run the full sync: upsert one timed VEVENT per `scheduled` Interview,
