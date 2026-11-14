@@ -65,6 +65,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Payroll;
 
+use OCA\Humaniq\Payroll\Dsl\DslException;
 use OCA\Humaniq\Payroll\Dsl\PackInterpreter;
 use OCA\Humaniq\Payroll\Dsl\PackRunResult;
 
@@ -128,9 +129,18 @@ final class PayrollCalculator {
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-007
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 *
+	 * @throws DslException When the input carries a special payment the pack cannot tax.
 	 */
 	public function calculate(CalculationInput $in, TaxTables $t): CalculationResult {
 		$pack = $this->packs->resolve($in->jurisdiction, $in->period);
+		// A special payment a pack cannot tax must not be paid untaxed or
+		// dropped silently (payroll-reservation-payouts D1).
+		if ($in->special->specialPaymentCents > 0 && array_key_exists('specialPayment', $pack->inputs()) === false) {
+			throw new DslException('Pack ' . $pack->engineVersion() . ' declareert geen invoer "specialPayment"; een bijzondere beloning kan er niet mee worden berekend.');
+		}
+
 		$out = $this->interpreter->run($this->mapper->toPackInputs($in), $pack, $t, $in->period);
 
 		return $this->resultFrom($out);

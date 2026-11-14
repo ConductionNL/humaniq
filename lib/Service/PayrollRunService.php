@@ -978,9 +978,9 @@ class PayrollRunService {
 		$state['allocatable'][] = ['payslipId' => $slip['payslipId'], 'employeeId' => $slip['employeeId'], 'grossCents' => ($result->grossPayCents + $retro['gross']), 'chargesCents' => ($result->employerChargesCents + $retro['employerCharges'])];
 
 		$state['totals']['gross'] += ($result->grossPayCents + $retro['gross']);
-		$state['totals']['loonheffing'] += ($result->loonheffingCents + $retro['loonheffing']);
+		$state['totals']['loonheffing'] += ($result->loonheffingCents + $result->specialLoonheffingCents + $retro['loonheffing']);
 		$state['totals']['employerCharges'] += ($result->employerChargesCents + $retro['employerCharges']);
-		$state['totals']['withholdings'] += ($result->loonheffingCents + $retro['loonheffing']);
+		$state['totals']['withholdings'] += ($result->loonheffingCents + $result->specialLoonheffingCents + $retro['loonheffing']);
 		$state['totals']['net'] += ($slip['nettoPaySoFarCents'] - $slip['loonbeslagDeductionCents']);
 		$state['totals']['reimbursements'] += $slip['expenseNetCents'];
 	}//end tallySlip()
@@ -1425,8 +1425,34 @@ class PayrollRunService {
 			$payload['hoursWorked'] = round((((float)$hoursPerWeek) * 52 / 12), 2);
 		}
 
-		return $payload;
+		return array_merge($payload, self::reservationFields(result: $result));
 	}//end payslipPayload()
+
+	/**
+	 * The special-payment and end-of-year fields of a payslip, present only
+	 * when they carry an amount, so a payslip without them is stored exactly
+	 * as before (payroll-reservation-payouts REQ-RSP-001).
+	 *
+	 * @param CalculationResult $result The calculation.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 */
+	private static function reservationFields(CalculationResult $result): array {
+		$fields = [];
+		if ($result->specialPaymentCents > 0) {
+			$fields['specialPayment'] = round(($result->specialPaymentCents / 100), 2);
+			$fields['specialTaxRate'] = $result->specialTaxRate;
+			$fields['specialLoonheffing'] = round(($result->specialLoonheffingCents / 100), 2);
+		}
+
+		if ($result->eindejaarsuitkeringReservedCents > 0) {
+			$fields['eindejaarsuitkeringReserved'] = round(($result->eindejaarsuitkeringReservedCents / 100), 2);
+		}
+
+		return $fields;
+	}//end reservationFields()
 
 	/**
 	 * Upsert one engine Payslip: update the existing (payrollRunId,

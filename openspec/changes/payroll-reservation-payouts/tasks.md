@@ -9,7 +9,7 @@
 - [x] 1.3 Extend the pack with the two inputs, the special-rate binding and step, the
       end-of-year reserve and new golden vectors; bump `packVersion`. Verify: the nine existing
       fixtures pass unchanged and the new vectors pass through `PackValidator` gate 5.
-- [ ] 1.4 Carry the new inputs and outputs through `CalculationInput`, the mapper, the result
+- [x] 1.4 Carry the new inputs and outputs through `CalculationInput`, the mapper, the result
       and the payslip payload. Verify: unit test that a payslip with no special payment is
       byte-identical to before.
 

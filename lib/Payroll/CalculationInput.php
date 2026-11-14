@@ -130,18 +130,28 @@ final class CalculationInput {
 	public readonly float $thirtyPercentRulingRate;
 
 	/**
+	 * The special payment and end-of-year rate (payroll-reservation-payouts);
+	 * empty for a period without either.
+	 *
+	 * @var SpecialPayment
+	 */
+	public readonly SpecialPayment $special;
+
+	/**
 	 * The fields stay flat and in this order: the pack mapper, toArray() and
 	 * the stamped engineInputSnapshot read them by name.
 	 *
 	 * @param CalculationWage $wage The gross salary, date of birth, period and jurisdiction.
 	 * @param CalculationLevies $levies The wage tax election and the insurance tariffs.
+	 * @param SpecialPayment|null $special The special payment and end-of-year rate, none by default.
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-001
 	 * @spec openspec/specs/30-procent-regeling/spec.md#REQ-30P-003
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
 	 */
-	public function __construct(CalculationWage $wage, CalculationLevies $levies) {
+	public function __construct(CalculationWage $wage, CalculationLevies $levies, ?SpecialPayment $special = null) {
 		$this->grossMonthlySalaryCents = $wage->grossMonthlySalaryCents;
 		$this->taxTableColor = $levies->wageTax->taxTableColor;
 		$this->loonheffingskortingToegepast = $levies->wageTax->loonheffingskortingToegepast;
@@ -153,18 +163,23 @@ final class CalculationInput {
 		$this->verzekeringsplichtig = $levies->insurance->verzekeringsplichtig;
 		$this->jurisdiction = $wage->jurisdiction;
 		$this->thirtyPercentRulingRate = $levies->wageTax->thirtyPercentRulingRate;
+		$this->special = ($special ?? new SpecialPayment());
 
 	}//end __construct()
 
 	/**
 	 * All eleven public readonly properties as a plain array, keyed by name.
+	 * The special-payment keys are added only when the input carries one, so
+	 * a period without one stamps exactly the snapshot it stamped before
+	 * (payroll-reservation-payouts REQ-RSP-001).
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
 	 */
 	public function toArray(): array {
-		return [
+		$data = [
 			'grossMonthlySalaryCents' => $this->grossMonthlySalaryCents,
 			'taxTableColor' => $this->taxTableColor,
 			'loonheffingskortingToegepast' => $this->loonheffingskortingToegepast,
@@ -177,6 +192,13 @@ final class CalculationInput {
 			'jurisdiction' => $this->jurisdiction,
 			'thirtyPercentRulingRate' => $this->thirtyPercentRulingRate,
 		];
+		if ($this->special->isEmpty() === false) {
+			$data['specialPaymentCents'] = $this->special->specialPaymentCents;
+			$data['annualWageReferenceCents'] = $this->special->annualWageReferenceCents;
+			$data['endOfYearRate'] = $this->special->endOfYearRate;
+		}
+
+		return $data;
 
 	}//end toArray()
 
@@ -263,6 +285,11 @@ final class CalculationInput {
 					whkPercentage: (float)($decoded['whkPercentage'] ?? 0.0),
 					verzekeringsplichtig: (($decoded['verzekeringsplichtig'] ?? true) === true)
 				)
+			),
+			special: new SpecialPayment(
+				specialPaymentCents: max(0, (int)($decoded['specialPaymentCents'] ?? 0)),
+				annualWageReferenceCents: max(0, (int)($decoded['annualWageReferenceCents'] ?? 0)),
+				endOfYearRate: max(0.0, (float)($decoded['endOfYearRate'] ?? 0.0))
 			)
 		);
 

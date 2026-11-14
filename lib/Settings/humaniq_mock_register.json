@@ -3767,6 +3767,22 @@
             "description": "Contracted hours per week. Used to work out the minimum pay for each period.",
             "x-notes": "Contracted hours per week. Used with the statutory hourly minimum to derive period minimums (nl-minimumuurloon-wet)."
           },
+          "endOfYearRate": {
+            "title": "End-of-year payment rate",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Percentage of the wage set aside each period as an end-of-year payment (thirteenth month). Leave empty to follow the collective agreement.",
+            "x-notes": "Resolved contract first, confirmed CAO allowances.eindejaarsuitkering second; a placeholder CAO reserves nothing (payroll-reservation-payouts D7)."
+          },
+          "ikbRate": {
+            "title": "Individual choice budget rate",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Percentage of the wage added to the individual choice budget (IKB) each period. Leave empty to follow the collective agreement.",
+            "x-notes": "Resolved contract first, confirmed CAO allowances.ikb.pct second (payroll-reservation-payouts D8)."
+          },
           "hourlyWage": {
             "title": "Hourly wage",
             "type": "number",
@@ -10632,6 +10648,132 @@
             "type": "number",
             "description": "The holiday allowance percentage applied: at least 8.",
             "x-notes": "Applied vakantiebijslag rate percentage — at least 8 (nl-vakantiebijslag-8procent).",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "specialPayment": {
+            "title": "Special payment",
+            "type": "number",
+            "description": "A one-off payment this period, such as the holiday allowance payout, taxed at the special rate instead of as this period's wage.",
+            "x-notes": "Included in grossPay; taxed by loonheffingBijzonder (payroll-reservation-payouts D1).",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "specialTaxRate": {
+            "title": "Special rate",
+            "type": "number",
+            "description": "The special-rate percentage applied to the one-off payment.",
+            "x-notes": "Tabel bijzondere beloningen percentage selected by annualWageReference (payroll-reservation-payouts D1).",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "specialLoonheffing": {
+            "title": "Wage tax on the special payment",
+            "type": "number",
+            "description": "The wage tax withheld on the one-off payment, apart from the wage tax on the regular wage.",
+            "x-notes": "specialPayment x specialTaxRate / 100 (payroll-reservation-payouts D1).",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "annualWageReference": {
+            "title": "Annual wage for the special rate",
+            "type": "number",
+            "description": "The annual wage the special rate was chosen by: last year's wage, or the expected wage of this year.",
+            "x-notes": "ReservationPayoutService::annualWageReference (payroll-reservation-payouts D3).",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "eindejaarsuitkeringReserved": {
+            "title": "End-of-year payment reserved",
+            "type": "number",
+            "description": "End-of-year payment (thirteenth month) set aside this period.",
+            "x-notes": "endOfYearRate of the taxable wage (payroll-reservation-payouts D7).",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "ikbAccrued": {
+            "title": "Individual choice budget accrued",
+            "type": "number",
+            "description": "Individual choice budget (IKB) built up this period.",
+            "x-notes": "ikbRate x the regular gross; added to IkbBudget.accrued on run approval (payroll-reservation-payouts D8).",
             "authorization": {
               "read": [
                 "humaniq-hr",
