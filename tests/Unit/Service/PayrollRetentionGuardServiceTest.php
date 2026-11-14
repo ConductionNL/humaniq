@@ -534,4 +534,34 @@ class PayrollRetentionGuardServiceTest extends TestCase {
 
 	}//end fakeObjectMapper()
 
+	/**
+	 * Where OpenRegister offers placeHold(), the hold goes through it with one HoldOrder.
+	 *
+	 * @return void
+	 */
+	public function testAHoldIsPlacedThroughPlaceHoldWhenOffered(): void {
+		$retention = new class {
+			/**
+			 * @var array<int, mixed>
+			 */
+			public array $orders = [];
+
+			/**
+			 * @param object $object The object.
+			 * @param object $order  The hold order.
+			 *
+			 * @return object
+			 */
+			public function placeHold(object $object, object $order): object {
+				$this->orders[] = $order;
+				return $object;
+			}//end placeHold()
+		};
+		$service = $this->buildService($retention, $this->fakeObjectMapper());
+		$entity  = $this->fakeEntity([], []);
+
+		$place = new \ReflectionMethod($service, 'placeHold');
+		$this->assertSame($entity, $place->invoke($service, $entity, 'AWR art. 52 lid 4'));
+		$this->assertEquals([new \OCA\OpenRegister\Service\HoldOrder(reason: 'AWR art. 52 lid 4')], $retention->orders);
+	}//end testAHoldIsPlacedThroughPlaceHoldWhenOffered()
 }//end class
