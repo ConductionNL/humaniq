@@ -1,10 +1,12 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "humaniq",
     {
+        "2024": "2024",
+        "2025": "2025",
+        "2026": "2026",
+        "Make employer statement": "Make employer statement",
+        "Making the employer statement failed.": "Making the employer statement failed.",
+        "The employer statement is being made.": "The employer statement is being made.",
         "Deployment plan": "Deployment plan",
         "Draft while the plan is made; confirmed once agreed.": "Draft while the plan is made; confirmed once agreed.",
         "From the CAO": "From the CAO",
@@ -34,9 +36,6 @@ OC.L10N.register(
         "The total of the plan lines.": "The total of the plan lines.",
         "Weeks": "Weeks",
         "Whether the norm comes from the CAO or was entered by hand.": "Whether the norm comes from the CAO or was entered by hand.",
-        "2024": "2024",
-        "2025": "2025",
-        "2026": "2026",
         "(Re)calculate": "(Re)calculate",
         "(Re)calculating the payroll run failed.": "(Re)calculating the payroll run failed.",
         "30%-ruling applied rate": "30%-ruling applied rate",

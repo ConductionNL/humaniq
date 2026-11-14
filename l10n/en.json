@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Make employer statement": "Make employer statement",
+        "Making the employer statement failed.": "Making the employer statement failed.",
+        "The employer statement is being made.": "The employer statement is being made.",
         "Deployment plan": "Deployment plan",
         "Draft while the plan is made; confirmed once agreed.": "Draft while the plan is made; confirmed once agreed.",
         "From the CAO": "From the CAO",

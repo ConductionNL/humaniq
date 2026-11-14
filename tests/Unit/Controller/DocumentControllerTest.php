@@ -169,4 +169,42 @@ class DocumentControllerTest extends TestCase {
 		$this->assertSame([], $this->store->finds);
 	}//end testAStatementRequestWithoutAnIdIs400()
 
+	/**
+	 * An employer statement for a readable contract is made for the
+	 * contract's own employee.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
+	 */
+	public function testAnEmployerStatementIsMadeForTheContractsEmployee(): void {
+		$controller = $this->controller(row: ['id' => 'contract-3', 'employeeId' => 'emp-3']);
+		$this->service->expects($this->once())->method('generate')
+			->with('emp-3', 'contract-3', 'werkgeversverklaring', 'caller')
+			->willReturn(['status' => 'generated', 'documentType' => 'werkgeversverklaring']);
+
+		$response = $controller->generate(contractId: 'contract-3', documentType: 'werkgeversverklaring');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('generated', $response->getData()['status']);
+		$this->assertSame([['id' => 'contract-3', 'schema' => 'EmploymentContract']], $this->store->finds);
+	}//end testAnEmployerStatementIsMadeForTheContractsEmployee()
+
+	/**
+	 * A contract the caller cannot read is 404 and no statement is made.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
+	 */
+	public function testAnUnreadableContractGivesNoEmployerStatement(): void {
+		$controller = $this->controller(row: null);
+		$this->service->expects($this->never())->method('generate');
+
+		$response = $controller->generate(contractId: 'contract-hidden', documentType: 'werkgeversverklaring');
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertCount(1, $this->store->finds);
+	}//end testAnUnreadableContractGivesNoEmployerStatement()
+
 }//end class

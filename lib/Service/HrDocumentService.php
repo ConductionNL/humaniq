@@ -176,6 +176,18 @@ class HrDocumentService {
 	private const ACTIVE_STATUSES = ['pending', 'generated'];
 
 	/**
+	 * Document types that are never deduplicated: each confirmed request makes
+	 * a new GeneratedDocument and earlier ones stay. An employer statement is
+	 * dated and each application needs a fresh one
+	 * (documents-employer-statement-from-the-contract D2).
+	 *
+	 * @var string[]
+	 *
+	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
+	 */
+	private const NEVER_DEDUPLICATED = ['werkgeversverklaring'];
+
+	/**
 	 * Max rows loaded per register scan.
 	 *
 	 * @var int
@@ -543,13 +555,19 @@ class HrDocumentService {
 	 * @param HrDocumentRequest $request The normalised request.
 	 *
 	 * @return array{status: string, message: string, document: array<string, mixed>|null}
+	 *
+	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
 	 */
 	private function runGeneration(HrDocumentRequest $request): array {
 		if ($request->subject->employeeId === '') {
 			return ['status' => 'failed', 'message' => 'Geen employeeId opgegeven; genereren is geweigerd.', 'document' => null];
 		}
 
-		$active = $this->activeDocumentFor($request);
+		$active = null;
+		if (in_array($request->documentType, self::NEVER_DEDUPLICATED, true) === false) {
+			$active = $this->activeDocumentFor($request);
+		}
+
 		if ($active !== null) {
 			if ((string)($active['status'] ?? '') === 'generated') {
 				return ['status' => 'already-generated', 'message' => 'Er bestaat al een gegenereerd document; geen nieuwe poging nodig.', 'document' => $active];
