@@ -51,6 +51,31 @@ final class PayPeriod {
 	public const TIJDVAK_WEEK = 'week';
 
 	/**
+	 * Pay frequencies of an administration, and the tijdvak each one pays in.
+	 *
+	 * @var array<string, string>
+	 */
+	public const FREQUENCY_TIJDVAK = [
+		'monthly'     => self::TIJDVAK_MAAND,
+		'four-weekly' => self::TIJDVAK_VIERWEKEN,
+		'weekly'      => self::TIJDVAK_WEEK,
+	];
+
+	/**
+	 * A four-weekly administration pays week 53 on the period 13 payslip.
+	 *
+	 * @var string
+	 */
+	public const WEEK53_EXTEND = 'extend-period-13';
+
+	/**
+	 * A four-weekly administration pays week 53 as its own period 14.
+	 *
+	 * @var string
+	 */
+	public const WEEK53_SEPARATE = 'separate-period-14';
+
+	/**
 	 * Constructor; use parse().
 	 *
 	 * @param string            $id       The period id as given.
@@ -94,6 +119,44 @@ final class PayPeriod {
 
 		throw new InvalidArgumentException(sprintf('"%s" is not a pay period: use YYYY-MM, YYYY-Pnn or YYYY-Wnn.', $id));
 	}//end parse()
+
+	/**
+	 * Parse a period id and check it belongs to an administration's pay
+	 * frequency: a monthly administration takes only months, a four-weekly
+	 * one only four-week periods (period 14 only when it pays week 53
+	 * separately), a weekly one only weeks.
+	 *
+	 * @param string $id             The period id.
+	 * @param string $frequency      The administration's payFrequency; empty means monthly.
+	 * @param string $week53Handling The administration's week53Handling; empty means extend-period-13.
+	 *
+	 * @return self
+	 *
+	 * @throws InvalidArgumentException When the id is no period, or not one of that frequency.
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	public static function forFrequency(string $id, string $frequency, string $week53Handling=''): self {
+		$frequency = ($frequency === '') ? 'monthly' : $frequency;
+		if (isset(self::FREQUENCY_TIJDVAK[$frequency]) === false) {
+			throw new InvalidArgumentException(sprintf('"%s" is not a pay frequency: use monthly, four-weekly or weekly.', $frequency));
+		}
+
+		$period = self::parse(id: $id);
+		if ($period->tijdvak !== self::FREQUENCY_TIJDVAK[$frequency]
+			&& ($frequency !== 'four-weekly' || str_ends_with($id, '-P14') === false)
+		) {
+			throw new InvalidArgumentException(sprintf('"%s" is not a %s period: this administration pays %s.', $id, $frequency, $frequency));
+		}
+
+		if (str_ends_with($id, '-P14') === true && $week53Handling !== self::WEEK53_SEPARATE) {
+			throw new InvalidArgumentException(
+				sprintf('"%s" does not exist for this administration: it pays week 53 on the period 13 payslip.', $id)
+			);
+		}
+
+		return $period;
+	}//end forFrequency()
 
 	/**
 	 * Whether an ISO year has a week 53.

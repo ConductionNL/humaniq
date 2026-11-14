@@ -37,6 +37,7 @@ namespace OCA\Humaniq\Service;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\PayPeriod;
 use OCA\Humaniq\Payroll\CalculationLevies;
 use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\CalculationWage;
@@ -383,7 +384,7 @@ class ProformaPayslipService {
 		}
 
 		$period = trim((string)$value);
-		if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period) !== 1) {
+		if (self::isMonth(period: $period) === false) {
 			throw new InvalidArgumentException('Periode "' . $value . '" moet het formaat JJJJ-MM hebben.');
 		}
 
@@ -427,5 +428,24 @@ class ProformaPayslipService {
 		$string = trim((string)$value);
 		return $string === '' ? null : $string;
 	}//end nullableString()
+
+	/**
+	 * Whether a period id is a month. Read through PayPeriod; this path
+	 * still converts by month, so four-weekly and weekly ids wait for the
+	 * run's conversions to move to the period's share of the year.
+	 *
+	 * @param string $period The period id.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private static function isMonth(string $period): bool {
+		try {
+			return PayPeriod::parse(id: $period)->tijdvak === PayPeriod::TIJDVAK_MAAND;
+		} catch (\InvalidArgumentException) {
+			return false;
+		}
+	}//end isMonth()
 
 }//end class

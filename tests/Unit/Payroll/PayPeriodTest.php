@@ -111,4 +111,59 @@ class PayPeriodTest extends TestCase {
 	public function testTheIdIsKeptAsGiven(): void {
 		$this->assertSame('2026-P05', PayPeriod::parse('2026-P05')->id);
 	}//end testTheIdIsKeptAsGiven()
+	/**
+	 * A monthly administration takes months only; a four-weekly one takes
+	 * four-week periods only; a weekly one weeks only. No frequency is monthly.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	public function testForFrequencyAcceptsOnlyThatFrequencysPeriods(): void {
+		self::assertSame('maand', PayPeriod::forFrequency(id: '2026-05', frequency: 'monthly')->tijdvak);
+		self::assertSame('maand', PayPeriod::forFrequency(id: '2026-05', frequency: '')->tijdvak);
+		self::assertSame('vierweken', PayPeriod::forFrequency(id: '2026-P05', frequency: 'four-weekly')->tijdvak);
+		self::assertSame('week', PayPeriod::forFrequency(id: '2026-W53', frequency: 'weekly')->tijdvak);
+
+		foreach ([['2026-P05', 'monthly'], ['2026-P05', ''], ['2026-05', 'four-weekly'], ['2026-W05', 'four-weekly'], ['2026-05', 'weekly']] as [$id, $frequency]) {
+			try {
+				PayPeriod::forFrequency(id: $id, frequency: $frequency);
+				self::fail($id . ' was accepted for ' . ($frequency === '' ? 'no frequency' : $frequency));
+			} catch (\InvalidArgumentException $e) {
+				self::assertStringContainsString('"' . $id . '" is not a ' . ($frequency === '' ? 'monthly' : $frequency) . ' period', $e->getMessage());
+			}
+		}
+	}//end testForFrequencyAcceptsOnlyThatFrequencysPeriods()
+
+	/**
+	 * Period 14 exists only for a four-weekly administration that pays week
+	 * 53 separately, and only in a year that has a week 53.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 */
+	public function testPeriod14NeedsTheSeparateWeek53Setting(): void {
+		$p14 = PayPeriod::forFrequency(id: '2026-P14', frequency: 'four-weekly', week53Handling: 'separate-period-14');
+		self::assertSame('week', $p14->tijdvak);
+		self::assertTrue($p14->week53);
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('"2026-P14" does not exist for this administration: it pays week 53 on the period 13 payslip.');
+		PayPeriod::forFrequency(id: '2026-P14', frequency: 'four-weekly');
+	}//end testPeriod14NeedsTheSeparateWeek53Setting()
+
+	/**
+	 * An unknown frequency is refused by name.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	public function testAnUnknownFrequencyIsRefused(): void {
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('"daily" is not a pay frequency: use monthly, four-weekly or weekly.');
+		PayPeriod::forFrequency(id: '2026-05', frequency: 'daily');
+	}//end testAnUnknownFrequencyIsRefused()
+
 }//end class

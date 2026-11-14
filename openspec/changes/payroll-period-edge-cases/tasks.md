@@ -3,9 +3,10 @@
 - [x] 1.1 Add `PayPeriod` (D1). Verify: unit tests for `2026-05`, `2026-P13` holding ISO week
       53, `2026-P14`, `2026-W53`, and `2025-P14` refused because 2025 has no week 53.
   - Done: `lib/Payroll/PayPeriod.php`. `parse()` answers `tijdvak`, `firstDay`, `lastDay`, `shareOfYear()`, `periodsPerYear()` and `week53`, and refuses any other id by name. `P13` keeps weeks 49 to 52 as its own tijdvak and flags `week53` in a year that has one, so the run can extend it (D3). `P14` and `W53` exist only in such a year. Tests: `tests/Unit/Payroll/PayPeriodTest.php` (19).
-- [ ] 1.2 Add `payFrequency` and `week53Handling` to `hrAdministration` and switch the four month
+- [x] 1.2 Add `payFrequency` and `week53Handling` to `hrAdministration` and switch the four month
       patterns to `PayPeriod`. Verify: unit tests that a monthly administration refuses
       `2026-P05` and a four-weekly one accepts it.
+  - Done: `hrAdministration.payFrequency` (`monthly` default, `four-weekly`, `weekly`) and `week53Handling` (`extend-period-13` default, `separate-period-14`) in `hr-administratie.json` (schema 1.8.0). `PayPeriod::forFrequency()` checks an id against them (period 14 only with `separate-period-14`). `PayrollRunService::runFor()` refuses a period of another frequency by name; the flow node's config check parses any `PayPeriod` id (the run then applies the frequency). The pro-forma payslip and the retro correction read the id through `PayPeriod` but stay month-only until their month conversions move to `shareOfYear` (2.3). Tests: 3 in `PayPeriodTest`, `PayrollRunServiceTest::testARunTakesOnlyPeriodsOfTheAdministrationsFrequency`.
 
 ## 2. Engine
 
