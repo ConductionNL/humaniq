@@ -1174,6 +1174,7 @@
 					"_note": "{{note}}",
 					"actionToggles": "{{actionToggles}}",
 					"allowCreate": "{{allowCreate}}",
+					"allowExport": true,
 					"bulkActions": "{{bulkActions}}",
 					"columns": "{{columns}}",
 					"defaultFilters": "{{defaultFilters}}",
@@ -3322,6 +3323,7 @@
 				"actionToggles": {
 					"showAdd": true
 				},
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"startedAt",
@@ -4372,6 +4374,7 @@
 				"actionToggles": {
 					"showAdd": true
 				},
+				"allowExport": true,
 				"columns": [
 					"candidateName",
 					"vacancyTitle",
@@ -11048,6 +11051,7 @@
 				"actionToggles": {
 					"showAdd": true
 				},
+				"allowExport": true,
 				"columns": [
 					"startedAt",
 					"endedAt",
@@ -11751,6 +11755,7 @@
 		{
 			"config": {
 				"_note": "self-service-approvals-inbox (2026-09-29): REQ-API-002. My HR > My deputies is a preset on this page (managerUserId = @me), not a second index. ManagerDeputyListener makes a record without a manager the writer's own, lets only the manager or HR write one, and refuses a self-deputy or a last day before the first.",
+				"allowExport": true,
 				"columns": [
 					"managerUserId",
 					"deputyUserId",
@@ -11838,6 +11843,7 @@
 					"showDeleteAction": false,
 					"showEditAction": false
 				},
+				"allowExport": true,
 				"columns": [
 					"period",
 					"hours",
@@ -11865,6 +11871,7 @@
 		{
 			"config": {
 				"_note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-ROST-C01. Sorted on validUntil ascending because the interesting row is the one about to expire: a BOA pas that runs out next week is what a planner has to act on, and CompetenceCheckService will refuse the shift the day after it does without anybody editing the record. No lifecycle: a qualification is renewed by writing a new row, not by transitioning an old one.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"competenceCode",
@@ -11949,6 +11956,7 @@
 		{
 			"config": {
 				"_note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-AGD-003. quantity is a column rather than a hidden setting because it is what decides whether a second booking is a clash: one room is one room, and two geluidsmeters are two. `active` likewise: a resource out of service refuses a booking, and a planner needs to see which ones do.",
+				"allowExport": true,
 				"columns": [
 					"name",
 					"kind",
@@ -12034,6 +12042,7 @@
 		{
 			"config": {
 				"_note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-AGD-004. A booking that would take a resource past its quantity over an overlapping period is refused by ResourceBookingOverlapListener in the WRITE path, so this index never shows a clash: the refusal names the booking that blocks it at the moment somebody tries, rather than in a report nobody reads before walking to the room.",
+				"allowExport": true,
 				"columns": [
 					"resourceId",
 					"start",
@@ -12119,6 +12128,7 @@
 		{
 			"config": {
 				"_note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-AGD-005. lastPollStatus is a column because a feed that has quietly stopped answering is the failure that matters: the cached busy time stays in place on purpose, so the agenda keeps looking healthy while going stale, and this column is where that becomes visible. busyPeriods carries periods only, never a title, a location or an attendee.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"label",
@@ -12203,6 +12213,7 @@
 		{
 			"config": {
 				"_note": "self-service-announcements-and-digest (2026-09-30): REQ-AND-001. HR writes; employees read a published one on My announcements and My HR.",
+				"allowExport": true,
 				"columns": [
 					"title",
 					"audience",
@@ -12233,6 +12244,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"category",
@@ -12261,6 +12273,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"assetId",
 					"employeeId",
@@ -12344,6 +12357,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"title",
 					"department",
@@ -12373,6 +12387,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"candidateName",
 					"vacancyId",
@@ -12401,6 +12416,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"applicationId",
 					"scheduledStart",
@@ -12521,6 +12537,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"date",
@@ -12630,6 +12647,7 @@
 		{
 			"config": {
 				"_note": "bhv-organisatie (2026-07-17): coverage VISIBILITY, not a coverage formula (REQ-BHV-003/-004, design.md D2) -- this index lists who is currently certified, filterable/groupable by orgUnitId and rol, so HR/a safety officer can judge adequacy against their own RI&E. No red/green adequacy indicator, no computed ratio anywhere on this page.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"rol",
@@ -12728,6 +12746,7 @@
 					"showMassImport": false
 				},
 				"allowCreate": false,
+				"allowExport": true,
 				"columns": [
 					"caoId",
 					"name",
@@ -12755,6 +12774,7 @@
 		{
 			"config": {
 				"_note": "people-record-change-approval (2026-09-29): REQ-ECR-001. The approval queue; ChangeApproverRoleGuard decides who may approve or reject each one. My HR > My change requests is a menu preset on this page (userId = @me), not a second index (ADR-097 Decision 5); its create form is the self-service request: employeeId is not required, ChangeRequestService fills it from the requester's own account, merges the flat address and bank fields into changes, and applies an address change at once (approver none, own record).",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"changeKind",
@@ -12906,6 +12926,7 @@
 		{
 			"config": {
 				"_note": "people-record-change-approval (2026-09-29): D2. Administered data, not code: the five seeded rules (adres none, bankrekening hr, persoonsgegevens hr, salaris accountant, contractvoorwaarden hr) apply to every administration without rules of its own.",
+				"allowExport": true,
 				"columns": [
 					"changeKind",
 					"approverRole",
@@ -12997,6 +13018,7 @@
 					"showMassImport": false
 				},
 				"allowCreate": false,
+				"allowExport": true,
 				"columns": [
 					"bandId",
 					"title",
@@ -13075,6 +13097,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"period",
@@ -13226,6 +13249,7 @@
 		{
 			"config": {
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"basis",
@@ -13312,6 +13336,7 @@
 		{
 			"config": {
 				"allowCreate": false,
+				"allowExport": true,
 				"columns": [
 					"period",
 					"costCenter",
@@ -13437,6 +13462,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"documentType",
 					"status",
@@ -13599,6 +13625,7 @@
 			],
 			"config": {
 				"_note": "payroll-annual-statement-action (2026-09-29): the header action queues last year's statements for every employee with payslips in that year (POST /api/documents/jaaropgaven, HR or payroll only, design D2/D3). It carries no year: another year goes through occ humaniq:documents:generate or the endpoint's year parameter.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"year",
@@ -13699,6 +13726,7 @@
 		{
 			"config": {
 				"_note": "people-dossier-completeness (2026-09-29): D1. Administered data, not code. A requirement proven by a document added to the file matches PersonnelDocument.requirementCode; one proven by a generated document matches HrGeneratedDocument.documentType with status generated; one proven by a competence matches EmployeeCompetence.competenceCode.",
+				"allowExport": true,
 				"columns": [
 					"code",
 					"label",
@@ -13784,6 +13812,7 @@
 		{
 			"config": {
 				"_note": "people-dossier-completeness (2026-09-29): D2. HR is notified when a document enters its warning window and when it expires (x-openregister-notifications on the schema, materialised daysUntilWarning and daysUntilExpiry).",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"requirementCode",
@@ -13878,6 +13907,7 @@
 		{
 			"config": {
 				"_note": "people-dossier-completeness (2026-09-29): D4. RightToWorkCheckListener decides result, reason and method on every save (a result typed by hand does not survive), clears the pasted zone so no document number is stored, and refuses anyone outside HR. A pass ticks the onboarding case's WID check; RightToWorkGuard then lets the case reach the first working day.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"onboardingId",
@@ -13981,6 +14011,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"right",
@@ -14129,6 +14160,7 @@
 		{
 			"config": {
 				"_note": "estimate-spent-and-remaining-on-an-hours-leaf (2026-09-18): REQ-HL-EST-001. There is NO remaining column, and that is the point: remaining is estimated minus booked, derived on read by TimeEstimateService, so deleting an entry moves it at once and no stored figure can go stale. `enforced` is a column because it changes what happens on a write: false refuses nothing, true refuses a new entry past the ceiling naming the hours left, and a stopped timer lands either way. The expected number itself belongs to the consuming app, which writes it from its own policy (REQ-HL-EST-005); this page is where an administrator reads and corrects one.",
+				"allowExport": true,
 				"columns": [
 					"domainObjectType",
 					"domainObjectRef",
@@ -14209,6 +14241,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"title",
@@ -14238,6 +14271,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"distanceKmOneWay",
@@ -14409,6 +14443,7 @@
 		{
 			"config": {
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"kind",
@@ -14533,6 +14568,7 @@
 		{
 			"config": {
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"year",
 					"administrationId",
@@ -14660,6 +14696,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"title",
 					"orgUnitId",
@@ -14692,6 +14729,7 @@
 		{
 			"config": {
 				"_note": "reporting-personnel-budget-and-scenarios (2026-09-29): REQ-PBS-001/002. The budget itself is on FormationScenarioDetail.",
+				"allowExport": true,
 				"columns": [
 					"name",
 					"year",
@@ -14721,6 +14759,7 @@
 		{
 			"config": {
 				"_note": "reporting-personnel-budget-and-scenarios (2026-09-29): D1. ScenarioMutationListener refuses a change to a fixed scenario.",
+				"allowExport": true,
 				"columns": [
 					"scenarioId",
 					"formatieplaatsId",
@@ -14803,6 +14842,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"status",
@@ -14920,6 +14960,7 @@
 			"config": {
 				"_note": "payroll-external-bureau-handoff (2026-10-01): one PayrollHandoff per administration and period, for an administration whose payrollProcessing is external-bureau. integriq delivers a handoff that is set ready and writes the bureau's payslips back.",
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"administrationId",
 					"period",
@@ -14952,6 +14993,7 @@
 			"config": {
 				"_note": "payroll-external-bureau-handoff (2026-10-01): written only by SalaryBureauExchangeService::compile(); reached from a handoff's mutation list (View all).",
 				"allowCreate": false,
+				"allowExport": true,
 				"columns": [
 					"handoffId",
 					"employeeId",
@@ -15077,6 +15119,7 @@
 					"showMassImport": true
 				},
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"functiecode",
 					"naam",
@@ -15121,6 +15164,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"purpose",
@@ -15183,6 +15227,7 @@
 		{
 			"config": {
 				"_note": "leave-against-a-department-schedule (2026-09-18): REQ-LVM-T01, administered rather than enumerated. A LeaveRequest holds the CODE of its type, not a uuid, so every request written while leaveType was an enum still resolves to the type carrying that code -- LeaveTypeResolver matches uuid first, code second. `active` is a filter rather than a hidden flag because a retired type must stay readable on the requests that carry it while being absent from the picker on a new one. No lifecycle: a type is edited or retired, never transitioned.",
+				"allowExport": true,
 				"columns": [
 					"code",
 					"label",
@@ -15265,6 +15310,7 @@
 		{
 			"config": {
 				"_note": "leave-against-a-department-schedule (2026-09-18): REQ-LVM-S01/S03. The schedule is composed ON READ and nothing is stored, so a withdrawn request is gone from the next read with no sync in between. This page is the declarative half over LeaveRequest itself; the org-unit composition, the redaction of a request the reader may not see, and the coverage warning live in GET /api/leave/schedule and GET /api/leave/coverage, which resolve every request under the CALLER's own RBAC rather than inventing a scoping rule of their own. Approve and reject here drive the transitions LeaveRequest already declares, guarded by the existing NoSelfApprovalGuard: no edge is added for this surface, and the LeaveApproval queue keeps working unchanged beside it.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"startDate",
@@ -15294,6 +15340,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"leaveType",
@@ -15323,6 +15370,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"year",
@@ -15463,6 +15511,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"transactionType",
 					"hours",
@@ -15499,6 +15548,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"creditor",
@@ -15532,6 +15582,7 @@
 					"showDeleteAction": false,
 					"showEditAction": false
 				},
+				"allowExport": true,
 				"columns": [
 					"period",
 					"jurisdiction",
@@ -15557,6 +15608,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"bulkActions": [
 					{
 						"handler": "proposeRaiseForSelection",
@@ -15593,6 +15645,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"type",
@@ -15622,6 +15675,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"period",
@@ -15662,6 +15716,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"administrationId",
@@ -15691,6 +15746,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"tijdvakcode",
@@ -15722,6 +15778,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"toPeriod",
 					"fromPeriod",
@@ -15764,6 +15821,7 @@
 			],
 			"config": {
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"administrationId",
 					"year",
@@ -15851,6 +15909,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"administrationId",
 					"year",
@@ -16047,6 +16106,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"title",
 					"status",
@@ -16071,6 +16131,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"status",
@@ -16098,6 +16159,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"reason",
@@ -16185,6 +16247,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"type",
@@ -16214,6 +16277,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"orgUnitId",
@@ -16300,6 +16364,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"status",
@@ -16416,6 +16481,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"fund",
@@ -16578,6 +16644,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"year",
@@ -16705,6 +16772,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"cycleId",
 					"status",
@@ -16731,6 +16799,7 @@
 		{
 			"config": {
 				"_note": "people-employee-relations-cases (2026-09-29): REQ-ERC-001/002. My HR > My warnings and measures is a preset on this page (userId = @me); OpenRegister's authorization shows the employee only their own closed warnings and measures, and the manager only kind, status and dates.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"kind",
@@ -16858,6 +16927,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"status",
@@ -16975,6 +17045,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"originalPeriod",
@@ -17014,6 +17085,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"startTime",
@@ -17108,6 +17180,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"orgUnitId",
@@ -17135,6 +17208,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"date",
 					"employeeId",
@@ -17222,6 +17296,7 @@
 		{
 			"config": {
 				"_note": "people-secondment-and-side-activities (2026-09-29): REQ-SEC-001/002. AgendaComposer turns an actief secondment into a secondment entry and AvailabilityService commits hoursPerWeek over the contracted week.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"receivingOrganisation",
@@ -17333,6 +17408,7 @@
 		{
 			"config": {
 				"_note": "people-secondment-and-side-activities (2026-09-29): REQ-SEC-003. My HR > My side activities is a preset on this page (userId = @me), not a second index. SideActivityListener fills in the employee from the reporter's account and keeps Employee.nevenwerkzaamhedenGemeld in step with the register.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"description",
@@ -17461,6 +17537,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"onderwijsinstelling",
 					"opleiding",
@@ -17579,6 +17656,7 @@
 		{
 			"config": {
 				"_note": "talent-engagement-surveys (2026-10-02): REQ-SRV-001. HR builds and opens a survey; employees answer on My surveys.",
+				"allowExport": true,
 				"columns": [
 					"title",
 					"scope",
@@ -17610,6 +17688,7 @@
 		{
 			"config": {
 				"_note": "talent-engagement-surveys (2026-10-02): REQ-SRV-002, design D4. HR sees who has not answered yet; an employee sees only their own invitations (My surveys, userId @me).",
+				"allowExport": true,
 				"columns": [
 					"surveyId",
 					"employeeId",
@@ -17639,6 +17718,7 @@
 			"config": {
 				"_note": "filings-ib47 (2026-10-01): ThirdPartyPayee. The BSN carries the same field authorization as an employee's (HR and payroll only); nl-ubd-payee-identification flags a paid payee without BSN or date of birth.",
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"lastName",
 					"initials",
@@ -17725,6 +17805,7 @@
 			"config": {
 				"_note": "filings-ib47 (2026-10-01): ThirdPartyPayment. ThirdPartyReportService sums them per payee and year.",
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"payeeId",
 					"paidOn",
@@ -17811,6 +17892,7 @@
 			"config": {
 				"_note": "filings-ib47 (2026-10-01): one ThirdPartyReport per administration and year; nl-ubd-deadline flags a year with payments whose report is not sent by 31 January of the next year.",
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"administrationId",
 					"year",
@@ -17847,6 +17929,7 @@
 					"showAdd": false,
 					"showEditAction": false
 				},
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"period",
@@ -17882,6 +17965,7 @@
 					"showDeleteAction": false,
 					"showEditAction": false
 				},
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"period",
@@ -17920,6 +18004,7 @@
 					"showDeleteAction": false,
 					"showEditAction": false
 				},
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"period",
@@ -17954,6 +18039,7 @@
 		{
 			"config": {
 				"_note": "talent-training-and-lms (2026-09-29): REQ-TRN-001. One record per employee per training (D1); a group course is planned as one record per participant, and the two bulk actions register attendance for the selection through OpenRegister's transition endpoint, so the lifecycle and TrainingRecordListener run exactly as they do on the detail page. Sorted on plannedOn descending: the course that just ran is the one to register.",
+				"allowExport": true,
 				"bulkActions": [
 					{
 						"handler": "registerTrainingAttended",
@@ -18092,6 +18178,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"firstSickDay",
@@ -18119,6 +18206,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"year",
 					"employeeId",
@@ -18246,6 +18334,7 @@
 		{
 			"config": {
 				"_note": "working-hours-per-person (2026-09-18): the person half of decision D19. A pattern is DATED and is never edited to record a contract change (design.md D2), so the index sorts on validFrom descending and shows validUntil: an open-ended row is the running pattern and an ended one is history a past figure still divides by. Hours are listed per weekday rather than as an fte fraction (design.md D4) -- the fte figure stays on the employment record and is not derived here. No feestdag column: which days are non-working for the organisation is openregister's working calendar, read and never owned.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"validFrom",
@@ -18332,6 +18421,7 @@
 		{
 			"config": {
 				"_note": "working-hours-per-person (2026-09-18): the third kind of absence (design.md D3). Leave is requested and drawn from a balance (LeaveRequests), sickness is a case with a poortwachter timeline (SickLeaveCases), and this is neither: nothing is requested and no balance moves. The reason list is administered and holds no leave type, so a row here can never read as verlof on a day the person was never contracted to work.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"reason",
