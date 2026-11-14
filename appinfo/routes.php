@@ -23,6 +23,9 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // allowed-expense-categories: which categories employees may claim (read: signed-in users, save: admin).
         ['name' => 'expenseCategory#index', 'url' => '/api/expense-categories', 'verb' => 'GET'],
         ['name' => 'expenseCategory#update', 'url' => '/api/expense-categories', 'verb' => 'PUT'],
+        // sign-in-and-hosting-are-the-platforms: the Inloggen admin section reads and saves Nextcloud's own sign-in settings (admin only).
+        ['name' => 'signInSettings#show', 'url' => '/api/settings/sign-in', 'verb' => 'GET'],
+        ['name' => 'signInSettings#update', 'url' => '/api/settings/sign-in', 'verb' => 'PUT'],
         ['name' => 'page#index',    'url' => '/',             'verb' => 'GET'],
         // ADR-024 §4 — manifest endpoint (bundled blob).
         ['name' => 'page#manifest', 'url' => '/api/manifest', 'verb' => 'GET'],

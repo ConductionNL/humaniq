@@ -11,6 +11,9 @@
 
  @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
  @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
+ @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-004
+ @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-005
+ @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-006
 -->
 <template>
 	<div class="humaniq-admin">
@@ -87,6 +90,80 @@
 						{{ categoryError }}
 					</p>
 				</CnSettingsSection>
+
+				<!-- Board tab "Inloggen". Sign-in is Nextcloud's: the methods come
+				     from user_saml / user_oidc (read only), the password rules and
+				     the lock after failed attempts are password_policy's own
+				     config, which the API reads and writes. humaniq stores none. -->
+				<CnSettingsSection
+					:name="t('humaniq', 'Sign-in')"
+					:description="t('humaniq', 'How employees, applicants and former employees sign in. These are Nextcloud settings: what you save here is what the Nextcloud security settings show.')"
+					data-testid="humaniq-admin-sign-in">
+					<h3 class="humaniq-admin__subheading">
+						{{ t('humaniq', 'Sign-in methods') }}
+					</h3>
+					<ul class="humaniq-admin__methods">
+						<li v-for="method in signIn.signInMethods"
+							:key="method.app"
+							:data-method="method.app">
+							<span class="humaniq-admin__role">{{ methodLabel(method.protocol) }}</span>
+							<span>{{ methodState(method) }}</span>
+							<a v-if="method.enabled" :href="adminSectionUrl(method.section)">
+								{{ t('humaniq', 'Provider settings') }}
+							</a>
+						</li>
+					</ul>
+
+					<template v-if="signIn.passwordPolicy.available">
+						<h3 class="humaniq-admin__subheading">
+							{{ t('humaniq', 'Password rules for accounts outside single sign-on') }}
+						</h3>
+						<NcTextField :modelValue="String(policy.minLength ?? '')"
+							:label="t('humaniq', 'Minimum password length')"
+							type="number"
+							min="1"
+							max="255"
+							data-policy="minLength"
+							@update:modelValue="policy.minLength = $event" />
+						<NcCheckboxRadioSwitch v-for="rule in policyRules"
+							:key="rule.key"
+							type="switch"
+							:modelValue="policy[rule.key] === true"
+							:data-policy="rule.key"
+							@update:modelValue="policy[rule.key] = $event">
+							{{ rule.label }}
+						</NcCheckboxRadioSwitch>
+
+						<h3 class="humaniq-admin__subheading">
+							{{ t('humaniq', 'Failed sign-in attempts') }}
+						</h3>
+						<p class="humaniq-admin__note">
+							{{ t('humaniq', 'Nextcloud slows down repeated failed sign-in attempts. It can also lock the account after a number of them.') }}
+						</p>
+						<NcTextField :modelValue="String(policy.maximumLoginAttempts ?? '')"
+							:label="t('humaniq', 'Lock the account after this many failed attempts (0 is never)')"
+							type="number"
+							min="0"
+							max="255"
+							data-policy="maximumLoginAttempts"
+							@update:modelValue="policy.maximumLoginAttempts = $event" />
+
+						<NcButton variant="primary"
+							class="humaniq-admin__save"
+							:disabled="savingSignIn"
+							data-testid="humaniq-admin-sign-in-save"
+							@click="saveSignInSettings">
+							{{ t('humaniq', 'Save') }}
+						</NcButton>
+					</template>
+					<p v-else-if="signInLoaded" class="humaniq-admin__note" data-testid="humaniq-admin-sign-in-missing">
+						{{ t('humaniq', 'The password policy needs the Nextcloud password policy app.') }}
+						<a :href="appsUrl">{{ t('humaniq', 'Open the apps page') }}</a>
+					</p>
+					<p v-if="signInMessage" class="humaniq-admin__note" :role="signInError ? 'alert' : 'status'">
+						{{ signInMessage }}
+					</p>
+				</CnSettingsSection>
 			</div>
 		</CnAdminSettingsShell>
 	</div>
@@ -98,11 +175,13 @@ import axios from '@nextcloud/axios'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcTextField } from '@nextcloud/vue'
 import { defineComponent } from 'vue'
 import { allowedAfterToggle, loadCategories, saveCategories } from './expenseCategories.js'
+import { emptySignIn, loadSignIn, saveRefusal, saveSignIn } from './signInSettings.js'
 
 const CATEGORIES_URL = generateUrl('/apps/humaniq/api/expense-categories')
+const SIGN_IN_URL = generateUrl('/apps/humaniq/api/settings/sign-in')
 
 export default defineComponent({
 	name: 'AdminSettings',
@@ -110,7 +189,9 @@ export default defineComponent({
 	components: {
 		CnAdminSettingsShell,
 		CnSettingsSection,
+		NcButton,
 		NcCheckboxRadioSwitch,
+		NcTextField,
 	},
 
 	data() {
@@ -119,6 +200,12 @@ export default defineComponent({
 			expenseCategories: [],
 			savingCategories: false,
 			categoryError: '',
+			signIn: emptySignIn(),
+			policy: {},
+			signInLoaded: false,
+			savingSignIn: false,
+			signInMessage: '',
+			signInError: false,
 		}
 	},
 
@@ -149,6 +236,31 @@ export default defineComponent({
 		roles() {
 			return [...this.groupRoles(), ...this.derivedRoles()]
 		},
+
+		/**
+		 * The password policy switches with their labels, in board order.
+		 *
+		 * @return {Array<{key: string, label: string}>}
+		 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-005
+		 */
+		policyRules() {
+			return [
+				{ key: 'enforceUpperLowerCase', label: t('humaniq', 'Require upper and lower case letters') },
+				{ key: 'enforceNumericCharacters', label: t('humaniq', 'Require a digit') },
+				{ key: 'enforceSpecialCharacters', label: t('humaniq', 'Require a special character') },
+				{ key: 'enforceHaveIBeenPwned', label: t('humaniq', 'Refuse passwords known from data breaches') },
+			]
+		},
+
+		/**
+		 * Nextcloud's apps page, where the password policy app is enabled.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-005
+		 */
+		appsUrl() {
+			return generateUrl('/settings/apps')
+		},
 	},
 
 	/**
@@ -158,15 +270,135 @@ export default defineComponent({
 	 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
 	 */
 	async mounted() {
-		try {
-			this.expenseCategories = await loadCategories(axios, CATEGORIES_URL)
-		} catch {
-			this.categoryError = t('humaniq', 'The expense categories could not be loaded.')
-		}
+		await Promise.all([this.loadExpenseCategories(), this.loadSignInSettings()])
 	},
 
 	methods: {
 		t,
+
+		/**
+		 * Read the expense category switches.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
+		 */
+		async loadExpenseCategories() {
+			try {
+				this.expenseCategories = await loadCategories(axios, CATEGORIES_URL)
+			} catch {
+				this.categoryError = t('humaniq', 'The expense categories could not be loaded.')
+			}
+		},
+
+		/**
+		 * Read the sign-in methods and the password policy.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-004
+		 */
+		async loadSignInSettings() {
+			try {
+				this.showSignIn(await loadSignIn(axios, SIGN_IN_URL))
+				this.signInLoaded = true
+			} catch {
+				this.signInError = true
+				this.signInMessage = t('humaniq', 'The sign-in settings could not be loaded.')
+			}
+		},
+
+		/**
+		 * Show the settings as the server holds them.
+		 *
+		 * @param {{signInMethods: Array<object>, passwordPolicy: {available: boolean, values: object|null}}} settings The settings.
+		 * @return {void}
+		 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-005
+		 */
+		showSignIn(settings) {
+			this.signIn = settings
+			this.policy = { ...(settings.passwordPolicy.values ?? {}) }
+		},
+
+		/**
+		 * Save the password policy in Nextcloud's password policy app.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-005
+		 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-006
+		 */
+		async saveSignInSettings() {
+			this.savingSignIn = true
+			this.signInMessage = ''
+			this.signInError = false
+			try {
+				this.showSignIn(await saveSignIn(axios, SIGN_IN_URL, this.policy))
+				this.signInMessage = t('humaniq', 'The sign-in settings are saved.')
+			} catch (error) {
+				this.signInError = true
+				this.signInMessage = this.signInRefusal(saveRefusal(error))
+			} finally {
+				this.savingSignIn = false
+			}
+		},
+
+		/**
+		 * The message for a refused save.
+		 *
+		 * @param {'missing-app'|'invalid'|'failed'} reason Why the save was refused.
+		 * @return {string}
+		 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-005
+		 */
+		signInRefusal(reason) {
+			if (reason === 'missing-app') {
+				return t('humaniq', 'The password policy needs the Nextcloud password policy app.')
+			}
+			if (reason === 'invalid') {
+				return t('humaniq', 'Use whole numbers: a minimum length from 1 to 255 and a number of failed attempts from 0 to 255.')
+			}
+			return t('humaniq', 'The sign-in settings could not be saved.')
+		},
+
+		/**
+		 * The name of a sign-in method.
+		 *
+		 * @param {string} protocol `saml` or `oidc`.
+		 * @return {string}
+		 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-004
+		 */
+		methodLabel(protocol) {
+			const labels = {
+				saml: t('humaniq', 'Single sign-on through SAML'),
+				oidc: t('humaniq', 'Single sign-on through OpenID Connect'),
+			}
+			return labels[protocol] ?? protocol
+		},
+
+		/**
+		 * What a sign-in method shows: its providers, or that it is off.
+		 *
+		 * @param {{enabled: boolean, providers: Array<string>}} method The method.
+		 * @return {string}
+		 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-004
+		 */
+		methodState(method) {
+			if (method.enabled !== true) {
+				return t('humaniq', 'not enabled')
+			}
+			if (!Array.isArray(method.providers) || method.providers.length === 0) {
+				return t('humaniq', 'enabled, no provider configured yet')
+			}
+			return method.providers.join(', ')
+		},
+
+		/**
+		 * A Nextcloud admin settings section.
+		 *
+		 * @param {string} section The section id.
+		 * @return {string}
+		 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-004
+		 */
+		adminSectionUrl(section) {
+			return generateUrl('/settings/admin/' + encodeURIComponent(section))
+		},
 
 		/**
 		 * The label of an expense category.
@@ -354,5 +586,29 @@ export default defineComponent({
 .humaniq-admin__note {
 	margin-top: 12px;
 	color: var(--color-text-maxcontrast);
+}
+
+.humaniq-admin__subheading {
+	margin: 16px 0 8px;
+	font-size: 1em;
+	font-weight: 600;
+}
+
+.humaniq-admin__methods {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.humaniq-admin__methods li {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 12px;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.humaniq-admin__save {
+	margin-top: 12px;
 }
 </style>
