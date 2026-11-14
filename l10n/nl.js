@@ -1,10 +1,9 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "humaniq",
     {
+        "2024": "2024",
+        "2025": "2025",
+        "2026": "2026",
         "Deployment plan": "Inzetplan",
         "Draft while the plan is made; confirmed once agreed.": "Concept zolang het plan wordt gemaakt; vastgesteld zodra het is afgesproken.",
         "From the CAO": "Uit de cao",
@@ -34,9 +33,6 @@ OC.L10N.register(
         "The total of the plan lines.": "Het totaal van de planregels.",
         "Weeks": "Weken",
         "Whether the norm comes from the CAO or was entered by hand.": "Of de norm uit de cao komt of met de hand is ingevoerd.",
-        "2024": "2024",
-        "2025": "2025",
-        "2026": "2026",
         "(Re)calculate": "(Her)berekenen",
         "(Re)calculating the payroll run failed.": "(Her)berekenen van de loonrun is mislukt.",
         "30%-ruling applied rate": "Toegepast 30%-percentage",
@@ -3752,7 +3748,13 @@ OC.L10N.register(
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
         "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
-        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort."
+        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort.",
+        "Access grants": "Toegangsrechten",
+        "Add integration": "Koppeling toevoegen",
+        "Connection": "Koppeling",
+        "Last checked": "Laatst gecontroleerd",
+        "Status message": "Statusmelding",
+        "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why.": "De externe systemen waarmee humaniq gegevens uitwisselt, en of elk ervan werkt. Een koppeling die nog niet beschikbaar is, zegt waarom."
     },
     "nplurals=2; plural=(n != 1);"
 )

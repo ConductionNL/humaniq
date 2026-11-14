@@ -1100,7 +1100,7 @@
 				{
 					"icon": "PowerPlugOutline",
 					"id": "Integraties",
-					"label": "Integrations",
+					"label": "Access grants",
 					"route": "IntegrationAccounts"
 				},
 				{
@@ -1108,6 +1108,16 @@
 					"id": "Loonpakketten",
 					"label": "Payroll packs",
 					"route": "PayrollPacks"
+				},
+				{
+					"icon": "PowerPlugOutline",
+					"id": "Koppelingen",
+					"label": "Integrations",
+					"permission": "admin",
+					"route": "Integrations",
+					"visibleIf": {
+						"appInstalled": "integriq"
+					}
 				}
 			],
 			"icon": "CogOutline",
@@ -11749,6 +11759,77 @@
 			"type": "dashboard"
 		},
 		{
+			"_note": "platform-integrations-catalogue (design D1-D3, hydra connection-registry D8/D9). The rows are integriq's app_connection objects, synced from lib/Settings/connections.json; integriq works out each status, humaniq only declares them and reports the ledger handoff. config.filter scopes the list to humaniq, also for a bookmarked link. showAdd is false because a row nothing declared has nothing to check; Add integration leaves for integriq's overview through the openIntegriqConnections handler, since a header action's navigate only pushes a route inside this app. The two formatters are nextcloud-vue built-ins. Without integriq the menu entry hides and requiresApp names the missing app on a deep link. The access-grant records stay on IntegrationAccounts (Access grants).",
+			"config": {
+				"actionToggles": {
+					"showAdd": false
+				},
+				"columns": [
+					{
+						"key": "title",
+						"label": "Connection"
+					},
+					{
+						"formatter": "connectionStatus",
+						"key": "status",
+						"label": "Status"
+					},
+					{
+						"key": "statusMessage",
+						"label": "Status message",
+						"sortable": false
+					},
+					{
+						"key": "checkedAt",
+						"label": "Last checked"
+					},
+					{
+						"formatter": "connectionSettingsLabel",
+						"key": "settingsUrl",
+						"label": "Settings",
+						"sortable": false,
+						"widget": "link",
+						"widgetProps": {
+							"href": "{settingsUrl}"
+						}
+					}
+				],
+				"defaultSort": {
+					"direction": "asc",
+					"field": "order"
+				},
+				"description": "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why.",
+				"filter": {
+					"app": "humaniq"
+				},
+				"folderSidebar": {
+					"allLabel": "All connections",
+					"field": "status",
+					"source": "field"
+				},
+				"headerActions": [
+					{
+						"handler": "openIntegriqConnections",
+						"icon": "PowerPlugOutline",
+						"id": "add-integration",
+						"label": "Add integration"
+					}
+				],
+				"register": "integriq",
+				"schema": "app_connection",
+				"showViewAction": false
+			},
+			"id": "Integrations",
+			"permission": "admin",
+			"requiresApp": {
+				"id": "integriq",
+				"name": "Integriq"
+			},
+			"route": "/configuratie/koppelingen",
+			"title": "Integrations",
+			"type": "index"
+		},
+		{
 			"config": {
 				"_note": "self-service-approvals-inbox (2026-09-29): REQ-API-002. My HR > My deputies is a preset on this page (managerUserId = @me), not a second index. ManagerDeputyListener makes a record without a manager the writer's own, lets only the manager or HR write one, and refuses a self-deputy or a last day before the first.",
 				"columns": [
@@ -15140,7 +15221,7 @@
 			},
 			"id": "IntegrationAccounts",
 			"route": "/configuratie/integraties",
-			"title": "Integrations",
+			"title": "Access grants",
 			"type": "index"
 		},
 		{
