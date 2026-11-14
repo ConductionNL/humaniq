@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
+use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Service\PayrollRunServices;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Controller\PayrollController;
@@ -49,6 +50,7 @@ use OCA\Humaniq\Service\WkrService;
 use OCA\Humaniq\Tests\Unit\Support\NextcloudDispatch;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Response;
+use OCP\AppFramework\Services\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
@@ -267,10 +269,8 @@ class PayrollControllerProformaTest extends TestCase {
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getPayrollAofTariff')->willReturn('laag');
-		$settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
 
-		$proformaService = new ProformaPayslipService(new PayrollCalculator(), $settings);
+		$proformaService = new ProformaPayslipService(new PayrollCalculator(), new EmployerPremiumSettings($this->createMock(IAppConfig::class)));
 
 		// Not exercised by proforma(); present only to satisfy the merged
 		// constructor (payroll-mutation-reports/retro-adjustments/

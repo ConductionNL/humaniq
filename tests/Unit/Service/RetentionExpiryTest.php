@@ -530,4 +530,35 @@ class RetentionExpiryTest extends TestCase {
 
 	}//end retentionService()
 
+	/**
+	 * Where OpenRegister offers releaseHold(), the release goes through it with one HoldOrder.
+	 *
+	 * @return void
+	 */
+	public function testAHoldIsReleasedThroughReleaseHoldWhenOffered(): void {
+		$retention = new class {
+			/**
+			 * @var array<int, mixed>
+			 */
+			public array $orders = [];
+
+			/**
+			 * @param object $object The object.
+			 * @param object $order  The hold order.
+			 *
+			 * @return object
+			 */
+			public function releaseHold(object $object, object $order): object {
+				$this->orders[] = $order;
+				return $object;
+			}//end releaseHold()
+		};
+		$logger  = $this->createMock(\Psr\Log\LoggerInterface::class);
+		$service = new RetentionExpiryService($this->container($retention, $this->mapper(), null), $this->settings(true), $logger);
+		$entity  = $this->entity([], []);
+
+		$release = new \ReflectionMethod($service, 'releaseHold');
+		$this->assertSame($entity, $release->invoke($service, $entity, 'Statutaire bewaartermijn verstreken'));
+		$this->assertEquals([new \OCA\OpenRegister\Service\HoldOrder(reason: 'Statutaire bewaartermijn verstreken')], $retention->orders);
+	}//end testAHoldIsReleasedThroughReleaseHoldWhenOffered()
 }//end class

@@ -25,12 +25,15 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Command;
 
 use OCA\Humaniq\Command\WageTaxRemitCommand;
+use OCA\Humaniq\Service\PayrollBookkeepingSettings;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WageTaxRemittanceService;
 use OCA\Humaniq\Tests\Unit\Service\WageTaxRemittanceServiceTest;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -54,12 +57,11 @@ class WageTaxRemitCommandTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getWageTaxPayeeId')->willReturn('payee-belastingdienst');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
 		$service = new WageTaxRemittanceService(
 			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $store]),
 			appManager: $appManager,
 			settingsService: $settings,
+			bookkeeping: new PayrollBookkeepingSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), ['wagetax_payee_id' => 'payee-belastingdienst'])),
 			logger: new NullLogger(),
 		);
 		$command = new WageTaxRemitCommand(service: $service);
@@ -89,11 +91,11 @@ class WageTaxRemitCommandTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getWageTaxPayeeId')->willReturn('');
 		$service = new WageTaxRemittanceService(
 			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $store]),
 			appManager: $appManager,
 			settingsService: $settings,
+			bookkeeping: new PayrollBookkeepingSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), ['wagetax_payee_id' => ''])),
 			logger: new NullLogger(),
 		);
 		$command = new WageTaxRemitCommand(service: $service);

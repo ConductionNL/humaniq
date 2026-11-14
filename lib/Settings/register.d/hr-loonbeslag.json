@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "Loonbeslag": {
+                "configuration": {"exportable": true},
                 "slug": "Loonbeslag",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "Gavel",
