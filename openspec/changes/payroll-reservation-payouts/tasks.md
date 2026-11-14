@@ -6,7 +6,7 @@
 - [x] 1.2 Add the `band` op to the registry, the vocabulary and validator gate 2. Verify: unit
       tests for the first, a middle and the open top band, and a validator test that an unknown
       op is still refused.
-- [ ] 1.3 Extend the pack with the two inputs, the special-rate binding and step, the
+- [x] 1.3 Extend the pack with the two inputs, the special-rate binding and step, the
       end-of-year reserve and new golden vectors; bump `packVersion`. Verify: the nine existing
       fixtures pass unchanged and the new vectors pass through `PackValidator` gate 5.
 - [ ] 1.4 Carry the new inputs and outputs through `CalculationInput`, the mapper, the result
