@@ -10,6 +10,10 @@
  * The unit itself is read under the caller's RBAC: an unreadable or unknown
  * unit answers 404, without saying which.
  *
+ * POST /api/deployment/ipto-export: the IPTO staff count rows of the caller's
+ * active administration for a reference week (D4), for HR and administrators
+ * only, from the confirmed plans; draft plans are listed as not confirmed.
+ *
  * @category Controller
  * @package  OCA\Humaniq\Controller
  *
@@ -31,7 +35,10 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\DeploymentPlanService;
+use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\IptoExportService;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCP\AppFramework\Controller;
@@ -39,6 +46,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 
 /**
  * Serves the per-school deployment view.
@@ -50,16 +58,24 @@ class DeploymentController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest              $request The request.
-	 * @param RecordStoreInterface  $gateway Register reads.
-	 * @param RbacObjectReader      $rbac    The unit and teachers, under the caller's RBAC.
-	 * @param DeploymentPlanService $plans   The plan arithmetic and the school view.
+	 * @param IRequest              $request         The request.
+	 * @param RecordStoreInterface  $gateway         Register reads.
+	 * @param RbacObjectReader      $rbac            The unit and teachers, under the caller's RBAC.
+	 * @param DeploymentPlanService $plans           The plan arithmetic and the school view.
+	 * @param IptoExportService     $ipto            The IPTO staff count rows.
+	 * @param HumaniqRoles          $roles           The HR check.
+	 * @param IUserSession          $session         The caller.
+	 * @param AdministrationService $administrations The caller's active administration.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly RecordStoreInterface $gateway,
 		private readonly RbacObjectReader $rbac,
 		private readonly DeploymentPlanService $plans,
+		private readonly IptoExportService $ipto,
+		private readonly HumaniqRoles $roles,
+		private readonly IUserSession $session,
+		private readonly AdministrationService $administrations,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -114,4 +130,62 @@ class DeploymentController extends Controller {
 			]
 		);
 	}//end orgUnit()
+
+	/**
+	 * POST /api/deployment/ipto-export {referenceWeek}.
+	 *
+	 * @param string|null $referenceWeek The reference week, `YYYY-Www`.
+	 *
+	 * @return JSONResponse The export; 403 for anyone but HR or an administrator, 400, or 409 without a BRIN number.
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-the-ipto-staff-count-file-shall-be-produced-from-the-confirmed-plans-req-edu-003
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#scenario-a-draft-plan-is-left-out
+	 */
+	#[NoAdminRequired]
+	public function iptoExport(?string $referenceWeek = null): JSONResponse {
+		$uid = $this->session->getUser()?->getUID();
+		if ($this->roles->isHr($uid) === false) {
+			return new JSONResponse(['message' => 'Only HR or an administrator can export the IPTO'], Http::STATUS_FORBIDDEN);
+		}
+
+		if ($referenceWeek === null || IptoExportService::weekStart(referenceWeek: $referenceWeek) === null) {
+			return new JSONResponse(['message' => 'referenceWeek must be YYYY-Www'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$administrationId = $this->administrations->getActiveAdministrationId((string)$uid);
+		$administration = null;
+		if ($administrationId !== null) {
+			$administration = $this->gateway->findObjectData(uuid: $administrationId, schema: 'hrAdministration');
+		}
+
+		if ($administration === null) {
+			return new JSONResponse(['message' => 'No active administration'], Http::STATUS_FORBIDDEN);
+		}
+
+		$administration['id'] = $administrationId;
+		if (trim((string)($administration['brinNummer'] ?? '')) === '') {
+			return new JSONResponse(['message' => 'The administration has no BRIN number'], Http::STATUS_CONFLICT);
+		}
+
+		$units = [];
+		foreach ($this->gateway->findFiltered(schema: 'OrgUnit', filters: ['administrationId' => $administrationId]) as $unit) {
+			$units[(string)($unit['id'] ?? '')] = true;
+		}
+
+		$plans = array_values(
+			array_filter(
+				$this->gateway->loadAll('DeploymentPlan'),
+				static fn (array $plan): bool => isset($units[(string)($plan['orgUnitId'] ?? '')]) === true
+			)
+		);
+		$employees = [];
+		foreach ($plans as $plan) {
+			$employeeId = (string)($plan['employeeId'] ?? '');
+			if ($employeeId !== '' && isset($employees[$employeeId]) === false) {
+				$employees[$employeeId] = ($this->gateway->findObjectData(uuid: $employeeId, schema: 'Employee') ?? []);
+			}
+		}
+
+		return new JSONResponse($this->ipto->export(administration: $administration, plans: $plans, employees: $employees, referenceWeek: $referenceWeek));
+	}//end iptoExport()
 }//end class

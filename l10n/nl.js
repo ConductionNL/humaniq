@@ -4,6 +4,8 @@ OC.L10N.register(
         "2024": "2024",
         "2025": "2025",
         "2026": "2026",
+        "BRIN number": "BRIN-nummer",
+        "The school's registration number with the education ministry, for example 12AB. The staff count export needs it.": "Het registratienummer van de school bij het ministerie van OCW, bijvoorbeeld 12AB. De export voor de personeelstelling heeft het nodig.",
         "Confirm plan": "Plan vaststellen",
         "Deployment plans": "Inzetplannen",
         "Each teacher's planned hours for a school year against the norm for their contract. Above zero difference is an overload.": "De geplande uren van elke docent voor een schooljaar tegenover de norm voor het contract. Een verschil boven nul is een overbelasting.",

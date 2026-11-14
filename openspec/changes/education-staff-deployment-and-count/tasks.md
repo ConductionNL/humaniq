@@ -41,8 +41,19 @@
       Verify: the specification document is linked in the service docblock.
 - [ ] 3.2 Add `brinNummer` to `hrAdministration` and `IptoExportService`. Verify: unit test
       against a fixture built from the specification's own example.
+      Partly done, left open on 3.1: `brinNummer` is on `hrAdministration` and
+      `IptoExportService::export()` selects the rows (one per teacher, subject and education
+      level with the weekly hours, from the `lesgevend` lines of the `vastgesteld` plans of the
+      reference week's school year) and lists the draft plans as not confirmed. Its
+      `specificationVersion` is null and no file layout is written: the OCW layout is not
+      invented here (design D4), so the fixture from the specification's example waits for 3.1.
 - [ ] 3.3 Add `POST /api/deployment/ipto-export` (admin or HR) and the action. Verify:
       controller test that only `vastgesteld` plans are exported.
+      Endpoint done: `DeploymentController::iptoExport` (HR or administrator, else 403; the
+      caller's active administration; 409 without a BRIN number), with the controller test that
+      only `vastgesteld` plans of the administration's units are exported. Left open: the
+      `Export IPTO` action on the administration, because an `api-call` header action cannot
+      ask for the reference week and the stored document depends on the 3.1 layout.
 - [ ] 3.4 Seed the school, teachers and plans. Verify: `npm run check:seed-refs` exits 0.
 
 ## 4. Verification

@@ -99,6 +99,7 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'flexContract#chain', 'url' => '/api/contracts/{id}/chain', 'verb' => 'GET'],
         // education-staff-deployment-and-count D3: every teacher's deployment plan for one school and school year.
         ['name' => 'deployment#orgUnit', 'url' => '/api/deployment/org-units/{id}', 'verb' => 'GET'],
+        ['name' => 'deployment#iptoExport', 'url' => '/api/deployment/ipto-export', 'verb' => 'POST'],
         // people-org-chart-view: the organisation chart of the caller's administration on a date.
         ['name' => 'orgChart#chart', 'url' => '/api/org/chart', 'verb' => 'GET'],
         ['name' => 'dossier#incomplete', 'url' => '/api/dossier/incomplete', 'verb' => 'GET'],
