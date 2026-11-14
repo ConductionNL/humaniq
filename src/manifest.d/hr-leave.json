@@ -406,7 +406,7 @@
 				"route": "/ikb-requests/:id",
 				"title": "Choice budget request",
 				"dataTitle": "Request",
-				"dataIcon": "WalletPlusOutline",
+				"dataIcon": "CashPlus",
 				"relatedTitle": "Related",
 				"gridHeight": 8,
 				"exclude": [
@@ -502,33 +502,6 @@
 				],
 				"description": "What employees may spend the choice budget on besides a payout or extra leave, and how each is taxed.",
 				"note": "payroll-reservation-payouts D8."
-			}
-		},
-		{
-			"templateRef": "indexScaffold",
-			"register": "humaniq",
-			"schema": "IkbSpendRequest",
-			"params": {
-				"id": "MijnKeuzebudget",
-				"route": "/mijn/keuzebudget",
-				"title": "My choice budget",
-				"columns": [
-					"year",
-					"goal",
-					"amount",
-					"hours",
-					"settlementPeriod",
-					"status"
-				],
-				"sort": {
-					"field": "settlementPeriod",
-					"order": "desc"
-				},
-				"filter": {
-					"userId": "@me"
-				},
-				"description": "Your requests to spend your individual choice budget: pay it out, buy extra leave or spend it on a goal your employer allows.",
-				"note": "payroll-reservation-payouts D8: self-service."
 			}
 		}
 	]

@@ -2988,7 +2988,7 @@
 				"route": "/reservation-payouts/:id",
 				"title": "Reserve payout",
 				"dataTitle": "Payout",
-				"dataIcon": "CashFast",
+				"dataIcon": "CashMultiple",
 				"relatedTitle": "Related",
 				"gridHeight": 7,
 				"exclude": [

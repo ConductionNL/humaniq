@@ -556,10 +556,6 @@
 		"route": "/ikb-goals"
 	},
 	{
-		"id": "MijnKeuzebudget",
-		"route": "/mijn/keuzebudget"
-	},
-	{
 		"id": "Loonbeslagen",
 		"route": "/loonbeslagen"
 	},

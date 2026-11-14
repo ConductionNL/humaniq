@@ -352,10 +352,13 @@
 					"route": "MijnVerlofKopenVerkopen"
 				},
 				{
-					"icon": "WalletOutline",
+					"icon": "PiggyBankOutline",
 					"id": "MijnKeuzebudget",
 					"label": "My choice budget",
-					"route": "MijnKeuzebudget"
+					"query": {
+						"userId": "@me"
+					},
+					"route": "IkbSpendRequests"
 				},
 				{
 					"icon": "ScaleBalance",
@@ -703,19 +706,19 @@
 					"route": "LeaveBalances"
 				},
 				{
-					"icon": "WalletPlusOutline",
+					"icon": "CashPlus",
 					"id": "IkbSpendRequests",
 					"label": "Choice budget requests",
 					"route": "IkbSpendRequests"
 				},
 				{
-					"icon": "WalletOutline",
+					"icon": "PiggyBankOutline",
 					"id": "IkbBudgets",
 					"label": "Choice budgets",
 					"route": "IkbBudgets"
 				},
 				{
-					"icon": "TargetAccount",
+					"icon": "TargetVariant",
 					"id": "IkbGoals",
 					"label": "Choice budget goals",
 					"route": "IkbGoals"
@@ -875,7 +878,7 @@
 					"route": "Payslips"
 				},
 				{
-					"icon": "CashFast",
+					"icon": "CashMultiple",
 					"id": "ReservationPayouts",
 					"label": "Reserve payouts",
 					"route": "ReservationPayouts"
@@ -15614,7 +15617,7 @@
 							],
 							"title": "Request"
 						},
-						"icon": "WalletPlusOutline",
+						"icon": "CashPlus",
 						"id": "data",
 						"title": "Request",
 						"type": "data"
@@ -15689,33 +15692,6 @@
 			"id": "IkbGoals",
 			"route": "/ikb-goals",
 			"title": "Choice budget goals",
-			"type": "index"
-		},
-		{
-			"config": {
-				"_note": "payroll-reservation-payouts D8: self-service.",
-				"columns": [
-					"year",
-					"goal",
-					"amount",
-					"hours",
-					"settlementPeriod",
-					"status"
-				],
-				"description": "Your requests to spend your individual choice budget: pay it out, buy extra leave or spend it on a goal your employer allows.",
-				"filter": {
-					"userId": "@me"
-				},
-				"register": "humaniq",
-				"schema": "IkbSpendRequest",
-				"sort": {
-					"field": "settlementPeriod",
-					"order": "desc"
-				}
-			},
-			"id": "MijnKeuzebudget",
-			"route": "/mijn/keuzebudget",
-			"title": "My choice budget",
 			"type": "index"
 		},
 		{
@@ -16295,7 +16271,7 @@
 							],
 							"title": "Payout"
 						},
-						"icon": "CashFast",
+						"icon": "CashMultiple",
 						"id": "data",
 						"title": "Payout",
 						"type": "data"

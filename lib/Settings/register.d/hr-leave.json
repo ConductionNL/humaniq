@@ -751,7 +751,7 @@
                         "humaniq-hr"
                     ]
                 },
-                "icon": "WalletOutline",
+                "icon": "PiggyBankOutline",
                 "version": "0.1.0",
                 "title": "Individual choice budget",
                 "description": "An employee's individual choice budget (IKB) for one year (payroll-reservation-payouts D8): accrued on every approved payslip at the contract's or the confirmed collective agreement's rate, and spent by approved requests. balance is accrued minus spent.",
@@ -844,7 +844,7 @@
                         "humaniq-hr"
                     ]
                 },
-                "icon": "TargetAccount",
+                "icon": "TargetVariant",
                 "version": "0.1.0",
                 "title": "Choice budget goal",
                 "description": "A goal HR allows the individual choice budget to be spent on, such as a union fee or a bicycle, with its tax treatment (payroll-reservation-payouts D8). An exempt goal is paid untaxed and recorded in the work-related costs scheme; a taxed goal is paid at the special rate.",
@@ -962,7 +962,7 @@
                         "humaniq-hr"
                     ]
                 },
-                "icon": "WalletPlusOutline",
+                "icon": "CashPlus",
                 "version": "0.1.0",
                 "title": "Choice budget request",
                 "description": "An employee's request to spend the individual choice budget (payroll-reservation-payouts D8): as a payout, as extra leave hours, or on a goal HR configured. A declarative draft -> submitted -> approved/rejected -> settled lifecycle; approval by someone other than the requester and never above the balance (IkbSpendApprovalGuard). The payroll run settles an approved request in its settlement period.",

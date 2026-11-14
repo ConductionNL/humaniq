@@ -807,7 +807,7 @@
                         "humaniq-payroll"
                     ]
                 },
-                "icon": "CashFast",
+                "icon": "CashMultiple",
                 "version": "0.1.0",
                 "title": "Reservation payout",
                 "description": "One payout of a reserve: the holiday allowance, the end-of-year payment or the individual choice budget, paid by a payroll run as a special payment over a basis period (payroll-reservation-payouts D4). The open reserve is always what the payslips of the basis period reserved minus these records; nothing keeps a second running balance.",

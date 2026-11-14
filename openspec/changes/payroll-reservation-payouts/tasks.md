@@ -42,7 +42,7 @@
 
 ## 5. Verification
 
-- [ ] 5.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec` tags
+- [x] 5.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec` tags
       on every new method (gate 16).
 - [ ] 5.2 One live check on a dev instance: calculate a May run with a holiday allowance payout
       and read the special-rate line; record screenshots in the PR.

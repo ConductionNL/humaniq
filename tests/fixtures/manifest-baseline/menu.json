@@ -129,8 +129,11 @@
 			{
 				"id": "MijnKeuzebudget",
 				"label": "My choice budget",
-				"icon": "WalletOutline",
-				"route": "MijnKeuzebudget"
+				"icon": "PiggyBankOutline",
+				"route": "IkbSpendRequests",
+				"query": {
+					"userId": "@me"
+				}
 			},
 			{
 				"id": "MijnGebruikelijkLoon",
@@ -480,19 +483,19 @@
 			{
 				"id": "IkbSpendRequests",
 				"label": "Choice budget requests",
-				"icon": "WalletPlusOutline",
+				"icon": "CashPlus",
 				"route": "IkbSpendRequests"
 			},
 			{
 				"id": "IkbBudgets",
 				"label": "Choice budgets",
-				"icon": "WalletOutline",
+				"icon": "PiggyBankOutline",
 				"route": "IkbBudgets"
 			},
 			{
 				"id": "IkbGoals",
 				"label": "Choice budget goals",
-				"icon": "TargetAccount",
+				"icon": "TargetVariant",
 				"route": "IkbGoals"
 			},
 			{
@@ -659,7 +662,7 @@
 			{
 				"id": "ReservationPayouts",
 				"label": "Reserve payouts",
-				"icon": "CashFast",
+				"icon": "CashMultiple",
 				"route": "ReservationPayouts"
 			},
 			{
