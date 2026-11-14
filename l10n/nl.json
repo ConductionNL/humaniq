@@ -3164,6 +3164,13 @@
         "Create a new record": "Nieuw dossier aanmaken",
         "The hire is on the earlier record, with a new onboarding case.": "De indiensttreding staat op het eerdere dossier, met een nieuw onboardingdossier.",
         "The employee and the onboarding case are created.": "De medewerker en het onboardingdossier zijn aangemaakt.",
+        "Workplace and buddy arranged": "Werkplek en buddy geregeld",
+        "First month's programme shared": "Programma eerste maand gedeeld",
+        "Probation talk planned": "Proeftijdgesprek gepland",
+        "Whether the hire's manager arranged a workplace and a buddy. Ticked when the manager marks the task done in the onboarding flow.": "Of de leidinggevende van de nieuwe medewerker een werkplek en een buddy heeft geregeld. Wordt aangevinkt als de leidinggevende de taak in de onboardingflow als gedaan markeert.",
+        "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.": "Of de leidinggevende van de nieuwe medewerker het programma van de eerste maand heeft gedeeld. Wordt aangevinkt als de leidinggevende de taak in de onboardingflow als gedaan markeert.",
+        "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.": "Of de leidinggevende van de nieuwe medewerker het gesprek aan het einde van de proeftijd heeft gepland. Wordt aangevinkt als de leidinggevende de taak in de onboardingflow als gedaan markeert.",
+        "IT": "IT",
         "This application already has an employee.": "Deze sollicitatie heeft al een medewerker.",
         "Could not load this application. Try again.": "Deze sollicitatie kon niet worden geladen. Probeer het opnieuw.",
         "Same BSN": "Zelfde BSN",
@@ -3747,14 +3754,7 @@
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
         "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
-        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort.",
-        "Workplace and buddy arranged": "Werkplek en buddy geregeld",
-        "First month's programme shared": "Programma eerste maand gedeeld",
-        "Probation talk planned": "Proeftijdgesprek gepland",
-        "Whether the hire's manager arranged a workplace and a buddy. Ticked when the manager marks the task done in the onboarding flow.": "Of de leidinggevende van de nieuwe medewerker een werkplek en een buddy heeft geregeld. Wordt aangevinkt als de leidinggevende de taak in de onboardingflow als gedaan markeert.",
-        "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.": "Of de leidinggevende van de nieuwe medewerker het programma van de eerste maand heeft gedeeld. Wordt aangevinkt als de leidinggevende de taak in de onboardingflow als gedaan markeert.",
-        "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.": "Of de leidinggevende van de nieuwe medewerker het gesprek aan het einde van de proeftijd heeft gepland. Wordt aangevinkt als de leidinggevende de taak in de onboardingflow als gedaan markeert.",
-        "IT": "IT"
+        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

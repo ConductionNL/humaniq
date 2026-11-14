@@ -3169,6 +3169,13 @@ OC.L10N.register(
         "Create a new record": "Create a new record",
         "The hire is on the earlier record, with a new onboarding case.": "The hire is on the earlier record, with a new onboarding case.",
         "The employee and the onboarding case are created.": "The employee and the onboarding case are created.",
+        "Workplace and buddy arranged": "Workplace and buddy arranged",
+        "First month's programme shared": "First month's programme shared",
+        "Probation talk planned": "Probation talk planned",
+        "Whether the hire's manager arranged a workplace and a buddy. Ticked when the manager marks the task done in the onboarding flow.": "Whether the hire's manager arranged a workplace and a buddy. Ticked when the manager marks the task done in the onboarding flow.",
+        "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.": "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.",
+        "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.": "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.",
+        "IT": "IT",
         "This application already has an employee.": "This application already has an employee.",
         "Could not load this application. Try again.": "Could not load this application. Try again.",
         "Same BSN": "Same BSN",
@@ -3752,14 +3759,7 @@ OC.L10N.register(
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.",
         "The expense categories could not be loaded.": "The expense categories could not be loaded.",
         "The expense categories could not be saved.": "The expense categories could not be saved.",
-        "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on.",
-        "Workplace and buddy arranged": "Workplace and buddy arranged",
-        "First month's programme shared": "First month's programme shared",
-        "Probation talk planned": "Probation talk planned",
-        "Whether the hire's manager arranged a workplace and a buddy. Ticked when the manager marks the task done in the onboarding flow.": "Whether the hire's manager arranged a workplace and a buddy. Ticked when the manager marks the task done in the onboarding flow.",
-        "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.": "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.",
-        "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.": "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.",
-        "IT": "IT"
+        "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on."
     },
     "nplurals=2; plural=(n != 1);"
 )
