@@ -10413,6 +10413,28 @@
               ]
             }
           },
+          "tijdvakFactor": {
+            "title": "Periods per year",
+            "type": "integer",
+            "nullable": true,
+            "description": "How many periods of this payslip's kind make a year: 13 for four weeks, 52 for a week. Monthly figures (salary, car benefit, protected amount of a wage garnishment) were scaled by 12 divided by it. Empty on a monthly payslip.",
+            "x-notes": "payroll-period-edge-cases D4: PayPeriod::periodsPerYear() of the period; absent for YYYY-MM so a monthly payslip is unchanged.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
           "loonheffing": {
             "title": "Loonheffing",
             "type": "number",
