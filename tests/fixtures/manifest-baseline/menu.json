@@ -887,7 +887,7 @@
 			},
 			{
 				"id": "Integraties",
-				"label": "Integrations",
+				"label": "Access grants",
 				"icon": "PowerPlugOutline",
 				"route": "IntegrationAccounts"
 			},
@@ -896,6 +896,16 @@
 				"label": "Payroll packs",
 				"icon": "PackageVariantClosed",
 				"route": "PayrollPacks"
+			},
+			{
+				"id": "Koppelingen",
+				"label": "Integrations",
+				"icon": "PowerPlugOutline",
+				"route": "Integrations",
+				"permission": "admin",
+				"visibleIf": {
+					"appInstalled": "integriq"
+				}
 			}
 		]
 	},

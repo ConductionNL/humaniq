@@ -236,6 +236,10 @@
 		"route": "/mijn"
 	},
 	{
+		"id": "Integrations",
+		"route": "/configuratie/koppelingen"
+	},
+	{
 		"id": "TaakbeleidScholen",
 		"route": "/taakbeleid"
 	},

@@ -145,20 +145,16 @@ class SettingsServiceTest extends TestCase {
 	}//end testTheExtraLeaveHours()
 
 	/**
-	 * The switches have their defaults, and the minimum group size is at least one.
+	 * The switches have their defaults; the minimum group size is covered by PayTransparencySettingsTest.
 	 *
 	 * @return void
 	 */
-	public function testSwitchesAndTheMinimumGroup(): void {
+	public function testSwitches(): void {
 		self::assertTrue($this->settings([])->isLeaveAccrualEnabled());
 		self::assertFalse($this->settings(['leave_accrual_enabled' => false])->isLeaveAccrualEnabled());
 		self::assertFalse($this->settings([])->isRetentionExpiryEnabled());
 		self::assertTrue($this->settings(['retention_expiry_enabled' => true])->isRetentionExpiryEnabled());
-
-		self::assertSame(5, $this->settings([])->getPayTransparencyMinimumGroup());
-		self::assertSame(10, $this->settings(['pay_transparency_minimum_group' => 10])->getPayTransparencyMinimumGroup());
-		self::assertSame(1, $this->settings(['pay_transparency_minimum_group' => 0])->getPayTransparencyMinimumGroup());
-	}//end testSwitchesAndTheMinimumGroup()
+	}//end testSwitches()
 
 	/**
 	 * Whether OpenRegister is available follows the app manager.

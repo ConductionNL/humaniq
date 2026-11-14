@@ -14,6 +14,45 @@
             "description": "Fills an employee's name, date of birth and address by BSN, for an employer that records a legal basis for it. The certificate stays with the credential broker.",
             "order": 20,
             "requiredConfig": ["prefill_brp_source"]
+        },
+        {
+            "key": "shillinq-ledger",
+            "title": "Accounting ledger (shillinq)",
+            "description": "Payroll journal entries and net-pay payment runs go to shillinq. Humaniq reports whether shillinq took its last handoff.",
+            "order": 30,
+            "reportedOnly": true
+        },
+        {
+            "key": "upa-pensioen",
+            "title": "Pension fund delivery (UPA)",
+            "description": "Sends the payroll figures a pension fund needs in the UPA message.",
+            "order": 40,
+            "available": false,
+            "unavailableMessage": "The UPA message is specified in filings-pension-upa-message and not built yet."
+        },
+        {
+            "key": "arbodienst",
+            "title": "Occupational health service",
+            "description": "Passes sick reports and recovery to the occupational health service.",
+            "order": 50,
+            "available": false,
+            "unavailableMessage": "Sick reports reach the arbodienst by hand today."
+        },
+        {
+            "key": "lms",
+            "title": "Learning platform",
+            "description": "Keeps training enrolments and completions in step with a learning platform.",
+            "order": 60,
+            "available": false,
+            "unavailableMessage": "The learning sync is specified in talent-training-and-lms."
+        },
+        {
+            "key": "payroll-bureau",
+            "title": "Outside payroll bureau",
+            "description": "Hands the payroll input to an outside payroll bureau and takes its results back.",
+            "order": 70,
+            "available": false,
+            "unavailableMessage": "The handoff is specified in payroll-external-bureau-handoff."
         }
     ]
 }

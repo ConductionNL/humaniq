@@ -35,6 +35,7 @@ use OCA\Humaniq\Service\PayrollBookkeepingSettings;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
+use OCA\Humaniq\Service\Connection\ConnectionReporter;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -88,6 +89,13 @@ class PayrollGLPostServiceTest extends TestCase {
 			 * @var array<int, string>
 			 */
 			public array $lookupFails = [];
+
+			/**
+			 * Schemas whose save throws, as a store that refuses the write.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $saveFails = [];
 
 			/**
 			 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
@@ -163,6 +171,10 @@ class PayrollGLPostServiceTest extends TestCase {
 					throw new \RuntimeException('shillinq register unavailable');
 				}
 
+				if (in_array($targetSchema, $this->saveFails, true) === true) {
+					throw new \RuntimeException('shillinq refused the write');
+				}
+
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
 				$saved = array_merge($object, ['id' => $id]);
 
@@ -201,7 +213,7 @@ class PayrollGLPostServiceTest extends TestCase {
 	 *
 	 * @return array{0: PayrollGLPostService, 1: object}
 	 */
-	private function service(array $rowsBySchema = [], bool $shillinqThrows = false, bool $shillinqInstalled = true): array {
+	private function service(array $rowsBySchema = [], bool $shillinqThrows = false, bool $shillinqInstalled = true, ?ConnectionReporter $connections = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema, $shillinqThrows);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -223,7 +235,7 @@ class PayrollGLPostServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new PayrollGLPostService($container, $appManager, $settings, new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)), $logger), $fake];
+		return [new PayrollGLPostService($container, $appManager, $settings, new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)), $logger, $connections), $fake];
 	}//end service()
 
 	/**
@@ -837,4 +849,63 @@ class PayrollGLPostServiceTest extends TestCase {
 		self::assertArrayHasKey('projectCode', $glPost['properties']['lines']['items']['properties']);
 	}//end testThePostedJournalCarriesTheCodesAndFitsBothSchemas()
 
+
+	/**
+	 * A journal entry shillinq took reports the ledger as configured (platform-integrations-catalogue D2).
+	 *
+	 * @return void
+	 */
+	public function testAPostShillinqTookReportsTheLedgerConfigured(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'configured', 'Shillinq took journal entry HRMQ-LOON-2026-05-ADM-001.')
+			->willReturn(true);
+		[$service] = $this->service(connections: $connections);
+
+		$this->assertSame('posted', $service->postRun($this->payrollRun())['status']);
+	}//end testAPostShillinqTookReportsTheLedgerConfigured()
+
+	/**
+	 * A journal entry shillinq refused reports the ledger as an error with the reason.
+	 *
+	 * @return void
+	 */
+	public function testAJournalEntryShillinqRefusedReportsTheLedgerError(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'error', 'Shillinq refused the journal entry: shillinq refused the write')
+			->willReturn(true);
+		[$service, $fake] = $this->service(connections: $connections);
+		$fake->saveFails = ['JournalEntry'];
+
+		$this->assertSame('failed', $service->postRun($this->payrollRun())['status']);
+	}//end testAJournalEntryShillinqRefusedReportsTheLedgerError()
+
+	/**
+	 * Without shillinq the ledger is reported unavailable.
+	 *
+	 * @return void
+	 */
+	public function testAMissingShillinqReportsTheLedgerUnavailable(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'unavailable', 'Shillinq is not installed, or its journal entries cannot be reached.')
+			->willReturn(true);
+		[$service] = $this->service(shillinqInstalled: false, connections: $connections);
+
+		$this->assertSame('skipped-no-shillinq', $service->postRun($this->payrollRun())['status']);
+	}//end testAMissingShillinqReportsTheLedgerUnavailable()
+
+	/**
+	 * A run humaniq itself refuses never reached shillinq, so it says nothing about the ledger.
+	 *
+	 * @return void
+	 */
+	public function testARunHumaniqRefusesReportsNothing(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->never())->method('report');
+		[$service] = $this->service(connections: $connections);
+
+		$this->assertSame('failed', $service->postRun($this->payrollRun(['id' => '']))['status']);
+	}//end testARunHumaniqRefusesReportsNothing()
 }//end class
