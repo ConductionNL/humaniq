@@ -199,7 +199,9 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Sick leave cases and the Gatekeeper Improvement Act milestones (administrative data, no medical data)."
+				"description": "Sick leave cases and the Gatekeeper Improvement Act milestones (administrative data, no medical data).",
+				"allowSavedViews": true,
+				"allowExport": true
 			}
 		}
 	]

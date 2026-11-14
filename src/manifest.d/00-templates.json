@@ -2,7 +2,7 @@
 	"pageTemplates": [
 		{
 			"id": "indexScaffold",
-			"_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the one shape every humaniq index page shares — a schema-bound CnIndexPage with columns/sort and no widgets. All 58 index pages instantiate this template; the only variance is the presence of the optional keys below, which expandPageTemplates() drops from the expanded page when the instantiation omits them (exact-match placeholder + absent optional param). `filters` is optional because the nine Mijn* self-service pages and VerzuimOverzicht pin their result set with `filter` alone and offer no user-facing filter bar. `actions` (page-level create buttons, e.g. PayrollRuns' 'Loonrun aanmaken') and `note` (the page's own maintainer prose, landing as config._note) ride along as ordinary parameters so an instantiation stays the single complete description of its page. `extend` (2026-09-06) forwards OpenRegister `_extend[]` on the fetch, e.g. [\"calculations\"] so a schema's `materialise: false` calculations are evaluated and can be shown as columns. Optional like the rest: an instantiation that omits it has the key dropped and sends no `_extend` at all. Added because LeaveBalances declares a `remainingHours` column that rendered an em dash on every row without it, the template being the reason a page could not ask.",
+			"_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the one shape every humaniq index page shares — a schema-bound CnIndexPage with columns/sort and no widgets. All 58 index pages instantiate this template; the only variance is the presence of the optional keys below, which expandPageTemplates() drops from the expanded page when the instantiation omits them (exact-match placeholder + absent optional param). `filters` is optional because the nine Mijn* self-service pages and VerzuimOverzicht pin their result set with `filter` alone and offer no user-facing filter bar. `actions` (page-level create buttons, e.g. PayrollRuns' 'Loonrun aanmaken') and `note` (the page's own maintainer prose, landing as config._note) ride along as ordinary parameters so an instantiation stays the single complete description of its page. `extend` (2026-09-06) forwards OpenRegister `_extend[]` on the fetch, e.g. [\"calculations\"] so a schema's `materialise: false` calculations are evaluated and can be shown as columns. Optional like the rest: an instantiation that omits it has the key dropped and sends no `_extend` at all. Added because LeaveBalances declares a `remainingHours` column that rendered an em dash on every row without it, the template being the reason a page could not ask. `allowSavedViews` and `allowExport` (2026-11-14, reporting-standard-reports-and-builder D2) switch on the library's saved views and its export menu; export shows only when the schema is also flagged `exportable`. Optional like the rest.",
 			"params": [
 				{
 					"name": "id",
@@ -71,6 +71,12 @@
 				{
 					"name": "bulkActions",
 					"required": false
+				},
+				{
+					"name": "allowSavedViews"
+				},
+				{
+					"name": "allowExport"
 				}
 			],
 			"page": {
@@ -92,7 +98,9 @@
 					"sort": "{{sort}}",
 					"allowCreate": "{{allowCreate}}",
 					"actionToggles": "{{actionToggles}}",
-					"bulkActions": "{{bulkActions}}"
+					"bulkActions": "{{bulkActions}}",
+					"allowSavedViews": "{{allowSavedViews}}",
+					"allowExport": "{{allowExport}}"
 				}
 			}
 		},

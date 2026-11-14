@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "humaniq",
     {
@@ -3722,7 +3718,50 @@ OC.L10N.register(
         "Expense categories": "Declaratiecategorieën",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
-        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen."
+        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
+        "Above-statutory hours": "Bovenwettelijke uren",
+        "Approved runs": "Goedgekeurde loonruns",
+        "Balances by expiry date": "Saldi op vervaldatum",
+        "Costs per run": "Kosten per loonrun",
+        "Draft runs": "Loonruns in concept",
+        "Employer charges per period": "Werkgeverslasten per periode",
+        "Employer charges, all runs": "Werkgeverslasten, alle loonruns",
+        "Employment contracts": "Arbeidscontracten",
+        "Entitled hours per leave type": "Rechturen per verlofsoort",
+        "Entitled, used and expiring leave hours per employee and leave type.": "Recht, opgenomen en vervallende verlofuren per medewerker en verlofsoort.",
+        "Every payroll run with its totals and status, per period.": "Elke loonrun met zijn totalen en status, per periode.",
+        "Gross wages per period": "Brutolonen per periode",
+        "Gross wages, all runs": "Brutolonen, alle loonruns",
+        "Last 365 days": "Afgelopen 365 dagen",
+        "Last 90 days": "Afgelopen 90 dagen",
+        "Last two years": "Afgelopen twee jaar",
+        "Leavers per month": "Uitstroom per maand",
+        "Most recent leavers": "Laatst uit dienst getreden",
+        "Most recent runs": "Meest recente loonruns",
+        "My reports": "Mijn rapporten",
+        "Net wages per period": "Nettolonen per periode",
+        "No leave balances yet": "Nog geen verlofsaldi",
+        "No leavers in this period": "Geen uitstroom in deze periode",
+        "No leavers yet": "Nog niemand uit dienst",
+        "No payroll runs yet": "Nog geen loonruns",
+        "No saved reports on this list yet": "Nog geen opgeslagen rapporten bij deze lijst",
+        "No starters in this period": "Geen instroom in deze periode",
+        "Paid runs": "Betaalde loonruns",
+        "Payroll tax per period": "Loonheffing per periode",
+        "Payroll tax, all runs": "Loonheffing, alle loonruns",
+        "Reports you and your colleagues saved on the lists. Save one from a list with the saved views menu.": "Rapporten die jij en je collega's bij de lijsten hebben opgeslagen. Sla er een op vanuit een lijst met het menu voor opgeslagen weergaven.",
+        "Runs by status": "Loonruns per status",
+        "Runs per period": "Loonruns per periode",
+        "Starters per month": "Instroom per maand",
+        "The reports you and your colleagues saved on the lists, to reopen or export.": "De rapporten die jij en je collega's bij de lijsten hebben opgeslagen, om opnieuw te openen of te exporteren.",
+        "The wage cost per period, with gross wages, employer charges, payroll tax and net wages.": "De loonkosten per periode, met brutolonen, werkgeverslasten, loonheffing en nettolonen.",
+        "Turnover": "Verloop",
+        "Used hours per leave type": "Opgenomen uren per verlofsoort",
+        "View all employees": "Alle medewerkers bekijken",
+        "View all leave balances": "Alle verlofsaldi bekijken",
+        "View all payroll runs": "Alle loonruns bekijken",
+        "Who started and who left, per month, and why employment ended.": "Wie in en uit dienst ging, per maand, en waarom het dienstverband eindigde.",
+        "Why employment ended": "Waarom het dienstverband eindigde"
     },
     "nplurals=2; plural=(n != 1);"
 )
