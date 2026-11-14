@@ -63,7 +63,9 @@
 
 ## 5. Verification
 
-- [ ] 5.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec` tags
+- [x] 5.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec` tags
       on every new method (gate 16).
+      (A reason-bearing `@e2e exclude` on all eight scenarios, naming the unit test that covers
+      each; every new method carries `@spec openspec/changes/payroll-special-regimes`.)
 - [ ] 5.2 One live check on a dev instance: calculate a run with the seeded RVU benefit and
       alderman and read both payslips; record screenshots in the PR.
