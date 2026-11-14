@@ -325,46 +325,6 @@ class SettingsService {
 	}//end getOfferSigningDeadlineDays()
 
 	/**
-	 * The employer's Aof (arbeidsongeschiktheidsfonds) tariff classification
-	 * (payroll-core-engine design.md D2 step 9): `laag` for small employers,
-	 * `hoog` for other employers — a per-employer fact the tax-year tables
-	 * cannot know. Configurable via app config key `payroll_aof_tariff`;
-	 * anything other than `hoog` falls back to the honest default `laag`.
-	 *
-	 * @return string `laag` or `hoog`.
-	 *
-	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
-	 */
-	public function getPayrollAofTariff(): string {
-		$value = strtolower(trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_aof_tariff', 'laag')));
-		return $value === 'hoog' ? 'hoog' : 'laag';
-	}//end getPayrollAofTariff()
-
-	/**
-	 * The employer's gedifferentieerde Whk (Werkhervattingskas) percentage
-	 * (payroll-core-engine design.md D2 step 9) — employer-specific, set by
-	 * the Belastingdienst Whk-beschikking. Configurable via app config key
-	 * `payroll_whk_percentage`; unset/blank/non-numeric falls back to the
-	 * tables' flagged national average passed in by the caller (the tables
-	 * file marks its `whk` value `placeholder: true`).
-	 *
-	 * @param float $tablesDefault The tables' flagged national-average Whk percentage.
-	 *
-	 * @return float The Whk percentage (percentage scale, e.g. 1.52).
-	 *
-	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
-	 */
-	public function getPayrollWhkPercentage(float $tablesDefault): float {
-		$value = trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_whk_percentage', ''));
-		if ($value === '' || is_numeric($value) === false) {
-			return $tablesDefault;
-		}
-
-		$percentage = (float)$value;
-		return $percentage >= 0.0 ? $percentage : $tablesDefault;
-	}//end getPayrollWhkPercentage()
-
-	/**
 	 * Whether `LeaveAccrualJob` may run (leave-accrual-job design.md D6) — an
 	 * operator off-switch, configurable via app config key
 	 * `leave_accrual_enabled`. Defaults to `true`; the job returns immediately

@@ -157,30 +157,6 @@ class SettingsServiceTest extends TestCase {
 	}//end testTheEmployerBlock()
 
 	/**
-	 * The AOF tariff is high only when set to it, in any case and spacing; anything else is low.
-	 *
-	 * @return void
-	 */
-	public function testTheAofTariffIsHighOnlyWhenSetSo(): void {
-		self::assertSame('laag', $this->settings([])->getPayrollAofTariff());
-		self::assertSame('hoog', $this->settings(['payroll_aof_tariff' => ' HOOG '])->getPayrollAofTariff());
-		self::assertSame('laag', $this->settings(['payroll_aof_tariff' => 'midden'])->getPayrollAofTariff());
-	}//end testTheAofTariffIsHighOnlyWhenSetSo()
-
-	/**
-	 * The WHK percentage is the stored number when it is one and not negative, else the tables' default.
-	 *
-	 * @return void
-	 */
-	public function testTheWhkPercentage(): void {
-		self::assertSame(1.52, $this->settings([])->getPayrollWhkPercentage(1.52));
-		self::assertSame(0.88, $this->settings(['payroll_whk_percentage' => ' 0.88 '])->getPayrollWhkPercentage(1.52));
-		self::assertSame(0.0, $this->settings(['payroll_whk_percentage' => '0'])->getPayrollWhkPercentage(1.52));
-		self::assertSame(1.52, $this->settings(['payroll_whk_percentage' => 'n.v.t.'])->getPayrollWhkPercentage(1.52));
-		self::assertSame(1.52, $this->settings(['payroll_whk_percentage' => '-1'])->getPayrollWhkPercentage(1.52));
-	}//end testTheWhkPercentage()
-
-	/**
 	 * Extra statutory leave hours are a non-negative number, zero when unset or unusable.
 	 *
 	 * @return void
