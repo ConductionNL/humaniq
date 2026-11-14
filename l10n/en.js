@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "humaniq",
     {
@@ -3722,7 +3718,9 @@ OC.L10N.register(
         "Expense categories": "Expense categories",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.",
         "The expense categories could not be loaded.": "The expense categories could not be loaded.",
-        "The expense categories could not be saved.": "The expense categories could not be saved."
+        "The expense categories could not be saved.": "The expense categories could not be saved.",
+        "Request leave": "Request leave",
+        "Submit an expense": "Submit an expense"
     },
     "nplurals=2; plural=(n != 1);"
 )

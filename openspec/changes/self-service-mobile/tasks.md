@@ -1,18 +1,18 @@
 ## 1. Installable app
 
-- [ ] 1.1 Add `PwaController` with `manifest()` and `serviceWorker()` and the two routes
+- [x] 1.1 Add `PwaController` with `manifest()` and `serviceWorker()` and the two routes
       before `page#catchAll`. Verify: controller test for content types and the
       `Service-Worker-Allowed` header; `hydra-gate-route-auth` passes.
-- [ ] 1.2 Add `src/service-worker.js`, its webpack entry, and the icons. Verify: `npm run
+- [x] 1.2 Add `src/service-worker.js`, its webpack entry, and the icons. Verify: `npm run
       lint` exits 0 and the build emits `service-worker.js`.
-- [ ] 1.3 Link the web manifest in the page head from `Application.php`. Verify: the SPA
+- [x] 1.3 Link the web manifest in the page head from `Application.php`. Verify: the SPA
       page source carries the manifest link.
-- [ ] 1.4 Cache the shell only. Verify: a unit test of the fetch handler that an
+- [x] 1.4 Cache the shell only. Verify: a unit test of the fetch handler that an
       `/apps/humaniq/api/` request is never answered from cache.
 
 ## 2. Phone use
 
-- [ ] 2.1 Add the three quick actions to `MijnHr`. Verify: `npm run check:manifest` exits 0.
+- [x] 2.1 Add the three quick actions to `MijnHr`. Verify: `npm run check:manifest` exits 0.
 - [ ] 2.2 Add the capture hint to the expense receipt field. Verify: `npm run
       check:manifest` exits 0.
 - [ ] 2.3 Add the opt-in notification setting on `Mijn HR` calling openregister's web-push

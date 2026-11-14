@@ -20,6 +20,7 @@ import { registerHoursLeaf } from './integrations/registerHoursLeaf.js'
 import bundledManifest from './manifest.json'
 import menuLayout from './menu-layout.json'
 import pinia from './pinia.js'
+import { registerServiceWorker } from './pwa/registerServiceWorker.js'
 import registry from './registry.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
@@ -219,3 +220,7 @@ app.use(router)
 // (Vue 2 `$mount()` REPLACED it). Selecting `#content` therefore resolved to
 // core's wrapper, not ours. See the comment in templates/index.php.
 app.mount('#humaniq-app')
+
+// self-service-mobile (design.md D1): the installable Mijn HR. Registering asks
+// nothing of the employee; notification permission is only ever asked on a tap.
+registerServiceWorker(generateUrl('/apps/humaniq'))
