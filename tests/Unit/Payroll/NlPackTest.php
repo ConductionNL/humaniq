@@ -74,13 +74,17 @@ class NlPackTest extends TestCase {
 	 * REQ-JP-006 / 30-procent-regeling: the NL pack's self-test block is the 10
 	 * existing fixtures (the original 9 plus the 30%-ruling anchor) —
 	 * referenced, never copied. If a fixture is added, it belongs here too.
+	 * Every fixture is monthly; the four-weekly and weekly periods are the
+	 * inline vectors after them (payroll-period-edge-cases 2.2).
 	 *
 	 * @return void
 	 */
 	public function testTheNlPackDeclaresAllTenGoldenFixturesAsItsOwnVectors(): void {
 		$vectors = $this->pack()->selfTest()['vectors'];
+		$fixtures = array_values(array_filter($vectors, static fn (array $vector): bool => array_key_exists('$fixture', $vector)));
 
-		$this->assertCount(10, $vectors);
+		$this->assertCount(10, $fixtures);
+		$this->assertSame(['2026-P05', '2026-W20', '2026-P05', '2026-W20'], array_column(array_slice($vectors, 10), 'period'));
 		$this->assertSame(
 			[
 				'payroll-2026/anchor.json',
@@ -94,7 +98,7 @@ class NlPackTest extends TestCase {
 				'payroll-2026/dga-anchor.json',
 				'payroll-2026/thirty-percent-ruling-anchor.json',
 			],
-			array_column($vectors, '$fixture')
+			array_column($fixtures, '$fixture')
 		);
 
 	}//end testTheNlPackDeclaresAllTenGoldenFixturesAsItsOwnVectors()

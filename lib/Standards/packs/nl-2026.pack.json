@@ -68,6 +68,15 @@
   },
   "bindings": [
     {
+      "id": "tijdvakFactor",
+      "_note": "F, the number of periods of the period's tijdvak in a year: 12 for a month, 13 for four weeks, 52 for a week (RV2026 tabel 1b). Read from @period.tijdvak, never an input, so it cannot disagree with the period (payroll-period-edge-cases D2).",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "@table.loonheffing.tijdvakFactoren[@period.tijdvak]"
+      }
+    },
+    {
       "id": "tvl",
       "_note": "The taxable wage for the period. HEAD: max(0, grossMonthlySalaryCents).",
       "op": "derive",
@@ -85,7 +94,7 @@
         "op": "cappedRate",
         "base": "@binding.tvl",
         "rate": "@input.thirtyPercentRulingRate",
-        "cap": "@table.dertigProcentRegeling.aftoppingsgrens.maand:cents"
+        "cap": "@table.dertigProcentRegeling.aftoppingsgrens[@period.tijdvak]:cents"
       },
       "round": {
         "mode": "nearest",
@@ -181,11 +190,11 @@
     },
     {
       "id": "annualised",
-      "_note": "belastbaarLoon x F (the tijdvakfactor for a monthly period). 30-procent-regeling D2: repointed from @binding.tvl to @binding.belastbaarLoon so the tabelloon/schijventarief/heffingskortingen chain is computed over the 30%-reduced taxable base.",
+      "_note": "belastbaarLoon x F (the tijdvakfactor of the period's tijdvak). 30-procent-regeling D2: repointed from @binding.tvl to @binding.belastbaarLoon so the tabelloon/schijventarief/heffingskortingen chain is computed over the 30%-reduced taxable base.",
       "op": "derive",
       "using": {
         "op": "expr",
-        "expression": "@binding.belastbaarLoon * @table.loonheffing.tijdvakFactoren.maand"
+        "expression": "@binding.belastbaarLoon * @binding.tijdvakFactor"
       }
     },
     {
@@ -273,11 +282,11 @@
     },
     {
       "id": "premieloonCap",
-      "_note": "The monthly maximum premieloon — the same leaf caps the Zvw bijdrageloon, since both share one annual maximum in the corpus.",
+      "_note": "The maximum premieloon of the period's tijdvak — the same leaf caps the Zvw bijdrageloon, since both share one annual maximum in the corpus.",
       "op": "derive",
       "using": {
         "op": "expr",
-        "expression": "@table.werknemersverzekeringen.maximumpremieloon.maand:cents"
+        "expression": "@table.werknemersverzekeringen.maximumpremieloon[@period.tijdvak]:cents"
       }
     },
     {
@@ -417,7 +426,7 @@
       "_note": "The tijdvakbedrag x = X / F. The ONLY step in the NL chain that reduces net — which is why the interpreter's incidence fold yields exactly tvl - loonheffing.",
       "op": "expr",
       "incidence": "reduces-net",
-      "expression": "@step.loonheffingJaar / @table.loonheffing.tijdvakFactoren.maand",
+      "expression": "@step.loonheffingJaar / @binding.tijdvakFactor",
       "round": {
         "mode": "nearest",
         "unit": "cent"
@@ -428,7 +437,7 @@
       "_note": "The applied arbeidskorting tijdvakbedrag. Informative: it is already reflected inside loonheffing, so it must not reduce net a second time.",
       "op": "expr",
       "incidence": "informative",
-      "expression": "@step.ark / @table.loonheffing.tijdvakFactoren.maand",
+      "expression": "@step.ark / @binding.tijdvakFactor",
       "round": {
         "mode": "nearest",
         "unit": "cent"
@@ -568,7 +577,11 @@
       { "$fixture": "payroll-2026/part-time.json" },
       { "$fixture": "payroll-2026/bijtelling-anchor.json" },
       { "$fixture": "payroll-2026/dga-anchor.json" },
-      { "$fixture": "payroll-2026/thirty-percent-ruling-anchor.json" }
+      { "$fixture": "payroll-2026/thirty-percent-ruling-anchor.json" },
+      {"_note": "Four-weekly (payroll-period-edge-cases D2): the anchor's annual wage (3800 x 12 / 13 per period) gives the anchor's loonheffing x 12 / 13, through tijdvakFactor 13.", "period": "2026-P05", "input": {"gross": 350769, "taxTableColor": "wit", "dateOfBirth": "1990-04-12", "loonheffingskortingToegepast": true, "awfTariff": "laag", "aofTariff": "laag", "whkPercentage": 1.52}, "expected": {"@step.loonheffing": 66354, "@step.arbeidskorting": 43731, "@step.volksverzekeringen": 43464, "@step.zvw": 21397, "@step.awf": 9611, "@step.aof": 21993, "@step.werknemersverzekeringen": 38690, "@step.vakantiegeld": 28062, "@net": 284415, "@employerCharges": 60087}},
+      {"_note": "Weekly: the anchor's annual wage (3800 x 12 / 52 per week) gives the anchor's loonheffing x 12 / 52, through tijdvakFactor 52.", "period": "2026-W20", "input": {"gross": 87692, "taxTableColor": "wit", "dateOfBirth": "1990-04-12", "loonheffingskortingToegepast": true, "awfTariff": "laag", "aofTariff": "laag", "whkPercentage": 1.52}, "expected": {"@step.loonheffing": 16588, "@step.arbeidskorting": 10933, "@step.volksverzekeringen": 10866, "@step.zvw": 5349, "@step.awf": 2403, "@step.aof": 5498, "@step.werknemersverzekeringen": 9672, "@step.vakantiegeld": 7015, "@net": 71104, "@employerCharges": 15021}},
+      {"_note": "Four-weekly above the cap: Zvw and the werknemersverzekeringen stop at maximumpremieloon.vierweken (6108.38; Zvw 6.10% = 372.61).", "period": "2026-P05", "input": {"gross": 700000, "taxTableColor": "wit", "dateOfBirth": "1990-04-12", "loonheffingskortingToegepast": true, "awfTariff": "laag", "aofTariff": "laag", "whkPercentage": 1.52}, "expected": {"@step.loonheffing": 248008, "@step.arbeidskorting": 21000, "@step.volksverzekeringen": 76245, "@step.zvw": 37261, "@step.awf": 16737, "@step.aof": 38300, "@step.werknemersverzekeringen": 67376, "@step.vakantiegeld": 56000, "@net": 451992, "@employerCharges": 104637}},
+      {"_note": "Weekly above the cap: Zvw and the werknemersverzekeringen stop at maximumpremieloon.week (1527.10; Zvw 6.10% = 93.15).", "period": "2026-W20", "input": {"gross": 200000, "taxTableColor": "wit", "dateOfBirth": "1990-04-12", "loonheffingskortingToegepast": true, "awfTariff": "laag", "aofTariff": "laag", "whkPercentage": 1.52}, "expected": {"@step.loonheffing": 75962, "@step.arbeidskorting": 3627, "@step.volksverzekeringen": 19733, "@step.zvw": 9315, "@step.awf": 4184, "@step.aof": 9575, "@step.werknemersverzekeringen": 16844, "@step.vakantiegeld": 16000, "@net": 124038, "@employerCharges": 26159}}
     ]
   }
 }

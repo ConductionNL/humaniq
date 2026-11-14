@@ -13,9 +13,10 @@
 - [x] 2.1 Teach `RefResolver` `@period.tijdvak` and `@period.lastDay` for every id. Verify:
       unit tests for each grain.
   - Done: `RefResolver::period()` parses the id through `PayPeriod`: `@period.year` is the id's (ISO) year, `@period.lastDay` the period's last day, `@period.tijdvak` `maand`, `vierweken` or `week`; an unknown id or a week 53 the year lacks is refused as before. Tests: `RefResolverTest::testEachGrainResolvesItsPeriodFields` (6 grains), `testAWeek53TheYearLacksIsRejected`.
-- [ ] 2.2 Replace the monthly factor and caps in the pack with tijdvak bindings, add
+- [x] 2.2 Replace the monthly factor and caps in the pack with tijdvak bindings, add
       `maximumpremieloon.week` and new golden vectors. Verify: the nine fixtures pass unchanged
       and the four-weekly and weekly vectors pass through `PackValidator` gate 5.
+  - Done: binding `tijdvakFactor` = `@table.loonheffing.tijdvakFactoren[@period.tijdvak]` feeds `annualised`, `loonheffing` and `arbeidskorting`; `premieloonCap` and the 30%-ruling cap index `maximumpremieloon` and `aftoppingsgrens` by `@period.tijdvak`. The tables gain `maximumpremieloon.week` (1527.10 = jaar / 52) and `aftoppingsgrens.vierweken`/`.week` (jaar x 4 / 52, jaar / 52). The ten monthly fixtures pass unchanged; four inline vectors (`2026-P05` and `2026-W20`, below and above the cap) pass gate 5, and the uncapped ones reproduce the anchor's loonheffing x 12 / 13 and x 12 / 52. Tests: `NlPackTest`.
 - [ ] 2.3 Switch the run's monthly conversions to `shareOfYear` (D4). Verify: unit test that a
       monthly payslip is byte-identical to before.
 - [ ] 2.4 Add week-53 handling for both settings (D3). Verify: unit tests that an extended
