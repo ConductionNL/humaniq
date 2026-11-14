@@ -716,6 +716,507 @@
                         "description": "The Nextcloud account this transaction belongs to, so it appears under the employee's own pages.", "x-notes": "Denormalized Nextcloud user id of the employee this transaction belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the LeaveRequest.userId convention, never a $ref relation. The MijnVerlofKopenVerkopen self-service page filters on it with the @me token."
                     }
                 }
+            },
+            "IkbBudget": {
+                "configuration": {
+                    "exportable": true
+                },
+                "slug": "IkbBudget",
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        "humaniq-payroll",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "userId": "$userId"
+                            }
+                        },
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "managerUserId": "$userId"
+                            }
+                        }
+                    ],
+                    "create": [
+                        "humaniq-hr",
+                        "humaniq-payroll"
+                    ],
+                    "update": [
+                        "humaniq-hr",
+                        "humaniq-payroll"
+                    ],
+                    "delete": [
+                        "humaniq-hr"
+                    ]
+                },
+                "icon": "PiggyBankOutline",
+                "version": "0.1.0",
+                "title": "Individual choice budget",
+                "description": "An employee's individual choice budget (IKB) for one year (payroll-reservation-payouts D8): accrued on every approved payslip at the contract's or the confirmed collective agreement's rate, and spent by approved requests. balance is accrued minus spent.",
+                "type": "object",
+                "x-schema-org": "schema:MonetaryAmount",
+                "required": [
+                    "employeeId",
+                    "year"
+                ],
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Whose budget this is."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "User",
+                        "description": "The account of the employee, who may read this budget.",
+                        "x-notes": "Denormalized Employee.nextcloudUserId."
+                    },
+                    "managerUserId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Manager",
+                        "description": "The account of the employee's manager, who may read this budget."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration ID",
+                        "description": "Which administration the budget belongs to."
+                    },
+                    "year": {
+                        "type": "integer",
+                        "title": "Year",
+                        "description": "The calendar year the budget accrues in."
+                    },
+                    "accrued": {
+                        "type": "number",
+                        "default": 0,
+                        "title": "Accrued",
+                        "description": "What has been built up this year, in euros."
+                    },
+                    "spent": {
+                        "type": "number",
+                        "default": 0,
+                        "title": "Spent",
+                        "description": "What approved requests have used, in euros."
+                    },
+                    "balance": {
+                        "type": "number",
+                        "default": 0,
+                        "title": "Balance",
+                        "description": "What is left to spend: accrued minus spent, in euros."
+                    },
+                    "accruedRunIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "title": "Runs accrued",
+                        "description": "The payroll runs already added to this budget.",
+                        "x-notes": "Idempotency: a replayed approval of a run already listed adds nothing (payroll-reservation-payouts task 2.3)."
+                    }
+                }
+            },
+            "IkbGoal": {
+                "configuration": {
+                    "exportable": true
+                },
+                "slug": "IkbGoal",
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        "humaniq-payroll",
+                        "authenticated"
+                    ],
+                    "create": [
+                        "humaniq-hr"
+                    ],
+                    "update": [
+                        "humaniq-hr"
+                    ],
+                    "delete": [
+                        "humaniq-hr"
+                    ]
+                },
+                "icon": "TargetVariant",
+                "version": "0.1.0",
+                "title": "Choice budget goal",
+                "description": "A goal HR allows the individual choice budget to be spent on, such as a union fee or a bicycle, with its tax treatment (payroll-reservation-payouts D8). An exempt goal is paid untaxed and recorded in the work-related costs scheme; a taxed goal is paid at the special rate.",
+                "type": "object",
+                "x-schema-org": "schema:Thing",
+                "required": [
+                    "name",
+                    "taxTreatment"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "What the budget is spent on, as employees see it."
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Description",
+                        "description": "What the goal covers and what proof is needed."
+                    },
+                    "taxTreatment": {
+                        "type": "string",
+                        "enum": [
+                            "exempt",
+                            "taxed"
+                        ],
+                        "x-enum-labels": {
+                            "exempt": "Untaxed",
+                            "taxed": "Taxed at the special rate"
+                        },
+                        "title": "Tax treatment",
+                        "description": "Whether a spend on this goal is paid untaxed or taxed at the special rate."
+                    },
+                    "wkrCategory": {
+                        "type": "string",
+                        "nullable": true,
+                        "enum": [
+                            "gericht-vrijgesteld",
+                            "vrije-ruimte",
+                            "eindheffing",
+                            null
+                        ],
+                        "x-enum-labels": {
+                            "gericht-vrijgesteld": "Specifically exempt",
+                            "vrije-ruimte": "Charged to the free margin",
+                            "eindheffing": "Final levy"
+                        },
+                        "title": "WKR category",
+                        "description": "Where an untaxed spend is recorded in the work-related costs scheme."
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "default": true,
+                        "title": "Active",
+                        "description": "Whether employees can choose this goal now."
+                    }
+                }
+            },
+            "IkbSpendRequest": {
+                "slug": "IkbSpendRequest",
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        "humaniq-payroll",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "userId": "$userId"
+                            }
+                        },
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "managerUserId": "$userId"
+                            }
+                        },
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "deputyUserIds": {
+                                    "$contains": "$userId"
+                                }
+                            }
+                        }
+                    ],
+                    "create": [
+                        "humaniq-hr",
+                        "authenticated"
+                    ],
+                    "update": [
+                        "humaniq-hr",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "userId": "$userId"
+                            }
+                        },
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "managerUserId": "$userId"
+                            }
+                        },
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "deputyUserIds": {
+                                    "$contains": "$userId"
+                                }
+                            }
+                        }
+                    ],
+                    "delete": [
+                        "humaniq-hr"
+                    ]
+                },
+                "icon": "CashPlus",
+                "version": "0.1.0",
+                "title": "Choice budget request",
+                "description": "An employee's request to spend the individual choice budget (payroll-reservation-payouts D8): as a payout, as extra leave hours, or on a goal HR configured. A declarative draft -> submitted -> approved/rejected -> settled lifecycle; approval by someone other than the requester and never above the balance (IkbSpendApprovalGuard). The payroll run settles an approved request in its settlement period.",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "employeeId",
+                    "year",
+                    "goal",
+                    "status"
+                ],
+                "configuration": {
+                    "exportable": true,
+                    "x-openregister-notifications": {
+                        "ikb-spend-request-submitted": {
+                            "trigger": {
+                                "type": "transition",
+                                "action": "submit"
+                            },
+                            "enabled": true,
+                            "originApp": "humaniq",
+                            "channels": [
+                                "nc-notification",
+                                "email"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "expression",
+                                    "resolver": "OCA\\Humaniq\\Notification\\ManagerOrDeputyRecipientResolver"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Een verzoek om het keuzebudget te besteden wacht op je goedkeuring",
+                                "en": "A request to spend the choice budget waits for your approval"
+                            },
+                            "message": {
+                                "nl": "{{amount}} euro in {{year}}. Je vindt het bij Mijn goedkeuringen.",
+                                "en": "{{amount}} euros in {{year}}. You find it under My approvals."
+                            }
+                        },
+                        "ikb-spend-request-approved": {
+                            "trigger": {
+                                "type": "transition",
+                                "action": "approve"
+                            },
+                            "enabled": true,
+                            "originApp": "humaniq",
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "field",
+                                    "field": "userId"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Je verzoek om het keuzebudget te besteden is goedgekeurd",
+                                "en": "Your request to spend the choice budget was approved"
+                            },
+                            "message": {
+                                "nl": "{{amount}} euro in {{year}}.",
+                                "en": "{{amount}} euros in {{year}}."
+                            }
+                        },
+                        "ikb-spend-request-rejected": {
+                            "trigger": {
+                                "type": "transition",
+                                "action": "reject"
+                            },
+                            "enabled": true,
+                            "originApp": "humaniq",
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "field",
+                                    "field": "userId"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Je verzoek om het keuzebudget te besteden is afgewezen",
+                                "en": "Your request to spend the choice budget was rejected"
+                            },
+                            "message": {
+                                "nl": "{{amount}} euro in {{year}}. Reden: {{rejectionReason}}",
+                                "en": "{{amount}} euros in {{year}}. Reason: {{rejectionReason}}"
+                            }
+                        }
+                    },
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "draft",
+                        "terminal": [
+                            "settled"
+                        ],
+                        "transitions": {
+                            "submit": {
+                                "from": [
+                                    "draft",
+                                    "rejected"
+                                ],
+                                "to": "submitted",
+                                "description": "The employee submits the request for approval. A rejected request may be corrected and submitted again."
+                            },
+                            "approve": {
+                                "from": [
+                                    "submitted"
+                                ],
+                                "to": "approved",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\IkbSpendApprovalGuard",
+                                "description": "A manager or HR approves. IkbSpendApprovalGuard refuses self-approval first, then a request above the budget's balance."
+                            },
+                            "reject": {
+                                "from": [
+                                    "submitted"
+                                ],
+                                "to": "rejected",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "A manager or HR rejects, with a rejectionReason. The requester cannot reject their own request."
+                            },
+                            "settle": {
+                                "from": [
+                                    "approved"
+                                ],
+                                "to": "settled",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\LeaveSettlementPeriodGuard",
+                                "description": "The payroll run settles the request in its settlementPeriod: a payout at the special rate, leave as hours, a goal untaxed or at the special rate. Fail-closed unless settlementPeriod is YYYY-MM-shaped."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "managerUserId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Manager",
+                        "description": "The account of the employee's manager, who may read this record.",
+                        "x-notes": "Stamped by humaniq on every save and refreshed by the manager access pass (ManagerAccessStamps): the nextcloudUserId of the manager the org resolution gives today for the record's employee. Never taken from the request. Read by the managerUserId authorization rule."
+                    },
+                    "deputyUserIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true,
+                        "title": "Deputies",
+                        "description": "The accounts standing in for the manager today, who may read this record too.",
+                        "x-notes": "Stamped with managerUserId: the deputies of ManagerDeputy records active today for that manager. Refreshed by the manager access pass when a deputy period starts or ends. Read by the deputyUserIds $contains authorization rule."
+                    },
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Who spends the budget."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "User",
+                        "description": "The account of the employee, who may read and edit the request.",
+                        "x-notes": "Denormalized Employee.nextcloudUserId; the requester for NoSelfApprovalGuard."
+                    },
+                    "year": {
+                        "type": "integer",
+                        "title": "Year",
+                        "description": "The budget year spent from."
+                    },
+                    "goal": {
+                        "type": "string",
+                        "enum": [
+                            "payout",
+                            "leave",
+                            "goal"
+                        ],
+                        "x-enum-labels": {
+                            "payout": "Pay out",
+                            "leave": "Extra leave",
+                            "goal": "A goal HR allows"
+                        },
+                        "title": "Spend on",
+                        "description": "Whether the budget is paid out, turned into extra leave hours, or spent on a goal HR allows."
+                    },
+                    "ikbGoalId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true,
+                        "$ref": "IkbGoal",
+                        "title": "Goal",
+                        "description": "The goal, when the budget is spent on one."
+                    },
+                    "amount": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Amount",
+                        "description": "The amount spent, in euros. For extra leave, what the hours are worth."
+                    },
+                    "hours": {
+                        "type": "number",
+                        "minimum": 0,
+                        "nullable": true,
+                        "title": "Hours",
+                        "description": "For extra leave, how many hours."
+                    },
+                    "settlementPeriod": {
+                        "type": "string",
+                        "nullable": true,
+                        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+                        "title": "Settlement period",
+                        "description": "The payroll period that settles the request, YYYY-MM."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "submitted",
+                            "approved",
+                            "rejected",
+                            "settled"
+                        ],
+                        "x-enum-labels": {
+                            "draft": "Draft",
+                            "submitted": "Submitted",
+                            "approved": "Approved",
+                            "rejected": "Rejected",
+                            "settled": "Settled"
+                        },
+                        "default": "draft",
+                        "title": "Status",
+                        "description": "Where the request has got to."
+                    },
+                    "approvedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Approved by",
+                        "description": "Who approved or rejected the request."
+                    },
+                    "rejectionReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Reason for rejection",
+                        "description": "Why the request was rejected."
+                    },
+                    "settledInRunId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true,
+                        "$ref": "PayrollRun",
+                        "title": "Settled in run",
+                        "description": "The payroll run that settled the request."
+                    }
+                }
             }
         }
     }

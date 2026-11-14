@@ -311,4 +311,53 @@ class TaxTablesAccessorsTest extends TestCase {
 		self::assertTrue(TaxTables::isBundled(' nl-2026 '));
 		self::assertFalse(TaxTables::isBundled('nl-1999'));
 	}//end testTheBundledIdsAreListedFromDisk()
+
+	/**
+	 * The special-rate bands come per colour and column in cents, open at the
+	 * top, and the unverified 2026 leaf is not usable to tax a payment.
+	 *
+	 * @return void
+	 */
+	public function testTheSpecialRateBandsAreReadPerColumnAndRefusedWhileUnverified(): void {
+		$raw = $this->v('bijzondereBeloningen', 'wit', 'value', 'belowAow', 'metKorting');
+		$read = $this->tables->bijzondereBeloningen('wit', false, true);
+
+		self::assertCount(count($raw), $read['bands']);
+		self::assertSame((int)round($raw[0]['tot'] * 100), $read['bands'][0]['totCents']);
+		self::assertSame((float)$raw[3]['percentage'], $read['bands'][3]['percentage']);
+		self::assertNull($read['bands'][(count($raw) - 1)]['totCents'], 'the top band is open');
+		self::assertFalse($read['usable'], 'an unverified leaf must not tax a payment');
+
+		$aow = $this->tables->bijzondereBeloningen('groen', true, false);
+		$rawAow = $this->v('bijzondereBeloningen', 'groen', 'value', 'aowAge', 'zonderKorting');
+		self::assertSame((float)$rawAow[0]['percentage'], $aow['bands'][0]['percentage']);
+	}//end testTheSpecialRateBandsAreReadPerColumnAndRefusedWhileUnverified()
+
+	/**
+	 * A verified special-rate leaf is usable.
+	 *
+	 * @return void
+	 */
+	public function testAVerifiedSpecialRateLeafIsUsable(): void {
+		$raw = $this->raw;
+		$raw['parameters']['bijzondereBeloningen']['wit']['verified'] = true;
+		$raw['parameters']['bijzondereBeloningen']['wit']['placeholder'] = false;
+
+		$read = TaxTables::fromDocument($raw, 'test')->bijzondereBeloningen('wit', false, true);
+
+		self::assertTrue($read['usable']);
+	}//end testAVerifiedSpecialRateLeafIsUsable()
+
+	/**
+	 * A tables document without the group refuses the special rate.
+	 *
+	 * @return void
+	 */
+	public function testMissingSpecialRateGroupIsRefused(): void {
+		$raw = $this->raw;
+		unset($raw['parameters']['bijzondereBeloningen']);
+
+		$this->expectException(RuntimeException::class);
+		TaxTables::fromDocument($raw, 'test')->bijzondereBeloningen('wit', false, true);
+	}//end testMissingSpecialRateGroupIsRefused()
 }//end class

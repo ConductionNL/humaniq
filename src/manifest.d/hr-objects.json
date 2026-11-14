@@ -2942,6 +2942,63 @@
 					]
 				}
 			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "ReservationPayout",
+			"params": {
+				"id": "ReservationPayouts",
+				"route": "/reservation-payouts",
+				"title": "Reserve payouts",
+				"columns": [
+					"employeeId",
+					"kind",
+					"reason",
+					"basisFrom",
+					"basisTo",
+					"amount",
+					"period",
+					"status"
+				],
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				},
+				"filters": [
+					"kind",
+					"reason",
+					"status",
+					"period"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"allowCreate": false,
+				"description": "Holiday allowance, end-of-year payment and choice budget paid out by the payroll runs, with the periods each covers. Amounts in cents.",
+				"note": "payroll-reservation-payouts D4: written by the run, paid on run approval."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "ReservationPayout",
+			"params": {
+				"id": "ReservationPayoutDetail",
+				"route": "/reservation-payouts/:id",
+				"title": "Reserve payout",
+				"dataTitle": "Payout",
+				"dataIcon": "CashMultiple",
+				"relatedTitle": "Related",
+				"gridHeight": 7,
+				"exclude": [
+					"employeeId",
+					"payrollRunId",
+					"payslipId",
+					"ikbSpendRequestId"
+				],
+				"note": "payroll-reservation-payouts D4."
+			}
 		}
 	]
 }

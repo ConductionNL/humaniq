@@ -2,11 +2,11 @@
   "id": "nl-2026",
   "jurisdiction": "NL",
   "taxYear": 2026,
-  "packVersion": "1.1.0",
+  "packVersion": "1.2.0",
   "dslVersion": "1.0",
   "tables": "nl-2026",
   "currency": "EUR",
-  "grossRef": "@binding.tvl",
+  "grossRef": "@binding.grossWithSpecial",
   "basedOn": [
     {
       "doc": "Belastingdienst — Rekenvoorschriften voor de geautomatiseerde loonadministratie 2026 (RV2026), sec. 2.1-2.2.4",
@@ -21,7 +21,7 @@
     "parameters": "Every rate, bracket and threshold arrives by @table.* reference into the verified lib/Standards/tables/nl-2026.json corpus. NO parameter value is copied into this pack: the {value, source, verified} leaves keep exactly one home (design.md D4).",
     "units": "The corpus carries no unit marker on its leaves (Lv: 54 is euro, zvw.werkgeversheffing: 6.1 is a percentage), so this pack DECLARES the unit via the :cents ref suffix and the bracket op's `unit` field. Unit knowledge lives here, in config — never in the interpreter.",
     "hatch": "Zero phpStep uses. Every step of the NL chain is expressible in the declarative vocabulary.",
-    "netto": "There is deliberately NO netto step. Net is the interpreter's fold over incidence: gross - sum(reduces-net). For NL that yields tvl - loonheffing because every employer charge below honestly declares employer-cost — not because any rule says so.",
+    "netto": "There is deliberately NO netto step. Net is the interpreter's fold over incidence: gross - sum(reduces-net). For NL that yields tvl + specialPayment - loonheffing - loonheffingBijzonder because every employer charge below honestly declares employer-cost — not because any rule says so.",
     "gaps": "Reproduces the engine at HEAD, gaps included: no VCR (every premium is period-capped, not cumulative-year-capped) and no above-Lmax 'systematiek 1' (the aboveLmax binding flags it; the chain does not extend)."
   },
   "inputs": {
@@ -62,6 +62,18 @@
       "default": true
     },
     "thirtyPercentRulingRate": {
+      "type": "percent",
+      "default": 0
+    },
+    "specialPayment": {
+      "type": "cents",
+      "default": 0
+    },
+    "annualWageReference": {
+      "type": "cents",
+      "default": 0
+    },
+    "endOfYearRate": {
       "type": "percent",
       "default": 0
     }
@@ -303,6 +315,37 @@
           "hoog": "@table.werknemersverzekeringen.aof.hoog"
         }
       }
+    },
+    {
+      "id": "grossWithSpecial",
+      "_note": "payroll-reservation-payouts D1: the gross the fold subtracts from is the regular wage plus the one-off special payment. With specialPayment 0 (the default) it is tvl, exactly as before.",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "@binding.tvl + max(0, @input.specialPayment)"
+      }
+    },
+    {
+      "id": "premieBase",
+      "_note": "payroll-reservation-payouts D1: the employer premiums and the Zvw are levied on the regular taxable wage plus the special payment, under the same period cap (tijdvak method, no VCR).",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "@binding.belastbaarLoon + max(0, @input.specialPayment)"
+      }
+    },
+    {
+      "id": "bijzonderKortingCol",
+      "_note": "The special-rate column: with or without loonheffingskorting, as the regular chain applies it.",
+      "op": "derive",
+      "using": {
+        "op": "match",
+        "on": "@input.loonheffingskortingToegepast",
+        "cases": {
+          "true": "metKorting",
+          "false": "zonderKorting"
+        }
+      }
     }
   ],
   "steps": [
@@ -313,6 +356,23 @@
       "incidence": "reserve",
       "base": "@binding.belastbaarLoon",
       "rate": "@binding.vakantiegeldRate",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "eindejaarsuitkering",
+      "_note": "payroll-reservation-payouts D7: the end-of-year (thirteenth month) reserve, endOfYearRate of the taxable wage. RESERVE like the holiday allowance. The rate is resolved by the run, contract first and a confirmed CAO second; it defaults to 0, so a contract without one reserves nothing.",
+      "op": "rate",
+      "incidence": "reserve",
+      "when": {
+        "op": "gt",
+        "left": "@input.endOfYearRate",
+        "right": 0
+      },
+      "base": "@binding.belastbaarLoon",
+      "rate": "@input.endOfYearRate",
       "round": {
         "mode": "nearest",
         "unit": "cent"
@@ -414,10 +474,45 @@
     },
     {
       "id": "loonheffing",
-      "_note": "The tijdvakbedrag x = X / F. The ONLY step in the NL chain that reduces net — which is why the interpreter's incidence fold yields exactly tvl - loonheffing.",
+      "_note": "The tijdvakbedrag x = X / F, the wage tax on the regular wage. With loonheffingBijzonder the only steps that reduce net — which is why the interpreter's incidence fold yields exactly tvl + specialPayment - loonheffing - loonheffingBijzonder.",
       "op": "expr",
       "incidence": "reduces-net",
       "expression": "@step.loonheffingJaar / @table.loonheffing.tijdvakFactoren.maand",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "bijzonderPercentage",
+      "_note": "payroll-reservation-payouts D1/D2: the special-rate percentage (tabel bijzondere beloningen) for the annual wage reference, in the employee's colour, AOW and korting column. A rate, not money. Gated on a special payment, so a period without one never reads the table.",
+      "op": "band",
+      "incidence": "informative",
+      "when": {
+        "op": "gt",
+        "left": "@input.specialPayment",
+        "right": 0
+      },
+      "value": "@input.annualWageReference",
+      "table": "@table.bijzondereBeloningen[@input.taxTableColor][@binding.kortingCol][@binding.bijzonderKortingCol]",
+      "unit": "euro",
+      "round": {
+        "mode": "nearest",
+        "unit": "decimals",
+        "decimals": 2
+      }
+    },
+    {
+      "id": "loonheffingBijzonder",
+      "_note": "payroll-reservation-payouts D1: the wage tax on the special payment at the special rate. Reduces net. The regular chain above never sees the special payment.",
+      "op": "expr",
+      "incidence": "reduces-net",
+      "when": {
+        "op": "gt",
+        "left": "@input.specialPayment",
+        "right": 0
+      },
+      "expression": "@input.specialPayment * @step.bijzonderPercentage / 100",
       "round": {
         "mode": "nearest",
         "unit": "cent"
@@ -455,7 +550,7 @@
       "_note": "Zvw werkgeversheffing over the capped bijdrageloon. EMPLOYER-COST.",
       "op": "cappedRate",
       "incidence": "employer-cost",
-      "base": "@binding.belastbaarLoon",
+      "base": "@binding.premieBase",
       "rate": "@binding.zvwRate",
       "cap": "@binding.premieloonCap",
       "round": {
@@ -469,7 +564,7 @@
       "op": "cappedRate",
       "incidence": "employer-cost",
       "when": "@input.verzekeringsplichtig",
-      "base": "@binding.belastbaarLoon",
+      "base": "@binding.premieBase",
       "rate": "@binding.awfRate",
       "cap": "@binding.premieloonCap",
       "round": {
@@ -482,7 +577,7 @@
       "op": "cappedRate",
       "incidence": "employer-cost",
       "when": "@input.verzekeringsplichtig",
-      "base": "@binding.belastbaarLoon",
+      "base": "@binding.premieBase",
       "rate": "@binding.aofRate",
       "cap": "@binding.premieloonCap",
       "round": {
@@ -495,7 +590,7 @@
       "op": "cappedRate",
       "incidence": "employer-cost",
       "when": "@input.verzekeringsplichtig",
-      "base": "@binding.belastbaarLoon",
+      "base": "@binding.premieBase",
       "rate": "@table.werknemersverzekeringen.wkoOpslag",
       "cap": "@binding.premieloonCap",
       "round": {
@@ -509,7 +604,7 @@
       "op": "cappedRate",
       "incidence": "employer-cost",
       "when": "@input.verzekeringsplichtig",
-      "base": "@binding.belastbaarLoon",
+      "base": "@binding.premieBase",
       "rate": "@input.whkPercentage",
       "cap": "@binding.premieloonCap",
       "round": {
@@ -543,7 +638,7 @@
     }
   ],
   "selfTest": {
-    "_note": "REQUIRED (REQ-JP-006). NL's golden vectors ARE the 9 existing fixtures under tests/fixtures/payroll-2026/ — referenced, never copied, edited or re-derived. The machinery that gates a third-party pack is therefore the exact machinery that proves the NL migration was behaviour-identical: one mechanism, two jobs. The `$fixture` vector form is bundled-only; an uploaded pack must carry inline {input, expected} vectors and is rejected if it names a fixture.",
+    "_note": "REQUIRED (REQ-JP-006). NL's regular golden vectors ARE the existing fixtures under tests/fixtures/payroll-2026/ — referenced, never copied, edited or re-derived. The machinery that gates a third-party pack is therefore the exact machinery that proves the NL migration was behaviour-identical: one mechanism, two jobs. The `$fixture` vector form is bundled-only; an uploaded pack must carry inline {input, expected} vectors and is rejected if it names a fixture. The three inline vectors after them cover the special-rate path and the end-of-year reserve (payroll-reservation-payouts); their special-rate figures follow the unverified 2026 bijzondereBeloningen bands and move when those are transcribed.",
     "fixtureMap": {
       "loonheffing": "@step.loonheffing",
       "arbeidskorting": "@step.arbeidskorting",
@@ -568,7 +663,59 @@
       { "$fixture": "payroll-2026/part-time.json" },
       { "$fixture": "payroll-2026/bijtelling-anchor.json" },
       { "$fixture": "payroll-2026/dga-anchor.json" },
-      { "$fixture": "payroll-2026/thirty-percent-ruling-anchor.json" }
+      { "$fixture": "payroll-2026/thirty-percent-ruling-anchor.json" },
+      {
+        "period": "2026-05",
+        "input": {
+          "gross": 380000,
+          "taxTableColor": "wit",
+          "dateOfBirth": "1990-04-12",
+          "whkPercentage": 1.52,
+          "specialPayment": 364800,
+          "annualWageReference": 4560000
+        },
+        "expected": {
+          "@gross": 744800,
+          "@step.loonheffing": 71883,
+          "@step.loonheffingBijzonder": 184115,
+          "@employerCharges": 113356,
+          "@step.vakantiegeld": 30400,
+          "@net": 488802
+        }
+      },
+      {
+        "period": "2026-05",
+        "input": {
+          "gross": 380000,
+          "taxTableColor": "wit",
+          "dateOfBirth": "1955-04-12",
+          "whkPercentage": 1.52,
+          "specialPayment": 364800,
+          "annualWageReference": 4560000
+        },
+        "expected": {
+          "@gross": 744800,
+          "@step.loonheffing": 29142,
+          "@step.loonheffingBijzonder": 160548,
+          "@employerCharges": 113356,
+          "@net": 555110
+        }
+      },
+      {
+        "period": "2026-12",
+        "input": {
+          "gross": 300000,
+          "taxTableColor": "wit",
+          "dateOfBirth": "1990-04-12",
+          "endOfYearRate": 8.33
+        },
+        "expected": {
+          "@gross": 300000,
+          "@step.eindejaarsuitkering": 24990,
+          "@step.loonheffingBijzonder": 0,
+          "@net": 261317
+        }
+      }
     ]
   }
 }

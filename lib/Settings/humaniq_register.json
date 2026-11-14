@@ -123,7 +123,11 @@
                     "Survey",
                     "SurveyInvitation",
                     "SurveyResponse",
-                    "WageTaxRemittance"
+                    "WageTaxRemittance",
+                    "ReservationPayout",
+                    "IkbBudget",
+                    "IkbGoal",
+                    "IkbSpendRequest"
                 ]
             }
         },

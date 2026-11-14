@@ -118,6 +118,15 @@
 					"route": "MijnVerlofKopenVerkopen"
 				},
 				{
+					"id": "MijnKeuzebudget",
+					"label": "My choice budget",
+					"icon": "PiggyBankOutline",
+					"route": "IkbSpendRequests",
+					"query": {
+						"userId": "@me"
+					}
+				},
+				{
 					"id": "MijnGebruikelijkLoon",
 					"label": "My customary wage",
 					"icon": "ScaleBalance",
@@ -494,6 +503,24 @@
 					"route": "LeaveBalances"
 				},
 				{
+					"id": "IkbSpendRequests",
+					"label": "Choice budget requests",
+					"icon": "CashPlus",
+					"route": "IkbSpendRequests"
+				},
+				{
+					"id": "IkbBudgets",
+					"label": "Choice budgets",
+					"icon": "PiggyBankOutline",
+					"route": "IkbBudgets"
+				},
+				{
+					"id": "IkbGoals",
+					"label": "Choice budget goals",
+					"icon": "TargetVariant",
+					"route": "IkbGoals"
+				},
+				{
 					"id": "VerlofVervaltBinnenkort",
 					"label": "Leave that lapses soon",
 					"icon": "CalendarRemoveOutline",
@@ -640,6 +667,12 @@
 					"label": "Payslips",
 					"icon": "ReceiptTextOutline",
 					"route": "Payslips"
+				},
+				{
+					"id": "ReservationPayouts",
+					"label": "Reserve payouts",
+					"icon": "CashMultiple",
+					"route": "ReservationPayouts"
 				},
 				{
 					"id": "Jaaropgaven",

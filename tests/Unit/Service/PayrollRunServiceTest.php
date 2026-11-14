@@ -59,6 +59,7 @@ use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
+use OCA\Humaniq\Service\ReservationPayoutRunService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -258,10 +259,11 @@ class PayrollRunServiceTest extends TestCase {
 	 * @param CaoComponentPayService|null $caoComponents The CAO components fold, or null for a run without it.
 	 * @param CostAllocationService|null $costAllocation The cost allocation, or null for a run without it.
 	 * @param AwfReviewService|null $awfReview The Awf review, or null for a run without it.
+	 * @param ReservationPayoutRunService|null $reservations The reserve payouts, or null for a run without them.
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null, ?ReservationPayoutRunService $reservations = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -281,7 +283,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview),
+			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, reservations: $reservations),
 			$fake,
 			$retentionGuard,
 		];
@@ -423,11 +425,49 @@ class PayrollRunServiceTest extends TestCase {
 		// PACK that computed the run, `{packId}@{packVersion}`, rather than the
 		// bare tables id. Strictly more information — it names the chain as well
 		// as the parameter set. Every cents-exact total above is unchanged.
-		$this->assertSame('nl-2026@1.1.0', $final['engineVersion']);
+		$this->assertSame('nl-2026@1.2.0', $final['engineVersion']);
 		$this->assertNotSame('', trim((string)$final['calculatedAt']));
 		$this->assertArrayNotHasKey('glExpensePosted', $final);
 
 	}//end testCreatesDraftRunAndAnchorPayslip()
+
+	/**
+	 * payroll-reservation-payouts: in May the holiday allowance is due, but
+	 * the bundled special-rate table is unverified, so it is held and the
+	 * employee listed; the regular payslip is unchanged. The IKB accrues on
+	 * the payslip and an exempt goal is paid on net.
+	 *
+	 * @return void
+	 */
+	public function testReservePayoutsAreHeldWhileTheSpecialRateIsUnverified(): void {
+		$records = $this->createMock(HoursRegisterGateway::class);
+		$records->method('loadAll')->willReturnCallback(static fn (string $schema): array => match ($schema) {
+			'IkbSpendRequest' => [['id' => 'req-fee', 'employeeId' => 'emp-1', 'year' => 2026, 'goal' => 'goal', 'ikbGoalId' => 'goal-union', 'amount' => 120.0, 'status' => 'approved', 'settlementPeriod' => '2026-05']],
+			'IkbGoal' => [['id' => 'goal-union', 'name' => 'Vakbond', 'taxTreatment' => 'exempt', 'wkrCategory' => 'gericht-vrijgesteld']],
+			default => [],
+		});
+		$saved = [];
+		$records->method('save')->willReturnCallback(static function (array $payload, string $schema) use (&$saved): object {
+			$saved[] = $schema;
+			return new \stdClass();
+		});
+		[$service, $fake] = $this->service(
+			['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract(['ikbRate' => 10])], 'PayrollRun' => [], 'Payslip' => []],
+			reservations: new ReservationPayoutRunService($records, new InternalWriteMarker())
+		);
+
+		$result = $service->runFor('2026-05');
+
+		$this->assertSame([['employeeId' => 'emp-1', 'reason' => 'special-rate-unverified', 'amountCents' => 30400, 'employee' => $result['computed'][0]['employee']]], $result['heldPayouts']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+		$this->assertArrayNotHasKey('specialPayment', $payslip);
+		$this->assertSame(3800.00, $payslip['grossPay']);
+		$this->assertSame(718.83, $payslip['loonheffing']);
+		$this->assertSame(380.00, $payslip['ikbAccrued']);
+		$this->assertSame(120.00, $payslip['ikbUntaxedPayment']);
+		$this->assertSame(round(3081.17 + 120.00, 2), $payslip['nettoPay']);
+		$this->assertSame(['ReservationPayout', 'WkrDeclaration'], $saved, 'the exempt goal is paid and recorded; nothing special-rate is');
+	}//end testReservePayoutsAreHeldWhileTheSpecialRateIsUnverified()
 
 	/**
 	 * 30-procent-regeling (design.md D4/D5): a granted-ruling employee's

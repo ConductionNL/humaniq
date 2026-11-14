@@ -74,6 +74,56 @@ class PackValidatorTest extends TestCase {
 	 *
 	 * @return void
 	 */
+	/**
+	 * Gate 2 knows `band` (payroll-reservation-payouts D2): a pack using it validates.
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 */
+	public function testABandStepValidates(): void {
+		$this->assertSame([], $this->validate($this->bandPack(band: [])));
+	}//end testABandStepValidates()
+
+	/**
+	 * A `band` step carrying a key outside its allow-list is refused.
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 */
+	public function testABandStepWithAForeignKeyIsRefused(): void {
+		$this->expectException(DslException::class);
+		$this->expectExceptionMessageMatches('/mode/');
+
+		$this->validate($this->bandPack(band: ['mode' => 'affine']));
+	}//end testABandStepWithAForeignKeyIsRefused()
+
+	/**
+	 * A pack taxing the gross at the percentage of its band: 20% above 500.00.
+	 *
+	 * @param array<string, mixed> $band Extra keys on the band step.
+	 *
+	 * @return JurisdictionPack
+	 */
+	private function bandPack(array $band): JurisdictionPack {
+		return $this->pack(
+			[
+				'steps' => [
+					array_merge(
+						[
+							'id' => 'pct',
+							'op' => 'band',
+							'incidence' => 'informative',
+							'value' => '@input.gross',
+							'table' => [['tot' => 50000, 'percentage' => 10], ['tot' => null, 'percentage' => 20]],
+							'unit' => 'cent',
+						],
+						$band
+					),
+					$this->exprStep('tax', 'reduces-net', '@input.gross * @step.pct / 100'),
+				],
+				'selfTest' => ['vectors' => [$this->vector(80000)]],
+			]
+		);
+	}//end bandPack()
+
 	public function testADanglingTableReferenceIsRejectedNamingIt(): void {
 		$this->expectException(DslException::class);
 		$this->expectExceptionMessageMatches('/@table\.loonheffing\.doesNotExist/');
