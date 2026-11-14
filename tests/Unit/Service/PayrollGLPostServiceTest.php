@@ -31,10 +31,12 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\PayrollBookkeepingSettings;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -218,14 +220,10 @@ class PayrollGLPostServiceTest extends TestCase {
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getGlPostAccountGross')->willReturn('4001');
-		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
-		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new PayrollGLPostService($container, $appManager, $settings, $logger), $fake];
+		return [new PayrollGLPostService($container, $appManager, $settings, new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)), $logger), $fake];
 	}//end service()
 
 	/**
@@ -502,7 +500,7 @@ class PayrollGLPostServiceTest extends TestCase {
 		return [
 			'no wage tax' => [['totalLoonheffing' => 0.0, 'totalNet' => 3800.0], ['4001' => 3800.0, '4002' => 649.8, '1702' => 4449.8]],
 			'no employer charges' => [['totalEmployerCharges' => 0.0], ['4001' => 3800.0, '1701' => 1102.0, '1702' => 2698.0]],
-			'only reimbursements' => [['totalGross' => 0.0, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => 0.0, 'totalNet' => 50.0, 'totalReimbursements' => 50.0], ['' => 50.0, '1702' => 50.0]],
+			'only reimbursements' => [['totalGross' => 0.0, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => 0.0, 'totalNet' => 50.0, 'totalReimbursements' => 50.0], ['4010' => 50.0, '1702' => 50.0]],
 			'only employer charges' => [['totalGross' => 0.0, 'totalEmployerCharges' => 10.0, 'totalLoonheffing' => 0.0, 'totalNet' => 0.0], ['4002' => 10.0, '1702' => 10.0]],
 			'one cent of gross' => [['totalGross' => 0.01, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => 0.0, 'totalNet' => 0.01], ['4001' => 0.01, '1702' => 0.01]],
 			'negative zero' => [['totalEmployerCharges' => -0.0, 'totalReimbursements' => -0.004], ['4001' => 3800.0, '1701' => 1102.0, '1702' => 2698.0]],

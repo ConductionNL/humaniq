@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "ThirdPartyPayee": {
+                "configuration": {"exportable": true},
                 "slug": "ThirdPartyPayee",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "AccountArrowRightOutline",
@@ -33,6 +34,7 @@
                 }
             },
             "ThirdPartyPayment": {
+                "configuration": {"exportable": true},
                 "slug": "ThirdPartyPayment",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "CashMultiple",
@@ -71,6 +73,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "concept",

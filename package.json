@@ -25,9 +25,10 @@
     "l10n:build": "node scripts/build-l10n-js.js",
     "check:l10n-js": "node scripts/build-l10n-js.js --check",
     "check:deps-drift": "node scripts/check-node-deps-drift.js",
+    "check:composer-drift": "node scripts/check-composer-deps-drift.js",
     "check:manifest-sentinels": "node scripts/check-manifest-sentinels.mjs",
     "check:bundle-freshness": "node scripts/check-bundle-freshness.js",
-    "check:boot-integrity": "npm run check:deps-drift && npm run check:manifest-sentinels && npm run check:bundle-freshness",
+    "check:boot-integrity": "npm run check:deps-drift && npm run check:composer-drift && npm run check:manifest-sentinels && npm run check:bundle-freshness",
     "test:js": "node --test tests/js/*.test.mjs",
     "test:e2e": "playwright test --project chromium",
     "check:bundle-sidecar": "node scripts/check-bundle-freshness.js --sidecar"
@@ -62,7 +63,10 @@
   },
   "overrides": {
     "@noble/hashes": "1.4.0",
-    "dompurify": "$dompurify"
+    "dompurify": "$dompurify",
+    "webdav": {
+      "minimatch": "^11.0.1"
+    }
   },
   "devDependencies": {
     "@nextcloud/browserslist-config": "^3.0.1",

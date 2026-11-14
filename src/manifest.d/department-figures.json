@@ -74,6 +74,10 @@
 				"register": "humaniq",
 				"schema": "OrgUnit",
 				"_note": "department-figures REQ-DPF-002. One department a manager leads: unit totals from GET /api/analytics/unit-figures (absence rate, frequency, wage cost over the quarter, open vacancies), formation from GET /api/formation/occupancy, and the absence rate and wage cost over the year from the trends endpoint with orgUnitId. Each endpoint admits hr and accountants, and otherwise only the manager of this unit or a unit above it; the figures of a unit under the small-unit threshold come back null with suppressed: unit-too-small.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
 				"widgets": [
 					{
 						"id": "unit-absence-rate",
