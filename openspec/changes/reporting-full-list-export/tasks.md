@@ -1,14 +1,20 @@
 ## 0. Dependency
 
-- [ ] 0.1 Wait for nextcloud-vue `index-export-follows-the-page` to be released, and raise
+- [x] 0.1 Wait for nextcloud-vue `index-export-follows-the-page` to be released, and raise
       humaniq's `@conduction/nextcloud-vue` range to that release.
+      (Already met: the locked 2.89.2 reads `configuration.exportable` and exports with the
+      list's own query (`list.buildParams(1)`), so the `^2.89.2` range needed no raise.)
 
 ## 1. Pages
 
-- [ ] 1.1 Add `allowExport: true` to the `indexScaffold` template body in
+- [x] 1.1 Add `allowExport: true` to the `indexScaffold` template body in
       `src/manifest.d/00-templates.json` and to the three concrete index pages; regenerate
       `src/manifest.effective.json`. Verify: `npm run check:manifest` exits 0 and every
       `type: index` page in the effective manifest carries `allowExport`.
+      (Built: template and TimeEntries, MijnAanbevelingen, MijnUren; 89 of 90 index pages carry
+      it, the one without is `Flows`, a named-source page with no register or schema, which
+      the menu cannot export. Guarded by `tests/js/indexExport.test.mjs`. Also flagged the
+      `DeploymentPlan` schema added since 2.1, register 0.63.0.)
 
 ## 2. Schemas
 
