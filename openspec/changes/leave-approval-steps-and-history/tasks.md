@@ -15,10 +15,17 @@
       test that a type needing HR refuses `approve` from `submitted`, a type without refuses
       `approve-manager`, a non-HR user cannot approve from `manager-approved`, and the
       approving manager cannot also approve the HR step.
-- [ ] 2.3 Add the timeline and action to `LeaveRequestDetail` and the `HR-verlofgoedkeuring`
+- [x] 2.3 Add the timeline and action to `LeaveRequestDetail` and the `HR-verlofgoedkeuring`
       page and menu entry. Verify: `npm run check:manifest` exits 0.
-- [ ] 2.4 Seed the two leave type settings and two requests. Verify:
+- [x] 2.4 Seed the two leave type settings and two requests. Verify:
       `npm run check:seed-refs` exits 0.
+      Done: the leave types were seeded with 1.1 (`unpaid` needs HR, `holiday` above 80
+      hours); `hr-seed.json` adds an unpaid request at `manager-approved` and an approved
+      holiday request, each with its manager decision. 2.3: a `timeline` widget over
+      `decisions` on `LeaveRequestDetail`, the `approve-manager` action, `approve`/`reject`
+      from `manager-approved` too, and the menu entry "HR leave approval" over
+      `LeaveRequests` with `status: manager-approved` (the same index-with-query shape as
+      the other two approval queues).
 - [ ] 2.5 Show the coverage warning from `GET /api/leave/coverage` on `LeaveRequestDetail`
       before Approve, and store what the approver accepted in `coverageWarningAccepted`
       (`src/manifest.d/hr-leave.json`, REQ-LVM-S02). Verify: `npm run check:manifest` exits 0

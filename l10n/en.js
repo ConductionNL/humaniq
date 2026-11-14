@@ -3759,7 +3759,9 @@ OC.L10N.register(
         "Remark": "Remark",
         "When on, HR approves a request of this kind after the manager.": "When on, HR approves a request of this kind after the manager.",
         "Where this request has got to: draft, submitted, manager-approved (waiting for HR), approved or rejected.": "Where this request has got to: draft, submitted, manager-approved (waiting for HR), approved or rejected.",
-        "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on."
+        "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on.",
+        "HR leave approval": "HR leave approval",
+        "Approve as manager": "Approve as manager"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -3756,11 +3756,11 @@
         "HR approval above hours": "HR-goedkeuring boven uren",
         "Needs HR approval": "Goedkeuring door HR nodig",
         "Remark": "Opmerking",
-        "The account of the employee's manager, who may read this record.": "Het account van de manager van de medewerker, die dit record mag lezen.",
-        "The accounts standing in for the manager today, who may read this record too.": "De accounts die vandaag voor de manager waarnemen en dit record ook mogen lezen.",
         "When on, HR approves a request of this kind after the manager.": "Als dit aan staat, keurt HR een aanvraag van deze soort na de manager goed.",
         "Where this request has got to: draft, submitted, manager-approved (waiting for HR), approved or rejected.": "Hoe ver deze aanvraag is: concept, ingediend, goedgekeurd door manager (wacht op HR), goedgekeurd of afgewezen.",
-        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort."
+        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort.",
+        "HR leave approval": "HR-verlofgoedkeuring",
+        "Approve as manager": "Goedkeuren als leidinggevende"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

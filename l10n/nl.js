@@ -22,8 +22,8 @@ OC.L10N.register(
         "Teacher": "Leraar",
         "Teacher's account": "Account van de leraar",
         "Teaching": "Lesgevende taak",
-        "The account of the employee's manager, who may read this record.": "Het account van de manager van de medewerker, die dit record mag lezen.",
-        "The accounts standing in for the manager today, who may read this record too.": "De accounts die vandaag voor de manager waarnemen en dit record ook mogen lezen.",
+        "The account of the employee's manager, who may read this record.": "Het account van de leidinggevende van de medewerker, die dit gegeven mag lezen.",
+        "The accounts standing in for the manager today, who may read this record too.": "De accounts die vandaag de leidinggevende vervangen en dit gegeven ook mogen lezen.",
         "The hours the teacher's contracts give for the school year.": "De uren die de contracten van de leraar voor het schooljaar geven.",
         "The planned hours per category.": "De geplande uren per categorie.",
         "The school the teacher is deployed at.": "De school waar de leraar wordt ingezet.",
@@ -3759,7 +3759,9 @@ OC.L10N.register(
         "Remark": "Opmerking",
         "When on, HR approves a request of this kind after the manager.": "Als dit aan staat, keurt HR een aanvraag van deze soort na de manager goed.",
         "Where this request has got to: draft, submitted, manager-approved (waiting for HR), approved or rejected.": "Hoe ver deze aanvraag is: concept, ingediend, goedgekeurd door manager (wacht op HR), goedgekeurd of afgewezen.",
-        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort."
+        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort.",
+        "HR leave approval": "HR-verlofgoedkeuring",
+        "Approve as manager": "Goedkeuren als leidinggevende"
     },
     "nplurals=2; plural=(n != 1);"
 )
