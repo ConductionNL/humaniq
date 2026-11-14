@@ -36,8 +36,10 @@
       that six months of opening balance plus six humaniq payslips give a twelve-period
       statement.
   - Done: `HrDocumentService::upsertJaaropgaaf()` adds the employee's balance for the year (gross, loonheffing, Zvw withheld, holiday allowance reserved, pension, periods) and stamps `includesOpeningBalance` and `openingBalanceSource` (Jaaropgaaf schema 0.2.0); without a balance the statement is unchanged. `WkrService` adds each balance's `grossWage` to the loonsom of its administration and year. Tests: `HrDocumentServiceTest::testGenerateJaaropgaafAddsTheOpeningBalanceOfTheYear` (6 + 6 = 12 periods), `WkrServiceTest::testAnOpeningBalanceCountsTowardsTheFiscalWageBill`; the document golden re-recorded for the one added read.
-- [ ] 3.3 Add `nl-openingsbalans-overlap` and `nl-openingsbalans-ontbreekt`. Verify:
+- [x] 3.3 Add `nl-openingsbalans-overlap` and `nl-openingsbalans-ontbreekt`. Verify:
       `occ humaniq:rules:audit` reports a seeded overlap.
+
+  - Done: both rules in `lib/Standards/rules/payroll.json`, checked on Payslip by `NlOpeningBalanceChecks` over `context['openingBalances']` (balances by employee and year, each employee's first humaniq period of a year), built by `RuleAuditService` for the full and the run-scoped audit; the WKR audit context adds the balances' gross wage as `WkrService` does. Tests: `NlOpeningBalanceChecksTest` (3), `RuleAuditServiceTest::testTheAuditReportsAnOpeningBalanceOverlapAndAMissingBalance` (the seeded overlap and a missing balance, each reported once). Not run here: `occ humaniq:rules:audit` on a live instance.
 
 ## 4. Seed
 
