@@ -8,6 +8,9 @@ OC.L10N.register(
         "2024": "2024",
         "2025": "2025",
         "2026": "2026",
+        "Make employer statement": "Werkgeversverklaring maken",
+        "Making the employer statement failed.": "Het maken van de werkgeversverklaring is mislukt.",
+        "The employer statement is being made.": "De werkgeversverklaring wordt gemaakt.",
         "(Re)calculate": "(Her)berekenen",
         "(Re)calculating the payroll run failed.": "(Her)berekenen van de loonrun is mislukt.",
         "30%-ruling applied rate": "Toegepast 30%-percentage",
@@ -3722,10 +3725,7 @@ OC.L10N.register(
         "Expense categories": "Declaratiecategorieën",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
-        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
-        "Make employer statement": "Werkgeversverklaring maken",
-        "Making the employer statement failed.": "Het maken van de werkgeversverklaring is mislukt.",
-        "The employer statement is being made.": "De werkgeversverklaring wordt gemaakt."
+        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen."
     },
     "nplurals=2; plural=(n != 1);"
 )

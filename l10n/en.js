@@ -8,6 +8,9 @@ OC.L10N.register(
         "2024": "2024",
         "2025": "2025",
         "2026": "2026",
+        "Make employer statement": "Make employer statement",
+        "Making the employer statement failed.": "Making the employer statement failed.",
+        "The employer statement is being made.": "The employer statement is being made.",
         "(Re)calculate": "(Re)calculate",
         "(Re)calculating the payroll run failed.": "(Re)calculating the payroll run failed.",
         "30%-ruling applied rate": "30%-ruling applied rate",
@@ -3722,10 +3725,7 @@ OC.L10N.register(
         "Expense categories": "Expense categories",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.",
         "The expense categories could not be loaded.": "The expense categories could not be loaded.",
-        "The expense categories could not be saved.": "The expense categories could not be saved.",
-        "Make employer statement": "Make employer statement",
-        "Making the employer statement failed.": "Making the employer statement failed.",
-        "The employer statement is being made.": "The employer statement is being made."
+        "The expense categories could not be saved.": "The expense categories could not be saved."
     },
     "nplurals=2; plural=(n != 1);"
 )
