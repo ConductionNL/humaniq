@@ -39,6 +39,8 @@ use OCA\Humaniq\Payroll\PayPeriod;
 
 /**
  * Opening balances against humaniq's own payslips.
+ *
+ * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
  */
 final class NlOpeningBalanceChecks implements CheckProvider {
 
@@ -62,6 +64,8 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	public static function seedSpec(): array {
 		return [];

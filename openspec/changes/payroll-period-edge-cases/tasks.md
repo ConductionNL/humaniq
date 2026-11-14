@@ -43,7 +43,9 @@
 
 ## 4. Seed
 
-- [ ] 4.1 Seed `ADM-005` and the opening balance. Verify: `npm run check:seed-refs` exits 0.
+- [x] 4.1 Seed `ADM-005` and the opening balance. Verify: `npm run check:seed-refs` exits 0.
+
+  - Done: `hr-seed.json` seeds the four-weekly administration as `ADM-007` (ADM-005 and ADM-006 were already taken), with `week53Handling: extend-period-13`, one employee (`employee-vierweken`) and her contract, and `opening-balance-degroot-2026` (ADM-001, last period 2026-06, six periods). `npm run check:seed-refs` passes.
 
 ## 5. Verification
 
