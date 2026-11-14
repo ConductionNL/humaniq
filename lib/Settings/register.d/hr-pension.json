@@ -187,6 +187,9 @@
             },
             "PensionScheme": {
                 "slug": "PensionScheme",
+                "configuration": {
+                    "exportable": true
+                },
                 "authorization": {
                     "read": [
                         "humaniq-hr",
