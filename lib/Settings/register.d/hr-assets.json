@@ -16,6 +16,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-mcp": {
                         "enabled": true,
                         "tools": {
@@ -192,6 +193,7 @@
                 "icon": "HandshakeOutline",
                 "version": "0.3.1",
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-mcp": {
                         "enabled": true,
                         "tools": {

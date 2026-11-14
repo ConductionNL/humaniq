@@ -3,6 +3,7 @@
   "components": {
     "schemas": {
       "JurisdictionPack": {
+        "configuration": {"exportable": true},
         "slug": "JurisdictionPack",
         "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
         "title": "Jurisdiction pack",
@@ -80,6 +81,7 @@
         }
       },
       "TaxTableSet": {
+        "configuration": {"exportable": true},
         "slug": "TaxTableSet",
         "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
         "title": "Tax table set",
