@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "ManagerDeputy": {
+                "configuration": {"exportable": true},
                 "slug": "ManagerDeputy",
                 "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"managerUserId": "$userId"}}, {"group": "authenticated", "match": {"deputyUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"managerUserId": "$userId"}}]},
                 "icon": "AccountKeyOutline",

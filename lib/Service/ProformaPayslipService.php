@@ -67,11 +67,11 @@ class ProformaPayslipService {
 
 	/**
 	 * @param PayrollCalculator $calculator The existing, reused-as-is pure calculator.
-	 * @param SettingsService $settingsService The employer-level Aof/Whk knob source.
+	 * @param EmployerPremiumSettings $premiums The employer-level Aof/Whk knob source.
 	 */
 	public function __construct(
 		private readonly PayrollCalculator $calculator,
-		private readonly SettingsService $settingsService,
+		private readonly EmployerPremiumSettings $premiums,
 	) {
 
 	}//end __construct()
@@ -168,8 +168,8 @@ class ProformaPayslipService {
 		$whkDefault = (float)$tables->werknemersverzekeringen()['whkDefault'];
 
 		return [
-			'aof' => self::requireAofTariff($params['aof'] ?? null, $this->settingsService->getPayrollAofTariff()),
-			'whk' => self::requireNonNegativeFloat($params['whk'] ?? null, $this->settingsService->getPayrollWhkPercentage($whkDefault), 'Whk-percentage'),
+			'aof' => self::requireAofTariff($params['aof'] ?? null, $this->premiums->getPayrollAofTariff()),
+			'whk' => self::requireNonNegativeFloat($params['whk'] ?? null, $this->premiums->getPayrollWhkPercentage($whkDefault), 'Whk-percentage'),
 		];
 
 	}//end levyInput()
@@ -348,7 +348,7 @@ class ProformaPayslipService {
 	 * passed-in employer setting).
 	 *
 	 * @param mixed $value The raw value.
-	 * @param string $default The `SettingsService::getPayrollAofTariff()` default.
+	 * @param string $default The `EmployerPremiumSettings::getPayrollAofTariff()` default.
 	 *
 	 * @return string `laag` or `hoog`.
 	 *
