@@ -856,7 +856,8 @@
 				"categories": {
 					"people": "People",
 					"wellbeing": "Time away and performance",
-					"pay": "Pay"
+					"pay": "Pay",
+					"mine": "My reports"
 				},
 				"cards": [
 					{
@@ -890,6 +891,46 @@
 						"icon": "ScaleBalance",
 						"category": "pay",
 						"route": "PayTransparencyReport"
+					},
+					{
+						"id": "WageCostReport",
+						"label": "Wage costs",
+						"description": "The wage cost per period, with gross wages, employer charges, payroll tax and net wages.",
+						"icon": "CashMultiple",
+						"category": "pay",
+						"route": "WageCostReport"
+					},
+					{
+						"id": "PayrollRunsReport",
+						"label": "Payroll runs",
+						"description": "Every payroll run with its totals and status, per period.",
+						"icon": "CalendarSync",
+						"category": "pay",
+						"route": "PayrollRunsReport"
+					},
+					{
+						"id": "TurnoverReport",
+						"label": "Turnover",
+						"description": "Who started and who left, per month, and why employment ended.",
+						"icon": "AccountArrowRightOutline",
+						"category": "people",
+						"route": "TurnoverReport"
+					},
+					{
+						"id": "LeaveBalanceReport",
+						"label": "Leave balances",
+						"description": "Entitled, used and expiring leave hours per employee and leave type.",
+						"icon": "CalendarAccountOutline",
+						"category": "wellbeing",
+						"route": "LeaveBalanceReport"
+					},
+					{
+						"id": "MyReports",
+						"label": "My reports",
+						"description": "The reports you and your colleagues saved on the lists, to reopen or export.",
+						"icon": "StarOutline",
+						"category": "mine",
+						"route": "MyReports"
 					}
 				]
 			}

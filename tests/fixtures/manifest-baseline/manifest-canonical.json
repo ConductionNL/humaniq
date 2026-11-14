@@ -1166,7 +1166,7 @@
 	],
 	"pageTemplates": [
 		{
-			"_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the one shape every humaniq index page shares — a schema-bound CnIndexPage with columns/sort and no widgets. All 58 index pages instantiate this template; the only variance is the presence of the optional keys below, which expandPageTemplates() drops from the expanded page when the instantiation omits them (exact-match placeholder + absent optional param). `filters` is optional because the nine Mijn* self-service pages and VerzuimOverzicht pin their result set with `filter` alone and offer no user-facing filter bar. `actions` (page-level create buttons, e.g. PayrollRuns' 'Loonrun aanmaken') and `note` (the page's own maintainer prose, landing as config._note) ride along as ordinary parameters so an instantiation stays the single complete description of its page. `extend` (2026-09-06) forwards OpenRegister `_extend[]` on the fetch, e.g. [\"calculations\"] so a schema's `materialise: false` calculations are evaluated and can be shown as columns. Optional like the rest: an instantiation that omits it has the key dropped and sends no `_extend` at all. Added because LeaveBalances declares a `remainingHours` column that rendered an em dash on every row without it, the template being the reason a page could not ask.",
+			"_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the one shape every humaniq index page shares — a schema-bound CnIndexPage with columns/sort and no widgets. All 58 index pages instantiate this template; the only variance is the presence of the optional keys below, which expandPageTemplates() drops from the expanded page when the instantiation omits them (exact-match placeholder + absent optional param). `filters` is optional because the nine Mijn* self-service pages and VerzuimOverzicht pin their result set with `filter` alone and offer no user-facing filter bar. `actions` (page-level create buttons, e.g. PayrollRuns' 'Loonrun aanmaken') and `note` (the page's own maintainer prose, landing as config._note) ride along as ordinary parameters so an instantiation stays the single complete description of its page. `extend` (2026-09-06) forwards OpenRegister `_extend[]` on the fetch, e.g. [\"calculations\"] so a schema's `materialise: false` calculations are evaluated and can be shown as columns. Optional like the rest: an instantiation that omits it has the key dropped and sends no `_extend` at all. Added because LeaveBalances declares a `remainingHours` column that rendered an em dash on every row without it, the template being the reason a page could not ask. `allowSavedViews` and `allowExport` (2026-11-14, reporting-standard-reports-and-builder D2) switch on the library's saved views and its export menu; export shows only when the schema is also flagged `exportable`. Optional like the rest.",
 			"id": "indexScaffold",
 			"page": {
 				"actions": "{{actions}}",
@@ -1174,6 +1174,8 @@
 					"_note": "{{note}}",
 					"actionToggles": "{{actionToggles}}",
 					"allowCreate": "{{allowCreate}}",
+					"allowExport": "{{allowExport}}",
+					"allowSavedViews": "{{allowSavedViews}}",
 					"bulkActions": "{{bulkActions}}",
 					"columns": "{{columns}}",
 					"defaultFilters": "{{defaultFilters}}",
@@ -1258,6 +1260,12 @@
 				{
 					"name": "bulkActions",
 					"required": false
+				},
+				{
+					"name": "allowSavedViews"
+				},
+				{
+					"name": "allowExport"
 				}
 			]
 		},
@@ -2132,9 +2140,50 @@
 						"id": "PayTransparencyReport",
 						"label": "Pay transparency",
 						"route": "PayTransparencyReport"
+					},
+					{
+						"category": "pay",
+						"description": "The wage cost per period, with gross wages, employer charges, payroll tax and net wages.",
+						"icon": "CashMultiple",
+						"id": "WageCostReport",
+						"label": "Wage costs",
+						"route": "WageCostReport"
+					},
+					{
+						"category": "pay",
+						"description": "Every payroll run with its totals and status, per period.",
+						"icon": "CalendarSync",
+						"id": "PayrollRunsReport",
+						"label": "Payroll runs",
+						"route": "PayrollRunsReport"
+					},
+					{
+						"category": "people",
+						"description": "Who started and who left, per month, and why employment ended.",
+						"icon": "AccountArrowRightOutline",
+						"id": "TurnoverReport",
+						"label": "Turnover",
+						"route": "TurnoverReport"
+					},
+					{
+						"category": "wellbeing",
+						"description": "Entitled, used and expiring leave hours per employee and leave type.",
+						"icon": "CalendarAccountOutline",
+						"id": "LeaveBalanceReport",
+						"label": "Leave balances",
+						"route": "LeaveBalanceReport"
+					},
+					{
+						"category": "mine",
+						"description": "The reports you and your colleagues saved on the lists, to reopen or export.",
+						"icon": "StarOutline",
+						"id": "MyReports",
+						"label": "My reports",
+						"route": "MyReports"
 					}
 				],
 				"categories": {
+					"mine": "My reports",
 					"pay": "Pay",
 					"people": "People",
 					"wellbeing": "Time away and performance"
@@ -3322,6 +3371,8 @@
 				"actionToggles": {
 					"showAdd": true
 				},
+				"allowExport": true,
+				"allowSavedViews": true,
 				"columns": [
 					"employeeId",
 					"startedAt",
@@ -9956,6 +10007,1101 @@
 			"type": "detail"
 		},
 		{
+			"_note": "reporting-standard-reports-and-builder D1 (REQ-HRP-001). The wage cost per period and its components, summed from the stored PayrollRun totals with the aggregation endpoint's sum; nothing is recalculated here. A period is the run's own `period` string, so every run of a period adds up. The per-unit split stays on the department figures, which reach it through the trends endpoint.",
+			"config": {
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 0,
+						"id": "1",
+						"showTitle": false,
+						"widgetId": "stat-wage-gross"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 0,
+						"id": "2",
+						"showTitle": false,
+						"widgetId": "stat-wage-employer"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": "3",
+						"showTitle": false,
+						"widgetId": "stat-wage-tax"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 2,
+						"id": "4",
+						"showTitle": true,
+						"widgetId": "wage-gross-by-period"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 2,
+						"id": "5",
+						"showTitle": true,
+						"widgetId": "wage-employer-by-period"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 7,
+						"id": "6",
+						"showTitle": true,
+						"widgetId": "wage-tax-by-period"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 7,
+						"id": "7",
+						"showTitle": true,
+						"widgetId": "wage-net-by-period"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 12,
+						"id": "8",
+						"showTitle": true,
+						"widgetId": "wage-runs"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"format": {
+								"currency": "EUR",
+								"decimals": 0,
+								"style": "currency"
+							},
+							"icon": "CashMultiple",
+							"label": "Gross wages, all runs",
+							"route": {
+								"name": "PayrollRuns"
+							},
+							"source": {
+								"field": "totalGross",
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							}
+						},
+						"id": "stat-wage-gross",
+						"title": "Gross wages, all runs",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"currency": "EUR",
+								"decimals": 0,
+								"style": "currency"
+							},
+							"icon": "OfficeBuildingOutline",
+							"label": "Employer charges, all runs",
+							"route": {
+								"name": "PayrollRuns"
+							},
+							"source": {
+								"field": "totalEmployerCharges",
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							}
+						},
+						"id": "stat-wage-employer",
+						"title": "Employer charges, all runs",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"currency": "EUR",
+								"decimals": 0,
+								"style": "currency"
+							},
+							"icon": "Bank",
+							"label": "Payroll tax, all runs",
+							"route": {
+								"name": "PayrollRuns"
+							},
+							"source": {
+								"field": "totalLoonheffing",
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							}
+						},
+						"id": "stat-wage-tax",
+						"title": "Payroll tax, all runs",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"chartKind": "bar",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "period",
+									"metric": "sum",
+									"sumField": "totalGross"
+								},
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							},
+							"emptyLabel": "No payroll runs yet",
+							"legendPosition": "bottom"
+						},
+						"id": "wage-gross-by-period",
+						"title": "Gross wages per period",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "bar",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "period",
+									"metric": "sum",
+									"sumField": "totalEmployerCharges"
+								},
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							},
+							"emptyLabel": "No payroll runs yet",
+							"legendPosition": "bottom"
+						},
+						"id": "wage-employer-by-period",
+						"title": "Employer charges per period",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "bar",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "period",
+									"metric": "sum",
+									"sumField": "totalLoonheffing"
+								},
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							},
+							"emptyLabel": "No payroll runs yet",
+							"legendPosition": "bottom"
+						},
+						"id": "wage-tax-by-period",
+						"title": "Payroll tax per period",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "bar",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "period",
+									"metric": "sum",
+									"sumField": "totalNet"
+								},
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							},
+							"emptyLabel": "No payroll runs yet",
+							"legendPosition": "bottom"
+						},
+						"id": "wage-net-by-period",
+						"title": "Net wages per period",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "period",
+									"label": "Period"
+								},
+								{
+									"key": "totalGross",
+									"label": "Gross"
+								},
+								{
+									"key": "totalEmployerCharges",
+									"label": "Employer charges"
+								},
+								{
+									"key": "totalLoonheffing",
+									"label": "Payroll tax"
+								},
+								{
+									"key": "totalNet",
+									"label": "Net"
+								}
+							],
+							"emptyText": "No payroll runs yet",
+							"filter": {},
+							"hideHeader": true,
+							"limit": 12,
+							"register": "humaniq",
+							"schema": "PayrollRun",
+							"sort": {
+								"dir": "desc",
+								"field": "period"
+							},
+							"viewAllLabel": "View all payroll runs",
+							"viewAllRoute": {
+								"name": "PayrollRuns"
+							}
+						},
+						"id": "wage-runs",
+						"title": "Costs per run",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "WageCostReport",
+			"route": "/reports/wage-costs",
+			"title": "Wage costs",
+			"type": "dashboard"
+		},
+		{
+			"_note": "reporting-standard-reports-and-builder D1 (REQ-HRP-001). Runs, their totals and their status per period. Status counts use scalar equality on the lifecycle field; posted runs show in the status chart.",
+			"config": {
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 0,
+						"id": "1",
+						"showTitle": false,
+						"widgetId": "stat-runs-draft"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 0,
+						"id": "2",
+						"showTitle": false,
+						"widgetId": "stat-runs-approved"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": "3",
+						"showTitle": false,
+						"widgetId": "stat-runs-paid"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 2,
+						"id": "4",
+						"showTitle": true,
+						"widgetId": "runs-by-status"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 2,
+						"id": "5",
+						"showTitle": true,
+						"widgetId": "runs-by-period"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 7,
+						"id": "6",
+						"showTitle": true,
+						"widgetId": "runs-recent"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "FileDocumentEditOutline",
+							"label": "Draft runs",
+							"route": {
+								"name": "PayrollRuns"
+							},
+							"source": {
+								"filter": {
+									"status": "draft"
+								},
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							}
+						},
+						"id": "stat-runs-draft",
+						"title": "Draft runs",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "CheckCircleOutline",
+							"label": "Approved runs",
+							"route": {
+								"name": "PayrollRuns"
+							},
+							"source": {
+								"filter": {
+									"status": "approved"
+								},
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							}
+						},
+						"id": "stat-runs-approved",
+						"title": "Approved runs",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "CashCheck",
+							"label": "Paid runs",
+							"route": {
+								"name": "PayrollRuns"
+							},
+							"source": {
+								"filter": {
+									"status": "paid"
+								},
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							}
+						},
+						"id": "stat-runs-paid",
+						"title": "Paid runs",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"chartKind": "donut",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "status",
+									"metric": "count"
+								},
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							},
+							"emptyLabel": "No payroll runs yet",
+							"legendPosition": "bottom"
+						},
+						"id": "runs-by-status",
+						"title": "Runs by status",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "bar",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "period",
+									"metric": "count"
+								},
+								"register": "humaniq",
+								"schema": "PayrollRun"
+							},
+							"emptyLabel": "No payroll runs yet",
+							"legendPosition": "bottom"
+						},
+						"id": "runs-by-period",
+						"title": "Runs per period",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "period",
+									"label": "Period"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "totalGross",
+									"label": "Gross"
+								},
+								{
+									"key": "totalNet",
+									"label": "Net"
+								},
+								{
+									"key": "blockingFindings",
+									"label": "Blocking findings"
+								}
+							],
+							"emptyText": "No payroll runs yet",
+							"filter": {},
+							"hideHeader": true,
+							"limit": 12,
+							"register": "humaniq",
+							"schema": "PayrollRun",
+							"sort": {
+								"dir": "desc",
+								"field": "period"
+							},
+							"viewAllLabel": "View all payroll runs",
+							"viewAllRoute": {
+								"name": "PayrollRuns"
+							}
+						},
+						"id": "runs-recent",
+						"title": "Most recent runs",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "PayrollRunsReport",
+			"route": "/reports/payroll-runs",
+			"title": "Payroll runs",
+			"type": "dashboard"
+		},
+		{
+			"_note": "reporting-standard-reports-and-builder D1 (REQ-HRP-001). Starters and leavers per month are month buckets over Employee.startDate and endDate within the chosen range. Headcount is the plain record count, as on the workforce report: a headcount at the end of each month is a running total the aggregation endpoint cannot express, and a figure that means something else is worse than none.",
+			"config": {
+				"dateRange": {
+					"default": {
+						"preset": "year"
+					},
+					"enabled": true,
+					"persistKey": "humaniq-turnover-range",
+					"presets": [
+						{
+							"days": 90,
+							"id": "quarter",
+							"label": "Last 90 days"
+						},
+						{
+							"days": 365,
+							"id": "year",
+							"label": "Last 365 days"
+						},
+						{
+							"days": 730,
+							"id": "two-years",
+							"label": "Last two years"
+						}
+					],
+					"showHeaderPicker": true
+				},
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 0,
+						"id": "1",
+						"showTitle": false,
+						"widgetId": "stat-turnover-records"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 2,
+						"id": "2",
+						"showTitle": true,
+						"widgetId": "turnover-starters"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 2,
+						"id": "3",
+						"showTitle": true,
+						"widgetId": "turnover-leavers"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 7,
+						"id": "4",
+						"showTitle": true,
+						"widgetId": "turnover-end-reasons"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 8,
+						"gridX": 4,
+						"gridY": 7,
+						"id": "5",
+						"showTitle": true,
+						"widgetId": "turnover-recent-leavers"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "AccountGroupOutline",
+							"label": "Employee records",
+							"route": {
+								"name": "Employees"
+							},
+							"source": {
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "Employee"
+							}
+						},
+						"id": "stat-turnover-records",
+						"title": "Employee records",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"chartKind": "bar",
+							"dataSource": {
+								"bucket": {
+									"field": "startDate",
+									"interval": "month",
+									"metric": "count"
+								},
+								"filter": {},
+								"register": "humaniq",
+								"schema": "Employee"
+							},
+							"emptyLabel": "No starters in this period",
+							"legendPosition": "bottom"
+						},
+						"id": "turnover-starters",
+						"title": "Starters per month",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "bar",
+							"dataSource": {
+								"bucket": {
+									"field": "endDate",
+									"interval": "month",
+									"metric": "count"
+								},
+								"filter": {},
+								"register": "humaniq",
+								"schema": "Employee"
+							},
+							"emptyLabel": "No leavers in this period",
+							"legendPosition": "bottom"
+						},
+						"id": "turnover-leavers",
+						"title": "Leavers per month",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "donut",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "endReason",
+									"metric": "count"
+								},
+								"register": "humaniq",
+								"schema": "Employee"
+							},
+							"emptyLabel": "No leavers yet",
+							"legendPosition": "bottom"
+						},
+						"id": "turnover-end-reasons",
+						"title": "Why employment ended",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "endDate",
+									"label": "End date"
+								},
+								{
+									"key": "lastName",
+									"label": "Name"
+								},
+								{
+									"key": "employeeNumber",
+									"label": "Number"
+								},
+								{
+									"key": "endReason",
+									"label": "Reason"
+								}
+							],
+							"emptyText": "No leavers yet",
+							"filter": {
+								"endDate": "IS NOT NULL"
+							},
+							"hideHeader": true,
+							"limit": 8,
+							"register": "humaniq",
+							"schema": "Employee",
+							"sort": {
+								"dir": "desc",
+								"field": "endDate"
+							},
+							"viewAllLabel": "View all employees",
+							"viewAllRoute": {
+								"name": "Employees"
+							}
+						},
+						"id": "turnover-recent-leavers",
+						"title": "Most recent leavers",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "TurnoverReport",
+			"route": "/reports/turnover",
+			"title": "Turnover",
+			"type": "dashboard"
+		},
+		{
+			"_note": "reporting-standard-reports-and-builder D1 (REQ-HRP-001). Entitlement, extra and used hours per leave type, and each balance with its expiry dates, soonest first. The remaining hours are entitled plus extra minus used: the report shows the stored fields side by side rather than inventing that sum, and the balance projection keeps usedHours current. The Leave balances page shows the calculated remaining hours per row.",
+			"config": {
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 0,
+						"id": "1",
+						"showTitle": false,
+						"widgetId": "stat-leave-entitled"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 0,
+						"id": "2",
+						"showTitle": false,
+						"widgetId": "stat-leave-extra"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": "3",
+						"showTitle": false,
+						"widgetId": "stat-leave-used"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 2,
+						"id": "4",
+						"showTitle": true,
+						"widgetId": "leave-entitled-by-type"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 2,
+						"id": "5",
+						"showTitle": true,
+						"widgetId": "leave-used-by-type"
+					},
+					{
+						"gridHeight": 7,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 7,
+						"id": "6",
+						"showTitle": true,
+						"widgetId": "leave-expiring"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "CalendarCheckOutline",
+							"label": "Entitled hours",
+							"route": {
+								"name": "LeaveBalances"
+							},
+							"source": {
+								"field": "entitledHours",
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "LeaveBalance"
+							}
+						},
+						"id": "stat-leave-entitled",
+						"title": "Entitled hours",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "CalendarPlusOutline",
+							"label": "Above-statutory hours",
+							"route": {
+								"name": "LeaveBalances"
+							},
+							"source": {
+								"field": "bovenwettelijkHours",
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "LeaveBalance"
+							}
+						},
+						"id": "stat-leave-extra",
+						"title": "Above-statutory hours",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "CalendarRemoveOutline",
+							"label": "Used hours",
+							"route": {
+								"name": "LeaveBalances"
+							},
+							"source": {
+								"field": "usedHours",
+								"metric": "sum",
+								"register": "humaniq",
+								"schema": "LeaveBalance"
+							}
+						},
+						"id": "stat-leave-used",
+						"title": "Used hours",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"chartKind": "bar",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "leaveType",
+									"metric": "sum",
+									"sumField": "entitledHours"
+								},
+								"register": "humaniq",
+								"schema": "LeaveBalance"
+							},
+							"emptyLabel": "No leave balances yet",
+							"legendPosition": "bottom"
+						},
+						"id": "leave-entitled-by-type",
+						"title": "Entitled hours per leave type",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "bar",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "leaveType",
+									"metric": "sum",
+									"sumField": "usedHours"
+								},
+								"register": "humaniq",
+								"schema": "LeaveBalance"
+							},
+							"emptyLabel": "No leave balances yet",
+							"legendPosition": "bottom"
+						},
+						"id": "leave-used-by-type",
+						"title": "Used hours per leave type",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "leaveType",
+									"label": "Leave type"
+								},
+								{
+									"key": "year",
+									"label": "Year"
+								},
+								{
+									"key": "entitledHours",
+									"label": "Entitled hours"
+								},
+								{
+									"key": "bovenwettelijkHours",
+									"label": "Above-statutory hours"
+								},
+								{
+									"key": "usedHours",
+									"label": "Used hours"
+								},
+								{
+									"key": "expiryDate",
+									"label": "Expiry date"
+								},
+								{
+									"key": "bovenwettelijkExpiryDate",
+									"label": "Above-statutory expiry date"
+								}
+							],
+							"emptyText": "No leave balances yet",
+							"filter": {},
+							"hideHeader": true,
+							"limit": 15,
+							"register": "humaniq",
+							"schema": "LeaveBalance",
+							"sort": {
+								"dir": "asc",
+								"field": "expiryDate"
+							},
+							"viewAllLabel": "View all leave balances",
+							"viewAllRoute": {
+								"name": "LeaveBalances"
+							}
+						},
+						"id": "leave-expiring",
+						"title": "Balances by expiry date",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "LeaveBalanceReport",
+			"route": "/reports/leave-balances",
+			"title": "Leave balances",
+			"type": "dashboard"
+		},
+		{
+			"_note": "reporting-standard-reports-and-builder D3 (REQ-HRP-002). A report someone builds is a saved view on one of the seven lists that switch on allowSavedViews and allowExport. This page lists the reader's own views and the ones shared with them (own: false), per list, each linking to that list with the view's filters, search and sort applied. Declarative: the library's saved-views widget reads OpenRegister's views API, so no host section is needed.",
+			"config": {
+				"description": "Reports you and your colleagues saved on the lists. Save one from a list with the saved views menu.",
+				"layout": [
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 0,
+						"id": "1",
+						"showTitle": true,
+						"widgetId": "my-employees"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 0,
+						"id": "2",
+						"showTitle": true,
+						"widgetId": "my-contracts"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 4,
+						"id": "3",
+						"showTitle": true,
+						"widgetId": "my-payslips"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 4,
+						"id": "4",
+						"showTitle": true,
+						"widgetId": "my-leave"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 8,
+						"id": "5",
+						"showTitle": true,
+						"widgetId": "my-sick"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 8,
+						"id": "6",
+						"showTitle": true,
+						"widgetId": "my-time"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 12,
+						"id": "7",
+						"showTitle": true,
+						"widgetId": "my-expenses"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"emptyText": "No saved reports on this list yet",
+							"limit": 20,
+							"own": false,
+							"register": "humaniq",
+							"route": "Employees",
+							"schema": "Employee",
+							"showCounts": true
+						},
+						"id": "my-employees",
+						"title": "Employees",
+						"type": "saved-views"
+					},
+					{
+						"content": {
+							"emptyText": "No saved reports on this list yet",
+							"limit": 20,
+							"own": false,
+							"register": "humaniq",
+							"route": "EmploymentContracts",
+							"schema": "EmploymentContract",
+							"showCounts": true
+						},
+						"id": "my-contracts",
+						"title": "Employment contracts",
+						"type": "saved-views"
+					},
+					{
+						"content": {
+							"emptyText": "No saved reports on this list yet",
+							"limit": 20,
+							"own": false,
+							"register": "humaniq",
+							"route": "Payslips",
+							"schema": "Payslip",
+							"showCounts": true
+						},
+						"id": "my-payslips",
+						"title": "Payslips",
+						"type": "saved-views"
+					},
+					{
+						"content": {
+							"emptyText": "No saved reports on this list yet",
+							"limit": 20,
+							"own": false,
+							"register": "humaniq",
+							"route": "LeaveRequests",
+							"schema": "LeaveRequest",
+							"showCounts": true
+						},
+						"id": "my-leave",
+						"title": "Leave requests",
+						"type": "saved-views"
+					},
+					{
+						"content": {
+							"emptyText": "No saved reports on this list yet",
+							"limit": 20,
+							"own": false,
+							"register": "humaniq",
+							"route": "SickLeaveCases",
+							"schema": "SickLeaveCase",
+							"showCounts": true
+						},
+						"id": "my-sick",
+						"title": "Sick leave cases",
+						"type": "saved-views"
+					},
+					{
+						"content": {
+							"emptyText": "No saved reports on this list yet",
+							"limit": 20,
+							"own": false,
+							"register": "humaniq",
+							"route": "TimeEntries",
+							"schema": "TimeEntry",
+							"showCounts": true
+						},
+						"id": "my-time",
+						"title": "Time entries",
+						"type": "saved-views"
+					},
+					{
+						"content": {
+							"emptyText": "No saved reports on this list yet",
+							"limit": 20,
+							"own": false,
+							"register": "humaniq",
+							"route": "Expenses",
+							"schema": "Expense",
+							"showCounts": true
+						},
+						"id": "my-expenses",
+						"title": "Expenses",
+						"type": "saved-views"
+					}
+				]
+			},
+			"id": "MyReports",
+			"route": "/reports/mine",
+			"title": "My reports",
+			"type": "dashboard"
+		},
+		{
 			"config": {
 				"_note": "retro-adjustments (2026-07-15): a PayrollAdjustment is a DELTA against a sealed original -- pa-delta leads top-left as the stat KPI an accountant reviews (the net nabetaling/terugvordering amount actually settling into the current run), pa-related sits top-right to resolve the four $ref fields (employeeId, originalPayrollRunId, originalPayslipId, settlementPayrollRunId) at matching height, and pa-data runs full-width below with the remaining record fields (excluding those four $refs, already resolved by Related). No lifecycleActions: status is a plain draft/applied enum with no x-openregister-lifecycle map (the PayrollRunDetail precedent -- design.md D8); the page-level 'Herrekenen' api-call is the only action, guarded server-side by PayrollController::adjust() (404 unresolvable/unauthorized, 400 already-applied). Audit history is a sidebar tab.",
 				"headerActions": [
@@ -14209,6 +15355,8 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
+				"allowSavedViews": true,
 				"columns": [
 					"employeeId",
 					"title",
@@ -15294,6 +16442,8 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
+				"allowSavedViews": true,
 				"columns": [
 					"employeeId",
 					"leaveType",
@@ -15557,6 +16707,8 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
+				"allowSavedViews": true,
 				"bulkActions": [
 					{
 						"handler": "proposeRaiseForSelection",
@@ -15593,6 +16745,8 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
+				"allowSavedViews": true,
 				"columns": [
 					"employeeId",
 					"type",
@@ -15622,6 +16776,8 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
+				"allowSavedViews": true,
 				"columns": [
 					"employeeId",
 					"period",
@@ -18092,6 +19248,7 @@
 		},
 		{
 			"config": {
+				"allowSavedViews": true,
 				"columns": [
 					"employeeId",
 					"firstSickDay",

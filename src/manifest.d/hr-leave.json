@@ -239,7 +239,9 @@
 				],
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
-				}
+				},
+				"allowSavedViews": true,
+				"allowExport": true
 			}
 		},
 		{
