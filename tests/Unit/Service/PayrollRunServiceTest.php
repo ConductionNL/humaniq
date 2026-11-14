@@ -48,16 +48,19 @@ use OCA\Humaniq\Service\AwfReviewService;
 use OCA\Humaniq\Service\CaoComponentCalculator;
 use OCA\Humaniq\Service\CaoComponentPayService;
 use OCA\Humaniq\Service\CostAllocationService;
+use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Service\EmploymentTermsResolver;
 use OCA\Humaniq\Service\HoursPayService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\PayrollBookkeepingSettings;
 use OCA\Humaniq\Service\PayrollExpenseFoldService;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -106,6 +109,13 @@ class PayrollRunServiceTest extends TestCase {
 			 * @var array<int, string>
 			 */
 			public array $deleted = [];
+
+			/**
+			 * Every find() call: the one ObjectService read that leaves a `read` audit entry.
+			 *
+			 * @var array<int, array<string, mixed>>
+			 */
+			public array $found = [];
 
 			/**
 			 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
@@ -197,6 +207,18 @@ class PayrollRunServiceTest extends TestCase {
 			 *
 			 * @return bool
 			 */
+			/**
+			 * A single-object read, recorded; it answers nothing.
+			 *
+			 * @param mixed ...$args The call's arguments.
+			 *
+			 * @return null
+			 */
+			public function find(mixed ...$args): mixed {
+				$this->found[] = $args;
+				return null;
+			}//end find()
+
 			public function deleteObject(
 				string $uuid,
 				?string $register = null,
@@ -251,8 +273,6 @@ class PayrollRunServiceTest extends TestCase {
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getPayrollAofTariff')->willReturn('laag');
-		$settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
 
 		$logger = $this->createMock(LoggerInterface::class);
 
@@ -261,7 +281,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview),
+			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview),
 			$fake,
 			$retentionGuard,
 		];
@@ -321,6 +341,33 @@ class PayrollRunServiceTest extends TestCase {
 		);
 
 	}//end contract()
+
+	/**
+	 * A calculation reads its rows as lists, never one object at a time, so the
+	 * audit trail lists the people who opened a record and not the payroll job
+	 * (record-history-on-every-detail-page REQ-RAH-001, design D5): only
+	 * ObjectService::find() records a `read` entry.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-every-read-and-every-change-of-a-humaniq-record-shall-be-recorded-in-openregisters-audit-trail-req-rah-001
+	 */
+	public function testACalculationMakesNoSingleObjectReadsThatWouldBeAudited(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(), $this->employee(['id' => 'emp-2', 'employeeNumber' => 'EMP-NL-0002'])],
+				'EmploymentContract' => [$this->contract(), $this->contract(['id' => 'ct-2', 'employeeId' => 'emp-2'])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$result = $service->runFor('2026-02');
+		$service->runFor('2026-02', recalculate: true);
+
+		$this->assertCount(2, $result['computed']);
+		$this->assertSame([], $fake->found);
+	}//end testACalculationMakesNoSingleObjectReadsThatWouldBeAudited()
 
 	/**
 	 * @return void
@@ -1051,16 +1098,12 @@ class PayrollRunServiceTest extends TestCase {
 		$run = $fake->rowsBySchema['PayrollRun'][0];
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getGlPostAccountGross')->willReturn('4001');
-		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
-		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
-		$settings->method('getGlPostAccountReimbursements')->willReturn('4010');
 
 		$glPost = new PayrollGLPostService(
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
 			$settings,
+			new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)),
 			$this->createMock(LoggerInterface::class)
 		);
 		$built = $glPost->buildLines($run);
@@ -1986,12 +2029,7 @@ class PayrollRunServiceTest extends TestCase {
 		$run['totalReimbursements'] = 27.40;
 		$run['totalNet'] = ($run['totalNet'] + 27.40);
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getGlPostAccountGross')->willReturn('4001');
-		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
-		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
-		$settings->method('getGlPostAccountReimbursements')->willReturn('4010');
-		$built = (new PayrollGLPostService($this->createMock(ContainerInterface::class), $this->createMock(IAppManager::class), $settings, $this->createMock(LoggerInterface::class)))->buildLines($run);
+		$built = (new PayrollGLPostService($this->createMock(ContainerInterface::class), $this->createMock(IAppManager::class), $settings, new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)), $this->createMock(LoggerInterface::class)))->buildLines($run);
 
 		$this->assertNull($built['error']);
 		$byAccount = array_column($built['lines'], 'amount', 'accountNumber');
