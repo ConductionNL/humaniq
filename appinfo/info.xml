@@ -256,6 +256,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  records stored before the fields existed. Runs AFTER
                  InitializeRegister, which imports the fields. -->
             <step>OCA\Humaniq\Repair\StampManagerAccess</step>
+            <!-- time-entry-approval-state D3: stamp each timesheet's status on its
+                 time entries (approvalState, approvedAt). Runs AFTER
+                 InitializeRegister, which imports the fields. Idempotent: only a
+                 drifted entry is written, so a missed edge heals on every repair. -->
+            <step>OCA\Humaniq\Repair\RestampTimeEntryApprovalState</step>
             <!-- settle-the-shipped-example-claim: the old seed shipped the example
                  travel claim approved on the payroll route without a run. Marks it
                  reimbursed on the direct route, once, only while it still holds the
@@ -369,6 +374,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  records stored before the fields existed. Runs AFTER
                  InitializeRegister, which imports the fields. -->
             <step>OCA\Humaniq\Repair\StampManagerAccess</step>
+            <!-- time-entry-approval-state D3: stamp each timesheet's status on its
+                 time entries (approvalState, approvedAt). Runs AFTER
+                 InitializeRegister, which imports the fields. Idempotent: only a
+                 drifted entry is written, so a missed edge heals on every repair. -->
+            <step>OCA\Humaniq\Repair\RestampTimeEntryApprovalState</step>
             <!-- settle-the-shipped-example-claim: the old seed shipped the example
                  travel claim approved on the payroll route without a run. Marks it
                  reimbursed on the direct route, once, only while it still holds the

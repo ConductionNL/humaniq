@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "humaniq",
     {
@@ -3722,7 +3718,12 @@ OC.L10N.register(
         "Expense categories": "Declaratiecategorieën",
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Kies wat medewerkers mogen declareren. Een declaratie in een categorie die uit staat, kan niet worden gemaakt of ingediend.",
         "The expense categories could not be loaded.": "De declaratiecategorieën konden niet worden geladen.",
-        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen."
+        "The expense categories could not be saved.": "De declaratiecategorieën konden niet worden opgeslagen.",
+        "Approval state": "Goedkeuringsstatus",
+        "Where the timesheet of these hours is in the approval process.": "Waar de urenstaat van deze uren in het goedkeuringsproces staat.",
+        "When the timesheet of these hours was approved.": "Wanneer de urenstaat van deze uren is goedgekeurd.",
+        "The account of the employee's manager, who may read this record.": "Het account van de leidinggevende van de medewerker, die dit gegeven mag inzien.",
+        "The accounts standing in for the manager today, who may read this record too.": "De accounts die vandaag de leidinggevende vervangen en dit gegeven ook mogen inzien."
     },
     "nplurals=2; plural=(n != 1);"
 )

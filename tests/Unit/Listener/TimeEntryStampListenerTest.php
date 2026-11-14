@@ -766,4 +766,74 @@ class TimeEntryStampListenerTest extends TestCase {
 			]
 		);
 	}//end testTheParentLockMatrix()
+	/**
+	 * A new entry on a draft timesheet carries approvalState draft, and a
+	 * client-sent approved state and approval time are overwritten
+	 * (time-entry-approval-state D2).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+	 */
+	public function testAClientCannotApproveItsOwnEntry(): void {
+		$event = new ObjectCreatingEvent($this->entryEntity([
+			'startedAt' => '2026-09-07T09:00:00Z',
+			'endedAt' => '2026-09-07T13:00:00Z',
+			'approvalState' => 'approved',
+			'approvedAt' => '2026-09-07T13:00:00Z',
+		]));
+
+		$this->listener->handle($event);
+
+		$this->assertFalse($event->isPropagationStopped());
+		$modified = $event->getModifiedData();
+		$this->assertSame('draft', $modified['approvalState']);
+		$this->assertArrayHasKey('approvedAt', $modified);
+		$this->assertNull($modified['approvedAt']);
+	}//end testAClientCannotApproveItsOwnEntry()
+
+	/**
+	 * An entry written under a rejected timesheet carries approvalState
+	 * rejected, on create and on update.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+	 */
+	public function testAnEntryOnARejectedTimesheetCarriesRejected(): void {
+		$this->store->seed('Timesheet', 'ts-rejected', [
+			'employeeId' => 'employee-jansen',
+			'period' => '2026-09',
+			'status' => 'rejected',
+		]);
+
+		$create = new ObjectCreatingEvent($this->entryEntity([
+			'startedAt' => '2026-09-08T09:00:00Z',
+			'endedAt' => '2026-09-08T12:00:00Z',
+			'approvalState' => 'draft',
+		]));
+		$this->listener->handle($create);
+
+		$this->assertFalse($create->isPropagationStopped());
+		$this->assertSame('ts-rejected', $create->getModifiedData()['timesheetId']);
+		$this->assertSame('rejected', $create->getModifiedData()['approvalState']);
+
+		$stored = [
+			'employeeId' => 'employee-jansen',
+			'timesheetId' => 'ts-rejected',
+			'startedAt' => '2026-09-08T09:00:00Z',
+			'endedAt' => '2026-09-08T12:00:00Z',
+			'approvalState' => 'draft',
+		];
+		$update = new ObjectUpdatingEvent(
+			$this->entryEntity(array_merge($stored, ['endedAt' => '2026-09-08T13:00:00Z', 'approvalState' => 'approved']), 'entry-1'),
+			$this->entryEntity($stored, 'entry-1')
+		);
+		$this->listener->handle($update);
+
+		$this->assertFalse($update->isPropagationStopped());
+		$this->assertSame('rejected', $update->getModifiedData()['approvalState']);
+		$this->assertNull($update->getModifiedData()['approvedAt']);
+	}//end testAnEntryOnARejectedTimesheetCarriesRejected()
+
 }//end class
