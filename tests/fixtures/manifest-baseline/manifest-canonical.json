@@ -19248,7 +19248,6 @@
 		},
 		{
 			"config": {
-				"allowExport": true,
 				"allowSavedViews": true,
 				"columns": [
 					"employeeId",

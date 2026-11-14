@@ -99,12 +99,19 @@ test('REQ-HRP-001: turnover buckets starters and leavers per month within the ch
 	assert.deepEqual(buckets.map((b) => [b.field, b.interval]), [['startDate', 'month'], ['endDate', 'month']])
 })
 
-test('REQ-HRP-002: the seven lists offer saved views and export, and their schemas are exportable', () => {
+test('REQ-HRP-002: the seven lists offer saved views; all but sick leave offer export, and their schemas are exportable', () => {
 	const schemas = baseSchemas()
 	for (const [id, slug] of Object.entries(LISTS)) {
 		assert.equal(pages[id].config.allowSavedViews, true, `${id} saved views`)
-		assert.equal(pages[id].config.allowExport, true, `${id} export`)
 		assert.equal(pages[id].config.schema, slug)
+		if (slug === 'SickLeaveCase') {
+			// Health data is never exported in bulk (reporting-full-list-export,
+			// REQ-HLE-002): sick leave cases get saved views only.
+			assert.equal(pages[id].config.allowExport, undefined, `${id} offers no export`)
+			assert.notEqual(schemas[slug].exportable, true, `${slug} is not exportable`)
+			continue
+		}
+		assert.equal(pages[id].config.allowExport, true, `${id} export`)
 		assert.equal(schemas[slug].exportable, true, `${slug} exportable`)
 	}
 	assert.equal(pages.LeaveBalances.config.allowExport, undefined, 'a list the change does not name stays as it was')
