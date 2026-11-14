@@ -2564,6 +2564,7 @@
                 "name": "Example: Conduction Demo B.V.",
                 "kvkNumber": "12345678",
                 "loonheffingennummer": "000000000L01",
+                "brinNummer": "00XX",
                 "postalAddress": "Voorbeeldstraat 1, 1234 AB Amsterdam",
                 "aangifteContactName": "Example: Payroll desk",
                 "aangifteContactPhone": "020 123 4567",

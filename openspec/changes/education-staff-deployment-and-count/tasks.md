@@ -54,7 +54,10 @@
       only `vastgesteld` plans of the administration's units are exported. Left open: the
       `Export IPTO` action on the administration, because an `api-call` header action cannot
       ask for the reference week and the stored document depends on the 3.1 layout.
-- [ ] 3.4 Seed the school, teachers and plans. Verify: `npm run check:seed-refs` exits 0.
+- [x] 3.4 Seed the school, teachers and plans. Verify: `npm run check:seed-refs` exits 0.
+      Done: ADM-001 carries `brinNummer` `00XX`; `Basisschool De Klimop` with a full-time CAO
+      PO teacher (confirmed, 1,700 planned against a hand-entered 1,659) and a 0.6 teacher
+      (draft, 875.4 against 995.4). `check:seed-refs` exits 0.
 
 ## 4. Verification
 

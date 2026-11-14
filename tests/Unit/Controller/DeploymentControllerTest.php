@@ -85,17 +85,15 @@ class DeploymentControllerTest extends TestCase {
 		$gateway = $this->createMock(HoursRegisterGateway::class);
 		$gateway->method('loadAll')->willReturnCallback(static fn (string $schema): array => ($rows[$schema] ?? []));
 		$gateway->method('findObjectData')->willReturnCallback(
-			static function (string $uuid, string $schema) use ($brin): ?array {
-				if ($schema === 'hrAdministration') {
-					return ($uuid === 'adm-1' ? ['name' => 'De Klimop', 'brinNummer' => $brin] : null);
-				}
-
-				return ['id' => $uuid, 'firstName' => strtoupper($uuid), 'lastName' => 'Docent'];
-			}
+			static fn (string $uuid, string $schema): array => ['id' => $uuid, 'firstName' => strtoupper($uuid), 'lastName' => 'Docent']
 		);
 		$gateway->method('findFiltered')->willReturnCallback(
-			function (string $schema, array $filters, bool $asCaller = false) use ($rows): array {
+			function (string $schema, array $filters, bool $asCaller = false) use ($rows, $brin): array {
 				$this->calls[$schema] = ['filters' => $filters, 'asCaller' => $asCaller];
+				if ($schema === 'hrAdministration') {
+					return (($filters['administrationId'] ?? null) === 'adm-1' ? [['name' => 'De Klimop', 'administrationId' => 'adm-1', 'brinNummer' => $brin]] : []);
+				}
+
 				return ($rows[$schema] ?? []);
 			}
 		);
@@ -252,6 +250,7 @@ class DeploymentControllerTest extends TestCase {
 		$this->assertSame('12AB', $data['brinNummer']);
 		$this->assertSame('adm-1', $data['administrationId']);
 		$this->assertSame(['filters' => ['administrationId' => 'adm-1'], 'asCaller' => false], $this->calls['OrgUnit']);
+		$this->assertSame(['filters' => ['administrationId' => 'adm-1'], 'asCaller' => false], $this->calls['hrAdministration']);
 		$this->assertSame([['employeeId' => 'e-1', 'employeeNumber' => null, 'name' => 'E-1 Docent', 'subject' => '', 'educationLevel' => '', 'hoursPerWeek' => 25.0]], $data['rows']);
 		$this->assertSame(['e-2', 'e-4'], array_column($data['notConfirmed'], 'employeeId'));
 	}//end testIptoExportsOnlyConfirmedPlansOfTheAdministration()

@@ -134,7 +134,7 @@
 						"id": "teachers",
 						"type": "endpoint-table",
 						"title": "Teachers",
-						"icon": "AccountSchoolOutline",
+						"icon": "SchoolOutline",
 						"content": {
 							"endpointSource": {
 								"url": "/apps/humaniq/api/deployment/org-units/@objectId",
@@ -200,7 +200,7 @@
 				{
 					"id": "Taakbeleid",
 					"label": "Task policy",
-					"icon": "AccountSchoolOutline",
+					"icon": "SchoolOutline",
 					"route": "TaakbeleidScholen"
 				},
 				{

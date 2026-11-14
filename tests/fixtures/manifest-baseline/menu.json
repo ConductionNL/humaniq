@@ -823,7 +823,7 @@
 			{
 				"id": "Taakbeleid",
 				"label": "Task policy",
-				"icon": "AccountSchoolOutline",
+				"icon": "SchoolOutline",
 				"route": "TaakbeleidScholen"
 			},
 			{

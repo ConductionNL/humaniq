@@ -1,5 +1,6 @@
 [
     "OCA\\Humaniq\\Controller\\AgendaController::$gateway",
+    "OCA\\Humaniq\\Controller\\DeploymentController::$gateway",
     "OCA\\Humaniq\\Controller\\DossierController::$gateway",
     "OCA\\Humaniq\\Controller\\EmployeeHistoryController::$gateway",
     "OCA\\Humaniq\\Controller\\FlexContractController::$gateway",

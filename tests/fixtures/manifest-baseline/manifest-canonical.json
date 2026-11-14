@@ -1041,7 +1041,7 @@
 					"route": "CalendarSubscriptions"
 				},
 				{
-					"icon": "AccountSchoolOutline",
+					"icon": "SchoolOutline",
 					"id": "Taakbeleid",
 					"label": "Task policy",
 					"route": "TaakbeleidScholen"
@@ -11869,7 +11869,7 @@
 							},
 							"rowRoute": "DeploymentPlanDetail"
 						},
-						"icon": "AccountSchoolOutline",
+						"icon": "SchoolOutline",
 						"id": "teachers",
 						"title": "Teachers",
 						"type": "endpoint-table"

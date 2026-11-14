@@ -155,7 +155,7 @@ class DeploymentController extends Controller {
 		$administrationId = $this->administrations->getActiveAdministrationId((string)$uid);
 		$administration = null;
 		if ($administrationId !== null) {
-			$administration = $this->gateway->findObjectData(uuid: $administrationId, schema: 'hrAdministration');
+			$administration = ($this->gateway->findFiltered(schema: 'hrAdministration', filters: ['administrationId' => $administrationId])[0] ?? null);
 		}
 
 		if ($administration === null) {
