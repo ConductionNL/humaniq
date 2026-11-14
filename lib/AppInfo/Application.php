@@ -155,6 +155,14 @@ class Application extends App implements IBootstrap {
 		// problem details). Registered first: Nextcloud runs afterController in
 		// reverse order, so it sees the final response of every other middleware.
 		$context->registerMiddleware(class: ApiContractMiddleware::class);
+
+		// self-service-mobile (design.md D1): link the web manifest from the
+		// head of humaniq's own pages, so a phone browser offers to install Mijn HR.
+		$context->registerEventListener(
+			\OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent::class,
+			\OCA\Humaniq\Listener\PwaHeadListener::class
+		);
+
 		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class)));
 		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
 		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);

@@ -228,6 +228,10 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'survey#respond', 'url' => '/api/surveys/{id}/responses', 'verb' => 'POST'],
         ['name' => 'survey#results', 'url' => '/api/surveys/results', 'verb' => 'GET'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
+        // self-service-mobile (design.md D1): the web manifest and service worker of the
+        // installable Mijn HR. Public static assets, declared before the catch-all.
+        ['name' => 'pwa#manifest',      'url' => '/manifest.webmanifest', 'verb' => 'GET'],
+        ['name' => 'pwa#serviceWorker', 'url' => '/service-worker.js',    'verb' => 'GET'],
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],
 ]);
