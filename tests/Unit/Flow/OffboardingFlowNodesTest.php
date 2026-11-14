@@ -158,7 +158,11 @@ class OffboardingFlowNodesTest extends TestCase {
 		$fragment = json_decode((string)file_get_contents(dirname(__DIR__, 3) . '/lib/Settings/register.d/hr-onboarding.json'), true);
 		$expected = ['Offboarding' => 'humaniq.revoke-access', 'ExitInterview' => 'humaniq.anonymise-exit-interviews'];
 		foreach ($expected as $schema => $step) {
-			$flows = ($fragment['components']['schemas'][$schema]['configuration']['x-openregister-flows'] ?? []);
+			// The scheduled flow; Offboarding also carries the Uitdiensttreding task flow (platform-hr-workflows).
+			$flows = array_values(array_filter(
+				($fragment['components']['schemas'][$schema]['configuration']['x-openregister-flows'] ?? []),
+				static fn (array $flow): bool => ($flow['trigger'] ?? '') === 'schedule'
+			));
 			self::assertCount(1, $flows, $schema);
 			$flow = $flows[0];
 			self::assertSame('schedule', $flow['trigger']);

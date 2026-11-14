@@ -23,6 +23,10 @@
  * document in appinfo/info.xml. `occ maintenance:repair` re-runs it on
  * demand, which idempotence makes safe.
  *
+ * Generalised (platform-hr-workflows): after the Loonrun repair it hands every
+ * other flow humaniq declares to {@see ShippedFlowPublisher}, so a flow shipped
+ * after an instance installed humaniq gets a published version on upgrade.
+ *
  * @category Repair
  * @package  OCA\Humaniq\Repair
  *
@@ -33,6 +37,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+ * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
  */
 
 declare(strict_types=1);
@@ -40,6 +45,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Repair;
 
 use OCA\Humaniq\Service\LoonrunFlowRepairService;
+use OCA\Humaniq\Service\ShippedFlowPublisher;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -55,14 +61,16 @@ class RepublishLoonrunFlow implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param LoonrunFlowRepairService $repairService The repair itself.
-	 * @param LoggerInterface $logger The logger.
+	 * @param LoonrunFlowRepairService  $repairService The repair itself.
+	 * @param LoggerInterface           $logger        The logger.
+	 * @param ShippedFlowPublisher|null $publisher     Publishes the other shipped flows; skipped when null.
 	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function __construct(
 		private readonly LoonrunFlowRepairService $repairService,
 		private readonly LoggerInterface $logger,
+		private readonly ?ShippedFlowPublisher $publisher=null,
 	) {
 
 	}//end __construct()
@@ -75,7 +83,7 @@ class RepublishLoonrunFlow implements IRepairStep {
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function getName(): string {
-		return 'Republish the humaniq Loonrun flow so approvals stop taking the rejected exit';
+		return 'Republish the shipped humaniq flows, so Loonrun approvals stop taking the rejected exit and new flows get published';
 	}//end getName()
 
 	/**
@@ -91,14 +99,42 @@ class RepublishLoonrunFlow implements IRepairStep {
 	public function run(IOutput $output): void {
 		try {
 			$report = $this->repairService->repair();
+			$output->info('Loonrun flow repair: ' . $report['status'] . '. ' . $report['detail']);
 		} catch (\Throwable $e) {
 			$output->warning('Could not repair the Loonrun flow: ' . $e->getMessage());
 			$this->logger->error('Humaniq: Loonrun flow repair failed', ['exception' => $e->getMessage()]);
+		}
+
+		$this->publishShippedFlows(output: $output);
+
+	}//end run()
+
+	/**
+	 * Publish every other shipped flow that needs it, one info line per flow.
+	 *
+	 * @param IOutput $output The output interface for progress reporting.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
+	 */
+	private function publishShippedFlows(IOutput $output): void {
+		if ($this->publisher === null) {
 			return;
 		}
 
-		$output->info('Loonrun flow repair: ' . $report['status'] . '. ' . $report['detail']);
+		try {
+			$reports = $this->publisher->publishAll();
+		} catch (\Throwable $e) {
+			$output->warning('Could not publish the shipped flows: ' . $e->getMessage());
+			$this->logger->error('Humaniq: shipped flow publishing failed', ['exception' => $e->getMessage()]);
+			return;
+		}
 
-	}//end run()
+		foreach ($reports as $report) {
+			$output->info('Shipped flow ' . $report['flow'] . ': ' . $report['status'] . '. ' . $report['detail']);
+		}
+
+	}//end publishShippedFlows()
 
 }//end class

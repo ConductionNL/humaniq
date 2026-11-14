@@ -26,6 +26,7 @@ use OCA\Humaniq\Repair\RepublishLoonrunFlow;
 use OCA\Humaniq\Service\FlowGraphKeypaths;
 use OCA\Humaniq\Service\LoonrunFlowRepairService;
 use OCA\Humaniq\Service\OpenRegisterAvailability;
+use OCA\Humaniq\Service\ShippedFlowPublisher;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
@@ -39,6 +40,8 @@ use Psr\Log\LoggerInterface;
  * @covers \OCA\Humaniq\Repair\RepublishLoonrunFlow
  * @uses   \OCA\Humaniq\Service\LoonrunFlowRepairService
  * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
+ * @uses   \OCA\Humaniq\Service\ShippedFlowPublisher
+ * @uses   \OCA\Humaniq\Service\FlowGraphKeypaths
  */
 class RepublishLoonrunFlowTest extends TestCase {
 
@@ -90,7 +93,7 @@ class RepublishLoonrunFlowTest extends TestCase {
 		$step->run($output);
 
 		self::assertSame(
-			'Republish the humaniq Loonrun flow so approvals stop taking the rejected exit',
+			'Republish the shipped humaniq flows, so Loonrun approvals stop taking the rejected exit and new flows get published',
 			$step->getName()
 		);
 
@@ -156,5 +159,43 @@ class RepublishLoonrunFlowTest extends TestCase {
 		$this->step(true, $container, $logger)->run($output);
 
 	}//end testAFailingRepairWarnsAndLogsInsteadOfThrowing()
+
+	/**
+	 * After the Loonrun repair the step reports every other shipped flow, and
+	 * a failing publisher warns instead of aborting the upgrade.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
+	 */
+	public function testTheShippedFlowsAreReportedAfterTheLoonrunRepair(): void {
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('isInstalled')->willReturn(false);
+		$availability = new OpenRegisterAvailability($appManager);
+		$container    = $this->createMock(ContainerInterface::class);
+		$logger       = $this->createMock(LoggerInterface::class);
+		$publisher    = new ShippedFlowPublisher($availability, $container, new FlowGraphKeypaths(), $logger);
+		$service      = new LoonrunFlowRepairService($availability, $container, new FlowGraphKeypaths(), $logger);
+
+		$lines  = [];
+		$output = $this->createMock(IOutput::class);
+		$output->method('info')->willReturnCallback(
+			static function (string $line) use (&$lines): void {
+				$lines[] = $line;
+			}
+		);
+		$output->expects(self::never())->method('warning');
+
+		(new RepublishLoonrunFlow($service, $logger, $publisher))->run($output);
+
+		self::assertSame(
+			[
+				'Loonrun flow repair: skipped. OpenRegister is not installed or enabled.',
+				'Shipped flow *: skipped. OpenRegister is not installed or enabled.',
+			],
+			$lines
+		);
+
+	}//end testTheShippedFlowsAreReportedAfterTheLoonrunRepair()
 
 }//end class

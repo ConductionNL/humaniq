@@ -5,7 +5,7 @@
             "Onboarding": {
                 "slug": "Onboarding",
                 "icon": "AccountPlus",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Onboarding case",
                 "description": "A deterministic onboarding case (one per hire): the concrete legal gates for a new employee's first week. Contract signed, WID identity check, BSN/IBAN validated, IT provisioned, pensioen aangemeld. As checklist boolean/date fields, governed by a simplified six-state declarative lifecycle (onboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/onboarding-wizard draft's 13-state machine and 15-step wizard stepper: no OnboardingStep/WIDCheck/BSNValidatie/Reminder side entities, no wizard stepper UI (follow-up nc-vue widget, design.md D6), no BSN elfproef/IBAN modulus-97 validation services, no IT auto-provisioning, no reminder/escalation engine. The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOnboardingChecks.php), except the right-to-work check, which RightToWorkGuard enforces at write time on gereed_melden and starten (people-dossier-completeness). Guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
                 "type": "object",
@@ -16,6 +16,126 @@
                     "status"
                 ],
                 "configuration": {
+                    "x-openregister-flows": [
+                        {
+                            "name": "Indiensttreding",
+                            "app": "humaniq",
+                            "description": "Starts when an onboarding case is created (platform-hr-workflows). The IT contact group gets a task to provide the new hire's account; marking it done ticks IT provisioned on the case, marking it not applicable leaves the case as it is. The flow arrives disabled per the engine's adoption contract: enable it deliberately and re-point the IT task's candidate group from admin to your IT contact group. Tasks for the hire's own manager are not part of this flow yet.",
+                            "trigger": "object.created",
+                            "triggerRegister": "humaniq",
+                            "executionMode": "async",
+                            "limits": {
+                                "maxTransitions": 50
+                            },
+                            "nodes": [
+                                {
+                                    "id": "start",
+                                    "type": "openregister.trigger-object",
+                                    "config": {
+                                        "event": "object.created",
+                                        "register": "humaniq",
+                                        "schema": "Onboarding"
+                                    }
+                                },
+                                {
+                                    "id": "it-account",
+                                    "type": "openregister.user-task",
+                                    "config": {
+                                        "title": "Account voor nieuwe medewerker regelen",
+                                        "description": "Maak het account en de werkplekmiddelen aan voor de nieuwe medewerker die op {{ startDate }} begint. Kies gedaan als het account klaarstaat; dan wordt IT geregeld aangevinkt op het onboardingdossier.",
+                                        "performerType": "group",
+                                        "candidateGroups": [
+                                            "admin"
+                                        ],
+                                        "outcomes": [
+                                            "gedaan",
+                                            "niet-van-toepassing"
+                                        ],
+                                        "outcomeKey": "itAccount"
+                                    }
+                                },
+                                {
+                                    "id": "it-gate",
+                                    "type": "openregister.switch",
+                                    "config": {},
+                                    "exits": [
+                                        {
+                                            "id": "gedaan",
+                                            "condition": {
+                                                "==": [
+                                                    {
+                                                        "var": "json.itAccount.outcome"
+                                                    },
+                                                    "gedaan"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": "overgeslagen"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "tick-it",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "Onboarding",
+                                        "operation": "update",
+                                        "match": [
+                                            {
+                                                "property": "uuid",
+                                                "value": "{{ id }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "uuid": "{{ id }}",
+                                            "itProvisioned": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "end",
+                                    "type": "openregister.end",
+                                    "config": {}
+                                },
+                                {
+                                    "id": "end-skipped",
+                                    "type": "openregister.end",
+                                    "config": {}
+                                }
+                            ],
+                            "edges": [
+                                {
+                                    "id": "e-start",
+                                    "from": "start",
+                                    "to": "it-account"
+                                },
+                                {
+                                    "id": "e-it",
+                                    "from": "it-account",
+                                    "to": "it-gate"
+                                },
+                                {
+                                    "id": "e-it-done",
+                                    "from": "it-gate",
+                                    "fromExit": "gedaan",
+                                    "to": "tick-it"
+                                },
+                                {
+                                    "id": "e-it-skip",
+                                    "from": "it-gate",
+                                    "fromExit": "overgeslagen",
+                                    "to": "end-skipped"
+                                },
+                                {
+                                    "id": "e-ticked",
+                                    "from": "tick-it",
+                                    "to": "end"
+                                }
+                            ]
+                        }
+                    ],
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "aangenomen",
@@ -172,7 +292,7 @@
             "Offboarding": {
                 "slug": "Offboarding",
                 "icon": "AccountMinus",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Offboarding case",
                 "description": "A deterministic offboarding case (one per departure): the concrete gates for a leaving employee. Exit interview held, assets returned, access revoked. And the statutory eindafrekening components (verlofsaldo paid out, vakantiegeld settled, transitievergoeding recorded, getuigschrift provided) as checklist boolean/date fields, governed by a simplified five-state declarative lifecycle (offboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/offboarding-wizard draft's 17-state machine and 7 entity schemas: no OffboardingStep/Eindafrekening/EquipmentReturn/ExitInterview/Getuigschrift/RetentionTimer side entities, no eindafrekening computation engine, no UWV WW-melding/pensioenfonds/ZVW submissions, no AVG retention timers, no per-item asset tracking (the parallel asset-management-mvp owns asset data. Loose coupling only, design.md D6). The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOffboardingChecks.php), NOT by write-time guard classes. Guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
                 "type": "object",
@@ -201,6 +321,299 @@
                             "edges": [
                                 {"id": "e-start", "from": "start", "to": "revoke"},
                                 {"id": "e-done", "from": "revoke", "to": "end"}
+                            ]
+                        },
+                        {
+                            "name": "Uitdiensttreding",
+                            "app": "humaniq",
+                            "description": "Starts when an offboarding case is created (platform-hr-workflows). HR gets a task for the asset return, the IT contact group one for revoking access, and HR one for the exit interview, one after the other. Marking a task done fills its field on the case: Assets returned, Access revoked, and the date of the exit interview; not applicable leaves the field as it is and moves on. The flow arrives disabled per the engine's adoption contract: enable it deliberately and re-point the candidate groups (humaniq-hr for HR, admin for IT) to the groups that do this work.",
+                            "trigger": "object.created",
+                            "triggerRegister": "humaniq",
+                            "executionMode": "async",
+                            "limits": {
+                                "maxTransitions": 50
+                            },
+                            "nodes": [
+                                {
+                                    "id": "start",
+                                    "type": "openregister.trigger-object",
+                                    "config": {
+                                        "event": "object.created",
+                                        "register": "humaniq",
+                                        "schema": "Offboarding"
+                                    }
+                                },
+                                {
+                                    "id": "assets",
+                                    "type": "openregister.user-task",
+                                    "config": {
+                                        "title": "Bedrijfsmiddelen innemen",
+                                        "description": "Neem de bedrijfsmiddelen in van de medewerker die op {{ lastWorkingDay }} voor het laatst werkt. Kies gedaan als alles is ingeleverd; dan wordt Middelen ingeleverd aangevinkt op het uitdienstdossier.",
+                                        "performerType": "group",
+                                        "candidateGroups": [
+                                            "humaniq-hr"
+                                        ],
+                                        "outcomes": [
+                                            "gedaan",
+                                            "niet-van-toepassing"
+                                        ],
+                                        "outcomeKey": "assetReturn"
+                                    }
+                                },
+                                {
+                                    "id": "assets-gate",
+                                    "type": "openregister.switch",
+                                    "config": {},
+                                    "exits": [
+                                        {
+                                            "id": "gedaan",
+                                            "condition": {
+                                                "==": [
+                                                    {
+                                                        "var": "json.assetReturn.outcome"
+                                                    },
+                                                    "gedaan"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": "overgeslagen"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "tick-assets",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "Offboarding",
+                                        "operation": "update",
+                                        "match": [
+                                            {
+                                                "property": "uuid",
+                                                "value": "{{ id }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "uuid": "{{ id }}",
+                                            "assetsIngeleverd": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "access",
+                                    "type": "openregister.user-task",
+                                    "config": {
+                                        "title": "Toegang intrekken",
+                                        "description": "Trek de toegang in van de medewerker die op {{ lastWorkingDay }} voor het laatst werkt. Kies gedaan als alle toegang is ingetrokken; dan wordt Toegang ingetrokken aangevinkt op het uitdienstdossier.",
+                                        "performerType": "group",
+                                        "candidateGroups": [
+                                            "admin"
+                                        ],
+                                        "outcomes": [
+                                            "gedaan",
+                                            "niet-van-toepassing"
+                                        ],
+                                        "outcomeKey": "accessRevocation"
+                                    }
+                                },
+                                {
+                                    "id": "access-gate",
+                                    "type": "openregister.switch",
+                                    "config": {},
+                                    "exits": [
+                                        {
+                                            "id": "gedaan",
+                                            "condition": {
+                                                "==": [
+                                                    {
+                                                        "var": "json.accessRevocation.outcome"
+                                                    },
+                                                    "gedaan"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": "overgeslagen"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "tick-access",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "Offboarding",
+                                        "operation": "update",
+                                        "match": [
+                                            {
+                                                "property": "uuid",
+                                                "value": "{{ id }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "uuid": "{{ id }}",
+                                            "toegangIngetrokken": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "exit-interview",
+                                    "type": "openregister.user-task",
+                                    "config": {
+                                        "title": "Exitgesprek voeren",
+                                        "description": "Voer het exitgesprek met de medewerker die op {{ lastWorkingDay }} voor het laatst werkt. Kies gedaan na het gesprek; de datum waarop je de taak afrondt komt als datum van het exitgesprek op het uitdienstdossier.",
+                                        "performerType": "group",
+                                        "candidateGroups": [
+                                            "humaniq-hr"
+                                        ],
+                                        "outcomes": [
+                                            "gedaan",
+                                            "niet-van-toepassing"
+                                        ],
+                                        "outcomeKey": "exitInterview"
+                                    }
+                                },
+                                {
+                                    "id": "exit-gate",
+                                    "type": "openregister.switch",
+                                    "config": {},
+                                    "exits": [
+                                        {
+                                            "id": "gedaan",
+                                            "condition": {
+                                                "==": [
+                                                    {
+                                                        "var": "json.exitInterview.outcome"
+                                                    },
+                                                    "gedaan"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": "overgeslagen"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "exit-date",
+                                    "type": "openregister.set-fields",
+                                    "config": {
+                                        "compute": {
+                                            "exitGesprekDatum": {
+                                                "substr": [
+                                                    {
+                                                        "var": "json.exitInterview.completedAt"
+                                                    },
+                                                    0,
+                                                    10
+                                                ]
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "tick-exit",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "humaniq",
+                                        "schema": "Offboarding",
+                                        "operation": "update",
+                                        "match": [
+                                            {
+                                                "property": "uuid",
+                                                "value": "{{ id }}"
+                                            }
+                                        ],
+                                        "fields": {
+                                            "uuid": "{{ id }}",
+                                            "exitGesprekDone": "{{ exitGesprekDatum }}"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "end",
+                                    "type": "openregister.end",
+                                    "config": {}
+                                }
+                            ],
+                            "edges": [
+                                {
+                                    "id": "e-start",
+                                    "from": "start",
+                                    "to": "assets"
+                                },
+                                {
+                                    "id": "e-assets",
+                                    "from": "assets",
+                                    "to": "assets-gate"
+                                },
+                                {
+                                    "id": "e-assets-done",
+                                    "from": "assets-gate",
+                                    "fromExit": "gedaan",
+                                    "to": "tick-assets"
+                                },
+                                {
+                                    "id": "e-assets-skip",
+                                    "from": "assets-gate",
+                                    "fromExit": "overgeslagen",
+                                    "to": "access"
+                                },
+                                {
+                                    "id": "e-assets-ticked",
+                                    "from": "tick-assets",
+                                    "to": "access"
+                                },
+                                {
+                                    "id": "e-access",
+                                    "from": "access",
+                                    "to": "access-gate"
+                                },
+                                {
+                                    "id": "e-access-done",
+                                    "from": "access-gate",
+                                    "fromExit": "gedaan",
+                                    "to": "tick-access"
+                                },
+                                {
+                                    "id": "e-access-skip",
+                                    "from": "access-gate",
+                                    "fromExit": "overgeslagen",
+                                    "to": "exit-interview"
+                                },
+                                {
+                                    "id": "e-access-ticked",
+                                    "from": "tick-access",
+                                    "to": "exit-interview"
+                                },
+                                {
+                                    "id": "e-exit",
+                                    "from": "exit-interview",
+                                    "to": "exit-gate"
+                                },
+                                {
+                                    "id": "e-exit-done",
+                                    "from": "exit-gate",
+                                    "fromExit": "gedaan",
+                                    "to": "exit-date"
+                                },
+                                {
+                                    "id": "e-exit-skip",
+                                    "from": "exit-gate",
+                                    "fromExit": "overgeslagen",
+                                    "to": "end"
+                                },
+                                {
+                                    "id": "e-exit-dated",
+                                    "from": "exit-date",
+                                    "to": "tick-exit"
+                                },
+                                {
+                                    "id": "e-exit-ticked",
+                                    "from": "tick-exit",
+                                    "to": "end"
+                                }
                             ]
                         }
                     ],
