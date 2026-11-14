@@ -1,0 +1,215 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "DeploymentPlan",
+			"params": {
+				"id": "DeploymentPlans",
+				"route": "/deployment-plans",
+				"title": "Deployment plans",
+				"columns": [
+					"employeeId",
+					"orgUnitId",
+					"schoolYear",
+					"plannedHours",
+					"normHours",
+					"differenceHours",
+					"status"
+				],
+				"sort": {
+					"field": "schoolYear",
+					"order": "desc"
+				},
+				"filters": [
+					"orgUnitId",
+					"schoolYear",
+					"status"
+				],
+				"description": "Each teacher's planned hours for a school year against the norm for their contract. Above zero difference is an overload.",
+				"note": "education-staff-deployment-and-count (2026-11-14): REQ-EDU-001/002. One plan per teacher per school year. plannedHours is stamped by DeploymentPlanTotalsListener, differenceHours is the schema's calculation. Only HR creates plans; a teacher reads their own."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "DeploymentPlan",
+			"params": {
+				"id": "DeploymentPlanDetail",
+				"route": "/deployment-plans/:id",
+				"title": "Deployment plan",
+				"dataTitle": "Deployment plan",
+				"dataIcon": "CalendarClock",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"exclude": [
+					"employeeUserId"
+				],
+				"note": "education-staff-deployment-and-count (2026-11-14): REQ-EDU-001/002. Shows the plan lines with planned, norm (normSource says whether it came from the CAO or was entered by hand) and the difference. vaststellen and heropenen are the schema's own transitions, guarded server-side by NoSelfApprovalGuard so a teacher cannot confirm their own plan.",
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "vaststellen",
+							"from": [
+								"concept"
+							],
+							"to": "vastgesteld",
+							"label": "Confirm plan"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"vastgesteld"
+							],
+							"to": "concept",
+							"label": "Reopen plan"
+						}
+					]
+				}
+			}
+		}
+	],
+	"pages": [
+		{
+			"id": "TaakbeleidScholen",
+			"route": "/taakbeleid",
+			"type": "dashboard",
+			"title": "Task policy",
+			"config": {
+				"description": "Pick a school to see every teacher's plan for the school year against their norm.",
+				"_note": "education-staff-deployment-and-count (2026-11-14): REQ-EDU-001/002. The entry to Taakbeleid: the org units of the active administration; a row opens Taakbeleid for that unit. Taakbeleid is a second OrgUnit detail page, so this fragment sorts after hr-org.json and OrgUnitDetail stays the detail page the OrgUnits index opens.",
+				"widgets": [
+					{
+						"id": "schools",
+						"type": "object-table",
+						"title": "Schools",
+						"content": {
+							"register": "humaniq",
+							"schema": "OrgUnit",
+							"filter": {
+								"administrationId": "@workspace.activeAdministrationId?"
+							},
+							"sort": {
+								"field": "name",
+								"dir": "asc"
+							},
+							"limit": 100,
+							"columns": [
+								"name",
+								"type"
+							],
+							"rowRoute": "Taakbeleid",
+							"emptyText": "No organisational units yet"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "schools",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 7
+					}
+				]
+			}
+		},
+		{
+			"id": "Taakbeleid",
+			"route": "/taakbeleid/:id",
+			"type": "detail",
+			"title": "Task policy",
+			"config": {
+				"register": "humaniq",
+				"schema": "OrgUnit",
+				"_note": "education-staff-deployment-and-count (2026-11-14): REQ-EDU-001/002. One school's teachers for the current school year from GET /api/deployment/org-units/{id}: planned, norm and difference, the largest overload first, and placed teachers without a plan last. The unit and each teacher are read under the caller's access; an unreadable unit answers 404. A row with a plan opens DeploymentPlanDetail.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "teachers",
+						"type": "endpoint-table",
+						"title": "Teachers",
+						"icon": "AccountSchoolOutline",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/deployment/org-units/@objectId",
+								"responsePath": "teachers"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Teacher",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "plannedHours",
+									"label": "Planned hours"
+								},
+								{
+									"key": "normHours",
+									"label": "Norm hours"
+								},
+								{
+									"key": "normSource",
+									"label": "Norm source"
+								},
+								{
+									"key": "differenceHours",
+									"label": "Difference"
+								},
+								{
+									"key": "overload",
+									"label": "Overload"
+								},
+								{
+									"key": "hasPlan",
+									"label": "Has a plan"
+								}
+							],
+							"rowRoute": "DeploymentPlanDetail",
+							"emptyText": "No teachers placed at this school this school year"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "teachers",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 8
+					}
+				]
+			}
+		}
+	],
+	"menu": [
+		{
+			"id": "PlanningGroup",
+			"children": [
+				{
+					"id": "Taakbeleid",
+					"label": "Task policy",
+					"icon": "AccountSchoolOutline",
+					"route": "TaakbeleidScholen"
+				},
+				{
+					"id": "DeploymentPlans",
+					"label": "Deployment plans",
+					"icon": "CalendarClock",
+					"route": "DeploymentPlans"
+				}
+			]
+		}
+	]
+}

@@ -140,11 +140,13 @@ class DeploymentControllerTest extends TestCase {
 		$this->assertSame(41.0, $overloaded['differenceHours']);
 		$this->assertTrue($overloaded['overload']);
 		$this->assertSame('vastgesteld', $overloaded['status']);
+		$this->assertSame('p-1', $overloaded['id']);
 		$this->assertSame(-120.0, $room['differenceHours']);
 		$this->assertFalse($room['overload']);
 		$this->assertSame('Kim de Vries', $room['name']);
 		$this->assertFalse($none['hasPlan']);
 		$this->assertNull($none['planId']);
+		$this->assertNull($none['id']);
 		$this->assertSame('Ali Bakker', $none['name']);
 	}//end testListsReadableTeachersOverloadFirstAndThoseWithoutAPlan()
 

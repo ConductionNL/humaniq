@@ -1,10 +1,21 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "humaniq",
     {
+        "2024": "2024",
+        "2025": "2025",
+        "2026": "2026",
+        "Confirm plan": "Confirm plan",
+        "Deployment plans": "Deployment plans",
+        "Each teacher's planned hours for a school year against the norm for their contract. Above zero difference is an overload.": "Each teacher's planned hours for a school year against the norm for their contract. Above zero difference is an overload.",
+        "Has a plan": "Has a plan",
+        "No organisational units yet": "No organisational units yet",
+        "No teachers placed at this school this school year": "No teachers placed at this school this school year",
+        "Overload": "Overload",
+        "Pick a school to see every teacher's plan for the school year against their norm.": "Pick a school to see every teacher's plan for the school year against their norm.",
+        "Reopen plan": "Reopen plan",
+        "Schools": "Schools",
+        "Task policy": "Task policy",
+        "Teachers": "Teachers",
         "Deployment plan": "Deployment plan",
         "Draft while the plan is made; confirmed once agreed.": "Draft while the plan is made; confirmed once agreed.",
         "From the CAO": "From the CAO",
@@ -34,9 +45,6 @@ OC.L10N.register(
         "The total of the plan lines.": "The total of the plan lines.",
         "Weeks": "Weeks",
         "Whether the norm comes from the CAO or was entered by hand.": "Whether the norm comes from the CAO or was entered by hand.",
-        "2024": "2024",
-        "2025": "2025",
-        "2026": "2026",
         "(Re)calculate": "(Re)calculate",
         "(Re)calculating the payroll run failed.": "(Re)calculating the payroll run failed.",
         "30%-ruling applied rate": "30%-ruling applied rate",

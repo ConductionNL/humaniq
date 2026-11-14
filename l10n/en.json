@@ -1,5 +1,17 @@
 {
     "translations": {
+        "Confirm plan": "Confirm plan",
+        "Deployment plans": "Deployment plans",
+        "Each teacher's planned hours for a school year against the norm for their contract. Above zero difference is an overload.": "Each teacher's planned hours for a school year against the norm for their contract. Above zero difference is an overload.",
+        "Has a plan": "Has a plan",
+        "No organisational units yet": "No organisational units yet",
+        "No teachers placed at this school this school year": "No teachers placed at this school this school year",
+        "Overload": "Overload",
+        "Pick a school to see every teacher's plan for the school year against their norm.": "Pick a school to see every teacher's plan for the school year against their norm.",
+        "Reopen plan": "Reopen plan",
+        "Schools": "Schools",
+        "Task policy": "Task policy",
+        "Teachers": "Teachers",
         "Deployment plan": "Deployment plan",
         "Draft while the plan is made; confirmed once agreed.": "Draft while the plan is made; confirmed once agreed.",
         "From the CAO": "From the CAO",

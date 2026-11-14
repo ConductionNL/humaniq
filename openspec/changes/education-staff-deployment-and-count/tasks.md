@@ -26,8 +26,14 @@
       (largest difference first, teachers without a plan last) is
       `DeploymentPlanService::schoolView`. Route-auth passes; no-admin-idor reports no
       finding on this controller (its one finding is a pre-existing one elsewhere).
-- [ ] 2.2 Add `DeploymentPlans`, `DeploymentPlanDetail`, `Taakbeleid` and the menu entry.
+- [x] 2.2 Add `DeploymentPlans`, `DeploymentPlanDetail`, `Taakbeleid` and the menu entry.
       Verify: `npm run check:manifest` and `npm run lint` exit 0.
+      Done in `src/manifest.d/staff-deployment.json` (not `hr-deployment.json`): `Taakbeleid` is
+      a second OrgUnit detail page, and the fragment must sort after `hr-org.json` so the
+      OrgUnits index keeps opening `OrgUnitDetail`. `TaakbeleidScholen` (the menu entry,
+      under Time & scheduling) lists the units and opens `Taakbeleid` for one; a teacher row
+      with a plan opens `DeploymentPlanDetail`. `check:manifest`, `check:l10n`, manifest
+      parity (baseline updated) and `lint` exit 0.
 
 ## 3. IPTO export
 

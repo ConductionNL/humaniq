@@ -236,6 +236,14 @@
 		"route": "/mijn"
 	},
 	{
+		"id": "TaakbeleidScholen",
+		"route": "/taakbeleid"
+	},
+	{
+		"id": "Taakbeleid",
+		"route": "/taakbeleid/:id"
+	},
+	{
 		"id": "ManagerDeputies",
 		"route": "/manager-deputies"
 	},
@@ -786,5 +794,13 @@
 	{
 		"id": "NonWorkingTimeDetail",
 		"route": "/niet-werkdagen/:id"
+	},
+	{
+		"id": "DeploymentPlans",
+		"route": "/deployment-plans"
+	},
+	{
+		"id": "DeploymentPlanDetail",
+		"route": "/deployment-plans/:id"
 	}
 ]

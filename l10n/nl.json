@@ -1,5 +1,17 @@
 {
     "translations": {
+        "Confirm plan": "Plan vaststellen",
+        "Deployment plans": "Inzetplannen",
+        "Each teacher's planned hours for a school year against the norm for their contract. Above zero difference is an overload.": "De geplande uren van elke docent voor een schooljaar tegenover de norm voor het contract. Een verschil boven nul is een overbelasting.",
+        "Has a plan": "Heeft een plan",
+        "No organisational units yet": "Nog geen organisatie-eenheden",
+        "No teachers placed at this school this school year": "Geen docenten geplaatst op deze school dit schooljaar",
+        "Overload": "Overbelasting",
+        "Pick a school to see every teacher's plan for the school year against their norm.": "Kies een school om het plan van elke docent voor het schooljaar tegenover de norm te zien.",
+        "Reopen plan": "Plan heropenen",
+        "Schools": "Scholen",
+        "Task policy": "Taakbeleid",
+        "Teachers": "Docenten",
         "Deployment plan": "Inzetplan",
         "Draft while the plan is made; confirmed once agreed.": "Concept zolang het plan wordt gemaakt; vastgesteld zodra het is afgesproken.",
         "From the CAO": "Uit de cao",

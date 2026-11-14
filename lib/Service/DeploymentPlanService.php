@@ -161,7 +161,8 @@ class DeploymentPlanService {
 	 * one is listed with `hasPlan` false. Rows with a plan come first, the
 	 * largest difference (the worst overload) first; teachers without a plan
 	 * follow by name. Only the teachers in `$readable` are listed, so the
-	 * caller's read access decides who appears.
+	 * caller's read access decides who appears. A row's `id` is its plan's id
+	 * (null without a plan), so a table row opens the plan.
 	 *
 	 * @param array<int, array<string, mixed>>    $assignments The unit's OrgAssignment rows (`employeeId`, `startDate`, `endDate`).
 	 * @param array<int, array<string, mixed>>    $plans       The unit's DeploymentPlan rows for the school year.
@@ -209,7 +210,7 @@ class DeploymentPlanService {
 				'name'       => self::employeeName(employee: $readable[$employeeId]),
 			];
 			if (isset($plansByEmployee[$employeeId]) === false) {
-				$withoutPlan[] = array_merge($row, ['hasPlan' => false, 'planId' => null, 'status' => null, 'plannedHours' => null, 'normHours' => null, 'normSource' => null, 'differenceHours' => null, 'overload' => false]);
+				$withoutPlan[] = array_merge($row, ['id' => null, 'hasPlan' => false, 'planId' => null, 'status' => null, 'plannedHours' => null, 'normHours' => null, 'normSource' => null, 'differenceHours' => null, 'overload' => false]);
 				continue;
 			}
 
@@ -223,6 +224,7 @@ class DeploymentPlanService {
 			$withPlan[] = array_merge(
 				$row,
 				[
+					'id'              => ($plan['id'] ?? null),
 					'hasPlan'         => true,
 					'planId'          => ($plan['id'] ?? null),
 					'status'          => ($plan['status'] ?? null),

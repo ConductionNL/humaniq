@@ -821,6 +821,18 @@
 				"order": 100
 			},
 			{
+				"id": "Taakbeleid",
+				"label": "Task policy",
+				"icon": "AccountSchoolOutline",
+				"route": "TaakbeleidScholen"
+			},
+			{
+				"id": "DeploymentPlans",
+				"label": "Deployment plans",
+				"icon": "CalendarClock",
+				"route": "DeploymentPlans"
+			},
+			{
 				"id": "TeamUrengoedkeuring",
 				"label": "Team timesheet approval",
 				"icon": "CheckDecagramOutline",
