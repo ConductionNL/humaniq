@@ -50,8 +50,12 @@
 
 ## 4. Pages and seed
 
-- [ ] 4.1 Add entitlement pages and office fields on the contract page. Verify:
+- [x] 4.1 Add entitlement pages and office fields on the contract page. Verify:
       `npm run check:manifest` exits 0.
+      (`src/manifest.d/payroll-special-regimes.json`: index and detail with the activate/end
+      lifecycle actions, a Payroll menu entry; the contract page shows the office fields in its
+      data widget and lists the person's benefit entitlements; check:manifest, parity
+      (`--update`), l10n parity and test:js pass.)
 - [ ] 4.2 Seed the RVU entitlement and the alderman. Verify: `npm run check:seed-refs` exits 0.
 
 ## 5. Verification

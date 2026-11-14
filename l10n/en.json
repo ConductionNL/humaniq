@@ -3794,7 +3794,12 @@
         "To month": "To month",
         "Where the entitlement stands. Only an active one is paid.": "Where the entitlement stands. Only an active one is paid.",
         "Whether the benefit is paid every month or once.": "Whether the benefit is paid every month or once.",
-        "Which benefit this is. It selects the tax treatment.": "Which benefit this is. It selects the tax treatment."
+        "Which benefit this is. It selects the tax treatment.": "Which benefit this is. It selects the tax treatment.",
+        "Benefit entitlement recorded as a draft. Another HR adviser activates it.": "Benefit entitlement recorded as a draft. Another HR adviser activates it.",
+        "Benefit entitlements": "Benefit entitlements",
+        "Benefits paid to a person from a decision rather than for work: an early-retirement benefit or a former office holder's benefit. Each active entitlement gets its own payslip in the payroll run, next to any salary payslip, also after the person has left. Record the decision as a draft; another HR adviser activates it.": "Benefits paid to a person from a decision rather than for work: an early-retirement benefit or a former office holder's benefit. Each active entitlement gets its own payslip in the payroll run, next to any salary payslip, also after the person has left. Record the decision as a draft; another HR adviser activates it.",
+        "No benefit entitlements": "No benefit entitlements",
+        "Record benefit entitlement": "Record benefit entitlement"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

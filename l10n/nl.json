@@ -3794,7 +3794,12 @@
         "To month": "Tot en met maand",
         "Where the entitlement stands. Only an active one is paid.": "Hoe het uitkeringsrecht ervoor staat. Alleen een actief recht wordt betaald.",
         "Whether the benefit is paid every month or once.": "Of de uitkering elke maand of eenmalig wordt betaald.",
-        "Which benefit this is. It selects the tax treatment.": "Welke uitkering dit is. Dit bepaalt de fiscale behandeling."
+        "Which benefit this is. It selects the tax treatment.": "Welke uitkering dit is. Dit bepaalt de fiscale behandeling.",
+        "Benefit entitlement recorded as a draft. Another HR adviser activates it.": "Uitkeringsrecht vastgelegd als concept. Een andere HR-adviseur activeert het.",
+        "Benefit entitlements": "Uitkeringsrechten",
+        "Benefits paid to a person from a decision rather than for work: an early-retirement benefit or a former office holder's benefit. Each active entitlement gets its own payslip in the payroll run, next to any salary payslip, also after the person has left. Record the decision as a draft; another HR adviser activates it.": "Uitkeringen die iemand ontvangt op grond van een besluit in plaats van voor werk: een RVU-uitkering of de uitkering van een voormalig ambtsdrager. Elk actief uitkeringsrecht krijgt een eigen loonstrook in de loonrun, naast een eventuele salarisstrook, ook nadat iemand uit dienst is. Leg het besluit vast als concept; een andere HR-adviseur activeert het.",
+        "No benefit entitlements": "Geen uitkeringsrechten",
+        "Record benefit entitlement": "Uitkeringsrecht vastleggen"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

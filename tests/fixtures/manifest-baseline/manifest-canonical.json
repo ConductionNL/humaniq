@@ -982,6 +982,12 @@
 							]
 						}
 					}
+				},
+				{
+					"icon": "CashClock",
+					"id": "BenefitEntitlements",
+					"label": "Benefit entitlements",
+					"route": "BenefitEntitlements"
 				}
 			],
 			"icon": "CashSync",
@@ -8668,6 +8674,14 @@
 						"gridY": 7,
 						"id": 3,
 						"widgetId": "chain"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 10,
+						"id": 4,
+						"widgetId": "benefits"
 					}
 				],
 				"register": "humaniq",
@@ -8735,6 +8749,48 @@
 						"id": "chain",
 						"title": "Fixed-term chain",
 						"type": "endpoint-table"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "startDate",
+									"label": "Start"
+								},
+								{
+									"key": "endDate",
+									"label": "End"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"emptyText": "No benefit entitlements",
+							"filter": {
+								"employeeId": "@object.employeeId"
+							},
+							"limit": 10,
+							"register": "humaniq",
+							"rowRoute": "BenefitEntitlementDetail",
+							"schema": "BenefitEntitlement",
+							"sort": {
+								"dir": "desc",
+								"field": "startDate"
+							},
+							"viewAllQuery": {
+								"employeeId": "@object.employeeId"
+							},
+							"viewAllRoute": "BenefitEntitlements"
+						},
+						"icon": "CashClock",
+						"id": "benefits",
+						"title": "Benefit entitlements",
+						"type": "object-list"
 					}
 				]
 			},
@@ -18412,6 +18468,129 @@
 			"id": "NonWorkingTimeDetail",
 			"route": "/niet-werkdagen/:id",
 			"title": "Non-working time",
+			"type": "detail"
+		},
+		{
+			"actions": [
+				{
+					"icon": "PlusCircleOutline",
+					"id": "create-benefit-entitlement",
+					"label": "Record benefit entitlement",
+					"onSuccessRoute": "BenefitEntitlementDetail",
+					"register": "humaniq",
+					"schema": "BenefitEntitlement",
+					"successMessage": "Benefit entitlement recorded as a draft. Another HR adviser activates it.",
+					"type": "open-form"
+				}
+			],
+			"config": {
+				"columns": [
+					"employeeId",
+					"kind",
+					"paymentMode",
+					"startDate",
+					"endDate",
+					"monthlyAmount",
+					"status"
+				],
+				"description": "Benefits paid to a person from a decision rather than for work: an early-retirement benefit or a former office holder's benefit. Each active entitlement gets its own payslip in the payroll run, next to any salary payslip, also after the person has left. Record the decision as a draft; another HR adviser activates it.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"kind",
+					"status",
+					"paymentMode"
+				],
+				"register": "humaniq",
+				"schema": "BenefitEntitlement",
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				}
+			},
+			"id": "BenefitEntitlements",
+			"route": "/benefit-entitlements",
+			"title": "Benefit entitlements",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-special-regimes (2026-11-14): one benefit decision for a person (design.md D1). The payroll run pays every active entitlement covering the period as its own payslip, keyed by the entitlement, whether or not the person is still employed. lifecycleActions expose exactly the schema's two transitions: activate (guarded by NoSelfApprovalGuard, so the person the entitlement is for cannot activate it) and end. The tax treatment comes from the tables' specialRegimes leaves for the entitlement's kind; while a leaf is unverified the run lists the person as regime-unverified and pays nothing. Audit history is a sidebar tab.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "activate",
+							"from": [
+								"draft"
+							],
+							"label": "Activate",
+							"to": "active"
+						},
+						{
+							"action": "end",
+							"from": [
+								"active"
+							],
+							"label": "End",
+							"to": "ended"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "BenefitEntitlement",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"administrationId"
+							],
+							"title": "Benefit entitlement"
+						},
+						"icon": "CashClock",
+						"id": "data",
+						"title": "Benefit entitlement",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "BenefitEntitlementDetail",
+			"route": "/benefit-entitlements/:id",
+			"title": "Benefit entitlement",
 			"type": "detail"
 		}
 	],

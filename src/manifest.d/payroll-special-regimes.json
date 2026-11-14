@@ -1,0 +1,101 @@
+{
+	"menu": [
+		{
+			"id": "PayrollGroup",
+			"children": [
+				{
+					"id": "BenefitEntitlements",
+					"label": "Benefit entitlements",
+					"icon": "CashClock",
+					"route": "BenefitEntitlements"
+				}
+			]
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "BenefitEntitlement",
+			"params": {
+				"id": "BenefitEntitlements",
+				"route": "/benefit-entitlements",
+				"title": "Benefit entitlements",
+				"columns": [
+					"employeeId",
+					"kind",
+					"paymentMode",
+					"startDate",
+					"endDate",
+					"monthlyAmount",
+					"status"
+				],
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				},
+				"filters": [
+					"kind",
+					"status",
+					"paymentMode"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Benefits paid to a person from a decision rather than for work: an early-retirement benefit or a former office holder's benefit. Each active entitlement gets its own payslip in the payroll run, next to any salary payslip, also after the person has left. Record the decision as a draft; another HR adviser activates it.",
+				"actions": [
+					{
+						"id": "create-benefit-entitlement",
+						"label": "Record benefit entitlement",
+						"type": "open-form",
+						"icon": "PlusCircleOutline",
+						"register": "humaniq",
+						"schema": "BenefitEntitlement",
+						"onSuccessRoute": "BenefitEntitlementDetail",
+						"successMessage": "Benefit entitlement recorded as a draft. Another HR adviser activates it."
+					}
+				]
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "BenefitEntitlement",
+			"params": {
+				"id": "BenefitEntitlementDetail",
+				"route": "/benefit-entitlements/:id",
+				"title": "Benefit entitlement",
+				"dataTitle": "Benefit entitlement",
+				"dataIcon": "CashClock",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"note": "payroll-special-regimes (2026-11-14): one benefit decision for a person (design.md D1). The payroll run pays every active entitlement covering the period as its own payslip, keyed by the entitlement, whether or not the person is still employed. lifecycleActions expose exactly the schema's two transitions: activate (guarded by NoSelfApprovalGuard, so the person the entitlement is for cannot activate it) and end. The tax treatment comes from the tables' specialRegimes leaves for the entitlement's kind; while a leaf is unverified the run lists the person as regime-unverified and pays nothing. Audit history is a sidebar tab.",
+				"exclude": [
+					"employeeId",
+					"administrationId"
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "activate",
+							"from": [
+								"draft"
+							],
+							"to": "active",
+							"label": "Activate"
+						},
+						{
+							"action": "end",
+							"from": [
+								"active"
+							],
+							"to": "ended",
+							"label": "End"
+						}
+					]
+				}
+			}
+		}
+	]
+}

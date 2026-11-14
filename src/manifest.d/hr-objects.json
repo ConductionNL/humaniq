@@ -2481,6 +2481,14 @@
 						"gridY": 7,
 						"gridWidth": 12,
 						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "benefits",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 12,
+						"gridHeight": 4
 					}
 				],
 				"register": "humaniq",
@@ -2547,6 +2555,48 @@
 								}
 							],
 							"emptyText": "Not part of a fixed-term chain"
+						}
+					},
+					{
+						"id": "benefits",
+						"type": "object-list",
+						"title": "Benefit entitlements",
+						"icon": "CashClock",
+						"content": {
+							"register": "humaniq",
+							"schema": "BenefitEntitlement",
+							"filter": {
+								"employeeId": "@object.employeeId"
+							},
+							"sort": {
+								"field": "startDate",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "startDate",
+									"label": "Start"
+								},
+								{
+									"key": "endDate",
+									"label": "End"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 10,
+							"rowRoute": "BenefitEntitlementDetail",
+							"viewAllRoute": "BenefitEntitlements",
+							"viewAllQuery": {
+								"employeeId": "@object.employeeId"
+							},
+							"emptyText": "No benefit entitlements"
 						}
 					}
 				]
