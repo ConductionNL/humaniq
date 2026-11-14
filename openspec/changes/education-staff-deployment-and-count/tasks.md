@@ -61,7 +61,9 @@
 
 ## 4. Verification
 
-- [ ] 4.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec`
+- [x] 4.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec`
       tags on the new methods (gate 16).
+      Done: a reason-bearing `@e2e exclude` on each of the six scenarios, naming the unit
+      tests that verify it; gate 19 and gate 16 (with base `origin/development`) pass.
 - [ ] 4.2 One live check: open `Taakbeleid` for the seeded school and read the overload;
       record the screenshot in the PR.

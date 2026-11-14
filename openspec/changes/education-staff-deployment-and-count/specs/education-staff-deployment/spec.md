@@ -15,17 +15,23 @@ plan SHALL say it was entered by hand. A teacher SHALL NOT confirm their own pla
 Rows: `tt-staff-deployment` (planninq matrix, owned by humaniq), tender https://www.tenderned.nl/aankondigingen/overzicht/271977.
 
 #### Scenario: A school leader sees an overload
+
+@e2e exclude Plan arithmetic shown as fields on a plain detail page; planned, norm, difference and overload are verified by DeploymentPlanServiceTest (totals) and the seeded 1,700 against 1,659 plan, read in the live check of task 4.2
 - **GIVEN** a full-time teacher with a norm of 1,659 hours and plan lines totalling 1,700
   hours
 - **WHEN** the school leader opens `DeploymentPlanDetail`
 - **THEN** the plan shows 1,700 planned, 1,659 norm and an overload of 41 hours
 
 #### Scenario: An unverified CAO figure is not used
+
+@e2e exclude Backend rule with no journey of its own: normFor() returns null for an unverified CAO figure, verified by DeploymentPlanServiceTest and CaoAnnualNormTest; the hand-entered norm is an ordinary field
 - **GIVEN** the CAO PO normjaartaak is still marked unverified
 - **WHEN** a plan is created for a CAO PO teacher
 - **THEN** the plan asks for the norm to be entered and shows its source as entered by hand
 
 #### Scenario: A part-time contract halfway through the year
+
+@e2e exclude Proration arithmetic with no UI of its own; verified by DeploymentPlanServiceTest (0.6 contract, contract starting in the school year)
 - **GIVEN** a teacher on a 24-hour contract starting 1 February and a verified annual norm of
   1,659 hours
 - **WHEN** the norm is computed for the school year
@@ -41,6 +47,8 @@ the caller may read.
 Rows: `tt-staff-deployment` (planninq matrix, owned by humaniq).
 
 #### Scenario: Room in the team
+
+@e2e exclude The ordering and the readable-only listing are composed server-side and verified by DeploymentControllerTest and DeploymentPlanServiceTest::schoolView; the page itself is read in the live check of task 4.2
 - **GIVEN** a school with one overloaded teacher and one 0.6 teacher planned 120 hours under
   the norm
 - **WHEN** the school leader opens `Taakbeleid` for the school
@@ -56,6 +64,8 @@ version of the specification it followed. It SHALL be available to admins and HR
 Rows: `tt-staff-count-export` (planninq matrix, owned by humaniq).
 
 #### Scenario: The November export
+
+@e2e exclude An HR-only export endpoint whose OCW file layout is not yet recorded (task 3.1); row selection verified by IptoExportServiceTest and DeploymentControllerTest
 - **GIVEN** a secondary school with confirmed plans for 40 teachers and a BRIN number on the
   administration
 - **WHEN** an HR adviser exports IPTO for the second week of November
@@ -63,6 +73,8 @@ Rows: `tt-staff-count-export` (planninq matrix, owned by humaniq).
   stored on the administration, naming the specification version
 
 #### Scenario: A draft plan is left out
+
+@e2e exclude Row selection of the export endpoint; verified by IptoExportServiceTest::testADraftPlanIsLeftOutAndListed and DeploymentControllerTest
 - **GIVEN** a teacher whose plan is still `concept`
 - **WHEN** the export runs
 - **THEN** that teacher's hours are not in the file and the export lists them as not
