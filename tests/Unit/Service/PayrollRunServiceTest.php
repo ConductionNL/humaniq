@@ -57,6 +57,7 @@ use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
+use OCA\Humaniq\Service\PayslipLineageService;
 use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use OCP\App\IAppManager;
@@ -236,10 +237,11 @@ class PayrollRunServiceTest extends TestCase {
 	 * @param CaoComponentPayService|null $caoComponents The CAO components fold, or null for a run without it.
 	 * @param CostAllocationService|null $costAllocation The cost allocation, or null for a run without it.
 	 * @param AwfReviewService|null $awfReview The Awf review, or null for a run without it.
+	 * @param bool $withLineage Whether the run writes payslip lines (payroll-mutation-lineage).
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null, bool $withLineage = false): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -260,13 +262,115 @@ class PayrollRunServiceTest extends TestCase {
 			$retentionGuard = $this->createMock(PayrollRetentionGuardService::class);
 		}
 
+		$lineage = null;
+		if ($withLineage === true) {
+			// payroll-mutation-lineage: the lines go through the same fake
+			// register; the audit trail answers with no rows.
+			$audit = new class {
+				/**
+				 * @param string $uuid The object.
+				 *
+				 * @return array<int, mixed>
+				 */
+				public function getLogs(string $uuid): array {
+					return [];
+				}//end getLogs()
+			};
+			$lineageContainer = $this->createMock(ContainerInterface::class);
+			$lineageContainer->method('get')->willReturnCallback(
+				static fn (string $id): object => ($id === 'OCA\OpenRegister\Service\ObjectService' ? $fake : $audit)
+			);
+			$lineage = new PayslipLineageService($lineageContainer, $settings, $logger);
+		}
+
 		return [
-			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview),
+			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, lineage: $lineage),
 			$fake,
 			$retentionGuard,
 		];
 
 	}//end service()
+
+	/**
+	 * payroll-mutation-lineage REQ-PML-001 "Two corrections are two lines":
+	 * two applied corrections settling in the period keep their summed retro
+	 * figure on the payslip and get one line each, naming the correction.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.1
+	 */
+	public function testTwoCorrectionsAreOneTotalAndTwoLines(): void {
+		$adjustment = ['employeeId' => 'emp-1', 'originalPeriod' => '2026-01', 'status' => 'applied', 'settlementPeriod' => '2026-02', 'deltaLoonheffing' => 0.00];
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+				'PayrollAdjustment' => [
+					array_merge($adjustment, ['id' => 'adj-100', 'correctionRef' => 'c1', 'deltaNet' => 100.00]),
+					array_merge($adjustment, ['id' => 'adj-50', 'correctionRef' => 'c2', 'deltaNet' => 50.00]),
+					array_merge($adjustment, ['id' => 'adj-draft', 'correctionRef' => 'c3', 'deltaNet' => 999.00, 'status' => 'draft']),
+				],
+			],
+			withLineage: true
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+		$this->assertSame(150.00, $payslip['retroAdjustment']);
+
+		$lines = $this->savedFor($fake, 'PayslipLine');
+		$retro = array_values(array_filter($lines, static fn (array $line): bool => $line['component'] === 'retroAdjustment'));
+		$this->assertSame(['adj-100', 'adj-50'], array_column($retro, 'sourceId'));
+		$this->assertSame([100.0, 50.0], array_column($retro, 'amount'));
+		$this->assertSame(['correction', 'correction'], array_column($retro, 'sourceKind'));
+		$this->assertSame($payslip['id'], $retro[0]['payslipId']);
+
+		$salary = array_values(array_filter($lines, static fn (array $line): bool => $line['component'] === 'salary'));
+		$this->assertCount(1, $salary);
+		$this->assertSame(3800.0, $salary[0]['amount']);
+		$this->assertSame('Employee', $salary[0]['sourceSchema']);
+		$this->assertSame('emp-1', $salary[0]['sourceId']);
+
+	}//end testTwoCorrectionsAreOneTotalAndTwoLines()
+
+	/**
+	 * payroll-mutation-lineage REQ-PML-001 "Recalculation replaces lines": a
+	 * draft whose payslip had a bijtelling line, recalculated after the car
+	 * assignment ended, keeps only its current lines.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.3
+	 */
+	public function testARecalculatedDraftKeepsOnlyItsCurrentLines(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+				'Asset' => [$this->vehicleAsset()],
+				'AssetAssignment' => [$this->vehicleAssignment()],
+			],
+			withLineage: true
+		);
+
+		$service->runFor('2026-02');
+		$this->assertSame(['salary', 'bijtelling'], array_column($fake->rowsBySchema['PayslipLine'], 'component'));
+		$this->assertSame('ca-1', $fake->rowsBySchema['PayslipLine'][1]['sourceId']);
+		$this->assertSame(500.0, $fake->rowsBySchema['PayslipLine'][1]['amount']);
+
+		$fake->rowsBySchema['AssetAssignment'] = [$this->vehicleAssignment(['returnedOn' => '2026-01-15'])];
+		$this->assertSame('calculated', $service->runFor('2026-02', null, true)['status']);
+
+		$this->assertSame(['salary'], array_column($fake->rowsBySchema['PayslipLine'], 'component'));
+		$this->assertCount(2, array_filter($fake->deleted, static fn (string $id): bool => str_contains($id, 'PayslipLine')));
+
+	}//end testARecalculatedDraftKeepsOnlyItsCurrentLines()
 
 	/**
 	 * The anchor-case Employee fixture (design.md D2: €3.800, wit, korting,

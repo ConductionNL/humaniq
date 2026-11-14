@@ -90,6 +90,7 @@
                     "PayrollRunFinding",
                     "WageCostAllocation",
                     "Payslip",
+                    "PayslipLine",
                     "PensionFiling",
                     "PerformanceReview",
                     "PersonnelDocument",

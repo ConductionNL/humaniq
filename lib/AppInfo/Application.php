@@ -61,6 +61,7 @@ use OCA\Humaniq\Listener\ManagerAccessListeners;
 use OCA\Humaniq\Listener\ManagerDeputyListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
+use OCA\Humaniq\Listener\PayrollAdjustmentLineGuard;
 use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
 use OCA\Humaniq\Listener\RightToWorkCheckListener;
 use OCA\Humaniq\Listener\ScenarioMutationListener;
@@ -607,6 +608,18 @@ class Application extends App implements IBootstrap {
 				listener: ResourceBookingOverlapListener::class,
 				registers: null,
 				schemas: [ResourceBookingOverlapListener::RESOURCEBOOKING_SLUG]
+			);
+		}
+
+		// payroll-mutation-lineage D4: a retro correction may name the payslip
+		// line it corrects, and only a line of its own original payslip.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: PayrollAdjustmentLineGuard::class,
+				registers: null,
+				schemas: [PayrollAdjustmentLineGuard::PAYROLLADJUSTMENT_SLUG]
 			);
 		}
 

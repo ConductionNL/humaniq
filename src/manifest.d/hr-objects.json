@@ -1128,7 +1128,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "Payslip",
-				"_note": "Financial-document archetype (x-schema-org: schema:Invoice), same family as Expense's amount-first design: three headline tiles (gross pay, net pay, Related-to-Employee) lead the page since that is what an employee or approver checks first, followed by the dense data widget carrying the full gross-to-net withholding breakdown (NL loonheffing/zvw/wkr, DE Lohnsteuer/Soli/Kirchensteuer, FR cotisations/PAS, US FICA/Medicare -- the schema is genuinely multi-jurisdiction: only one jurisdiction's fields populate per real record, but which one varies per payslip so a static manifest cannot cherry-pick per-instance; all fields surface via one widget, sized to its true field count and set to 4 columns full-width rather than clipped at 2). ADR-062 round-2: data widget now excludes employeeId (resolved via Related instead of raw uuid) and the height budget was corrected from the round-1 h7 (which clipped ~54 fields behind a scrollbar) to match content. Stat format uses 'number' not 'currency' because Payslip.currency varies per record (EUR/USD) and a widget's format is static. No files/calendar/comms leaves: nothing in the schema models an attachable payslip document or appointment, and Payslip carries no x-openregister-lifecycle so there are no lifecycleActions. Audit history is a sidebar tab. payslip-pdf-docudesk (2026-07-14): page-level action \"Genereer PDF\" mirrors EmploymentContractDetail's \"Genereer arbeidsovereenkomst\" shape -- POST /api/documents/generate with {payslipId: @objectId, documentType: loonstrook}, guarded server-side by DocumentController::authorizePayslip(). payroll-cost-allocation (2026-09-30): Wage costs per cost centre lists the payslip's WageCostAllocation lines, which the run writes after every calculation.",
+				"_note": "Financial-document archetype (x-schema-org: schema:Invoice), same family as Expense's amount-first design: three headline tiles (gross pay, net pay, Related-to-Employee) lead the page since that is what an employee or approver checks first, followed by the dense data widget carrying the full gross-to-net withholding breakdown (NL loonheffing/zvw/wkr, DE Lohnsteuer/Soli/Kirchensteuer, FR cotisations/PAS, US FICA/Medicare -- the schema is genuinely multi-jurisdiction: only one jurisdiction's fields populate per real record, but which one varies per payslip so a static manifest cannot cherry-pick per-instance; all fields surface via one widget, sized to its true field count and set to 4 columns full-width rather than clipped at 2). ADR-062 round-2: data widget now excludes employeeId (resolved via Related instead of raw uuid) and the height budget was corrected from the round-1 h7 (which clipped ~54 fields behind a scrollbar) to match content. Stat format uses 'number' not 'currency' because Payslip.currency varies per record (EUR/USD) and a widget's format is static. No files/calendar/comms leaves: nothing in the schema models an attachable payslip document or appointment, and Payslip carries no x-openregister-lifecycle so there are no lifecycleActions. Audit history is a sidebar tab. payslip-pdf-docudesk (2026-07-14): page-level action \"Genereer PDF\" mirrors EmploymentContractDetail's \"Genereer arbeidsovereenkomst\" shape -- POST /api/documents/generate with {payslipId: @objectId, documentType: loonstrook}, guarded server-side by DocumentController::authorizePayslip(). payroll-cost-allocation (2026-09-30): Wage costs per cost centre lists the payslip's WageCostAllocation lines, which the run writes after every calculation. payroll-mutation-lineage (2026-11-14): Where each amount comes from lists the payslip's PayslipLine rows, one per component with the record that caused it and that record's last change before the calculation; the run writes them after every calculation.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -1257,6 +1257,56 @@
 							"emptyText": "No wage cost lines yet. They are written when the run is calculated.",
 							"allowCreate": false
 						}
+					},
+					{
+						"id": "payslip-lines",
+						"type": "object-list",
+						"title": "Where each amount comes from",
+						"icon": "FormatListBulleted",
+						"content": {
+							"register": "humaniq",
+							"schema": "PayslipLine",
+							"filter": {
+								"payslipId": "@objectId"
+							},
+							"sort": {
+								"field": "component",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "component",
+									"label": "Component"
+								},
+								{
+									"key": "amount",
+									"label": "Amount"
+								},
+								{
+									"key": "sourceKind",
+									"label": "Cause"
+								},
+								{
+									"key": "sourceSchema",
+									"label": "Source type"
+								},
+								{
+									"key": "sourceId",
+									"label": "Source"
+								},
+								{
+									"key": "sourceChangedBy",
+									"label": "Changed by"
+								},
+								{
+									"key": "sourceChangedAt",
+									"label": "Changed at"
+								}
+							],
+							"limit": 50,
+							"emptyText": "No lines yet. They are written when the run is calculated; payslips calculated before this existed have none.",
+							"allowCreate": false
+						}
 					}
 				],
 				"layout": [
@@ -1299,6 +1349,14 @@
 						"gridY": 17,
 						"gridWidth": 12,
 						"gridHeight": 4
+					},
+					{
+						"id": 6,
+						"widgetId": "payslip-lines",
+						"gridX": 0,
+						"gridY": 21,
+						"gridWidth": 12,
+						"gridHeight": 5
 					}
 				],
 				"headerActions": [
