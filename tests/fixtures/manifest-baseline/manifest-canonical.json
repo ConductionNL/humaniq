@@ -3397,10 +3397,18 @@
 								"projectId",
 								"billable",
 								"costCenter",
-								"userId"
+								"userId",
+								"domainObjectType",
+								"domainObjectRef"
 							],
 							"overrides": {
 								"costCenter": {
+									"editable": false
+								},
+								"domainObjectRef": {
+									"editable": false
+								},
+								"domainObjectType": {
 									"editable": false
 								},
 								"hours": {

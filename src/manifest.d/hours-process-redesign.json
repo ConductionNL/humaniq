@@ -75,7 +75,9 @@
 								"projectId",
 								"billable",
 								"costCenter",
-								"userId"
+								"userId",
+								"domainObjectType",
+								"domainObjectRef"
 							],
 							"title": "Time entry",
 							"overrides": {
@@ -86,6 +88,12 @@
 									"editable": false
 								},
 								"userId": {
+									"editable": false
+								},
+								"domainObjectType": {
+									"editable": false
+								},
+								"domainObjectRef": {
 									"editable": false
 								}
 							}
