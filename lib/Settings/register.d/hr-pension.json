@@ -152,6 +152,165 @@
                         "nullable": true,
                         "title": "Administration",
                         "description": "Which administration this filing covers.", "x-notes": "Denormalized administratie key this PensionFiling is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); nl-administratie-scope-consistency (REQ-MULTI-007) audits it against the referenced payrollRunId's PayrollRun.administrationId (the parent, the Payslip precedent)."
+                    },
+                    "messageFileId": {
+                        "type": "string",
+                        "title": "Message file",
+                        "description": "The delivery file rendered for this filing when it is checked.",
+                        "x-notes": "filings-pension-upa-message REQ-PUM-001: the Nextcloud file id of the UPA or APG delivery rendered from the approved run. Written by the check, never by hand."
+                    },
+                    "messageFormat": {
+                        "type": "string",
+                        "title": "Message format",
+                        "description": "The format of the delivery file: UPA or APG's delivery.",
+                        "enum": [
+                            "upa",
+                            "apg"
+                        ],
+                        "x-enum-labels": {
+                            "upa": "UPA",
+                            "apg": "APG"
+                        },
+                        "x-notes": "filings-pension-upa-message: copied from the fund's PensionScheme.messageFormat when the delivery is rendered."
+                    },
+                    "messageFindings": {
+                        "type": "array",
+                        "title": "Message findings",
+                        "description": "Why the delivery could not be made, per employee.",
+                        "items": {
+                            "type": "object"
+                        },
+                        "x-notes": "filings-pension-upa-message REQ-PUM-001: each finding names the employee and the missing fact (for example the part-time factor of a contract without hours per week)."
+                    }
+                }
+            },
+            "PensionScheme": {
+                "slug": "PensionScheme",
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        "humaniq-payroll"
+                    ],
+                    "create": [
+                        "humaniq-payroll"
+                    ],
+                    "update": [
+                        "humaniq-payroll"
+                    ],
+                    "delete": [
+                        "humaniq-payroll"
+                    ]
+                },
+                "icon": "PiggyBank",
+                "version": "0.1.0",
+                "title": "Pension scheme",
+                "description": "The pension scheme of one fund for one administration: the scheme code, the delivery format, the franchise, the maximum pensionable salary and the contribution percentages, sourced and dated like the tax tables (filings-pension-upa-message D1).",
+                "type": "object",
+                "x-schema-org": "schema:DefinedTerm",
+                "required": [
+                    "administrationId",
+                    "fund",
+                    "schemeCode",
+                    "messageFormat",
+                    "franchise",
+                    "maxPensionableSalary",
+                    "validFrom"
+                ],
+                "properties": {
+                    "administrationId": {
+                        "type": "string",
+                        "title": "Administration",
+                        "description": "The administration this scheme applies to."
+                    },
+                    "fund": {
+                        "type": "string",
+                        "title": "Fund",
+                        "description": "The pension fund this scheme belongs to.",
+                        "x-enum-labels": {
+                            "abp": "ABP",
+                            "spw": "SPW",
+                            "bpf-bouw": "BPF Bouw",
+                            "schoonmaak": "Schoonmaak",
+                            "pfab": "PFAB",
+                            "pwri": "PWRI"
+                        },
+                        "enum": [
+                            "abp",
+                            "spw",
+                            "bpf-bouw",
+                            "schoonmaak",
+                            "pfab",
+                            "pwri"
+                        ],
+                        "x-notes": "The PensionFiling.fund enum: a filing uses the scheme of its own fund and administration."
+                    },
+                    "schemeCode": {
+                        "type": "string",
+                        "title": "Scheme code",
+                        "description": "The fund's code for the scheme, as it appears in the delivery."
+                    },
+                    "messageFormat": {
+                        "type": "string",
+                        "title": "Delivery format",
+                        "description": "How the fund takes the delivery: the UPA message or APG's delivery (ABP).",
+                        "enum": [
+                            "upa",
+                            "apg"
+                        ],
+                        "x-enum-labels": {
+                            "upa": "UPA",
+                            "apg": "APG"
+                        }
+                    },
+                    "franchise": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Franchise",
+                        "description": "The yearly franchise for a full-time employee, in euro."
+                    },
+                    "maxPensionableSalary": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Maximum pensionable salary",
+                        "description": "The yearly cap on the pensionable wage, in euro."
+                    },
+                    "employerPercentage": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100,
+                        "title": "Employer contribution (%)",
+                        "description": "The employer's share of the contribution, as a percentage of the pension base."
+                    },
+                    "employeePercentage": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100,
+                        "title": "Employee contribution (%)",
+                        "description": "The employee's share of the contribution, as a percentage of the pension base."
+                    },
+                    "validFrom": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Valid from",
+                        "description": "The first day the figures apply."
+                    },
+                    "validUntil": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Valid until",
+                        "description": "The last day the figures apply; empty while they still do."
+                    },
+                    "source": {
+                        "type": "string",
+                        "title": "Source",
+                        "description": "Where the figures come from."
+                    },
+                    "verified": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Verified",
+                        "description": "Whether the figures were checked against the fund's published rates.",
+                        "x-notes": "The {value, source, verified} discipline of the tables: unverified figures are advisory."
                     }
                 }
             }

@@ -81,6 +81,7 @@
     "OCA\\Humaniq\\Service\\OvertimeCreditService::$gateway",
     "OCA\\Humaniq\\Service\\PayrollExpenseFoldService::$gateway",
     "OCA\\Humaniq\\Service\\PayrollRunCheckService::$gateway",
+    "OCA\\Humaniq\\Service\\PensionMessageService::$gateway",
     "OCA\\Humaniq\\Service\\ReferralService::$gateway",
     "OCA\\Humaniq\\Service\\RightToWorkRecorder::$gateway",
     "OCA\\Humaniq\\Service\\RunningTimerService::$gateway",

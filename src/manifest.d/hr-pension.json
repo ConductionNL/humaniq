@@ -106,6 +106,56 @@
 					]
 				}
 			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "PensionScheme",
+			"params": {
+				"id": "PensionSchemes",
+				"route": "/pension-schemes",
+				"title": "Pension schemes",
+				"columns": [
+					"fund",
+					"schemeCode",
+					"messageFormat",
+					"franchise",
+					"maxPensionableSalary",
+					"employerPercentage",
+					"employeePercentage",
+					"validFrom",
+					"verified"
+				],
+				"sort": {
+					"field": "validFrom",
+					"order": "desc"
+				},
+				"filters": [
+					"fund",
+					"messageFormat",
+					"verified"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "The pension scheme of each fund: the delivery format, the franchise, the maximum pensionable salary and the contribution percentages a pension filing is reported with.",
+				"note": "filings-pension-upa-message (2026-11-14): D1. Administered data, sourced and dated like the tax tables; a figure stays advisory until verified. An ABP-obliged administration holds an abp scheme on the APG format."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "PensionScheme",
+			"params": {
+				"id": "PensionSchemeDetail",
+				"route": "/pension-schemes/:id",
+				"title": "Pension scheme",
+				"dataTitle": "Pension scheme",
+				"dataIcon": "PiggyBank",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"note": "filings-pension-upa-message (2026-11-14): D1. A plain configuration record, no lifecycle."
+			}
 		}
 	]
 }
