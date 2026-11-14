@@ -115,7 +115,7 @@ class SettingsServiceTest extends TestCase {
 	}//end testDaysFallBackWhenNotPositive()
 
 	/**
-	 * The debtor IBAN is as stored; the wage-tax payee id and prefill source are trimmed.
+	 * The debtor IBAN is as stored; the wage-tax payee id is trimmed.
 	 *
 	 * @return void
 	 */
@@ -124,14 +124,12 @@ class SettingsServiceTest extends TestCase {
 			'netpay_debtor_iban' => 'NL91ABNA0417164300',
 			'wagetax_payee_id' => ' bd-1 ',
 			'documents_template_contract' => 'tpl-9',
-			'prefill_brp_source' => ' haalcentraal ',
 		]);
 
 		self::assertSame('NL91ABNA0417164300', $settings->getNetPayDebtorIban());
 		self::assertSame('bd-1', $settings->getWageTaxPayeeId());
 		self::assertSame('tpl-9', $settings->getDocumentsTemplateId('contract'));
 		self::assertSame('', $settings->getDocumentsTemplateId('offer'));
-		self::assertSame('haalcentraal', $settings->getRegisterPrefillSource('brp'));
 		self::assertSame('', $this->settings([])->getNetPayDebtorIban());
 	}//end testIdentifiersAreReadAsStored()
 
