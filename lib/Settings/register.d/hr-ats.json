@@ -16,6 +16,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-mcp": {
                         "enabled": true,
                         "tools": {
@@ -1048,6 +1049,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "nieuw",
@@ -1317,6 +1319,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "scheduled",
@@ -1423,6 +1426,7 @@
                 }
             },
             "VacancyPosting": {
+                "configuration": {"exportable": true},
                 "slug": "VacancyPosting",
                 "icon": "BullhornOutline",
                 "version": "0.1.0",
@@ -1507,6 +1511,7 @@
                 }
             },
             "CandidateEvaluation": {
+                "configuration": {"exportable": true},
                 "slug": "CandidateEvaluation",
                 "icon": "StarOutline",
                 "version": "0.1.0",
@@ -1607,6 +1612,7 @@
                 }
             },
             "Referral": {
+                "configuration": {"exportable": true},
                 "slug": "Referral",
                 "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"referrerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "AccountArrowRightOutline",

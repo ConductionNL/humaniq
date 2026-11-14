@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "Announcement": {
+                "configuration": {"exportable": true},
                 "slug": "Announcement",
                 "icon": "BullhornOutline",
                 "version": "0.1.0",
@@ -46,6 +47,7 @@
                 }
             },
             "AnnouncementConfirmation": {
+                "configuration": {"exportable": true},
                 "slug": "AnnouncementConfirmation",
                 "icon": "CheckDecagramOutline",
                 "version": "0.1.0",
