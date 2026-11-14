@@ -51,7 +51,9 @@
 				</h3>
 			</div>
 
-			<div class="hq-hours__controls">
+			<!-- No controls without a host object: there is nothing to time,
+			     book or open (REQ-HLD-003). -->
+			<div v-if="hostResolvable" class="hq-hours__controls">
 				<span v-if="weekLine !== ''" class="hq-hours__week" data-testid="hq-hours-week"><component
 					:is="part.strong ? 'strong' : 'span'"
 					v-for="(part, index) in weekParts"
@@ -172,7 +174,13 @@
 		     Only this object. A timer running elsewhere leaves the figures alone,
 		     because putting another object's elapsed time where this object's
 		     total goes reads as this object's time. -->
-		<div v-if="runningHere" class="hq-hours__figures" data-testid="hq-hours-running">
+		<!-- A host that passed no register, schema or uuid named no object. Say
+		     so, and draw no total: "0 hours" and "no host" look the same to a
+		     caseworker and only one of them is a fact (REQ-HLD-003). -->
+		<p v-if="!hostResolvable" class="hq-hours__sub" role="status" data-testid="hq-hours-no-host">
+			{{ t('humaniq', 'This card cannot show hours: the page did not say which item it is on.') }}
+		</p>
+		<div v-else-if="runningHere" class="hq-hours__figures" data-testid="hq-hours-running">
 			<div class="hq-hours__headline">
 				<span class="hq-hours__value hq-hours__value--running">{{ elapsed }}</span>
 			</div>
@@ -300,7 +308,7 @@
 		</template>
 
 		<HoursBookingDialog
-			v-if="showBooking"
+			v-if="showBooking && hostResolvable"
 			:domainObjectType="domainObjectType"
 			:domainObjectRef="objectId"
 			@close="showBooking = false"
@@ -309,6 +317,17 @@
 </template>
 
 <script>
+import { getLanguage, translate as t } from '@nextcloud/l10n'
+import HoursBookingDialog from '../dialogs/HoursBookingDialog.vue'
+import {
+	administrationUrl,
+	bookHours,
+	fetchEstimate,
+	fetchRunningTimer,
+	fetchWeek,
+	startTimer,
+	stopTimer,
+} from './hoursApi.js'
 /**
  * CnHoursWidget — hours booked against ANY object, and the three ways to act.
  *
@@ -337,17 +356,7 @@
  * object's uuid. Both are written by integrations rather than typed by an
  * employee, which is why neither appears in any `includeFields` allowlist.
  */
-import { getLanguage, translate as t } from '@nextcloud/l10n'
-import HoursBookingDialog from '../dialogs/HoursBookingDialog.vue'
-import {
-	administrationUrl,
-	bookHours,
-	fetchEstimate,
-	fetchRunningTimer,
-	fetchWeek,
-	startTimer,
-	stopTimer,
-} from './hoursApi.js'
+import { isResolvableHost } from './hoursHost.mjs'
 import { isForObject, parseHours, ROW_RECORDED_EVENT } from './rowHours.mjs'
 import { HOURS_MARK, weekLineParts } from './weekLineParts.mjs'
 
@@ -674,6 +683,18 @@ export default {
 		 */
 		domainObjectType() {
 			return this.register !== '' && this.schema !== '' ? `${this.register}:${this.schema}` : ''
+		},
+
+		/**
+		 * Whether the host passed the register, schema and uuid of an object
+		 * (REQ-HLD-003). Without them the card names the gap and draws no total.
+		 *
+		 * @return {boolean} True when the host named an object.
+		 *
+		 * @spec openspec/changes/hours-leaf-loads-on-a-consuming-page/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
+		 */
+		hostResolvable() {
+			return isResolvableHost({ register: this.register, schema: this.schema, objectId: this.objectId })
 		},
 
 		/**

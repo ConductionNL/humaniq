@@ -82,13 +82,15 @@ class RetroAdjustmentService {
 
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
-	 * @param SettingsService $settingsService Register slug + employer-level payroll config.
+	 * @param SettingsService $settingsService Register slug.
+	 * @param EmployerPremiumSettings $premiums The employer's Aof tariff and Whk percentage.
 	 * @param PayrollCalculator $calculator The pure gross-to-net calculator (reused, never modified).
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
+		private readonly EmployerPremiumSettings $premiums,
 		private readonly PayrollCalculator $calculator,
 		private readonly LoggerInterface $logger,
 	) {
@@ -381,8 +383,8 @@ class RetroAdjustmentService {
 			return ['status' => 'failed', 'message' => 'Geen contract gevonden dat de originele periode dekt.'];
 		}
 
-		$aofTariff = $this->settingsService->getPayrollAofTariff();
-		$whkPercentage = $this->settingsService->getPayrollWhkPercentage($tables->werknemersverzekeringen()['whkDefault']);
+		$aofTariff = $this->premiums->getPayrollAofTariff();
+		$whkPercentage = $this->premiums->getPayrollWhkPercentage($tables->werknemersverzekeringen()['whkDefault']);
 
 		$input = CalculationInput::fromDecoded([
 			'grossMonthlySalaryCents' => (int)round($correctedGrossMonthlySalary * 100),
