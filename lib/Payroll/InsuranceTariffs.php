@@ -37,12 +37,16 @@ final class InsuranceTariffs {
 	 * @param string $aofTariff `laag` or `hoog` (employer-level config).
 	 * @param float $whkPercentage The employer's Whk percentage (percentage scale, e.g. `1.52`).
 	 * @param bool $verzekeringsplichtig Whether the employee is verzekeringsplichtig for the werknemersverzekeringen (dga-payroll-mode). `false` for a DGA — zeroes Awf/Aof/Wko/Whk; every other component is unaffected.
+	 * @param string $zvwMode `werkgeversheffing` (the employer's levy, default) or `inhouding` (the contribution withheld from net pay, payroll-special-regimes D3).
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
 	 */
 	public function __construct(
 		public readonly string $awfTariff,
 		public readonly string $aofTariff,
 		public readonly float $whkPercentage,
 		public readonly bool $verzekeringsplichtig = true,
+		public readonly string $zvwMode = 'werkgeversheffing',
 	) {
 
 	}//end __construct()

@@ -71,7 +71,9 @@ class PayrollCalculatorTest extends TestCase {
 			$this->assertSame(self::cents($expected['loonheffing']), $result->loonheffingCents, $label . ': loonheffing');
 			$this->assertSame(self::cents($expected['arbeidskorting']), $result->arbeidskortingCents, $label . ': arbeidskorting');
 			$this->assertSame(self::cents($expected['volksverzekeringen']), $result->volksverzekeringenCents, $label . ': volksverzekeringen');
-			$this->assertSame(self::cents($expected['zvw']), $result->zvwCents, $label . ': zvw');
+			$this->assertSame((self::cents($expected['zvw']) + self::cents((float)($expected['zvwInhouding'] ?? 0.0))), $result->zvwCents, $label . ': zvw');
+			$this->assertSame(self::cents((float)($expected['rvuEindheffing'] ?? 0.0)), $result->rvuFinalLevyCents, $label . ': rvuEindheffing');
+			$this->assertSame((($fixture['input']['zvwMode'] ?? 'werkgeversheffing') === 'inhouding' ? 'inhouding' : 'werkgeversheffing'), $result->zvwMode, $label . ': zvwMode');
 			$this->assertSame(self::cents($expected['awf']), $result->awfCents, $label . ': awf');
 			$this->assertSame(self::cents($expected['aof']), $result->aofCents, $label . ': aof');
 			$this->assertSame(self::cents($expected['wko']), $result->wkoCents, $label . ': wko');
@@ -575,8 +577,11 @@ class PayrollCalculatorTest extends TestCase {
 					awfTariff: (string)$input['awfTariff'],
 					aofTariff: (string)$input['aofTariff'],
 					whkPercentage: (float)$input['whkPercentage'],
-					verzekeringsplichtig: (bool)($input['verzekeringsplichtig'] ?? true)
-				)
+					verzekeringsplichtig: (bool)($input['verzekeringsplichtig'] ?? true),
+					zvwMode: (string)($input['zvwMode'] ?? 'werkgeversheffing')
+				),
+				rvuThresholdCents: self::cents((float)($input['rvuThreshold'] ?? 0.0)),
+				rvuFinalLevyRate: (float)($input['rvuFinalLevyRate'] ?? 0.0)
 			)
 		);
 

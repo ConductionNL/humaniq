@@ -70,14 +70,14 @@ final class CalculationResult {
 	public readonly int $volksverzekeringenCents;
 
 	/**
-	 * Zvw contribution for the period.
+	 * Zvw contribution for the period: the employer's levy, or in `inhouding` mode the contribution withheld from net pay.
 	 *
 	 * @var integer
 	 */
 	public readonly int $zvwCents;
 
 	/**
-	 * `werkgeversheffing` (MVP; `inhouding` never emitted).
+	 * `werkgeversheffing` or `inhouding`: the mode the pack ran (payroll-special-regimes D3).
 	 *
 	 * @var string
 	 */
@@ -182,6 +182,13 @@ final class CalculationResult {
 	public readonly int $premiumWageCents;
 
 	/**
+	 * The employer's final levy on an early-retirement benefit above the threshold (payroll-special-regimes D4); 0 for any other wage.
+	 *
+	 * @var integer
+	 */
+	public readonly int $rvuFinalLevyCents;
+
+	/**
 	 * Read every figure off one pack run. `nettoPayCents` and
 	 * `employerChargesCents` are the interpreter's incidence folds: read, not
 	 * computed here (REQ-JP-003). The fields stay flat and in this order.
@@ -197,8 +204,8 @@ final class CalculationResult {
 		$this->loonheffingCents = $out->cents('loonheffing');
 		$this->arbeidskortingCents = $out->cents('arbeidskorting');
 		$this->volksverzekeringenCents = $out->cents('volksverzekeringen');
-		$this->zvwCents = $out->cents('zvw');
-		$this->zvwMode = 'werkgeversheffing';
+		$this->zvwCents = ($out->cents('zvw') + self::optionalStepCents(out: $out, id: 'zvwInhouding'));
+		$this->zvwMode = self::zvwModeOf($out);
 		$this->zvwRate = (float)$out->binding('zvwRate');
 		$this->appliedTaxRate = (float)$out->step('appliedTaxRate');
 		$this->nettoPayCents = $out->net();
@@ -213,6 +220,7 @@ final class CalculationResult {
 		$this->aboveLmax = (bool)$out->binding('aboveLmax');
 		$this->taxableWageCents = self::optionalCents(out: $out, id: 'belastbaarLoon');
 		$this->premiumWageCents = min(self::optionalCents(out: $out, id: 'belastbaarLoon'), self::optionalCents(out: $out, id: 'premieloonCap'));
+		$this->rvuFinalLevyCents = self::optionalStepCents(out: $out, id: 'rvuEindheffing');
 
 	}//end __construct()
 
@@ -234,5 +242,48 @@ final class CalculationResult {
 			return 0;
 		}
 	}//end optionalCents()
+
+	/**
+	 * A step in cents, or 0 when the pack does not declare it (a third-party
+	 * pack need not carry the Dutch special-regime steps).
+	 *
+	 * @param PackRunResult $out The interpreter output.
+	 * @param string        $id  The step id.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private static function optionalStepCents(PackRunResult $out, string $id): int {
+		try {
+			return $out->cents($id);
+		} catch (DslException $e) {
+			return 0;
+		}
+	}//end optionalStepCents()
+
+	/**
+	 * The Zvw mode the pack ran: its `zvwMode` binding, or the employer's levy
+	 * for a pack that declares none.
+	 *
+	 * @param PackRunResult $out The interpreter output.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private static function zvwModeOf(PackRunResult $out): string {
+		try {
+			$mode = $out->binding('zvwMode');
+		} catch (DslException $e) {
+			return 'werkgeversheffing';
+		}
+
+		if ($mode === 'inhouding') {
+			return 'inhouding';
+		}
+
+		return 'werkgeversheffing';
+	}//end zvwModeOf()
 
 }//end class

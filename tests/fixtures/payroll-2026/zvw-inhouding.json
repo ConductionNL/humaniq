@@ -1,0 +1,31 @@
+{
+  "name": "zvw-inhouding — a monthly benefit of 2000.00 on the green table under a regime that withholds the Zvw (payroll-special-regimes D3): Zvw 4.85% of the capped base is withheld from net, no employer Zvw levy and no employee insurance premiums",
+  "input": {
+    "grossMonthly": 2000.00,
+    "taxTableColor": "groen",
+    "dateOfBirth": "1961-03-15",
+    "loonheffingskortingToegepast": true,
+    "awfTariff": "low",
+    "aofTariff": "laag",
+    "whkPercentage": 1.52,
+    "verzekeringsplichtig": false,
+    "zvwMode": "inhouding",
+    "period": "2026-07"
+  },
+  "expected": {
+    "loonheffing": 454.67,
+    "arbeidskorting": 0.00,
+    "volksverzekeringen": 351.67,
+    "zvw": 0.00,
+    "zvwInhouding": 97.00,
+    "awf": 0.00,
+    "aof": 0.00,
+    "wko": 0.00,
+    "whk": 0.00,
+    "werknemersverzekeringen": 0.00,
+    "rvuEindheffing": 0.00,
+    "employerCharges": 0.00,
+    "vakantiegeldReserved": 160.00,
+    "nettoPay": 1448.33
+  }
+}

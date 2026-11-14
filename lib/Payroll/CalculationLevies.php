@@ -35,10 +35,16 @@ final class CalculationLevies {
 	/**
 	 * @param WageTaxElection $wageTax Table colour, loonheffingskorting and 30%-ruling rate.
 	 * @param InsuranceTariffs $insurance Awf and Aof tariffs, Whk percentage and whether the employee is insured.
+	 * @param int $rvuThresholdCents The early-retirement final-levy threshold for the period, in cents; 0 when the wage is no early-retirement benefit (payroll-special-regimes D4).
+	 * @param float $rvuFinalLevyRate The early-retirement final-levy rate on the percentage scale (0-100), read from the regime's tables leaf.
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
 	 */
 	public function __construct(
 		public readonly WageTaxElection $wageTax,
 		public readonly InsuranceTariffs $insurance,
+		public readonly int $rvuThresholdCents = 0,
+		public readonly float $rvuFinalLevyRate = 0.0,
 	) {
 
 	}//end __construct()

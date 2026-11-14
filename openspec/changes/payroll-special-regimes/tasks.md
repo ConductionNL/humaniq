@@ -15,11 +15,18 @@
 
 ## 2. Engine
 
-- [ ] 2.1 Add the `zvwMode` input, the gated `zvwInhouding` step and golden vectors, and report
+- [x] 2.1 Add the `zvwMode` input, the gated `zvwInhouding` step and golden vectors, and report
       the mode from `PayrollCalculator`. Verify: the nine fixtures pass unchanged and the
       withholding vector passes gate 5.
-- [ ] 2.2 Add the `rvuThreshold` input and the `rvuEindheffing` step. Verify: a golden vector for
+      (Pack input `zvwMode`, binding `zvwMode`, `zvw` gated on the levy, `zvwInhouding`
+      reduces net; `InsuranceTariffs.zvwMode`, `CalculationResult.zvwMode` from the pack; the
+      ten existing fixtures pass unchanged, `zvw-inhouding.json` is a pack vector.)
+- [x] 2.2 Add the `rvuThreshold` input and the `rvuEindheffing` step. Verify: a golden vector for
       a benefit above the threshold gives the levy on the excess only.
+      (Inputs `rvuThreshold` and `rvuFinalLevyRate`, the rate passed by the run from the regime
+      leaf so the pack resolves no unverified leaf; `rvuEindheffing` employer cost;
+      `CalculationResult.rvuFinalLevyCents`; `rvu-final-levy.json` vector; the new snapshot keys
+      appear only on a benefit so ordinary snapshots stay byte-identical.)
 
 ## 3. Run
 
