@@ -89,77 +89,6 @@ class SettingsService {
 	}//end getRegisterSlug()
 
 	/**
-	 * The RGS-coded GL account for gross wages (payroll-glpost-shillinq D2 line 1:
-	 * debit loonkosten bruto), configurable via app config key
-	 * `glpost_account_gross`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountGross(): string {
-		return $this->glPostAccount('glpost_account_gross', '4001');
-	}//end getGlPostAccountGross()
-
-	/**
-	 * The RGS-coded GL account for employer social charges (payroll-glpost-shillinq
-	 * D2 line 2: debit werkgeverslasten sociale premies), configurable via app
-	 * config key `glpost_account_employer_charges`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountEmployerCharges(): string {
-		return $this->glPostAccount('glpost_account_employer_charges', '4002');
-	}//end getGlPostAccountEmployerCharges()
-
-	/**
-	 * The RGS-coded GL account for the wage-tax liability (payroll-glpost-shillinq
-	 * D2 line 3: credit loonheffing-schuld), configurable via app config key
-	 * `glpost_account_wage_tax_liability`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountWageTaxLiability(): string {
-		return $this->glPostAccount('glpost_account_wage_tax_liability', '1701');
-	}//end getGlPostAccountWageTaxLiability()
-
-	/**
-	 * The RGS-coded GL account for the net-wages liability (payroll-glpost-shillinq
-	 * D2 line 4: credit netto-loonschuld, which absorbs the balancing remainder R),
-	 * configurable via app config key `glpost_account_net_wages_liability`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountNetWagesLiability(): string {
-		return $this->glPostAccount('glpost_account_net_wages_liability', '1702');
-	}//end getGlPostAccountNetWagesLiability()
-
-	/**
-	 * The GL account for employee expense reimbursements paid through payroll
-	 * (payroll-expenses-and-allowances D6: debit declaraties), configurable via
-	 * app config key `glpost_account_reimbursements`.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-004
-	 */
-	public function getGlPostAccountReimbursements(): string {
-		return $this->glPostAccount('glpost_account_reimbursements', '4010');
-	}//end getGlPostAccountReimbursements()
-
-	/**
-	 * Read a `glpost_account_*` config key, falling back to its placeholder
-	 * default when unset or blank.
-	 *
-	 * @param string $key The app config key.
-	 * @param string $default The placeholder default account number.
-	 *
-	 * @return string
-	 */
-	private function glPostAccount(string $key, string $default): string {
-		$value = $this->appConfig->getValueString(Application::APP_ID, $key, $default);
-		return $value === '' ? $default : $value;
-	}//end glPostAccount()
-
-	/**
 	 * The day of the wage-period month used as the shillinq PaymentRun
 	 * `executionDate` (payroll-sepa-netpay-shillinq design.md D5 — the
 	 * customary Dutch salary date), configurable via app config key
@@ -186,19 +115,6 @@ class SettingsService {
 	public function getNetPayDebtorIban(): string {
 		return $this->appConfig->getValueString(Application::APP_ID, 'netpay_debtor_iban', '');
 	}//end getNetPayDebtorIban()
-
-	/**
-	 * The shillinq Payee (id or slug) that receives the wage tax remittance:
-	 * the Belastingdienst (payroll-wage-tax-remittance-shillinq D4), app config
-	 * key `wagetax_payee_id`. Empty means the hand-off fails closed.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
-	 */
-	public function getWageTaxPayeeId(): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, 'wagetax_payee_id', ''));
-	}//end getWageTaxPayeeId()
 
 	/**
 	 * The docudesk template UUID configured for one HR document type
@@ -325,46 +241,6 @@ class SettingsService {
 	}//end getOfferSigningDeadlineDays()
 
 	/**
-	 * The employer's Aof (arbeidsongeschiktheidsfonds) tariff classification
-	 * (payroll-core-engine design.md D2 step 9): `laag` for small employers,
-	 * `hoog` for other employers — a per-employer fact the tax-year tables
-	 * cannot know. Configurable via app config key `payroll_aof_tariff`;
-	 * anything other than `hoog` falls back to the honest default `laag`.
-	 *
-	 * @return string `laag` or `hoog`.
-	 *
-	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
-	 */
-	public function getPayrollAofTariff(): string {
-		$value = strtolower(trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_aof_tariff', 'laag')));
-		return $value === 'hoog' ? 'hoog' : 'laag';
-	}//end getPayrollAofTariff()
-
-	/**
-	 * The employer's gedifferentieerde Whk (Werkhervattingskas) percentage
-	 * (payroll-core-engine design.md D2 step 9) — employer-specific, set by
-	 * the Belastingdienst Whk-beschikking. Configurable via app config key
-	 * `payroll_whk_percentage`; unset/blank/non-numeric falls back to the
-	 * tables' flagged national average passed in by the caller (the tables
-	 * file marks its `whk` value `placeholder: true`).
-	 *
-	 * @param float $tablesDefault The tables' flagged national-average Whk percentage.
-	 *
-	 * @return float The Whk percentage (percentage scale, e.g. 1.52).
-	 *
-	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
-	 */
-	public function getPayrollWhkPercentage(float $tablesDefault): float {
-		$value = trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_whk_percentage', ''));
-		if ($value === '' || is_numeric($value) === false) {
-			return $tablesDefault;
-		}
-
-		$percentage = (float)$value;
-		return $percentage >= 0.0 ? $percentage : $tablesDefault;
-	}//end getPayrollWhkPercentage()
-
-	/**
 	 * Whether `LeaveAccrualJob` may run (leave-accrual-job design.md D6) — an
 	 * operator off-switch, configurable via app config key
 	 * `leave_accrual_enabled`. Defaults to `true`; the job returns immediately
@@ -393,21 +269,6 @@ class SettingsService {
 	public function isRetentionExpiryEnabled(): bool {
 		return $this->appConfig->getValueBool(Application::APP_ID, 'retention_expiry_enabled', false);
 	}//end isRetentionExpiryEnabled()
-
-	/**
-	 * The integriq source uuid a base register is called through
-	 * (people-register-prefill D1): app config `prefill_rdw_source` or
-	 * `prefill_brp_source`. Empty when not configured.
-	 *
-	 * @param string $register The register key: `rdw` or `brp`.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/specs/register-prefill/spec.md#REQ-RPF-001
-	 */
-	public function getRegisterPrefillSource(string $register): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, 'prefill_' . $register . '_source', ''));
-	}//end getRegisterPrefillSource()
 
 	/**
 	 * The annual bovenwettelijk (above-statutory) leave hours LeaveAccrualJob

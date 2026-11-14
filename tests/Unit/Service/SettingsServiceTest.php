@@ -76,29 +76,6 @@ class SettingsServiceTest extends TestCase {
 	}//end testTheRegisterSlug()
 
 	/**
-	 * Each ledger account has its own default, used when unset or blank.
-	 *
-	 * @return void
-	 */
-	public function testTheLedgerAccounts(): void {
-		$defaults = $this->settings([]);
-		self::assertSame(
-			['4001', '4002', '1701', '1702', '4010'],
-			[
-				$defaults->getGlPostAccountGross(),
-				$defaults->getGlPostAccountEmployerCharges(),
-				$defaults->getGlPostAccountWageTaxLiability(),
-				$defaults->getGlPostAccountNetWagesLiability(),
-				$defaults->getGlPostAccountReimbursements(),
-			]
-		);
-
-		$stored = $this->settings(['glpost_account_gross' => '8000', 'glpost_account_reimbursements' => '']);
-		self::assertSame('8000', $stored->getGlPostAccountGross());
-		self::assertSame('4010', $stored->getGlPostAccountReimbursements());
-	}//end testTheLedgerAccounts()
-
-	/**
 	 * The net-pay execution day and the signing deadline fall back on anything not positive.
 	 *
 	 * @return void
@@ -115,23 +92,19 @@ class SettingsServiceTest extends TestCase {
 	}//end testDaysFallBackWhenNotPositive()
 
 	/**
-	 * The debtor IBAN is as stored; the wage-tax payee id and prefill source are trimmed.
+	 * The debtor IBAN is as stored; the wage-tax payee id is trimmed.
 	 *
 	 * @return void
 	 */
 	public function testIdentifiersAreReadAsStored(): void {
 		$settings = $this->settings([
 			'netpay_debtor_iban' => 'NL91ABNA0417164300',
-			'wagetax_payee_id' => ' bd-1 ',
 			'documents_template_contract' => 'tpl-9',
-			'prefill_brp_source' => ' haalcentraal ',
 		]);
 
 		self::assertSame('NL91ABNA0417164300', $settings->getNetPayDebtorIban());
-		self::assertSame('bd-1', $settings->getWageTaxPayeeId());
 		self::assertSame('tpl-9', $settings->getDocumentsTemplateId('contract'));
 		self::assertSame('', $settings->getDocumentsTemplateId('offer'));
-		self::assertSame('haalcentraal', $settings->getRegisterPrefillSource('brp'));
 		self::assertSame('', $this->settings([])->getNetPayDebtorIban());
 	}//end testIdentifiersAreReadAsStored()
 
@@ -157,30 +130,6 @@ class SettingsServiceTest extends TestCase {
 		self::assertSame('Voorbeeld Werkgever B.V.', $this->settings([])->getDocumentsEmployerName());
 		self::assertSame('000000000L01', $this->settings([])->getDocumentsEmployerLoonheffingennummer());
 	}//end testTheEmployerBlock()
-
-	/**
-	 * The AOF tariff is high only when set to it, in any case and spacing; anything else is low.
-	 *
-	 * @return void
-	 */
-	public function testTheAofTariffIsHighOnlyWhenSetSo(): void {
-		self::assertSame('laag', $this->settings([])->getPayrollAofTariff());
-		self::assertSame('hoog', $this->settings(['payroll_aof_tariff' => ' HOOG '])->getPayrollAofTariff());
-		self::assertSame('laag', $this->settings(['payroll_aof_tariff' => 'midden'])->getPayrollAofTariff());
-	}//end testTheAofTariffIsHighOnlyWhenSetSo()
-
-	/**
-	 * The WHK percentage is the stored number when it is one and not negative, else the tables' default.
-	 *
-	 * @return void
-	 */
-	public function testTheWhkPercentage(): void {
-		self::assertSame(1.52, $this->settings([])->getPayrollWhkPercentage(1.52));
-		self::assertSame(0.88, $this->settings(['payroll_whk_percentage' => ' 0.88 '])->getPayrollWhkPercentage(1.52));
-		self::assertSame(0.0, $this->settings(['payroll_whk_percentage' => '0'])->getPayrollWhkPercentage(1.52));
-		self::assertSame(1.52, $this->settings(['payroll_whk_percentage' => 'n.v.t.'])->getPayrollWhkPercentage(1.52));
-		self::assertSame(1.52, $this->settings(['payroll_whk_percentage' => '-1'])->getPayrollWhkPercentage(1.52));
-	}//end testTheWhkPercentage()
 
 	/**
 	 * Extra statutory leave hours are a non-negative number, zero when unset or unusable.

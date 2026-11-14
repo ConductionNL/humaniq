@@ -37,6 +37,7 @@ use OCA\Humaniq\Service\AwfReviewService;
 use OCA\Humaniq\Service\CaoComponentCalculator;
 use OCA\Humaniq\Service\CaoComponentPayService;
 use OCA\Humaniq\Service\CostAllocationService;
+use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Service\EmploymentTermsResolver;
 use OCA\Humaniq\Service\HoursPayService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
@@ -47,6 +48,7 @@ use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WorkingCalendarReader;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -278,13 +280,11 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getPayrollAofTariff')->willReturn('laag');
-		$settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
 
 		$logger = $this->recorder(LoggerInterface::class);
 		$guard = $this->recorder(PayrollRetentionGuardService::class);
 		if ($withFolds === false) {
-			return new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $guard, $logger);
+			return new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $guard, $logger);
 		}
 
 		$throw = static function (): never {
@@ -296,6 +296,7 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 		return new PayrollRunService(
 			$container,
 			$settings,
+			new EmployerPremiumSettings($this->createMock(IAppConfig::class)),
 			new PayrollCalculator(),
 			new SickPayCalculator(),
 			$guard,

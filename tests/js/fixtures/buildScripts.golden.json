@@ -248,6 +248,72 @@
 			"l10n/README.md": "not a catalogue"
 		}
 	},
+	"composer drift: matches": {
+		"status": 0,
+		"stdout": "[check-composer-deps-drift] conduction/hydra-gates: v1.19.0 (matches composer.lock)\n[check-composer-deps-drift] vendor/ writable by this account: yes\n[check-composer-deps-drift] PASS — 1 watched package(s) match composer.lock.\n",
+		"stderr": "",
+		"files": {
+			"composer.lock": "{\n  \"packages\": [\n    {\n      \"name\": \"other/pkg\",\n      \"version\": \"1.0.0\"\n    }\n  ],\n  \"packages-dev\": [\n    {\n      \"name\": \"conduction/hydra-gates\",\n      \"version\": \"v1.19.0\"\n    }\n  ]\n}",
+			"vendor/composer/installed.json": "{\n  \"packages\": [\n    {\n      \"name\": \"conduction/hydra-gates\",\n      \"version\": \"v1.19.0\"\n    }\n  ],\n  \"dev\": true\n}",
+			"vendor/conduction/hydra-gates/composer.json": "{\n  \"name\": \"conduction/hydra-gates\"\n}"
+		}
+	},
+	"composer drift: matches a Composer 1 installed.json": {
+		"status": 0,
+		"stdout": "[check-composer-deps-drift] conduction/hydra-gates: v1.19.0 (matches composer.lock)\n[check-composer-deps-drift] vendor/ writable by this account: yes\n[check-composer-deps-drift] PASS — 1 watched package(s) match composer.lock.\n",
+		"stderr": "",
+		"files": {
+			"composer.lock": "{\n  \"packages\": [\n    {\n      \"name\": \"other/pkg\",\n      \"version\": \"1.0.0\"\n    }\n  ],\n  \"packages-dev\": [\n    {\n      \"name\": \"conduction/hydra-gates\",\n      \"version\": \"v1.19.0\"\n    }\n  ]\n}",
+			"vendor/composer/installed.json": "[\n  {\n    \"name\": \"conduction/hydra-gates\",\n    \"version\": \"v1.19.0\"\n  }\n]",
+			"vendor/conduction/hydra-gates/composer.json": "{\n  \"name\": \"conduction/hydra-gates\"\n}"
+		}
+	},
+	"composer drift: other version installed": {
+		"status": 1,
+		"stdout": "[check-composer-deps-drift] vendor/ writable by this account: yes\n",
+		"stderr": "[check-composer-deps-drift] FAIL — vendor/ does not match composer.lock:\n  conduction/hydra-gates: locked v1.19.0, installed v1.18.2.\n  Run `composer install` as the account that owns vendor/ (not `composer update` — only install reconciles to the lockfile).\n",
+		"files": {
+			"composer.lock": "{\n  \"packages\": [\n    {\n      \"name\": \"other/pkg\",\n      \"version\": \"1.0.0\"\n    }\n  ],\n  \"packages-dev\": [\n    {\n      \"name\": \"conduction/hydra-gates\",\n      \"version\": \"v1.19.0\"\n    }\n  ]\n}",
+			"vendor/composer/installed.json": "{\n  \"packages\": [\n    {\n      \"name\": \"conduction/hydra-gates\",\n      \"version\": \"v1.18.2\"\n    }\n  ],\n  \"dev\": true\n}",
+			"vendor/conduction/hydra-gates/composer.json": "{\n  \"name\": \"conduction/hydra-gates\"\n}"
+		}
+	},
+	"composer drift: not installed": {
+		"status": 1,
+		"stdout": "[check-composer-deps-drift] vendor/ writable by this account: yes\n",
+		"stderr": "[check-composer-deps-drift] FAIL — vendor/ does not match composer.lock:\n  conduction/hydra-gates: locked v1.19.0, NOT INSTALLED.\n  Run `composer install` as the account that owns vendor/ (not `composer update` — only install reconciles to the lockfile).\n",
+		"files": {
+			"composer.lock": "{\n  \"packages\": [\n    {\n      \"name\": \"other/pkg\",\n      \"version\": \"1.0.0\"\n    }\n  ],\n  \"packages-dev\": [\n    {\n      \"name\": \"conduction/hydra-gates\",\n      \"version\": \"v1.19.0\"\n    }\n  ]\n}"
+		}
+	},
+	"composer drift: recorded but the directory is gone": {
+		"status": 1,
+		"stdout": "[check-composer-deps-drift] vendor/ writable by this account: yes\n",
+		"stderr": "[check-composer-deps-drift] FAIL — vendor/ does not match composer.lock:\n  conduction/hydra-gates: locked v1.19.0, NOT INSTALLED.\n  Run `composer install` as the account that owns vendor/ (not `composer update` — only install reconciles to the lockfile).\n",
+		"files": {
+			"composer.lock": "{\n  \"packages\": [\n    {\n      \"name\": \"other/pkg\",\n      \"version\": \"1.0.0\"\n    }\n  ],\n  \"packages-dev\": [\n    {\n      \"name\": \"conduction/hydra-gates\",\n      \"version\": \"v1.19.0\"\n    }\n  ]\n}",
+			"vendor/composer/installed.json": "{\n  \"packages\": [\n    {\n      \"name\": \"conduction/hydra-gates\",\n      \"version\": \"v1.19.0\"\n    }\n  ]\n}"
+		}
+	},
+	"composer drift: not in the lockfile": {
+		"status": 1,
+		"stdout": "[check-composer-deps-drift] vendor/ writable by this account: yes\n",
+		"stderr": "[check-composer-deps-drift] FAIL — vendor/ does not match composer.lock:\n  conduction/hydra-gates: not present in composer.lock — it is watched here but not a declared dependency.\n  Run `composer install` as the account that owns vendor/ (not `composer update` — only install reconciles to the lockfile).\n",
+		"files": {
+			"composer.lock": "{\n  \"packages\": []\n}",
+			"vendor/composer/installed.json": "{\n  \"packages\": [\n    {\n      \"name\": \"conduction/hydra-gates\",\n      \"version\": \"v1.19.0\"\n    }\n  ],\n  \"dev\": true\n}",
+			"vendor/conduction/hydra-gates/composer.json": "{\n  \"name\": \"conduction/hydra-gates\"\n}"
+		}
+	},
+	"composer drift: no lockfile": {
+		"status": 1,
+		"stdout": "",
+		"stderr": "[check-composer-deps-drift] FAIL — composer.lock not found or unreadable; nothing to check against.\n",
+		"files": {
+			"vendor/composer/installed.json": "{\n  \"packages\": [\n    {\n      \"name\": \"conduction/hydra-gates\",\n      \"version\": \"v1.19.0\"\n    }\n  ],\n  \"dev\": true\n}",
+			"vendor/conduction/hydra-gates/composer.json": "{\n  \"name\": \"conduction/hydra-gates\"\n}"
+		}
+	},
 	"bundle sidecar: missing": {
 		"status": 1,
 		"stdout": "",
