@@ -1,10 +1,14 @@
 ## 1. Register import
 
-- [ ] 1.1 Check that `occ app:update humaniq` keeps a property an administrator added to
+- [x] 1.1 Check that `occ app:update humaniq` keeps a property an administrator added to
       `Employee`. If the import replaces the schema, change OpenRegister's
       `ConfigurationService::importFromApp()` to keep properties the app does not ship, in an
       OpenRegister PR first. Verify: an integration test that adds a property, re-imports and
       reads it back.
+      > OpenRegister keeps it: `ShippedConfigurationGuard` merges an app import over the recorded shipped
+      > baseline, so a property the app does not ship survives. Pinned in openregister#10564
+      > (`ImportHandlerKeepsAddedPropertyTest`: import, add, import the update, read back), which runs the real
+      > import handler and guard; no OpenRegister change was needed.
 
 ## 2. Page
 
@@ -17,7 +21,8 @@
 
 ## 3. Verification
 
-- [ ] 3.1 An e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19).
+- [x] 3.1 An e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19).
+      > Each scenario names the unit test that covers it; the manage link's adminOnly flag is now asserted too.
 - [ ] 3.2 One live check: add a "Rijbewijs" property to Employee in OpenRegister, fill it on an
       employee page and reload.
 

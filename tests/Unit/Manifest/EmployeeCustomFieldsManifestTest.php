@@ -123,4 +123,24 @@ final class EmployeeCustomFieldsManifestTest extends TestCase {
 		$this->assertSame($shipped, array_values(array_filter($shipped, static fn (string $name): bool => in_array($name, $person, true) || in_array($name, $employed, true))));
 		$this->assertCount(count($shipped), array_unique([...$person, ...$employed]), 'every shipped field still shows once');
 	}//end testTheOtherDataCardsNameTheirFields()
+
+	/**
+	 * Manage fields is a header action only administrators see, opening OpenRegister's schemas.
+	 *
+	 * @return void
+	 */
+	public function testManageFieldsIsAnAdministratorOnlyLinkToTheSchemas(): void {
+		$manifest = json_decode((string) file_get_contents(dirname(__DIR__, 3).'/src/manifest.d/hr-objects.json'), true);
+		$actions  = [];
+		foreach ($manifest['pages'] as $page) {
+			if ($page['id'] === 'EmployeeDetail') {
+				$actions = array_column(($page['config']['headerActions'] ?? []), null, 'id');
+			}
+		}
+
+		$this->assertArrayHasKey('manage-fields', $actions);
+		$this->assertTrue($actions['manage-fields']['adminOnly']);
+		$this->assertSame('navigate', $actions['manage-fields']['type']);
+		$this->assertSame('/apps/openregister/schemas', $actions['manage-fields']['target']);
+	}//end testManageFieldsIsAnAdministratorOnlyLinkToTheSchemas()
 }//end class
