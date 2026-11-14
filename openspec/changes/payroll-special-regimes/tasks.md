@@ -56,7 +56,10 @@
       lifecycle actions, a Payroll menu entry; the contract page shows the office fields in its
       data widget and lists the person's benefit entitlements; check:manifest, parity
       (`--update`), l10n parity and test:js pass.)
-- [ ] 4.2 Seed the RVU entitlement and the alderman. Verify: `npm run check:seed-refs` exits 0.
+- [x] 4.2 Seed the RVU entitlement and the alderman. Verify: `npm run check:seed-refs` exits 0.
+      (`benefit-degroot-rvu`, monthly 2000.00 from 2026-07; `employee-wethouder` with
+      `contract-wethouder-ambt` as wethouder; `BenefitEntitlement.administrationId` is now the
+      plain administration key like every other schema; check:seed-refs passes.)
 
 ## 5. Verification
 

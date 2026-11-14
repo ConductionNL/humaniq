@@ -3526,6 +3526,58 @@
                 "awfOverrunPercentYearToDate": 41,
                 "statementProvided": true,
                 "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-wethouder"
+                },
+                "gender": "man",
+                "employeeNumber": "EMP-0040",
+                "firstName": "Pieter",
+                "lastName": "Hoekstra",
+                "dateOfBirth": "1971-08-19",
+                "startDate": "2026-04-15",
+                "grossMonthlySalary": 8250.0,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001",
+                "_note": "payroll-special-regimes: an alderman (wethouder), an office holder rather than an employee. His contract is of type political-office, so the run pays him under the politiek-ambt regime: no unemployment, disability or sickness insurance premiums. While the regime's table leaves are unverified the run lists him as regime-unverified and pays nothing."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-wethouder-ambt"
+                },
+                "employeeId": "@ref:employee-wethouder",
+                "type": "political-office",
+                "officeRole": "wethouder",
+                "termStart": "2026-04-15",
+                "termEnd": "2030-03-31",
+                "writtenContract": true,
+                "startDate": "2026-04-15",
+                "endDate": "2030-03-31",
+                "hoursPerWeek": 36,
+                "awfTariff": "low",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "BenefitEntitlement",
+                    "slug": "benefit-degroot-rvu"
+                },
+                "employeeId": "@ref:employee-degroot",
+                "kind": "rvu",
+                "decisionReference": "RVU-2026-0006",
+                "startDate": "2026-07-01",
+                "paymentMode": "periodic",
+                "monthlyAmount": 2000.0,
+                "status": "active",
+                "administrationId": "ADM-001"
             }
         ]
     }

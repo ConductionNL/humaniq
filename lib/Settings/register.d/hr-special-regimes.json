@@ -206,10 +206,10 @@
                     },
                     "administrationId": {
                         "type": "string",
-                        "format": "uuid",
-                        "$ref": "hrAdministration",
+                        "nullable": true,
                         "title": "Administration",
-                        "description": "The payroll administration that pays the benefit."
+                        "description": "The payroll administration that pays the benefit.",
+                        "x-notes": "Denormalized administratie key, a plain nullable string and NOT a $ref (ADR-062 rule 7, the PayrollRun convention), like Employee.administrationId. The payroll run pays an entitlement only in a run of the same administration when both name one."
                     }
                 }
             },
