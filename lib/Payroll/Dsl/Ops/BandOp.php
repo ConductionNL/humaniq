@@ -85,7 +85,11 @@ final class BandOp extends AbstractOp {
 			throw new DslException('Pack: op "band" verwacht een niet-lege rijenlijst in "table".');
 		}
 
-		$row = $this->select(rows: $rows, value: $value, unit: $unit, ctx: $ctx);
+		$reaches = function (mixed $tot) use ($value, $unit, $ctx): bool {
+			$limit = ($unit === 'cent') ? (int)$tot : $ctx->tables()->toCents((float)$tot);
+			return $value <= $limit;
+		};
+		$row = $this->select(rows: $rows, reaches: $reaches);
 		if (is_numeric($row['percentage'] ?? null) === false) {
 			throw new DslException('Pack: op "band" verwacht een numeriek "percentage" in elke rij.');
 		}
@@ -96,47 +100,26 @@ final class BandOp extends AbstractOp {
 	/**
 	 * The first row whose `tot` reaches the value; the last row when none does.
 	 *
-	 * @param array<int, mixed> $rows  The table rows.
-	 * @param int|float         $value The value.
-	 * @param string            $unit  The declared unit of `tot`.
-	 * @param StepContext       $ctx   The step context.
+	 * A row without `tot` is open-ended and always selected.
+	 *
+	 * @param array<int, mixed>       $rows    The table rows.
+	 * @param callable(mixed): bool   $reaches Whether a `tot` limit reaches the value.
 	 *
 	 * @return array<string, mixed> The row.
 	 *
 	 * @throws DslException When a row is not an object.
 	 */
-	private function select(array $rows, int|float $value, string $unit, StepContext $ctx): array {
+	private function select(array $rows, callable $reaches): array {
 		foreach ($rows as $row) {
 			if (is_array($row) === false) {
 				throw new DslException('Pack: op "band" verwacht rijen met "tot" en "percentage".');
 			}
 
-			if (($row['tot'] ?? null) === null) {
-				return $row;
-			}
-
-			if ($value <= $this->money(value: $row['tot'], unit: $unit, ctx: $ctx)) {
+			if (($row['tot'] ?? null) === null || $reaches($row['tot']) === true) {
 				return $row;
 			}
 		}
 
 		return end($rows);
 	}//end select()
-
-	/**
-	 * A `tot` value in cents.
-	 *
-	 * @param mixed       $value The value.
-	 * @param string      $unit  The declared unit.
-	 * @param StepContext $ctx   The step context.
-	 *
-	 * @return int The cents.
-	 */
-	private function money(mixed $value, string $unit, StepContext $ctx): int {
-		if ($unit === 'cent') {
-			return (int)$value;
-		}
-
-		return $ctx->tables()->toCents((float)$value);
-	}//end money()
 }//end class
