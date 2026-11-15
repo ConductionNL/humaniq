@@ -3,6 +3,9 @@
 /**
  * Offer E-sign Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Closes the MVP gap the `Application.aanbieden` transition's own docblock
  * names: generates a real offer-letter (aanbiedingsbrief) PDF from
  * `Application`+`Vacancy` data via docudesk's rendering engine and raises a
@@ -82,9 +85,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -205,7 +205,7 @@ class OfferEsignService {
 			return $letter['outcome'];
 		}
 
-		return $this->createSigningRequest($applicationId, $letter['application'], $letter['fileId'], $letter['fileName']);
+		return $this->createSigningRequest($applicationId, $letter);
 	}//end requestSignature()
 
 	/**
@@ -339,15 +339,16 @@ class OfferEsignService {
 	 * escapes (REQ-OFFR-003).
 	 *
 	 * @param string $applicationId The Application id.
-	 * @param array<string, mixed> $application The Application, current (post file-store) state.
-	 * @param int $fileId The stored offer-letter file id.
-	 * @param string $fileName The stored offer-letter file name.
+	 * @param array<string, mixed> $letter The stored letter: the Application as saved, its fileId and fileName.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function createSigningRequest(string $applicationId, array $application, int $fileId, string $fileName): array {
-		$candidateName = (string)($application['candidateName'] ?? '');
-		$email = (string)($application['email'] ?? '');
+	private function createSigningRequest(string $applicationId, array $letter): array {
+		$attempt = new OfferSigningAttempt();
+		$attempt->applicationId = $applicationId;
+		$attempt->application = $letter['application'];
+		$attempt->fileId = $letter['fileId'];
+		$attempt->fileName = $letter['fileName'];
 
 		// No-external-signer gap (class docblock, defect-2): docudesk's
 		// SigningService::sign() authorizes strictly on
@@ -355,46 +356,101 @@ class OfferEsignService {
 		// createRequest() -- an unresolvable candidate must never reach
 		// docudesk with an empty userId (that used to crash on the
 		// signerRecord's NOT NULL `user_id` column, design.md D8).
-		$candidateUserId = $this->signingRecovery->resolveCandidateUserId($email);
+		$candidateUserId = $this->signingRecovery->resolveCandidateUserId((string)($attempt->application['email'] ?? ''));
 		if ($candidateUserId === null) {
-			$application = $this->applications->save($application, ['offerSigningStatus' => 'failed']);
-			return $this->outcome(
-				$applicationId,
-				$application,
-				'failed',
-				'no-nextcloud-user-for-candidate — docudesk kan niet ondertekenen voor externe (niet-Nextcloud-)ondertekenaars '
-				. '(zie docudesk SigningService::sign, dat autoriseert op signer.userId): geen Nextcloud-gebruiker gevonden voor "' . $email . '".'
-			);
+			return $this->noCandidateUser($attempt);
 		}
 
-		$deadline = (new DateTimeImmutable())
-			->modify('+' . $this->settingsService->getOfferSigningDeadlineDays() . ' days')
-			->format(DateTimeInterface::ATOM);
+		$attempt->candidateUserId = $candidateUserId;
+		$created = $this->signing->create($this->signingRequestData($attempt));
+		if ($created['status'] === 'failed') {
+			return $this->failedRequest(attempt: $attempt, created: $created);
+		}
 
-		$requestData = [
-			'documentFileId' => (string)$fileId,
-			'documentName' => $fileName,
+		return $this->requested(attempt: $attempt, created: $created);
+	}//end createSigningRequest()
+
+	/**
+	 * Mark the request failed because the candidate has no Nextcloud account.
+	 *
+	 * @param OfferSigningAttempt $attempt The attempt.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 */
+	private function noCandidateUser(OfferSigningAttempt $attempt): array {
+		$email = (string)($attempt->application['email'] ?? '');
+		$application = $this->applications->save($attempt->application, ['offerSigningStatus' => 'failed']);
+
+		return $this->outcome(
+			$attempt->applicationId,
+			$application,
+			'failed',
+			'no-nextcloud-user-for-candidate — docudesk kan niet ondertekenen voor externe (niet-Nextcloud-)ondertekenaars '
+			. '(zie docudesk SigningService::sign, dat autoriseert op signer.userId): geen Nextcloud-gebruiker gevonden voor "' . $email . '".'
+		);
+
+	}//end noCandidateUser()
+
+	/**
+	 * The signing request docudesk's createRequest() takes.
+	 *
+	 * @param OfferSigningAttempt $attempt The attempt, with the candidate resolved.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function signingRequestData(OfferSigningAttempt $attempt): array {
+		$candidateName = (string)($attempt->application['candidateName'] ?? '');
+
+		return [
+			'documentFileId' => (string)$attempt->fileId,
+			'documentName' => $attempt->fileName,
 			'signatureLevel' => 'SES',
 			'signingMode' => 'sequential',
-			'deadline' => $deadline,
+			'deadline' => $this->signingDeadline(),
 			// The VERIFIED real field: `signers`, NOT `signerIds` --
 			// createRequest() creates the SignerRecord objects itself and
 			// derives signerIds internally (design.md Context).
 			'signers' => [
 				[
-					'userId' => $candidateUserId,
+					'userId' => $attempt->candidateUserId,
 					'displayName' => $candidateName,
-					'email' => $email,
+					'email' => (string)($attempt->application['email'] ?? ''),
 					'order' => 0,
 				],
 			],
-			// Provenance fields threaded through for cross-app correlation
-			// (design.md Context / D3) AND for the orphan-recovery lookup
-			// below (design.md D8, defect-3).
-			// FROZEN at the old app id: this value is BOTH written onto new docudesk
-			// signing requests AND used as the lookup key that recovers orphaned
-			// in-flight ones. Renaming it would make every already-raised request
-			// unfindable. Not to be "finished" with the rest of the rename.
+		] + $this->provenance(applicationId: $attempt->applicationId, candidateName: $candidateName);
+
+	}//end signingRequestData()
+
+	/**
+	 * The signing deadline: the configured number of days from now, ATOM.
+	 *
+	 * @return string
+	 */
+	private function signingDeadline(): string {
+		return (new DateTimeImmutable())
+			->modify('+' . $this->settingsService->getOfferSigningDeadlineDays() . ' days')
+			->format(DateTimeInterface::ATOM);
+
+	}//end signingDeadline()
+
+	/**
+	 * The provenance fields that correlate the request back to the Application.
+	 *
+	 * @param string $applicationId The Application id.
+	 * @param string $candidateName The candidate's name.
+	 *
+	 * @return array<string, string>
+	 */
+	private function provenance(string $applicationId, string $candidateName): array {
+		// Provenance fields threaded through for cross-app correlation
+		// (design.md Context / D3) AND for the orphan-recovery lookup
+		// (design.md D8, defect-3).
+		// FROZEN at the old app id: this value is BOTH written onto new docudesk
+		// signing requests AND used as the lookup key that recovers orphaned
+		// in-flight ones. Renaming it would make every already-raised request
+		// unfindable. Not to be "finished" with the rest of the rename.
+		return [
 			'sourceApp' => 'hrmq',
 			'subjectRegister' => $this->settingsService->getRegisterSlug(),
 			'subjectSchema' => self::APPLICATION_SCHEMA,
@@ -404,44 +460,63 @@ class OfferEsignService {
 			'correlationId' => $applicationId,
 		];
 
-		$created = $this->signing->create($requestData);
-		if ($created['status'] === 'failed') {
-			// Never let RuntimeException('No authenticated user') (design.md
-			// D5 -- always true for a genuine occ CLI process) escape.
-			// createRequest() writes the signing-request row BEFORE the
-			// signer-record write that can throw, so a best-effort recovery
-			// is attempted (design.md D8, defect-3) rather than silently
-			// stranding the orphan.
-			$recoveredRequestId = $created['requestId'];
+	}//end provenance()
 
-			$fields = ['offerSigningStatus' => 'failed'];
-			if ($recoveredRequestId !== null) {
-				$fields['offerSigningRequestId'] = $recoveredRequestId;
-			}
+	/**
+	 * Mark the request failed, keeping any partially created request reachable.
+	 *
+	 * Never let RuntimeException('No authenticated user') (design.md D5 --
+	 * always true for a genuine occ CLI process) escape. createRequest()
+	 * writes the signing-request row BEFORE the signer-record write that can
+	 * throw, so a best-effort recovery is attempted (design.md D8, defect-3)
+	 * rather than silently stranding the orphan.
+	 *
+	 * @param OfferSigningAttempt  $attempt The attempt.
+	 * @param array<string, mixed> $created The failed create() answer.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 */
+	private function failedRequest(OfferSigningAttempt $attempt, array $created): array {
+		$recoveredRequestId = $created['requestId'];
 
-			$application = $this->applications->save($application, $fields);
+		$fields = ['offerSigningStatus' => 'failed'];
+		if ($recoveredRequestId !== null) {
+			$fields['offerSigningRequestId'] = $recoveredRequestId;
+		}
 
-			$message = 'Aanvragen van de e-handtekening via docudesk is mislukt: ' . (string)$created['error'];
-			$message .= ($recoveredRequestId !== null)
-				? ' Een gedeeltelijk aangemaakte signing-request (' . $recoveredRequestId . ') is teruggevonden en blijft bereikbaar via syncSignatureStatus/cancelRequest.'
-				: ' Kon een eventueel gedeeltelijk aangemaakte signing-request niet eenduidig terugvinden -- zoek zo nodig handmatig in het signingRequest-register op correlationId="' . $applicationId . '".';
+		$application = $this->applications->save($attempt->application, $fields);
 
-			return $this->outcome($applicationId, $application, 'failed', $message);
-		}//end if
+		$message = 'Aanvragen van de e-handtekening via docudesk is mislukt: ' . (string)$created['error'];
+		$message .= ($recoveredRequestId !== null)
+			? ' Een gedeeltelijk aangemaakte signing-request (' . $recoveredRequestId . ') is teruggevonden en blijft bereikbaar via syncSignatureStatus/cancelRequest.'
+			: ' Kon een eventueel gedeeltelijk aangemaakte signing-request niet eenduidig terugvinden -- zoek zo nodig handmatig in het signingRequest-register op correlationId="' . $attempt->applicationId . '".';
 
+		return $this->outcome($attempt->applicationId, $application, 'failed', $message);
+
+	}//end failedRequest()
+
+	/**
+	 * Store the created request on the Application.
+	 *
+	 * @param OfferSigningAttempt  $attempt The attempt.
+	 * @param array<string, mixed> $created The create() answer.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 */
+	private function requested(OfferSigningAttempt $attempt, array $created): array {
 		$requestId = (string)$created['requestId'];
-		$newStatus = $created['status'];
 
 		$application = $this->applications->save(
-			$application,
+			$attempt->application,
 			[
 				'offerSigningRequestId' => ($requestId === '' ? null : $requestId),
-				'offerSigningStatus' => $newStatus,
+				'offerSigningStatus' => $created['status'],
 			]
 		);
 
-		return $this->outcome($applicationId, $application, 'requested', 'Aanbiedingsbrief gegenereerd en e-handtekeningaanvraag aangemaakt.');
-	}//end createSigningRequest()
+		return $this->outcome($attempt->applicationId, $application, 'requested', 'Aanbiedingsbrief gegenereerd en e-handtekeningaanvraag aangemaakt.');
+
+	}//end requested()
 
 	/**
 	 * Read-only poll of the docudesk signing-request status onto

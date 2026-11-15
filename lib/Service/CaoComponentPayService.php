@@ -84,14 +84,13 @@ class CaoComponentPayService {
 		$paid = array_flip(array_map('strval', (array)($basis['hoursPay']['timesheetIds'] ?? [])));
 		$worked = array_values(array_filter($basis['entries'], static fn (array $entry): bool => isset($paid[(string)($entry['timesheetId'] ?? '')])));
 		$rate = ($basis['hoursPay']['hourlyRate'] ?? ($contract['hourlyWage'] ?? null));
-		$result = $this->calculator->compute(
-			components: $resolved['components'],
-			regularWageCents: (int)$basis['regularWageCents'],
-			hourlyRate: (is_numeric($rate) === true ? (float)$rate : null),
-			entries: $worked,
-			nonWorkingDates: ($basis['nonWorkingDates'] ?? []),
-			monthFraction: self::monthFraction(contract: $contract, period: (string)$basis['period'])
-		);
+		$pay = new CaoPayBasis();
+		$pay->regularWageCents = (int)$basis['regularWageCents'];
+		$pay->hourlyRate = (is_numeric($rate) === true ? (float)$rate : null);
+		$pay->entries = $worked;
+		$pay->nonWorkingDates = ($basis['nonWorkingDates'] ?? []);
+		$pay->monthFraction = self::monthFraction(contract: $contract, period: (string)$basis['period']);
+		$result = $this->calculator->compute(components: $resolved['components'], basis: $pay);
 
 		return ['totalCents' => $result['totalCents'], 'lines' => $result['lines'], 'unresolved' => $resolved['unresolved']];
 	}//end foldFor()

@@ -3,6 +3,9 @@
 /**
  * Calendar Subscription Poller
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Reads each employee's subscribed iCalendar feed and caches the busy periods
  * it declares.
  *
@@ -30,9 +33,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -122,16 +122,8 @@ class CalendarSubscriptionPoller {
 			return false;
 		}
 
-		try {
-			// A GET, and never anything else. This is the only request humaniq
-			// makes against a subscribed address.
-			$response = $this->clientService->newClient()->get(
-				$url,
-				['timeout' => self::TIMEOUT_SECONDS]
-			);
-			$body = (string)$response->getBody();
-		} catch (\Throwable $e) {
-			$this->degrade(subscription: $subscription, uuid: $uuid, status: 'unreachable', detail: $e->getMessage());
+		$body = $this->fetched(subscription: $subscription, uuid: $uuid);
+		if ($body === null) {
 			return false;
 		}
 
@@ -149,10 +141,49 @@ class CalendarSubscriptionPoller {
 			return false;
 		}
 
+		return $this->cached(subscription: $subscription, periods: $periods);
+	}//end poll()
+
+	/**
+	 * The body the subscribed address answers to a GET, or null after the
+	 * failed read was recorded as unreachable.
+	 *
+	 * @param array<string, mixed> $subscription The CalendarSubscription row.
+	 * @param string               $uuid         Its trimmed id.
+	 *
+	 * @return string|null
+	 */
+	private function fetched(array $subscription, string $uuid): ?string {
+		try {
+			// A GET, and never anything else. This is the only request humaniq
+			// makes against a subscribed address.
+			$response = $this->clientService->newClient()->get(
+				trim((string)($subscription['feedUrl'] ?? '')),
+				['timeout' => self::TIMEOUT_SECONDS]
+			);
+
+			return (string)$response->getBody();
+		} catch (\Throwable $e) {
+			$this->degrade(subscription: $subscription, uuid: $uuid, status: 'unreachable', detail: $e->getMessage());
+
+			return null;
+		}
+	}//end fetched()
+
+	/**
+	 * Write the read periods onto the subscription as a successful poll.
+	 *
+	 * @param array<string, mixed>             $subscription The CalendarSubscription row.
+	 * @param array<int, array<string, mixed>> $periods      The busy periods read from the feed.
+	 *
+	 * @return bool True when the cache was written.
+	 */
+	private function cached(array $subscription, array $periods): bool {
+		$uuid    = trim((string)($subscription['id'] ?? ''));
 		$payload = $subscription;
 		unset($payload['@self'], $payload['id']);
-		$payload['busyPeriods'] = $periods;
-		$payload['lastPolledAt'] = (new DateTimeImmutable('now'))->format('Y-m-d\TH:i:sP');
+		$payload['busyPeriods']    = $periods;
+		$payload['lastPolledAt']   = (new DateTimeImmutable('now'))->format('Y-m-d\TH:i:sP');
 		$payload['lastPollStatus'] = 'ok';
 
 		try {
@@ -165,7 +196,7 @@ class CalendarSubscriptionPoller {
 		}
 
 		return true;
-	}//end poll()
+	}//end cached()
 
 	/**
 	 * Record a failed poll and leave the cached periods where they are.

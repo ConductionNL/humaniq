@@ -3,6 +3,9 @@
 /**
  * NL Stagiair / BBL Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable check for the single `hr-stagiair` corpus rule
  * (lib/Standards/rules/labour.json, framework `hr-stagiair`),
  * `nl-bpv-overeenkomst-vereist`, registered under BOTH object types it can
@@ -33,9 +36,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

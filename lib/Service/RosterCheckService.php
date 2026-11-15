@@ -3,6 +3,9 @@
 /**
  * Roster Check Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The pre-publish (and standing) Arbeidstijdenwet verdict for a roster
  * (rostering MVP design D5, REQ-ROST-005): resolves a `Roster` and its
  * `RosterAssignment`s through OpenRegister's `ObjectService` (the
@@ -32,9 +35,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -107,16 +107,27 @@ class RosterCheckService {
 			return $this->unresolvedRegisterReport();
 		}
 
-		$rosters = [];
-		foreach ($this->loadAll('Roster', $register) as $roster) {
-			if ((string)($roster['id'] ?? $roster['@self']['id'] ?? '') === $rosterId) {
-				$rosters[] = $roster;
-				break;
+		return $this->evaluateRosters(self::firstWithId($this->loadAll('Roster', $register), $rosterId), $context, $register);
+	}//end checkRoster()
+
+	/**
+	 * The first row with the id, as a one-row list, or an empty list.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The rows.
+	 * @param string                           $id   The id.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function firstWithId(array $rows, string $id): array {
+		foreach ($rows as $row) {
+			if ((string)($row['id'] ?? $row['@self']['id'] ?? '') === $id) {
+				return [$row];
 			}
 		}
 
-		return $this->evaluateRosters($rosters, $context, $register);
-	}//end checkRoster()
+		return [];
+
+	}//end firstWithId()
 
 	/**
 	 * Check every Roster of a planning period (optionally scoped to one
@@ -142,23 +153,29 @@ class RosterCheckService {
 			return $this->unresolvedRegisterReport();
 		}
 
-		$rosters = [];
-		foreach ($this->loadAll('Roster', $register) as $roster) {
-			if ((string)($roster['period'] ?? '') !== $period) {
-				continue;
-			}
-
-			if ($administrationId !== null && $administrationId !== ''
-				&& (string)($roster['administrationId'] ?? '') !== $administrationId
-			) {
-				continue;
-			}
-
-			$rosters[] = $roster;
-		}
+		$rosters = array_values(
+			array_filter(
+				$this->loadAll('Roster', $register),
+				static fn (array $roster): bool => (string)($roster['period'] ?? '') === $period && self::inAdministration($roster, $administrationId)
+			)
+		);
 
 		return $this->evaluateRosters($rosters, $context, $register);
 	}//end checkPeriod()
+
+	/**
+	 * Whether a roster belongs to the administration filter (no filter admits every roster).
+	 *
+	 * @param array<string, mixed> $roster           The Roster row.
+	 * @param string|null          $administrationId The administration filter.
+	 *
+	 * @return bool
+	 */
+	private static function inAdministration(array $roster, ?string $administrationId): bool {
+		return $administrationId === null || $administrationId === ''
+			|| (string)($roster['administrationId'] ?? '') === $administrationId;
+
+	}//end inAdministration()
 
 	/**
 	 * Load the RosterAssignments of the given rosters, fill any missing
@@ -179,37 +196,119 @@ class RosterCheckService {
 		}
 
 		$assignments = $this->assignmentsOf(rosters: $rosters, register: $register);
+		$shiftsById = self::rowsById($this->loadAll('Shift', $register));
+		$projected = self::projected($assignments, $shiftsById);
 
-		$shiftsById = [];
-		foreach ($this->loadAll('Shift', $register) as $shift) {
-			$id = (string)($shift['id'] ?? $shift['@self']['id'] ?? '');
+		$context['rostering'] = self::rosteringIndex($projected);
+
+		$report = ['rostersChecked' => count($rosters)] + self::workingTimeReport($projected, $context);
+
+		// The competence cross-check runs in the SAME act as the working-time
+		// rules (REQ-ROST-C02), so `occ humaniq:roster:check` and
+		// POST /api/roster/check still answer the whole question in one call.
+		// It keeps the never-throw posture: a competence list that cannot be
+		// read costs its own findings and nothing else.
+		$competenceFindings = $this->crossCheck(
+			fn (): array => $this->crossChecks->competences->findings(
+				assignments: $projected,
+				shiftsById: $shiftsById,
+				competences: $this->loadAll('EmployeeCompetence', $register)
+			),
+			'competence'
+		);
+
+		$report = $this->withFindings(report: $report, findings: $competenceFindings, counter: 'competenceFindings');
+
+		return $this->withFindings(report: $report, findings: $this->leaveFindings(assignments: $projected, register: $register), counter: 'leaveFindings');
+	}//end evaluateRosters()
+
+	/**
+	 * Every row with an id, keyed by that id (a later row wins).
+	 *
+	 * @param array<int, array<string, mixed>> $rows The rows.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function rowsById(array $rows): array {
+		$byId = [];
+		foreach ($rows as $row) {
+			$id = (string)($row['id'] ?? $row['@self']['id'] ?? '');
 			if ($id !== '') {
-				$shiftsById[$id] = $shift;
+				$byId[$id] = $row;
 			}
 		}
 
+		return $byId;
+
+	}//end rowsById()
+
+	/**
+	 * The local daily-rest sibling index of the projected assignments.
+	 *
+	 * @param array<int, array<string, mixed>> $projected The projected assignments.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function rosteringIndex(array $projected): array {
+		return [
+			'plannedClockByEmployeeDate' => RosterAssignmentProjectionService::plannedClockIndex($projected),
+		];
+
+	}//end rosteringIndex()
+
+	/**
+	 * The assignments with any missing planned-clock fields filled from their Shift.
+	 *
+	 * @param array<int, array<string, mixed>>    $assignments The RosterAssignments.
+	 * @param array<string, array<string, mixed>> $shiftsById  The Shifts by id.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function projected(array $assignments, array $shiftsById): array {
 		$projected = [];
 		foreach ($assignments as $assignment) {
 			$projected[] = RosterAssignmentProjectionService::withProjection($assignment, $shiftsById);
 		}
 
-		$context['rostering'] = [
-			'plannedClockByEmployeeDate' => RosterAssignmentProjectionService::plannedClockIndex($projected),
-		];
+		return $projected;
 
-		$report = [
-			'rostersChecked' => count($rosters),
+	}//end projected()
+
+	/**
+	 * The report counts and the working-time violations of the projected assignments.
+	 *
+	 * @param array<int, array<string, mixed>> $projected The projected assignments.
+	 * @param array<string, mixed>             $context   Evaluation context, with the rostering index.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function workingTimeReport(array $projected, array $context): array {
+		$violations = self::workingTimeViolations($projected, $context);
+
+		return [
 			'assignmentsChecked' => count($projected),
-			'violations' => [],
-			'mandatoryViolations' => 0,
+			'violations' => $violations,
+			'mandatoryViolations' => count(array_filter($violations, static fn (array $row): bool => $row['severity'] === 'mandatory')),
 			'competenceFindings' => 0,
 			'leaveFindings' => 0,
 			'registerResolved' => true,
 		];
 
+	}//end workingTimeReport()
+
+	/**
+	 * One report row per working-time rule an assignment violates.
+	 *
+	 * @param array<int, array<string, mixed>> $projected The projected assignments.
+	 * @param array<string, mixed>             $context   Evaluation context, with the rostering index.
+	 *
+	 * @return array<int, array<string, string>>
+	 */
+	private static function workingTimeViolations(array $projected, array $context): array {
+		$rows = [];
 		foreach ($projected as $assignment) {
 			foreach (RuleEngine::evaluate('RosterAssignment', $assignment, $context) as $violation) {
-				$report['violations'][] = [
+				$rows[] = [
 					'kind' => CompetenceCheckService::WORKING_TIME_KIND,
 					'objectType' => 'RosterAssignment',
 					'objectId' => (string)($assignment['id'] ?? $assignment['@self']['id'] ?? ''),
@@ -217,35 +316,30 @@ class RosterCheckService {
 					'severity' => $violation->severity,
 					'statement' => $violation->statement,
 				];
-
-				if ($violation->severity === 'mandatory') {
-					$report['mandatoryViolations']++;
-				}
 			}
 		}
 
-		// The competence cross-check runs in the SAME act as the working-time
-		// rules (REQ-ROST-C02), so `occ humaniq:roster:check` and
-		// POST /api/roster/check still answer the whole question in one call.
-		// It keeps the never-throw posture: a competence list that cannot be
-		// read costs its own findings and nothing else.
+		return $rows;
+
+	}//end workingTimeViolations()
+
+	/**
+	 * Run one cross-check; a cross-check that throws costs its own findings and is logged.
+	 *
+	 * @param \Closure(): array<int, array<string, mixed>> $check The cross-check.
+	 * @param string                                       $name  The cross-check's name, for the log line.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function crossCheck(\Closure $check, string $name): array {
 		try {
-			$competenceFindings = $this->crossChecks->competences->findings(
-				assignments: $projected,
-				shiftsById: $shiftsById,
-				competences: $this->loadAll('EmployeeCompetence', $register)
-			);
+			return $check();
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'humaniq: the competence cross-check could not run: ' . $e->getMessage()
-			);
-			$competenceFindings = [];
+			$this->logger->warning('humaniq: the ' . $name . ' cross-check could not run: ' . $e->getMessage());
+			return [];
 		}
 
-		$report = $this->withFindings(report: $report, findings: $competenceFindings, counter: 'competenceFindings');
-
-		return $this->withFindings(report: $report, findings: $this->leaveFindings(assignments: $projected, register: $register), counter: 'leaveFindings');
-	}//end evaluateRosters()
+	}//end crossCheck()
 
 	/**
 	 * The leave findings of one roster: who is planned on a day of approved
@@ -274,13 +368,7 @@ class RosterCheckService {
 	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C02
 	 */
 	private function assignmentsOf(array $rosters, string $register): array {
-		$rosterIds = [];
-		foreach ($rosters as $roster) {
-			$id = (string)($roster['id'] ?? $roster['@self']['id'] ?? '');
-			if ($id !== '') {
-				$rosterIds[$id] = true;
-			}
-		}
+		$rosterIds = array_map(static fn (): bool => true, self::rowsById($rosters));
 
 		$assignments = [];
 		foreach ($this->loadAll('RosterAssignment', $register) as $assignment) {
@@ -331,16 +419,14 @@ class RosterCheckService {
 	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
 	 */
 	private function leaveFindings(array $assignments, string $register): array {
-		try {
-			return $this->crossChecks->leave->findings(
+		return $this->crossCheck(
+			fn (): array => $this->crossChecks->leave->findings(
 				assignments: $assignments,
 				leaveRequests: $this->loadAll('LeaveRequest', $register),
 				sickLeaveCases: $this->loadAll('SickLeaveCase', $register)
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('humaniq: the leave cross-check could not run: ' . $e->getMessage());
-			return [];
-		}
+			),
+			'leave'
+		);
 	}//end leaveFindings()
 
 	/**

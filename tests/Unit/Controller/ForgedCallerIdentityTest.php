@@ -41,6 +41,7 @@ use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\ReceiptExtractionService;
 use OCA\Humaniq\Service\SalaryBureauExchangeService;
+use OCA\Humaniq\Service\PayrollDeskAccess;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
@@ -158,7 +159,7 @@ class ForgedCallerIdentityTest extends TestCase {
 			'interview' => new InterviewController($req, $svc(InterviewCalendarService::class), $this->settings(), $ctx),
 			'offer' => new OfferController($req, $svc(OfferEsignService::class), $this->settings(), $ctx),
 			'payrollCheck' => new PayrollCheckController($req, $this->settings(), $svc(PayrollRunCheckService::class), $ctx),
-			'payrollHandoff' => new PayrollHandoffController($req, $this->settings(), $svc(SalaryBureauExchangeService::class), $ctx),
+			'payrollHandoff' => new PayrollHandoffController($req, $this->settings(), $svc(SalaryBureauExchangeService::class), $ctx, new PayrollDeskAccess($ctx, $this->settings())),
 		};
 	}
 
@@ -275,7 +276,8 @@ class ForgedCallerIdentityTest extends TestCase {
 		};
 		$c2 = $this->createMock(ContainerInterface::class);
 		$c2->method('get')->willReturn($rows);
-		$ho = new PayrollHandoffController($this->request('victim'), $this->settings(), $h, $this->context('boss', $c2));
+		$ctx2 = $this->context('boss', $c2);
+		$ho = new PayrollHandoffController($this->request('victim'), $this->settings(), $h, $ctx2, new PayrollDeskAccess($ctx2, $this->settings()));
 		$this->assertSame(Http::STATUS_OK, $ho->compile('ADM-006', '2026-05')->getStatus());
 	}
 

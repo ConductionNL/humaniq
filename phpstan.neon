@@ -22,6 +22,7 @@ parameters:
     # OpenRegister's lifecycle guard contract, the same stub the tests load.
     scanFiles:
         - tests/stubs/OpenRegisterLifecycleStub.php
+        - tests/stubs/OpenRegisterLifecycleTransitionStub.php
 
     excludePaths:
         # These classes implement an OpenRegister interface that only exists at

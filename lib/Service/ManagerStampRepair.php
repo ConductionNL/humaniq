@@ -85,7 +85,7 @@ class ManagerStampRepair {
 	 * @param HoursRegisterGateway $gateway The register.
 	 * @param InternalWriteMarker $marker Marks the writes as humaniq's own.
 	 * @param LoggerInterface $logger Records every rewritten stamp and every failure.
-	 * @param OrgResolutionService $orgResolution The shared manager resolution.
+	 * @param OrgLookups $org The read-once org lookups and the manager resolution.
 	 *
 	 * @spec openspec/changes/restamp-open-manager-records/specs/mss-team-scope/spec.md#Requirement:-Open-records-SHALL-be-restamped-with-the-manager-the-shared-resolution-gives-today-(REQ-MSS-007)
 	 */
@@ -93,7 +93,7 @@ class ManagerStampRepair {
 		private readonly HoursRegisterGateway $gateway,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,
-		private readonly OrgResolutionService $orgResolution,
+		private readonly OrgLookups $org,
 	) {
 
 	}//end __construct()
@@ -109,7 +109,7 @@ class ManagerStampRepair {
 	 */
 	public function run(bool $dryRun): array {
 		$this->dryRun = $dryRun;
-		$this->lookups = $this->readLookups();
+		$this->lookups = $this->org->read();
 		$report = [];
 		foreach (array_keys(self::SCHEMAS) as $schema) {
 			$report[$schema] = $this->restampSchema(schema: $schema);
@@ -205,48 +205,6 @@ class ManagerStampRepair {
 	}//end logChange()
 
 	/**
-	 * The org lookups the resolution needs, read once, and whether every
-	 * read reached the end.
-	 *
-	 * @return array{assignments: array<string, array<int, array<string, mixed>>>, units: array<string, array<string, mixed>>, employees: array<string, array<string, mixed>>, complete: bool}
-	 */
-	private function readLookups(): array {
-		$assignments = $this->gateway->loadAll('OrgAssignment');
-		$units = $this->gateway->loadAll('OrgUnit');
-		$employees = $this->gateway->loadAll('Employee');
-		$byEmployee = [];
-		foreach ($assignments as $assignment) {
-			$byEmployee[trim((string)($assignment['employeeId'] ?? ''))][] = $assignment;
-		}
-
-		return [
-			'assignments' => $byEmployee,
-			'units' => $this->indexById(rows: $units),
-			'employees' => $this->indexById(rows: $employees),
-			'complete' => (max(count($assignments), count($units), count($employees)) < HoursRegisterGateway::MAX_ROWS),
-		];
-	}//end readLookups()
-
-	/**
-	 * Key rows by their id.
-	 *
-	 * @param array<int, array<string, mixed>> $rows The rows.
-	 *
-	 * @return array<string, array<string, mixed>>
-	 */
-	private function indexById(array $rows): array {
-		$index = [];
-		foreach ($rows as $row) {
-			$id = trim((string)($row['id'] ?? ($row['@self']['id'] ?? '')));
-			if ($id !== '') {
-				$index[$id] = $row;
-			}
-		}
-
-		return $index;
-	}//end indexById()
-
-	/**
 	 * Whether a record is still open: awaiting a decision, or not closed.
 	 *
 	 * @param array<string, mixed> $row The record.
@@ -285,15 +243,7 @@ class ManagerStampRepair {
 			return null;
 		}
 
-		$new = $this->orgResolution->uniqueOrNull(
-			$this->orgResolution->resolveManagerUserIds(
-				employeeId: $employeeId,
-				assignmentsByEmployeeId: $this->lookups['assignments'],
-				unitsById: $this->lookups['units'],
-				employeesById: $this->lookups['employees'],
-				onDate: $this->referenceDate(row: $row, field: self::SCHEMAS[$schema]['date'])
-			)
-		);
+		$new = $this->org->managerOf($employeeId, $this->referenceDate(row: $row, field: self::SCHEMAS[$schema]['date']));
 		if ($new === $old) {
 			return null;
 		}

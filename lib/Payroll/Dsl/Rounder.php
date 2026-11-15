@@ -3,6 +3,9 @@
 /**
  * Rounder
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The DSL's `round` modifier (jurisdiction-packs design.md D3), applicable to
  * every step and binding: `{mode: floor|ceil|nearest, unit: cent|euro|decimals}`.
  *
@@ -26,9 +29,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

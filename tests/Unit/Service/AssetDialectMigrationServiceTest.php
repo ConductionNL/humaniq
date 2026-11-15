@@ -3,6 +3,9 @@
 /**
  * Unit tests for AssetDialectMigrationService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pins the hrmq-asset-fleet-merge blocking-defect fix (tasks.md section 13):
  * an old-dialect `Asset`/`AssetAssignment` row is rewritten to the new
  * dialect; a row already in the new dialect is untouched (idempotent),
@@ -62,9 +65,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

@@ -3,6 +3,9 @@
 /**
  * Unit tests for RuleAuditService's cross-type `related` pre-pass.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * pension-filing-upa-mvp extends RuleAuditService::audit() with a small
  * pre-pass that populates `$context['related']` before the per-type
  * evaluation loop, so the PensionFiling/PayrollRun predicates in
@@ -30,9 +33,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

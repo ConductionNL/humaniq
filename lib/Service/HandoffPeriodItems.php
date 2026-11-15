@@ -51,6 +51,20 @@ class HandoffPeriodItems {
 	];
 
 	/**
+	 * The status a never-sent item of each kind needs to be due; a sickness
+	 * case is due on its dates alone.
+	 *
+	 * @var array<string, string>
+	 */
+	private const DUE_STATUS = [
+		'hours' => 'approved',
+		'claim' => 'approved',
+		'leave-transaction' => 'approved',
+		'allowance' => 'active',
+		'garnishment' => 'actief',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param RecordStoreInterface $gateway The register plumbing.
@@ -76,23 +90,56 @@ class HandoffPeriodItems {
 	 */
 	public function mutationsFor(string $employeeId, string $period, array $sent): array {
 		$mutations = [];
-		foreach (self::ITEMS as $kind => $item) {
-			foreach ($this->gateway->findFiltered($item['schema'], ['employeeId' => $employeeId]) as $row) {
-				$key = 'item:' . (string)($row['id'] ?? '');
-				$before = (isset($sent[$key]) === true ? (array)$sent[$key] : null);
-				if ($before === null && $this->isDue(kind: $kind, row: $row, period: $period) === false) {
-					continue;
-				}
-
-				$mutation = $this->mutationOf(kind: $kind, row: $row, before: $before, period: $period);
-				if ($mutation !== null) {
-					$mutations[] = array_merge($mutation, ['employeeId' => $employeeId, 'sentState' => [$key => $this->valuesOf(kind: $kind, row: $row)]]);
-				}
+		foreach (array_keys(self::ITEMS) as $kind) {
+			foreach ($this->gateway->findFiltered(self::ITEMS[$kind]['schema'], ['employeeId' => $employeeId]) as $row) {
+				$item = $this->item(kind: $kind, row: $row);
+				$item->employeeId = $employeeId;
+				$item->period = $period;
+				$item->before = (isset($sent[$item->key]) === true ? (array)$sent[$item->key] : null);
+				$mutations = array_merge($mutations, $this->mutationsOf(item: $item));
 			}
 		}
 
 		return $mutations;
 	}//end mutationsFor()
+
+	/**
+	 * One item of a kind, keyed as the sent state keys it.
+	 *
+	 * @param string               $kind The mutation kind.
+	 * @param array<string, mixed> $row  The item.
+	 *
+	 * @return HandoffItem
+	 */
+	private function item(string $kind, array $row): HandoffItem {
+		$item = new HandoffItem();
+		$item->kind = $kind;
+		$item->row = $row;
+		$item->key = 'item:' . (string)($row['id'] ?? '');
+
+		return $item;
+	}//end item()
+
+	/**
+	 * The item's mutation with the employee and the state it sends, or none
+	 * when a never-sent item is not due or nothing changed.
+	 *
+	 * @param HandoffItem $item The item.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function mutationsOf(HandoffItem $item): array {
+		if ($item->before === null && $this->isDue(item: $item) === false) {
+			return [];
+		}
+
+		$mutation = $this->mutationOf(item: $item);
+		if ($mutation === null) {
+			return [];
+		}
+
+		return [array_merge($mutation, ['employeeId' => $item->employeeId, 'sentState' => [$item->key => $this->valuesOf(kind: $item->kind, row: $item->row)]])];
+	}//end mutationsOf()
 
 	/**
 	 * A comparable value: numbers as floats, empty strings as null.
@@ -114,38 +161,41 @@ class HandoffPeriodItems {
 	/**
 	 * Whether a never-sent item belongs in this period's handoff.
 	 *
-	 * @param string               $kind   The mutation kind.
-	 * @param array<string, mixed> $row    The item.
-	 * @param string               $period The period.
+	 * @param HandoffItem $item The item and the period.
 	 *
 	 * @return bool
 	 */
-	private function isDue(string $kind, array $row, string $period): bool {
-		$first = $period . '-01';
-		$last = date('Y-m-t', (int)strtotime($first));
-		$status = (string)($row['status'] ?? '');
+	private function isDue(HandoffItem $item): bool {
+		$row = $item->row;
+		$status = (self::DUE_STATUS[$item->kind] ?? null);
+		if ($status !== null && (string)($row['status'] ?? '') !== $status) {
+			return false;
+		}
 
-		return match ($kind) {
-			'hours' => ($status === 'approved' && (string)($row['period'] ?? '') === $period),
-			'claim' => ($status === 'approved' && ($row['reimbursementRoute'] ?? '') === 'payroll'),
-			'leave-transaction' => ($status === 'approved'),
-			'allowance' => ($status === 'active' && $this->runsIn(from: (string)($row['startDate'] ?? ''), until: (string)($row['endDate'] ?? ''), first: $first, last: $last) === true),
-			'sickness' => $this->runsIn(from: (string)($row['firstSickDay'] ?? ''), until: (string)($row['recoveredDate'] ?? ''), first: $first, last: $last),
-			default => ($status === 'actief' && $this->runsIn(from: (string)($row['effectiveFrom'] ?? ''), until: (string)($row['effectiveTo'] ?? ''), first: $first, last: $last) === true),
+		return match ($item->kind) {
+			'hours' => ((string)($row['period'] ?? '') === $item->period),
+			'claim' => (($row['reimbursementRoute'] ?? '') === 'payroll'),
+			'leave-transaction' => true,
+			'allowance' => $this->runsIn(item: $item, span: ['startDate', 'endDate']),
+			'sickness' => $this->runsIn(item: $item, span: ['firstSickDay', 'recoveredDate']),
+			default => $this->runsIn(item: $item, span: ['effectiveFrom', 'effectiveTo']),
 		};
 	}//end isDue()
 
 	/**
-	 * Whether a date range touches the period; an empty end is open.
+	 * Whether the item's date range touches the period; an empty end is open.
 	 *
-	 * @param string $from  The start.
-	 * @param string $until The end, or ''.
-	 * @param string $first The period's first day.
-	 * @param string $last  The period's last day.
+	 * @param HandoffItem               $item The item and the period.
+	 * @param array{0: string, 1: string} $span The item's start and end fields.
 	 *
 	 * @return bool
 	 */
-	private function runsIn(string $from, string $until, string $first, string $last): bool {
+	private function runsIn(HandoffItem $item, array $span): bool {
+		$from = (string)($item->row[$span[0]] ?? '');
+		$until = (string)($item->row[$span[1]] ?? '');
+		$first = $item->period . '-01';
+		$last = date('Y-m-t', (int)strtotime($first));
+
 		return ($from !== '' && $from <= $last && ($until === '' || $until >= $first));
 	}//end runsIn()
 
@@ -153,51 +203,59 @@ class HandoffPeriodItems {
 	 * The mutation of one item, or null when nothing changed since it went
 	 * out.
 	 *
-	 * @param string                    $kind   The mutation kind.
-	 * @param array<string, mixed>      $row    The item.
-	 * @param array<string, mixed>|null $before What was sent, or null.
-	 * @param string                    $period The period.
+	 * @param HandoffItem $item The item and what was sent for it.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function mutationOf(string $kind, array $row, ?array $before, string $period): ?array {
+	private function mutationOf(HandoffItem $item): ?array {
+		$fields = $this->changesSinceSent(item: $item);
+		if ($fields === null) {
+			return null;
+		}
+
+		$effective = $this->effectiveDate(item: $item, fields: ($item->before === null ? [] : $fields));
+
+		return ['kind' => $item->kind, 'effectiveDate' => $effective, 'fields' => $fields, 'sourceSchema' => self::ITEMS[$item->kind]['schema'], 'sourceId' => (string)($item->row['id'] ?? '')];
+	}//end mutationOf()
+
+	/**
+	 * The fields whose value differs from what was sent, old and new; null
+	 * when nothing changed since the item went out.
+	 *
+	 * @param HandoffItem $item The item and what was sent for it.
+	 *
+	 * @return array<string, array{old: mixed, new: mixed}>|null
+	 */
+	private function changesSinceSent(HandoffItem $item): ?array {
 		$fields = [];
-		foreach ($this->valuesOf(kind: $kind, row: $row) as $field => $value) {
-			$old = ($before[$field] ?? null);
+		foreach ($this->valuesOf(kind: $item->kind, row: $item->row) as $field => $value) {
+			$old = ($item->before[$field] ?? null);
 			if ($old !== $value) {
 				$fields[$field] = ['old' => $old, 'new' => $value];
 			}
 		}
 
-		if ($fields === []) {
-			return null;
-		}
-
-		$effective = $this->effectiveDate(kind: $kind, row: $row, fields: ($before === null ? [] : $fields), period: $period);
-
-		return ['kind' => $kind, 'effectiveDate' => $effective, 'fields' => $fields, 'sourceSchema' => self::ITEMS[$kind]['schema'], 'sourceId' => (string)($row['id'] ?? '')];
-	}//end mutationOf()
+		return ($fields === [] ? null : $fields);
+	}//end changesSinceSent()
 
 	/**
 	 * From when a mutation applies: the new end of a sent item that ended,
 	 * else the item's start, else the first of the period.
 	 *
-	 * @param string                              $kind   The mutation kind.
-	 * @param array<string, mixed>                $row    The item.
+	 * @param HandoffItem                         $item   The item and the period.
 	 * @param array<string, array<string, mixed>> $fields The changes of a sent item, or [] for a new one.
-	 * @param string                              $period The period.
 	 *
 	 * @return string
 	 */
-	private function effectiveDate(string $kind, array $row, array $fields, string $period): string {
-		$item = self::ITEMS[$kind];
-		$end = ($item['end'] === '' ? null : ($fields[$item['end']]['new'] ?? null));
+	private function effectiveDate(HandoffItem $item, array $fields): string {
+		$spec = self::ITEMS[$item->kind];
+		$end = ($spec['end'] === '' ? null : ($fields[$spec['end']]['new'] ?? null));
 		if ($end !== null) {
 			return (string)$end;
 		}
 
-		$start = ($item['start'] === '' ? '' : (string)($row[$item['start']] ?? ''));
-		return ($start === '' ? $period . '-01' : $start);
+		$start = ($spec['start'] === '' ? '' : (string)($item->row[$spec['start']] ?? ''));
+		return ($start === '' ? $item->period . '-01' : $start);
 	}//end effectiveDate()
 
 	/**

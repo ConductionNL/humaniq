@@ -298,5 +298,17 @@ class NlDossierRetentionChecksTest extends TestCase {
 	private function checkFor(string $schema): callable {
 		return NlDossierRetentionChecks::checks()[$schema][self::RULE_ID];
 	}//end checkFor()
+	/**
+	 * Vacuous (satisfied) when `retention.archiefactiedatum` is not a date --
+	 * no ceiling can have passed.
+	 *
+	 * @return void
+	 */
+	public function testVacuousWhenArchiefactiedatumIsUnparseable(): void {
+		$check = $this->checkFor('Payslip');
+
+		$this->assertTrue($check(['@self' => ['retention' => ['archiefactiedatum' => 'onbekend', 'archiefstatus' => 'nog_te_archiveren']]]));
+
+	}//end testVacuousWhenArchiefactiedatumIsUnparseable()
 
 }//end class

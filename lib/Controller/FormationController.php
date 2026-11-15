@@ -36,7 +36,7 @@ use OCA\Humaniq\Service\FormationAbsenceSources;
 use OCA\Humaniq\Service\FormationOccupancyService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\RbacObjectReader;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\WorkforceReportSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -55,14 +55,14 @@ class FormationController extends Controller {
 	 * @param HoursRegisterGateway      $gateway   Loads the records the count needs.
 	 * @param FormationOccupancyService $occupancy The pure count.
 	 * @param RbacObjectReader          $rbac      Resolves the unit or place under the caller's RBAC.
-	 * @param SettingsService           $settings  The net-FTE leave types and sickness threshold.
+	 * @param WorkforceReportSettings   $settings  The net-FTE leave types and sickness threshold.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly HoursRegisterGateway $gateway,
 		private readonly FormationOccupancyService $occupancy,
 		private readonly RbacObjectReader $rbac,
-		private readonly SettingsService $settings,
+		private readonly WorkforceReportSettings $settings,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -100,12 +100,7 @@ class FormationController extends Controller {
 		$result = $this->occupancy->occupancy(
 			places: $places,
 			contracts: $this->gateway->loadAll('EmploymentContract'),
-			absences: new FormationAbsenceSources(
-				leaveRequests: $this->gateway->loadAll('LeaveRequest'),
-				sickCases: $this->gateway->loadAll('SickLeaveCase'),
-				netLeaveTypes: $this->settings->getFormationNetFteLeaveTypes(),
-				longTermSickWeeks: $weeks
-			),
+			absences: $this->absenceSources(longTermSickWeeks: $weeks),
 			period: new AbsencePeriod(start: $window[0], end: $window[1])
 		);
 
@@ -116,6 +111,24 @@ class FormationController extends Controller {
 			)
 		);
 	}//end occupancy()
+
+	/**
+	 * The leave and sickness rows and the settings that take FTE off a place.
+	 *
+	 * @param int $longTermSickWeeks The weeks after which sickness counts as long-term.
+	 *
+	 * @return FormationAbsenceSources
+	 *
+	 * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-002
+	 */
+	private function absenceSources(int $longTermSickWeeks): FormationAbsenceSources {
+		return new FormationAbsenceSources(
+			leaveRequests: $this->gateway->loadAll('LeaveRequest'),
+			sickCases: $this->gateway->loadAll('SickLeaveCase'),
+			netLeaveTypes: $this->settings->getFormationNetFteLeaveTypes(),
+			longTermSickWeeks: $longTermSickWeeks
+		);
+	}//end absenceSources()
 
 	/**
 	 * The places to count, or null when the unit or place does not resolve

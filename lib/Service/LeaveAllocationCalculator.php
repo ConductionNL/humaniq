@@ -62,45 +62,72 @@ class LeaveAllocationCalculator {
 	 * @spec openspec/specs/leave-expiry-and-carry-over/spec.md#Requirement:-Leave-taken-SHALL-draw-from-the-hours-that-lapse-first-(REQ-LEX-001)
 	 */
 	public function allocate(array $balances, array $uses, ?array $leaveType, string $today): array {
-		$buckets = [];
-		$result = [];
+		$run = new LeaveAllocationRun();
+		$run->balances = $balances;
+		$run->leaveType = $leaveType;
 		foreach ($balances as $balance) {
-			$id = $this->idOf(balance: $balance);
-			if ($id === '') {
-				continue;
-			}
-
-			$result[$id] = [
-				'usedStatutoryHours' => 0.0,
-				'usedBovenwettelijkHours' => 0.0,
-				'usedHours' => 0.0,
-				'expiredHours' => 0.0,
-				'bovenwettelijkExpiryDate' => $this->bovenwettelijkExpiry(balance: $balance, leaveType: $leaveType),
-			];
-			foreach ($this->bucketsOf(balance: $balance, id: $id, leaveType: $leaveType) as $bucket) {
-				$buckets[] = $bucket;
-			}
+			$this->openBalance(run: $run, balance: $balance);
 		}
 
 		usort($uses, fn (array $a, array $b): int => strcmp((string)$a['date'], (string)$b['date']));
 		foreach ($uses as $use) {
-			$this->place(buckets: $buckets, result: $result, balances: $balances, use: $use);
+			$this->place(run: $run, use: $use);
 		}
 
-		return $this->tally(buckets: $buckets, result: $result, today: $today);
+		return $this->tally(run: $run, today: $today);
 	}//end allocate()
+
+	/**
+	 * Open one balance in the run: its empty result row and its buckets. A
+	 * balance without an id takes no part.
+	 *
+	 * @param LeaveAllocationRun   $run     The allocation.
+	 * @param array<string, mixed> $balance The balance.
+	 *
+	 * @return void
+	 */
+	private function openBalance(LeaveAllocationRun $run, array $balance): void {
+		$id = $this->idOf(balance: $balance);
+		if ($id === '') {
+			return;
+		}
+
+		$run->result[$id] = $this->emptyResultRow(run: $run, balance: $balance);
+		foreach ($this->bucketsOf(run: $run, balance: $balance) as $bucket) {
+			$run->buckets[] = $bucket;
+		}
+	}//end openBalance()
+
+	/**
+	 * The result row of a balance before any use: nothing used or expired,
+	 * and the date its carried-over bovenwettelijk hours lapse.
+	 *
+	 * @param LeaveAllocationRun   $run     The allocation: its leave type.
+	 * @param array<string, mixed> $balance The balance.
+	 *
+	 * @return array{usedStatutoryHours: float, usedBovenwettelijkHours: float, usedHours: float, expiredHours: float, bovenwettelijkExpiryDate: string}
+	 */
+	private function emptyResultRow(LeaveAllocationRun $run, array $balance): array {
+		return [
+			'usedStatutoryHours' => 0.0,
+			'usedBovenwettelijkHours' => 0.0,
+			'usedHours' => 0.0,
+			'expiredHours' => 0.0,
+			'bovenwettelijkExpiryDate' => $this->bovenwettelijkExpiry(balance: $balance, leaveType: $run->leaveType),
+		];
+	}//end emptyResultRow()
 
 	/**
 	 * The hours used from the buckets of each balance, and what lapsed by today.
 	 *
-	 * @param array<int, array<string, mixed>>    $buckets The consumed buckets.
-	 * @param array<string, array<string, mixed>> $result  The per-balance result so far (overdrafts).
-	 * @param string                              $today   The date the lapse is measured on.
+	 * @param LeaveAllocationRun $run   The allocation: its consumed buckets and the per-balance result so far (overdrafts).
+	 * @param string             $today The date the lapse is measured on.
 	 *
 	 * @return array<string, array{usedStatutoryHours: float, usedBovenwettelijkHours: float, usedHours: float, expiredHours: float, bovenwettelijkExpiryDate: string}>
 	 */
-	private function tally(array $buckets, array $result, string $today): array {
-		foreach ($buckets as $bucket) {
+	private function tally(LeaveAllocationRun $run, string $today): array {
+		$result = $run->result;
+		foreach ($run->buckets as $bucket) {
 			$key = ($bucket['statutory'] === true ? 'usedStatutoryHours' : 'usedBovenwettelijkHours');
 			$result[$bucket['balance']][$key] += $bucket['used'];
 			if ($bucket['waived'] === false && $bucket['lapses'] < $today) {
@@ -108,6 +135,18 @@ class LeaveAllocationCalculator {
 			}
 		}
 
+		return $this->rounded(result: $result);
+	}//end tally()
+
+	/**
+	 * The per-balance result with every figure rounded to two decimals and
+	 * the used hours as the sum of the rounded statutory and bovenwettelijk use.
+	 *
+	 * @param array<string, array<string, mixed>> $result The per-balance result.
+	 *
+	 * @return array<string, array{usedStatutoryHours: float, usedBovenwettelijkHours: float, usedHours: float, expiredHours: float, bovenwettelijkExpiryDate: string}>
+	 */
+	private function rounded(array $result): array {
 		foreach ($result as $id => $row) {
 			$row['usedStatutoryHours'] = round($row['usedStatutoryHours'], 2);
 			$row['usedBovenwettelijkHours'] = round($row['usedBovenwettelijkHours'], 2);
@@ -117,40 +156,49 @@ class LeaveAllocationCalculator {
 		}
 
 		return $result;
-	}//end tally()
+	}//end rounded()
 
 	/**
 	 * Place one use in the buckets valid on its day, soonest lapse first.
 	 *
-	 * @param array<int, array<string, mixed>>   $buckets  The buckets, consumed in place.
-	 * @param array<string, array<string, mixed>> $result  The per-balance result, for an overdraft.
-	 * @param array<int, array<string, mixed>>   $balances The balances.
+	 * @param LeaveAllocationRun                           $run The allocation: its buckets, consumed in place, and the result, for an overdraft.
 	 * @param array{date: string, year: int, hours: float} $use The use.
 	 *
 	 * @return void
 	 */
-	private function place(array &$buckets, array &$result, array $balances, array $use): void {
+	private function place(LeaveAllocationRun $run, array $use): void {
 		$left = (float)$use['hours'];
-		foreach ($this->eligible(buckets: $buckets, use: $use) as $index) {
-			$take = min($left, $buckets[$index]['hours'] - $buckets[$index]['used']);
-			$buckets[$index]['used'] += $take;
+		foreach ($this->eligible(buckets: $run->buckets, use: $use) as $index) {
+			$take = min($left, $run->buckets[$index]['hours'] - $run->buckets[$index]['used']);
+			$run->buckets[$index]['used'] += $take;
 			$left -= $take;
 			if ($left <= 0.0) {
 				return;
 			}
 		}
 
-		// Overdraft: on the balance of the leave year, as statutory use, so the
-		// negative-balance check sees it. With no balance that year it has
-		// nowhere to go, as before.
-		foreach ($balances as $balance) {
+		$this->overdraw(run: $run, use: (['hours' => $left] + $use));
+	}//end place()
+
+	/**
+	 * Overdraft: on the balance of the leave year, as statutory use, so the
+	 * negative-balance check sees it. With no balance that year it has
+	 * nowhere to go, as before.
+	 *
+	 * @param LeaveAllocationRun                           $run The allocation: its balances and result.
+	 * @param array{date: string, year: int, hours: float} $use The use, its hours the part no bucket held.
+	 *
+	 * @return void
+	 */
+	private function overdraw(LeaveAllocationRun $run, array $use): void {
+		foreach ($run->balances as $balance) {
 			$id = $this->idOf(balance: $balance);
 			if ($id !== '' && (int)($balance['year'] ?? 0) === (int)$use['year']) {
-				$result[$id]['usedStatutoryHours'] += $left;
+				$run->result[$id]['usedStatutoryHours'] += $use['hours'];
 				return;
 			}
 		}
-	}//end place()
+	}//end overdraw()
 
 	/**
 	 * The indexes of the buckets a use may draw from, soonest lapse first and
@@ -190,20 +238,11 @@ class LeaveAllocationCalculator {
 	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-001
 	 */
 	public function usesFrom(array $requests, array $balances, string $employeeId, string $leaveType, ?array $workingTime = null): array {
-		$contractHours = [];
-		foreach ($balances as $balance) {
-			if (($balance['contractHoursPerWeek'] ?? null) !== null) {
-				$contractHours[(int)($balance['year'] ?? 0)] = (float)$balance['contractHoursPerWeek'];
-			}
-		}
-
+		$contractHours = self::contractHoursByYear(balances: $balances);
 		$uses = [];
 		$underivable = [];
 		foreach ($requests as $request) {
-			if ((string)($request['status'] ?? '') !== 'approved'
-				|| (string)($request['employeeId'] ?? '') !== $employeeId
-				|| (string)($request['leaveType'] ?? '') !== $leaveType
-			) {
+			if (self::isApprovedRequestOf(request: $request, balance: ['employeeId' => $employeeId, 'leaveType' => $leaveType]) === false) {
 				continue;
 			}
 
@@ -219,6 +258,38 @@ class LeaveAllocationCalculator {
 
 		return ['uses' => $uses, 'underivable' => array_values(array_unique($underivable))];
 	}//end usesFrom()
+
+	/**
+	 * The contract hours per week of each balance year that records them.
+	 *
+	 * @param array<int, array<string, mixed>> $balances The employee's balances of this type.
+	 *
+	 * @return array<int, float>
+	 */
+	private static function contractHoursByYear(array $balances): array {
+		$contractHours = [];
+		foreach ($balances as $balance) {
+			if (($balance['contractHoursPerWeek'] ?? null) !== null) {
+				$contractHours[(int)($balance['year'] ?? 0)] = (float)$balance['contractHoursPerWeek'];
+			}
+		}
+
+		return $contractHours;
+	}//end contractHoursByYear()
+
+	/**
+	 * Whether a request is an approved one of the balance's employee and type.
+	 *
+	 * @param array<string, mixed>                          $request The LeaveRequest.
+	 * @param array{employeeId: string, leaveType: string} $balance The employee and leave type.
+	 *
+	 * @return bool
+	 */
+	private static function isApprovedRequestOf(array $request, array $balance): bool {
+		return (string)($request['status'] ?? '') === 'approved'
+			&& (string)($request['employeeId'] ?? '') === $balance['employeeId']
+			&& (string)($request['leaveType'] ?? '') === $balance['leaveType'];
+	}//end isApprovedRequestOf()
 
 	/**
 	 * The uses of one request, one per year it touches; null for a year whose hours cannot be derived.
@@ -256,49 +327,105 @@ class LeaveAllocationCalculator {
 	/**
 	 * The buckets of one balance.
 	 *
-	 * @param array<string, mixed>      $balance   The balance.
-	 * @param string                    $id        Its id.
-	 * @param array<string, mixed>|null $leaveType The leave type.
+	 * @param LeaveAllocationRun   $run     The allocation: its leave type.
+	 * @param array<string, mixed> $balance The balance, with an id.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function bucketsOf(array $balance, string $id, ?array $leaveType): array {
-		$year = (int)($balance['year'] ?? 0);
-		$waived = (($balance['expiryWaived'] ?? false) === true);
-		$expiry = trim((string)($balance['expiryDate'] ?? ''));
-		$bucket = ['balance' => $id, 'year' => $year, 'used' => 0.0, 'waived' => $waived];
+	private function bucketsOf(LeaveAllocationRun $run, array $balance): array {
+		$bucket = $this->bucketBase(balance: $balance);
 
-		$out = [
-			$bucket + [
-				'statutory' => true,
-				'hours' => (float)($balance['entitledHours'] ?? 0),
-				'lapses' => ($expiry !== '' ? substr($expiry, 0, 10) : ($year + 1) . '-07-01'),
-			],
-		];
+		return array_merge([$bucket + self::statutoryHours(balance: $balance)], $this->bovenwettelijkBuckets(run: $run, balance: $balance));
+	}//end bucketsOf()
 
+	/**
+	 * What every bucket of a balance shares: the balance, its year, nothing
+	 * used yet and whether its expiry is waived.
+	 *
+	 * @param array<string, mixed> $balance The balance, with an id.
+	 *
+	 * @return array{balance: string, year: int, used: float, waived: bool}
+	 */
+	private function bucketBase(array $balance): array {
+		return ['balance' => $this->idOf(balance: $balance), 'year' => (int)($balance['year'] ?? 0), 'used' => 0.0, 'waived' => (($balance['expiryWaived'] ?? false) === true)];
+	}//end bucketBase()
+
+	/**
+	 * The bovenwettelijk buckets of a balance: the hours that lapse at the
+	 * end of its year, and the hours the leave type carries over.
+	 *
+	 * @param LeaveAllocationRun   $run     The allocation: its leave type.
+	 * @param array<string, mixed> $balance The balance, with an id.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function bovenwettelijkBuckets(LeaveAllocationRun $run, array $balance): array {
+		$bucket = $this->bucketBase(balance: $balance);
 		$bovenwettelijk = (float)($balance['bovenwettelijkHours'] ?? 0);
-		$rule = (string)($leaveType['carryOverRule'] ?? 'all');
-		$carried = $bovenwettelijk;
-		if ($rule === 'none') {
-			$carried = 0.0;
-		} else if ($rule === 'capped') {
-			$carried = min($bovenwettelijk, max(0.0, (float)($leaveType['carryOverCapHours'] ?? 0)));
-		}
-
+		$carried = self::carriedHours(bovenwettelijk: $bovenwettelijk, leaveType: $run->leaveType);
+		$out = [];
 		if ($bovenwettelijk - $carried > 0.0) {
-			$out[] = $bucket + ['statutory' => false, 'hours' => $bovenwettelijk - $carried, 'lapses' => $year . '-12-31'];
+			$out[] = $bucket + ['statutory' => false, 'hours' => $bovenwettelijk - $carried, 'lapses' => $bucket['year'] . '-12-31'];
 		}
 
 		if ($carried > 0.0) {
-			$out[] = $bucket + [
-				'statutory' => false,
-				'hours' => $carried,
-				'lapses' => $this->bovenwettelijkExpiry(balance: $balance, leaveType: $leaveType),
-			];
+			$out[] = $bucket + $this->carriedOver(run: $run, balance: $balance);
 		}
 
 		return $out;
-	}//end bucketsOf()
+	}//end bovenwettelijkBuckets()
+
+	/**
+	 * The bovenwettelijk hours of a balance the leave type carries over, and
+	 * when they lapse.
+	 *
+	 * @param LeaveAllocationRun   $run     The allocation: its leave type.
+	 * @param array<string, mixed> $balance The balance.
+	 *
+	 * @return array{statutory: bool, hours: float, lapses: string}
+	 */
+	private function carriedOver(LeaveAllocationRun $run, array $balance): array {
+		return [
+			'statutory' => false,
+			'hours' => self::carriedHours(bovenwettelijk: (float)($balance['bovenwettelijkHours'] ?? 0), leaveType: $run->leaveType),
+			'lapses' => $this->bovenwettelijkExpiry(balance: $balance, leaveType: $run->leaveType),
+		];
+	}//end carriedOver()
+
+	/**
+	 * The statutory hours of a balance and when they lapse: the stored
+	 * expiry date, else 1 July of the next year.
+	 *
+	 * @param array<string, mixed> $balance The balance.
+	 *
+	 * @return array{statutory: bool, hours: float, lapses: string}
+	 */
+	private static function statutoryHours(array $balance): array {
+		$expiry = trim((string)($balance['expiryDate'] ?? ''));
+
+		return [
+			'statutory' => true,
+			'hours' => (float)($balance['entitledHours'] ?? 0),
+			'lapses' => ($expiry !== '' ? substr($expiry, 0, 10) : ((int)($balance['year'] ?? 0) + 1) . '-07-01'),
+		];
+	}//end statutoryHours()
+
+	/**
+	 * The bovenwettelijk hours the leave type carries over: none, up to its
+	 * cap, or all.
+	 *
+	 * @param float                     $bovenwettelijk The balance's bovenwettelijk hours.
+	 * @param array<string, mixed>|null $leaveType      The leave type.
+	 *
+	 * @return float
+	 */
+	private static function carriedHours(float $bovenwettelijk, ?array $leaveType): float {
+		return match ((string)($leaveType['carryOverRule'] ?? 'all')) {
+			'none' => 0.0,
+			'capped' => min($bovenwettelijk, max(0.0, (float)($leaveType['carryOverCapHours'] ?? 0))),
+			default => $bovenwettelijk,
+		};
+	}//end carriedHours()
 
 	/**
 	 * When the carried bovenwettelijk hours of a balance lapse: the stored

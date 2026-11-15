@@ -3,6 +3,9 @@
 /**
  * Leave Buy/Sell Settlement Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The imperative balance-mutating write for leave-buy-sell (design.md D4):
  * lifecycle guards are read-only per OpenRegister's contract, so
  * `LeaveSettlementPeriodGuard` alone cannot adjust the employee's leave
@@ -47,9 +50,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

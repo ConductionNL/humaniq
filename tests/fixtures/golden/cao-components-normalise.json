@@ -1,0 +1,56 @@
+{
+    "percentage": {
+        "kind": "percentage-of-wage",
+        "pct": 8.33,
+        "holidayPct": 8.0
+    },
+    "percentage-text": {
+        "kind": "percentage-of-wage",
+        "pct": null,
+        "holidayPct": null
+    },
+    "amounts": {
+        "kind": "fixed-monthly",
+        "pct": 1.0,
+        "amountCents": 2500,
+        "minAmountCents": 1500
+    },
+    "amounts-text": {
+        "kind": "fixed-monthly"
+    },
+    "windows": {
+        "kind": "hourly-surcharge",
+        "windows": [
+            {
+                "label": "Avond",
+                "days": [
+                    "ma",
+                    "di"
+                ],
+                "from": "20:00",
+                "to": "24:00",
+                "pct": 25.0
+            },
+            {
+                "label": null,
+                "days": null,
+                "from": null,
+                "to": null,
+                "pct": 0.0
+            },
+            {
+                "label": null,
+                "days": null,
+                "from": null,
+                "to": null,
+                "pct": 0.0
+            }
+        ]
+    },
+    "windows-not-a-list": {
+        "kind": "hourly-surcharge"
+    },
+    "unknown-kind": null,
+    "no-kind": null,
+    "not-an-array": null
+}

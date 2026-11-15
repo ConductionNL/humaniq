@@ -85,15 +85,7 @@ class FrequentAbsenceListener implements IEventListener {
 			return;
 		}
 
-		$entity = null;
-		if ($event instanceof ObjectCreatedEvent) {
-			$entity = $event->getObject();
-		}
-
-		if ($event instanceof ObjectUpdatedEvent && $this->isReopening($event) === true) {
-			$entity = $event->getNewObject();
-		}
-
+		$entity = $this->countedEntity(event: $event);
 		if ($entity === null || strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::SICKLEAVECASE_SLUG) {
 			return;
 		}
@@ -104,6 +96,25 @@ class FrequentAbsenceListener implements IEventListener {
 			$this->logger->warning('humaniq: FrequentAbsenceListener could not count a sickness case', ['exception' => $e->getMessage()]);
 		}
 	}//end handle()
+
+	/**
+	 * The object of a create, or of an update that reopens a case; else null.
+	 *
+	 * @param Event $event The event.
+	 *
+	 * @return object|null
+	 */
+	private function countedEntity(Event $event): object|null {
+		if ($event instanceof ObjectCreatedEvent) {
+			return $event->getObject();
+		}
+
+		if ($event instanceof ObjectUpdatedEvent && $this->isReopening($event) === true) {
+			return $event->getNewObject();
+		}
+
+		return null;
+	}//end countedEntity()
 
 	/**
 	 * Whether the update reopens a recovered case (a relapse).

@@ -28,9 +28,12 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Notification;
 
 use OCA\Humaniq\Notification\CaseManagerResolver;
+use OCA\Humaniq\Service\AdministrationAccessTrust;
 use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -46,10 +49,11 @@ class CaseManagerResolverTest extends TestCase {
 	private function rows(): array {
 		return [
 			'AdministrationAccess' => [
-				['id' => 'acc-1', 'userId' => 'hr-adviseur', 'administrationId' => 'ADM-001', 'role' => 'hr'],
-				['id' => 'acc-2', 'userId' => 'boekhouder', 'administrationId' => 'ADM-001', 'role' => 'accountant'],
-				['id' => 'acc-3', 'userId' => 'hr-elders', 'administrationId' => 'ADM-002', 'role' => 'hr'],
-				['id' => 'acc-4', 'userId' => 'sjansen', 'administrationId' => 'ADM-001', 'role' => 'employee'],
+				['id' => 'acc-1', 'userId' => 'hr-adviseur', 'administrationId' => 'ADM-001', 'role' => 'hr', '@self' => ['owner' => 'admin']],
+				['id' => 'acc-2', 'userId' => 'boekhouder', 'administrationId' => 'ADM-001', 'role' => 'accountant', '@self' => ['owner' => 'admin']],
+				['id' => 'acc-3', 'userId' => 'hr-elders', 'administrationId' => 'ADM-002', 'role' => 'hr', '@self' => ['owner' => 'admin']],
+				['id' => 'acc-4', 'userId' => 'sjansen', 'administrationId' => 'ADM-001', 'role' => 'employee', '@self' => ['owner' => 'admin']],
+				['id' => 'acc-5', 'userId' => 'collega', 'administrationId' => 'ADM-001', 'role' => 'hr', '@self' => ['owner' => 'collega']],
 			],
 			'OrgAssignment' => [
 				['id' => 'as-1', 'employeeId' => 'emp-jansen', 'orgUnitId' => 'unit-ops', 'startDate' => '2024-01-01', 'endDate' => null],
@@ -95,7 +99,12 @@ class CaseManagerResolverTest extends TestCase {
 			}
 		);
 
-		return new CaseManagerResolver($gateway, new OrgResolutionService());
+		$roles = $this->createMock(HumaniqRoles::class);
+		$roles->method('isAdmin')->willReturnCallback(static fn (?string $uid): bool => $uid === 'admin');
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('');
+
+		return new CaseManagerResolver($gateway, new OrgResolutionService(), new AdministrationAccessTrust($roles, $appConfig));
 	}//end resolver()
 
 	/**
@@ -112,7 +121,8 @@ class CaseManagerResolverTest extends TestCase {
 	}//end sickCase()
 
 	/**
-	 * HR of the case's administration and the employee's manager, nobody else.
+	 * HR of the case's administration and the employee's manager, nobody else:
+	 * not a user who wrote an hr row for themselves.
 	 *
 	 * @return void
 	 */

@@ -85,96 +85,140 @@ class WpmReportService {
 	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-004
 	 */
 	public function compile(string $administrationId, int $year, string $userId): array {
-		$missing = [];
-		$business = $this->businessKm($administrationId, $year, $missing);
-		$commute = $this->commuteKm($administrationId, $year, $missing);
-		$employees = $this->employeeCount($administrationId, $year);
+		$run = new WpmReportRun();
+		$run->administrationId = $administrationId;
+		$run->year = $year;
+		$run->userId = $userId;
+		$run->business = $this->businessKm(run: $run);
+		$run->commute = $this->commuteKm(run: $run);
+		$run->employees = $this->employeeCount($administrationId, $year);
+		$report = $this->report(run: $run);
 
-		$report = [
-			'administrationId' => $administrationId,
-			'year' => $year,
-			'employeeCount' => $employees,
-			'meetsThreshold' => $employees >= self::THRESHOLD,
-			'businessKm' => $this->rows($business),
-			'commuteKm' => $this->rows($commute),
-			'totalBusinessKm' => $this->total($business),
-			'totalCommuteKm' => $this->total($commute),
-			'tripsWithoutMode' => $missing,
-			'compiledAt' => gmdate('Y-m-d\TH:i:s\Z'),
-			'compiledBy' => $userId,
-		];
-
-		$existing = $this->gateway->findFiltered('WpmReport', ['administrationId' => $administrationId, 'year' => $year]);
-		$uuid = null;
-		if ($existing !== []) {
-			$uuid = (string)($existing[0]['id'] ?? '');
-		}
-
-		$saved = $this->gateway->save(payload: $report, schema: 'WpmReport', uuid: ($uuid === '' ? null : $uuid));
+		$uuid = $this->storedReportId(run: $run);
+		$saved = $this->gateway->save(payload: $report, schema: 'WpmReport', uuid: $uuid);
 
 		return array_merge($report, ['id' => (string)$saved->getUuid()]);
 	}//end compile()
 
 	/**
+	 * The report as it is saved.
+	 *
+	 * @param WpmReportRun $run The compiled figures.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function report(WpmReportRun $run): array {
+		return [
+			'administrationId' => $run->administrationId,
+			'year' => $run->year,
+			'employeeCount' => $run->employees,
+			'meetsThreshold' => $run->employees >= self::THRESHOLD,
+			'businessKm' => $this->rows($run->business),
+			'commuteKm' => $this->rows($run->commute),
+			'totalBusinessKm' => $this->total($run->business),
+			'totalCommuteKm' => $this->total($run->commute),
+			'tripsWithoutMode' => $run->missing,
+			'compiledAt' => gmdate('Y-m-d\TH:i:s\Z'),
+			'compiledBy' => $run->userId,
+		];
+	}//end report()
+
+	/**
+	 * The id of the report kept for the administration and year, or null
+	 * when there is none yet.
+	 *
+	 * @param WpmReportRun $run The administration and year.
+	 *
+	 * @return string|null
+	 */
+	private function storedReportId(WpmReportRun $run): ?string {
+		$existing = $this->gateway->findFiltered('WpmReport', ['administrationId' => $run->administrationId, 'year' => $run->year]);
+		$uuid = null;
+		if ($existing !== []) {
+			$uuid = (string)($existing[0]['id'] ?? '');
+		}
+
+		return ($uuid === '' ? null : $uuid);
+	}//end storedReportId()
+
+	/**
 	 * Business kilometres per mode and fuel from the year's counted claims.
 	 *
-	 * @param string                           $administrationId The administration.
-	 * @param int                              $year             The year.
-	 * @param list<array<string, mixed>>       $missing          Collects the trips without a mode.
+	 * @param WpmReportRun $run The administration and year; collects the trips without a mode.
 	 *
 	 * @return array<string, array{transportMode: string, fuelType: string|null, km: float}>
 	 */
-	private function businessKm(string $administrationId, int $year, array &$missing): array {
-		$tally = ['groups' => [], 'missing' => $missing];
-		$claims = $this->gateway->findFiltered('Expense', ['administrationId' => $administrationId, 'category' => 'travel', 'travelType' => 'business']);
+	private function businessKm(WpmReportRun $run): array {
+		$tally = ['groups' => [], 'missing' => $run->missing];
+		$claims = $this->gateway->findFiltered('Expense', ['administrationId' => $run->administrationId, 'category' => 'travel', 'travelType' => 'business']);
 		foreach ($claims as $claim) {
-			$distance = ($claim['distanceKm'] ?? null);
-			if (in_array(($claim['status'] ?? null), self::COUNTED_CLAIMS, true) === false
-				|| str_starts_with((string)($claim['expenseDate'] ?? ''), $year . '-') === false
-				|| is_numeric($distance) === false
-				|| (float)$distance <= 0.0
-			) {
-				continue;
+			if ($this->isCountedTrip(claim: $claim, year: $run->year) === true) {
+				$this->add(tally: $tally, trip: ['schema' => 'Expense', 'row' => $claim, 'km' => (float)$claim['distanceKm']]);
 			}
-
-			$this->add(tally: $tally, trip: ['schema' => 'Expense', 'row' => $claim, 'km' => (float)$distance]);
 		}
 
-		$missing = $tally['missing'];
+		$run->missing = $tally['missing'];
 		return $tally['groups'];
 	}//end businessKm()
+
+	/**
+	 * Whether a business claim counts: a counted status, dated in the year,
+	 * with a distance above zero.
+	 *
+	 * @param array<string, mixed> $claim The travel Expense.
+	 * @param int                  $year  The year.
+	 *
+	 * @return bool
+	 */
+	private function isCountedTrip(array $claim, int $year): bool {
+		$distance = ($claim['distanceKm'] ?? null);
+
+		return (in_array(($claim['status'] ?? null), self::COUNTED_CLAIMS, true) === true
+			&& str_starts_with((string)($claim['expenseDate'] ?? ''), $year . '-') === true
+			&& is_numeric($distance) === true
+			&& (float)$distance > 0.0);
+	}//end isCountedTrip()
 
 	/**
 	 * Commuting kilometres per mode and fuel from the counted arrangements,
 	 * pro rata for the months each was active in the year.
 	 *
-	 * @param string                           $administrationId The administration.
-	 * @param int                              $year             The year.
-	 * @param list<array<string, mixed>>       $missing          Collects the trips without a mode.
+	 * @param WpmReportRun $run The administration and year; collects the trips without a mode.
 	 *
 	 * @return array<string, array{transportMode: string, fuelType: string|null, km: float}>
 	 */
-	private function commuteKm(string $administrationId, int $year, array &$missing): array {
-		$tally = ['groups' => [], 'missing' => $missing];
-		foreach ($this->gateway->findFiltered('CommuteArrangement', ['administrationId' => $administrationId]) as $arrangement) {
-			$distance = ($arrangement['distanceKmOneWay'] ?? null);
-			$days = ($arrangement['daysPerWeek'] ?? null);
-			if (in_array(($arrangement['status'] ?? null), self::COUNTED_ARRANGEMENTS, true) === false || is_numeric($distance) === false || is_numeric($days) === false) {
-				continue;
+	private function commuteKm(WpmReportRun $run): array {
+		$tally = ['groups' => [], 'missing' => $run->missing];
+		foreach ($this->gateway->findFiltered('CommuteArrangement', ['administrationId' => $run->administrationId]) as $arrangement) {
+			$kilometres = $this->yearlyKm(arrangement: $arrangement, year: $run->year);
+			if ($kilometres > 0.0) {
+				$this->add(tally: $tally, trip: ['schema' => 'CommuteArrangement', 'row' => $arrangement, 'km' => $kilometres]);
 			}
-
-			$months = $this->monthsActive((string)($arrangement['startDate'] ?? ''), (string)($arrangement['endDate'] ?? ''), $year);
-			$kilometres = $this->calculator->yearlyCommuteKm(distanceKmOneWay: (float)$distance, daysPerWeek: (float)$days, monthsActive: $months);
-			if ($kilometres <= 0.0) {
-				continue;
-			}
-
-			$this->add(tally: $tally, trip: ['schema' => 'CommuteArrangement', 'row' => $arrangement, 'km' => $kilometres]);
 		}
 
-		$missing = $tally['missing'];
+		$run->missing = $tally['missing'];
 		return $tally['groups'];
 	}//end commuteKm()
+
+	/**
+	 * The kilometres a counted arrangement commutes in the year; zero for
+	 * one that does not count or has no distance or days.
+	 *
+	 * @param array<string, mixed> $arrangement The CommuteArrangement.
+	 * @param int                  $year        The year.
+	 *
+	 * @return float
+	 */
+	private function yearlyKm(array $arrangement, int $year): float {
+		$distance = ($arrangement['distanceKmOneWay'] ?? null);
+		$days = ($arrangement['daysPerWeek'] ?? null);
+		if (in_array(($arrangement['status'] ?? null), self::COUNTED_ARRANGEMENTS, true) === false || is_numeric($distance) === false || is_numeric($days) === false) {
+			return 0.0;
+		}
+
+		$months = $this->monthsActive(arrangement: $arrangement, year: $year);
+		return $this->calculator->yearlyCommuteKm(distanceKmOneWay: (float)$distance, daysPerWeek: (float)$days, monthsActive: $months);
+	}//end yearlyKm()
 
 	/**
 	 * Add a trip to its mode and fuel group, or to the missing list.
@@ -203,27 +247,40 @@ class WpmReportService {
 	}//end add()
 
 	/**
-	 * The number of months of the year in which a period is active on at
-	 * least one day.
+	 * The number of months of the year in which an arrangement is active on
+	 * at least one day.
 	 *
-	 * @param string $start The first day, `YYYY-MM-DD`.
-	 * @param string $end   The last day, or empty while it lasts.
-	 * @param int    $year  The year.
+	 * @param array<string, mixed> $arrangement The arrangement: its startDate, and its endDate or none while it lasts.
+	 * @param int                  $year        The year.
 	 *
 	 * @return int 0 to 12.
 	 */
-	private function monthsActive(string $start, string $end, int $year): int {
+	private function monthsActive(array $arrangement, int $year): int {
 		$months = 0;
 		for ($month = 1; $month <= 12; $month++) {
-			$first = sprintf('%04d-%02d-01', $year, $month);
-			$last = date('Y-m-t', (int)strtotime($first));
-			if (($start === '' || $start <= $last) && ($end === '' || $end >= $first)) {
+			if ($this->activeInMonth(arrangement: $arrangement, first: sprintf('%04d-%02d-01', $year, $month)) === true) {
 				$months++;
 			}
 		}
 
 		return $months;
 	}//end monthsActive()
+
+	/**
+	 * Whether an arrangement is active on at least one day of a month.
+	 *
+	 * @param array<string, mixed> $arrangement The arrangement.
+	 * @param string               $first       The month's first day.
+	 *
+	 * @return bool
+	 */
+	private function activeInMonth(array $arrangement, string $first): bool {
+		$start = (string)($arrangement['startDate'] ?? '');
+		$end = (string)($arrangement['endDate'] ?? '');
+		$last = date('Y-m-t', (int)strtotime($first));
+
+		return ($start === '' || $start <= $last) && ($end === '' || $end >= $first);
+	}//end activeInMonth()
 
 	/**
 	 * The people of the administration employed on at least one day of the year.

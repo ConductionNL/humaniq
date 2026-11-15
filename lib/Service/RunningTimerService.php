@@ -3,6 +3,9 @@
 /**
  * The caller's running timer: starting one, stopping it, and finding it again.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * A running timer IS a time entry. `startedAt` is set, `endedAt` is absent, and
  * `origin` says `timer`. There is no second store, no session key and no cached
  * flag, so there is nothing that can disagree with the row: every surface that
@@ -26,9 +29,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -147,19 +147,27 @@ class RunningTimerService {
 			throw new HoursWriteRefusedException('De lopende timer kon niet worden opgehaald.');
 		}
 
-		$open = [];
-		foreach ($rows as $row) {
-			if (trim((string)($row['endedAt'] ?? '')) === '') {
-				$open[] = $row;
-			}
-		}
+		return self::newestOpen(rows: $rows);
+	}//end running()
 
+	/**
+	 * The newest row without an end, or null when every row has ended.
+	 *
+	 * Newest first, so a pre-existing duplicate from before the one-timer
+	 * guard existed resolves to the one the person most plausibly started.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The caller's timer rows.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function newestOpen(array $rows): ?array {
+		$open = array_values(
+			array_filter($rows, static fn (array $row): bool => trim((string)($row['endedAt'] ?? '')) === '')
+		);
 		if ($open === []) {
 			return null;
 		}
 
-		// Newest first, so a pre-existing duplicate from before this guard
-		// existed resolves to the one the person most plausibly started.
 		usort(
 			$open,
 			static fn (array $a, array $b): int => strcmp(
@@ -169,7 +177,7 @@ class RunningTimerService {
 		);
 
 		return $open[0];
-	}//end running()
+	}//end newestOpen()
 
 	/**
 	 * Start a timer against a host object.

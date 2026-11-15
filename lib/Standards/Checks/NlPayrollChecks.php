@@ -84,138 +84,429 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	 */
 	public static function checks(): array {
 		return [
-			'Payslip' => [
-				// Handboek Loonheffingen 2026 par. 7.2.3 — a low-premium employee on 30
-				// contracted hours a week or less, paid more than 30% above the contract
-				// this year so far, is heading for the review (filings-premium-differentiation).
-				'nl-awf-herziening-uren-signaal' => static fn (array $o): bool => self::awfHoursWithinLine($o),
-				// Wet LB 1964 art. 27 — a loonheffing must be withheld at each payment.
-				'nl-loonheffingen-inhouding' => static fn (array $o): bool => self::numeric($o, 'loonheffing') && ((float)$o['loonheffing']) >= 0.0,
-				// Wfsv / art. 27b — premie volksverzekeringen is levied inside the combined
-				// loonheffing, so it must be present and not exceed the total loonheffing.
-				'nl-loonheffingen-volksverzekeringen' => static fn (array $o): bool => self::numeric($o, 'volksverzekeringen')
-					&& self::numeric($o, 'loonheffing')
-					&& ((float)$o['volksverzekeringen']) >= 0.0
-					&& ((float)$o['volksverzekeringen']) <= ((float)$o['loonheffing']),
-				// Wfsv — employer-borne werknemersverzekeringen (WW/WIA/ZW) over the wage.
-				'nl-werknemersverzekeringen-werkgever' => static fn (array $o): bool => self::numeric($o, 'werknemersverzekeringen')
-					&& ((float)$o['werknemersverzekeringen']) >= 0.0,
-				// Zvw werkgeversheffing — when the employer-levy mode applies, the 2026 rate is 6,10%.
-				'nl-zvw-werkgeversheffing' => static fn (array $o): bool => ((string)($o['zvwMode'] ?? '') !== 'werkgeversheffing')
-					|| (self::numeric($o, 'zvwRate') && self::ratesEqual((float)$o['zvwRate'], 6.10) && self::numeric($o, 'zvw')),
-				// Zvw ingehouden bijdrage — when the withheld mode applies, the 2026 rate is 4,85%.
-				'nl-zvw-inhouding' => static fn (array $o): bool => ((string)($o['zvwMode'] ?? '') !== 'inhouding')
-					|| (self::numeric($o, 'zvwRate') && self::ratesEqual((float)$o['zvwRate'], 4.85) && self::numeric($o, 'zvw')),
-				// Wet LB 1964 art. 26b — the anoniementarief is exactly 52% when applied, and
-				// the effective applied rate must be consistent with that flag.
-				'nl-anoniementarief' => static fn (array $o): bool => self::numeric($o, 'appliedTaxRate')
-					&& ((($o['anoniementariefApplied'] ?? false) === true)
-					? self::ratesEqual((float)$o['appliedTaxRate'], 52.0)
-					: ((float)$o['appliedTaxRate']) < 52.0),
-				// WML art. 15 — vakantiebijslag is at least 8% of gross, and the reserved
-				// amount reconciles to that rate applied to the gross pay (to the cent).
-				'nl-vakantiebijslag-8procent' => static fn (array $o): bool => self::numeric($o, 'vakantiegeldRate')
-					&& ((float)$o['vakantiegeldRate']) >= 8.0
-					&& self::centsEqual((float)($o['vakantiegeldReserved'] ?? 0), (((float)($o['grossPay'] ?? 0)) * ((float)$o['vakantiegeldRate']) / 100)),
-				// Werkkostenregeling — designated allowances charged to the vrije ruimte may
-				// not push the remaining ruimte negative without recording the excess.
-				'nl-wkr-vrije-ruimte' => static fn (array $o): bool => self::numeric($o, 'wkrVrijeRuimteRemaining')
-					&& (((float)$o['wkrVrijeRuimteRemaining']) >= 0.0 || self::numeric($o, 'wkrExcess')),
-				// Wet LB 1964 art. 31a — any WKR excess over the vrije ruimte carries an
-				// 80% eindheffing; no excess means no eindheffing is owed.
-				'nl-wkr-eindheffing-80' => static fn (array $o): bool => (((float)($o['wkrExcess'] ?? 0)) <= 0.0)
-					|| (self::numeric($o, 'wkrEindheffingRate') && self::ratesEqual((float)$o['wkrEindheffingRate'], 80.0)),
-				// BW 7:626 lid 1 — the payslip must state gross wage, deduction basis, the
-				// applicable minimum wage, and employer/employee identification.
-				'nl-loonstrook-inhoud' => static fn (array $o): bool => (($o['showsGrossWage'] ?? false) === true)
-					&& (($o['showsDeductionBasis'] ?? false) === true)
-					&& (($o['showsMinimumWage'] ?? false) === true)
-					&& (($o['showsEmployerEmployeeIds'] ?? false) === true),
-				// Wet LB 1964 art. 31a (aftopping WNT-norm) — the recorded 30%-ruling
-				// exemption re-derives cents-exact from the WNT-capped formula
-				// (30-procent-regeling): the NUMERIC enforcement the boolean-only
-				// nl-30-regeling-aftoppingsgrens never provided.
-				'nl-30-regeling-aftoppingsgrens-bedrag' => static fn (array $o, array $context): bool => self::thirtyPercentExemptionMatchesFormula($o, $context),
-			],
-			'Employee' => [
-				// Handboek Loonheffingen — a verified ID-document copy is kept until at least
-				// 5 years after the year employment ends.
-				'nl-id-bewaarplicht-5jaar' => static fn (array $o): bool => (($o['identityDocumentVerified'] ?? false) === true)
-					&& self::present($o, 'identityDocumentRetainedUntil')
-					&& self::retainedAtLeastYearsAfterEnd($o, 'identityDocumentRetainedUntil', 5),
-				// Uitvoeringsregeling loonbelasting 2011 art. 12.1 lid 5 - the
-				// loonheffingenverklaring is kept until at least 5 years after the year
-				// employment ends, the same clock as the ID copy above.
-				//
-				// Gated on the statement actually being on file. The retention duty
-				// attaches to a document that exists, so an employee with no statement
-				// is VACUOUS here rather than in violation; whether one must be on file
-				// at all is a different obligation and no corpus rule covers it yet.
-				'nl-loonbelastingverklaring-bewaarplicht-5jaar' => static fn (array $o): bool => (($o['loonheffingenVerklaringOnFile'] ?? false) !== true)
-					|| (self::present($o, 'loonheffingenVerklaringRetainedUntil')
-					&& self::retainedAtLeastYearsAfterEnd($o, 'loonheffingenVerklaringRetainedUntil', 5)),
-				// Wet LB 1964 art. 31a (30%-regeling) — when granted, the applied tax-free
-				// percentage must not exceed 30 for 2025-2026.
-				'nl-30-percent-regeling' => static fn (array $o): bool => (($o['thirtyPercentRulingGranted'] ?? false) !== true)
-					|| (self::numeric($o, 'thirtyPercentRulingRate') && ((float)$o['thirtyPercentRulingRate']) <= 30.0),
-				// Wet LB 1964 art. 31a (aftopping WNT-norm) — a granted 30%-ruling is capped
-				// at the WNT-norm.
-				'nl-30-regeling-aftoppingsgrens' => static fn (array $o): bool => (($o['thirtyPercentRulingGranted'] ?? false) !== true)
-					|| (($o['thirtyPercentCappedAtWntNorm'] ?? false) === true),
-				// Wet LB 1964 art. 31a (looptijd) — a granted 30%-ruling runs at most
-				// 60 months from its start; flags an end date absent/beyond the term
-				// or a stale ruling past its end date (30-procent-regeling).
-				'nl-30-regeling-looptijd-5jaar' => static fn (array $o): bool => self::thirtyPercentTermSatisfied($o),
-				// Wet LB 1964 art. 31a (salarisnorm) — a granted 30%-ruling requires an
-				// annualised salary at or above the applicable norm (general or the
-				// under-30-master reduced norm) (30-procent-regeling).
-				'nl-30-regeling-salarisnorm' => static fn (array $o): bool => self::thirtyPercentSalaryNormSatisfied($o),
-				// Regulation (EC) 883/2004 art. 12 — a posted worker holds a valid A1
-				// certificate that runs no longer than 24 months from the posting.
-				'eu-a1-posted-worker' => static fn (array $o): bool => (($o['postedWorker'] ?? false) !== true)
-					|| (self::present($o, 'a1CertificateNumber')
-					&& self::present($o, 'a1ValidUntil')
-					&& self::withinMonths($o, 'startDate', 'a1ValidUntil', 24)),
-			],
-			'EmploymentContract' => [
-				// Wfsv (Wab), Handboek Loonheffingen 2026 par. 7.2 — the Awf low tariff applies
-				// to permanent written contracts and signed BBL contracts without an
-				// uitzendbeding; every other contract takes the high tariff. The applied
-				// tariff must match (the under-21 hours exception is per period, on the payslip).
-				'nl-awf-laag-hoog-tarief' => static fn (array $o): bool => self::present($o, 'awfTariff')
-					&& ((string)$o['awfTariff'] === self::expectedAwfTariff($o)),
-				// WML art. 8 — from 1 Jan 2026 the statutory minimum hourly wage is EUR 14,71
-				// for employees aged 21+; the contract hourly wage must meet it.
-				'nl-minimumloon-2026' => static fn (array $o): bool => self::numeric($o, 'hourlyWage')
-					&& ((float)$o['hourlyWage']) >= 14.71,
-				// Wet invoering minimumuurloon — a single hourly minimum applies; weekly/monthly
-				// minimums derive from it, so contracted hours must be a positive number.
-				'nl-minimumuurloon-wet' => static fn (array $o): bool => self::numeric($o, 'hoursPerWeek')
-					&& ((float)$o['hoursPerWeek']) > 0.0
-					&& self::numeric($o, 'hourlyWage'),
-			],
-			'PayrollRun' => [
-				// Payroll-to-GL control — the GL liability/expense postings reconcile to the
-				// run totals: expense = gross + employer charges; liability = gross + charges − net.
-				// Scoped to posted/paid runs (payroll-core-engine): a draft/approved run has no
-				// GL postings yet by definition, so checking it would be a false positive —
-				// never surfaced before because the only seeded run is `posted`.
-				'xc-payroll-gl-reconciliation' => static fn (array $o): bool => self::isGlPosted($o) === false
-					|| (self::numeric($o, 'glExpensePosted')
-					&& self::numeric($o, 'glLiabilityPosted')
-					&& self::centsEqual((float)$o['glExpensePosted'], (((float)($o['totalGross'] ?? 0)) + ((float)($o['totalEmployerCharges'] ?? 0))))
-					&& self::centsEqual((float)$o['glLiabilityPosted'], (((float)($o['totalGross'] ?? 0)) + ((float)($o['totalEmployerCharges'] ?? 0)) - ((float)($o['totalNet'] ?? 0))))),
-				// Liability-clearing control — each withholding liability is cleared to zero on
-				// remittance, so a cleared run carries a zero residual liability balance.
-				// Same posted/paid scoping: remittance clearing only exists once posted.
-				'xc-withholding-liability-clearing' => static fn (array $o): bool => self::isGlPosted($o) === false
-					|| ((($o['withholdingsClearedToZero'] ?? false) === true)
-					&& self::numeric($o, 'withholdingLiabilityBalance')
-					&& self::centsEqual((float)$o['withholdingLiabilityBalance'], 0.0)),
-			],
+			'Payslip' => [...self::payslipWithholdingChecks(), ...self::payslipStatementChecks()],
+			'Employee' => self::employeeChecks(),
+			'EmploymentContract' => self::contractChecks(),
+			'PayrollRun' => self::payrollRunChecks(),
 		];
 
 	}//end checks()
+
+	/**
+	 * Payslip checks on the withheld loonheffing and the insurance premiums.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function payslipWithholdingChecks(): array {
+		return [
+			// Handboek Loonheffingen 2026 par. 7.2.3 — a low-premium employee on 30
+			// contracted hours a week or less, paid more than 30% above the contract
+			// this year so far, is heading for the review (filings-premium-differentiation).
+			'nl-awf-herziening-uren-signaal' => self::awfHoursWithinLine(...),
+			// Wet LB 1964 art. 27 — a loonheffing must be withheld at each payment.
+			'nl-loonheffingen-inhouding' => self::loonheffingWithheld(...),
+			// Wfsv / art. 27b — premie volksverzekeringen is levied inside the combined
+			// loonheffing, so it must be present and not exceed the total loonheffing.
+			'nl-loonheffingen-volksverzekeringen' => self::volksverzekeringenWithinLoonheffing(...),
+			// Wfsv — employer-borne werknemersverzekeringen (WW/WIA/ZW) over the wage.
+			'nl-werknemersverzekeringen-werkgever' => self::werknemersverzekeringenPresent(...),
+			// Zvw werkgeversheffing — when the employer-levy mode applies, the 2026 rate is 6,10%.
+			'nl-zvw-werkgeversheffing' => self::zvwWerkgeversheffingAtRate(...),
+			// Zvw ingehouden bijdrage — when the withheld mode applies, the 2026 rate is 4,85%.
+			'nl-zvw-inhouding' => self::zvwInhoudingAtRate(...),
+		];
+
+	}//end payslipWithholdingChecks()
+
+	/**
+	 * Payslip checks on the applied rates, the reservations and the statement content.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function payslipStatementChecks(): array {
+		return [
+			// Wet LB 1964 art. 26b — the anoniementarief is exactly 52% when applied, and
+			// the effective applied rate must be consistent with that flag.
+			'nl-anoniementarief' => self::anoniementariefConsistent(...),
+			// WML art. 15 — vakantiebijslag is at least 8% of gross, and the reserved
+			// amount reconciles to that rate applied to the gross pay (to the cent).
+			'nl-vakantiebijslag-8procent' => self::vakantiebijslagReserved(...),
+			// Werkkostenregeling — designated allowances charged to the vrije ruimte may
+			// not push the remaining ruimte negative without recording the excess.
+			'nl-wkr-vrije-ruimte' => self::wkrVrijeRuimteCovered(...),
+			// Wet LB 1964 art. 31a — any WKR excess over the vrije ruimte carries an
+			// 80% eindheffing; no excess means no eindheffing is owed.
+			'nl-wkr-eindheffing-80' => self::wkrEindheffingAtRate(...),
+			// BW 7:626 lid 1 — the payslip must state gross wage, deduction basis, the
+			// applicable minimum wage, and employer/employee identification.
+			'nl-loonstrook-inhoud' => self::loonstrookComplete(...),
+			// Wet LB 1964 art. 31a (aftopping WNT-norm) — the recorded 30%-ruling
+			// exemption re-derives cents-exact from the WNT-capped formula
+			// (30-procent-regeling): the NUMERIC enforcement the boolean-only
+			// nl-30-regeling-aftoppingsgrens never provided.
+			'nl-30-regeling-aftoppingsgrens-bedrag' => self::thirtyPercentExemptionMatchesFormula(...),
+		];
+
+	}//end payslipStatementChecks()
+
+	/**
+	 * Employee checks: document retention, the 30%-ruling and the A1 certificate.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function employeeChecks(): array {
+		return [
+			// Handboek Loonheffingen — a verified ID-document copy is kept until at least
+			// 5 years after the year employment ends.
+			'nl-id-bewaarplicht-5jaar' => self::identityDocumentRetained(...),
+			// Uitvoeringsregeling loonbelasting 2011 art. 12.1 lid 5 - the
+			// loonheffingenverklaring is kept until at least 5 years after the year
+			// employment ends, the same clock as the ID copy above.
+			//
+			// Gated on the statement actually being on file. The retention duty
+			// attaches to a document that exists, so an employee with no statement
+			// is VACUOUS here rather than in violation; whether one must be on file
+			// at all is a different obligation and no corpus rule covers it yet.
+			'nl-loonbelastingverklaring-bewaarplicht-5jaar' => self::loonheffingenVerklaringRetained(...),
+			// Wet LB 1964 art. 31a (30%-regeling) — when granted, the applied tax-free
+			// percentage must not exceed 30 for 2025-2026.
+			'nl-30-percent-regeling' => self::thirtyPercentRateWithinCap(...),
+			// Wet LB 1964 art. 31a (aftopping WNT-norm) — a granted 30%-ruling is capped
+			// at the WNT-norm.
+			'nl-30-regeling-aftoppingsgrens' => self::thirtyPercentCappedAtWntNorm(...),
+			// Wet LB 1964 art. 31a (looptijd) — a granted 30%-ruling runs at most
+			// 60 months from its start; flags an end date absent/beyond the term
+			// or a stale ruling past its end date (30-procent-regeling).
+			'nl-30-regeling-looptijd-5jaar' => self::thirtyPercentTermSatisfied(...),
+			// Wet LB 1964 art. 31a (salarisnorm) — a granted 30%-ruling requires an
+			// annualised salary at or above the applicable norm (general or the
+			// under-30-master reduced norm) (30-procent-regeling).
+			'nl-30-regeling-salarisnorm' => self::thirtyPercentSalaryNormSatisfied(...),
+			// Regulation (EC) 883/2004 art. 12 — a posted worker holds a valid A1
+			// certificate that runs no longer than 24 months from the posting.
+			'eu-a1-posted-worker' => self::a1CertificateValid(...),
+		];
+
+	}//end employeeChecks()
+
+	/**
+	 * EmploymentContract checks: the Awf tariff and the statutory minimum wage.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function contractChecks(): array {
+		return [
+			// Wfsv (Wab), Handboek Loonheffingen 2026 par. 7.2 — the Awf low tariff applies
+			// to permanent written contracts and signed BBL contracts without an
+			// uitzendbeding; every other contract takes the high tariff. The applied
+			// tariff must match (the under-21 hours exception is per period, on the payslip).
+			'nl-awf-laag-hoog-tarief' => self::awfTariffMatches(...),
+			// WML art. 8 — from 1 Jan 2026 the statutory minimum hourly wage is EUR 14,71
+			// for employees aged 21+; the contract hourly wage must meet it.
+			'nl-minimumloon-2026' => self::minimumHourlyWageMet(...),
+			// Wet invoering minimumuurloon — a single hourly minimum applies; weekly/monthly
+			// minimums derive from it, so contracted hours must be a positive number.
+			'nl-minimumuurloon-wet' => self::contractedHoursPositive(...),
+		];
+
+	}//end contractChecks()
+
+	/**
+	 * PayrollRun checks: the GL reconciliation and the liability clearing.
+	 *
+	 * @return array<string, callable>
+	 */
+	private static function payrollRunChecks(): array {
+		return [
+			// Payroll-to-GL control — the GL liability/expense postings reconcile to the
+			// run totals: expense = gross + employer charges; liability = gross + charges − net.
+			// Scoped to posted/paid runs (payroll-core-engine): a draft/approved run has no
+			// GL postings yet by definition, so checking it would be a false positive —
+			// never surfaced before because the only seeded run is `posted`.
+			'xc-payroll-gl-reconciliation' => self::glPostingsReconcile(...),
+			// Liability-clearing control — each withholding liability is cleared to zero on
+			// remittance, so a cleared run carries a zero residual liability balance.
+			// Same posted/paid scoping: remittance clearing only exists once posted.
+			'xc-withholding-liability-clearing' => self::withholdingLiabilityCleared(...),
+		];
+
+	}//end payrollRunChecks()
+
+	/**
+	 * Whether a non-negative loonheffing is withheld.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function loonheffingWithheld(array $o): bool {
+		return self::numeric($o, 'loonheffing') && ((float)$o['loonheffing']) >= 0.0;
+
+	}//end loonheffingWithheld()
+
+	/**
+	 * Whether the volksverzekeringen premium is present and within the loonheffing.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function volksverzekeringenWithinLoonheffing(array $o): bool {
+		return self::numeric($o, 'volksverzekeringen')
+			&& self::numeric($o, 'loonheffing')
+			&& ((float)$o['volksverzekeringen']) >= 0.0
+			&& ((float)$o['volksverzekeringen']) <= ((float)$o['loonheffing']);
+
+	}//end volksverzekeringenWithinLoonheffing()
+
+	/**
+	 * Whether a non-negative employer werknemersverzekeringen amount is present.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function werknemersverzekeringenPresent(array $o): bool {
+		return self::numeric($o, 'werknemersverzekeringen')
+			&& ((float)$o['werknemersverzekeringen']) >= 0.0;
+
+	}//end werknemersverzekeringenPresent()
+
+	/**
+	 * Whether the employer-levy Zvw mode, when it applies, uses the 6,10% rate.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function zvwWerkgeversheffingAtRate(array $o): bool {
+		return ((string)($o['zvwMode'] ?? '') !== 'werkgeversheffing')
+			|| (self::numeric($o, 'zvwRate') && self::ratesEqual((float)$o['zvwRate'], 6.10) && self::numeric($o, 'zvw'));
+
+	}//end zvwWerkgeversheffingAtRate()
+
+	/**
+	 * Whether the withheld Zvw mode, when it applies, uses the 4,85% rate.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function zvwInhoudingAtRate(array $o): bool {
+		return ((string)($o['zvwMode'] ?? '') !== 'inhouding')
+			|| (self::numeric($o, 'zvwRate') && self::ratesEqual((float)$o['zvwRate'], 4.85) && self::numeric($o, 'zvw'));
+
+	}//end zvwInhoudingAtRate()
+
+	/**
+	 * Whether the applied tax rate agrees with the anoniementarief flag.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function anoniementariefConsistent(array $o): bool {
+		return self::numeric($o, 'appliedTaxRate')
+			&& ((($o['anoniementariefApplied'] ?? false) === true)
+			? self::ratesEqual((float)$o['appliedTaxRate'], 52.0)
+			: ((float)$o['appliedTaxRate']) < 52.0);
+
+	}//end anoniementariefConsistent()
+
+	/**
+	 * Whether the vakantiebijslag rate is at least 8% and the reserve matches it.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function vakantiebijslagReserved(array $o): bool {
+		return self::numeric($o, 'vakantiegeldRate')
+			&& ((float)$o['vakantiegeldRate']) >= 8.0
+			&& self::centsEqual((float)($o['vakantiegeldReserved'] ?? 0), (((float)($o['grossPay'] ?? 0)) * ((float)$o['vakantiegeldRate']) / 100));
+
+	}//end vakantiebijslagReserved()
+
+	/**
+	 * Whether the remaining vrije ruimte is non-negative or the excess is recorded.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function wkrVrijeRuimteCovered(array $o): bool {
+		return self::numeric($o, 'wkrVrijeRuimteRemaining')
+			&& (((float)$o['wkrVrijeRuimteRemaining']) >= 0.0 || self::numeric($o, 'wkrExcess'));
+
+	}//end wkrVrijeRuimteCovered()
+
+	/**
+	 * Whether a WKR excess carries the 80% eindheffing.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function wkrEindheffingAtRate(array $o): bool {
+		return (((float)($o['wkrExcess'] ?? 0)) <= 0.0)
+			|| (self::numeric($o, 'wkrEindheffingRate') && self::ratesEqual((float)$o['wkrEindheffingRate'], 80.0));
+
+	}//end wkrEindheffingAtRate()
+
+	/**
+	 * Whether the payslip states every mandatory item.
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 */
+	private static function loonstrookComplete(array $o): bool {
+		return (($o['showsGrossWage'] ?? false) === true)
+			&& (($o['showsDeductionBasis'] ?? false) === true)
+			&& (($o['showsMinimumWage'] ?? false) === true)
+			&& (($o['showsEmployerEmployeeIds'] ?? false) === true);
+
+	}//end loonstrookComplete()
+
+	/**
+	 * Whether a verified ID-document copy is retained long enough.
+	 *
+	 * @param array<string, mixed> $o The Employee.
+	 *
+	 * @return bool
+	 */
+	private static function identityDocumentRetained(array $o): bool {
+		return (($o['identityDocumentVerified'] ?? false) === true)
+			&& self::present($o, 'identityDocumentRetainedUntil')
+			&& self::retainedAtLeastYearsAfterEnd($o, 'identityDocumentRetainedUntil', 5);
+
+	}//end identityDocumentRetained()
+
+	/**
+	 * Whether a loonheffingenverklaring on file is retained long enough.
+	 *
+	 * @param array<string, mixed> $o The Employee.
+	 *
+	 * @return bool
+	 */
+	private static function loonheffingenVerklaringRetained(array $o): bool {
+		return (($o['loonheffingenVerklaringOnFile'] ?? false) !== true)
+			|| (self::present($o, 'loonheffingenVerklaringRetainedUntil')
+			&& self::retainedAtLeastYearsAfterEnd($o, 'loonheffingenVerklaringRetainedUntil', 5));
+
+	}//end loonheffingenVerklaringRetained()
+
+	/**
+	 * Whether a granted 30%-ruling applies at most 30 percent.
+	 *
+	 * @param array<string, mixed> $o The Employee.
+	 *
+	 * @return bool
+	 */
+	private static function thirtyPercentRateWithinCap(array $o): bool {
+		return (($o['thirtyPercentRulingGranted'] ?? false) !== true)
+			|| (self::numeric($o, 'thirtyPercentRulingRate') && ((float)$o['thirtyPercentRulingRate']) <= 30.0);
+
+	}//end thirtyPercentRateWithinCap()
+
+	/**
+	 * Whether a granted 30%-ruling is capped at the WNT-norm.
+	 *
+	 * @param array<string, mixed> $o The Employee.
+	 *
+	 * @return bool
+	 */
+	private static function thirtyPercentCappedAtWntNorm(array $o): bool {
+		return (($o['thirtyPercentRulingGranted'] ?? false) !== true)
+			|| (($o['thirtyPercentCappedAtWntNorm'] ?? false) === true);
+
+	}//end thirtyPercentCappedAtWntNorm()
+
+	/**
+	 * Whether a posted worker holds an A1 certificate of at most 24 months.
+	 *
+	 * @param array<string, mixed> $o The Employee.
+	 *
+	 * @return bool
+	 */
+	private static function a1CertificateValid(array $o): bool {
+		return (($o['postedWorker'] ?? false) !== true)
+			|| (self::present($o, 'a1CertificateNumber')
+			&& self::present($o, 'a1ValidUntil')
+			&& self::withinMonths($o, 'startDate', 'a1ValidUntil', 24));
+
+	}//end a1CertificateValid()
+
+	/**
+	 * Whether the contract carries the Awf tariff its terms call for.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return bool
+	 */
+	private static function awfTariffMatches(array $o): bool {
+		return self::present($o, 'awfTariff')
+			&& ((string)$o['awfTariff'] === self::expectedAwfTariff($o));
+
+	}//end awfTariffMatches()
+
+	/**
+	 * Whether the contract hourly wage meets the 2026 statutory minimum.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return bool
+	 */
+	private static function minimumHourlyWageMet(array $o): bool {
+		return self::numeric($o, 'hourlyWage')
+			&& ((float)$o['hourlyWage']) >= 14.71;
+
+	}//end minimumHourlyWageMet()
+
+	/**
+	 * Whether the contract has positive contracted hours and an hourly wage.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return bool
+	 */
+	private static function contractedHoursPositive(array $o): bool {
+		return self::numeric($o, 'hoursPerWeek')
+			&& ((float)$o['hoursPerWeek']) > 0.0
+			&& self::numeric($o, 'hourlyWage');
+
+	}//end contractedHoursPositive()
+
+	/**
+	 * Whether a posted run's GL postings reconcile to its totals.
+	 *
+	 * @param array<string, mixed> $o The PayrollRun.
+	 *
+	 * @return bool
+	 */
+	private static function glPostingsReconcile(array $o): bool {
+		return self::isGlPosted($o) === false
+			|| (self::numeric($o, 'glExpensePosted')
+			&& self::numeric($o, 'glLiabilityPosted')
+			&& self::centsEqual((float)$o['glExpensePosted'], (((float)($o['totalGross'] ?? 0)) + ((float)($o['totalEmployerCharges'] ?? 0))))
+			&& self::centsEqual((float)$o['glLiabilityPosted'], (((float)($o['totalGross'] ?? 0)) + ((float)($o['totalEmployerCharges'] ?? 0)) - ((float)($o['totalNet'] ?? 0)))));
+
+	}//end glPostingsReconcile()
+
+	/**
+	 * Whether a posted run's withholding liability is cleared to zero.
+	 *
+	 * @param array<string, mixed> $o The PayrollRun.
+	 *
+	 * @return bool
+	 */
+	private static function withholdingLiabilityCleared(array $o): bool {
+		return self::isGlPosted($o) === false
+			|| ((($o['withholdingsClearedToZero'] ?? false) === true)
+			&& self::numeric($o, 'withholdingLiabilityBalance')
+			&& self::centsEqual((float)$o['withholdingLiabilityBalance'], 0.0));
+
+	}//end withholdingLiabilityCleared()
 
 	/**
 	 * {@inheritDoc}

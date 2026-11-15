@@ -139,14 +139,14 @@ class HrLifecycleEventService {
 			$moment['data']
 		);
 
-		return (new CloudEventEnvelope())->build(
-			type: self::TYPE_PREFIX . $moment['type'],
-			source: self::SOURCE,
-			eventId: $this->eventId(moment: $moment),
-			time: gmdate('Y-m-d\TH:i:s\Z'),
-			data: $data,
-			subject: $moment['employeeId']
-		);
+		$header = new CloudEventHeader();
+		$header->type = self::TYPE_PREFIX . $moment['type'];
+		$header->source = self::SOURCE;
+		$header->eventId = $this->eventId(moment: $moment);
+		$header->time = gmdate('Y-m-d\TH:i:s\Z');
+		$header->subject = $moment['employeeId'];
+
+		return (new CloudEventEnvelope())->build(header: $header, data: $data);
 	}//end envelope()
 
 	/**

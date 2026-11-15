@@ -7,10 +7,11 @@
  * from `OfferEsignService` as a plain composed collaborator (not a public
  * surface of its own -- `OfferEsignService` remains the ONE service
  * `OfferController`/the two occ commands depend on, per design.md D1).
- * Owns exactly the template-selection (config-first/discovery-second/
- * fail-closed, design.md D4) / render (`DocumentService::generateDocument()`)
- * / store (`FileService::addFile()`, capturing the real `File::getId()`)
- * mechanics -- `OfferEsignService` still owns the Application read/write
+ * Owns exactly the render (`DocumentService::generateDocument()`) / store
+ * (`FileService::addFile()`, capturing the real `File::getId()`) mechanics,
+ * with the template selection (config-first/discovery-second/fail-closed,
+ * design.md D4) and render options shared with `HrDocumentService` through
+ * `DocudeskTemplates` -- `OfferEsignService` still owns the Application read/write
  * model, the docudesk-installed probe, `SigningService`, and every outcome
  * decision.
  *
@@ -33,10 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
-use OCA\Humaniq\Support\ConvertsRowsToArrays;
-use OCA\Humaniq\Support\FleetAppId;
 use Psr\Container\ContainerInterface;
-use RuntimeException;
 
 /**
  * Selects an `aanbiedingsbrief` template, renders it via docudesk, and
@@ -44,41 +42,12 @@ use RuntimeException;
  */
 class OfferLetterService {
 
-	use ConvertsRowsToArrays;
-
-	/**
-	 * docudesk's rendering service, resolved by string FQCN only (no
-	 * compile-time import).
-	 *
-	 * @var string
-	 */
-	private const DOCUMENT_APP = 'filinq';
-
-	private const DOCUMENT_SERVICE_CLASS = 'Service\DocumentService';
-
-	/**
-	 * docudesk's template lookup service, resolved by string FQCN only.
-	 *
-	 * @var string
-	 */
-	private const TEMPLATE_SERVICE_CLASS = 'Service\TemplateService';
-
 	/**
 	 * OpenRegister's file-storage service (read-only reuse, not docudesk).
 	 *
 	 * @var string
 	 */
 	private const OBJECT_FILE_SERVICE_FQCN = 'OCA\OpenRegister\Service\FileService';
-
-	/**
-	 * The docudesk template namespace humaniq's own templates live under.
-	 *
-	 * @var string
-	 */
-	// FROZEN at the old app id: docudesk stores this app's templates under this
-	// namespace. Renaming it would make them unreachable and offer-letter
-	// generation would quietly find no template rather than fail loudly.
-	private const TEMPLATE_NAMESPACE = 'hrmq';
 
 	/**
 	 * The docudesk template category / documentType for an offer letter --
@@ -99,12 +68,14 @@ class OfferLetterService {
 	private const VACANCY_SCHEMA = 'Vacancy';
 
 	/**
-	 * @param ContainerInterface $container DI container for lazy docudesk/FileService resolution.
-	 * @param SettingsService $settingsService Register slug, employer block, template config.
+	 * @param ContainerInterface $container DI container for lazy FileService resolution.
+	 * @param SettingsService $settingsService Register slug.
+	 * @param DocudeskTemplates $docudesk docudesk service resolution, template selection and render options.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
+		private readonly DocudeskTemplates $docudesk,
 	) {
 
 	}//end __construct()
@@ -117,14 +88,7 @@ class OfferLetterService {
 	 * @return bool
 	 */
 	public function available(): bool {
-		try {
-			$this->documentService();
-			$this->templateService();
-		} catch (\Throwable $e) {
-			return false;
-		}
-
-		return true;
+		return $this->docudesk->available();
 	}//end available()
 
 	/**
@@ -142,27 +106,39 @@ class OfferLetterService {
 	 * @spec openspec/specs/offer-esign/spec.md#REQ-OFFR-002
 	 */
 	public function generateAndStore(string $applicationId, string $vacancyId, ?string $userId): array {
-		$selected = $this->selectTemplate();
+		$selected = $this->docudesk->selectTemplate(self::DOCUMENT_TYPE);
 		if ($selected['error'] !== null) {
 			return $this->failure((string)$selected['error']);
 		}
 
 		$dataRefs = $this->buildDataRefs($applicationId, $vacancyId);
-		$options = $this->buildOptions($userId);
+		$options = $this->docudesk->renderOptions(self::DOCUMENT_TYPE, $userId);
 
 		try {
-			$rendered = $this->documentService()->generateDocument($selected['templateId'], $dataRefs, $options);
+			$rendered = $this->docudesk->documentService()->generateDocument($selected['templateId'], $dataRefs, $options);
 		} catch (\Throwable $e) {
 			return $this->failure('Genereren van de aanbiedingsbrief via docudesk is mislukt: ' . $e->getMessage());
 		}
 
+		return $this->storeRendered($applicationId, $rendered);
+	}//end generateAndStore()
+
+	/**
+	 * Store the rendered PDF, failing when docudesk returned no content.
+	 *
+	 * @param string $applicationId The Application id.
+	 * @param mixed $rendered docudesk's `generateDocument()` answer.
+	 *
+	 * @return array{success: bool, fileId: int, fileName: string, error: string|null}
+	 */
+	private function storeRendered(string $applicationId, mixed $rendered): array {
 		$content = (string)($rendered['content'] ?? '');
 		if ($content === '') {
 			return $this->failure('Docudesk leverde geen documentinhoud terug.');
 		}
 
 		return $this->store($applicationId, $content);
-	}//end generateAndStore()
+	}//end storeRendered()
 
 	/**
 	 * Store the rendered PDF and capture the real Nextcloud file id.
@@ -199,78 +175,6 @@ class OfferLetterService {
 	}//end failure()
 
 	/**
-	 * Template selection: config-UUID first, then namespace/category
-	 * discovery, fail closed on zero/multiple matches (design.md D4 --
-	 * `HrDocumentService::selectTemplate()`'s algorithm, re-implemented
-	 * against this leaf's own subject model, reusing the EXISTING
-	 * `aanbiedingsbrief` category).
-	 *
-	 * @return array{templateId: string|null, error: string|null}
-	 */
-	private function selectTemplate(): array {
-		$configured = trim($this->settingsService->getDocumentsTemplateId(self::DOCUMENT_TYPE));
-		if ($configured !== '') {
-			return ['templateId' => $configured, 'error' => null];
-		}
-
-		try {
-			$templates = $this->templateService()->getTemplatesByNamespace(self::TEMPLATE_NAMESPACE);
-		} catch (\Throwable $e) {
-			return ['templateId' => null, 'error' => 'Kon docudesk-sjablonen niet opzoeken: ' . $e->getMessage()];
-		}
-
-		$matches = [];
-		foreach ((is_array($templates) === true ? $templates : []) as $row) {
-			$template = $this->toArray($row);
-			if ((string)($template['category'] ?? '') === self::DOCUMENT_TYPE) {
-				$matches[] = $template;
-			}
-		}
-
-		return $this->resolveTemplateMatches($matches);
-	}//end selectTemplate()
-
-	/**
-	 * Resolve the discovery-phase template matches -- fail closed on
-	 * zero/multiple matches (design.md D4).
-	 *
-	 * @param array<int, array<string, mixed>> $matches The category-filtered templates.
-	 *
-	 * @return array{templateId: string|null, error: string|null}
-	 */
-	private function resolveTemplateMatches(array $matches): array {
-		if (count($matches) === 0) {
-			return [
-				'templateId' => null,
-				'error' => sprintf('Geen docudesk-sjabloon gevonden voor "%s" in namespace "hrmq"; genereren is geweigerd.', self::DOCUMENT_TYPE),
-			];
-		}
-
-		if (count($matches) > 1) {
-			$names = array_map(
-				static fn (array $t): string => (string)($t['name'] ?? ($t['id'] ?? ($t['@self']['id'] ?? '?'))),
-				$matches
-			);
-
-			return [
-				'templateId' => null,
-				'error' => sprintf(
-					'Meerdere docudesk-sjablonen (%s) voor "%s" in namespace "hrmq"; genereren is geweigerd (nooit gokken tussen sjablonen die officiële documenten opleveren).',
-					implode(', ', $names),
-					self::DOCUMENT_TYPE
-				),
-			];
-		}
-
-		$id = (string)($matches[0]['id'] ?? $matches[0]['@self']['id'] ?? '');
-		if ($id === '') {
-			return ['templateId' => null, 'error' => 'Het gevonden docudesk-sjabloon heeft geen id.'];
-		}
-
-		return ['templateId' => $id, 'error' => null];
-	}//end resolveTemplateMatches()
-
-	/**
 	 * The `dataRefs` payload for the docudesk render call (design.md D3):
 	 * exactly the Application and its Vacancy -- deliberately no Employee ref
 	 * (none exists pre-hire).
@@ -293,30 +197,6 @@ class OfferLetterService {
 	}//end buildDataRefs()
 
 	/**
-	 * The `options` payload for the docudesk render call (design.md D3):
-	 * `adHocData` carries only the configured employer block and generation
-	 * metadata -- no candidate PII flattened.
-	 *
-	 * @param string|null $userId The acting user id, or null for 'system'.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function buildOptions(?string $userId): array {
-		return [
-			'format' => 'pdf',
-			'userId' => ($userId !== null && trim($userId) !== '') ? $userId : 'system',
-			'adHocData' => [
-				'employer' => $this->settingsService->getDocumentsEmployerBlock(),
-				'document' => [
-					'type' => self::DOCUMENT_TYPE,
-					'requestedAt' => gmdate('Y-m-d\TH:i:s\Z'),
-				],
-			],
-		];
-
-	}//end buildOptions()
-
-	/**
 	 * The stored PDF's file name: `aanbiedingsbrief-{applicationId}-{YYYY-MM-DD}.pdf`
 	 * -- applicationId, not candidateName, in the filename (AVG-minimisation).
 	 *
@@ -334,30 +214,6 @@ class OfferLetterService {
 	private function fileService(): mixed {
 		return $this->container->get(self::OBJECT_FILE_SERVICE_FQCN);
 	}//end fileService()
-
-	/**
-	 * @return mixed docudesk's DocumentService, resolved by string FQCN only.
-	 */
-	private function documentService(): mixed {
-		// Throws when no candidate namespace resolves, preserving the
-		// container->get() contract the *Available() probes below rely on:
-		// a null return here would read as "resolved fine" and let the
-		// caller proceed against nothing.
-		return FleetAppId::getService($this->container, self::DOCUMENT_APP, self::DOCUMENT_SERVICE_CLASS)
-			?? throw new RuntimeException('filinq service '.self::DOCUMENT_SERVICE_CLASS.' is not available under any known namespace.');
-	}//end documentService()
-
-	/**
-	 * @return mixed docudesk's TemplateService, resolved by string FQCN only.
-	 */
-	private function templateService(): mixed {
-		// Throws when no candidate namespace resolves, preserving the
-		// container->get() contract the *Available() probes below rely on:
-		// a null return here would read as "resolved fine" and let the
-		// caller proceed against nothing.
-		return FleetAppId::getService($this->container, self::DOCUMENT_APP, self::TEMPLATE_SERVICE_CLASS)
-			?? throw new RuntimeException('filinq service '.self::TEMPLATE_SERVICE_CLASS.' is not available under any known namespace.');
-	}//end templateService()
 
 	/**
 	 * @return string The configured humaniq register slug.

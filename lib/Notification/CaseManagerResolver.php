@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Notification;
 
+use OCA\Humaniq\Service\AdministrationAccessTrust;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -49,10 +50,12 @@ class CaseManagerResolver implements RecipientResolverInterface {
 	/**
 	 * @param RecordStoreInterface $gateway Reads access rows, placements, units and employees.
 	 * @param OrgResolutionService $orgResolution Resolves an employee's managers.
+	 * @param AdministrationAccessTrust $trust Keeps only the access rows granted with standing.
 	 */
 	public function __construct(
 		private readonly RecordStoreInterface $gateway,
 		private readonly OrgResolutionService $orgResolution,
+		private readonly AdministrationAccessTrust $trust,
 	) {
 
 	}//end __construct()
@@ -76,8 +79,8 @@ class CaseManagerResolver implements RecipientResolverInterface {
 
 		$uids = [];
 		if ($administrationId !== '') {
-			foreach ($this->gateway->findFiltered('AdministrationAccess', ['administrationId' => $administrationId]) as $access) {
-				if (trim((string)($access['role'] ?? '')) === 'hr') {
+			foreach ($this->trust->trusted($this->gateway->loadAll('AdministrationAccess')) as $access) {
+				if ((string)($access['administrationId'] ?? '') === $administrationId && trim((string)($access['role'] ?? '')) === 'hr') {
 					$uids[] = trim((string)($access['userId'] ?? ''));
 				}
 			}

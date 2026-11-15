@@ -3,6 +3,9 @@
 /**
  * Humaniq NoSelfApprovalGuard
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * OpenRegister lifecycle guard shared by the Timesheet and Expense `approve`
  * and `reject` transitions, and by the PerformanceReview `vaststellen`
  * transition (performance-reviews-mvp). It enforces the one approval rule
@@ -41,9 +44,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

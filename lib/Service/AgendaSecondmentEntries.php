@@ -48,32 +48,75 @@ class AgendaSecondmentEntries {
 	public function entries(array $sources, AgendaWindow $window): array {
 		$entries = [];
 		foreach (($sources['secondments'] ?? []) as $secondment) {
-			$employeeId = trim((string)($secondment['employeeId'] ?? ''));
-			if (in_array($employeeId, $window->employees, true) === false || trim((string)($secondment['status'] ?? '')) !== 'actief') {
-				continue;
+			$span = ($this->isActiveFor(secondment: $secondment, window: $window) === true) ? $this->spanOf(secondment: $secondment, window: $window) : null;
+			if ($span !== null) {
+				$entries[] = $this->entryOf(secondment: $secondment, span: $span);
 			}
-
-			$start = max($window->from, substr(trim((string)($secondment['startDate'] ?? '')), 0, 10));
-			$endDate = substr(trim((string)($secondment['endDate'] ?? '')), 0, 10);
-			$end = ($endDate === '') ? $window->to : min($window->to, $endDate);
-			if ($start === '' || $start > $end) {
-				continue;
-			}
-
-			$entries[] = [
-				'kind' => 'secondment',
-				'subjectType' => 'employee',
-				'subjectId' => $employeeId,
-				'start' => ($start . 'T00:00:00'),
-				'end' => ($end . 'T23:59:59'),
-				'label' => 'Gedetacheerd: ' . trim((string)($secondment['receivingOrganisation'] ?? '')),
-				'hoursPerWeek' => (float)($secondment['hoursPerWeek'] ?? 0),
-				'sourceType' => 'Secondment',
-				'sourceId' => trim((string)($secondment['id'] ?? '')),
-			];
 		}
 
 		return $entries;
 	}//end entries()
+
+	/**
+	 * Whether a secondment is active and of one of the window's employees.
+	 *
+	 * @param array<string, mixed> $secondment The secondment.
+	 * @param AgendaWindow $window The subject and the window.
+	 *
+	 * @return bool
+	 */
+	private function isActiveFor(array $secondment, AgendaWindow $window): bool {
+		return in_array(trim((string)($secondment['employeeId'] ?? '')), $window->employees, true) === true && trim((string)($secondment['status'] ?? '')) === 'actief';
+	}//end isActiveFor()
+
+	/**
+	 * The days of a secondment inside the window, or null when none are.
+	 *
+	 * @param array<string, mixed> $secondment The secondment.
+	 * @param AgendaWindow $window The subject and the window.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function spanOf(array $secondment, AgendaWindow $window): array|null {
+		$start = max($window->from, $this->day(row: $secondment, field: 'startDate'));
+		$endDate = $this->day(row: $secondment, field: 'endDate');
+		$end = ($endDate === '') ? $window->to : min($window->to, $endDate);
+
+		return ($start === '' || $start > $end) ? null : [$start, $end];
+	}//end spanOf()
+
+	/**
+	 * The agenda entry for a secondment over its days in the window.
+	 *
+	 * @param array<string, mixed> $secondment The secondment.
+	 * @param array{0: string, 1: string} $span The first and last day.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function entryOf(array $secondment, array $span): array {
+		return [
+			'kind' => 'secondment',
+			'subjectType' => 'employee',
+			'subjectId' => trim((string)($secondment['employeeId'] ?? '')),
+			'start' => ($span[0] . 'T00:00:00'),
+			'end' => ($span[1] . 'T23:59:59'),
+			'label' => 'Gedetacheerd: ' . trim((string)($secondment['receivingOrganisation'] ?? '')),
+			'hoursPerWeek' => (float)($secondment['hoursPerWeek'] ?? 0),
+			'sourceType' => 'Secondment',
+			'sourceId' => trim((string)($secondment['id'] ?? '')),
+		];
+	}//end entryOf()
+
+	/**
+	 * The date part of a field, or ''.
+	 *
+	 * @param array<string, mixed> $row The row.
+	 * @param string $field The field.
+	 *
+	 * @return string
+	 */
+	private function day(array $row, string $field): string {
+		return substr(trim((string)($row[$field] ?? '')), 0, 10);
+	}//end day()
 
 }//end class

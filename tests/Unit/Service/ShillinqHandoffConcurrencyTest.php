@@ -19,11 +19,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use Fiber;
+use OCA\Humaniq\Service\PayrollBookkeepingSettings;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Service\Support\InMemoryLocks;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCP\AppFramework\Services\IAppConfig;
 use OCP\Lock\ILockingProvider;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
@@ -241,7 +243,7 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 		$number = ($kind === 'netpay' ? 'runNumber' : 'journalNumber');
 		$value = ($kind === 'netpay' ? 'HRMQ-NETPAY-2026-05-ADM-001' : 'HRMQ-LOON-2026-05-ADM-001');
 		$store = $this->store();
-		$store->rows[$target] = [['id' => 'by-cron', $number => $value, '_org' => 'default']];
+		$store->rows[$target] = [(['id' => 'by-cron', $number => $value, '_org' => 'default'] + $this->totalsOf($kind))];
 		$store->organisation = 'other-org';
 
 		$adopted = $this->service($kind, $store)->$handOff($this->payrollRun());
@@ -283,7 +285,7 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 			$store->rows[$target][] = ['id' => 'old-' . $i, $number => 'OLD-' . $i];
 		}
 
-		$store->rows[$target][] = ['id' => 'mine', $number => $value];
+		$store->rows[$target][] = (['id' => 'mine', $number => $value] + $this->totalsOf($kind));
 		$adopted = $this->service($kind, $store)->$handOff($this->payrollRun());
 
 		$this->assertContains($adopted['status'], ['created', 'posted']);
@@ -373,7 +375,7 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 
 		$store = $this->store();
 		$store->rows[$ownSchema] = [$stale];
-		$store->rows[$target] = [['id' => 'by-crash', $number => $value]];
+		$store->rows[$target] = [(['id' => 'by-crash', $number => $value] + $this->totalsOf($kind))];
 
 		$adopted = $this->service($kind, $store)->$handOff($this->payrollRun());
 
@@ -472,7 +474,7 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 		$this->assertCount(1, $store->savesOf($target), 'One record reaches shillinq.');
 
 		$store = $this->store();
-		$store->rows[$target] = [['id' => 'by-cron', $number => $value, '_org' => 'default']];
+		$store->rows[$target] = [(['id' => 'by-cron', $number => $value, '_org' => 'default'] + $this->totalsOf($kind))];
 		$store->organisation = 'default';
 		$store->unreadable = [$target, $ownSchema];
 
@@ -573,6 +575,21 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 
 		return ['journalNumber', 'HRMQ-LOON-2026-05-ADM-001'];
 	}//end numberOf()
+
+	/**
+	 * The totals a shillinq record written for this test's payroll run carries.
+	 *
+	 * @param string $kind Which service.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function totalsOf(string $kind): array {
+		if ($kind === 'netpay') {
+			return ['totalAmount' => 2698.0];
+		}
+
+		return ['lines' => [['side' => 'debit', 'amount' => 4449.80], ['side' => 'credit', 'amount' => 4449.80]]];
+	}//end totalsOf()
 
 	/**
 	 * The saves of one record of a schema, in order.
@@ -824,15 +841,11 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 		$settings->method('getNetPayExecutionDay')->willReturn(25);
 		$settings->method('getNetPayDebtorIban')->willReturn('');
-		$settings->method('getGlPostAccountGross')->willReturn('4001');
-		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
-		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
 
 		if ($kind === 'netpay') {
 			return new PayrollNetPayService($container, $apps, $settings, new NullLogger());
 		}
 
-		return new PayrollGLPostService($container, $apps, $settings, new NullLogger());
+		return new PayrollGLPostService($container, $apps, $settings, new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)), new NullLogger());
 	}//end service()
 }//end class

@@ -40,6 +40,7 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Humaniq\Support\ChecksPeriodCoverage
  * @uses   \OCA\Humaniq\Support\ReadsEmployeeKeys
  * @uses   \OCA\Humaniq\Support\FindsCoveringContract
+ * @uses   \OCA\Humaniq\BackgroundJob\LeaveAccrualPass
  */
 class LeaveAccrualGoldenTest extends TestCase {
 

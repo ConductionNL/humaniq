@@ -3,6 +3,9 @@
 /**
  * NL Reiskosten (Mileage) Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable check for the Dutch onbelaste kilometervergoeding rule of the
  * payroll corpus (lib/Standards/rules/payroll.json), mapped onto the Expense
  * object type: a mileage claim (category travel, travelType business or
@@ -29,9 +32,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -92,21 +92,7 @@ final class NlTravelExpenseChecks implements CheckProvider {
 	 * @return bool
 	 */
 	private static function onbelastTariefSatisfied(array $o): bool {
-		if ((string)($o['category'] ?? '') !== 'travel') {
-			return true;
-		}
-
-		if (in_array(($o['travelType'] ?? null), ['business', 'commute'], true) === false) {
-			return true;
-		}
-
-		$distanceKm = ($o['distanceKm'] ?? null);
-		if (is_numeric($distanceKm) === false || (float)$distanceKm <= 0.0) {
-			return true;
-		}
-
-		$amount = ($o['amount'] ?? null);
-		if (is_numeric($amount) === false) {
+		if (self::isMileageClaim(o: $o) === false || self::hasDistanceAndAmount(o: $o) === false) {
 			return true;
 		}
 
@@ -115,19 +101,54 @@ final class NlTravelExpenseChecks implements CheckProvider {
 			return true;
 		}
 
-		// expenses-travel-calculation: the part of the amount recorded as
-		// taxable is not a tax-free reimbursement, so only the rest is held
-		// to the rate. A claim without the split is held whole, as before.
-		$taxable = ($o['taxableAmount'] ?? null);
-		$taxFreePaid = (float)$amount;
-		if (is_numeric($taxable) === true && (float)$taxable > 0.0) {
-			$taxFreePaid = ((float)$amount - (float)$taxable);
-		}
-
-		$perKm = ($taxFreePaid / (float)$distanceKm);
+		$perKm = (self::taxFreePaid(o: $o) / (float)$o['distanceKm']);
 
 		return self::perKmWithinRate($perKm, $rateEurPerKm);
 	}//end onbelastTariefSatisfied()
+
+	/**
+	 * Whether an expense is a business or commute travel claim.
+	 *
+	 * @param array<string, mixed> $o The Expense.
+	 *
+	 * @return bool
+	 */
+	private static function isMileageClaim(array $o): bool {
+		return (string)($o['category'] ?? '') === 'travel' && in_array(($o['travelType'] ?? null), ['business', 'commute'], true) === true;
+	}//end isMileageClaim()
+
+	/**
+	 * Whether a claim states a positive distance and a numeric amount.
+	 *
+	 * @param array<string, mixed> $o The Expense.
+	 *
+	 * @return bool
+	 */
+	private static function hasDistanceAndAmount(array $o): bool {
+		$distanceKm = ($o['distanceKm'] ?? null);
+
+		return is_numeric($distanceKm) === true && (float)$distanceKm > 0.0 && is_numeric($o['amount'] ?? null) === true;
+	}//end hasDistanceAndAmount()
+
+	/**
+	 * The part of the amount paid as a tax-free reimbursement.
+	 *
+	 * expenses-travel-calculation: the part of the amount recorded as
+	 * taxable is not a tax-free reimbursement, so only the rest is held
+	 * to the rate. A claim without the split is held whole, as before.
+	 *
+	 * @param array<string, mixed> $o The Expense, with a numeric amount.
+	 *
+	 * @return float
+	 */
+	private static function taxFreePaid(array $o): float {
+		$taxable = ($o['taxableAmount'] ?? null);
+		if (is_numeric($taxable) === true && (float)$taxable > 0.0) {
+			return ((float)$o['amount'] - (float)$taxable);
+		}
+
+		return (float)$o['amount'];
+	}//end taxFreePaid()
 
 	/**
 	 * The tax-free rate per kilometre from the rule corpus, or null when the

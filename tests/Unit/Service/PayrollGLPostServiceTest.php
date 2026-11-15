@@ -31,11 +31,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\PayrollBookkeepingSettings;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Humaniq\Service\Connection\ConnectionReporter;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -82,6 +85,20 @@ class PayrollGLPostServiceTest extends TestCase {
 			public array $saved = [];
 
 			/**
+			 * Schemas whose filtered lookups fail; the availability probe is unfiltered.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $lookupFails = [];
+
+			/**
+			 * Schemas whose save throws, as a store that refuses the write.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $saveFails = [];
+
+			/**
 			 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
 			 * @param bool $shillinqThrows Whether JournalEntry access throws.
 			 */
@@ -123,6 +140,10 @@ class PayrollGLPostServiceTest extends TestCase {
 					throw new \RuntimeException('shillinq register unavailable');
 				}
 
+				if (isset($options['filters']) === true && in_array($this->schema, $this->lookupFails, true) === true) {
+					throw new \RuntimeException('lookup failed');
+				}
+
 				return $this->rowsBySchema[$this->schema] ?? [];
 			}//end findAll()
 
@@ -147,6 +168,10 @@ class PayrollGLPostServiceTest extends TestCase {
 				$targetSchema = ($schema ?? $this->schema);
 				if ($targetSchema === 'JournalEntry' && $this->shillinqThrows === true) {
 					throw new \RuntimeException('shillinq register unavailable');
+				}
+
+				if (in_array($targetSchema, $this->saveFails, true) === true) {
+					throw new \RuntimeException('shillinq refused the write');
 				}
 
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
@@ -187,7 +212,7 @@ class PayrollGLPostServiceTest extends TestCase {
 	 *
 	 * @return array{0: PayrollGLPostService, 1: object}
 	 */
-	private function service(array $rowsBySchema = [], bool $shillinqThrows = false, bool $shillinqInstalled = true): array {
+	private function service(array $rowsBySchema = [], bool $shillinqThrows = false, bool $shillinqInstalled = true, ?ConnectionReporter $connections = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema, $shillinqThrows);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -206,14 +231,10 @@ class PayrollGLPostServiceTest extends TestCase {
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getGlPostAccountGross')->willReturn('4001');
-		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
-		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new PayrollGLPostService($container, $appManager, $settings, $logger), $fake];
+		return [new PayrollGLPostService($container, $appManager, $settings, new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)), $logger, $connections), $fake];
 	}//end service()
 
 	/**
@@ -490,7 +511,7 @@ class PayrollGLPostServiceTest extends TestCase {
 		return [
 			'no wage tax' => [['totalLoonheffing' => 0.0, 'totalNet' => 3800.0], ['4001' => 3800.0, '4002' => 649.8, '1702' => 4449.8]],
 			'no employer charges' => [['totalEmployerCharges' => 0.0], ['4001' => 3800.0, '1701' => 1102.0, '1702' => 2698.0]],
-			'only reimbursements' => [['totalGross' => 0.0, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => 0.0, 'totalNet' => 50.0, 'totalReimbursements' => 50.0], ['' => 50.0, '1702' => 50.0]],
+			'only reimbursements' => [['totalGross' => 0.0, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => 0.0, 'totalNet' => 50.0, 'totalReimbursements' => 50.0], ['4010' => 50.0, '1702' => 50.0]],
 			'only employer charges' => [['totalGross' => 0.0, 'totalEmployerCharges' => 10.0, 'totalLoonheffing' => 0.0, 'totalNet' => 0.0], ['4002' => 10.0, '1702' => 10.0]],
 			'one cent of gross' => [['totalGross' => 0.01, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => 0.0, 'totalNet' => 0.01], ['4001' => 0.01, '1702' => 0.01]],
 			'negative zero' => [['totalEmployerCharges' => -0.0, 'totalReimbursements' => -0.004], ['4001' => 3800.0, '1701' => 1102.0, '1702' => 2698.0]],
@@ -571,9 +592,10 @@ class PayrollGLPostServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testPostRunAdoptsExistingJournalEntryByNumberInsteadOfDuplicating(): void {
+		[$builder] = $this->service();
 		$rows = [
 			'JournalEntry' => [
-				['id' => 'je-existing', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001'],
+				['id' => 'je-existing', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001', 'lines' => $builder->buildLines($this->payrollRun())['lines']],
 			],
 		];
 		[$service, $fake] = $this->service($rows);
@@ -585,6 +607,65 @@ class PayrollGLPostServiceTest extends TestCase {
 		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
 
 	}//end testPostRunAdoptsExistingJournalEntryByNumberInsteadOfDuplicating()
+
+	/**
+	 * An existing JournalEntry with other totals is not adopted.
+	 *
+	 * @return void
+	 */
+	public function testAJournalEntryWithOtherTotalsIsNotAdopted(): void {
+		[$builder] = $this->service();
+		$lines = $builder->buildLines($this->payrollRun())['lines'];
+		$lines[0]['amount'] = ((float)$lines[0]['amount'] + 1);
+		[$service, $fake] = $this->service(['JournalEntry' => [['id' => 'je-other', 'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001', 'lines' => $lines]]]);
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertStringContainsString('niet overgenomen', (string)$result['message']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+	}//end testAJournalEntryWithOtherTotalsIsNotAdopted()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedJournalEntryLookupCreatesNoJournalEntry(): void {
+		[$service, $fake] = $this->service();
+		$fake->lookupFails = ['JournalEntry'];
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+	}//end testAFailedJournalEntryLookupCreatesNoJournalEntry()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedJournalEntryLookupLeavesAStalePendingGlPostAlone(): void {
+		[$service, $fake] = $this->service(['PayrollGLPost' => [['id' => 'gp-1', 'payrollRunId' => 'run-1', 'period' => '2026-05', 'status' => 'pending']]]);
+		$fake->lookupFails = ['JournalEntry'];
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('pending', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+		$this->assertCount(0, $this->savedFor($fake, 'PayrollGLPost'));
+	}//end testAFailedJournalEntryLookupLeavesAStalePendingGlPostAlone()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedGlPostLookupWritesNothing(): void {
+		[$service, $fake] = $this->service();
+		$fake->lookupFails = ['PayrollGLPost'];
+
+		$result = $service->postRun($this->payrollRun());
+
+		$this->assertSame('pending', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+		$this->assertCount(0, $this->savedFor($fake, 'PayrollGLPost'));
+	}//end testAFailedGlPostLookupWritesNothing()
 
 	/**
 	 * @return void
@@ -767,4 +848,63 @@ class PayrollGLPostServiceTest extends TestCase {
 		self::assertArrayHasKey('projectCode', $glPost['properties']['lines']['items']['properties']);
 	}//end testThePostedJournalCarriesTheCodesAndFitsBothSchemas()
 
+
+	/**
+	 * A journal entry shillinq took reports the ledger as configured (platform-integrations-catalogue D2).
+	 *
+	 * @return void
+	 */
+	public function testAPostShillinqTookReportsTheLedgerConfigured(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'configured', 'Shillinq took journal entry HRMQ-LOON-2026-05-ADM-001.')
+			->willReturn(true);
+		[$service] = $this->service(connections: $connections);
+
+		$this->assertSame('posted', $service->postRun($this->payrollRun())['status']);
+	}//end testAPostShillinqTookReportsTheLedgerConfigured()
+
+	/**
+	 * A journal entry shillinq refused reports the ledger as an error with the reason.
+	 *
+	 * @return void
+	 */
+	public function testAJournalEntryShillinqRefusedReportsTheLedgerError(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'error', 'Shillinq refused the journal entry: shillinq refused the write')
+			->willReturn(true);
+		[$service, $fake] = $this->service(connections: $connections);
+		$fake->saveFails = ['JournalEntry'];
+
+		$this->assertSame('failed', $service->postRun($this->payrollRun())['status']);
+	}//end testAJournalEntryShillinqRefusedReportsTheLedgerError()
+
+	/**
+	 * Without shillinq the ledger is reported unavailable.
+	 *
+	 * @return void
+	 */
+	public function testAMissingShillinqReportsTheLedgerUnavailable(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'unavailable', 'Shillinq is not installed, or its journal entries cannot be reached.')
+			->willReturn(true);
+		[$service] = $this->service(shillinqInstalled: false, connections: $connections);
+
+		$this->assertSame('skipped-no-shillinq', $service->postRun($this->payrollRun())['status']);
+	}//end testAMissingShillinqReportsTheLedgerUnavailable()
+
+	/**
+	 * A run humaniq itself refuses never reached shillinq, so it says nothing about the ledger.
+	 *
+	 * @return void
+	 */
+	public function testARunHumaniqRefusesReportsNothing(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->never())->method('report');
+		[$service] = $this->service(connections: $connections);
+
+		$this->assertSame('failed', $service->postRun($this->payrollRun(['id' => '']))['status']);
+	}//end testARunHumaniqRefusesReportsNothing()
 }//end class

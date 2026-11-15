@@ -226,6 +226,55 @@ class NlWageGarnishmentChecksTest extends TestCase {
 	}//end testRealRuleEngineIsSilentWhenTheFloorHolds()
 
 	/**
+	 * The single-active verdict for every shape of garnishment and its neighbours.
+	 *
+	 * @return void
+	 */
+	public function testTheSingleActiveVerdictForEveryShape(): void {
+		$check = $this->checks['Loonbeslag']['nl-loonbeslag-single-active'];
+		$self = $this->loonbeslag(['id' => 'lb-1', 'effectiveFrom' => '2026-01-01', 'effectiveTo' => '2026-06-30']);
+		$others = [
+			'overlapping' => ['id' => 'lb-2', 'effectiveFrom' => '2026-06-30'],
+			'after' => ['id' => 'lb-2', 'effectiveFrom' => '2026-07-01'],
+			'before' => ['id' => 'lb-2', 'effectiveFrom' => '2025-01-01', 'effectiveTo' => '2025-12-31'],
+			'concept' => ['id' => 'lb-2', 'status' => 'concept'],
+			'other-employee' => ['id' => 'lb-2', 'employeeId' => 'emp-2'],
+			'padded-employee' => ['id' => 'lb-2', 'employeeId' => ' emp-1 '],
+			'unreadable-dates' => ['id' => 'lb-2', 'effectiveFrom' => 'ooit', 'effectiveTo' => 'later'],
+		];
+		$got = [];
+		foreach ($others as $name => $overrides) {
+			$got[$name] = $check($self, $this->context([$self, $this->loonbeslag($overrides)]));
+		}
+
+		$got['itself-only'] = $check($self, $this->context([$self]));
+		$got['self-id-from-meta'] = $check(array_merge(array_diff_key($self, ['id' => 1]), ['@self' => ['id' => 'lb-1']]), $this->context([$self]));
+		$got['not-a-record'] = $check($self, ['payroll' => ['loonbeslagenById' => ['lb-2' => 'x', 'lb-1' => $self]]]);
+		$got['no-context'] = $check($self, []);
+		$got['self-concept'] = $check(array_merge($self, ['status' => 'concept']), $this->context([$self, $this->loonbeslag(['id' => 'lb-2'])]));
+		$got['self-no-employee'] = $check(array_merge($self, ['employeeId' => ' ']), $this->context([$self, $this->loonbeslag(['id' => 'lb-2', 'employeeId' => ''])]));
+
+		self::assertSame(
+			[
+				'overlapping' => false,
+				'after' => true,
+				'before' => true,
+				'concept' => true,
+				'other-employee' => true,
+				'padded-employee' => false,
+				'unreadable-dates' => false,
+				'itself-only' => true,
+				'self-id-from-meta' => true,
+				'not-a-record' => true,
+				'no-context' => true,
+				'self-concept' => true,
+				'self-no-employee' => true,
+			],
+			$got
+		);
+	}//end testTheSingleActiveVerdictForEveryShape()
+
+	/**
 	 * A non-`actief` Loonbeslag can never conflict for the single-active
 	 * check (vacuous).
 	 *

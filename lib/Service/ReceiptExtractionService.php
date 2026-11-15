@@ -3,6 +3,9 @@
 /**
  * Receipt Extraction Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The second, opposite-direction docudesk consumption (receipt-ocr design.md
  * D1): where `HrDocumentService` hands humaniq data TO docudesk to render a
  * PDF, this service reads an already-attached `Expense.receiptFile` and asks
@@ -73,9 +76,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -213,32 +213,76 @@ class ReceiptExtractionService {
 	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-005
 	 */
 	public function extractForExpense(string $expenseId, ?string $userId = null): array {
-		$expenseId = trim($expenseId);
-		if ($expenseId === '') {
+		$attempt = new ReceiptExtractionAttempt();
+		$attempt->expenseId = trim($expenseId);
+		$attempt->userId = $userId;
+
+		return ($this->earlyOutcome(attempt: $attempt) ?? $this->runExtraction(attempt: $attempt));
+	}//end extractForExpense()
+
+	/**
+	 * The outcome that ends the attempt before docudesk is called, in order:
+	 * a refused Expense, an earlier extraction, or docudesk not available.
+	 * Null when the attempt proceeds; the Expense and its receipt are loaded.
+	 *
+	 * @param ReceiptExtractionAttempt $attempt The attempt.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-003
+	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-004
+	 */
+	private function earlyOutcome(ReceiptExtractionAttempt $attempt): ?array {
+		return ($this->refusal(attempt: $attempt)
+			?? $this->idempotencyOutcome($attempt->expenseId)
+			?? $this->unavailableOutcome(attempt: $attempt));
+	}//end earlyOutcome()
+
+	/**
+	 * The `failed` outcome for an empty id, an unknown Expense or an Expense
+	 * without a receipt; null after loading the Expense and its receipt.
+	 *
+	 * @param ReceiptExtractionAttempt $attempt The attempt; its Expense and receipt file are set.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-002
+	 */
+	private function refusal(ReceiptExtractionAttempt $attempt): ?array {
+		if ($attempt->expenseId === '') {
 			return $this->outcome('', 'failed', 'Geen expenseId opgegeven; extractie is geweigerd.');
 		}
 
-		$expense = $this->repository->findExpense($expenseId);
-		if ($expense === null) {
-			return $this->outcome($expenseId, 'failed', 'Expense niet gevonden: ' . $expenseId);
+		$attempt->expense = $this->repository->findExpense($attempt->expenseId);
+		if ($attempt->expense === null) {
+			return $this->outcome($attempt->expenseId, 'failed', 'Expense niet gevonden: ' . $attempt->expenseId);
 		}
 
-		$receiptFile = trim((string)($expense['receiptFile'] ?? ''));
-		if ($receiptFile === '') {
-			return $this->outcome($expenseId, 'failed', 'Expense heeft geen receiptFile; extractie is geweigerd.');
+		$attempt->receiptFile = trim((string)($attempt->expense['receiptFile'] ?? ''));
+		if ($attempt->receiptFile === '') {
+			return $this->outcome($attempt->expenseId, 'failed', 'Expense heeft geen receiptFile; extractie is geweigerd.');
 		}
 
-		$idempotentOutcome = $this->idempotencyOutcome($expenseId);
-		if ($idempotentOutcome !== null) {
-			return $idempotentOutcome;
+		return null;
+	}//end refusal()
+
+	/**
+	 * The `skipped-no-docudesk` outcome when docudesk is not available, or
+	 * null when it is.
+	 *
+	 * @param ReceiptExtractionAttempt $attempt The attempt.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-003
+	 */
+	private function unavailableOutcome(ReceiptExtractionAttempt $attempt): ?array {
+		if ($this->docudeskAvailable() === true) {
+			return null;
 		}
 
-		if ($this->docudeskAvailable() === false) {
-			return $this->skipNoDocudesk($expenseId, $userId);
-		}
-
-		return $this->runExtraction($expenseId, $expense, $receiptFile, $userId);
-	}//end extractForExpense()
+		return $this->skipNoDocudesk($attempt->expenseId, $attempt->userId);
+	}//end unavailableOutcome()
 
 	/**
 	 * The idempotency pre-check (design.md D3): an active `extracted` row
@@ -305,43 +349,68 @@ class ReceiptExtractionService {
 	 * `applyExtractionResult()` on success -- a caught `\Throwable` records
 	 * `failed` and never propagates.
 	 *
-	 * @param string $expenseId The Expense id.
-	 * @param array<string, mixed> $expense The current Expense (pre-write).
-	 * @param string $receiptFile The Expense's non-empty receiptFile value.
-	 * @param string|null $userId The acting Nextcloud user id, or null for 'system'.
+	 * @param ReceiptExtractionAttempt $attempt The attempt, its Expense and receipt file loaded.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-002
 	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-003
 	 */
-	private function runExtraction(string $expenseId, array $expense, string $receiptFile, ?string $userId): array {
-		$row = $this->repository->createReceiptExtraction(
-			[
-				'expenseId' => $expenseId,
-				'status' => 'pending',
-				'requestedBy' => $userId,
-			]
-		);
-
+	private function runExtraction(ReceiptExtractionAttempt $attempt): array {
+		$attempt->row = $this->pendingRow(attempt: $attempt);
+		$userId = $attempt->userId;
 		$requestedBy = ($userId !== null && trim($userId) !== '') ? $userId : 'system';
 
 		try {
 			$result = $this->financialExtractionService()->extractFinancial(
-				$this->buildExtractionData($receiptFile),
+				$this->buildExtractionData($attempt->receiptFile),
 				$requestedBy
 			);
 		} catch (\Throwable $e) {
-			$row = $this->repository->saveReceiptExtraction(
-				$row,
-				['status' => 'failed', 'errorMessage' => 'Extractie via docudesk is mislukt: ' . $e->getMessage()]
-			);
-
-			return $this->outcome($expenseId, 'failed', (string)$row['errorMessage'], $row);
+			return $this->failedExtraction(attempt: $attempt, error: $e);
 		}
 
-		return $this->applyExtractionResult($expenseId, $expense, $row, $result);
+		return $this->applyExtractionResult(attempt: $attempt, result: $result);
 	}//end runExtraction()
+
+	/**
+	 * Create the attempt's `pending` ReceiptExtraction row.
+	 *
+	 * @param ReceiptExtractionAttempt $attempt The attempt.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-002
+	 */
+	private function pendingRow(ReceiptExtractionAttempt $attempt): array {
+		return $this->repository->createReceiptExtraction(
+			[
+				'expenseId' => $attempt->expenseId,
+				'status' => 'pending',
+				'requestedBy' => $attempt->userId,
+			]
+		);
+	}//end pendingRow()
+
+	/**
+	 * Record a docudesk failure on the attempt's row and return the
+	 * `failed` outcome.
+	 *
+	 * @param ReceiptExtractionAttempt $attempt The attempt, its row created.
+	 * @param \Throwable              $error   What docudesk threw.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-003
+	 */
+	private function failedExtraction(ReceiptExtractionAttempt $attempt, \Throwable $error): array {
+		$row = $this->repository->saveReceiptExtraction(
+			$attempt->row,
+			['status' => 'failed', 'errorMessage' => 'Extractie via docudesk is mislukt: ' . $error->getMessage()]
+		);
+
+		return $this->outcome($attempt->expenseId, 'failed', (string)$row['errorMessage'], $row);
+	}//end failedExtraction()
 
 	/**
 	 * Apply the prefill-not-overwrite mapping (design.md D4) onto the
@@ -351,45 +420,68 @@ class ReceiptExtractionService {
 	 * amount/expenseDate/vendor/vatAmount, so this write can never advance or
 	 * alter the claim's lifecycle.
 	 *
-	 * @param string $expenseId The Expense id.
-	 * @param array<string, mixed> $expense The current Expense (pre-write).
-	 * @param array<string, mixed> $row The `pending` ReceiptExtraction row.
-	 * @param array<string, mixed> $result docudesk's `extractFinancial()` result.
+	 * @param ReceiptExtractionAttempt $attempt The attempt, its Expense loaded and `pending` row created.
+	 * @param array<string, mixed>     $result  docudesk's `extractFinancial()` result.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-002
 	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-005
 	 */
-	private function applyExtractionResult(string $expenseId, array $expense, array $row, array $result): array {
+	private function applyExtractionResult(ReceiptExtractionAttempt $attempt, array $result): array {
 		$fields = (array)($result['fields'] ?? []);
-		$mapping = $this->mapFields($expense, $fields);
+		$mapping = $this->mapFields($attempt->expense, $fields);
 
 		if ($mapping['writes'] !== []) {
-			$this->repository->saveExpense($expense, $mapping['writes']);
+			$this->repository->saveExpense($attempt->expense, $mapping['writes']);
 		}
 
+		$row = $this->repository->saveReceiptExtraction($attempt->row, $this->extractedRecord(mapping: $mapping, result: $result));
+
+		return $this->outcome($attempt->expenseId, 'extracted', 'Extractie voltooid.', $row);
+	}//end applyExtractionResult()
+
+	/**
+	 * What a completed attempt records on its ReceiptExtraction: the raw
+	 * values, the overall confidence, the fields applied and when.
+	 *
+	 * @param array{writes: array<string, mixed>, applied: array<int, string>, raw: array<string, mixed>} $mapping The field mapping.
+	 * @param array<string, mixed>                                                                     $result  docudesk's `extractFinancial()` result.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-002
+	 */
+	private function extractedRecord(array $mapping, array $result): array {
+		$overallConfidence = $this->overallConfidence(result: $result);
+
+		return array_merge(
+			$mapping['raw'],
+			[
+				'status' => 'extracted',
+				'overallConfidence' => $overallConfidence,
+				'appliedFields' => ($mapping['applied'] === [] ? null : implode(',', $mapping['applied'])),
+				'extractedAt' => gmdate('Y-m-d\TH:i:s\Z'),
+				'errorMessage' => null,
+			]
+		);
+	}//end extractedRecord()
+
+	/**
+	 * docudesk's overall confidence as a float, or null when it gave none.
+	 *
+	 * @param array<string, mixed> $result docudesk's `extractFinancial()` result.
+	 *
+	 * @return float|null
+	 */
+	private function overallConfidence(array $result): ?float {
 		$overallConfidence = null;
 		if (isset($result['overallConfidence']) === true) {
 			$overallConfidence = (float)$result['overallConfidence'];
 		}
 
-		$row = $this->repository->saveReceiptExtraction(
-			$row,
-			array_merge(
-				$mapping['raw'],
-				[
-					'status' => 'extracted',
-					'overallConfidence' => $overallConfidence,
-					'appliedFields' => ($mapping['applied'] === [] ? null : implode(',', $mapping['applied'])),
-					'extractedAt' => gmdate('Y-m-d\TH:i:s\Z'),
-					'errorMessage' => null,
-				]
-			)
-		);
-
-		return $this->outcome($expenseId, 'extracted', 'Extractie voltooid.', $row);
-	}//end applyExtractionResult()
+		return $overallConfidence;
+	}//end overallConfidence()
 
 	/**
 	 * Build the `extractFinancial()` `$data` argument: `Expense.receiptFile`

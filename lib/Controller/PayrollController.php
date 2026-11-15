@@ -3,6 +3,9 @@
 /**
  * Payroll Controller
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Backs the `PayrollRunDetail` manifest page action "(Her)berekenen"
  * (payroll-core-engine design.md D6): a single POST endpoint that resolves
  * the posted `runId` through OpenRegister's ObjectService under the caller's
@@ -64,9 +67,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -234,6 +234,28 @@ class PayrollController extends Controller {
 		}
 
 		$toRunId = trim((string)$toRunId);
+		$fromRunId = trim((string)$fromRunId);
+		$refusal = $this->mutationRunsRefusal($toRunId, $fromRunId);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->mutationReport($toRunId, $fromRunId);
+	}//end mutations()
+
+	/**
+	 * The refusal for a mutation report's runs, or null when both may be
+	 * diffed: a blank toRunId is 400; a toRunId or a given fromRunId that
+	 * does not resolve under the caller's RBAC is 404.
+	 *
+	 * @param string $toRunId The PayrollRun being reviewed (trimmed).
+	 * @param string $fromRunId The baseline PayrollRun (trimmed), '' to auto-resolve.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/specs/payroll-mutation-reports/spec.md#REQ-MUT-008
+	 */
+	private function mutationRunsRefusal(string $toRunId, string $fromRunId): JSONResponse|null {
 		if ($toRunId === '') {
 			return new JSONResponse(['error' => 'toRunId is verplicht.'], Http::STATUS_BAD_REQUEST);
 		}
@@ -244,11 +266,25 @@ class PayrollController extends Controller {
 			return new JSONResponse(['error' => 'Loonrun niet gevonden.'], Http::STATUS_NOT_FOUND);
 		}
 
-		$fromRunId = trim((string)$fromRunId);
 		if ($fromRunId !== '' && $this->authorizeRun($fromRunId) === null) {
 			return new JSONResponse(['error' => 'Loonrun niet gevonden.'], Http::STATUS_NOT_FOUND);
 		}
 
+		return null;
+	}//end mutationRunsRefusal()
+
+	/**
+	 * Diff the two runs and persist the report: a refused diff is 400, a
+	 * failed persist is 500, otherwise {reportId, report}.
+	 *
+	 * @param string $toRunId The PayrollRun being reviewed.
+	 * @param string $fromRunId The baseline PayrollRun, '' to auto-resolve the prior period.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/specs/payroll-mutation-reports/spec.md#REQ-MUT-008
+	 */
+	private function mutationReport(string $toRunId, string $fromRunId): JSONResponse {
 		$outcome = $this->runs->payrollMutationService->diff($toRunId, ($fromRunId === '' ? null : $fromRunId));
 		if ((string)$outcome['status'] !== 'ok') {
 			return new JSONResponse(['error' => (string)$outcome['message']], Http::STATUS_BAD_REQUEST);
@@ -260,7 +296,7 @@ class PayrollController extends Controller {
 		}
 
 		return new JSONResponse(['reportId' => $persisted['reportId'], 'report' => $outcome['report']]);
-	}//end mutations()
+	}//end mutationReport()
 
 	/**
 	 * Whether the caller may take payroll actions: a member of the

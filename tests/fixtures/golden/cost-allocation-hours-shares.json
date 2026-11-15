@@ -1,0 +1,56 @@
+{
+    "fallback": [
+        {
+            "costCenter": "CC-1",
+            "projectId": "P-1",
+            "percentage": 46.43,
+            "allocationSource": "hours"
+        },
+        {
+            "costCenter": "CC-2",
+            "projectId": null,
+            "percentage": 21.43,
+            "allocationSource": "hours"
+        },
+        {
+            "costCenter": "CC-F",
+            "projectId": "P-9",
+            "percentage": 7.14,
+            "allocationSource": "hours"
+        },
+        {
+            "costCenter": "CC-F",
+            "projectId": null,
+            "percentage": 25.0,
+            "allocationSource": "hours"
+        }
+    ],
+    "no-fallback": [
+        {
+            "costCenter": "CC-1",
+            "projectId": "P-1",
+            "percentage": 46.43,
+            "allocationSource": "hours"
+        },
+        {
+            "costCenter": "CC-2",
+            "projectId": null,
+            "percentage": 21.43,
+            "allocationSource": "hours"
+        },
+        {
+            "costCenter": null,
+            "projectId": "P-9",
+            "percentage": 7.14,
+            "allocationSource": "hours"
+        },
+        {
+            "costCenter": null,
+            "projectId": null,
+            "percentage": 25.0,
+            "allocationSource": "hours"
+        }
+    ],
+    "no-hours": [],
+    "none": []
+}
