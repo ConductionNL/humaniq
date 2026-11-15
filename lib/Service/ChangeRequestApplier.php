@@ -46,12 +46,12 @@ class ChangeRequestApplier {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Reads and writes humaniq's register.
+	 * @param RecordStoreInterface $gateway Reads and writes humaniq's register.
 	 * @param InternalWriteMarker  $marker  Marks the apply write as humaniq's own.
 	 * @param ITimeFactory         $time    Now.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly InternalWriteMarker $marker,
 		private readonly ITimeFactory $time,
 	) {

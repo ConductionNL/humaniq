@@ -3,6 +3,9 @@
 /**
  * NL HR-Signals Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable checks for the three hr-signals corpus rules
  * (lib/Standards/rules/labour.json, framework `hr-signals` /`bw7-10`): two
  * keyed on `EmploymentContract` -- a temporary contract nearing its `endDate`
@@ -40,9 +43,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -176,42 +176,52 @@ final class NlSignalChecks implements CheckProvider {
 	 * @return bool
 	 */
 	private static function hasSuccessor(array $o, array $context): bool {
-		$employeeId = (string)($o['employeeId'] ?? '');
-		$ownId = (string)($o['id'] ?? $o['@self']['id'] ?? '');
 		$ownStart = strtotime((string)($o['startDate'] ?? ''));
 		if ($ownStart === false) {
 			return false;
 		}
 
-		$siblings = self::contractsByEmployeeId($context)[$employeeId] ?? [];
-
-		foreach ($siblings as $sibling) {
-			$siblingId = (string)($sibling['id'] ?? '');
-			if ($ownId !== '' && $siblingId !== '' && $siblingId === $ownId) {
-				// Never count itself as its own successor.
-				continue;
-			}
-
-			$siblingStart = strtotime((string)($sibling['startDate'] ?? ''));
-			if ($siblingStart === false || $siblingStart <= $ownStart) {
-				continue;
-			}
-
-			$siblingEndRaw = trim((string)($sibling['endDate'] ?? ''));
-			if ($siblingEndRaw === '') {
-				// Open-ended successor.
-				return true;
-			}
-
-			$siblingEnd = strtotime($siblingEndRaw);
-			$ownEnd = strtotime((string)($o['endDate'] ?? ''));
-			if ($siblingEnd !== false && $ownEnd !== false && $siblingEnd > $ownEnd) {
+		$own = ['id' => (string)($o['id'] ?? $o['@self']['id'] ?? ''), 'start' => $ownStart, 'end' => strtotime((string)($o['endDate'] ?? ''))];
+		foreach ((self::contractsByEmployeeId($context)[(string)($o['employeeId'] ?? '')] ?? []) as $sibling) {
+			if (self::succeeds(sibling: $sibling, own: $own) === true) {
 				return true;
 			}
 		}
 
 		return false;
 	}//end hasSuccessor()
+
+	/**
+	 * Whether one sibling contract succeeds the contract: another contract
+	 * (never itself) that starts later and is open-ended or ends later.
+	 *
+	 * @param array<string, mixed> $sibling The sibling contract.
+	 * @param array{id: string, start: int, end: int|false} $own The contract's id, start and parsed end (false when unparseable).
+	 *
+	 * @return bool
+	 */
+	private static function succeeds(array $sibling, array $own): bool {
+		$siblingId = (string)($sibling['id'] ?? '');
+		if ($own['id'] !== '' && $siblingId !== '' && $siblingId === $own['id']) {
+			// Never count itself as its own successor.
+			return false;
+		}
+
+		$siblingStart = strtotime((string)($sibling['startDate'] ?? ''));
+		if ($siblingStart === false || $siblingStart <= $own['start']) {
+			return false;
+		}
+
+		$siblingEndRaw = trim((string)($sibling['endDate'] ?? ''));
+		if ($siblingEndRaw === '') {
+			// Open-ended successor.
+			return true;
+		}
+
+		$siblingEnd = strtotime($siblingEndRaw);
+
+		return ($siblingEnd !== false && $own['end'] !== false && $siblingEnd > $own['end']);
+	}//end succeeds()
 
 	/**
 	 * The `signals.contractsByEmployeeId` index from the context, or an empty
@@ -244,15 +254,8 @@ final class NlSignalChecks implements CheckProvider {
 			return true;
 		}
 
-		$startDate = strtotime((string)($o['startDate'] ?? ''));
-		$endDate = strtotime((string)($o['endDate'] ?? ''));
-		if ($startDate === false || $endDate === false) {
-			return true;
-		}
-
-		$minTermEnd = strtotime('+' . self::MIN_CONTRACT_MONTHS . ' months', $startDate);
-		if ($endDate < $minTermEnd) {
-			// Fixed term shorter than the statutory threshold -- out of scope.
+		$endDate = self::monitoredTermEnd($o);
+		if ($endDate === null) {
 			return true;
 		}
 
@@ -269,6 +272,43 @@ final class NlSignalChecks implements CheckProvider {
 			return true;
 		}
 
+		return self::aanzegdBy($o, $deadline);
+	}//end aanzegtermijnSatisfied()
+
+	/**
+	 * The end of a fixed term the check monitors, or null when its dates are
+	 * unreadable or the term is shorter than the statutory threshold.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract object.
+	 *
+	 * @return int|null The end date as a timestamp.
+	 */
+	private static function monitoredTermEnd(array $o): ?int {
+		$startDate = strtotime((string)($o['startDate'] ?? ''));
+		$endDate = strtotime((string)($o['endDate'] ?? ''));
+		if ($startDate === false || $endDate === false) {
+			return null;
+		}
+
+		$minTermEnd = strtotime('+' . self::MIN_CONTRACT_MONTHS . ' months', $startDate);
+		if ($endDate < $minTermEnd) {
+			// Fixed term shorter than the statutory threshold -- out of scope.
+			return null;
+		}
+
+		return $endDate;
+
+	}//end monitoredTermEnd()
+
+	/**
+	 * Whether a readable aanzegdOn date lies on or before the deadline.
+	 *
+	 * @param array<string, mixed> $o        The EmploymentContract object.
+	 * @param int                  $deadline The aanzeg deadline, as a timestamp.
+	 *
+	 * @return bool
+	 */
+	private static function aanzegdBy(array $o, int $deadline): bool {
 		$aanzegdOn = trim((string)($o['aanzegdOn'] ?? ''));
 		if ($aanzegdOn === '') {
 			return false;
@@ -280,7 +320,8 @@ final class NlSignalChecks implements CheckProvider {
 		}
 
 		return $aanzegdOnDate <= $deadline;
-	}//end aanzegtermijnSatisfied()
+
+	}//end aanzegdBy()
 
 	/**
 	 * `nl-bhv-certificaat-verloopt`: true unless `certificaatGeldigTot` is a

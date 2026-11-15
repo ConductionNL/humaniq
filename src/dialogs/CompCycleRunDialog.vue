@@ -123,6 +123,21 @@ import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 
 /**
+ * What a confirmed step did, per step; propose is the fallback.
+ *
+ * @type {{[step: string]: function(object): string}}
+ */
+const DONE_TEXT = {
+	approve: (d) => t('humaniq', 'Approved: {approved}. Left for a colleague: {own}. Refused: {failed}.', {
+		approved: d.approved ?? 0,
+		own: d.refusedSelfApproval ?? 0,
+		failed: d.failed ?? 0,
+	}),
+	effectuate: (d) => t('humaniq', 'Salaries written: {count}', { count: d.counts?.applied ?? 0 }),
+	propose: (d) => t('humaniq', 'Proposals created: {count}', { count: d.created ?? 0 }),
+}
+
+/**
  * CompCycleRunDialog: run one step of a compensation cycle for many people.
  *
  * Opened from the cycle page (propose, approve, effectuate) and from a
@@ -273,18 +288,8 @@ export default {
 		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		doneText() {
-			const d = this.done ?? {}
-			if (this.step === 'approve') {
-				return t('humaniq', 'Approved: {approved}. Left for a colleague: {own}. Refused: {failed}.', {
-					approved: d.approved ?? 0,
-					own: d.refusedSelfApproval ?? 0,
-					failed: d.failed ?? 0,
-				})
-			}
-			if (this.step === 'effectuate') {
-				return t('humaniq', 'Salaries written: {count}', { count: d.counts?.applied ?? 0 })
-			}
-			return t('humaniq', 'Proposals created: {count}', { count: d.created ?? 0 })
+			const text = DONE_TEXT[this.step] ?? DONE_TEXT.propose
+			return text(this.done ?? {})
 		},
 	},
 
@@ -345,10 +350,20 @@ export default {
 				const { data } = await axios.post(generateUrl(this.endpoint()), this.payload(true))
 				this.preview = data
 			} catch (e) {
-				this.error = e?.response?.data?.message || e?.response?.data?.error || t('humaniq', 'Could not work out what this would do. Try again.')
+				this.error = this.previewError(e)
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * @param {Error} e The failed preview request.
+		 * @return {string} The server's reason, or a plain retry hint.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
+		 */
+		previewError(e) {
+			return e?.response?.data?.message || e?.response?.data?.error || t('humaniq', 'Could not work out what this would do. Try again.')
 		},
 
 		/**

@@ -29,59 +29,261 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Payroll;
 
+use OCA\Humaniq\Payroll\Dsl\DslException;
+use OCA\Humaniq\Payroll\Dsl\PackRunResult;
+
 /**
  * Immutable output of one gross-to-net calculation, integer cents throughout.
+ *
+ * @SuppressWarnings(PHPMD.TooManyFields) One flat field per figure of the
+ *  breakdown: PayrollRunService, the filings and the balancing check read each
+ *  one by name, so they stay on this class rather than one level down.
  */
 final class CalculationResult {
 
 	/**
-	 * @param int $grossPayCents The gross wage for the period (`tvl`, echoed).
-	 * @param int $loonheffingCents Combined loonheffing withheld (`x`).
-	 * @param int $arbeidskortingCents Applied arbeidskorting tijdvakbedrag.
-	 * @param int $volksverzekeringenCents Informative volksverzekeringen split.
-	 * @param int $zvwCents Zvw contribution for the period.
-	 * @param string $zvwMode `werkgeversheffing` (MVP; `inhouding` never emitted).
-	 * @param float $zvwRate Applied Zvw rate percentage.
-	 * @param float $appliedTaxRate Effective loonheffing rate percentage.
-	 * @param int $nettoPayCents Net wage paid to the employee.
-	 * @param int $vakantiegeldReservedCents Vakantiebijslag reserved this period.
-	 * @param float $vakantiegeldRate Applied vakantiebijslag rate percentage.
-	 * @param int $awfCents Awf employer charge (informative line).
-	 * @param int $aofCents Aof employer charge (informative line).
-	 * @param int $wkoCents Wko opslag employer charge (informative line).
-	 * @param int $whkCents Whk employer charge (informative line).
-	 * @param int $werknemersverzekeringenCents `awf+aof+wko+whk` (the Payslip field).
-	 * @param int $employerChargesCents `werknemersverzekeringen + zvw`.
-	 * @param bool $aboveLmax Whether the tabelloon exceeded the tables' `Lmax` ceiling (documented edge, design.md D2 step 3).
-	 * @param int $taxableWageCents The pack's `belastbaarLoon`: the wage the tax and premiums are calculated over (filings-wage-tax-message D5).
-	 * @param int $premiumWageCents `belastbaarLoon` capped at the period's maximum premium wage: the base of Awf, Aof, Wko and Whk (filings-wage-tax-message D5).
+	 * The gross wage for the period (`tvl`, echoed).
+	 *
+	 * @var integer
+	 */
+	public readonly int $grossPayCents;
+
+	/**
+	 * Combined loonheffing withheld (`x`).
+	 *
+	 * @var integer
+	 */
+	public readonly int $loonheffingCents;
+
+	/**
+	 * Applied arbeidskorting tijdvakbedrag.
+	 *
+	 * @var integer
+	 */
+	public readonly int $arbeidskortingCents;
+
+	/**
+	 * Informative volksverzekeringen split.
+	 *
+	 * @var integer
+	 */
+	public readonly int $volksverzekeringenCents;
+
+	/**
+	 * Zvw contribution for the period: the employer's levy, or in `inhouding` mode the contribution withheld from net pay.
+	 *
+	 * @var integer
+	 */
+	public readonly int $zvwCents;
+
+	/**
+	 * `werkgeversheffing` or `inhouding`: the mode the pack ran (payroll-special-regimes D3).
+	 *
+	 * @var string
+	 */
+	public readonly string $zvwMode;
+
+	/**
+	 * Applied Zvw rate percentage.
+	 *
+	 * @var float
+	 */
+	public readonly float $zvwRate;
+
+	/**
+	 * Effective loonheffing rate percentage.
+	 *
+	 * @var float
+	 */
+	public readonly float $appliedTaxRate;
+
+	/**
+	 * Net wage paid to the employee.
+	 *
+	 * @var integer
+	 */
+	public readonly int $nettoPayCents;
+
+	/**
+	 * Vakantiebijslag reserved this period.
+	 *
+	 * @var integer
+	 */
+	public readonly int $vakantiegeldReservedCents;
+
+	/**
+	 * Applied vakantiebijslag rate percentage.
+	 *
+	 * @var float
+	 */
+	public readonly float $vakantiegeldRate;
+
+	/**
+	 * Awf employer charge (informative line).
+	 *
+	 * @var integer
+	 */
+	public readonly int $awfCents;
+
+	/**
+	 * Aof employer charge (informative line).
+	 *
+	 * @var integer
+	 */
+	public readonly int $aofCents;
+
+	/**
+	 * Wko opslag employer charge (informative line).
+	 *
+	 * @var integer
+	 */
+	public readonly int $wkoCents;
+
+	/**
+	 * Whk employer charge (informative line).
+	 *
+	 * @var integer
+	 */
+	public readonly int $whkCents;
+
+	/**
+	 * `awf+aof+wko+whk` (the Payslip field).
+	 *
+	 * @var integer
+	 */
+	public readonly int $werknemersverzekeringenCents;
+
+	/**
+	 * `werknemersverzekeringen + zvw`.
+	 *
+	 * @var integer
+	 */
+	public readonly int $employerChargesCents;
+
+	/**
+	 * Whether the tabelloon exceeded the tables' `Lmax` ceiling (documented edge, design.md D2 step 3).
+	 *
+	 * @var boolean
+	 */
+	public readonly bool $aboveLmax;
+
+	/**
+	 * The pack's `belastbaarLoon`: the wage the tax and premiums are calculated over (filings-wage-tax-message D5).
+	 *
+	 * @var integer
+	 */
+	public readonly int $taxableWageCents;
+
+	/**
+	 * `belastbaarLoon` capped at the period's maximum premium wage: the base of Awf, Aof, Wko and Whk (filings-wage-tax-message D5).
+	 *
+	 * @var integer
+	 */
+	public readonly int $premiumWageCents;
+
+	/**
+	 * The employer's final levy on an early-retirement benefit above the threshold (payroll-special-regimes D4); 0 for any other wage.
+	 *
+	 * @var integer
+	 */
+	public readonly int $rvuFinalLevyCents;
+
+	/**
+	 * Read every figure off one pack run. `nettoPayCents` and
+	 * `employerChargesCents` are the interpreter's incidence folds: read, not
+	 * computed here (REQ-JP-003). The fields stay flat and in this order.
+	 *
+	 * @param PackRunResult $out The pack run's output.
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
 	 */
-	public function __construct(
-		public readonly int $grossPayCents,
-		public readonly int $loonheffingCents,
-		public readonly int $arbeidskortingCents,
-		public readonly int $volksverzekeringenCents,
-		public readonly int $zvwCents,
-		public readonly string $zvwMode,
-		public readonly float $zvwRate,
-		public readonly float $appliedTaxRate,
-		public readonly int $nettoPayCents,
-		public readonly int $vakantiegeldReservedCents,
-		public readonly float $vakantiegeldRate,
-		public readonly int $awfCents,
-		public readonly int $aofCents,
-		public readonly int $wkoCents,
-		public readonly int $whkCents,
-		public readonly int $werknemersverzekeringenCents,
-		public readonly int $employerChargesCents,
-		public readonly bool $aboveLmax,
-		public readonly int $taxableWageCents=0,
-		public readonly int $premiumWageCents=0,
-	) {
+	public function __construct(PackRunResult $out) {
+		$this->grossPayCents = $out->gross();
+		$this->loonheffingCents = $out->cents('loonheffing');
+		$this->arbeidskortingCents = $out->cents('arbeidskorting');
+		$this->volksverzekeringenCents = $out->cents('volksverzekeringen');
+		$this->zvwCents = ($out->cents('zvw') + self::optionalStepCents(out: $out, id: 'zvwInhouding'));
+		$this->zvwMode = self::zvwModeOf($out);
+		$this->zvwRate = (float)$out->binding('zvwRate');
+		$this->appliedTaxRate = (float)$out->step('appliedTaxRate');
+		$this->nettoPayCents = $out->net();
+		$this->vakantiegeldReservedCents = $out->cents('vakantiegeld');
+		$this->vakantiegeldRate = (float)$out->binding('vakantiegeldRate');
+		$this->awfCents = $out->cents('awf');
+		$this->aofCents = $out->cents('aof');
+		$this->wkoCents = $out->cents('wko');
+		$this->whkCents = $out->cents('whk');
+		$this->werknemersverzekeringenCents = $out->cents('werknemersverzekeringen');
+		$this->employerChargesCents = $out->employerCharges();
+		$this->aboveLmax = (bool)$out->binding('aboveLmax');
+		$this->taxableWageCents = self::optionalCents(out: $out, id: 'belastbaarLoon');
+		$this->premiumWageCents = min(self::optionalCents(out: $out, id: 'belastbaarLoon'), self::optionalCents(out: $out, id: 'premieloonCap'));
+		$this->rvuFinalLevyCents = self::optionalStepCents(out: $out, id: 'rvuEindheffing');
 
 	}//end __construct()
+
+	/**
+	 * A binding in cents, or 0 when the pack does not declare it (a third-party
+	 * pack need not carry the Dutch wage bindings).
+	 *
+	 * @param PackRunResult $out The interpreter output.
+	 * @param string        $id  The binding id.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 */
+	private static function optionalCents(PackRunResult $out, string $id): int {
+		try {
+			return (int)$out->binding($id);
+		} catch (DslException $e) {
+			return 0;
+		}
+	}//end optionalCents()
+
+	/**
+	 * A step in cents, or 0 when the pack does not declare it (a third-party
+	 * pack need not carry the Dutch special-regime steps).
+	 *
+	 * @param PackRunResult $out The interpreter output.
+	 * @param string        $id  The step id.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private static function optionalStepCents(PackRunResult $out, string $id): int {
+		try {
+			return $out->cents($id);
+		} catch (DslException $e) {
+			return 0;
+		}
+	}//end optionalStepCents()
+
+	/**
+	 * The Zvw mode the pack ran: its `zvwMode` binding, or the employer's levy
+	 * for a pack that declares none.
+	 *
+	 * @param PackRunResult $out The interpreter output.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private static function zvwModeOf(PackRunResult $out): string {
+		try {
+			$mode = $out->binding('zvwMode');
+		} catch (DslException $e) {
+			return 'werkgeversheffing';
+		}
+
+		if ($mode === 'inhouding') {
+			return 'inhouding';
+		}
+
+		return 'werkgeversheffing';
+	}//end zvwModeOf()
 
 }//end class

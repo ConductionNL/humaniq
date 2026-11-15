@@ -35,6 +35,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Payroll;
 
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 use PHPUnit\Framework\TestCase;
@@ -67,7 +71,9 @@ class PayrollCalculatorTest extends TestCase {
 			$this->assertSame(self::cents($expected['loonheffing']), $result->loonheffingCents, $label . ': loonheffing');
 			$this->assertSame(self::cents($expected['arbeidskorting']), $result->arbeidskortingCents, $label . ': arbeidskorting');
 			$this->assertSame(self::cents($expected['volksverzekeringen']), $result->volksverzekeringenCents, $label . ': volksverzekeringen');
-			$this->assertSame(self::cents($expected['zvw']), $result->zvwCents, $label . ': zvw');
+			$this->assertSame((self::cents($expected['zvw']) + self::cents((float)($expected['zvwInhouding'] ?? 0.0))), $result->zvwCents, $label . ': zvw');
+			$this->assertSame(self::cents((float)($expected['rvuEindheffing'] ?? 0.0)), $result->rvuFinalLevyCents, $label . ': rvuEindheffing');
+			$this->assertSame((($fixture['input']['zvwMode'] ?? 'werkgeversheffing') === 'inhouding' ? 'inhouding' : 'werkgeversheffing'), $result->zvwMode, $label . ': zvwMode');
 			$this->assertSame(self::cents($expected['awf']), $result->awfCents, $label . ': awf');
 			$this->assertSame(self::cents($expected['aof']), $result->aofCents, $label . ': aof');
 			$this->assertSame(self::cents($expected['wko']), $result->wkoCents, $label . ': wko');
@@ -91,14 +97,22 @@ class PayrollCalculatorTest extends TestCase {
 		$tables = TaxTables::load('nl-2026');
 
 		$input = new CalculationInput(
-			grossMonthlySalaryCents: 380000,
-			taxTableColor: 'wit',
-			loonheffingskortingToegepast: true,
-			dateOfBirth: '1990-04-12',
-			period: '2026-02',
-			awfTariff: 'low',
-			aofTariff: 'laag',
-			whkPercentage: 1.52
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: 380000,
+				dateOfBirth: '1990-04-12',
+				period: '2026-02'
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'wit',
+					loonheffingskortingToegepast: true
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: 'low',
+					aofTariff: 'laag',
+					whkPercentage: 1.52
+				)
+			)
 		);
 
 		$result = $calculator->calculate($input, $tables);
@@ -130,15 +144,23 @@ class PayrollCalculatorTest extends TestCase {
 		$tables = TaxTables::load('nl-2026');
 
 		$input = new CalculationInput(
-			grossMonthlySalaryCents: 380000,
-			taxTableColor: 'wit',
-			loonheffingskortingToegepast: true,
-			dateOfBirth: '1990-04-12',
-			period: '2026-02',
-			awfTariff: 'low',
-			aofTariff: 'laag',
-			whkPercentage: 1.52,
-			verzekeringsplichtig: false
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: 380000,
+				dateOfBirth: '1990-04-12',
+				period: '2026-02'
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'wit',
+					loonheffingskortingToegepast: true
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: 'low',
+					aofTariff: 'laag',
+					whkPercentage: 1.52,
+					verzekeringsplichtig: false
+				)
+			)
 		);
 
 		$result = $calculator->calculate($input, $tables);
@@ -174,15 +196,23 @@ class PayrollCalculatorTest extends TestCase {
 		$tables = TaxTables::load('nl-2026');
 
 		$input = new CalculationInput(
-			grossMonthlySalaryCents: 380000,
-			taxTableColor: 'wit',
-			loonheffingskortingToegepast: true,
-			dateOfBirth: '1990-04-12',
-			period: '2026-02',
-			awfTariff: 'low',
-			aofTariff: 'laag',
-			whkPercentage: 1.52,
-			verzekeringsplichtig: true
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: 380000,
+				dateOfBirth: '1990-04-12',
+				period: '2026-02'
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'wit',
+					loonheffingskortingToegepast: true
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: 'low',
+					aofTariff: 'laag',
+					whkPercentage: 1.52,
+					verzekeringsplichtig: true
+				)
+			)
 		);
 
 		$result = $calculator->calculate($input, $tables);
@@ -219,14 +249,22 @@ class PayrollCalculatorTest extends TestCase {
 		$tables = TaxTables::load('nl-2026');
 
 		$input = new CalculationInput(
-			grossMonthlySalaryCents: 430000,
-			taxTableColor: 'wit',
-			loonheffingskortingToegepast: true,
-			dateOfBirth: '1990-04-12',
-			period: '2026-02',
-			awfTariff: 'low',
-			aofTariff: 'laag',
-			whkPercentage: 1.52
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: 430000,
+				dateOfBirth: '1990-04-12',
+				period: '2026-02'
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'wit',
+					loonheffingskortingToegepast: true
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: 'low',
+					aofTariff: 'laag',
+					whkPercentage: 1.52
+				)
+			)
 		);
 
 		$result = $calculator->calculate($input, $tables);
@@ -264,15 +302,23 @@ class PayrollCalculatorTest extends TestCase {
 		$tables = TaxTables::load('nl-2026');
 
 		$input = new CalculationInput(
-			grossMonthlySalaryCents: 380000,
-			taxTableColor: 'wit',
-			loonheffingskortingToegepast: true,
-			dateOfBirth: '1990-04-12',
-			period: '2026-02',
-			awfTariff: 'low',
-			aofTariff: 'laag',
-			whkPercentage: 1.52,
-			thirtyPercentRulingRate: 30.0
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: 380000,
+				dateOfBirth: '1990-04-12',
+				period: '2026-02'
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'wit',
+					loonheffingskortingToegepast: true,
+					thirtyPercentRulingRate: 30.0
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: 'low',
+					aofTariff: 'laag',
+					whkPercentage: 1.52
+				)
+			)
 		);
 
 		$result = $calculator->calculate($input, $tables);
@@ -312,14 +358,22 @@ class PayrollCalculatorTest extends TestCase {
 		$tables = TaxTables::load('nl-2026');
 
 		$input = new CalculationInput(
-			grossMonthlySalaryCents: 380000,
-			taxTableColor: 'wit',
-			loonheffingskortingToegepast: true,
-			dateOfBirth: '1990-04-12',
-			period: '2026-02',
-			awfTariff: 'low',
-			aofTariff: 'laag',
-			whkPercentage: 1.52
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: 380000,
+				dateOfBirth: '1990-04-12',
+				period: '2026-02'
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'wit',
+					loonheffingskortingToegepast: true
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: 'low',
+					aofTariff: 'laag',
+					whkPercentage: 1.52
+				)
+			)
 		);
 
 		$result = $calculator->calculate($input, $tables);
@@ -353,15 +407,23 @@ class PayrollCalculatorTest extends TestCase {
 
 		$ruling = $calculator->calculate(
 			new CalculationInput(
-				grossMonthlySalaryCents: 2500000,
-				taxTableColor: 'wit',
-				loonheffingskortingToegepast: true,
-				dateOfBirth: '1990-04-12',
-				period: '2026-02',
-				awfTariff: 'low',
-				aofTariff: 'laag',
-				whkPercentage: 1.52,
-				thirtyPercentRulingRate: 30.0
+				wage: new CalculationWage(
+					grossMonthlySalaryCents: 2500000,
+					dateOfBirth: '1990-04-12',
+					period: '2026-02'
+				),
+				levies: new CalculationLevies(
+					wageTax: new WageTaxElection(
+						taxTableColor: 'wit',
+						loonheffingskortingToegepast: true,
+						thirtyPercentRulingRate: 30.0
+					),
+					insurance: new InsuranceTariffs(
+						awfTariff: 'low',
+						aofTariff: 'laag',
+						whkPercentage: 1.52
+					)
+				)
 			),
 			$tables
 		);
@@ -372,14 +434,22 @@ class PayrollCalculatorTest extends TestCase {
 		// would have left an €17.500,00 base).
 		$cappedBase = $calculator->calculate(
 			new CalculationInput(
-				grossMonthlySalaryCents: 1845000,
-				taxTableColor: 'wit',
-				loonheffingskortingToegepast: true,
-				dateOfBirth: '1990-04-12',
-				period: '2026-02',
-				awfTariff: 'low',
-				aofTariff: 'laag',
-				whkPercentage: 1.52
+				wage: new CalculationWage(
+					grossMonthlySalaryCents: 1845000,
+					dateOfBirth: '1990-04-12',
+					period: '2026-02'
+				),
+				levies: new CalculationLevies(
+					wageTax: new WageTaxElection(
+						taxTableColor: 'wit',
+						loonheffingskortingToegepast: true
+					),
+					insurance: new InsuranceTariffs(
+						awfTariff: 'low',
+						aofTariff: 'laag',
+						whkPercentage: 1.52
+					)
+				)
 			),
 			$tables
 		);
@@ -401,14 +471,22 @@ class PayrollCalculatorTest extends TestCase {
 		$tables = TaxTables::load('nl-2026');
 
 		$input = new CalculationInput(
-			grossMonthlySalaryCents: 380000,
-			taxTableColor: 'wit',
-			loonheffingskortingToegepast: false,
-			dateOfBirth: '1990-04-12',
-			period: '2026-02',
-			awfTariff: 'low',
-			aofTariff: 'laag',
-			whkPercentage: 1.52
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: 380000,
+				dateOfBirth: '1990-04-12',
+				period: '2026-02'
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'wit',
+					loonheffingskortingToegepast: false
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: 'low',
+					aofTariff: 'laag',
+					whkPercentage: 1.52
+				)
+			)
 		);
 
 		$result = $calculator->calculate($input, $tables);
@@ -429,14 +507,22 @@ class PayrollCalculatorTest extends TestCase {
 		$tables = TaxTables::load('nl-2026');
 
 		$input = new CalculationInput(
-			grossMonthlySalaryCents: 380000,
-			taxTableColor: 'groen',
-			loonheffingskortingToegepast: true,
-			dateOfBirth: '1990-04-12',
-			period: '2026-02',
-			awfTariff: 'low',
-			aofTariff: 'laag',
-			whkPercentage: 1.52
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: 380000,
+				dateOfBirth: '1990-04-12',
+				period: '2026-02'
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'groen',
+					loonheffingskortingToegepast: true
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: 'low',
+					aofTariff: 'laag',
+					whkPercentage: 1.52
+				)
+			)
 		);
 
 		$result = $calculator->calculate($input, $tables);
@@ -476,16 +562,27 @@ class PayrollCalculatorTest extends TestCase {
 	 */
 	private static function inputFromFixture(array $input): CalculationInput {
 		return new CalculationInput(
-			grossMonthlySalaryCents: self::cents((float)$input['grossMonthly']),
-			taxTableColor: (string)$input['taxTableColor'],
-			loonheffingskortingToegepast: (bool)$input['loonheffingskortingToegepast'],
-			dateOfBirth: (string)$input['dateOfBirth'],
-			period: (string)$input['period'],
-			awfTariff: (string)$input['awfTariff'],
-			aofTariff: (string)$input['aofTariff'],
-			whkPercentage: (float)$input['whkPercentage'],
-			verzekeringsplichtig: (bool)($input['verzekeringsplichtig'] ?? true),
-			thirtyPercentRulingRate: (float)($input['thirtyPercentRulingRate'] ?? 0.0)
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: self::cents((float)$input['grossMonthly']),
+				dateOfBirth: (string)$input['dateOfBirth'],
+				period: (string)$input['period']
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: (string)$input['taxTableColor'],
+					loonheffingskortingToegepast: (bool)$input['loonheffingskortingToegepast'],
+					thirtyPercentRulingRate: (float)($input['thirtyPercentRulingRate'] ?? 0.0)
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: (string)$input['awfTariff'],
+					aofTariff: (string)$input['aofTariff'],
+					whkPercentage: (float)$input['whkPercentage'],
+					verzekeringsplichtig: (bool)($input['verzekeringsplichtig'] ?? true),
+					zvwMode: (string)($input['zvwMode'] ?? 'werkgeversheffing')
+				),
+				rvuThresholdCents: self::cents((float)($input['rvuThreshold'] ?? 0.0)),
+				rvuFinalLevyRate: (float)($input['rvuFinalLevyRate'] ?? 0.0)
+			)
 		);
 
 	}//end inputFromFixture()

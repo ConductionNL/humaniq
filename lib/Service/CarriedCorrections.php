@@ -36,10 +36,10 @@ class CarriedCorrections {
 	/**
 	 * The corrections.
 	 *
-	 * @param HoursRegisterGateway $gateway Register reads and writes.
+	 * @param RecordStoreInterface $gateway Register reads and writes.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 	) {
 	}//end __construct()
 

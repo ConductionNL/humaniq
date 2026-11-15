@@ -117,4 +117,37 @@ class HireMatchServiceTest extends TestCase {
 		self::assertSame(['bsn', 'private-email'], array_column($matches, 'matchedOn'));
 	}//end testKeysAreOrderedAndAPersonIsListedOnce()
 
+	/**
+	 * The whole answer for every kind of person, against employees that match
+	 * on more than one key, carry their id only under `@self`, or none.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeAnswerForEveryPerson(): void {
+		$gateway = $this->createMock(HoursRegisterGateway::class);
+		$gateway->method('loadAll')->with('Employee')->willReturn([
+			['id' => 'emp-a', 'firstName' => 'Kim', 'lastName' => 'Bos', 'dateOfBirth' => '1990-01-01', 'privateEmail' => 'kim@example.org', 'startDate' => '2020-01-01'],
+			['@self' => ['id' => 'emp-b'], 'lastName' => 'Bos', 'dateOfBirth' => '1990-01-01', 'bsn' => '1234.567.82', 'endDate' => '2024-12-31'],
+			['lastName' => 'Bos', 'dateOfBirth' => '1990-01-01', 'bsn' => '123456782'],
+			['id' => '', 'privateEmail' => 'kim@example.org'],
+			['id' => 'emp-c', 'firstName' => ' ', 'lastName' => 'BOS  ', 'dateOfBirth' => '1990-01-01', 'privateEmail' => ' KIM@example.org '],
+		]);
+		$service = new HireMatchService($gateway);
+		$people = [
+			'all-keys' => ['bsn' => '123456782', 'lastName' => 'bos', 'dateOfBirth' => '1990-01-01', 'privateEmail' => 'kim@example.org'],
+			'email-only' => ['privateEmail' => 'Kim@Example.org'],
+			'name-without-date' => ['lastName' => 'Bos'],
+			'date-without-name' => ['dateOfBirth' => '1990-01-01'],
+			'bsn-letters' => ['bsn' => 'geen'],
+			'nobody' => ['bsn' => '999999999', 'privateEmail' => 'x@example.org'],
+			'empty' => [],
+		];
+		$got = [];
+		foreach ($people as $name => $person) {
+			$got[$name] = $service->matches($person);
+		}
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/hire-matches.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeAnswerForEveryPerson()
+
 }//end class

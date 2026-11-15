@@ -93,6 +93,20 @@ class TrendPeriods {
 	}//end bounds()
 
 	/**
+	 * A `YYYY-MM` period as the closed period an absence rate is measured over.
+	 *
+	 * @param string $period `YYYY-MM`.
+	 *
+	 * @return AbsencePeriod The month, first to last day, on the default full-time week.
+	 *
+	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-001
+	 */
+	public function absencePeriod(string $period): AbsencePeriod {
+		[$start, $end] = $this->bounds(period: $period);
+		return new AbsencePeriod(start: $start, end: $end);
+	}//end absencePeriod()
+
+	/**
 	 * Parse a stored date or date-time value.
 	 *
 	 * @param mixed $value The raw value.
@@ -102,15 +116,7 @@ class TrendPeriods {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	public function parseDate(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception) {
-			return null;
-		}
+		return DateValues::parse($value);
 	}//end parseDate()
 
 }//end class

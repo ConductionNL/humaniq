@@ -3,6 +3,9 @@
 /**
  * Retro Adjustment Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Computes and settles terugwerkende kracht (TWK) corrections for a SEALED
  * prior-period payslip (design.md D1): the original, already-approved/posted/
  * paid Payslip and its PayrollRun are READ ONLY, never passed to
@@ -33,9 +36,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-001
@@ -48,19 +48,33 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
-use DateTimeImmutable;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
+use OCA\Humaniq\Payroll\PayPeriod;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\LoadsAllRows;
+use OCA\Humaniq\Support\ChecksPeriodCoverage;
+use OCA\Humaniq\Support\ReadsEmployeeKeys;
 
 /**
  * Computes + settles TWK delta corrections against sealed payslips.
+ *
+ * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-001
  */
 class RetroAdjustmentService {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use LoadsAllRows;
+	use ChecksPeriodCoverage;
+	use ReadsEmployeeKeys;
 
 	/**
 	 * Max objects loaded per type.
@@ -71,13 +85,15 @@ class RetroAdjustmentService {
 
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
-	 * @param SettingsService $settingsService Register slug + employer-level payroll config.
+	 * @param SettingsService $settingsService Register slug.
+	 * @param EmployerPremiumSettings $premiums The employer's Aof tariff and Whk percentage.
 	 * @param PayrollCalculator $calculator The pure gross-to-net calculator (reused, never modified).
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
+		private readonly EmployerPremiumSettings $premiums,
 		private readonly PayrollCalculator $calculator,
 		private readonly LoggerInterface $logger,
 	) {
@@ -88,10 +104,7 @@ class RetroAdjustmentService {
 	 * Compute (and, with `$apply`, settle) a TWK correction -- the occ
 	 * `humaniq:payroll:adjust` entry point (design.md D3/D4/D5).
 	 *
-	 * @param string $originalPeriod Wage period being corrected, `YYYY-MM`.
-	 * @param string $employeeId The Employee id.
-	 * @param string $correctionRef Caller-supplied idempotency key.
-	 * @param float|null $correctedGrossMonthlySalary Corrected gross monthly salary (euro); reused from an existing adjustment when omitted.
+	 * @param RetroCorrection $correction The period, employee and reference, and the corrected gross (reused from an existing adjustment when null).
 	 * @param string|null $correctionType Free-text correction classification.
 	 * @param string|null $settlementPeriod The period to settle into, or null to auto-resolve the open draft run's period.
 	 * @param bool $apply Whether to flip `status: draft -> applied` and stamp `settlementPayrollRunId`.
@@ -104,62 +117,159 @@ class RetroAdjustmentService {
 	 * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-005
 	 */
 	public function adjustFor(
-		string $originalPeriod,
-		string $employeeId,
-		string $correctionRef,
-		?float $correctedGrossMonthlySalary = null,
+		RetroCorrection $correction,
 		?string $correctionType = null,
 		?string $settlementPeriod = null,
 		bool $apply = false,
 	): array {
-		$originalPeriod = trim($originalPeriod);
-		$employeeId = trim($employeeId);
-		$correctionRef = trim($correctionRef);
+		$correction = $correction->trimmed();
 
-		if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $originalPeriod) !== 1) {
-			return $this->outcome('', $originalPeriod, $employeeId, $correctionRef, 'failed', 'Ongeldige originele periode "' . $originalPeriod . '" (verwacht JJJJ-MM).');
-		}
-
-		if ($employeeId === '' || $correctionRef === '') {
-			return $this->outcome('', $originalPeriod, $employeeId, $correctionRef, 'failed', 'employeeId en correctionRef zijn verplicht.');
+		$refusal = $this->correctionRefusal(correction: $correction);
+		if ($refusal !== null) {
+			return $this->outcome('', $correction, 'failed', $refusal);
 		}
 
 		// Probe-before-create idempotency (design.md D3): the SAME
 		// (originalPeriod, employeeId, correctionRef) always resolves to the
 		// SAME PayrollAdjustment.
-		$existing = $this->findAdjustment($originalPeriod, $employeeId, $correctionRef);
-		$idempotent = ($existing !== null);
-
-		$grossToUse = $correctedGrossMonthlySalary;
-		if ($grossToUse === null && $existing !== null && is_numeric($existing['correctedGrossMonthlySalary'] ?? null) === true) {
-			$grossToUse = (float)$existing['correctedGrossMonthlySalary'];
+		$existing = $this->findAdjustment(correction: $correction);
+		$correction = $correction->withGross($this->grossToUse(correction: $correction, existing: $existing));
+		$gross = $correction->correctedGrossMonthlySalary;
+		if ($gross === null || $gross <= 0.0) {
+			return $this->outcome($this->idOf($existing ?? []), $correction, 'corrected-gross-required', 'Een gecorrigeerd bruto maandsalaris (--gross) is verplicht bij de eerste berekening.');
 		}
 
-		if ($grossToUse === null || $grossToUse <= 0.0) {
-			return $this->outcome($this->idOf($existing ?? []), $originalPeriod, $employeeId, $correctionRef, 'corrected-gross-required', 'Een gecorrigeerd bruto maandsalaris (--gross) is verplicht bij de eerste berekening.');
-		}
-
-		$delta = $this->computeDelta($originalPeriod, $employeeId, $grossToUse);
+		$delta = $this->computeDelta($correction->originalPeriod, $correction->employeeId, $gross);
 		if ($delta['status'] !== 'ok') {
-			return $this->outcome($this->idOf($existing ?? []), $originalPeriod, $employeeId, $correctionRef, $delta['status'], $delta['message']);
+			return $this->outcome($this->idOf($existing ?? []), $correction, $delta['status'], $delta['message']);
 		}
 
 		$resolvedSettlementPeriod = $this->resolveSettlementPeriod($settlementPeriod);
 		if ($resolvedSettlementPeriod === null) {
-			return $this->outcome($this->idOf($existing ?? []), $originalPeriod, $employeeId, $correctionRef, 'settlement-period-required', 'Kon geen concept-loonrun vinden om de correctie in te verwerken -- geef --settlement-period expliciet op.');
+			return $this->outcome($this->idOf($existing ?? []), $correction, 'settlement-period-required', 'Kon geen concept-loonrun vinden om de correctie in te verwerken -- geef --settlement-period expliciet op.');
 		}
 
-		$deltaEuros = $delta['deltaEuros'];
-		$settlementLine = ($deltaEuros['net'] < 0.0) ? 'terugvordering' : 'nabetaling';
+		return $this->settle(
+			correction: $correction,
+			computed: [
+				'existing' => $existing,
+				'delta' => $delta,
+				'settlementPeriod' => $resolvedSettlementPeriod,
+				'settlementLine' => ($delta['deltaEuros']['net'] < 0.0) ? 'terugvordering' : 'nabetaling',
+				'correctionType' => $correctionType ?? ($existing['correctionType'] ?? null),
+				'apply' => $apply,
+			]
+		);
+	}//end adjustFor()
 
-		$payload = [
-			'employeeId' => $employeeId,
+	/**
+	 * Why a correction cannot be computed, or null when it can.
+	 *
+	 * @param RetroCorrection $correction The trimmed correction.
+	 *
+	 * @return string|null The refusal message.
+	 */
+	private function correctionRefusal(RetroCorrection $correction): ?string {
+		if (self::isMonth(period: $correction->originalPeriod) === false) {
+			return 'Ongeldige originele periode "' . $correction->originalPeriod . '" (verwacht JJJJ-MM).';
+		}
+
+		if ($correction->employeeId === '' || $correction->correctionRef === '') {
+			return 'employeeId en correctionRef zijn verplicht.';
+		}
+
+		return null;
+	}//end correctionRefusal()
+
+	/**
+	 * The corrected gross to compute on: the requested one, else the one the
+	 * existing adjustment stored.
+	 *
+	 * @param RetroCorrection $correction The correction.
+	 * @param array<string, mixed>|null $existing The PayrollAdjustment of the same key, or null.
+	 *
+	 * @return float|null
+	 */
+	private function grossToUse(RetroCorrection $correction, ?array $existing): ?float {
+		$gross = $correction->correctedGrossMonthlySalary;
+		if ($gross === null && $existing !== null && is_numeric($existing['correctedGrossMonthlySalary'] ?? null) === true) {
+			$gross = (float)$existing['correctedGrossMonthlySalary'];
+		}
+
+		return $gross;
+	}//end grossToUse()
+
+	/**
+	 * Store a computed correction, applied or as a draft, and report it.
+	 *
+	 * @param RetroCorrection $correction The trimmed correction with the gross it was computed on.
+	 * @param array{existing: array<string, mixed>|null, delta: array<string, mixed>, settlementPeriod: string, settlementLine: string, correctionType: string|null, apply: bool} $computed The computed correction.
+	 *
+	 * @return array<string, mixed> Outcome (see adjustFor()).
+	 *
+	 * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-005
+	 */
+	private function settle(RetroCorrection $correction, array $computed): array {
+		$existing = $computed['existing'];
+		$apply = $computed['apply'];
+		$payload = $this->payload(correction: $correction, computed: $computed);
+		if ($apply === true) {
+			$payload['status'] = 'applied';
+			$payload['settlementPayrollRunId'] = $this->resolveRunForPeriod($computed['settlementPeriod'], (string)($computed['delta']['administrationId'] ?? ''));
+		}
+
+		try {
+			$saved = $this->toArray(
+				$this->objectService()->saveObject(
+					object: $payload,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $this->register(), schema: 'PayrollAdjustment'),
+						uuid: $existing !== null ? ($this->idOf($existing) === '' ? null : $this->idOf($existing)) : null
+					),
+					_rbac: false,
+					_multitenancy: false
+				)
+			);
+		} catch (\Throwable $e) {
+			$this->logger->error('RetroAdjustmentService: kon PayrollAdjustment niet opslaan: ' . $e->getMessage());
+			return $this->outcome($this->idOf($existing ?? []), $correction, 'failed', 'Opslaan van de correctie is mislukt: ' . $e->getMessage());
+		}
+
+		$status = ($apply === true) ? 'applied' : 'computed';
+
+		$outcome = $this->outcome($this->idOf($saved), $correction, $status, ($apply === true ? 'Correctie berekend en toegepast.' : 'Correctie berekend.'));
+		$outcome['idempotent'] = ($existing !== null);
+		$outcome['delta'] = $computed['delta']['deltaEuros'];
+		$outcome['engineVersion'] = $computed['delta']['engineVersion'];
+		$outcome['settlementPeriod'] = $computed['settlementPeriod'];
+		$outcome['settlementLine'] = $computed['settlementLine'];
+
+		return $outcome;
+	}//end settle()
+
+	/**
+	 * The PayrollAdjustment object of a computed correction, as a draft.
+	 *
+	 * @param RetroCorrection $correction The trimmed correction with the gross it was computed on.
+	 * @param array{existing: array<string, mixed>|null, delta: array<string, mixed>, settlementPeriod: string, settlementLine: string, correctionType: string|null, apply: bool} $computed The computed correction.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-002
+	 */
+	private function payload(RetroCorrection $correction, array $computed): array {
+		$existing = $computed['existing'];
+		$delta = $computed['delta'];
+		$deltaEuros = $delta['deltaEuros'];
+
+		return [
+			'employeeId' => $correction->employeeId,
 			'originalPayrollRunId' => $delta['originalPayrollRunId'],
 			'originalPayslipId' => $delta['originalPayslipId'],
-			'originalPeriod' => $originalPeriod,
-			'correctionType' => $correctionType ?? ($existing['correctionType'] ?? null),
-			'correctedGrossMonthlySalary' => $grossToUse,
-			'correctionRef' => $correctionRef,
+			'originalPeriod' => $correction->originalPeriod,
+			'correctionType' => $computed['correctionType'],
+			'correctedGrossMonthlySalary' => $correction->correctedGrossMonthlySalary,
+			'correctionRef' => $correction->correctionRef,
 			'deltaGross' => $deltaEuros['gross'],
 			'deltaLoonheffing' => $deltaEuros['loonheffing'],
 			'deltaNet' => $deltaEuros['net'],
@@ -168,45 +278,13 @@ class RetroAdjustmentService {
 			'deltaVolksverzekeringen' => $deltaEuros['volksverzekeringen'],
 			'deltaVakantiegeldReserved' => $deltaEuros['vakantiegeldReserved'],
 			'engineVersion' => $delta['engineVersion'],
-			'settlementPeriod' => $resolvedSettlementPeriod,
-			'settlementLine' => $settlementLine,
+			'settlementPeriod' => $computed['settlementPeriod'],
+			'settlementLine' => $computed['settlementLine'],
 			'status' => ($existing['status'] ?? 'draft'),
 			'settlementPayrollRunId' => ($existing['settlementPayrollRunId'] ?? null),
 			'calculatedAt' => gmdate('Y-m-d\TH:i:s\Z'),
 		];
-
-		if ($apply === true) {
-			$payload['status'] = 'applied';
-			$payload['settlementPayrollRunId'] = $this->resolveRunForPeriod($resolvedSettlementPeriod, (string)($delta['administrationId'] ?? ''));
-		}
-
-		try {
-			$saved = $this->toArray(
-				$this->objectService()->saveObject(
-					object: $payload,
-					register: $this->register(),
-					schema: 'PayrollAdjustment',
-					uuid: ($existing !== null ? ($this->idOf($existing) === '' ? null : $this->idOf($existing)) : null),
-					_rbac: false,
-					_multitenancy: false
-				)
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error('RetroAdjustmentService: kon PayrollAdjustment niet opslaan: ' . $e->getMessage());
-			return $this->outcome($this->idOf($existing ?? []), $originalPeriod, $employeeId, $correctionRef, 'failed', 'Opslaan van de correctie is mislukt: ' . $e->getMessage());
-		}
-
-		$status = ($apply === true) ? 'applied' : 'computed';
-
-		$outcome = $this->outcome($this->idOf($saved), $originalPeriod, $employeeId, $correctionRef, $status, ($apply === true ? 'Correctie berekend en toegepast.' : 'Correctie berekend.'));
-		$outcome['idempotent'] = $idempotent;
-		$outcome['delta'] = $deltaEuros;
-		$outcome['engineVersion'] = $delta['engineVersion'];
-		$outcome['settlementPeriod'] = $resolvedSettlementPeriod;
-		$outcome['settlementLine'] = $settlementLine;
-
-		return $outcome;
-	}//end adjustFor()
+	}//end payload()
 
 	/**
 	 * Recompute one existing PayrollAdjustment in place -- the guarded
@@ -226,27 +304,22 @@ class RetroAdjustmentService {
 	public function recomputeAdjustment(string $adjustmentId): array {
 		$adjustment = $this->findAdjustmentById($adjustmentId);
 		if ($adjustment === null) {
-			return $this->outcome($adjustmentId, '', '', '', 'failed', 'Correctie niet gevonden.');
-		}
-
-		if ((string)($adjustment['status'] ?? '') === 'applied') {
-			return $this->outcome(
-				$adjustmentId,
-				(string)($adjustment['originalPeriod'] ?? ''),
-				(string)($adjustment['employeeId'] ?? ''),
-				(string)($adjustment['correctionRef'] ?? ''),
-				'refused-applied',
-				'Correctie is al toegepast -- herrekenen is niet meer mogelijk.'
-			);
+			return $this->outcome($adjustmentId, new RetroCorrection('', '', ''), 'failed', 'Correctie niet gevonden.');
 		}
 
 		$correctedGross = ($adjustment['correctedGrossMonthlySalary'] ?? null);
+		$correction = new RetroCorrection(
+			originalPeriod: (string)($adjustment['originalPeriod'] ?? ''),
+			employeeId: (string)($adjustment['employeeId'] ?? ''),
+			correctionRef: (string)($adjustment['correctionRef'] ?? ''),
+			correctedGrossMonthlySalary: (is_numeric($correctedGross) === true ? (float)$correctedGross : null)
+		);
+		if ((string)($adjustment['status'] ?? '') === 'applied') {
+			return $this->outcome($adjustmentId, $correction, 'refused-applied', 'Correctie is al toegepast -- herrekenen is niet meer mogelijk.');
+		}
 
 		return $this->adjustFor(
-			(string)($adjustment['originalPeriod'] ?? ''),
-			(string)($adjustment['employeeId'] ?? ''),
-			(string)($adjustment['correctionRef'] ?? ''),
-			(is_numeric($correctedGross) === true ? (float)$correctedGross : null),
+			$correction,
 			(($adjustment['correctionType'] ?? null) !== null ? (string)$adjustment['correctionType'] : null),
 			(string)($adjustment['settlementPeriod'] ?? ''),
 			false
@@ -314,19 +387,19 @@ class RetroAdjustmentService {
 			return ['status' => 'failed', 'message' => 'Geen contract gevonden dat de originele periode dekt.'];
 		}
 
-		$aofTariff = $this->settingsService->getPayrollAofTariff();
-		$whkPercentage = $this->settingsService->getPayrollWhkPercentage($tables->werknemersverzekeringen()['whkDefault']);
+		$aofTariff = $this->premiums->getPayrollAofTariff();
+		$whkPercentage = $this->premiums->getPayrollWhkPercentage($tables->werknemersverzekeringen()['whkDefault']);
 
-		$input = new CalculationInput(
-			grossMonthlySalaryCents: (int)round($correctedGrossMonthlySalary * 100),
-			taxTableColor: $taxTableColor,
-			loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true),
-			dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null),
-			period: $originalPeriod,
-			awfTariff: $this->awfTariffFor($contract, $employee, $payslip, $originalPeriod),
-			aofTariff: $aofTariff,
-			whkPercentage: $whkPercentage
-		);
+		$input = CalculationInput::fromDecoded([
+			'grossMonthlySalaryCents' => (int)round($correctedGrossMonthlySalary * 100),
+			'taxTableColor' => $taxTableColor,
+			'loonheffingskortingToegepast' => (($employee['loonheffingskortingToegepast'] ?? true) === true),
+			'dateOfBirth' => (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null),
+			'period' => $originalPeriod,
+			'awfTariff' => $this->awfTariffFor($contract, $employee, $payslip, $originalPeriod),
+			'aofTariff' => $aofTariff,
+			'whkPercentage' => $whkPercentage,
+		]);
 
 		$result = $this->calculator->calculate($input, $tables);
 
@@ -442,14 +515,7 @@ class RetroAdjustmentService {
 	 * @return array<string, mixed>|null
 	 */
 	private function coveringContract(array $employee, string $originalPeriod): ?array {
-		$keys = array_filter(
-			[
-				$this->idOf($employee),
-				(string)($employee['@self']['slug'] ?? ''),
-				trim((string)($employee['employeeNumber'] ?? '')),
-			],
-			static fn (string $key): bool => $key !== ''
-		);
+		$keys = $this->employeeKeys($employee);
 
 		foreach ($this->loadAll('EmploymentContract') as $contract) {
 			$key = trim((string)($contract['employeeId'] ?? ''));
@@ -464,39 +530,6 @@ class RetroAdjustmentService {
 
 		return null;
 	}//end coveringContract()
-
-	/**
-	 * Whether a start/end date range covers the wage period (the
-	 * PayrollRunService precedent).
-	 *
-	 * @param string $startDate ISO start date.
-	 * @param string $endDate ISO end date, or ''/null-ish while open.
-	 * @param string $period Wage period (YYYY-MM).
-	 *
-	 * @return bool
-	 */
-	private function coversPeriod(string $startDate, string $endDate, string $period): bool {
-		try {
-			$periodStart = new DateTimeImmutable($period . '-01');
-		} catch (\Throwable $e) {
-			return false;
-		}
-
-		$periodEnd = $periodStart->modify('last day of this month');
-
-		$start = strtotime(trim($startDate));
-		if ($start === false || $start > $periodEnd->getTimestamp()) {
-			return false;
-		}
-
-		$endDate = trim($endDate);
-		if ($endDate === '') {
-			return true;
-		}
-
-		$end = strtotime($endDate);
-		return $end === false || $end >= $periodStart->getTimestamp();
-	}//end coversPeriod()
 
 	/**
 	 * The Awf tariff of the corrected period: what the run charged when the
@@ -528,17 +561,15 @@ class RetroAdjustmentService {
 	 * The existing PayrollAdjustment for (originalPeriod, employeeId,
 	 * correctionRef), or null -- the idempotency probe (design.md D3).
 	 *
-	 * @param string $originalPeriod Wage period being corrected, `YYYY-MM`.
-	 * @param string $employeeId The Employee id.
-	 * @param string $correctionRef The caller-supplied idempotency key.
+	 * @param RetroCorrection $correction The period, employee and reference.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function findAdjustment(string $originalPeriod, string $employeeId, string $correctionRef): ?array {
+	private function findAdjustment(RetroCorrection $correction): ?array {
 		foreach ($this->loadAll('PayrollAdjustment') as $adjustment) {
-			if ((string)($adjustment['originalPeriod'] ?? '') === $originalPeriod
-				&& (string)($adjustment['employeeId'] ?? '') === $employeeId
-				&& (string)($adjustment['correctionRef'] ?? '') === $correctionRef
+			if ((string)($adjustment['originalPeriod'] ?? '') === $correction->originalPeriod
+				&& (string)($adjustment['employeeId'] ?? '') === $correction->employeeId
+				&& (string)($adjustment['correctionRef'] ?? '') === $correction->correctionRef
 			) {
 				return $adjustment;
 			}
@@ -625,20 +656,18 @@ class RetroAdjustmentService {
 	 * Build the base outcome array.
 	 *
 	 * @param string $adjustmentId The PayrollAdjustment id ('' when unknown).
-	 * @param string $originalPeriod The wage period being corrected.
-	 * @param string $employeeId The Employee id.
-	 * @param string $correctionRef The idempotency key.
+	 * @param RetroCorrection $correction The period, employee and reference.
 	 * @param string $status Outcome status.
 	 * @param string $message Human-readable outcome message.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function outcome(string $adjustmentId, string $originalPeriod, string $employeeId, string $correctionRef, string $status, string $message): array {
+	private function outcome(string $adjustmentId, RetroCorrection $correction, string $status, string $message): array {
 		return [
 			'adjustmentId' => ($adjustmentId === '' ? null : $adjustmentId),
-			'originalPeriod' => $originalPeriod,
-			'employeeId' => $employeeId,
-			'correctionRef' => $correctionRef,
+			'originalPeriod' => $correction->originalPeriod,
+			'employeeId' => $correction->employeeId,
+			'correctionRef' => $correction->correctionRef,
 			'status' => $status,
 			'message' => $message,
 			'idempotent' => false,
@@ -676,50 +705,6 @@ class RetroAdjustmentService {
 	}//end euros()
 
 	/**
-	 * Load all objects of a schema (capped), as plain arrays. Degrades
-	 * gracefully to an empty list when the schema does not exist yet in the
-	 * register.
-	 *
-	 * @param string $schema The schema name.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function loadAll(string $schema): array {
-		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema($schema)->findAll(['limit' => self::LIMIT]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('RetroAdjustmentService: kon ' . $schema . ' niet laden: ' . $e->getMessage());
-			return [];
-		}
-
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end loadAll()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * The object id of a row, falling back to `@self.id`.
 	 *
 	 * @param array<string, mixed> $row The row.
@@ -731,28 +716,28 @@ class RetroAdjustmentService {
 	}//end idOf()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
+	/**
+	 * Whether a period id is a month. Read through PayPeriod; this path
+	 * still converts by month, so four-weekly and weekly ids wait for the
+	 * run's conversions to move to the period's share of the year.
+	 *
+	 * @param string $period The period id.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private static function isMonth(string $period): bool {
+		try {
+			return PayPeriod::parse(id: $period)->tijdvak === PayPeriod::TIJDVAK_MAAND;
+		} catch (\InvalidArgumentException) {
+			return false;
+		}
+	}//end isMonth()
 
 }//end class

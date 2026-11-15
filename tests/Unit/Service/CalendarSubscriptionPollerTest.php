@@ -192,6 +192,58 @@ class CalendarSubscriptionPollerTest extends TestCase {
 	}//end testAnAnswerThatIsNotACalendarIsADegradation()
 
 	/**
+	 * The cached row keeps the subscription's fields in their order without
+	 * its id and @self, replaces the periods and adds the poll stamp; an empty
+	 * calendar is an empty cache, not a degradation.
+	 *
+	 * @return void
+	 */
+	public function testThePayloadOfASuccessfulPoll(): void {
+		$subscription = ['@self' => ['id' => 'sub-1'], 'id' => ' sub-1 ', 'feedUrl' => ' https://calendar.example.invalid/x.ics ', 'busyPeriods' => [['start' => 'a', 'end' => 'b']], 'active' => true];
+
+		$this->assertTrue($this->poller("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n")->poll($subscription));
+
+		$this->assertSame([['GET', 'https://calendar.example.invalid/x.ics']], $this->requests);
+		$this->assertSame('CalendarSubscription', $this->writes[0]['schema']);
+		$this->assertSame('sub-1', $this->writes[0]['uuid']);
+		$payload = $this->writes[0]['payload'];
+		$this->assertSame(['feedUrl', 'busyPeriods', 'active', 'lastPolledAt', 'lastPollStatus'], array_keys($payload));
+		$this->assertSame([], $payload['busyPeriods']);
+		$this->assertSame('ok', $payload['lastPollStatus']);
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $payload['lastPolledAt']);
+	}//end testThePayloadOfASuccessfulPoll()
+
+	/**
+	 * A subscription without an address or an id is not polled at all, and a
+	 * cache that cannot be written is a failed poll.
+	 *
+	 * @return void
+	 */
+	public function testABlankSubscriptionIsSkippedAndAFailedCacheIsAFailure(): void {
+		$poller = $this->poller("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
+		$this->assertFalse($poller->poll(['id' => 'sub-1', 'feedUrl' => ' ']));
+		$this->assertFalse($poller->poll(['id' => '', 'feedUrl' => 'https://calendar.example.invalid/x.ics']));
+		$this->assertSame([], $this->requests);
+		$this->assertSame([], $this->writes);
+
+		$gateway = $this->getMockBuilder(HoursRegisterGateway::class)->disableOriginalConstructor()->onlyMethods(['save'])->getMock();
+		$gateway->expects($this->once())->method('save')->willThrowException(new RuntimeException('store down'));
+		$response = $this->createMock(IResponse::class);
+		$response->method('getBody')->willReturn("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
+		$client = $this->createMock(IClient::class);
+		$client->method('get')->willReturn($response);
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->method('newClient')->willReturn($client);
+		$logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')
+			->with('humaniq: the busy periods of calendar subscription sub-1 could not be cached: store down');
+
+		$failing = new CalendarSubscriptionPoller(gateway: $gateway, clientService: $clientService, parser: new IcalBusyParser(), logger: $logger);
+
+		$this->assertFalse($failing->poll($this->subscription()));
+	}//end testABlankSubscriptionIsSkippedAndAFailedCacheIsAFailure()
+
+	/**
 	 * Nothing is written outward: every request the poller makes against a
 	 * subscribed address is a GET.
 	 *

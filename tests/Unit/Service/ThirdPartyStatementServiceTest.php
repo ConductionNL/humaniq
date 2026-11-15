@@ -105,6 +105,51 @@ class ThirdPartyStatementServiceTest extends TestCase {
 	}//end testTheVariableContract()
 
 	/**
+	 * Golden: the whole variable set, key for key; and a payee without prefix, with a house-number addition and no known administration.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeVariableSet(): void {
+		self::assertSame(
+			[
+				'documentType' => 'ubd-jaaropgaaf',
+				'year' => 2026,
+				'payee' => [
+					'name' => 'J.P. van Dijk',
+					'addressLines' => ['Kerkstraat 12', '3511AB Utrecht'],
+					'lastName' => 'Dijk',
+					'bsn' => '111222333',
+					'dateOfBirth' => '1971-05-14',
+					'activity' => 'Gastlessen',
+				],
+				'administration' => [
+					'administrationId' => 'ADM-001',
+					'name' => 'Conduction Demo B.V.',
+					'loonheffingennummer' => '123456789L01',
+					'postalAddress' => 'Lauriergracht 14h, 1016 RL Amsterdam',
+				],
+				'payments' => [
+					['paidOn' => '2026-03-10', 'description' => 'Maart', 'amount' => 450.0, 'expenseAllowance' => 32.4, 'total' => 482.4],
+					['paidOn' => '2026-06-02', 'description' => 'Juni', 'amount' => 450.0, 'expenseAllowance' => 0.0, 'total' => 450.0],
+				],
+				'totalPaid' => 932.4,
+				'totalReported' => 932,
+			],
+			$this->service->variables(payeeId: 'payee-lecturer', year: 2026)
+		);
+
+		$this->store->seed('ThirdPartyPayee', 'payee-plain', ['initials' => 'A.', 'lastName' => 'Smit', 'street' => 'Dorpsweg', 'houseNumber' => '3', 'houseNumberAddition' => 'b', 'administrationId' => 'ADM-404']);
+		$this->store->seed('ThirdPartyPayment', 'pay-plain', ['payeeId' => 'payee-plain', 'paidOn' => '2026-01-31', 'amount' => '99.995']);
+		$plain = $this->service->variables(payeeId: 'payee-plain', year: 2026);
+
+		self::assertSame(['name' => 'A. Smit', 'addressLines' => ['Dorpsweg 3b', ''], 'lastName' => 'Smit', 'bsn' => '', 'dateOfBirth' => '', 'activity' => ''], $plain['payee']);
+		self::assertSame(['administrationId' => 'ADM-404', 'name' => '', 'loonheffingennummer' => '', 'postalAddress' => ''], $plain['administration']);
+		self::assertSame([['paidOn' => '2026-01-31', 'description' => '', 'amount' => 100.0, 'expenseAllowance' => 0.0, 'total' => 100.0]], $plain['payments']);
+		self::assertSame([100.0, 100], [$plain['totalPaid'], $plain['totalReported']]);
+		self::assertSame([], $this->service->variables(payeeId: 'payee-plain', year: 2025)['payments']);
+	}//end testTheWholeVariableSet()
+
+	/**
 	 * Without filinq the statement is skipped and says so; with one
 	 * template it is generated with the variables and stored on the payee;
 	 * with two templates it fails closed; a year without payments has

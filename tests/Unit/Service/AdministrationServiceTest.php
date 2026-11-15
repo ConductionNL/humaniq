@@ -35,8 +35,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\AdministrationAccessTrust;
 use OCA\Humaniq\Service\AdministrationService;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\SettingsService;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -180,6 +183,30 @@ class AdministrationServiceTest extends TestCase {
 	}//end testHasAccessReflectsMembershipRowsOnly()
 
 	/**
+	 * A row a user wrote for themselves grants nothing: the self-granted
+	 * `hr` role on ADM-002 is neither access nor a role, while the row HR
+	 * of ADM-001 granted them still counts.
+	 *
+	 * @return void
+	 */
+	public function testSelfGrantedRowGrantsNoAccessOrRole(): void {
+		$store = ['medewerker' => ['active_administration_id' => 'ADM-002']];
+		$config = $this->createMock(IConfig::class);
+		$config->method('getUserValue')
+			->willReturnCallback(static function (string $userId, string $appName, string $key, string $default) use (&$store): string {
+				return $store[$userId][$key] ?? $default;
+			});
+
+		$service = $this->buildService($config);
+
+		$this->assertFalse($service->hasAccess('medewerker', 'ADM-002'));
+		$this->assertNull($service->getActiveAdministrationRole('medewerker'));
+		$this->assertTrue($service->hasAccess('medewerker', 'ADM-001'));
+		$this->assertTrue($service->hasAccess('hr-devries', 'ADM-001'));
+
+	}//end testSelfGrantedRowGrantsNoAccessOrRole()
+
+	/**
 	 * The active-administration pointer round-trips through the per-user
 	 * `IConfig` value (design.md D4): unset resolves to null, then a set
 	 * value is read back exactly.
@@ -251,9 +278,12 @@ class AdministrationServiceTest extends TestCase {
 		];
 
 		$access = [
-			['userId' => 'admin', 'administrationId' => 'ADM-001', 'role' => 'accountant'],
-			['userId' => 'admin', 'administrationId' => 'ADM-002', 'role' => 'accountant'],
-			['userId' => 'hr-devries', 'administrationId' => 'ADM-001', 'role' => 'hr'],
+			['userId' => 'admin', 'administrationId' => 'ADM-001', 'role' => 'accountant', '@self' => ['owner' => '__system__']],
+			['userId' => 'admin', 'administrationId' => 'ADM-002', 'role' => 'accountant', '@self' => ['owner' => '__system__']],
+			['userId' => 'hr-devries', 'administrationId' => 'ADM-001', 'role' => 'hr', '@self' => ['owner' => 'admin']],
+			['userId' => 'medewerker', 'administrationId' => 'ADM-001', 'role' => 'employee', '@self' => ['owner' => 'hr-devries']],
+			// Written by the user for themselves, with no standing in ADM-002.
+			['userId' => 'medewerker', 'administrationId' => 'ADM-002', 'role' => 'hr', '@self' => ['owner' => 'medewerker']],
 		];
 
 		$objectService = new class($administrations, $access) {
@@ -322,7 +352,12 @@ class AdministrationServiceTest extends TestCase {
 		$config ??= $this->createMock(IConfig::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return new AdministrationService($container, $config, $settings, $logger);
+		$roles = $this->createMock(HumaniqRoles::class);
+		$roles->method('isAdmin')->willReturnCallback(static fn (?string $uid): bool => $uid === 'admin');
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('');
+
+		return new AdministrationService($container, $config, $settings, $logger, new AdministrationAccessTrust($roles, $appConfig));
 	}//end buildService()
 
 }//end class

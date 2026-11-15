@@ -282,4 +282,72 @@ class RuleAuditServicePayrollScopeTest extends TestCase {
 
 	}//end testScopeIsExactlyThePeriodsRunsAndTheirPayslips()
 
+	/**
+	 * The administration filter applies only when given; ids may come from `@self`; payslips need a scoped run id.
+	 *
+	 * @return void
+	 */
+	public function testAdministrationFilterAndSelfIds(): void {
+		$selfRun = $this->engineRun(['administrationId' => 'ADM-002']);
+		unset($selfRun['id']);
+		$selfRun['@self'] = ['id' => 'run-self'];
+		$service = $this->serviceWithRows(
+			[
+				'PayrollRun' => [
+					$this->engineRun(),
+					$selfRun,
+					$this->engineRun(['id' => '', 'administrationId' => 'ADM-002']),
+				],
+				'Payslip' => [
+					$this->enginePayslip(),
+					$this->enginePayslip(['id' => 'ps-self', 'payrollRunId' => 'run-self']),
+					$this->enginePayslip(['id' => 'ps-blank', 'payrollRunId' => '']),
+				],
+			]
+		);
+
+		$all = $service->auditPayrollRunScope('2026-02', null, ['jurisdiction' => 'NL']);
+		$this->assertSame([3, 2], [$all['runsChecked'], $all['payslipsChecked']]);
+
+		$blank = $service->auditPayrollRunScope('2026-02', '', ['jurisdiction' => 'NL']);
+		$this->assertSame([3, 2], [$blank['runsChecked'], $blank['payslipsChecked']]);
+
+		$second = $service->auditPayrollRunScope('2026-02', 'ADM-002', ['jurisdiction' => 'NL']);
+		$this->assertSame([2, 1], [$second['runsChecked'], $second['payslipsChecked']]);
+
+		$none = $service->auditPayrollRunScope('2026-03', null, ['jurisdiction' => 'NL']);
+		$this->assertSame(['runsChecked' => 0, 'payslipsChecked' => 0, 'violations' => [], 'mandatoryViolations' => 0], $none);
+
+	}//end testAdministrationFilterAndSelfIds()
+
+	/**
+	 * Each violation row names the object type, the object id (or its `@self` id), the rule, severity and statement.
+	 *
+	 * @return void
+	 */
+	public function testViolationRowsAndMandatoryCount(): void {
+		$payslip = $this->enginePayslip(['nettoPay' => 3000.00]);
+		unset($payslip['id']);
+		$payslip['@self'] = ['id' => 'ps-self'];
+		$service = $this->serviceWithRows(
+			[
+				'PayrollRun' => [$this->engineRun()],
+				'Payslip' => [$payslip],
+			]
+		);
+
+		$report = $service->auditPayrollRunScope('2026-02', null, ['jurisdiction' => 'NL']);
+
+		$mandatory = 0;
+		foreach ($report['violations'] as $row) {
+			$this->assertSame(['objectType', 'objectId', 'ruleId', 'severity', 'statement'], array_keys($row));
+			$this->assertSame(['Payslip', 'ps-self'], [$row['objectType'], $row['objectId']], $row['ruleId']);
+			$this->assertIsString($row['statement']);
+			$mandatory += ($row['severity'] === 'mandatory') ? 1 : 0;
+		}
+
+		$this->assertGreaterThan(0, $mandatory);
+		$this->assertSame($mandatory, $report['mandatoryViolations']);
+
+	}//end testViolationRowsAndMandatoryCount()
 }//end class

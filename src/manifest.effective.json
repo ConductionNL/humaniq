@@ -691,6 +691,21 @@
 					}
 				},
 				{
+					"icon": "CheckDecagramOutline",
+					"id": "HrVerlofgoedkeuring",
+					"label": "HR leave approval",
+					"query": {
+						"_order": "[{\"key\":\"submittedAt\",\"order\":\"asc\"}]",
+						"status": "manager-approved"
+					},
+					"route": "LeaveRequests",
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
+				},
+				{
 					"icon": "CalendarWeekendOutline",
 					"id": "LeaveBalances",
 					"label": "Leave balances",
@@ -911,6 +926,12 @@
 					"route": "PensionFilings"
 				},
 				{
+					"icon": "PiggyBank",
+					"id": "PensionSchemes",
+					"label": "Pension schemes",
+					"route": "PensionSchemes"
+				},
+				{
 					"icon": "ScaleBalance",
 					"id": "WntDisclosures",
 					"label": "WNT disclosures",
@@ -982,6 +1003,12 @@
 							]
 						}
 					}
+				},
+				{
+					"icon": "CashClock",
+					"id": "BenefitEntitlements",
+					"label": "Benefit entitlements",
+					"route": "BenefitEntitlements"
 				}
 			],
 			"icon": "CashSync",
@@ -1039,6 +1066,18 @@
 					"label": "Calendar subscriptions",
 					"order": 100,
 					"route": "CalendarSubscriptions"
+				},
+				{
+					"icon": "SchoolOutline",
+					"id": "Taakbeleid",
+					"label": "Task policy",
+					"route": "TaakbeleidScholen"
+				},
+				{
+					"icon": "CalendarClock",
+					"id": "DeploymentPlans",
+					"label": "Deployment plans",
+					"route": "DeploymentPlans"
 				},
 				{
 					"icon": "CheckDecagramOutline",
@@ -1100,7 +1139,7 @@
 				{
 					"icon": "PowerPlugOutline",
 					"id": "Integraties",
-					"label": "Integrations",
+					"label": "Access grants",
 					"route": "IntegrationAccounts"
 				},
 				{
@@ -1108,6 +1147,16 @@
 					"id": "Loonpakketten",
 					"label": "Payroll packs",
 					"route": "PayrollPacks"
+				},
+				{
+					"icon": "PowerPlugOutline",
+					"id": "Koppelingen",
+					"label": "Integrations",
+					"permission": "admin",
+					"route": "Integrations",
+					"visibleIf": {
+						"appInstalled": "integriq"
+					}
 				}
 			],
 			"icon": "CogOutline",
@@ -1135,7 +1184,7 @@
 		{
 			"icon": "StoreOutline",
 			"id": "StoreMenu",
-			"label": "Store",
+			"label": "Marketplace",
 			"order": 92,
 			"route": "Store",
 			"section": "footer"
@@ -1174,6 +1223,7 @@
 					"_note": "{{note}}",
 					"actionToggles": "{{actionToggles}}",
 					"allowCreate": "{{allowCreate}}",
+					"allowExport": true,
 					"bulkActions": "{{bulkActions}}",
 					"columns": "{{columns}}",
 					"defaultFilters": "{{defaultFilters}}",
@@ -1634,11 +1684,11 @@
 			"config": {
 				"app": "humaniq",
 				"description": "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding.",
-				"title": "Store"
+				"title": "Marketplace"
 			},
 			"id": "Store",
 			"route": "/store",
-			"title": "Store",
+			"title": "Marketplace",
 			"type": "store"
 		},
 		{
@@ -2075,14 +2125,16 @@
 			"type": "dashboard"
 		},
 		{
-			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. Rendered by the shared CnFlowsPage page type over OpenRegister's one native flow store (ADR-065), scoped to this app.",
+			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app. rowRoute names the FlowDetail page (a route name, not a path): a named-source page has no register and schema, so without it a row click opens nothing and Edit falls back to the source's own /flows path.",
 			"config": {
-				"app": "humaniq"
+				"app": "humaniq",
+				"entitySource": "flows",
+				"rowRoute": "FlowDetail"
 			},
 			"id": "Flows",
 			"route": "/flows",
 			"title": "Flows",
-			"type": "flows"
+			"type": "index"
 		},
 		{
 			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors pipelinq#1490.",
@@ -2093,7 +2145,7 @@
 			"route": "/flows/:id",
 			"sidebarComponent": "FlowDetailSidebar",
 			"title": "Flow",
-			"type": "flow-detail"
+			"type": "flow"
 		},
 		{
 			"_note": "ADR-112 / ADR-114 Decision 3. Three declarative type:dashboard pages over humaniq's own register — no bespoke component and no per-app controller. ⚠️ Read the SCHEMAS FROM lib/Settings/register.d/*.json, not from humaniq_mock_register.json: the mock declares the same 54 slugs, and a mock import duplicates every one of them, so reading slugs there is reading the wrong register. Slugs here equal their keys (PascalCase, no overrides).",
@@ -3089,6 +3141,10 @@
 				],
 				"register": "humaniq",
 				"schema": "OrgUnit",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
 				"widgets": [
 					{
 						"content": {
@@ -3316,6 +3372,7 @@
 				"actionToggles": {
 					"showAdd": true
 				},
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"startedAt",
@@ -3395,10 +3452,18 @@
 								"projectId",
 								"billable",
 								"costCenter",
-								"userId"
+								"userId",
+								"domainObjectType",
+								"domainObjectRef"
 							],
 							"overrides": {
 								"costCenter": {
+									"editable": false
+								},
+								"domainObjectRef": {
+									"editable": false
+								},
+								"domainObjectType": {
 									"editable": false
 								},
 								"hours": {
@@ -4358,6 +4423,7 @@
 				"actionToggles": {
 					"showAdd": true
 				},
+				"allowExport": true,
 				"columns": [
 					"candidateName",
 					"vacancyTitle",
@@ -5763,7 +5829,7 @@
 		},
 		{
 			"config": {
-				"_note": "leave-verzuim-mvp (2026-07-12): drives the EXISTING LeaveRequest lifecycle from portal-schemas (submit -> approve/reject, guarded server-side by NoSelfApprovalGuard) -- nothing on the schema changes here, only its UI. TimesheetDetail pattern: the data widget is SPLIT into 'Request' (leaveType/startDate/endDate/hours/reason -- what is being requested) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), both excluding employeeId since Related already resolves and links the requesting Employee by name. Files sits full-width below for supporting documents (e.g. a bijzonder-verlof invitation). NO stat KPI tile: unlike Timesheet's hours-sum or Expense's amount-sum, a leave request has no single numeric headline worth a dedicated stat (hours is optional and nullable). lifecycleActions expose exactly submit/approve/reject -- no invented cancel/withdraw edge (PayrollRunDetail _note precedent: never claim a transition the backend does not guard). Audit history is a sidebar tab. leave-hours-from-the-working-pattern (2026-09-30): 'What this leave costs' and 'Day by day' read GET /api/leave/requests/{id}/cost (endpoint-table, the detail-page registry widget for endpoint rows): the hours per year with their basis (pattern, pattern-only when openregister's working calendar is unread, contract-average without a pattern, explicit for a request's own hours) and each day with why it costs what it costs (working day, public holiday, day off, weekend).",
+				"_note": "leave-verzuim-mvp (2026-07-12): drives the EXISTING LeaveRequest lifecycle from portal-schemas (submit -> approve/reject, guarded server-side by NoSelfApprovalGuard) -- nothing on the schema changes here, only its UI. TimesheetDetail pattern: the data widget is SPLIT into 'Request' (leaveType/startDate/endDate/hours/reason -- what is being requested) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), both excluding employeeId since Related already resolves and links the requesting Employee by name. Files sits full-width below for supporting documents (e.g. a bijzonder-verlof invitation). NO stat KPI tile: unlike Timesheet's hours-sum or Expense's amount-sum, a leave request has no single numeric headline worth a dedicated stat (hours is optional and nullable). lifecycleActions expose exactly submit/approve/reject -- no invented cancel/withdraw edge (PayrollRunDetail _note precedent: never claim a transition the backend does not guard). Audit history is a sidebar tab. leave-hours-from-the-working-pattern (2026-09-30): 'What this leave costs' and 'Day by day' read GET /api/leave/requests/{id}/cost (endpoint-table, the detail-page registry widget for endpoint rows): the hours per year with their basis (pattern, pattern-only when openregister's working calendar is unread, contract-average without a pattern, explicit for a request's own hours) and each day with why it costs what it costs (working day, public holiday, day off, weekend). leave-approval-steps-and-history (2026-11-14): a Decisions timeline over the request's own `decisions` list (each step, approved or rejected, by whom and when; written by LeaveRequestProcessStampListener), and the approve-manager action for leave types that need HR after the manager; approve and reject now also run from manager-approved (LeaveApprovalStepGuard decides which edge applies). Coverage (2.5, REQ-LVM-S02): 'Coverage if approved' reads GET /api/leave/coverage for this request before Approve: each date approving would take the department below its administered minimum, with who is present, the minimum and who else is away; an empty table means no warning. Approving never waits on it. On approve-manager and approve, LeaveRequestProcessStampListener records the same warning (composed by LeaveCoverageWarning, as the endpoint shows it) in coverageWarningAccepted, read-only in Approval.",
 				"layout": [
 					{
 						"gridHeight": 5,
@@ -5772,14 +5838,6 @@
 						"gridY": 0,
 						"id": 1,
 						"widgetId": "data"
-					},
-					{
-						"gridHeight": 4,
-						"gridWidth": 8,
-						"gridX": 0,
-						"gridY": 5,
-						"id": 2,
-						"widgetId": "data-2"
 					},
 					{
 						"gridHeight": 9,
@@ -5793,7 +5851,23 @@
 						"gridHeight": 4,
 						"gridWidth": 8,
 						"gridX": 0,
+						"gridY": 5,
+						"id": 2,
+						"widgetId": "data-2"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 8,
+						"gridX": 0,
 						"gridY": 9,
+						"id": 8,
+						"widgetId": "coverage"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 13,
 						"id": 4,
 						"widgetId": "files"
 					},
@@ -5801,7 +5875,7 @@
 						"gridHeight": 4,
 						"gridWidth": 4,
 						"gridX": 8,
-						"gridY": 9,
+						"gridY": 13,
 						"id": 5,
 						"widgetId": "leave-cost"
 					},
@@ -5809,9 +5883,17 @@
 						"gridHeight": 6,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 13,
+						"gridY": 17,
 						"id": 6,
 						"widgetId": "leave-cost-days"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 23,
+						"id": 7,
+						"widgetId": "decisions"
 					}
 				],
 				"lifecycleActions": {
@@ -5827,9 +5909,18 @@
 							"to": "submitted"
 						},
 						{
-							"action": "approve",
+							"action": "approve-manager",
 							"from": [
 								"submitted"
+							],
+							"label": "Approve as manager",
+							"to": "manager-approved"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted",
+								"manager-approved"
 							],
 							"label": "Approve",
 							"to": "approved"
@@ -5837,7 +5928,8 @@
 						{
 							"action": "reject",
 							"from": [
-								"submitted"
+								"submitted",
+								"manager-approved"
 							],
 							"label": "Reject",
 							"to": "rejected"
@@ -5872,13 +5964,17 @@
 								"submittedAt",
 								"approvedBy",
 								"approvedAt",
-								"rejectionReason"
+								"rejectionReason",
+								"coverageWarningAccepted"
 							],
 							"overrides": {
 								"approvedAt": {
 									"editable": false
 								},
 								"approvedBy": {
+									"editable": false
+								},
+								"coverageWarningAccepted": {
 									"editable": false
 								},
 								"status": {
@@ -5894,6 +5990,38 @@
 						"id": "data-2",
 						"title": "Approval",
 						"type": "data"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "date",
+									"label": "Date"
+								},
+								{
+									"key": "present",
+									"label": "Present after approval"
+								},
+								{
+									"key": "minimum",
+									"label": "Minimum"
+								},
+								{
+									"key": "othersAway",
+									"label": "Also away"
+								}
+							],
+							"emptyText": "Approving this request keeps enough colleagues present.",
+							"endpointSource": {
+								"responsePath": "dates",
+								"url": "/apps/humaniq/api/leave/coverage?leaveRequestId=@objectId"
+							}
+						},
+						"icon": "AccountGroupOutline",
+						"id": "coverage",
+						"title": "Coverage if approved",
+						"type": "endpoint-table"
 					},
 					{
 						"content": {
@@ -5964,6 +6092,24 @@
 						"id": "leave-cost-days",
 						"title": "Day by day",
 						"type": "endpoint-table"
+					},
+					{
+						"content": {
+							"lists": [
+								{
+									"dateField": "at",
+									"detailField": "decision",
+									"field": "decisions",
+									"labelField": "step"
+								}
+							],
+							"order": "asc",
+							"title": "Decisions"
+						},
+						"icon": "Timeline",
+						"id": "decisions",
+						"title": "Decisions",
+						"type": "timeline"
 					}
 				]
 			},
@@ -6175,7 +6321,7 @@
 		},
 		{
 			"config": {
-				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001). people-dossier-completeness (2026-09-29): a Dossier status table over GET /api/employees/{id}/dossier-status names each required document as present, missing, expired, expiring or too old at start (REQ-DCP-002), and a Personnel documents object-list (PersonnelDocument.employeeId = @objectId) holds the supplied documents. people-secondment-and-side-activities (2026-09-29): Secondments (Secondment.employeeId = @objectId, REQ-SEC-001) and Side activities (SideActivity.employeeId = @objectId, REQ-SEC-003) object-lists side by side.",
+				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001). people-dossier-completeness (2026-09-29): a Dossier status table over GET /api/employees/{id}/dossier-status names each required document as present, missing, expired, expiring or too old at start (REQ-DCP-002), and a Personnel documents object-list (PersonnelDocument.employeeId = @objectId) holds the supplied documents. people-secondment-and-side-activities (2026-09-29): Secondments (Secondment.employeeId = @objectId, REQ-SEC-001) and Side activities (SideActivity.employeeId = @objectId, REQ-SEC-003) object-lists side by side. employee-custom-fields-through-the-register (2026-11-13): 'Own fields' (full-width, below Employment & compliance) renders every Employee property the app does NOT ship (exclude = the shipped properties of hr-objects.json and hr-cost-rate.json, pinned by EmployeeCustomFieldsManifestTest), so a field an administrator adds in OpenRegister appears and edits there; 'Employment & compliance' now names its shipped fields with include instead of excluding the person fields, so an added field does not show twice. 'Manage fields' (adminOnly header action) opens OpenRegister's schema list.",
 				"headerActions": [
 					{
 						"confirm": false,
@@ -6192,6 +6338,14 @@
 							"op": "eq",
 							"value": true
 						}
+					},
+					{
+						"adminOnly": true,
+						"icon": "FormTextbox",
+						"id": "manage-fields",
+						"label": "Manage fields",
+						"target": "/apps/openregister/schemas",
+						"type": "navigate"
 					}
 				],
 				"layout": [
@@ -6244,10 +6398,18 @@
 						"widgetId": "data-2"
 					},
 					{
+						"gridHeight": 3,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 15,
+						"id": 28,
+						"widgetId": "own-fields"
+					},
+					{
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 0,
-						"gridY": 15,
+						"gridY": 18,
 						"id": 7,
 						"widgetId": "object-list"
 					},
@@ -6255,7 +6417,7 @@
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 6,
-						"gridY": 15,
+						"gridY": 18,
 						"id": 8,
 						"widgetId": "object-list-2"
 					},
@@ -6263,7 +6425,7 @@
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 0,
-						"gridY": 19,
+						"gridY": 22,
 						"id": 9,
 						"widgetId": "object-list-3"
 					},
@@ -6271,7 +6433,7 @@
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 6,
-						"gridY": 19,
+						"gridY": 22,
 						"id": 10,
 						"widgetId": "object-list-4"
 					},
@@ -6279,7 +6441,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 23,
+						"gridY": 26,
 						"id": 11,
 						"widgetId": "object-list-5"
 					},
@@ -6287,7 +6449,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 27,
+						"gridY": 30,
 						"id": 12,
 						"widgetId": "object-list-6"
 					},
@@ -6295,7 +6457,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 31,
+						"gridY": 34,
 						"id": 13,
 						"widgetId": "object-list-7"
 					},
@@ -6303,7 +6465,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 35,
+						"gridY": 38,
 						"id": 14,
 						"widgetId": "object-list-8"
 					},
@@ -6311,7 +6473,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 39,
+						"gridY": 42,
 						"id": 15,
 						"widgetId": "object-list-9"
 					},
@@ -6319,7 +6481,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 43,
+						"gridY": 46,
 						"id": 17,
 						"widgetId": "object-list-10"
 					},
@@ -6327,7 +6489,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 47,
+						"gridY": 50,
 						"id": 16,
 						"widgetId": "files"
 					},
@@ -6335,7 +6497,7 @@
 						"gridHeight": 5,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 51,
+						"gridY": 54,
 						"id": 18,
 						"widgetId": "employments"
 					},
@@ -6343,7 +6505,7 @@
 						"gridHeight": 6,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 56,
+						"gridY": 59,
 						"id": 19,
 						"widgetId": "history"
 					},
@@ -6351,7 +6513,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 62,
+						"gridY": 65,
 						"id": 20,
 						"widgetId": "object-list-11"
 					},
@@ -6359,7 +6521,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 66,
+						"gridY": 69,
 						"id": 21,
 						"widgetId": "object-list-12"
 					},
@@ -6367,7 +6529,7 @@
 						"gridHeight": 5,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 70,
+						"gridY": 73,
 						"id": 22,
 						"widgetId": "dossier-status"
 					},
@@ -6375,7 +6537,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 75,
+						"gridY": 78,
 						"id": 23,
 						"widgetId": "object-list-13"
 					},
@@ -6383,7 +6545,7 @@
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 0,
-						"gridY": 79,
+						"gridY": 82,
 						"id": 24,
 						"widgetId": "object-list-14"
 					},
@@ -6391,7 +6553,7 @@
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 6,
-						"gridY": 79,
+						"gridY": 82,
 						"id": 25,
 						"widgetId": "object-list-15"
 					},
@@ -6399,7 +6561,7 @@
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 0,
-						"gridY": 83,
+						"gridY": 86,
 						"id": 26,
 						"widgetId": "object-list-16"
 					},
@@ -6407,7 +6569,7 @@
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 6,
-						"gridY": 83,
+						"gridY": 86,
 						"id": 27,
 						"widgetId": "cost-allocations"
 					}
@@ -6533,18 +6695,134 @@
 					{
 						"content": {
 							"columns": 3,
-							"exclude": [
-								"employeeNumber",
-								"firstName",
-								"lastName",
-								"dateOfBirth",
-								"bsn"
+							"include": [
+								"hourlyCostRateOverrideCents",
+								"hourlyCostRateOverrideReason",
+								"hourlyCostRateOverrideBy",
+								"hourlyCostRateOverrideAt",
+								"hourlyCostAdditions",
+								"managerUserId",
+								"deputyUserIds",
+								"shareBirthday",
+								"startDate",
+								"endDate",
+								"incomeRelationshipNumber",
+								"endReason",
+								"grossMonthlySalary",
+								"taxTableColor",
+								"identityDocumentVerified",
+								"identityDocumentRetainedUntil",
+								"loonheffingenVerklaringRetainedUntil",
+								"loonheffingenVerklaringOnFile",
+								"elstamRetrieved",
+								"steuerklasse",
+								"w4OnFile",
+								"i9VerifiedWithinThreeDays",
+								"newHireReportedDate",
+								"a1CertificateNumber",
+								"a1ValidUntil",
+								"postedWorker",
+								"thirtyPercentRulingGranted",
+								"thirtyPercentRulingRate",
+								"thirtyPercentCappedAtWntNorm",
+								"thirtyPercentRulingStartDate",
+								"thirtyPercentRulingEndDate",
+								"thirtyPercentRulingReducedNormApplies",
+								"nextcloudUserId",
+								"iban",
+								"tenaamstelling",
+								"loonheffingskortingToegepast",
+								"administrationId",
+								"isDga",
+								"gebruikelijkloonJustification",
+								"publicSectorRegime",
+								"ambtseedAfgelegdOp",
+								"nevenwerkzaamhedenGemeld",
+								"wntTopfunctionaris",
+								"wntUitzonderingReden",
+								"gender",
+								"straat",
+								"huisnummer",
+								"postcode",
+								"woonplaats",
+								"land",
+								"privateEmail",
+								"phone"
 							],
 							"title": "Employment & compliance"
 						},
 						"icon": "ShieldCheckOutline",
 						"id": "data-2",
 						"title": "Employment & compliance",
+						"type": "data"
+					},
+					{
+						"content": {
+							"columns": 3,
+							"exclude": [
+								"hourlyCostRateOverrideCents",
+								"hourlyCostRateOverrideReason",
+								"hourlyCostRateOverrideBy",
+								"hourlyCostRateOverrideAt",
+								"hourlyCostAdditions",
+								"managerUserId",
+								"deputyUserIds",
+								"employeeNumber",
+								"bsn",
+								"firstName",
+								"lastName",
+								"dateOfBirth",
+								"shareBirthday",
+								"startDate",
+								"endDate",
+								"incomeRelationshipNumber",
+								"endReason",
+								"grossMonthlySalary",
+								"taxTableColor",
+								"identityDocumentVerified",
+								"identityDocumentRetainedUntil",
+								"loonheffingenVerklaringRetainedUntil",
+								"loonheffingenVerklaringOnFile",
+								"elstamRetrieved",
+								"steuerklasse",
+								"w4OnFile",
+								"i9VerifiedWithinThreeDays",
+								"newHireReportedDate",
+								"a1CertificateNumber",
+								"a1ValidUntil",
+								"postedWorker",
+								"thirtyPercentRulingGranted",
+								"thirtyPercentRulingRate",
+								"thirtyPercentCappedAtWntNorm",
+								"thirtyPercentRulingStartDate",
+								"thirtyPercentRulingEndDate",
+								"thirtyPercentRulingReducedNormApplies",
+								"nextcloudUserId",
+								"iban",
+								"tenaamstelling",
+								"loonheffingskortingToegepast",
+								"administrationId",
+								"isDga",
+								"gebruikelijkloonJustification",
+								"publicSectorRegime",
+								"ambtseedAfgelegdOp",
+								"nevenwerkzaamhedenGemeld",
+								"wntTopfunctionaris",
+								"wntUitzonderingReden",
+								"gender",
+								"straat",
+								"huisnummer",
+								"postcode",
+								"woonplaats",
+								"land",
+								"privateEmail",
+								"phone"
+							],
+							"title": "Own fields"
+						},
+						"icon": "FormTextbox",
+						"id": "own-fields",
+						"title": "Own fields",
 						"type": "data"
 					},
 					{
@@ -8654,6 +8932,14 @@
 						"gridY": 7,
 						"id": 3,
 						"widgetId": "chain"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 10,
+						"id": 4,
+						"widgetId": "benefits"
 					}
 				],
 				"register": "humaniq",
@@ -8721,6 +9007,48 @@
 						"id": "chain",
 						"title": "Fixed-term chain",
 						"type": "endpoint-table"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "startDate",
+									"label": "Start"
+								},
+								{
+									"key": "endDate",
+									"label": "End"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"emptyText": "No benefit entitlements",
+							"filter": {
+								"employeeId": "@object.employeeId"
+							},
+							"limit": 10,
+							"register": "humaniq",
+							"rowRoute": "BenefitEntitlementDetail",
+							"schema": "BenefitEntitlement",
+							"sort": {
+								"dir": "desc",
+								"field": "startDate"
+							},
+							"viewAllQuery": {
+								"employeeId": "@object.employeeId"
+							},
+							"viewAllRoute": "BenefitEntitlements"
+						},
+						"icon": "CashClock",
+						"id": "benefits",
+						"title": "Benefit entitlements",
+						"type": "object-list"
 					}
 				]
 			},
@@ -8866,7 +9194,7 @@
 		},
 		{
 			"config": {
-				"_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), except the right-to-work check: people-dossier-completeness (2026-09-29) adds RightToWorkGuard on gereed_melden and starten (REQ-DCP-004) and a Right-to-work checks object-list (RightToWorkCheck.onboardingId = @objectId) where HR records the check; a pass ticks widCheckDone. Audit history is a sidebar tab.",
+				"_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), except the right-to-work check: people-dossier-completeness (2026-09-29) adds RightToWorkGuard on gereed_melden and starten (REQ-DCP-004) and a Right-to-work checks object-list (RightToWorkCheck.onboardingId = @objectId) where HR records the check; a pass ticks widCheckDone. Audit history is a sidebar tab. platform-hr-workflows 1.1a (2026-11-14): the checklist is split per owner, as HuInwerken draws it: HR (contract, identity, BSN, IBAN, pension, notes), IT (itProvisioned) and Manager (workplace and buddy, first month's programme, probation talk), each ticked by its task in the Indiensttreding flow.",
 				"layout": [
 					{
 						"gridHeight": 5,
@@ -8885,7 +9213,7 @@
 						"widgetId": "data-2"
 					},
 					{
-						"gridHeight": 13,
+						"gridHeight": 20,
 						"gridWidth": 4,
 						"gridX": 8,
 						"gridY": 0,
@@ -8896,7 +9224,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 17,
+						"gridY": 24,
 						"id": 4,
 						"widgetId": "files"
 					},
@@ -8904,9 +9232,25 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 13,
+						"gridY": 20,
 						"id": 5,
 						"widgetId": "object-list"
+					},
+					{
+						"gridHeight": 3,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 13,
+						"id": 6,
+						"widgetId": "data-it"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 16,
+						"id": 7,
+						"widgetId": "data-manager"
 					}
 				],
 				"lifecycleActions": {
@@ -8985,7 +9329,10 @@
 								"ibanVerified",
 								"itProvisioned",
 								"pensioenAangemeld",
-								"notes"
+								"notes",
+								"werkplekEnBuddyGeregeld",
+								"eersteMaandProgrammaGedeeld",
+								"proeftijdgesprekGepland"
 							],
 							"title": "Case"
 						},
@@ -9003,15 +9350,42 @@
 								"widCheckDate",
 								"bsnValidated",
 								"ibanVerified",
-								"itProvisioned",
 								"pensioenAangemeld",
 								"notes"
 							],
-							"title": "Checklist"
+							"title": "HR"
 						},
 						"icon": "CheckDecagramOutline",
 						"id": "data-2",
-						"title": "Checklist",
+						"title": "HR",
+						"type": "data"
+					},
+					{
+						"content": {
+							"columns": 2,
+							"include": [
+								"itProvisioned"
+							],
+							"title": "IT"
+						},
+						"icon": "AccountKeyOutline",
+						"id": "data-it",
+						"title": "IT",
+						"type": "data"
+					},
+					{
+						"content": {
+							"columns": 2,
+							"include": [
+								"werkplekEnBuddyGeregeld",
+								"eersteMaandProgrammaGedeeld",
+								"proeftijdgesprekGepland"
+							],
+							"title": "Manager"
+						},
+						"icon": "AccountTieOutline",
+						"id": "data-manager",
+						"title": "Manager",
 						"type": "data"
 					},
 					{
@@ -10450,7 +10824,8 @@
 				"register": "humaniq",
 				"schema": "SurveyInvitation",
 				"sidebar": {
-					"enabled": false
+					"enabled": true,
+					"showMetadata": true
 				},
 				"widgets": [
 					{
@@ -11033,6 +11408,7 @@
 				"actionToggles": {
 					"showAdd": true
 				},
+				"allowExport": true,
 				"columns": [
 					"startedAt",
 					"endedAt",
@@ -11472,14 +11848,46 @@
 		},
 		{
 			"config": {
-				"_note": "hrmq-personal-dashboard (design.md D1/D3): the caller-scoped personal landing surface hydra ADR-097 Decision 3 requires — 'route to a type: \"dashboard\" page scoped to the caller … Not an index page, and not a bare parent with no route of its own'. The MijnHrGroup menu entry gains route: \"MijnHr\" through this fragment's menu block (mergeMenuItems fills the base group's undefined route key), so the group title lands here while its nine children stay under the collapse chevron — both of Decision 3's conditions, which moves humaniq's counted main-menu total from 6 to 5. Every widget carries a caller-scope filter (userId: \"@me\", or managerUserId: \"@me\" for the approver's own queue) plus the OPTIONAL administration token @workspace.activeAdministrationId? — unresolved means dropped, so a widget degrades to user-scoped-only, never to another user's rows. Only the built-in `stat` and `object-table` types are used (stat resolves through humaniq's own registry.js override, which is load-bearing: the library's self-registration is tree-shaken out of the production bundle); no custom widget, no new backend endpoint, no raw-GraphQL dataSource (the steering Dashboard's _note documents why that form resolves a schema by name across every register on the instance). Widget 6 has no conditional-visibility primitive available — the dashboard widget grammar has none for stat tiles (design.md D4) — so it always renders and shows 0 for a caller who manages nobody; its caption keeps the zero legible. The stat tiles' click-through uses content.route in the vue-router LOCATION-OBJECT form ({\"name\": \"…\"}), not the bare string design.md D3 writes: widgetLink passes a string straight to <router-link :to>, where vue-router 4 reads it as a PATH, so a bare route NAME would fall through to the catch-all. Same spelling the hr-objects nav-card entries already use. The three object-table widgets carry the FLAT content contract (register/schema/filter/sort{field,dir}/limit/columns/rowRoute/viewAllRoute/emptyText), NOT the nested `source` shape design.md D3 writes — measured live 2026-08-22, not inferred: on a type:\"dashboard\" page CnDashboardPage.registryRenderer looks up getWidgetTypeEntry(canonicalWidgetType(type)), and utils/widgetTypeAliases.js maps `object-table` -> `table`, which registerDashboardWidgets.js registers INLINE to CnObjectListWidget. The alias therefore never reaches CnWidgetObjectTable's dashboardRegistration (its `object-table` key is registered under a name the canonicaliser has already rewritten away, in a side-effect module ADR-061 tree-shaking drops anyway). With the `source` shape the widget rendered its emptyText and fired ZERO fetches, because CnObjectListWidget reads content.register/content.schema and has no `source` key at all. Consequences of the real contract, accepted: `limit` is a FETCH CAP (ADR-062), not a render promise — the visible row count fits the cell — and there is no per-row-route escape, which is fine since rowRoute is already a single static route name. All three also carry allowCreate: false — CnObjectListWidget renders a \"+ Toevoegen\" create affordance by DEFAULT (measured live), and all three collections are read-only to the employee: Timesheets are server-created by the booking flow (MijnUrenstaten already sets showAdd: false), LeaveBalance is written only by LeaveAccrualJob, and payslips are payroll-generated (REQ-MHS-004's read-only posture). Labels are Dutch literals; hrmq-i18n-locale-completeness owns their conversion and this change adds no English keys. self-service-announcements-and-digest (2026-09-30): the Announcements table on top is the one exception to no new endpoint: it reads GET /api/announcements/mine, because an audience of one of my departments is not a declarative filter (design D2).",
+				"_note": "hrmq-personal-dashboard (design.md D1/D3): the caller-scoped personal landing surface hydra ADR-097 Decision 3 requires — 'route to a type: \"dashboard\" page scoped to the caller … Not an index page, and not a bare parent with no route of its own'. The MijnHrGroup menu entry gains route: \"MijnHr\" through this fragment's menu block (mergeMenuItems fills the base group's undefined route key), so the group title lands here while its nine children stay under the collapse chevron — both of Decision 3's conditions, which moves humaniq's counted main-menu total from 6 to 5. Every widget carries a caller-scope filter (userId: \"@me\", or managerUserId: \"@me\" for the approver's own queue) plus the OPTIONAL administration token @workspace.activeAdministrationId? — unresolved means dropped, so a widget degrades to user-scoped-only, never to another user's rows. Only the built-in `stat` and `object-table` types are used (stat resolves through humaniq's own registry.js override, which is load-bearing: the library's self-registration is tree-shaken out of the production bundle); no custom widget, no new backend endpoint, no raw-GraphQL dataSource (the steering Dashboard's _note documents why that form resolves a schema by name across every register on the instance). Widget 6 has no conditional-visibility primitive available — the dashboard widget grammar has none for stat tiles (design.md D4) — so it always renders and shows 0 for a caller who manages nobody; its caption keeps the zero legible. The stat tiles' click-through uses content.route in the vue-router LOCATION-OBJECT form ({\"name\": \"…\"}), not the bare string design.md D3 writes: widgetLink passes a string straight to <router-link :to>, where vue-router 4 reads it as a PATH, so a bare route NAME would fall through to the catch-all. Same spelling the hr-objects nav-card entries already use. The three object-table widgets carry the FLAT content contract (register/schema/filter/sort{field,dir}/limit/columns/rowRoute/viewAllRoute/emptyText), NOT the nested `source` shape design.md D3 writes — measured live 2026-08-22, not inferred: on a type:\"dashboard\" page CnDashboardPage.registryRenderer looks up getWidgetTypeEntry(canonicalWidgetType(type)), and utils/widgetTypeAliases.js maps `object-table` -> `table`, which registerDashboardWidgets.js registers INLINE to CnObjectListWidget. The alias therefore never reaches CnWidgetObjectTable's dashboardRegistration (its `object-table` key is registered under a name the canonicaliser has already rewritten away, in a side-effect module ADR-061 tree-shaking drops anyway). With the `source` shape the widget rendered its emptyText and fired ZERO fetches, because CnObjectListWidget reads content.register/content.schema and has no `source` key at all. Consequences of the real contract, accepted: `limit` is a FETCH CAP (ADR-062), not a render promise — the visible row count fits the cell — and there is no per-row-route escape, which is fine since rowRoute is already a single static route name. All three also carry allowCreate: false — CnObjectListWidget renders a \"+ Toevoegen\" create affordance by DEFAULT (measured live), and all three collections are read-only to the employee: Timesheets are server-created by the booking flow (MijnUrenstaten already sets showAdd: false), LeaveBalance is written only by LeaveAccrualJob, and payslips are payroll-generated (REQ-MHS-004's read-only posture). Labels are Dutch literals; hrmq-i18n-locale-completeness owns their conversion and this change adds no English keys. self-service-announcements-and-digest (2026-09-30): the Announcements table on top is the one exception to no new endpoint: it reads GET /api/announcements/mine, because an audience of one of my departments is not a declarative filter (design D2). self-service-mobile (design.md D3): three `tile` widgets open the row, request leave (/leave-requests), submit an expense (/expenses) and book hours (/mijn/uren), so the everyday tasks are one tap from the start page; every other widget moves down two rows. The tiles carry no colour of their own, so they follow the theme, and the library's grid stacks them at phone width. self-service-mobile (design.md D5): the `device-push` widget at the bottom is the opt-in for notifications on this device; it reads the device state on load and asks the browser for permission only when the switch is flipped, then registers the subscription with openregister's web-push endpoint.",
 				"description": "Your personal overview: hours, leave, expenses and payslips.",
 				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 8,
+						"widgetId": "snel-verlof"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 0,
+						"id": 9,
+						"widgetId": "snel-declaratie"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 10,
+						"widgetId": "snel-uren"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 17,
+						"id": 11,
+						"widgetId": "apparaat-meldingen"
+					},
 					{
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 0,
+						"gridY": 2,
 						"id": 7,
 						"widgetId": "mededelingen"
 					},
@@ -11487,7 +11895,7 @@
 						"gridHeight": 3,
 						"gridWidth": 4,
 						"gridX": 0,
-						"gridY": 4,
+						"gridY": 6,
 						"id": 1,
 						"widgetId": "uren-maand"
 					},
@@ -11495,7 +11903,7 @@
 						"gridHeight": 3,
 						"gridWidth": 4,
 						"gridX": 4,
-						"gridY": 4,
+						"gridY": 6,
 						"id": 2,
 						"widgetId": "declaraties"
 					},
@@ -11503,7 +11911,7 @@
 						"gridHeight": 3,
 						"gridWidth": 4,
 						"gridX": 8,
-						"gridY": 4,
+						"gridY": 6,
 						"id": 3,
 						"widgetId": "te-beoordelen"
 					},
@@ -11511,7 +11919,7 @@
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 0,
-						"gridY": 7,
+						"gridY": 9,
 						"id": 4,
 						"widgetId": "urenstaten"
 					},
@@ -11519,7 +11927,7 @@
 						"gridHeight": 4,
 						"gridWidth": 6,
 						"gridX": 6,
-						"gridY": 7,
+						"gridY": 9,
 						"id": 5,
 						"widgetId": "verlofsaldo"
 					},
@@ -11527,12 +11935,53 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 11,
+						"gridY": 13,
 						"id": 6,
 						"widgetId": "loonstroken"
 					}
 				],
 				"widgets": [
+					{
+						"content": {
+							"icon": "CalendarRange",
+							"iconType": "class",
+							"linkType": "route",
+							"linkValue": "/leave-requests",
+							"title": "Request leave"
+						},
+						"id": "snel-verlof",
+						"title": "Request leave",
+						"type": "tile"
+					},
+					{
+						"content": {
+							"icon": "CashMultiple",
+							"iconType": "class",
+							"linkType": "route",
+							"linkValue": "/expenses",
+							"title": "Submit an expense"
+						},
+						"id": "snel-declaratie",
+						"title": "Submit an expense",
+						"type": "tile"
+					},
+					{
+						"content": {
+							"icon": "AccountClockOutline",
+							"iconType": "class",
+							"linkType": "route",
+							"linkValue": "/mijn/uren",
+							"title": "Book hours"
+						},
+						"id": "snel-uren",
+						"title": "Book hours",
+						"type": "tile"
+					},
+					{
+						"id": "apparaat-meldingen",
+						"title": "Notifications on this device",
+						"type": "device-push"
+					},
 					{
 						"content": {
 							"columns": [
@@ -11734,8 +12183,201 @@
 			"type": "dashboard"
 		},
 		{
+			"_note": "platform-integrations-catalogue (design D1-D3, hydra connection-registry D8/D9). The rows are integriq's app_connection objects, synced from lib/Settings/connections.json; integriq works out each status, humaniq only declares them and reports the ledger handoff. config.filter scopes the list to humaniq, also for a bookmarked link. showAdd is false because a row nothing declared has nothing to check; Add integration leaves for integriq's overview through the openIntegriqConnections handler, since a header action's navigate only pushes a route inside this app. The two formatters are nextcloud-vue built-ins. Without integriq the menu entry hides and requiresApp names the missing app on a deep link. The access-grant records stay on IntegrationAccounts (Access grants).",
+			"config": {
+				"actionToggles": {
+					"showAdd": false
+				},
+				"columns": [
+					{
+						"key": "title",
+						"label": "Connection"
+					},
+					{
+						"formatter": "connectionStatus",
+						"key": "status",
+						"label": "Status"
+					},
+					{
+						"key": "statusMessage",
+						"label": "Status message",
+						"sortable": false
+					},
+					{
+						"key": "checkedAt",
+						"label": "Last checked"
+					},
+					{
+						"formatter": "connectionSettingsLabel",
+						"key": "settingsUrl",
+						"label": "Settings",
+						"sortable": false,
+						"widget": "link",
+						"widgetProps": {
+							"href": "{settingsUrl}"
+						}
+					}
+				],
+				"defaultSort": {
+					"direction": "asc",
+					"field": "order"
+				},
+				"description": "The outside systems humaniq exchanges data with, and whether each one works. A connection that is not available yet says why.",
+				"filter": {
+					"app": "humaniq"
+				},
+				"folderSidebar": {
+					"allLabel": "All connections",
+					"field": "status",
+					"source": "field"
+				},
+				"headerActions": [
+					{
+						"handler": "openIntegriqConnections",
+						"icon": "PowerPlugOutline",
+						"id": "add-integration",
+						"label": "Add integration"
+					}
+				],
+				"register": "integriq",
+				"schema": "app_connection",
+				"showViewAction": false
+			},
+			"id": "Integrations",
+			"permission": "admin",
+			"requiresApp": {
+				"id": "integriq",
+				"name": "Integriq"
+			},
+			"route": "/configuratie/koppelingen",
+			"title": "Integrations",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "education-staff-deployment-and-count (2026-11-14): REQ-EDU-001/002. The entry to Taakbeleid: the org units of the active administration; a row opens Taakbeleid for that unit. Taakbeleid is a second OrgUnit detail page, so this fragment sorts after hr-org.json and OrgUnitDetail stays the detail page the OrgUnits index opens.",
+				"description": "Pick a school to see every teacher's plan for the school year against their norm.",
+				"layout": [
+					{
+						"gridHeight": 7,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "schools"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"columns": [
+								"name",
+								"type"
+							],
+							"emptyText": "No organisational units yet",
+							"filter": {
+								"administrationId": "@workspace.activeAdministrationId?"
+							},
+							"limit": 100,
+							"register": "humaniq",
+							"rowRoute": "Taakbeleid",
+							"schema": "OrgUnit",
+							"sort": {
+								"dir": "asc",
+								"field": "name"
+							}
+						},
+						"id": "schools",
+						"title": "Schools",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "TaakbeleidScholen",
+			"route": "/taakbeleid",
+			"title": "Task policy",
+			"type": "dashboard"
+		},
+		{
+			"config": {
+				"_note": "education-staff-deployment-and-count (2026-11-14): REQ-EDU-001/002. One school's teachers for the current school year from GET /api/deployment/org-units/{id}: planned, norm and difference, the largest overload first, and placed teachers without a plan last. The unit and each teacher are read under the caller's access; an unreadable unit answers 404. A row with a plan opens DeploymentPlanDetail.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "teachers"
+					}
+				],
+				"register": "humaniq",
+				"schema": "OrgUnit",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Teacher"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "plannedHours",
+									"label": "Planned hours"
+								},
+								{
+									"key": "normHours",
+									"label": "Norm hours"
+								},
+								{
+									"key": "normSource",
+									"label": "Norm source"
+								},
+								{
+									"key": "differenceHours",
+									"label": "Difference"
+								},
+								{
+									"key": "overload",
+									"label": "Overload"
+								},
+								{
+									"key": "hasPlan",
+									"label": "Has a plan"
+								}
+							],
+							"emptyText": "No teachers placed at this school this school year",
+							"endpointSource": {
+								"responsePath": "teachers",
+								"url": "/apps/humaniq/api/deployment/org-units/@objectId"
+							},
+							"rowRoute": "DeploymentPlanDetail"
+						},
+						"icon": "SchoolOutline",
+						"id": "teachers",
+						"title": "Teachers",
+						"type": "endpoint-table"
+					}
+				]
+			},
+			"id": "Taakbeleid",
+			"route": "/taakbeleid/:id",
+			"title": "Task policy",
+			"type": "detail"
+		},
+		{
 			"config": {
 				"_note": "self-service-approvals-inbox (2026-09-29): REQ-API-002. My HR > My deputies is a preset on this page (managerUserId = @me), not a second index. ManagerDeputyListener makes a record without a manager the writer's own, lets only the manager or HR write one, and refuses a self-deputy or a last day before the first.",
+				"allowExport": true,
 				"columns": [
 					"managerUserId",
 					"deputyUserId",
@@ -11823,6 +12465,7 @@
 					"showDeleteAction": false,
 					"showEditAction": false
 				},
+				"allowExport": true,
 				"columns": [
 					"period",
 					"hours",
@@ -11850,6 +12493,7 @@
 		{
 			"config": {
 				"_note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-ROST-C01. Sorted on validUntil ascending because the interesting row is the one about to expire: a BOA pas that runs out next week is what a planner has to act on, and CompetenceCheckService will refuse the shift the day after it does without anybody editing the record. No lifecycle: a qualification is renewed by writing a new row, not by transitioning an old one.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"competenceCode",
@@ -11934,6 +12578,7 @@
 		{
 			"config": {
 				"_note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-AGD-003. quantity is a column rather than a hidden setting because it is what decides whether a second booking is a clash: one room is one room, and two geluidsmeters are two. `active` likewise: a resource out of service refuses a booking, and a planner needs to see which ones do.",
+				"allowExport": true,
 				"columns": [
 					"name",
 					"kind",
@@ -12019,6 +12664,7 @@
 		{
 			"config": {
 				"_note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-AGD-004. A booking that would take a resource past its quantity over an overlapping period is refused by ResourceBookingOverlapListener in the WRITE path, so this index never shows a clash: the refusal names the booking that blocks it at the moment somebody tries, rather than in a report nobody reads before walking to the room.",
+				"allowExport": true,
 				"columns": [
 					"resourceId",
 					"start",
@@ -12104,6 +12750,7 @@
 		{
 			"config": {
 				"_note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-AGD-005. lastPollStatus is a column because a feed that has quietly stopped answering is the failure that matters: the cached busy time stays in place on purpose, so the agenda keeps looking healthy while going stale, and this column is where that becomes visible. busyPeriods carries periods only, never a title, a location or an attendee.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"label",
@@ -12188,6 +12835,7 @@
 		{
 			"config": {
 				"_note": "self-service-announcements-and-digest (2026-09-30): REQ-AND-001. HR writes; employees read a published one on My announcements and My HR.",
+				"allowExport": true,
 				"columns": [
 					"title",
 					"audience",
@@ -12218,6 +12866,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"category",
@@ -12246,6 +12895,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"assetId",
 					"employeeId",
@@ -12329,6 +12979,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"title",
 					"department",
@@ -12358,6 +13009,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"candidateName",
 					"vacancyId",
@@ -12386,6 +13038,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"applicationId",
 					"scheduledStart",
@@ -12506,6 +13159,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"date",
@@ -12615,6 +13269,7 @@
 		{
 			"config": {
 				"_note": "bhv-organisatie (2026-07-17): coverage VISIBILITY, not a coverage formula (REQ-BHV-003/-004, design.md D2) -- this index lists who is currently certified, filterable/groupable by orgUnitId and rol, so HR/a safety officer can judge adequacy against their own RI&E. No red/green adequacy indicator, no computed ratio anywhere on this page.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"rol",
@@ -12713,6 +13368,7 @@
 					"showMassImport": false
 				},
 				"allowCreate": false,
+				"allowExport": true,
 				"columns": [
 					"caoId",
 					"name",
@@ -12740,6 +13396,7 @@
 		{
 			"config": {
 				"_note": "people-record-change-approval (2026-09-29): REQ-ECR-001. The approval queue; ChangeApproverRoleGuard decides who may approve or reject each one. My HR > My change requests is a menu preset on this page (userId = @me), not a second index (ADR-097 Decision 5); its create form is the self-service request: employeeId is not required, ChangeRequestService fills it from the requester's own account, merges the flat address and bank fields into changes, and applies an address change at once (approver none, own record).",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"changeKind",
@@ -12891,6 +13548,7 @@
 		{
 			"config": {
 				"_note": "people-record-change-approval (2026-09-29): D2. Administered data, not code: the five seeded rules (adres none, bankrekening hr, persoonsgegevens hr, salaris accountant, contractvoorwaarden hr) apply to every administration without rules of its own.",
+				"allowExport": true,
 				"columns": [
 					"changeKind",
 					"approverRole",
@@ -12982,6 +13640,7 @@
 					"showMassImport": false
 				},
 				"allowCreate": false,
+				"allowExport": true,
 				"columns": [
 					"bandId",
 					"title",
@@ -13060,6 +13719,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"period",
@@ -13211,6 +13871,7 @@
 		{
 			"config": {
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"basis",
@@ -13297,6 +13958,7 @@
 		{
 			"config": {
 				"allowCreate": false,
+				"allowExport": true,
 				"columns": [
 					"period",
 					"costCenter",
@@ -13422,6 +14084,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"documentType",
 					"status",
@@ -13584,6 +14247,7 @@
 			],
 			"config": {
 				"_note": "payroll-annual-statement-action (2026-09-29): the header action queues last year's statements for every employee with payslips in that year (POST /api/documents/jaaropgaven, HR or payroll only, design D2/D3). It carries no year: another year goes through occ humaniq:documents:generate or the endpoint's year parameter.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"year",
@@ -13684,6 +14348,7 @@
 		{
 			"config": {
 				"_note": "people-dossier-completeness (2026-09-29): D1. Administered data, not code. A requirement proven by a document added to the file matches PersonnelDocument.requirementCode; one proven by a generated document matches HrGeneratedDocument.documentType with status generated; one proven by a competence matches EmployeeCompetence.competenceCode.",
+				"allowExport": true,
 				"columns": [
 					"code",
 					"label",
@@ -13769,6 +14434,7 @@
 		{
 			"config": {
 				"_note": "people-dossier-completeness (2026-09-29): D2. HR is notified when a document enters its warning window and when it expires (x-openregister-notifications on the schema, materialised daysUntilWarning and daysUntilExpiry).",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"requirementCode",
@@ -13863,6 +14529,7 @@
 		{
 			"config": {
 				"_note": "people-dossier-completeness (2026-09-29): D4. RightToWorkCheckListener decides result, reason and method on every save (a result typed by hand does not survive), clears the pasted zone so no document number is stored, and refuses anyone outside HR. A pass ticks the onboarding case's WID check; RightToWorkGuard then lets the case reach the first working day.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"onboardingId",
@@ -13966,6 +14633,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"right",
@@ -14114,6 +14782,7 @@
 		{
 			"config": {
 				"_note": "estimate-spent-and-remaining-on-an-hours-leaf (2026-09-18): REQ-HL-EST-001. There is NO remaining column, and that is the point: remaining is estimated minus booked, derived on read by TimeEstimateService, so deleting an entry moves it at once and no stored figure can go stale. `enforced` is a column because it changes what happens on a write: false refuses nothing, true refuses a new entry past the ceiling naming the hours left, and a stopped timer lands either way. The expected number itself belongs to the consuming app, which writes it from its own policy (REQ-HL-EST-005); this page is where an administrator reads and corrects one.",
+				"allowExport": true,
 				"columns": [
 					"domainObjectType",
 					"domainObjectRef",
@@ -14194,6 +14863,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"title",
@@ -14223,6 +14893,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"distanceKmOneWay",
@@ -14394,6 +15065,7 @@
 		{
 			"config": {
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"kind",
@@ -14518,6 +15190,7 @@
 		{
 			"config": {
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"year",
 					"administrationId",
@@ -14645,6 +15318,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"title",
 					"orgUnitId",
@@ -14677,6 +15351,7 @@
 		{
 			"config": {
 				"_note": "reporting-personnel-budget-and-scenarios (2026-09-29): REQ-PBS-001/002. The budget itself is on FormationScenarioDetail.",
+				"allowExport": true,
 				"columns": [
 					"name",
 					"year",
@@ -14706,6 +15381,7 @@
 		{
 			"config": {
 				"_note": "reporting-personnel-budget-and-scenarios (2026-09-29): D1. ScenarioMutationListener refuses a change to a fixed scenario.",
+				"allowExport": true,
 				"columns": [
 					"scenarioId",
 					"formatieplaatsId",
@@ -14788,6 +15464,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"status",
@@ -14905,6 +15582,7 @@
 			"config": {
 				"_note": "payroll-external-bureau-handoff (2026-10-01): one PayrollHandoff per administration and period, for an administration whose payrollProcessing is external-bureau. integriq delivers a handoff that is set ready and writes the bureau's payslips back.",
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"administrationId",
 					"period",
@@ -14937,6 +15615,7 @@
 			"config": {
 				"_note": "payroll-external-bureau-handoff (2026-10-01): written only by SalaryBureauExchangeService::compile(); reached from a handoff's mutation list (View all).",
 				"allowCreate": false,
+				"allowExport": true,
 				"columns": [
 					"handoffId",
 					"employeeId",
@@ -15062,6 +15741,7 @@
 					"showMassImport": true
 				},
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"functiecode",
 					"naam",
@@ -15106,6 +15786,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"purpose",
@@ -15125,7 +15806,7 @@
 			},
 			"id": "IntegrationAccounts",
 			"route": "/configuratie/integraties",
-			"title": "Integrations",
+			"title": "Access grants",
 			"type": "index"
 		},
 		{
@@ -15168,6 +15849,7 @@
 		{
 			"config": {
 				"_note": "leave-against-a-department-schedule (2026-09-18): REQ-LVM-T01, administered rather than enumerated. A LeaveRequest holds the CODE of its type, not a uuid, so every request written while leaveType was an enum still resolves to the type carrying that code -- LeaveTypeResolver matches uuid first, code second. `active` is a filter rather than a hidden flag because a retired type must stay readable on the requests that carry it while being absent from the picker on a new one. No lifecycle: a type is edited or retired, never transitioned.",
+				"allowExport": true,
 				"columns": [
 					"code",
 					"label",
@@ -15250,6 +15932,7 @@
 		{
 			"config": {
 				"_note": "leave-against-a-department-schedule (2026-09-18): REQ-LVM-S01/S03. The schedule is composed ON READ and nothing is stored, so a withdrawn request is gone from the next read with no sync in between. This page is the declarative half over LeaveRequest itself; the org-unit composition, the redaction of a request the reader may not see, and the coverage warning live in GET /api/leave/schedule and GET /api/leave/coverage, which resolve every request under the CALLER's own RBAC rather than inventing a scoping rule of their own. Approve and reject here drive the transitions LeaveRequest already declares, guarded by the existing NoSelfApprovalGuard: no edge is added for this surface, and the LeaveApproval queue keeps working unchanged beside it.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"startDate",
@@ -15279,6 +15962,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"leaveType",
@@ -15308,6 +15992,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"year",
@@ -15448,6 +16133,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"transactionType",
 					"hours",
@@ -15484,6 +16170,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"creditor",
@@ -15517,6 +16204,7 @@
 					"showDeleteAction": false,
 					"showEditAction": false
 				},
+				"allowExport": true,
 				"columns": [
 					"period",
 					"jurisdiction",
@@ -15542,6 +16230,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"bulkActions": [
 					{
 						"handler": "proposeRaiseForSelection",
@@ -15578,6 +16267,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"type",
@@ -15607,6 +16297,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"period",
@@ -15647,6 +16338,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"administrationId",
@@ -15676,6 +16368,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"tijdvakcode",
@@ -15707,6 +16400,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"toPeriod",
 					"fromPeriod",
@@ -15749,6 +16443,7 @@
 			],
 			"config": {
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"administrationId",
 					"year",
@@ -15836,6 +16531,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"administrationId",
 					"year",
@@ -16032,6 +16728,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"title",
 					"status",
@@ -16056,6 +16753,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"status",
@@ -16083,6 +16781,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"reason",
@@ -16170,6 +16869,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"type",
@@ -16199,6 +16899,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"orgUnitId",
@@ -16285,6 +16986,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"status",
@@ -16401,6 +17103,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"fund",
@@ -16563,6 +17266,97 @@
 		},
 		{
 			"config": {
+				"_note": "filings-pension-upa-message (2026-11-14): D1. Administered data, sourced and dated like the tax tables; a figure stays advisory until verified. An ABP-obliged administration holds an abp scheme on the APG format.",
+				"allowExport": true,
+				"columns": [
+					"fund",
+					"schemeCode",
+					"messageFormat",
+					"franchise",
+					"maxPensionableSalary",
+					"employerPercentage",
+					"employeePercentage",
+					"validFrom",
+					"verified"
+				],
+				"description": "The pension scheme of each fund: the delivery format, the franchise, the maximum pensionable salary and the contribution percentages a pension filing is reported with.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"fund",
+					"messageFormat",
+					"verified"
+				],
+				"register": "humaniq",
+				"schema": "PensionScheme",
+				"sort": {
+					"field": "validFrom",
+					"order": "desc"
+				}
+			},
+			"id": "PensionSchemes",
+			"route": "/pension-schemes",
+			"title": "Pension schemes",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "filings-pension-upa-message (2026-11-14): D1. A plain configuration record, no lifecycle.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "PensionScheme",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Pension scheme"
+						},
+						"icon": "PiggyBank",
+						"id": "data",
+						"title": "Pension scheme",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "PensionSchemeDetail",
+			"route": "/pension-schemes/:id",
+			"title": "Pension scheme",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"year",
@@ -16690,6 +17484,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"cycleId",
 					"status",
@@ -16716,6 +17511,7 @@
 		{
 			"config": {
 				"_note": "people-employee-relations-cases (2026-09-29): REQ-ERC-001/002. My HR > My warnings and measures is a preset on this page (userId = @me); OpenRegister's authorization shows the employee only their own closed warnings and measures, and the manager only kind, status and dates.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"kind",
@@ -16843,6 +17639,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"status",
@@ -16960,6 +17757,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"originalPeriod",
@@ -16999,6 +17797,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"name",
 					"startTime",
@@ -17093,6 +17892,7 @@
 				}
 			],
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"period",
 					"orgUnitId",
@@ -17120,6 +17920,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"date",
 					"employeeId",
@@ -17207,6 +18008,7 @@
 		{
 			"config": {
 				"_note": "people-secondment-and-side-activities (2026-09-29): REQ-SEC-001/002. AgendaComposer turns an actief secondment into a secondment entry and AvailabilityService commits hoursPerWeek over the contracted week.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"receivingOrganisation",
@@ -17318,6 +18120,7 @@
 		{
 			"config": {
 				"_note": "people-secondment-and-side-activities (2026-09-29): REQ-SEC-003. My HR > My side activities is a preset on this page (userId = @me), not a second index. SideActivityListener fills in the employee from the reporter's account and keeps Employee.nevenwerkzaamhedenGemeld in step with the register.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"description",
@@ -17446,6 +18249,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"onderwijsinstelling",
 					"opleiding",
@@ -17564,6 +18368,7 @@
 		{
 			"config": {
 				"_note": "talent-engagement-surveys (2026-10-02): REQ-SRV-001. HR builds and opens a survey; employees answer on My surveys.",
+				"allowExport": true,
 				"columns": [
 					"title",
 					"scope",
@@ -17595,6 +18400,7 @@
 		{
 			"config": {
 				"_note": "talent-engagement-surveys (2026-10-02): REQ-SRV-002, design D4. HR sees who has not answered yet; an employee sees only their own invitations (My surveys, userId @me).",
+				"allowExport": true,
 				"columns": [
 					"surveyId",
 					"employeeId",
@@ -17624,6 +18430,7 @@
 			"config": {
 				"_note": "filings-ib47 (2026-10-01): ThirdPartyPayee. The BSN carries the same field authorization as an employee's (HR and payroll only); nl-ubd-payee-identification flags a paid payee without BSN or date of birth.",
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"lastName",
 					"initials",
@@ -17710,6 +18517,7 @@
 			"config": {
 				"_note": "filings-ib47 (2026-10-01): ThirdPartyPayment. ThirdPartyReportService sums them per payee and year.",
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"payeeId",
 					"paidOn",
@@ -17796,6 +18604,7 @@
 			"config": {
 				"_note": "filings-ib47 (2026-10-01): one ThirdPartyReport per administration and year; nl-ubd-deadline flags a year with payments whose report is not sent by 31 January of the next year.",
 				"allowCreate": true,
+				"allowExport": true,
 				"columns": [
 					"administrationId",
 					"year",
@@ -17832,6 +18641,7 @@
 					"showAdd": false,
 					"showEditAction": false
 				},
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"period",
@@ -17867,6 +18677,7 @@
 					"showDeleteAction": false,
 					"showEditAction": false
 				},
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"period",
@@ -17905,6 +18716,7 @@
 					"showDeleteAction": false,
 					"showEditAction": false
 				},
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"period",
@@ -17939,6 +18751,7 @@
 		{
 			"config": {
 				"_note": "talent-training-and-lms (2026-09-29): REQ-TRN-001. One record per employee per training (D1); a group course is planned as one record per participant, and the two bulk actions register attendance for the selection through OpenRegister's transition endpoint, so the lifecycle and TrainingRecordListener run exactly as they do on the detail page. Sorted on plannedOn descending: the course that just ran is the one to register.",
+				"allowExport": true,
 				"bulkActions": [
 					{
 						"handler": "registerTrainingAttended",
@@ -18077,6 +18890,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"firstSickDay",
@@ -18104,6 +18918,7 @@
 		},
 		{
 			"config": {
+				"allowExport": true,
 				"columns": [
 					"year",
 					"employeeId",
@@ -18231,6 +19046,7 @@
 		{
 			"config": {
 				"_note": "working-hours-per-person (2026-09-18): the person half of decision D19. A pattern is DATED and is never edited to record a contract change (design.md D2), so the index sorts on validFrom descending and shows validUntil: an open-ended row is the running pattern and an ended one is history a past figure still divides by. Hours are listed per weekday rather than as an fte fraction (design.md D4) -- the fte figure stays on the employment record and is not derived here. No feestdag column: which days are non-working for the organisation is openregister's working calendar, read and never owned.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"validFrom",
@@ -18317,6 +19133,7 @@
 		{
 			"config": {
 				"_note": "working-hours-per-person (2026-09-18): the third kind of absence (design.md D3). Leave is requested and drawn from a balance (LeaveRequests), sickness is a case with a poortwachter timeline (SickLeaveCases), and this is neither: nothing is requested and no balance moves. The reason list is administered and holds no leave type, so a row here can never read as verlof on a day the person was never contracted to work.",
+				"allowExport": true,
 				"columns": [
 					"employeeId",
 					"reason",
@@ -18397,6 +19214,239 @@
 			"id": "NonWorkingTimeDetail",
 			"route": "/niet-werkdagen/:id",
 			"title": "Non-working time",
+			"type": "detail"
+		},
+		{
+			"actions": [
+				{
+					"icon": "PlusCircleOutline",
+					"id": "create-benefit-entitlement",
+					"label": "Record benefit entitlement",
+					"onSuccessRoute": "BenefitEntitlementDetail",
+					"register": "humaniq",
+					"schema": "BenefitEntitlement",
+					"successMessage": "Benefit entitlement recorded as a draft. Another HR adviser activates it.",
+					"type": "open-form"
+				}
+			],
+			"config": {
+				"allowExport": true,
+				"columns": [
+					"employeeId",
+					"kind",
+					"paymentMode",
+					"startDate",
+					"endDate",
+					"monthlyAmount",
+					"status"
+				],
+				"description": "Benefits paid to a person from a decision rather than for work: an early-retirement benefit or a former office holder's benefit. Each active entitlement gets its own payslip in the payroll run, next to any salary payslip, also after the person has left. Record the decision as a draft; another HR adviser activates it.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"kind",
+					"status",
+					"paymentMode"
+				],
+				"register": "humaniq",
+				"schema": "BenefitEntitlement",
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				}
+			},
+			"id": "BenefitEntitlements",
+			"route": "/benefit-entitlements",
+			"title": "Benefit entitlements",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-special-regimes (2026-11-14): one benefit decision for a person (design.md D1). The payroll run pays every active entitlement covering the period as its own payslip, keyed by the entitlement, whether or not the person is still employed. lifecycleActions expose exactly the schema's two transitions: activate (guarded by NoSelfApprovalGuard, so the person the entitlement is for cannot activate it) and end. The tax treatment comes from the tables' specialRegimes leaves for the entitlement's kind; while a leaf is unverified the run lists the person as regime-unverified and pays nothing. Audit history is a sidebar tab.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "activate",
+							"from": [
+								"draft"
+							],
+							"label": "Activate",
+							"to": "active"
+						},
+						{
+							"action": "end",
+							"from": [
+								"active"
+							],
+							"label": "End",
+							"to": "ended"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "BenefitEntitlement",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"administrationId"
+							],
+							"title": "Benefit entitlement"
+						},
+						"icon": "CashClock",
+						"id": "data",
+						"title": "Benefit entitlement",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "BenefitEntitlementDetail",
+			"route": "/benefit-entitlements/:id",
+			"title": "Benefit entitlement",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "education-staff-deployment-and-count (2026-11-14): REQ-EDU-001/002. One plan per teacher per school year. plannedHours is stamped by DeploymentPlanTotalsListener, differenceHours is the schema's calculation. Only HR creates plans; a teacher reads their own.",
+				"allowExport": true,
+				"columns": [
+					"employeeId",
+					"orgUnitId",
+					"schoolYear",
+					"plannedHours",
+					"normHours",
+					"differenceHours",
+					"status"
+				],
+				"description": "Each teacher's planned hours for a school year against the norm for their contract. Above zero difference is an overload.",
+				"filters": [
+					"orgUnitId",
+					"schoolYear",
+					"status"
+				],
+				"register": "humaniq",
+				"schema": "DeploymentPlan",
+				"sort": {
+					"field": "schoolYear",
+					"order": "desc"
+				}
+			},
+			"id": "DeploymentPlans",
+			"route": "/deployment-plans",
+			"title": "Deployment plans",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "education-staff-deployment-and-count (2026-11-14): REQ-EDU-001/002. Shows the plan lines with planned, norm (normSource says whether it came from the CAO or was entered by hand) and the difference. vaststellen and heropenen are the schema's own transitions, guarded server-side by NoSelfApprovalGuard so a teacher cannot confirm their own plan.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "vaststellen",
+							"from": [
+								"concept"
+							],
+							"label": "Confirm plan",
+							"to": "vastgesteld"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"vastgesteld"
+							],
+							"label": "Reopen plan",
+							"to": "concept"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "DeploymentPlan",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeUserId"
+							],
+							"title": "Deployment plan"
+						},
+						"icon": "CalendarClock",
+						"id": "data",
+						"title": "Deployment plan",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "DeploymentPlanDetail",
+			"route": "/deployment-plans/:id",
+			"title": "Deployment plan",
 			"type": "detail"
 		}
 	],

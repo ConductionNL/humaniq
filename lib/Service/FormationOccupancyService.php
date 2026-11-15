@@ -38,6 +38,8 @@ use DateTimeImmutable;
 
 /**
  * Computes formation occupancy from records handed in.
+ *
+ * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-002
  */
 class FormationOccupancyService {
 
@@ -52,56 +54,51 @@ class FormationOccupancyService {
 
 	/**
 	 * Occupancy per place and for the unit, averaged over the working days
-	 * from `$from` to `$to` inclusive.
+	 * of the period.
 	 *
-	 * @param list<array<string, mixed>> $places             The unit's Formatieplaats records.
-	 * @param list<array<string, mixed>> $contracts          EmploymentContract records.
-	 * @param list<array<string, mixed>> $leaveRequests      LeaveRequest records.
-	 * @param list<array<string, mixed>> $sickCases          SickLeaveCase records.
-	 * @param DateTimeImmutable          $from               First day.
-	 * @param DateTimeImmutable          $to                 Last day.
-	 * @param array<int, string>         $netLeaveTypes      Leave type codes that count as away.
-	 * @param int                        $longTermSickWeeks  Weeks after which sickness counts.
-	 * @param float                      $fullTimeHoursWeek  Hours of one FTE.
+	 * @param list<array<string, mixed>> $places    The unit's Formatieplaats records.
+	 * @param list<array<string, mixed>> $contracts EmploymentContract records.
+	 * @param FormationAbsenceSources    $absences  Leave and sickness records and the rules that make them count.
+	 * @param AbsencePeriod              $period    First and last day, inclusive, and the hours of one FTE.
 	 *
 	 * @return array{places: list<array<string, mixed>>, total: array<string, mixed>}
 	 *
 	 * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-002
 	 * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-003
-	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Every record set is an input of the pure count.
 	 */
 	public function occupancy(
 		array $places,
 		array $contracts,
-		array $leaveRequests,
-		array $sickCases,
-		DateTimeImmutable $from,
-		DateTimeImmutable $to,
-		array $netLeaveTypes,
-		int $longTermSickWeeks,
-		float $fullTimeHoursWeek,
+		FormationAbsenceSources $absences,
+		AbsencePeriod $period,
 	): array {
-		$days = $this->workingDays(from: $from, to: $to);
-		$away = new FormationAbsence(
-			progression: $this->progression,
-			leaveRequests: $leaveRequests,
-			sickCases: $sickCases,
-			netLeaveTypes: $netLeaveTypes,
-			longTermSickWeeks: $longTermSickWeeks
+		$window = new FormationWindow(
+			days: $this->workingDays(period: $period),
+			away: new FormationAbsence(progression: $this->progression, sources: $absences),
+			fullTimeHoursWeek: $period->fullTimeHoursWeek
 		);
 
 		$rows = [];
-		$total = ['budgetedFte' => 0.0, 'filledFte' => 0.0, 'vacantFte' => 0.0, 'netFte' => 0.0];
 		foreach ($places as $place) {
-			$row = $this->placeRow(
+			$rows[] = $this->placeRow(
 				place: $place,
-				contracts: $contracts,
-				days: $days,
-				away: $away,
-				fullTimeHoursWeek: $fullTimeHoursWeek
+				occupied: $this->occupiedFte(occupants: $this->occupantsOf(place: $place, contracts: $contracts), window: $window)
 			);
-			$rows[] = $row;
+		}
+
+		return ['places' => $rows, 'total' => $this->total(rows: $rows)];
+	}//end occupancy()
+
+	/**
+	 * The unit's figures: the sum of the place rows, and whether it is overfilled.
+	 *
+	 * @param list<array<string, mixed>> $rows The place rows.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function total(array $rows): array {
+		$total = ['budgetedFte' => 0.0, 'filledFte' => 0.0, 'vacantFte' => 0.0, 'netFte' => 0.0];
+		foreach ($rows as $row) {
 			foreach (array_keys($total) as $key) {
 				$total[$key] += $row[$key];
 			}
@@ -113,29 +110,30 @@ class FormationOccupancyService {
 
 		$total['overfilled'] = ($total['filledFte'] > $total['budgetedFte']);
 
-		return ['places' => $rows, 'total' => $total];
-	}//end occupancy()
+		return $total;
+	}//end total()
 
 	/**
-	 * One place's figures.
+	 * The id a place is matched on: its id, else its uuid, else empty.
 	 *
-	 * @param array<string, mixed>       $place             The Formatieplaats.
-	 * @param list<array<string, mixed>> $contracts         EmploymentContract records.
-	 * @param list<DateTimeImmutable>    $days              The working days of the window.
-	 * @param FormationAbsence           $away              Who is away on which day.
-	 * @param float                      $fullTimeHoursWeek Hours of one FTE.
+	 * @param array<string, mixed> $place The Formatieplaats.
 	 *
-	 * @return array<string, mixed>
+	 * @return string
 	 */
-	private function placeRow(
-		array $place,
-		array $contracts,
-		array $days,
-		FormationAbsence $away,
-		float $fullTimeHoursWeek,
-	): array {
-		$placeId = (string)($place['id'] ?? ($place['uuid'] ?? ''));
-		$budgeted = max(0.0, (float)($place['budgetedFte'] ?? 0));
+	private function placeId(array $place): string {
+		return (string)($place['id'] ?? ($place['uuid'] ?? ''));
+	}//end placeId()
+
+	/**
+	 * The contracts on a place. A place without an id has none.
+	 *
+	 * @param array<string, mixed>       $place     The Formatieplaats.
+	 * @param list<array<string, mixed>> $contracts EmploymentContract records.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function occupantsOf(array $place, array $contracts): array {
+		$placeId = $this->placeId(place: $place);
 		$occupants = [];
 		foreach ($contracts as $contract) {
 			if ($placeId !== '' && (string)($contract['formatieplaatsId'] ?? '') === $placeId) {
@@ -143,32 +141,57 @@ class FormationOccupancyService {
 			}
 		}
 
+		return $occupants;
+	}//end occupantsOf()
+
+	/**
+	 * The filled and the net FTE of a place's occupants, averaged over the
+	 * window's days and rounded.
+	 *
+	 * @param list<array<string, mixed>> $occupants The place's contracts.
+	 * @param FormationWindow            $window    The days, who is away, and the hours of one FTE.
+	 *
+	 * @return array{filled: float, net: float}
+	 */
+	private function occupiedFte(array $occupants, FormationWindow $window): array {
 		$filled = 0.0;
 		$net = 0.0;
-		foreach ($days as $day) {
+		foreach ($window->days as $day) {
 			foreach ($occupants as $contract) {
 				if ($this->activeOn(contract: $contract, day: $day) === false) {
 					continue;
 				}
 
-				$fte = $this->fte(contract: $contract, fullTimeHoursWeek: $fullTimeHoursWeek);
+				$fte = $this->fte(contract: $contract, fullTimeHoursWeek: $window->fullTimeHoursWeek);
 				$filled += $fte;
-				$net += ($fte * (1.0 - $away->fraction(employeeId: (string)($contract['employeeId'] ?? ''), day: $day)));
+				$net += ($fte * (1.0 - $window->away->fraction(employeeId: (string)($contract['employeeId'] ?? ''), day: $day)));
 			}
 		}
 
-		$count = max(1, count($days));
-		$filled = round(($filled / $count), 2);
-		$net = round(($net / $count), 2);
+		$count = max(1, count($window->days));
+
+		return ['filled' => round(($filled / $count), 2), 'net' => round(($net / $count), 2)];
+	}//end occupiedFte()
+
+	/**
+	 * One place's figures.
+	 *
+	 * @param array<string, mixed>              $place    The Formatieplaats.
+	 * @param array{filled: float, net: float}  $occupied The place's filled and net FTE.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function placeRow(array $place, array $occupied): array {
+		$budgeted = max(0.0, (float)($place['budgetedFte'] ?? 0));
 
 		return [
-			'id' => $placeId,
+			'id' => $this->placeId(place: $place),
 			'title' => (string)($place['title'] ?? ''),
 			'budgetedFte' => round($budgeted, 2),
-			'filledFte' => $filled,
-			'vacantFte' => round(max(0.0, ($budgeted - $filled)), 2),
-			'overfilled' => ($filled > $budgeted),
-			'netFte' => $net,
+			'filledFte' => $occupied['filled'],
+			'vacantFte' => round(max(0.0, ($budgeted - $occupied['filled'])), 2),
+			'overfilled' => ($occupied['filled'] > $budgeted),
+			'netFte' => $occupied['net'],
 		];
 	}//end placeRow()
 
@@ -208,21 +231,20 @@ class FormationOccupancyService {
 	 * The Monday to Friday days of a window; the window's first day when it
 	 * holds none, so a single weekend date still answers.
 	 *
-	 * @param DateTimeImmutable $from First day.
-	 * @param DateTimeImmutable $to   Last day.
+	 * @param AbsencePeriod $period First and last day.
 	 *
 	 * @return list<DateTimeImmutable>
 	 */
-	private function workingDays(DateTimeImmutable $from, DateTimeImmutable $to): array {
+	private function workingDays(AbsencePeriod $period): array {
 		$days = [];
-		for ($day = $from->setTime(0, 0); $day <= $to; $day = $day->modify('+1 day')) {
+		for ($day = $period->start->setTime(0, 0); $day <= $period->end; $day = $day->modify('+1 day')) {
 			if ((int)$day->format('N') <= 5) {
 				$days[] = $day;
 			}
 		}
 
 		if ($days === []) {
-			$days[] = $from->setTime(0, 0);
+			$days[] = $period->start->setTime(0, 0);
 		}
 
 		return $days;

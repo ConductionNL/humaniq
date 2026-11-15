@@ -3,6 +3,9 @@
 /**
  * Humaniq TimesheetProcessStampListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` /
  * `ObjectUpdatingEvent` for the `Timesheet` schema (hours-process-redesign
  * Decision 4). It makes the process fields (`submittedAt`, `approvedBy`,
@@ -43,9 +46,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
@@ -56,8 +56,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use DateTimeImmutable;
-use DateTimeZone;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCP\EventDispatcher\Event;
@@ -73,6 +71,18 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
  */
 class TimesheetProcessStampListener implements IEventListener {
+
+	use StampsProcessFields;
+
+	/**
+	 * The warning logged when stamping throws.
+	 */
+	private const STAMP_FAILURE = 'humaniq: TimesheetProcessStampListener could not stamp a Timesheet write';
+
+	/**
+	 * The user-facing message a write is refused with when stamping throws.
+	 */
+	private const STAMP_REFUSAL = 'De urenstaat kon niet worden verwerkt; probeer het later opnieuw.';
 
 	/**
 	 * Lower-cased slug of the schema this listener stamps.
@@ -135,48 +145,52 @@ class TimesheetProcessStampListener implements IEventListener {
 	 * @spec openspec/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
 	 */
 	public function handle(Event $event): void {
-		try {
-			if ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent) {
-				$entity = $event->getObject();
-				if ($this->isTimesheet($entity) === true) {
-					$event->setModifiedData($this->stampCreate($entity->getObject() ?? []));
-				}
-
-				return;
-			}
-
-			if (($event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) === false) {
-				return;
-			}
-
-			$entity = $event->getNewObject();
-			if ($this->isTimesheet($entity) === false) {
-				return;
-			}
-
-			$stored = $event->getOldObject()?->getObject();
-			if (is_array($stored) === false) {
-				$stored = $this->gateway->findObjectData((string)$entity->getUuid(), 'Timesheet');
-			}
-
-			if ($stored === null) {
-				// Without the stored values the inertness guarantee cannot
-				// be established — refuse rather than let a possibly
-				// tampered write through (fail closed).
-				$this->refuse($event, 'De urenstaat kon niet worden geladen; de wijziging is niet opgeslagen.');
-				return;
-			}
-
-			$event->setModifiedData($this->stampUpdate(($entity->getObject() ?? []), $stored));
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'humaniq: TimesheetProcessStampListener could not stamp a Timesheet write',
-				['exception' => $e->getMessage()]
-			);
-			$this->refuse($event, 'De urenstaat kon niet worden verwerkt; probeer het later opnieuw.');
-		}//end try
-
+		$this->stampOrRefuse(event: $event);
 	}//end handle()
+
+	/**
+	 * A Timesheet create starts at draft with the caches derived.
+	 *
+	 * @param \OCA\OpenRegister\Event\ObjectCreatingEvent $event The pre-save event.
+	 *
+	 * @return void
+	 */
+	private function stampCreating(\OCA\OpenRegister\Event\ObjectCreatingEvent $event): void {
+		$entity = $event->getObject();
+		if ($this->isTimesheet($entity) === true) {
+			$event->setModifiedData($this->stampCreate($entity->getObject() ?? []));
+		}
+	}//end stampCreating()
+
+	/**
+	 * A Timesheet update is judged against its stored values: the old object
+	 * on the event, else the register's row by uuid; without either it is refused.
+	 *
+	 * @param \OCA\OpenRegister\Event\ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return void
+	 */
+	private function stampUpdating(\OCA\OpenRegister\Event\ObjectUpdatingEvent $event): void {
+		$entity = $event->getNewObject();
+		if ($this->isTimesheet($entity) === false) {
+			return;
+		}
+
+		$stored = $event->getOldObject()?->getObject();
+		if (is_array($stored) === false) {
+			$stored = $this->gateway->findObjectData((string)$entity->getUuid(), 'Timesheet');
+		}
+
+		if ($stored === null) {
+			// Without the stored values the inertness guarantee cannot
+			// be established — refuse rather than let a possibly
+			// tampered write through (fail closed).
+			$this->refuse($event, 'De urenstaat kon niet worden geladen; de wijziging is niet opgeslagen.');
+			return;
+		}
+
+		$event->setModifiedData($this->stampUpdate(($entity->getObject() ?? []), $stored));
+	}//end stampUpdating()
 
 	/**
 	 * Whether the entity is a Timesheet (slug gate, defence in depth under
@@ -385,45 +399,5 @@ class TimesheetProcessStampListener implements IEventListener {
 		}//end try
 
 	}//end deriveIdentityCaches()
-
-	/**
-	 * Current UTC timestamp in ISO 8601 (the TimeEntryEventService format).
-	 *
-	 * @return string The timestamp.
-	 */
-	private function now(): string {
-		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
-	}//end now()
-
-	/**
-	 * Refuse the write with a structured, user-facing error.
-	 *
-	 * @param object $event The pre-save event.
-	 * @param string $message The Dutch user-facing message.
-	 *
-	 * @return void
-	 */
-	private function refuse(object $event, string $message): void {
-		if (method_exists($event, 'setErrors') === true) {
-			$event->setErrors(['message' => $message]);
-		}
-
-		if (method_exists($event, 'stopPropagation') === true) {
-			$event->stopPropagation();
-		}
-	}//end refuse()
-
-	/**
-	 * Trim to a non-empty string or null.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return string|null The trimmed value, or null.
-	 */
-	private function nullableTrim(mixed $value): ?string {
-		$trimmed = trim((string)($value ?? ''));
-
-		return $trimmed === '' ? null : $trimmed;
-	}//end nullableTrim()
 
 }//end class

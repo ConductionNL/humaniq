@@ -41,11 +41,16 @@ use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Humaniq\Support\KeepsReadableRows;
+use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
 
 /**
  * Read-only compliance auditor over the register's HR/labour objects.
  */
 class RuleAuditService {
+
+	use KeepsReadableRows;
+	use ResolvesObjectServiceByClass;
 
 	/**
 	 * Max objects loaded per type for the audit.
@@ -53,6 +58,16 @@ class RuleAuditService {
 	 * @var int
 	 */
 	private const LIMIT = 10000;
+
+	/**
+	 * The WKR bucket field a declaration category adds its amount to.
+	 *
+	 * @var array<string, string>
+	 */
+	private const WKR_DECLARED_FIELDS = [
+		'vrije-ruimte' => 'vrijeRuimteDeclared',
+		'eindheffing' => 'eindheffingDeclared',
+	];
 
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
@@ -108,6 +123,39 @@ class RuleAuditService {
 	 * @spec openspec/specs/time-attendance/spec.md#REQ-TA-004
 	 */
 	public function audit(array $context = []): array {
+		$context = $this->withPayrollIndexes($this->withRecordIndexes($context));
+
+		// fleet-bijtelling: NlFleetChecks::checks()['Payslip']
+		// ['nl-bijtelling-auto-privegebruik'] and ['Asset']
+		// ['nl-asset-voertuig-fiscale-velden-compleet'] read
+		// `context['related']['AssetAssignment']['byId']` /
+		// `context['related']['Asset']['byId']` (built above by
+		// buildRelatedContext()) directly -- humaniq-asset-fleet-merge
+		// (design.md D4) retired the dedicated `context['fleet']` index
+		// (`buildFleetContext()`/`vehiclesById`/`carAssignmentsById`) as
+		// redundant with the general Asset/AssetAssignment indexes.
+
+		$tally = new RuleAuditTally(self::auditReportHeader());
+		foreach (RuleEngine::supportedTypes() as $type) {
+			$tally->startType($type);
+			foreach ($this->loadAll($type) as $object) {
+				$tally->record($type, RuleEngine::evaluate($type, $object, $context));
+			}
+		}
+
+		return $tally->report();
+	}//end audit()
+
+	/**
+	 * Add the record-level sibling indexes the predicates read: related
+	 * objects, GL posts, third-party reports, attendance, net pay, generated
+	 * documents and contract signals.
+	 *
+	 * @param array<string, mixed> $context Evaluation context.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withRecordIndexes(array $context): array {
 		// Cross-type pre-pass (pension-filing-upa-mvp): a lightweight sibling index
 		// so per-object predicates can see PayrollRun/PensionFiling relations without
 		// each CheckProvider re-querying the register. The predicate contract already
@@ -152,6 +200,20 @@ class RuleAuditService {
 		// keeps only the last-loaded contract per employee and cannot answer
 		// that question (design.md D4).
 		$context['signals'] = $this->buildSignalsContext();
+
+		return $context;
+
+	}//end withRecordIndexes()
+
+	/**
+	 * Add the payroll-level indexes the predicates read: payroll runs, CAO,
+	 * retro, rostering, comp bands, normfuncties and the WKR aggregate.
+	 *
+	 * @param array<string, mixed> $context Evaluation context.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withPayrollIndexes(array $context): array {
 
 		// payroll-core-engine: a full PayrollRun-by-id index (engineVersion
 		// included) so NlEngineChecks::checks()['Payslip']
@@ -208,70 +270,29 @@ class RuleAuditService {
 		// the `buildPayrollContext()`/`buildGlPostContext()` precedent.
 		$context['wkr'] = $this->buildWkrContext();
 
-		// fleet-bijtelling: NlFleetChecks::checks()['Payslip']
-		// ['nl-bijtelling-auto-privegebruik'] and ['Asset']
-		// ['nl-asset-voertuig-fiscale-velden-compleet'] read
-		// `context['related']['AssetAssignment']['byId']` /
-		// `context['related']['Asset']['byId']` (built above by
-		// buildRelatedContext()) directly -- humaniq-asset-fleet-merge
-		// (design.md D4) retired the dedicated `context['fleet']` index
-		// (`buildFleetContext()`/`vehiclesById`/`carAssignmentsById`) as
-		// redundant with the general Asset/AssetAssignment indexes.
+		return $context;
 
+	}//end withPayrollIndexes()
+
+	/**
+	 * The catalogue and coverage figures that open the audit report.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function auditReportHeader(): array {
 		$corpusTotal = RuleCatalogue::count();
 		$machineCheckable = count(RuleCatalogue::machineCheckable());
 		$enforceable = count(RuleEngine::checkedRuleIds());
 
-		$report = [
+		return [
 			'catalogueVersion' => RuleCatalogue::version(),
 			'corpusTotal' => $corpusTotal,
 			'machineCheckable' => $machineCheckable,
 			'enforceableRules' => $enforceable,
 			'coveragePct' => $machineCheckable > 0 ? round(($enforceable / $machineCheckable) * 100, 1) : 0.0,
-			'types' => [],
-			'objectsChecked' => 0,
-			'objectsCompliant' => 0,
-			'objectsWithViolations' => 0,
-			'violationsBySeverity' => ['mandatory' => 0, 'conditional' => 0, 'recommended' => 0],
-			'topViolatedRules' => [],
 		];
 
-		$byRule = [];
-
-		foreach (RuleEngine::supportedTypes() as $type) {
-			$objects = $this->loadAll($type);
-			$typeStat = ['checked' => 0, 'compliant' => 0, 'withViolations' => 0, 'violations' => 0];
-
-			foreach ($objects as $object) {
-				$violations = RuleEngine::evaluate($type, $object, $context);
-				$typeStat['checked']++;
-				$report['objectsChecked']++;
-
-				if (empty($violations) === true) {
-					$typeStat['compliant']++;
-					$report['objectsCompliant']++;
-					continue;
-				}
-
-				$typeStat['withViolations']++;
-				$report['objectsWithViolations']++;
-				foreach ($violations as $violation) {
-					$typeStat['violations']++;
-					$report['violationsBySeverity'][$violation->severity] = (($report['violationsBySeverity'][$violation->severity] ?? 0) + 1);
-					$byRule[$violation->ruleId] = (($byRule[$violation->ruleId] ?? 0) + 1);
-				}
-			}
-
-			$report['types'][$type] = $typeStat;
-		}//end foreach
-
-		arsort($byRule);
-		foreach (array_slice($byRule, 0, 15, true) as $ruleId => $count) {
-			$report['topViolatedRules'][] = ['ruleId' => $ruleId, 'count' => $count];
-		}
-
-		return $report;
-	}//end audit()
+	}//end auditReportHeader()
 
 	/**
 	 * Build the cross-type sibling index consumed by the PayrollRun/PensionFiling
@@ -344,320 +365,7 @@ class RuleAuditService {
 	 * @spec openspec/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
 	 */
 	private function buildRelatedContext(): array {
-		$byId = [];
-		$approvedPeriods = [];
-		foreach ($this->loadAll('PayrollRun') as $run) {
-			$id = (string)($run['id'] ?? $run['@self']['id'] ?? '');
-			$period = (string)($run['period'] ?? '');
-			$status = (string)($run['status'] ?? '');
-			$administrationId = (string)($run['administrationId'] ?? '');
-
-			if ($id !== '') {
-				$byId[$id] = [
-					'id' => $id,
-					'period' => $period,
-					'status' => $status,
-					// abp-aansluiting (REQ-ABP-003): the run's own denormalized
-					// administratie key, consumed by NlAbpChecks to resolve the
-					// run's Administration and its own abpFiledPeriods entry.
-					'administrationId' => $administrationId,
-				];
-			}
-
-			if ($period !== '' && in_array($status, ['approved', 'posted', 'paid'], true) === true) {
-				$approvedPeriods[$period] = true;
-			}
-		}
-
-		$filedPeriods = [];
-		$abpFiledPeriodsByAdministrationId = [];
-		foreach ($this->loadAll('PensionFiling') as $filing) {
-			$period = (string)($filing['period'] ?? '');
-			if ($period !== '') {
-				$filedPeriods[$period] = true;
-			}
-
-			// abp-aansluiting (REQ-ABP-003): a SECOND, narrower index alongside
-			// the global filedPeriods set above -- fund AND tenant scoped,
-			// unlike that set. Only `fund: "abp"` filings with both a period
-			// and an administrationId contribute.
-			$administrationId = (string)($filing['administrationId'] ?? '');
-			if ($period !== '' && $administrationId !== '' && (string)($filing['fund'] ?? '') === 'abp') {
-				$abpFiledPeriodsByAdministrationId[$administrationId][$period] = true;
-			}
-		}
-
-		// abp-aansluiting (REQ-ABP-003): an Administration index keyed on the
-		// `administrationId` business key (not the object UUID -- the same
-		// key every denormalized child field already uses), carrying only
-		// the boolean NlAbpChecks needs to scope its predicate. Loaded once,
-		// no per-object IO (the buildPayrollContext() precedent). Degrades to
-		// an empty map when the Administration schema does not exist yet in
-		// the register.
-		$abpPlichtigByAdministrationId = [];
-		foreach ($this->loadAll('hrAdministration') as $administration) {
-			$administrationId = (string)($administration['administrationId'] ?? '');
-			if ($administrationId === '') {
-				continue;
-			}
-
-			$abpPlichtigByAdministrationId[$administrationId] = (bool)($administration['abpAansluitingsplichtig'] ?? false);
-		}
-
-		// onboarding-wizard-mvp: an Employee index (loonheffingenVerklaringOnFile +
-		// startDate, keyed by id/slug — the Timesheet/Onboarding employeeId
-		// reference mechanism) so NlOnboardingChecks::checks()['Onboarding']
-		// ['nl-onboarding-loonheffingenverklaring'] can resolve the hire's Employee
-		// without re-querying the register.
-		$employeesById = [];
-		foreach ($this->loadAll('Employee') as $employee) {
-			$id = (string)($employee['id'] ?? $employee['@self']['id'] ?? '');
-			if ($id === '') {
-				continue;
-			}
-
-			$employeesById[$id] = [
-				'id' => $id,
-				'loonheffingenVerklaringOnFile' => (bool)($employee['loonheffingenVerklaringOnFile'] ?? false),
-				'startDate' => (string)($employee['startDate'] ?? ''),
-				// offboarding-wizard-mvp: the case's endDate, consumed by
-				// nl-offboarding-einddatum-consistentie (BW 7:667).
-				'endDate' => (string)($employee['endDate'] ?? ''),
-				// mss-team-scope: the employee's own Nextcloud account id
-				// (when this Employee IS a manager), consumed by
-				// NlOrgChecks::checks()['Timesheet'/'Expense'/'LeaveRequest']
-				// ['nl-mss-manager-consistency'] to resolve a manager
-				// Employee's account for comparison against a record's
-				// stamped managerUserId.
-				'nextcloudUserId' => (string)($employee['nextcloudUserId'] ?? ''),
-				// multi-administratie: the employee's own denormalized
-				// administratie key, consumed by
-				// NlAdministratieChecks::checks() (every Employee-anchored
-				// schema this change denormalizes onto)
-				// ['nl-administratie-scope-consistency'] to resolve the
-				// parent employee's expected administrationId.
-				'administrationId' => (string)($employee['administrationId'] ?? ''),
-				// wnt-disclosure: the topfunctionaris's recorded
-				// transitional-exemption ground (overgangsrecht |
-				// ontheffing-minister | null), consumed by
-				// NlWntChecks::checks()['WntDisclosure']
-				// ['nl-wnt-norm-overschrijding'] -- a non-null value clears the
-				// norm-overschrijding flag (design.md D4/D5).
-				'wntTopfunctionaris' => (bool)($employee['wntTopfunctionaris'] ?? false),
-				'wntUitzonderingReden' => (($employee['wntUitzonderingReden'] ?? null) === null) ? null : (string)$employee['wntUitzonderingReden'],
-			];
-		}
-
-		// onboarding-wizard-mvp: an EmploymentContract index keyed by employeeId
-		// (the contract type/startDate/endDate that resolves for a given hire) so
-		// nl-onboarding-proeftijd-bewaking can apply the BW 7:652 contract-type cap.
-		// When more than one contract resolves for the same employeeId, the last
-		// one loaded wins (MVP simplification — contracts are optional data today,
-		// design.md D3); tightening to "most recent by startDate" is a check-only
-		// change once contract history matters for this predicate.
-		$contractsByEmployeeId = [];
-		foreach ($this->loadAll('EmploymentContract') as $contract) {
-			$employeeId = (string)($contract['employeeId'] ?? '');
-			if ($employeeId === '') {
-				continue;
-			}
-
-			$contractsByEmployeeId[$employeeId] = [
-				'type' => (string)($contract['type'] ?? ''),
-				'startDate' => (string)($contract['startDate'] ?? ''),
-				'endDate' => (string)($contract['endDate'] ?? ''),
-			];
-		}
-
-		// org-chart-basic: an OrgUnit index (id, parentUnitId, active), keyed by
-		// id, so NlOrgChecks::checks()['OrgAssignment']['nl-org-assignment-consistency']
-		// can resolve an assignment's unit without re-querying the register, and
-		// ['OrgUnit']['nl-org-unit-cycle'] can walk the parentUnitId chain through
-		// the same index.
-		$orgUnitsById = [];
-		foreach ($this->loadAll('OrgUnit') as $unit) {
-			$id = (string)($unit['id'] ?? $unit['@self']['id'] ?? '');
-			if ($id === '') {
-				continue;
-			}
-
-			$orgUnitsById[$id] = [
-				'id' => $id,
-				'parentUnitId' => (string)($unit['parentUnitId'] ?? ''),
-				'active' => (bool)($unit['active'] ?? true),
-				// mss-team-scope: the unit's manager (Employee UUID),
-				// consumed by NlOrgChecks::checks()['Timesheet'/'Expense'/
-				// 'LeaveRequest']['nl-mss-manager-consistency'] to resolve
-				// the manager for an active placement's unit.
-				'managerId' => (string)($unit['managerId'] ?? ''),
-			];
-		}
-
-		// mss-team-scope: an OrgAssignment index keyed by employeeId (a list
-		// of {orgUnitId, endDate} placements, start dates irrelevant to
-		// activeness-at-audit — the predicate applies the endDate rule
-		// itself) so NlOrgChecks::checks()['Timesheet'/'Expense'/
-		// 'LeaveRequest']['nl-mss-manager-consistency'] can resolve a
-		// record's employee's active placements without re-querying the
-		// register.
-		$orgAssignmentsByEmployeeId = [];
-		foreach ($this->loadAll('OrgAssignment') as $assignment) {
-			$employeeId = trim((string)($assignment['employeeId'] ?? ''));
-			if ($employeeId === '') {
-				continue;
-			}
-
-			$orgAssignmentsByEmployeeId[$employeeId][] = [
-				'orgUnitId' => (string)($assignment['orgUnitId'] ?? ''),
-				'endDate' => (string)($assignment['endDate'] ?? ''),
-			];
-		}
-
-		// offboarding-wizard-mvp: a LeaveBalance index keyed by employeeId (the
-		// list of {leaveType, year, entitledHours, bovenwettelijkHours,
-		// usedHours} rows) so nl-offboarding-verlofsaldo-uitbetaling can sum
-		// each employee's open leave balance without re-querying the register.
-		$leaveBalancesByEmployeeId = [];
-		foreach ($this->loadAll('LeaveBalance') as $balance) {
-			$employeeId = (string)($balance['employeeId'] ?? '');
-			if ($employeeId === '') {
-				continue;
-			}
-
-			$leaveBalancesByEmployeeId[$employeeId][] = [
-				'leaveType' => (string)($balance['leaveType'] ?? ''),
-				'year' => (int)($balance['year'] ?? 0),
-				'entitledHours' => (float)($balance['entitledHours'] ?? 0),
-				'bovenwettelijkHours' => (float)($balance['bovenwettelijkHours'] ?? 0),
-				'usedHours' => (float)($balance['usedHours'] ?? 0),
-			];
-		}
-
-		// asset-management-mvp: an Asset index (id, status, active), keyed by
-		// id, so NlAssetChecks::checks()['AssetAssignment']
-		// ['nl-asset-assignment-consistency'] can resolve an open assignment's
-		// asset status without re-querying the register. humaniq-asset-fleet-merge
-		// (design.md D4) extends it with category/listPrice/fuelType/
-		// companyCarTaxCategory -- the fields NlFleetChecks::checks()['Payslip']
-		// ['nl-bijtelling-auto-privegebruik'] and ['Asset']
-		// ['nl-asset-voertuig-fiscale-velden-compleet'] need -- so the
-		// dedicated `context['fleet']['vehiclesById']` index this ONE index
-		// used to duplicate (`buildFleetContext()`) is no longer needed.
-		$assetsById = [];
-		foreach ($this->loadAll('Asset') as $asset) {
-			$id = (string)($asset['id'] ?? $asset['@self']['id'] ?? '');
-			if ($id === '') {
-				continue;
-			}
-
-			$assetsById[$id] = [
-				'id' => $id,
-				'status' => (string)($asset['status'] ?? ''),
-				'active' => (bool)($asset['active'] ?? true),
-				'category' => (string)($asset['category'] ?? ''),
-				'listPrice' => ($asset['listPrice'] ?? null),
-				'fuelType' => ($asset['fuelType'] ?? null),
-				'companyCarTaxCategory' => ($asset['companyCarTaxCategory'] ?? null),
-			];
-		}
-
-		// humaniq-asset-fleet-merge (design.md D4): an AssetAssignment index
-		// (id, assetId, employeeId, issuedOn, returnedOn, employeeContribution),
-		// keyed by id -- the counterpart to `$assetsById` above, consumed by
-		// NlFleetChecks::checks()['Payslip']['nl-bijtelling-auto-privegebruik']
-		// to resolve a Payslip's `assetAssignmentId` -> AssetAssignment ->
-		// `assetId` -> Asset chain without re-querying the register. Replaces
-		// the dedicated `context['fleet']['carAssignmentsById']` index
-		// `buildFleetContext()` used to build.
-		$assetAssignmentsById = [];
-		foreach ($this->loadAll('AssetAssignment') as $assignment) {
-			$id = (string)($assignment['id'] ?? $assignment['@self']['id'] ?? '');
-			if ($id === '') {
-				continue;
-			}
-
-			$assetAssignmentsById[$id] = [
-				'id' => $id,
-				'assetId' => (string)($assignment['assetId'] ?? ''),
-				'employeeId' => (string)($assignment['employeeId'] ?? ''),
-				'issuedOn' => (string)($assignment['issuedOn'] ?? ''),
-				'returnedOn' => ($assignment['returnedOn'] ?? null),
-				'employeeContribution' => ($assignment['employeeContribution'] ?? 0),
-			];
-		}
-
-		// asset-management-mvp (design.md D3): a defensive Offboarding
-		// plannedCompletionByEmployeeId index -- the latest `lastWorkingDay`
-		// among an employee's non-cancelled (status !== geannuleerd)
-		// Offboarding cases, keyed by employeeId -- consumed by
-		// NlAssetChecks::checks()['AssetAssignment']
-		// ['nl-asset-inname-bij-offboarding']. Entries with a missing
-		// employeeId/lastWorkingDay, or an unparseable date, are skipped
-		// (skipping degrades to vacuous pass, never to a false violation).
-		// Degrades to an empty map when the Offboarding schema does not exist
-		// yet in the register -- the two changes land in either order.
-		$plannedCompletionByEmployeeId = [];
-		foreach ($this->loadAll('Offboarding') as $offboarding) {
-			if ((string)($offboarding['status'] ?? '') === 'geannuleerd') {
-				continue;
-			}
-
-			$employeeId = trim((string)($offboarding['employeeId'] ?? ''));
-			$lastWorkingDay = trim((string)($offboarding['lastWorkingDay'] ?? ''));
-			if ($employeeId === '' || $lastWorkingDay === '') {
-				continue;
-			}
-
-			$candidate = strtotime($lastWorkingDay);
-			if ($candidate === false) {
-				continue;
-			}
-
-			$current = ($plannedCompletionByEmployeeId[$employeeId] ?? null);
-			if ($current === null || strtotime($current) === false || $candidate > strtotime($current)) {
-				$plannedCompletionByEmployeeId[$employeeId] = $lastWorkingDay;
-			}
-		}
-
-		return [
-			'PayrollRun' => [
-				'byId' => $byId,
-				'approvedPeriods' => array_keys($approvedPeriods),
-			],
-			'PensionFiling' => [
-				'filedPeriods' => array_keys($filedPeriods),
-				// abp-aansluiting (REQ-ABP-003): administrationId -> [period => true].
-				'abpFiledPeriodsByAdministrationId' => $abpFiledPeriodsByAdministrationId,
-			],
-			'Administration' => [
-				// abp-aansluiting (REQ-ABP-003): administrationId -> abpAansluitingsplichtig bool.
-				'abpPlichtigByAdministrationId' => $abpPlichtigByAdministrationId,
-			],
-			'Employee' => [
-				'byId' => $employeesById,
-			],
-			'EmploymentContract' => [
-				'byEmployeeId' => $contractsByEmployeeId,
-			],
-			'OrgUnit' => [
-				'byId' => $orgUnitsById,
-			],
-			'OrgAssignment' => [
-				'byEmployeeId' => $orgAssignmentsByEmployeeId,
-			],
-			'LeaveBalance' => [
-				'byEmployeeId' => $leaveBalancesByEmployeeId,
-			],
-			'Asset' => [
-				'byId' => $assetsById,
-			],
-			'AssetAssignment' => [
-				'byId' => $assetAssignmentsById,
-			],
-			'Offboarding' => [
-				'plannedCompletionByEmployeeId' => $plannedCompletionByEmployeeId,
-			],
-		];
+		return (new RelatedContextIndexer($this->loadAll(...)))->build();
 
 	}//end buildRelatedContext()
 
@@ -708,6 +416,27 @@ class RuleAuditService {
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-006
 	 */
 	public function auditPayrollRunScope(string $period, ?string $administrationId = null, array $context = []): array {
+		$context = $this->withPayrollRunIndexes($context);
+		$runs = $this->runsInScope($period, $administrationId);
+		$payslips = $this->payslipsOfRuns(self::idSet($runs));
+		$violations = self::violationRows(['PayrollRun' => $runs, 'Payslip' => $payslips], $context);
+
+		return [
+			'runsChecked' => count($runs),
+			'payslipsChecked' => count($payslips),
+			'violations' => $violations,
+			'mandatoryViolations' => count(array_filter($violations, static fn (array $row): bool => $row['severity'] === 'mandatory')),
+		];
+	}//end auditPayrollRunScope()
+
+	/**
+	 * Add the indexes the PayrollRun and Payslip predicates read.
+	 *
+	 * @param array<string, mixed> $context Evaluation context.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withPayrollRunIndexes(array $context): array {
 		$context['related'] = $this->buildRelatedContext();
 		$context['glpost'] = $this->buildGlPostContext();
 		$context['attendance'] = $this->buildAttendanceContext();
@@ -719,26 +448,52 @@ class RuleAuditService {
 		$context['retro'] = $this->buildRetroContext();
 		$context['wkr'] = $this->buildWkrContext();
 
+		return $context;
+
+	}//end withPayrollRunIndexes()
+
+	/**
+	 * The PayrollRuns of a period, narrowed to one administration when one is given.
+	 *
+	 * @param string      $period           The wage period (YYYY-MM).
+	 * @param string|null $administrationId Only runs of this administration, or null/empty for all.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function runsInScope(string $period, ?string $administrationId): array {
 		$runs = [];
-		$runIds = [];
 		foreach ($this->loadAll('PayrollRun') as $run) {
-			if ((string)($run['period'] ?? '') !== $period) {
-				continue;
-			}
-
-			if ($administrationId !== null && $administrationId !== ''
-				&& (string)($run['administrationId'] ?? '') !== $administrationId
-			) {
-				continue;
-			}
-
-			$runs[] = $run;
-			$id = (string)($run['id'] ?? $run['@self']['id'] ?? '');
-			if ($id !== '') {
-				$runIds[$id] = true;
+			if ((string)($run['period'] ?? '') === $period && self::inAdministration($run, $administrationId) === true) {
+				$runs[] = $run;
 			}
 		}
 
+		return $runs;
+
+	}//end runsInScope()
+
+	/**
+	 * Whether a run belongs to the administration filter (no filter admits every run).
+	 *
+	 * @param array<string, mixed> $run              The PayrollRun.
+	 * @param string|null          $administrationId The administration filter.
+	 *
+	 * @return bool
+	 */
+	private static function inAdministration(array $run, ?string $administrationId): bool {
+		return $administrationId === null || $administrationId === ''
+			|| (string)($run['administrationId'] ?? '') === $administrationId;
+
+	}//end inAdministration()
+
+	/**
+	 * The Payslips whose payrollRunId is one of the given run ids.
+	 *
+	 * @param array<string, true> $runIds The run ids in scope.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function payslipsOfRuns(array $runIds): array {
 		$payslips = [];
 		foreach ($this->loadAll('Payslip') as $payslip) {
 			$runId = (string)($payslip['payrollRunId'] ?? '');
@@ -747,33 +502,69 @@ class RuleAuditService {
 			}
 		}
 
-		$report = [
-			'runsChecked' => count($runs),
-			'payslipsChecked' => count($payslips),
-			'violations' => [],
-			'mandatoryViolations' => 0,
-		];
+		return $payslips;
 
-		foreach ([['PayrollRun', $runs], ['Payslip', $payslips]] as [$type, $objects]) {
+	}//end payslipsOfRuns()
+
+	/**
+	 * One report row per violation of every object, per object type in order.
+	 *
+	 * @param array<string, list<array<string, mixed>>> $objectsByType The objects to evaluate, by type.
+	 * @param array<string, mixed>                      $context       Evaluation context.
+	 *
+	 * @return list<array<string, string>>
+	 */
+	private static function violationRows(array $objectsByType, array $context): array {
+		$rows = [];
+		foreach ($objectsByType as $type => $objects) {
 			foreach ($objects as $object) {
 				foreach (RuleEngine::evaluate($type, $object, $context) as $violation) {
-					$report['violations'][] = [
+					$rows[] = [
 						'objectType' => $type,
-						'objectId' => (string)($object['id'] ?? $object['@self']['id'] ?? ''),
+						'objectId' => self::objectId($object),
 						'ruleId' => $violation->ruleId,
 						'severity' => $violation->severity,
 						'statement' => $violation->statement,
 					];
-
-					if ($violation->severity === 'mandatory') {
-						$report['mandatoryViolations']++;
-					}
 				}
 			}
 		}
 
-		return $report;
-	}//end auditPayrollRunScope()
+		return $rows;
+
+	}//end violationRows()
+
+	/**
+	 * A register row's id, from `id` or `@self.id`, or '' when it has none.
+	 *
+	 * @param array<string, mixed> $row The row.
+	 *
+	 * @return string
+	 */
+	private static function objectId(array $row): string {
+		return (string)($row['id'] ?? $row['@self']['id'] ?? '');
+
+	}//end objectId()
+
+	/**
+	 * The set of non-empty row ids.
+	 *
+	 * @param list<array<string, mixed>> $rows The rows.
+	 *
+	 * @return array<string, true>
+	 */
+	private static function idSet(array $rows): array {
+		$ids = [];
+		foreach ($rows as $row) {
+			$id = self::objectId($row);
+			if ($id !== '') {
+				$ids[$id] = true;
+			}
+		}
+
+		return $ids;
+
+	}//end idSet()
 
 	/**
 	 * Build the PayrollRun-by-id index consumed by NlEngineChecks'
@@ -980,67 +771,141 @@ class RuleAuditService {
 	 * @spec openspec/specs/wkr-administration/spec.md#REQ-WKR-004
 	 */
 	private function buildWkrContext(): array {
+		$aggregate = $this->wkrPayslipAggregate(self::administrationByRunId($this->loadAll('PayrollRun')));
+		foreach ($this->loadAll('WkrDeclaration') as $declaration) {
+			self::addWkrDeclaration($aggregate, $declaration);
+		}
+
+		return $aggregate;
+	}//end buildWkrContext()
+
+	/**
+	 * Each PayrollRun's administrationId, keyed by run id.
+	 *
+	 * @param list<array<string, mixed>> $runs The PayrollRuns.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function administrationByRunId(array $runs): array {
 		$runsById = [];
-		foreach ($this->loadAll('PayrollRun') as $run) {
-			$id = (string)($run['id'] ?? $run['@self']['id'] ?? '');
+		foreach ($runs as $run) {
+			$id = self::objectId($run);
 			if ($id !== '') {
 				$runsById[$id] = (string)($run['administrationId'] ?? '');
 			}
 		}
 
+		return $runsById;
+
+	}//end administrationByRunId()
+
+	/**
+	 * The fiscale loonsom and the WKR use of every attributable Payslip, per (administrationId, year).
+	 *
+	 * @param array<string, string> $runsById Each run's administrationId, by run id.
+	 *
+	 * @return array<string, array<int, array<string, float>>>
+	 */
+	private function wkrPayslipAggregate(array $runsById): array {
 		$aggregate = [];
-
 		foreach ($this->loadAll('Payslip') as $payslip) {
-			$administrationId = trim((string)($payslip['administrationId'] ?? ''));
-			if ($administrationId === '') {
-				$runId = (string)($payslip['payrollRunId'] ?? '');
-				$administrationId = trim((string)($runsById[$runId] ?? ''));
-			}
-
-			if ($administrationId === '') {
-				// Unresolvable administration — cannot be attributed to any
-				// (administrationId, year) key, so excluded from the aggregate.
-				continue;
-			}
-
+			$administrationId = self::payslipAdministration($payslip, $runsById);
 			$year = self::yearFromPeriod((string)($payslip['period'] ?? ''));
-			if ($year === null) {
+			if ($administrationId === '' || $year === null) {
+				// Unresolvable administration or period — cannot be attributed to
+				// any (administrationId, year) key, so excluded from the aggregate.
 				continue;
 			}
 
-			$bucket = &$aggregate[$administrationId][$year];
-			$bucket['loonsom'] = (($bucket['loonsom'] ?? 0.0) + ((float)($payslip['grossPay'] ?? 0)));
-			$bucket['payslipWkrUsed'] = (($bucket['payslipWkrUsed'] ?? 0.0) + ((float)($payslip['wkrUsed'] ?? 0)));
-			$bucket['vrijeRuimteDeclared'] = ($bucket['vrijeRuimteDeclared'] ?? 0.0);
-			$bucket['eindheffingDeclared'] = ($bucket['eindheffingDeclared'] ?? 0.0);
-			unset($bucket);
-		}//end foreach
-
-		foreach ($this->loadAll('WkrDeclaration') as $declaration) {
-			$administrationId = trim((string)($declaration['administrationId'] ?? ''));
-			$year = (int)($declaration['year'] ?? 0);
-			$category = (string)($declaration['wkrCategory'] ?? '');
-			if ($administrationId === '' || $year === 0 || $category === 'gericht-vrijgesteld') {
-				continue;
-			}
-
-			$bucket = &$aggregate[$administrationId][$year];
-			$bucket['loonsom'] = ($bucket['loonsom'] ?? 0.0);
-			$bucket['payslipWkrUsed'] = ($bucket['payslipWkrUsed'] ?? 0.0);
-			$bucket['vrijeRuimteDeclared'] = ($bucket['vrijeRuimteDeclared'] ?? 0.0);
-			$bucket['eindheffingDeclared'] = ($bucket['eindheffingDeclared'] ?? 0.0);
-
-			if ($category === 'vrije-ruimte') {
-				$bucket['vrijeRuimteDeclared'] += ((float)($declaration['amount'] ?? 0));
-			} elseif ($category === 'eindheffing') {
-				$bucket['eindheffingDeclared'] += ((float)($declaration['amount'] ?? 0));
-			}
-
-			unset($bucket);
-		}//end foreach
+			self::addPayslipToWkrBucket($aggregate[$administrationId][$year], $payslip);
+		}
 
 		return $aggregate;
-	}//end buildWkrContext()
+
+	}//end wkrPayslipAggregate()
+
+	/**
+	 * A Payslip's administration: its own, else its PayrollRun's, trimmed ('' when neither resolves).
+	 *
+	 * @param array<string, mixed>  $payslip  The Payslip.
+	 * @param array<string, string> $runsById Each run's administrationId, by run id.
+	 *
+	 * @return string
+	 */
+	private static function payslipAdministration(array $payslip, array $runsById): string {
+		$administrationId = trim((string)($payslip['administrationId'] ?? ''));
+		if ($administrationId !== '') {
+			return $administrationId;
+		}
+
+		return trim((string)($runsById[(string)($payslip['payrollRunId'] ?? '')] ?? ''));
+
+	}//end payslipAdministration()
+
+	/**
+	 * Add one Payslip's gross pay and WKR use to its bucket.
+	 *
+	 * @param array<string, float>|null $bucket  The (administrationId, year) bucket.
+	 * @param array<string, mixed>      $payslip The Payslip.
+	 *
+	 * @param-out array<string, float> $bucket
+	 *
+	 * @return void
+	 */
+	private static function addPayslipToWkrBucket(?array &$bucket, array $payslip): void {
+		self::initialiseWkrBucket($bucket);
+		$bucket['loonsom'] += ((float)($payslip['grossPay'] ?? 0));
+		$bucket['payslipWkrUsed'] += ((float)($payslip['wkrUsed'] ?? 0));
+
+	}//end addPayslipToWkrBucket()
+
+	/**
+	 * Add one WkrDeclaration's amount to its (administrationId, year) bucket.
+	 *
+	 * Declarations without an administration or year, and gericht-vrijgesteld
+	 * ones, are left out; a category other than vrije-ruimte or eindheffing
+	 * only opens its bucket.
+	 *
+	 * @param array<string, array<int, array<string, float>>> $aggregate   The aggregate.
+	 * @param array<string, mixed>                            $declaration The WkrDeclaration.
+	 *
+	 * @return void
+	 */
+	private static function addWkrDeclaration(array &$aggregate, array $declaration): void {
+		$administrationId = trim((string)($declaration['administrationId'] ?? ''));
+		$year = (int)($declaration['year'] ?? 0);
+		$category = (string)($declaration['wkrCategory'] ?? '');
+		if ($administrationId === '' || $year === 0 || $category === 'gericht-vrijgesteld') {
+			return;
+		}
+
+		$bucket = &$aggregate[$administrationId][$year];
+		self::initialiseWkrBucket($bucket);
+		$field = (self::WKR_DECLARED_FIELDS[$category] ?? null);
+		if ($field !== null) {
+			$bucket[$field] += ((float)($declaration['amount'] ?? 0));
+		}
+
+		unset($bucket);
+
+	}//end addWkrDeclaration()
+
+	/**
+	 * Give every WKR bucket field a value, keeping the ones already summed.
+	 *
+	 * @param array<string, float>|null $bucket The (administrationId, year) bucket.
+	 *
+	 * @param-out array<string, float> $bucket
+	 *
+	 * @return void
+	 */
+	private static function initialiseWkrBucket(?array &$bucket): void {
+		$bucket['loonsom'] = ($bucket['loonsom'] ?? 0.0);
+		$bucket['payslipWkrUsed'] = ($bucket['payslipWkrUsed'] ?? 0.0);
+		$bucket['vrijeRuimteDeclared'] = ($bucket['vrijeRuimteDeclared'] ?? 0.0);
+		$bucket['eindheffingDeclared'] = ($bucket['eindheffingDeclared'] ?? 0.0);
+
+	}//end initialiseWkrBucket()
 
 	/**
 	 * The third-party payments index (filings-ib47 D3): `sent` holds the
@@ -1102,7 +967,7 @@ class RuleAuditService {
 	 *   awfTariff}` (last-loaded contract wins per employee -- the
 	 *   `related.EmploymentContract.byEmployeeId` MVP simplification).
 	 * - `aofTariff` / `whkPercentageOverride`: the SAME config keys and
-	 *   fallback semantics as `SettingsService::getPayrollAofTariff()` /
+	 *   fallback semantics as `EmployerPremiumSettings::getPayrollAofTariff()` /
 	 *   `getPayrollWhkPercentage()` (payroll-core-engine), read directly via
 	 *   the already-injected `IAppConfig` so this context builder needs no
 	 *   new service dependency -- NlRetroChecks itself stays a pure predicate
@@ -1117,17 +982,47 @@ class RuleAuditService {
 	 * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-001
 	 */
 	private function buildRetroContext(): array {
-		$payslipsById = [];
-		foreach ($this->loadAll('Payslip') as $payslip) {
-			$id = (string)($payslip['id'] ?? $payslip['@self']['id'] ?? '');
+		return [
+			'payslipsById' => self::rowsById($this->loadAll('Payslip')),
+			'employeesById' => self::retroEmployeesById($this->loadAll('Employee')),
+			'contractsByEmployeeId' => self::retroContractsByEmployeeId($this->loadAll('EmploymentContract')),
+			'aofTariff' => $this->configuredAofTariff(),
+			'whkPercentageOverride' => $this->configuredWhkPercentage(),
+		];
+
+	}//end buildRetroContext()
+
+	/**
+	 * Every row with an id, keyed by that id (a later row wins).
+	 *
+	 * @param list<array<string, mixed>> $rows The rows.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function rowsById(array $rows): array {
+		$byId = [];
+		foreach ($rows as $row) {
+			$id = self::objectId($row);
 			if ($id !== '') {
-				$payslipsById[$id] = $payslip;
+				$byId[$id] = $row;
 			}
 		}
 
+		return $byId;
+
+	}//end rowsById()
+
+	/**
+	 * The wage-tax fields of every Employee with an id, keyed by id.
+	 *
+	 * @param list<array<string, mixed>> $employees The Employees.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function retroEmployeesById(array $employees): array {
 		$employeesById = [];
-		foreach ($this->loadAll('Employee') as $employee) {
-			$id = (string)($employee['id'] ?? $employee['@self']['id'] ?? '');
+		foreach ($employees as $employee) {
+			$id = self::objectId($employee);
 			if ($id === '') {
 				continue;
 			}
@@ -1139,8 +1034,20 @@ class RuleAuditService {
 			];
 		}
 
+		return $employeesById;
+
+	}//end retroEmployeesById()
+
+	/**
+	 * The Awf-relevant fields of every EmploymentContract, keyed by its trimmed employeeId (a later contract wins).
+	 *
+	 * @param list<array<string, mixed>> $contracts The EmploymentContracts.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function retroContractsByEmployeeId(array $contracts): array {
 		$contractsByEmployeeId = [];
-		foreach ($this->loadAll('EmploymentContract') as $contract) {
+		foreach ($contracts as $contract) {
 			$employeeId = trim((string)($contract['employeeId'] ?? ''));
 			if ($employeeId === '') {
 				continue;
@@ -1153,18 +1060,31 @@ class RuleAuditService {
 			];
 		}
 
+		return $contractsByEmployeeId;
+
+	}//end retroContractsByEmployeeId()
+
+	/**
+	 * The configured Aof tariff: `hoog` when set so, else `laag`.
+	 *
+	 * @return string
+	 */
+	private function configuredAofTariff(): string {
 		$aofValue = strtolower(trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_aof_tariff', 'laag')));
+		return ($aofValue === 'hoog' ? 'hoog' : 'laag');
+
+	}//end configuredAofTariff()
+
+	/**
+	 * The configured whk percentage override, or null when it is unset, not a number or negative.
+	 *
+	 * @return float|null
+	 */
+	private function configuredWhkPercentage(): ?float {
 		$whkRaw = trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_whk_percentage', ''));
+		return ($whkRaw !== '' && is_numeric($whkRaw) === true && ((float)$whkRaw) >= 0.0) ? (float)$whkRaw : null;
 
-		return [
-			'payslipsById' => $payslipsById,
-			'employeesById' => $employeesById,
-			'contractsByEmployeeId' => $contractsByEmployeeId,
-			'aofTariff' => ($aofValue === 'hoog' ? 'hoog' : 'laag'),
-			'whkPercentageOverride' => ($whkRaw !== '' && is_numeric($whkRaw) === true && ((float)$whkRaw) >= 0.0) ? (float)$whkRaw : null,
-		];
-
-	}//end buildRetroContext()
+	}//end configuredWhkPercentage()
 
 	/**
 	 * Build the per-employee date-indexed clock index consumed by
@@ -1216,28 +1136,14 @@ class RuleAuditService {
 	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-004
 	 */
 	private function buildRosterContext(): array {
-		$publishedRosterIds = [];
-		foreach ($this->loadAll('Roster') as $roster) {
-			if ((string)($roster['status'] ?? '') !== 'gepubliceerd') {
-				continue;
-			}
-
-			$id = (string)($roster['id'] ?? $roster['@self']['id'] ?? '');
-			if ($id !== '') {
-				$publishedRosterIds[$id] = true;
-			}
-		}
+		$publishedRosterIds = self::publishedRosterIds($this->loadAll('Roster'));
 
 		$plannedClockByEmployeeDate = [];
 		foreach ($this->loadAll('RosterAssignment') as $assignment) {
 			$rosterId = (string)($assignment['rosterId'] ?? '');
-			if ($rosterId === '' || isset($publishedRosterIds[$rosterId]) === false) {
-				continue;
-			}
-
 			$employeeId = (string)($assignment['employeeId'] ?? '');
 			$date = (string)($assignment['date'] ?? '');
-			if ($employeeId === '' || $date === '') {
+			if (isset($publishedRosterIds[$rosterId]) === false || $employeeId === '' || $date === '') {
 				continue;
 			}
 
@@ -1249,6 +1155,20 @@ class RuleAuditService {
 
 		return ['plannedClockByEmployeeDate' => $plannedClockByEmployeeDate];
 	}//end buildRosterContext()
+
+	/**
+	 * The ids of the gepubliceerd Rosters.
+	 *
+	 * @param list<array<string, mixed>> $rosters The Rosters.
+	 *
+	 * @return array<string, true>
+	 */
+	private static function publishedRosterIds(array $rosters): array {
+		$published = array_filter($rosters, static fn (array $roster): bool => (string)($roster['status'] ?? '') === 'gepubliceerd');
+
+		return self::idSet($published);
+
+	}//end publishedRosterIds()
 
 	/**
 	 * Build the employee-IBAN-presence index and payable-period set consumed
@@ -1427,47 +1347,6 @@ class RuleAuditService {
 	}//end loadAll()
 
 	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$out[] = (array)$row->jsonSerialize();
-			}
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. class_exists() rather
-		// than SettingsService::isOpenRegisterAvailable(), because this class
-		// does not inject SettingsService and adding a constructor dependency
-		// purely to ask a yes/no question is the wrong trade. It answers the
-		// same question the container would otherwise have answered fatally.
-		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * The slug this instance's humaniq register answers to, or null when absent.
 	 *
 	 * This used to end `return $register === '' ? 'hrmq' : $register;` under a
@@ -1492,5 +1371,4 @@ class RuleAuditService {
 	private function registerSlug(): ?string {
 		return (new RegisterSlugLookup($this->container, $this->appConfig))->slugOrNull();
 	}//end registerSlug()
-
 }//end class

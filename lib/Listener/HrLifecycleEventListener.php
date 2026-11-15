@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\Humaniq\Service\HrLifecycleEventService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -50,12 +50,12 @@ class HrLifecycleEventListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param HrLifecycleEventService $events The moments and their sending.
-	 * @param HoursRegisterGateway $gateway Resolves the schema slug.
+	 * @param OrgLookupInterface   $gateway Resolves the schema slug.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly HrLifecycleEventService $events,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly OrgLookupInterface $gateway,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -76,22 +76,41 @@ class HrLifecycleEventListener implements IEventListener {
 		}
 
 		try {
-			$entity = ($event instanceof ObjectUpdatedEvent) ? $event->getNewObject() : $event->getObject();
-			$old = null;
-			if ($event instanceof ObjectUpdatedEvent) {
-				$old = ($event->getOldObject()?->getObject() ?? []);
-			}
-
-			$new = ($entity->getObject() ?? []);
-			if (isset($new['id']) === false && (string)$entity->getUuid() !== '') {
-				$new['id'] = (string)$entity->getUuid();
-			}
-
-			$slug = strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema()));
-			$this->events->emit(slug: $slug, old: $old, new: $new);
+			$this->emitFor(event: $event);
 		} catch (\Throwable $e) {
 			$this->logger->warning('humaniq: HrLifecycleEventListener could not send an HR lifecycle event', ['exception' => $e->getMessage()]);
 		}
 	}//end handle()
+
+	/**
+	 * Hand the lifecycle service the schema slug, the stored record (null on a create) and the saved record.
+	 *
+	 * @param ObjectCreatedEvent|ObjectUpdatedEvent $event The post-save event.
+	 *
+	 * @return void
+	 */
+	private function emitFor(ObjectCreatedEvent|ObjectUpdatedEvent $event): void {
+		$entity = ($event instanceof ObjectUpdatedEvent) ? $event->getNewObject() : $event->getObject();
+		$old = ($event instanceof ObjectUpdatedEvent) ? ($event->getOldObject()?->getObject() ?? []) : null;
+		$new = $this->recordOf(entity: $entity);
+		$slug = strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema()));
+		$this->events->emit(slug: $slug, old: $old, new: $new);
+	}//end emitFor()
+
+	/**
+	 * The saved record, with the object's uuid as its id when it carries none.
+	 *
+	 * @param object $entity The saved object.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function recordOf(object $entity): array {
+		$new = ($entity->getObject() ?? []);
+		if (isset($new['id']) === false && (string)$entity->getUuid() !== '') {
+			$new['id'] = (string)$entity->getUuid();
+		}
+
+		return $new;
+	}//end recordOf()
 
 }//end class

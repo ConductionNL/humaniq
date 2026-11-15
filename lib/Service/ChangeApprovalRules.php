@@ -44,10 +44,10 @@ class ChangeApprovalRules {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Reads humaniq's register.
+	 * @param RecordStoreInterface $gateway Reads humaniq's register.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 	) {
 
 	}//end __construct()
