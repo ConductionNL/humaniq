@@ -151,9 +151,9 @@ class ReferencesAuditCommand extends Command {
 			return 1;
 		}
 
-		[$owners, $ownerIds] = $this->ownerIndex($objectService, $output);
-		$counts = $this->auditRows($objectService, $satellites, $owners, $ownerIds, $write, $output);
-		$this->report($output, $counts, $write);
+		$run = new ReferenceAuditRun($objectService, $output, $write, $this->ownerIndex($objectService, $output));
+		$counts = $this->auditRows($run, $satellites);
+		$this->report($run, $counts);
 
 		if ($counts['dangling'] > 0) {
 			return 1;
@@ -170,23 +170,12 @@ class ReferencesAuditCommand extends Command {
 	 * Splitting the loop out is not cosmetic: execute() now reads as "read,
 	 * index, audit, report", and each of those four is separately testable.
 	 *
-	 * @param mixed $objectService The OpenRegister object service.
+	 * @param ReferenceAuditRun $run The collaborators and owner index of this run.
 	 * @param array<int, mixed> $satellites The satellite rows.
-	 * @param array<string, array<int, string>> $owners Identity key to owner ids.
-	 * @param array<string, bool> $ownerIds Every known owner id.
-	 * @param bool $write Whether this run may write.
-	 * @param OutputInterface $output Console output.
 	 *
 	 * @return array<string, int> The per-outcome tally.
 	 */
-	private function auditRows(
-		mixed $objectService,
-		array $satellites,
-		array $owners,
-		array $ownerIds,
-		bool $write,
-		OutputInterface $output,
-	): array {
+	private function auditRows(ReferenceAuditRun $run, array $satellites): array {
 		$counts = ['set' => 0, 'dangling' => 0, 'backfillable' => 0, 'ambiguous' => 0, 'unmatched' => 0, 'written' => 0];
 
 		foreach ($satellites as $raw) {
@@ -195,18 +184,18 @@ class ReferencesAuditCommand extends Command {
 				continue;
 			}
 
-			$verdict = $this->classifyRow($row, $owners, $ownerIds);
+			$verdict = $this->classifyRow($row, $run);
 			$counts[$verdict['outcome']]++;
 
 			if ($verdict['message'] !== '') {
-				$output->writeln($verdict['message']);
+				$run->output->writeln($verdict['message']);
 			}
 
-			if ($verdict['outcome'] !== 'backfillable' || $write === false) {
+			if ($verdict['outcome'] !== 'backfillable' || $run->write === false) {
 				continue;
 			}
 
-			if ($this->backfill($objectService, $verdict['id'], $verdict['owner'], $output) === true) {
+			if ($this->backfill($run, $verdict) === true) {
 				$counts['written']++;
 			}
 		}//end foreach
@@ -225,12 +214,11 @@ class ReferencesAuditCommand extends Command {
 	 * candidate, regardless of what its identity key would have matched.
 	 *
 	 * @param array<string, mixed> $row One satellite row's payload.
-	 * @param array<string, array<int, string>> $owners Identity key to owner ids.
-	 * @param array<string, bool> $ownerIds Every known owner id.
+	 * @param ReferenceAuditRun $run The owner index of this run.
 	 *
 	 * @return array{outcome: string, id: string, owner: string, message: string} The verdict.
 	 */
-	private function classifyRow(array $row, array $owners, array $ownerIds): array {
+	private function classifyRow(array $row, ReferenceAuditRun $run): array {
 		$id = (string)($row['id'] ?? '');
 		$reference = trim((string)($row[self::REFERENCE_PROPERTY] ?? ''));
 		$identity = trim((string)($row[self::IDENTITY_KEY] ?? ''));
@@ -239,7 +227,7 @@ class ReferencesAuditCommand extends Command {
 			// An empty owner index means the owner could not be read at all.
 			// That is reported as presence, never as a dangling link, or an
 			// outage would look like data loss.
-			if ($ownerIds === [] || isset($ownerIds[$reference]) === true) {
+			if ($run->owners === [] || $run->knowsOwner($reference) === true) {
 				return ['outcome' => 'set', 'id' => $id, 'owner' => '', 'message' => ''];
 			}
 
@@ -251,7 +239,7 @@ class ReferencesAuditCommand extends Command {
 			];
 		}
 
-		$candidates = ($owners[$identity] ?? []);
+		$candidates = ($run->owners[$identity] ?? []);
 		if ($identity === '' || $candidates === []) {
 			return ['outcome' => 'unmatched', 'id' => $id, 'owner' => '', 'message' => ''];
 		}
@@ -272,22 +260,20 @@ class ReferencesAuditCommand extends Command {
 	/**
 	 * Write one unambiguous owner reference onto a satellite row.
 	 *
-	 * @param mixed $objectService The OpenRegister object service.
-	 * @param string $id The satellite row's id.
-	 * @param string $owner The owner id to record.
-	 * @param OutputInterface $output Console output.
+	 * @param ReferenceAuditRun $run The object service and console of this run.
+	 * @param array{outcome: string, id: string, owner: string, message: string} $verdict The verdict: the satellite row's id and the owner id to record.
 	 *
 	 * @return bool True when the write landed.
 	 */
-	private function backfill(mixed $objectService, string $id, string $owner, OutputInterface $output): bool {
+	private function backfill(ReferenceAuditRun $run, array $verdict): bool {
 		try {
 			// Patch, NOT saveObject/updateObject. Those two are PUT-semantic: a
 			// property absent from the payload is written as null, so a
 			// one-field update through them quietly clears every field the
 			// read did not return.
-			$objectService->patchObject(
-				objectId: $id,
-				data: [self::REFERENCE_PROPERTY => $owner],
+			$run->objectService->patchObject(
+				objectId: $verdict['id'],
+				data: [self::REFERENCE_PROPERTY => $verdict['owner']],
 				register: self::REGISTER,
 				schema: self::SATELLITE_SCHEMA,
 				_rbac: false,
@@ -295,7 +281,7 @@ class ReferencesAuditCommand extends Command {
 			);
 			return true;
 		} catch (Throwable $e) {
-			$output->writeln('  <error>write failed</error> '.$id.': '.$e->getMessage());
+			$run->output->writeln('  <error>write failed</error> '.$verdict['id'].': '.$e->getMessage());
 			return false;
 		}
 	}//end backfill()
@@ -306,7 +292,7 @@ class ReferencesAuditCommand extends Command {
 	 * @param mixed $objectService The OpenRegister object service.
 	 * @param OutputInterface $output Console output.
 	 *
-	 * @return array{0: array<string, array<int, string>>, 1: array<string, bool>} The index and the id set.
+	 * @return array<string, array<int, string>> Identity key to owner ids, empty when the owners cannot be read.
 	 */
 	private function ownerIndex(mixed $objectService, OutputInterface $output): array {
 		$owners = [];
@@ -329,31 +315,23 @@ class ReferencesAuditCommand extends Command {
 				'<comment>shillinq is not readable ('.$e->getMessage().'). '
 				.'Nothing can be resolved or backfilled; reporting presence only.</comment>'
 			);
-			return [[], []];
+			return [];
 		}//end try
 
-		$ownerIds = [];
-		foreach ($owners as $ids) {
-			foreach ($ids as $id) {
-				$ownerIds[$id] = true;
-			}
-		}
-
-		return [$owners, $ownerIds];
+		return $owners;
 	}//end ownerIndex()
 
 	/**
 	 * Print the one-line summary, and the nudge toward the write option.
 	 *
-	 * @param OutputInterface $output Console output.
+	 * @param ReferenceAuditRun $run The console of this run and whether it was allowed to write.
 	 * @param array<string, int> $counts The per-outcome tally.
-	 * @param bool $write Whether this run was allowed to write.
 	 *
 	 * @return void
 	 */
-	private function report(OutputInterface $output, array $counts, bool $write): void {
-		$output->writeln('');
-		$output->writeln(
+	private function report(ReferenceAuditRun $run, array $counts): void {
+		$run->output->writeln('');
+		$run->output->writeln(
 			sprintf(
 				'%s.%s -> %s.%s via %s: %d set, %d dangling, %d backfillable, %d ambiguous, %d unmatched, %d written',
 				self::SATELLITE_SCHEMA,
@@ -370,8 +348,8 @@ class ReferencesAuditCommand extends Command {
 			)
 		);
 
-		if ($write === false && $counts['backfillable'] > 0) {
-			$output->writeln('Re-run with the write option to fill in the '.$counts['backfillable'].' unambiguous match(es).');
+		if ($run->write === false && $counts['backfillable'] > 0) {
+			$run->output->writeln('Re-run with the write option to fill in the '.$counts['backfillable'].' unambiguous match(es).');
 		}
 	}//end report()
 

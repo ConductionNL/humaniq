@@ -192,6 +192,27 @@ class FrequentAbsenceListenerTest extends TestCase {
 	}//end testOrdinaryEditsAndItsOwnWriteAreIgnored()
 
 	/**
+	 * A write of another schema, a delete, and an update that is not a
+	 * reopening count nothing; a case reopened from hersteld counts.
+	 *
+	 * @return void
+	 */
+	public function testOnlyACreateOrAReopeningOfASickLeaveCaseCounts(): void {
+		$this->store->seed('SickLeaveCase', 'case-oct', $this->sickCase('2026-10-05', 'gemeld'));
+		$other = new ObjectEntity();
+		$other->setUuid('lv-1');
+		$other->setSchema('LeaveRequest');
+		$other->setObject($this->sickCase('2026-10-05', 'gemeld'));
+		$this->listener->handle(new ObjectCreatedEvent($other));
+		$this->listener->handle(new ObjectUpdatedEvent($this->entity('case-oct', ['status' => 'gemeld']), $this->entity('case-oct', ['status' => 'gemeld'])));
+		$this->listener->handle(new ObjectUpdatedEvent($this->entity('case-oct', ['status' => 'hersteld']), $this->entity('case-oct', ['status' => 'hersteld'])));
+		self::assertSame([], $this->store->state->saves, 'Nothing counted yet.');
+
+		$this->listener->handle(new ObjectUpdatedEvent($this->entity('case-oct', $this->stored('case-oct')), $this->entity('case-oct', ['status' => 'hersteld'])));
+		self::assertSame(3, $this->stored('case-oct')['episodesInWindow']);
+	}//end testOnlyACreateOrAReopeningOfASickLeaveCaseCounts()
+
+	/**
 	 * Without a threshold on the administration the defaults apply: 3 in 12.
 	 *
 	 * @return void

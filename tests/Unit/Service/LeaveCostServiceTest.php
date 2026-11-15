@@ -96,6 +96,45 @@ class LeaveCostServiceTest extends TestCase {
 	}//end testAnUnreadCalendarSaysPatternOnly()
 
 	/**
+	 * A request over a year end answers one line per year, the basis of the
+	 * last year, the summed hours and the fields in a fixed order.
+	 *
+	 * @return void
+	 */
+	public function testARequestOverAYearEndAnswersPerYear(): void {
+		$cost = $this->service(['dates' => [], 'resolved' => true, 'reason' => null])->costOf(
+			['id' => 'lr-2', 'employeeId' => 'emp-part', 'leaveType' => 'holiday', 'startDate' => '2026-12-28', 'endDate' => '2027-01-05']
+		);
+
+		self::assertSame(['requestId', 'hours', 'basis', 'calendarRead', 'years', 'days'], array_keys($cost));
+		self::assertSame('lr-2', $cost['requestId']);
+		self::assertSame([2026, 2027], array_column($cost['years'], 'year'));
+		self::assertSame([24.0, 16.0], array_column($cost['years'], 'hours'));
+		self::assertSame(['pattern', 'pattern'], array_column($cost['years'], 'basis'));
+		self::assertSame(40.0, $cost['hours']);
+		self::assertSame('pattern', $cost['basis']);
+		self::assertTrue($cost['calendarRead']);
+		self::assertSame(9, count($cost['days']));
+	}//end testARequestOverAYearEndAnswersPerYear()
+
+	/**
+	 * Without a start date nothing is costed and the calendar is not read.
+	 *
+	 * @return void
+	 */
+	public function testARequestWithoutAStartCostsNothing(): void {
+		$gateway = $this->createMock(HoursRegisterGateway::class);
+		$gateway->method('findFiltered')->willReturn([]);
+		$calendar = $this->createMock(WorkingCalendarReader::class);
+		$calendar->expects(self::never())->method('nonWorkingDates');
+		$l10n = $this->createMock(IL10N::class);
+
+		$cost = (new LeaveCostService($gateway, $calendar, $l10n))->costOf(['employeeId' => 'emp-part']);
+
+		self::assertSame(['requestId' => '', 'hours' => 0.0, 'basis' => 'contract-average', 'calendarRead' => false, 'years' => [], 'days' => []], $cost);
+	}//end testARequestWithoutAStartCostsNothing()
+
+	/**
 	 * An unreadable request is 404 and costs nothing to compute.
 	 *
 	 * @return void

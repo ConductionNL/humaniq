@@ -218,4 +218,27 @@ class LearniqCredentialListenerTest extends TestCase {
 		self::assertSame([], $this->records());
 	}//end testACredentialOutsideLearniqIsIgnored()
 
+	/**
+	 * A credential for an unknown course and without an expiry still lands,
+	 * under the fallback title and with the employee's administration; a
+	 * record of the same reference from another source does not block it.
+	 *
+	 * @return void
+	 */
+	public function testTheFallbackTitleAndAnotherSourcesRecord(): void {
+		$this->store->seed('TrainingRecord', 'tr-manual', ['employeeId' => self::EMPLOYEE, 'title' => 'Handmatig', 'source' => 'manual', 'sourceRef' => self::CREDENTIAL]);
+		$entity = $this->credential(self::CREDENTIAL, self::LEARNER);
+		$entity->setObject(['learnerId' => self::LEARNER, 'courseId' => 'no-such-course', 'issuedAt' => 'soon']);
+
+		$this->listener->handle(new ObjectCreatedEvent($entity));
+
+		$records = array_values(array_filter($this->records(), static fn (array $row): bool => ($row['source'] ?? null) === 'learniq'));
+		self::assertCount(1, $records);
+		unset($records[0]['id'], $records[0]['@self']);
+		self::assertSame(
+			['employeeId' => self::EMPLOYEE, 'title' => 'Certificaat uit learniq', 'provider' => 'learniq', 'status' => 'gevolgd', 'completedOn' => null, 'validUntil' => null, 'studiekostenbeding' => false, 'source' => 'learniq', 'sourceRef' => self::CREDENTIAL, 'administrationId' => 'ADM-001'],
+			$records[0]
+		);
+	}//end testTheFallbackTitleAndAnotherSourcesRecord()
+
 }//end class

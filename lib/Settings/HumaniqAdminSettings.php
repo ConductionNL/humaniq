@@ -90,7 +90,8 @@ class HumaniqAdminSettings implements ISettings {
 			return ['id' => $gid, 'exists' => false, 'members' => null];
 		}
 
-		return ['id' => $gid, 'exists' => true, 'members' => $group->count()];
+		$members = $group->count();
+		return ['id' => $gid, 'exists' => true, 'members' => is_int($members) ? $members : null];
 	}//end describeGroup()
 
 	/**

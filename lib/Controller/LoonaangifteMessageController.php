@@ -28,17 +28,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\HumaniqRoles;
-use OCA\Humaniq\Service\LoonaangifteCorrectionService;
-use OCA\Humaniq\Service\LoonaangifteMessageService;
+use OCA\Humaniq\Service\CallerContext;
+use OCA\Humaniq\Service\PayrollTaxFilingServices;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Make the wage tax return message of a filing.
@@ -51,23 +47,15 @@ class LoonaangifteMessageController extends Controller {
 	 * The controller.
 	 *
 	 * @param IRequest                   $request     The request.
-	 * @param ContainerInterface         $container   For OpenRegister's ObjectService.
 	 * @param SettingsService            $settings    The register slug.
-	 * @param LoonaangifteMessageService $messages    The message service.
-	 * @param LoonaangifteCorrectionService $corrections The correction service.
-	 * @param IUserSession               $userSession The caller.
-	 * @param HumaniqRoles               $roles       HR and payroll membership.
-	 * @param LoggerInterface            $logger      Logger.
+	 * @param PayrollTaxFilingServices $filings Builds the messages and the corrections.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly SettingsService $settings,
-		private readonly LoonaangifteMessageService $messages,
-		private readonly LoonaangifteCorrectionService $corrections,
-		private readonly IUserSession $userSession,
-		private readonly HumaniqRoles $roles,
-		private readonly LoggerInterface $logger,
+		private readonly PayrollTaxFilingServices $filings,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -83,8 +71,8 @@ class LoonaangifteMessageController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function render(?string $filingId=null): JSONResponse {
-		$uid = $this->userSession->getUser()?->getUID();
-		if ($this->roles->isHr($uid) === false && $this->roles->isPayroll($uid) === false) {
+		$uid = $this->caller->userSession->getUser()?->getUID();
+		if ($this->caller->roles->isHr($uid) === false && $this->caller->roles->isPayroll($uid) === false) {
 			return new JSONResponse(['error' => 'Alleen HR, de salarisadministratie en beheerders mogen het aangiftebericht maken.'], 403);
 		}
 
@@ -99,11 +87,11 @@ class LoonaangifteMessageController extends Controller {
 		}
 
 		if ((string)($filing['filingType'] ?? '') === 'correctie') {
-			$outcome = $this->corrections->render($filing, (string)$uid);
+			$outcome = $this->filings->corrections->render($filing, (string)$uid);
 			return new JSONResponse($outcome, (($outcome['status'] ?? '') === 'prepared' ? 200 : 409));
 		}
 
-		$outcome = $this->messages->render($filing, (string)$uid);
+		$outcome = $this->filings->messages->render($filing, (string)$uid);
 		return new JSONResponse($outcome, (($outcome['status'] ?? '') === 'rendered' ? 200 : 409));
 	}//end render()
 
@@ -119,8 +107,8 @@ class LoonaangifteMessageController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function correction(?string $filingId=null): JSONResponse {
-		$uid = $this->userSession->getUser()?->getUID();
-		if ($this->roles->isHr($uid) === false && $this->roles->isPayroll($uid) === false) {
+		$uid = $this->caller->userSession->getUser()?->getUID();
+		if ($this->caller->roles->isHr($uid) === false && $this->caller->roles->isPayroll($uid) === false) {
 			return new JSONResponse(['error' => 'Alleen HR, de salarisadministratie en beheerders mogen een aangifte corrigeren.'], 403);
 		}
 
@@ -129,7 +117,7 @@ class LoonaangifteMessageController extends Controller {
 			return new JSONResponse(['error' => 'Aangifte niet gevonden.'], 404);
 		}
 
-		$outcome = $this->corrections->open($filing, (string)$uid);
+		$outcome = $this->filings->corrections->open($filing, (string)$uid);
 		$codes = ['opened' => 201, 'exists' => 200];
 		return new JSONResponse($outcome, ($codes[$outcome['status']] ?? 409));
 	}//end correction()
@@ -147,9 +135,9 @@ class LoonaangifteMessageController extends Controller {
 		}
 
 		try {
-			$filing = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(id: $filingId, register: $this->settings->getRegisterSlug(), schema: 'LoonaangifteFiling');
+			$filing = $this->caller->container->get('OCA\OpenRegister\Service\ObjectService')->find(id: $filingId, register: $this->settings->getRegisterSlug(), schema: 'LoonaangifteFiling');
 		} catch (\Throwable $e) {
-			$this->logger->info('LoonaangifteMessageController: filing ' . $filingId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->warning('LoonaangifteMessageController: a filing lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 

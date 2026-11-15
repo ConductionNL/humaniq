@@ -1,0 +1,393 @@
+{
+    "x-humaniq-fragment": "hr-deployment",
+    "components": {
+        "schemas": {
+            "DeploymentPlan": {
+                "slug": "DeploymentPlan",
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "employeeUserId": "$userId"
+                            }
+                        }
+                    ],
+                    "create": [
+                        "humaniq-hr"
+                    ],
+                    "update": [
+                        "humaniq-hr"
+                    ],
+                    "delete": [
+                        "humaniq-hr"
+                    ]
+                },
+                "icon": "CalendarClock",
+                "version": "0.1.0",
+                "title": "Deployment plan",
+                "description": "A teacher's planned hours for one school year, against the norm for their contract.",
+                "x-notes": "education-staff-deployment-and-count D1. One plan per teacher per school year (1 August to 31 July). Line hours and plannedHours are stamped by DeploymentPlanTotalsListener on every save; differenceHours is calculated from them. The norm comes from DeploymentPlanService::normFor (CAO annual norm prorated to the contracts) when the CAO figure is verified, else HR enters it and normSource is handmatig. NoSelfApprovalGuard stops the teacher (employeeUserId) confirming their own plan.",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "employeeId",
+                    "orgUnitId",
+                    "schoolYear",
+                    "status"
+                ],
+                "configuration": {
+                    "exportable": true,
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "transitions": {
+                            "vaststellen": {
+                                "from": [
+                                    "concept"
+                                ],
+                                "to": "vastgesteld",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "A school leader or HR confirms the plan. The teacher cannot confirm their own plan."
+                            },
+                            "heropenen": {
+                                "from": [
+                                    "vastgesteld"
+                                ],
+                                "to": "concept",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "The plan is opened again for changes."
+                            }
+                        }
+                    },
+                    "x-openregister-calculations": {
+                        "differenceHours": {
+                            "type": "number",
+                            "materialise": true,
+                            "title": "Difference",
+                            "description": "plannedHours minus normHours; above zero is an overload.",
+                            "expression": {
+                                "-": [
+                                    {
+                                        "coalesce": [
+                                            {
+                                                "prop": "plannedHours"
+                                            },
+                                            0
+                                        ]
+                                    },
+                                    {
+                                        "prop": "normHours"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Teacher",
+                        "description": "The teacher this plan is for."
+                    },
+                    "employeeUserId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Teacher's account",
+                        "description": "The teacher's Nextcloud account.",
+                        "x-notes": "Denormalised uid of the teacher: the teacher may read their own plan, and NoSelfApprovalGuard refuses them on vaststellen."
+                    },
+                    "orgUnitId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "OrgUnit",
+                        "title": "School",
+                        "description": "The school the teacher is deployed at."
+                    },
+                    "schoolYear": {
+                        "type": "string",
+                        "pattern": "^[0-9]{4}-[0-9]{4}$",
+                        "title": "School year",
+                        "description": "The school year, for example 2026-2027 (1 August to 31 July)."
+                    },
+                    "normHours": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Norm hours",
+                        "description": "The hours the teacher's contracts give for the school year."
+                    },
+                    "normSource": {
+                        "type": "string",
+                        "nullable": true,
+                        "enum": [
+                            "cao",
+                            "handmatig"
+                        ],
+                        "x-enum-labels": {
+                            "cao": "From the CAO",
+                            "handmatig": "Entered by hand"
+                        },
+                        "title": "Norm source",
+                        "description": "Whether the norm comes from the CAO or was entered by hand."
+                    },
+                    "lines": {
+                        "type": "array",
+                        "title": "Plan lines",
+                        "description": "The planned hours per category.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "category": {
+                                    "type": "string",
+                                    "enum": [
+                                        "lesgevend",
+                                        "lesgebonden",
+                                        "schooltaak",
+                                        "professionalisering",
+                                        "duurzame-inzetbaarheid"
+                                    ],
+                                    "x-enum-labels": {
+                                        "lesgevend": "Teaching",
+                                        "lesgebonden": "Lesson-related tasks",
+                                        "schooltaak": "School tasks",
+                                        "professionalisering": "Professional development",
+                                        "duurzame-inzetbaarheid": "Sustainable employability"
+                                    },
+                                    "title": "Category",
+                                    "description": "What the hours are for."
+                                },
+                                "subject": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "title": "Subject",
+                                    "description": "The subject taught, for a teaching line."
+                                },
+                                "educationLevel": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "title": "Education level",
+                                    "description": "The education level taught, for a teaching line."
+                                },
+                                "hoursPerWeek": {
+                                    "type": "number",
+                                    "nullable": true,
+                                    "minimum": 0,
+                                    "title": "Hours per week",
+                                    "description": "Teaching hours per week, for a teaching line."
+                                },
+                                "weeks": {
+                                    "type": "number",
+                                    "nullable": true,
+                                    "minimum": 0,
+                                    "title": "Weeks",
+                                    "description": "The number of weeks those hours are taught."
+                                },
+                                "hours": {
+                                    "type": "number",
+                                    "nullable": true,
+                                    "minimum": 0,
+                                    "title": "Hours",
+                                    "description": "Hours per week times weeks for a teaching line; the hours themselves for any other line."
+                                }
+                            },
+                            "required": [
+                                "category"
+                            ]
+                        }
+                    },
+                    "plannedHours": {
+                        "type": "number",
+                        "readOnly": true,
+                        "title": "Planned hours",
+                        "description": "The total of the plan lines."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "concept",
+                            "vastgesteld"
+                        ],
+                        "x-enum-labels": {
+                            "concept": "Draft",
+                            "vastgesteld": "Confirmed"
+                        },
+                        "title": "Status",
+                        "description": "Draft while the plan is made; confirmed once agreed."
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "OrgUnit",
+                    "slug": "orgunit-school-de-klimop"
+                },
+                "name": "Basisschool De Klimop",
+                "type": "afdeling",
+                "parentUnitId": "@ref:orgunit-directie",
+                "active": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-leraar-vermeulen"
+                },
+                "employeeNumber": "EMP-0901",
+                "firstName": "Lotte",
+                "lastName": "Vermeulen",
+                "startDate": "2020-08-01",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-leraar-claes"
+                },
+                "employeeNumber": "EMP-0902",
+                "firstName": "Daan",
+                "lastName": "Claes",
+                "startDate": "2022-08-01",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-leraar-vermeulen-po"
+                },
+                "employeeId": "@ref:employee-leraar-vermeulen",
+                "type": "permanent",
+                "startDate": "2020-08-01",
+                "endDate": null,
+                "hoursPerWeek": 40,
+                "cao": "cao-onderwijs-po",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-leraar-claes-po"
+                },
+                "employeeId": "@ref:employee-leraar-claes",
+                "type": "permanent",
+                "startDate": "2022-08-01",
+                "endDate": null,
+                "hoursPerWeek": 24,
+                "cao": "cao-onderwijs-po",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "OrgAssignment",
+                    "slug": "orgassignment-vermeulen-de-klimop"
+                },
+                "employeeId": "@ref:employee-leraar-vermeulen",
+                "orgUnitId": "@ref:orgunit-school-de-klimop",
+                "role": "Groepsleerkracht",
+                "startDate": "2020-08-01",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "OrgAssignment",
+                    "slug": "orgassignment-claes-de-klimop"
+                },
+                "employeeId": "@ref:employee-leraar-claes",
+                "orgUnitId": "@ref:orgunit-school-de-klimop",
+                "role": "Groepsleerkracht",
+                "startDate": "2022-08-01",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "DeploymentPlan",
+                    "slug": "deploymentplan-vermeulen-2026-2027"
+                },
+                "employeeId": "@ref:employee-leraar-vermeulen",
+                "orgUnitId": "@ref:orgunit-school-de-klimop",
+                "schoolYear": "2026-2027",
+                "normHours": 1659,
+                "normSource": "handmatig",
+                "status": "vastgesteld",
+                "lines": [
+                    {
+                        "category": "lesgevend",
+                        "subject": "Groepsleerkracht groep 7",
+                        "educationLevel": "po",
+                        "hoursPerWeek": 25,
+                        "weeks": 37.6,
+                        "hours": 940.0
+                    },
+                    {
+                        "category": "lesgebonden",
+                        "hours": 400.0
+                    },
+                    {
+                        "category": "schooltaak",
+                        "hours": 237.0
+                    },
+                    {
+                        "category": "professionalisering",
+                        "hours": 83.0
+                    },
+                    {
+                        "category": "duurzame-inzetbaarheid",
+                        "hours": 40.0
+                    }
+                ],
+                "plannedHours": 1700.0,
+                "_note": "education-staff-deployment-and-count seed: a full-time CAO PO teacher, confirmed, 1,700 planned against a hand-entered norm of 1,659 (the CAO figure is unverified): an overload of 41."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "DeploymentPlan",
+                    "slug": "deploymentplan-claes-2026-2027"
+                },
+                "employeeId": "@ref:employee-leraar-claes",
+                "orgUnitId": "@ref:orgunit-school-de-klimop",
+                "schoolYear": "2026-2027",
+                "normHours": 995.4,
+                "normSource": "handmatig",
+                "status": "concept",
+                "lines": [
+                    {
+                        "category": "lesgevend",
+                        "subject": "Groepsleerkracht groep 3",
+                        "educationLevel": "po",
+                        "hoursPerWeek": 15,
+                        "weeks": 37.6,
+                        "hours": 564.0
+                    },
+                    {
+                        "category": "lesgebonden",
+                        "hours": 200.0
+                    },
+                    {
+                        "category": "schooltaak",
+                        "hours": 61.4
+                    },
+                    {
+                        "category": "professionalisering",
+                        "hours": 50.0
+                    }
+                ],
+                "plannedHours": 875.4,
+                "_note": "education-staff-deployment-and-count seed: a 0.6 CAO PO teacher (24 of 40 hours), draft, 875.4 planned against a hand-entered norm of 995.4 (1,659 x 0.6): 120 hours of room."
+            }
+        ]
+    }
+}

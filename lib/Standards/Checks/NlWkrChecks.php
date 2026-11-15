@@ -3,6 +3,9 @@
 /**
  * NL WKR (Werkkostenregeling) Administration Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The administration-level executable check the wkr-administration change adds
  * on top of the pre-existing per-payslip WKR predicates in NlPayrollChecks
  * (nl-wkr-vrije-ruimte / nl-wkr-eindheffing-80, unchanged by this provider):
@@ -37,9 +40,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/wkr-administration/spec.md#REQ-WKR-004
@@ -50,11 +50,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Standards\Checks;
 
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Support\RoundsToCents;
 
 /**
  * Administration-level WKR eindheffing-exposure executable check.
  */
 final class NlWkrChecks implements CheckProvider, SeedsObjects {
+
+	use RoundsToCents;
 
 	/**
 	 * Memoised TaxTables instance (construction-time glob precedent —
@@ -99,37 +102,56 @@ final class NlWkrChecks implements CheckProvider, SeedsObjects {
 	 */
 	public static function seedObjects(): array {
 		return [
-			'WkrDeclaration' => [
-				[
-					'administrationId' => 'ADM-001',
-					'year' => 2026,
-					'date' => '2026-06-15',
-					'description' => 'Personeelsuitje juni',
-					'amount' => 300.00,
-					'wkrCategory' => 'vrije-ruimte',
-					'employeeId' => null,
-					'sourceReference' => 'INV-2026-0612',
-				],
-			],
-			'WkrAssessment' => [
-				[
-					'administrationId' => 'ADM-001',
-					'year' => 2026,
-					'fiscaleLoonsom' => 200000.00,
-					'vrijeRuimte' => 4000.00,
-					'vrijeRuimteUsed' => 300.00,
-					'vrijeRuimteRemaining' => 3700.00,
-					'excess' => 0.00,
-					'eindheffingRate' => null,
-					'eindheffingDue' => 0.00,
-					'status' => 'binnen-vrije-ruimte',
-					'engineVersion' => 'nl-2026',
-					'assessedAt' => '2026-07-15T00:00:00Z',
-				],
-			],
+			'WkrDeclaration' => [self::exampleDeclaration()],
+			'WkrAssessment' => [self::exampleAssessment()],
 		];
 
 	}//end seedObjects()
+
+	/**
+	 * The example declaration: a staff outing booked against the vrije ruimte.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/wkr-administration/spec.md#REQ-WKR-001
+	 */
+	private static function exampleDeclaration(): array {
+		return [
+			'administrationId' => 'ADM-001',
+			'year' => 2026,
+			'date' => '2026-06-15',
+			'description' => 'Personeelsuitje juni',
+			'amount' => 300.00,
+			'wkrCategory' => 'vrije-ruimte',
+			'employeeId' => null,
+			'sourceReference' => 'INV-2026-0612',
+		];
+	}//end exampleDeclaration()
+
+	/**
+	 * The example assessment of that year: well inside the vrije ruimte, no
+	 * eindheffing due.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/wkr-administration/spec.md#REQ-WKR-003
+	 */
+	private static function exampleAssessment(): array {
+		return [
+			'administrationId' => 'ADM-001',
+			'year' => 2026,
+			'fiscaleLoonsom' => 200000.00,
+			'vrijeRuimte' => 4000.00,
+			'vrijeRuimteUsed' => 300.00,
+			'vrijeRuimteRemaining' => 3700.00,
+			'excess' => 0.00,
+			'eindheffingRate' => null,
+			'eindheffingDue' => 0.00,
+			'status' => 'binnen-vrije-ruimte',
+			'engineVersion' => 'nl-2026',
+			'assessedAt' => '2026-07-15T00:00:00Z',
+		];
+	}//end exampleAssessment()
 
 	/**
 	 * The `nl-wkr-eindheffing-exposure` predicate (spec.md REQ-WKR-004,
@@ -242,23 +264,6 @@ final class NlWkrChecks implements CheckProvider, SeedsObjects {
 	}//end reset()
 
 	/**
-	 * Convert a euro-denominated value to integer cents (`round($euros * 100)`,
-	 * the PayrollMutationService read-time boundary). Non-numeric/null values
-	 * convert to 0.
-	 *
-	 * @param mixed $euros The raw field value.
-	 *
-	 * @return int
-	 */
-	private static function cents(mixed $euros): int {
-		if (is_numeric($euros) === false) {
-			return 0;
-		}
-
-		return (int)round(((float)$euros) * 100);
-	}//end cents()
-
-	/**
 	 * Compare two rate percentages at basis-point precision (the
 	 * NlPayrollChecks::ratesEqual precedent).
 	 *
@@ -270,5 +275,4 @@ final class NlWkrChecks implements CheckProvider, SeedsObjects {
 	private static function ratesEqual(float $a, float $b): bool {
 		return (int)round($a * 100) === (int)round($b * 100);
 	}//end ratesEqual()
-
 }//end class

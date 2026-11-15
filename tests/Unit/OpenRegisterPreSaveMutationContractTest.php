@@ -3,6 +3,9 @@
 /**
  * OpenRegister pre-save mutation contract (hours-process-redesign task V1)
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The hours-process redesign's Decisions 4 and 5 stand on ONE load-bearing
  * assumption: a listener on OpenRegister's pre-save `ObjectCreatingEvent` /
  * `ObjectUpdatingEvent` can hand back modified payload data (via
@@ -31,9 +34,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

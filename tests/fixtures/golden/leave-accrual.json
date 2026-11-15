@@ -1,0 +1,3244 @@
+{
+    "2026-07-15 bovenwettelijk 0": {
+        "summary": {
+            "period": "2026-07",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 3.3,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.5,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "bovenwettelijkHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2026-07-15 bovenwettelijk 25": {
+        "summary": {
+            "period": "2026-07",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Faal",
+                    "reason": "save-failed"
+                },
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 5.4,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.6,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "bovenwettelijkHours": 2.1,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2026-07-15 bovenwettelijk 13.33": {
+        "summary": {
+            "period": "2026-07",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Faal Bestaand",
+                    "reason": "save-failed"
+                },
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 4.4,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.6,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "bovenwettelijkHours": 1.1,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2026-07-15 bovenwettelijk 40.2": {
+        "summary": {
+            "period": "2026-07",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 6.699999999999999,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 4.9,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "bovenwettelijkHours": 3.4,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2026-01-01 bovenwettelijk 0": {
+        "summary": {
+            "period": "2026-01",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 3.3,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.5,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "bovenwettelijkHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2026-01-01 bovenwettelijk 25": {
+        "summary": {
+            "period": "2026-01",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Faal",
+                    "reason": "save-failed"
+                },
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 5.4,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.6,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "bovenwettelijkHours": 2.1,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2026-01-01 bovenwettelijk 13.33": {
+        "summary": {
+            "period": "2026-01",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Faal Bestaand",
+                    "reason": "save-failed"
+                },
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 4.4,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.6,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "bovenwettelijkHours": 1.1,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2026-01-01 bovenwettelijk 40.2": {
+        "summary": {
+            "period": "2026-01",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 6.699999999999999,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 4.9,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-01",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-01",
+                    "bovenwettelijkHours": 3.4,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2026-12-31 bovenwettelijk 0": {
+        "summary": {
+            "period": "2026-12",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 3.3,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.5,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "bovenwettelijkHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2026-12-31 bovenwettelijk 25": {
+        "summary": {
+            "period": "2026-12",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Faal",
+                    "reason": "save-failed"
+                },
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 5.4,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.6,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "bovenwettelijkHours": 2.1,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2026-12-31 bovenwettelijk 13.33": {
+        "summary": {
+            "period": "2026-12",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Faal Bestaand",
+                    "reason": "save-failed"
+                },
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 4.4,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.6,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "bovenwettelijkHours": 1.1,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2026-12-31 bovenwettelijk 40.2": {
+        "summary": {
+            "period": "2026-12",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 6.699999999999999,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 4.9,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-12",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-12",
+                    "bovenwettelijkHours": 3.4,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2028-02-29 bovenwettelijk 0": {
+        "summary": {
+            "period": "2028-02",
+            "year": 2028,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 3.3,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.5,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 0.0,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "bovenwettelijkHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2028-02-29 bovenwettelijk 25": {
+        "summary": {
+            "period": "2028-02",
+            "year": 2028,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Faal",
+                    "reason": "save-failed"
+                },
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 5.4,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.6,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "bovenwettelijkHours": 2.1,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2028-02-29 bovenwettelijk 13.33": {
+        "summary": {
+            "period": "2028-02",
+            "year": 2028,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Faal Bestaand",
+                    "reason": "save-failed"
+                },
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 4.4,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.6,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 1.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "bovenwettelijkHours": 1.1,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "2028-02-29 bovenwettelijk 40.2": {
+        "summary": {
+            "period": "2028-02",
+            "year": 2028,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 6.699999999999999,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 4.9,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.4,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2029-07-01",
+                    "lastAccruedPeriod": "2028-02",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2028,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2028-02",
+                    "bovenwettelijkHours": 3.4,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "entity answers": {
+        "summary": {
+            "period": "2026-07",
+            "year": 2026,
+            "enabled": true,
+            "provisioned": [
+                {
+                    "employee": "Nieuw",
+                    "leaveBalanceId": "LeaveBalance-new-1"
+                },
+                {
+                    "employee": "Deel Tijd",
+                    "leaveBalanceId": "LeaveBalance-new-2"
+                },
+                {
+                    "employee": "N-7",
+                    "leaveBalanceId": "LeaveBalance-new-3"
+                },
+                {
+                    "employee": "Faal",
+                    "leaveBalanceId": "LeaveBalance-new-4"
+                }
+            ],
+            "accrued": [
+                {
+                    "employee": "Meer",
+                    "leaveBalanceId": "lb-raise"
+                },
+                {
+                    "employee": "Minder",
+                    "leaveBalanceId": "lb-lower"
+                },
+                {
+                    "employee": "Faal Bestaand",
+                    "leaveBalanceId": "lb-failx"
+                }
+            ],
+            "skipped": [
+                {
+                    "employee": "Geen",
+                    "reason": "no-covering-contract"
+                },
+                {
+                    "employee": "Z-1",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "e-text",
+                    "reason": "no-hours-per-week"
+                },
+                {
+                    "employee": "Zonder Id",
+                    "reason": "no-employee-identity"
+                }
+            ],
+            "noop": 1
+        },
+        "writes": [
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-new",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "new.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-part",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 130.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 32.5,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-self",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 96.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 24.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "self.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-raise",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-raise",
+                    "employeeId": "e-raise",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 144.0,
+                    "bovenwettelijkHours": 5.4,
+                    "usedHours": 12.5,
+                    "contractHoursPerWeek": 36.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "raise.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-lower",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-lower",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 3.6,
+                    "contractHoursPerWeek": 40.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": null
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": null,
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "employeeId": "e-fail",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "bovenwettelijkHours": 2.1,
+                    "usedHours": 0.0,
+                    "contractHoursPerWeek": 40.0,
+                    "expiryDate": "2027-07-01",
+                    "lastAccruedPeriod": "2026-07",
+                    "userId": "fail.user"
+                }
+            },
+            {
+                "register": "humaniq",
+                "schema": "LeaveBalance",
+                "uuid": "lb-failx",
+                "rbac": false,
+                "multitenancy": false,
+                "object": {
+                    "id": "lb-failx",
+                    "employeeId": "e-failx",
+                    "year": 2026,
+                    "leaveType": "holiday",
+                    "entitledHours": 160.0,
+                    "lastAccruedPeriod": "2026-07",
+                    "bovenwettelijkHours": 2.1,
+                    "contractHoursPerWeek": 40.0,
+                    "userId": null
+                }
+            }
+        ]
+    },
+    "disabled": {
+        "summary": {
+            "period": "",
+            "year": 0,
+            "enabled": false,
+            "provisioned": [],
+            "accrued": [],
+            "skipped": [],
+            "noop": 0
+        },
+        "writes": []
+    }
+}

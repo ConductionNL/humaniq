@@ -575,6 +575,91 @@ final class TaxTables {
 	}//end bijtellingPrivegebruikAuto()
 
 	/**
+	 * The treatment of one special regime from the `specialRegimes` table group
+	 * (payroll-special-regimes design.md D2): the tax table colour, whether
+	 * employee insurances apply, the Zvw mode and, for the early-retirement
+	 * regime, the monthly final-levy threshold in cents and the final-levy rate
+	 * on the percentage scale (0-100). A regime without the threshold leaves
+	 * reports 0 for both, which the pack reads as "no final levy".
+	 *
+	 * `unverified` lists the dotted path of every leaf of the regime that is
+	 * unverified or a placeholder; the run refuses to pay under a regime while
+	 * that list is not empty.
+	 *
+	 * @param string $regime The regime key (`rvu`, `wachtgeld`, `politiek-ambt`).
+	 *
+	 * @return array{taxTableColor: string, werknemersverzekeringen: bool, zvwMode: string, thresholdPerMonthCents: int, finalLevyRate: float, unverified: list<string>}
+	 *
+	 * @throws \RuntimeException When the tables carry no such regime or it lacks a required leaf.
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	public function specialRegime(string $regime): array {
+		$node = $this->leaf(['specialRegimes', $regime]);
+		if (is_array($node) === false) {
+			throw new RuntimeException('TaxTables (' . $this->id . '): ontbrekende parameter "specialRegimes.' . $regime . '".');
+		}
+
+		[$threshold, $rate] = $this->finalLevyOf(node: $node, regime: $regime);
+
+		return [
+			'taxTableColor' => (string)$this->leaf(['specialRegimes', $regime, 'taxTableColor', 'value']),
+			'werknemersverzekeringen' => (bool)$this->leaf(['specialRegimes', $regime, 'werknemersverzekeringen', 'value']),
+			'zvwMode' => (string)$this->leaf(['specialRegimes', $regime, 'zvwMode', 'value']),
+			'thresholdPerMonthCents' => $threshold,
+			'finalLevyRate' => $rate,
+			'unverified' => self::unverifiedLeaves(node: $node, regime: $regime),
+		];
+
+	}//end specialRegime()
+
+	/**
+	 * The paths of a regime's value leaves that are not verified, or still a placeholder.
+	 *
+	 * @param array<string, mixed> $node   The regime's node.
+	 * @param string               $regime The regime key.
+	 *
+	 * @return list<string>
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private static function unverifiedLeaves(array $node, string $regime): array {
+		$unverified = [];
+		foreach ($node as $key => $leaf) {
+			if (is_array($leaf) === false || array_key_exists('value', $leaf) === false) {
+				continue;
+			}
+
+			if (($leaf['verified'] ?? false) !== true || ($leaf['placeholder'] ?? false) === true) {
+				$unverified[] = 'specialRegimes.' . $regime . '.' . $key;
+			}
+		}
+
+		return $unverified;
+	}//end unverifiedLeaves()
+
+	/**
+	 * A regime's final-levy threshold in cents and rate, or zero for a regime without one.
+	 *
+	 * @param array<string, mixed> $node   The regime's node.
+	 * @param string               $regime The regime key.
+	 *
+	 * @return array{0: int, 1: float}
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private function finalLevyOf(array $node, string $regime): array {
+		if (array_key_exists('thresholdPerMonth', $node) === false && array_key_exists('finalLevyRate', $node) === false) {
+			return [0, 0.0];
+		}
+
+		return [
+			self::euroToCents((float)$this->leaf(['specialRegimes', $regime, 'thresholdPerMonth', 'value'])),
+			(float)$this->leaf(['specialRegimes', $regime, 'finalLevyRate', 'value']),
+		];
+	}//end finalLevyOf()
+
+	/**
 	 * Convert a euro amount to integer cents using this class's own rule
 	 * (jurisdiction-packs design.md D4: the euro-to-cents conversion stays
 	 * exactly where it is today rather than being reimplemented in the
@@ -624,45 +709,86 @@ final class TaxTables {
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-006
 	 */
 	public function resolveLeaf(array $segments, bool $toCents = false): array {
-		$node = $this->parameters;
+		$current = [
+			'value' => $this->parameters,
+			'provenance' => null,
+		];
 		$walked = [];
-		$provenance = null;
 
 		foreach ($segments as $segment) {
-			$unwrapped = $this->unwrapLeaf($node, $walked);
-			if ($unwrapped !== null) {
-				$node = $unwrapped['value'];
-				$provenance = $unwrapped['provenance'];
-			}
-
+			$current = $this->unwrapped(current: $current, walked: $walked);
 			$walked[] = $segment;
-			if (is_array($node) === false || array_key_exists($segment, $node) === false) {
-				throw new RuntimeException('TaxTables (' . $this->id . '): ontbrekende parameter "' . implode('.', $walked) . '".');
-			}
-
-			$node = $node[$segment];
+			$current['value'] = $this->childAt(node: $current['value'], walked: $walked);
 		}
 
-		$unwrapped = $this->unwrapLeaf($node, $walked);
-		if ($unwrapped !== null) {
-			$node = $unwrapped['value'];
-			$provenance = $unwrapped['provenance'];
-		}
-
+		$current = $this->unwrapped(current: $current, walked: $walked);
 		if ($toCents === true) {
-			if (is_int($node) === false && is_float($node) === false) {
-				throw new RuntimeException('TaxTables (' . $this->id . '): parameter "' . implode('.', $walked) . '" is geen bedrag en kan niet naar centen worden omgezet.');
-			}
+			$current['value'] = $this->inCents(node: $current['value'], walked: $walked);
+		}
 
-			$node = self::euroToCents((float)$node);
+		return $current;
+
+	}//end resolveLeaf()
+
+	/**
+	 * The resolution with its value unwrapped when it is a provenance leaf.
+	 *
+	 * @param array{value: mixed, provenance: array<string, mixed>|null} $current The resolution so far.
+	 * @param array<int, string>                                          $walked  The path walked so far.
+	 *
+	 * @return array{value: mixed, provenance: array<string, mixed>|null}
+	 */
+	private function unwrapped(array $current, array $walked): array {
+		$unwrapped = $this->unwrapLeaf($current['value'], $walked);
+		if ($unwrapped === null) {
+			return $current;
 		}
 
 		return [
-			'value' => $node,
-			'provenance' => $provenance,
+			'value' => $unwrapped['value'],
+			'provenance' => $unwrapped['provenance'],
 		];
 
-	}//end resolveLeaf()
+	}//end unwrapped()
+
+	/**
+	 * The child at the last walked segment.
+	 *
+	 * @param mixed              $node   The node.
+	 * @param array<int, string> $walked The path walked, ending with the segment.
+	 *
+	 * @return mixed
+	 *
+	 * @throws RuntimeException When the node has no such child.
+	 */
+	private function childAt(mixed $node, array $walked): mixed {
+		$segment = $walked[(count($walked) - 1)];
+		if (is_array($node) === false || array_key_exists($segment, $node) === false) {
+			throw new RuntimeException('TaxTables (' . $this->id . '): ontbrekende parameter "' . implode('.', $walked) . '".');
+		}
+
+		return $node[$segment];
+
+	}//end childAt()
+
+	/**
+	 * An amount leaf in cents.
+	 *
+	 * @param mixed              $node   The leaf value.
+	 * @param array<int, string> $walked The path walked.
+	 *
+	 * @return int
+	 *
+	 * @throws RuntimeException When the leaf is not an amount.
+	 */
+	private function inCents(mixed $node, array $walked): int {
+		if (is_int($node) === false && is_float($node) === false) {
+			throw new RuntimeException('TaxTables (' . $this->id . '): parameter "' . implode('.', $walked) . '" is geen bedrag en kan niet naar centen worden omgezet.');
+		}
+
+		return self::euroToCents((float)$node);
+
+	}//end inCents()
 
 	/**
 	 * Unwrap a `{value, source, verified}` provenance leaf, returning its

@@ -121,6 +121,35 @@ class SurveyResultsTest extends TestCase {
 		}
 
 		self::assertNotContains('Anything else', array_column($results['rows'], 'question'));
+		self::assertSame(['key', 'label', 'type', 'count', 'distribution', 'average', 'enps'], array_keys($overall['beveel']));
+		self::assertSame(['0' => 0, '1' => 0, '2' => 1, '3' => 0, '4' => 0, '5' => 0, '6' => 0, '7' => 1, '8' => 1, '9' => 1, '10' => 2], $overall['beveel']['distribution']);
+		self::assertSame(7.67, $overall['beveel']['average']);
+		self::assertSame(['key', 'label', 'type', 'count', 'distribution'], array_keys($overall['druk']));
+		self::assertSame(['key', 'label', 'type', 'count', 'texts'], array_keys($overall['tekst']));
+		self::assertSame(['key', 'label', 'type', 'count'], array_keys(array_column($results['units'][0]['questions'], null, 'key')['tekst']));
 	}//end testTheEdgesOfTheBreakdown()
+
+	/**
+	 * A department without a name is shown by its id, an Other group large
+	 * enough is shown without a note, and a question without a key is left out.
+	 *
+	 * @return void
+	 */
+	public function testAnUnnamedDepartmentAndALargeEnoughOther(): void {
+		$responses = [
+			$this->response('u9', 1),
+			$this->response('u9', 2),
+			$this->response('u9', 3),
+			$this->response('u1', 4),
+			$this->response(null, 5),
+			$this->response('', 6),
+		];
+		$questions = array_merge(self::QUESTIONS, [['type' => 'enum', 'label' => 'No key']]);
+		$results = (new SurveyResults(new SurveyAnswers()))->compute(['questions' => $questions, 'minGroupSize' => 3], $responses, ['u1' => 'Finance']);
+
+		self::assertSame([['u9', 'u9', 3], ['other', 'Other', 3]], array_map(static fn (array $unit): array => [$unit['unitId'], $unit['name'], $unit['responses']], $results['units']));
+		self::assertSame([], $results['notes']);
+		self::assertSame(['druk', 'beveel', 'tekst'], array_column($results['overall'], 'key'));
+	}//end testAnUnnamedDepartmentAndALargeEnoughOther()
 
 }//end class

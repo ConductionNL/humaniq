@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
@@ -52,14 +52,14 @@ class RecurringAllowanceStampListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway     Reads the employee.
+	 * @param RecordStoreInterface $gateway     Reads the employee.
 	 * @param IUserSession         $userSession The signed-in user.
 	 * @param LoggerInterface      $logger      The logger.
 	 *
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-002
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {

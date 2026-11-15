@@ -1,10 +1,16 @@
 <?php
 
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
 namespace Unit\Service;
 
 use OCA\Humaniq\Service\DemoDataService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
+use OCA\Humaniq\Service\InternalWriteMarker;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -21,6 +27,13 @@ class DemoDataServiceTest extends TestCase {
 	private IAppManager $appManager;
 	private ContainerInterface $container;
 
+	/**
+	 * The write marker the service uses.
+	 *
+	 * @var InternalWriteMarker
+	 */
+	private InternalWriteMarker $marker;
+
 	protected function setUp(): void {
 		$this->appPath = sys_get_temp_dir() . '/or-demo-' . uniqid();
 		mkdir($this->appPath . '/lib/Settings', 0777, true);
@@ -31,6 +44,7 @@ class DemoDataServiceTest extends TestCase {
 		$this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
 		$this->container = $this->createMock(ContainerInterface::class);
+		$this->marker = new InternalWriteMarker();
 	}
 
 	protected function tearDown(): void {
@@ -52,7 +66,8 @@ class DemoDataServiceTest extends TestCase {
 		return new DemoDataService(
 			$this->appManager,
 			$this->container,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->marker
 		);
 	}
 
@@ -181,11 +196,18 @@ class DemoDataServiceTest extends TestCase {
 		// 🔴 THE PARAMETER NAMES ARE THE CONTRACT. install() calls this with
 		// named arguments, so a fake whose parameters are named differently
 		// fails at the call site rather than validating anything.
-		$importer = new class {
+		$marker = $this->marker;
+		$importer = new class($marker) {
 			public array $seen = [];
 
+			/**
+			 * @param InternalWriteMarker $marker The marker the service sets.
+			 */
+			public function __construct(private InternalWriteMarker $marker) {
+			}
+
 			public function importFromApp(string $appId, array $data, string $version, bool $force): array {
-				$this->seen = ['appId' => $appId, 'version' => $version, 'force' => $force];
+				$this->seen = ['appId' => $appId, 'version' => $version, 'force' => $force, 'shippedImport' => $this->marker->isShippedImport()];
 
 				// Deliberately reports FEWER than the file holds: an object whose
 				// schema does not resolve is skipped, and the operator is told
@@ -205,5 +227,48 @@ class DemoDataServiceTest extends TestCase {
 		// masked by — a pending real configuration update.
 		$this->assertSame('humaniq.demo', $importer->seen['appId']);
 		$this->assertTrue($importer->seen['force']);
+		$this->assertTrue($importer->seen['shippedImport']);
+		$this->assertFalse($this->marker->isShippedImport());
+	}
+
+	/**
+	 * Objects that are not a list count zero, both on the card and in the
+	 * import; the import logs the three counts; a JSON scalar is not a dataset.
+	 *
+	 * @return void
+	 */
+	public function testTheCountTheLogAndAScalarDescriptor(): void {
+		file_put_contents($this->descriptor(), json_encode(['components' => ['objects' => 'several']]));
+		$importer = new class() {
+			/**
+			 * The importer's reply: two registers and one schema.
+			 *
+			 * @param string               $appId   The configuration namespace.
+			 * @param array<string, mixed> $data    The dataset.
+			 * @param string               $version The app version.
+			 * @param bool                 $force   Whether to force the import.
+			 *
+			 * @return array<string, array<int, int>>
+			 */
+			public function importFromApp(string $appId, array $data, string $version, bool $force): array {
+				return ['registers' => [1, 2], 'schemas' => [1]];
+			}
+		};
+		$this->container->method('get')->willReturn($importer);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('info')->with(
+			'[DemoDataService] imported demo data: 0 object(s), 2 register(s), 1 schema(s).',
+			['app' => 'humaniq']
+		);
+		$service = new DemoDataService($this->appManager, $this->container, $logger, $this->marker);
+
+		$this->assertSame(0, $service->listChoices()[1]['objectCount']);
+		$this->assertSame(['objects' => 0, 'registers' => 2, 'schemas' => 1], $service->install());
+
+		file_put_contents($this->descriptor(), '"text"');
+		$this->assertSame([DemoDataService::NONE_DATASET], array_column($service->listChoices(), 'id'));
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessageMatches('/not valid JSON/');
+		$service->install();
 	}
 }

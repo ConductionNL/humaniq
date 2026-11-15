@@ -99,6 +99,8 @@ export default {
 </script>
 
 <style scoped lang="scss">
+@use '../css/admin-widget.scss';
+
 .application-answers {
 	padding: 8px 0;
 
@@ -107,16 +109,10 @@ export default {
 	}
 
 	&__list {
-		display: grid;
+		@include admin-widget.label-list;
 		grid-template-columns: minmax(160px, max-content) 1fr;
-		gap: 8px 24px;
-
-		dt {
-			color: var(--color-text-maxcontrast);
-		}
 
 		dd {
-			margin: 0;
 			white-space: pre-wrap;
 		}
 	}

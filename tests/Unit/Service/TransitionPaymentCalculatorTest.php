@@ -80,11 +80,9 @@ class TransitionPaymentCalculatorTest extends TestCase {
 	private function calc(float $salary, array $contracts, array $payslips, string $endDate, string $reason='opzegging-werkgever'): array {
 		return (new TransitionPaymentCalculator())->calculate(
 			employee: ['grossMonthlySalary' => $salary, 'startDate' => ($contracts[0]['startDate'] ?? '2020-01-01')],
-			contracts: $contracts,
-			payslips: $payslips,
+			history: ['contracts' => $contracts, 'payslips' => $payslips],
 			parameters: self::PARAMETERS,
-			endDate: $endDate,
-			reason: $reason
+			departure: ['endDate' => $endDate, 'reason' => $reason]
 		);
 	}//end calc()
 
@@ -200,11 +198,9 @@ class TransitionPaymentCalculatorTest extends TestCase {
 		$this->expectException(\InvalidArgumentException::class);
 		(new TransitionPaymentCalculator())->calculate(
 			employee: ['grossMonthlySalary' => 4000.0],
-			contracts: [$this->contract('2019-01-01', null)],
-			payslips: [],
+			history: ['contracts' => [$this->contract('2019-01-01', null)], 'payslips' => []],
 			parameters: ['dismissalInitiatedReasons' => ['opzegging-werkgever']],
-			endDate: '2025-12-31',
-			reason: 'opzegging-werkgever'
+			departure: ['endDate' => '2025-12-31', 'reason' => 'opzegging-werkgever']
 		);
 	}//end testAMissingCapIsRefused()
 

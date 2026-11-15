@@ -3,6 +3,9 @@
 /**
  * Interview Calendar Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Projects scheduled recruiting Interviews onto one configured shared
  * Nextcloud calendar as timed VEVENTs (interview-scheduling design.md
  * D1-D6) — a fork of `LeaveCalendarService` for a second object type. humaniq
@@ -44,9 +47,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/interview-scheduling/spec.md
@@ -56,28 +56,18 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCP\Calendar\IManager;
+use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
  * Upserts/removes scheduled-interview VEVENTs on the configured shared calendar.
+ *
+ * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-003
  */
 class InterviewCalendarService {
-
-	/**
-	 * The duck-typed CalDAV backend's FQCN, resolved from the container by
-	 * string (design.md D1) — never a `use` import, so humaniq carries no
-	 * composer/info.xml dependency on the dav app.
-	 *
-	 * @var string
-	 */
-	private const CALDAV_BACKEND_CLASS = 'OCA\DAV\CalDAV\CalDavBackend';
-
-	/**
-	 * @var InterviewRepository
-	 */
-	private readonly InterviewRepository $repository;
 
 	/**
 	 * @var InterviewSyncEngine
@@ -91,19 +81,46 @@ class InterviewCalendarService {
 
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService/CalDavBackend resolution.
-	 * @param SettingsService $settingsService Target-calendar config (design.md D6).
+	 * @param CalendarSettings $calendars Target-calendar config (design.md D6).
+	 * @param InterviewRepository $repository Reads interviews and their applications and vacancies.
 	 * @param LoggerInterface $logger Logger.
+	 * @param IUserManager|null $users Names the interviewers as attendees (REQ-INTV-010); without it they are text only.
+	 * @param IManager|null $calendarManager Delivers an event to its attendees' own calendars (REQ-INTV-010); without it the event stays in the shared calendar only.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly CalendarSettings $calendars,
+		private readonly InterviewRepository $repository,
 		private readonly LoggerInterface $logger,
+		?IUserManager $users = null,
+		?IManager $calendarManager = null,
 	) {
-		$this->repository = new InterviewRepository($container, $settingsService, $logger);
-		$this->engine = new InterviewSyncEngine($this->repository, new InterviewIcsRenderer());
+		$this->engine = $this->engineFor(users: $users, calendarManager: $calendarManager);
 		$this->orphanReconciler = new InterviewOrphanReconciler($logger);
 
 	}//end __construct()
+
+	/**
+	 * The sync engine, naming attendees and inviting them when the managers are there.
+	 *
+	 * @param IUserManager|null $users           Names the interviewers as attendees.
+	 * @param IManager|null     $calendarManager Delivers an event to its attendees' own calendars.
+	 *
+	 * @return InterviewSyncEngine
+	 */
+	private function engineFor(?IUserManager $users, ?IManager $calendarManager): InterviewSyncEngine {
+		$attendees = null;
+		if ($users !== null) {
+			$attendees = new InterviewAttendees(users: $users);
+		}
+
+		$scheduler = null;
+		if ($calendarManager !== null) {
+			$scheduler = new SchedulingCalendarWriter(calendars: $calendarManager);
+		}
+
+		return new InterviewSyncEngine($this->repository, new InterviewIcsRenderer(), $attendees, $scheduler);
+	}//end engineFor()
 
 	/**
 	 * Run the full sync: upsert one timed VEVENT per `scheduled` Interview,
@@ -134,10 +151,12 @@ class InterviewCalendarService {
 			return [$this->skipOutcome($target)];
 		}
 
-		$applicationsById = $this->repository->loadApplicationIndex();
-		$vacanciesById = $this->repository->loadVacancyTitleIndex();
-
-		$results = [];
+		$run = new InterviewSyncRun(
+			target: $target,
+			applicationsById: $this->repository->loadApplicationIndex(),
+			vacanciesById: $this->repository->loadVacancyTitleIndex(),
+			from: $from
+		);
 		$liveIds = [];
 
 		foreach ($this->repository->loadAllInterviews() as $interview) {
@@ -147,12 +166,12 @@ class InterviewCalendarService {
 			}
 
 			$liveIds[] = $id;
-			$this->engine->syncInterview($target, $interview, $id, $applicationsById, $vacanciesById, $from, $results);
+			$this->engine->syncInterview($run, $interview, $id);
 		}
 
-		$this->orphanReconciler->reconcile($target, $liveIds, $results);
+		$this->orphanReconciler->reconcile($target, $liveIds, $run->results);
 
-		return $results;
+		return $run->results;
 	}//end sync()
 
 	/**
@@ -177,13 +196,14 @@ class InterviewCalendarService {
 			return $this->outcome($interviewId, 'failed', 'Interview ' . $interviewId . ' kon niet worden geladen.');
 		}
 
-		$applicationsById = $this->repository->loadApplicationIndex();
-		$vacanciesById = $this->repository->loadVacancyTitleIndex();
+		$run = new InterviewSyncRun(
+			target: $target,
+			applicationsById: $this->repository->loadApplicationIndex(),
+			vacanciesById: $this->repository->loadVacancyTitleIndex()
+		);
+		$this->engine->syncInterview($run, $interview, $interviewId);
 
-		$results = [];
-		$this->engine->syncInterview($target, $interview, $interviewId, $applicationsById, $vacanciesById, null, $results);
-
-		return $results[0] ?? $this->outcome($interviewId, 'unchanged', 'Geen wijziging.');
+		return $run->results[0] ?? $this->outcome($interviewId, 'unchanged', 'Geen wijziging.');
 	}//end syncOne()
 
 	/**
@@ -197,8 +217,8 @@ class InterviewCalendarService {
 	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-006
 	 */
 	private function resolveTarget(): InterviewCalendarTarget|string {
-		$principal = $this->settingsService->getInterviewCalendarPrincipal();
-		$uri = $this->settingsService->getInterviewCalendarUri();
+		$principal = $this->calendars->getInterviewCalendarPrincipal();
+		$uri = $this->calendars->getInterviewCalendarUri();
 		if ($principal === '' || $uri === '') {
 			return 'interview_calendar_principal/interview_calendar_uri is niet geconfigureerd.';
 		}
@@ -225,35 +245,7 @@ class InterviewCalendarService {
 	 * @return mixed The resolved backend, or null when unavailable.
 	 */
 	private function resolveBackend(): mixed {
-		try {
-			$backend = $this->container->get(self::CALDAV_BACKEND_CLASS);
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if (is_object($backend) === false) {
-			return null;
-		}
-
-		$requiredMethods = [
-			'getCalendarByUri',
-			'getCalendarObjectByUID',
-			'createCalendarObject',
-			'updateCalendarObject',
-			'deleteCalendarObject',
-			'getCalendarObjects',
-		];
-		foreach ($requiredMethods as $method) {
-			if (method_exists($backend, $method) === false) {
-				// REQ-INTV-006: a resolution miss degrades to
-				// skipped-no-calendar and SHALL log nothing above INFO --
-				// this is an expected, healthy degradation path.
-				$this->logger->info('InterviewCalendarService: CalDavBackend mist methode ' . $method . '; kalendersync overgeslagen.');
-				return null;
-			}
-		}
-
-		return $backend;
+		return (new CalDavBackendResolver($this->container, $this->logger))->resolve('InterviewCalendarService');
 	}//end resolveBackend()
 
 	/**

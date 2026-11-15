@@ -34,6 +34,13 @@ class ApprovalDecisionStampListenerTest extends TestCase {
 
 	private const LEAVE = ['employeeId' => 'f1a3c2b4-0d5e-4c6f-8a7b-9c0d1e2f3a4b', 'leaveType' => 'holiday', 'startDate' => '2026-07-20', 'endDate' => '2026-07-24', 'hours' => 40];
 
+	public function testAnotherEventIsIgnored(): void {
+		$session = $this->createMock(IUserSession::class);
+		$session->expects(self::never())->method('getUser');
+
+		(new ApprovalDecisionStampListener($session))->handle(new \OCP\EventDispatcher\Event());
+	}//end testAnotherEventIsIgnored()
+
 	public function testASubmitStampsWhenAndClearsAnEarlierVerdict(): void {
 		$stamps = $this->move('LeaveRequest', array_merge(self::LEAVE, ['status' => 'rejected', 'approvedBy' => 'mila', 'approvedAt' => '2026-07-01T09:00:00Z']), 'submitted');
 

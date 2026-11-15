@@ -35,7 +35,7 @@ namespace OCA\Humaniq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
 
 /**
  * Reads one object with the caller's ambient RBAC left on.
@@ -43,6 +43,8 @@ use RuntimeException;
  * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
  */
 class RbacObjectReader {
+
+	use ResolvesObjectServiceByClass;
 
 	/**
 	 * Constructor.
@@ -104,26 +106,4 @@ class RbacObjectReader {
 
 		return $data;
 	}//end findOrNull()
-
-	/**
-	 * OpenRegister's ObjectService, with the caller's ambient RBAC left on.
-	 *
-	 * @return mixed The service.
-	 *
-	 * @throws RuntimeException When OpenRegister is not installed.
-	 *
-	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching, so an instance
-		// without OpenRegister is told which app to install rather than handed
-		// a container exception naming a class nobody has heard of.
-		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
 }//end class

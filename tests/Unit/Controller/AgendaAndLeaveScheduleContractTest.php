@@ -34,11 +34,13 @@ namespace OCA\Humaniq\Tests\Unit\Controller;
 use OCA\Humaniq\Controller\AgendaController;
 use OCA\Humaniq\Controller\LeaveScheduleController;
 use OCA\Humaniq\Service\AgendaComposer;
+use OCA\Humaniq\Service\AgendaReadAccess;
 use OCA\Humaniq\Service\AvailabilityService;
 use OCA\Humaniq\Service\DepartmentLeaveScheduleService;
 use OCA\Humaniq\Service\ForwardCapacityService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\LeaveCoverageService;
+use OCA\Humaniq\Service\LeaveCoverageWarning;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCA\Humaniq\Service\WorkingCalendarReader;
@@ -54,15 +56,19 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 	/**
 	 * Build the agenda controller with every collaborator doubled.
 	 *
+	 * @param AgendaComposer|null $composer The composer double, or null for one that answers no entries.
+	 *
 	 * @return AgendaController The subject.
 	 */
-	private function agendaController(): AgendaController {
+	private function agendaController(?AgendaComposer $composer = null): AgendaController {
 		$gateway = $this->createMock(HoursRegisterGateway::class);
 		$gateway->method('loadAll')->willReturn([]);
 		$gateway->method('findFiltered')->willReturn([]);
 
-		$composer = $this->createMock(AgendaComposer::class);
-		$composer->method('compose')->willReturn([]);
+		if ($composer === null) {
+			$composer = $this->createMock(AgendaComposer::class);
+			$composer->method('compose')->willReturn([]);
+		}
 
 		$calendar = $this->createMock(WorkingCalendarReader::class);
 		$calendar->method('nonWorkingDates')->willReturn(
@@ -73,13 +79,17 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 			]
 		);
 
+		$access = $this->createMock(AgendaReadAccess::class);
+		$access->method('grant')->willReturn(['all' => true, 'full' => []]);
+		$access->method('visibleEntries')->willReturnArgument(0);
+
 		return new AgendaController(
 			$this->createMock(IRequest::class),
 			$gateway,
 			$composer,
 			$this->createMock(AvailabilityService::class),
 			$this->createMock(ForwardCapacityService::class),
-			$this->createMock(OrgResolutionService::class),
+			$access,
 			$calendar
 		);
 	}//end agendaController()
@@ -88,10 +98,11 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 	 * Build the leave-schedule controller with every collaborator doubled.
 	 *
 	 * @param array<string, mixed>|null $resolved What the caller-scoped read answers with.
+	 * @param array<string, mixed>|null $scope    What the unit agenda rule answers, null for a refusal.
 	 *
 	 * @return LeaveScheduleController The subject.
 	 */
-	private function leaveController(?array $resolved = null): LeaveScheduleController {
+	private function leaveController(?array $resolved = null, ?array $scope = ['ids' => ['employee-1'], 'all' => true, 'full' => []]): LeaveScheduleController {
 		$gateway = $this->createMock(HoursRegisterGateway::class);
 		$gateway->method('loadAll')->willReturn([]);
 		$gateway->method('findFiltered')->willReturn([]);
@@ -103,15 +114,49 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 		$rbac = $this->createMock(RbacObjectReader::class);
 		$rbac->method('findOrNull')->willReturn($resolved);
 
+		$access = $this->createMock(AgendaReadAccess::class);
+		$access->method('employeeScope')->willReturn($scope);
+
 		return new LeaveScheduleController(
 			$this->createMock(IRequest::class),
 			$gateway,
 			$schedule,
-			$this->createMock(LeaveCoverageService::class),
-			$this->createMock(OrgResolutionService::class),
-			$rbac
+			new LeaveCoverageWarning(
+				gateway: $gateway,
+				coverage: $this->createMock(LeaveCoverageService::class),
+				orgResolution: $this->createMock(OrgResolutionService::class)
+			),
+			$rbac,
+			$access
 		);
 	}//end leaveController()
+
+	/**
+	 * `GET /api/agenda` hands the composer the trimmed subject and the days asked for.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
+	 */
+	public function testTheAgendaAsksTheComposerForTheRequestedSubjectAndDays(): void {
+		$composer = $this->createMock(AgendaComposer::class);
+		$composer->expects($this->once())
+			->method('compose')
+			->with(
+				$this->isType('array'),
+				['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-09-01', 'to' => '2026-09-07', 'memberEmployeeIds' => []]
+			)
+			->willReturn([['kind' => 'leave']]);
+
+		$response = $this->agendaController($composer)->agenda(
+			subjectType: ' employee ',
+			subjectId: 'emp-1',
+			from: '2026-09-01',
+			to: '2026-09-07'
+		);
+
+		$this->assertSame([['kind' => 'leave']], $response->getData()['entries']);
+	}//end testTheAgendaAsksTheComposerForTheRequestedSubjectAndDays()
 
 	/**
 	 * `GET /api/agenda` refuses a subject kind it does not serve.
@@ -169,6 +214,19 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 	}//end testTheScheduleRefusesWithoutAnOrgUnit()
 
 	/**
+	 * `GET /api/leave/schedule` refuses an unusable window with the window sentence.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
+	 */
+	public function testTheScheduleRefusesAnUnusableWindowWithItsSentence(): void {
+		$response = $this->leaveController()->schedule(orgUnitId: 'unit-1', from: '2026-09-07', to: '2026-09-01');
+
+		$this->assertSame([Http::STATUS_BAD_REQUEST, ['error' => 'from en to moeten geldige datums zijn, met to op of na from.']], [$response->getStatus(), $response->getData()]);
+	}//end testTheScheduleRefusesAnUnusableWindowWithItsSentence()
+
+	/**
 	 * `GET /api/leave/schedule` answers the member count beside the entries.
 	 *
 	 * @return void
@@ -188,6 +246,34 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 			array_keys($response->getData())
 		);
 	}//end testTheScheduleAnswersTheMemberCountAndTheEntries()
+
+	/**
+	 * `GET /api/leave/schedule` refuses a unit the caller may not read, and
+	 * reads no leave for it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
+	 */
+	public function testTheScheduleRefusesAUnitTheCallerMayNotRead(): void {
+		$response = $this->leaveController(scope: null)->schedule(orgUnitId: 'unit-other', from: '2026-09-01', to: '2026-09-07');
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertArrayNotHasKey('entries', $response->getData());
+	}//end testTheScheduleRefusesAUnitTheCallerMayNotRead()
+
+	/**
+	 * The member count is the members the unit agenda rule admits.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
+	 */
+	public function testTheScheduleCountsTheAdmittedMembers(): void {
+		$response = $this->leaveController()->schedule(orgUnitId: 'unit-1', from: '2026-09-01', to: '2026-09-07');
+
+		$this->assertSame(1, $response->getData()['memberCount']);
+	}//end testTheScheduleCountsTheAdmittedMembers()
 
 	/**
 	 * `GET /api/leave/coverage` answers 404 for a request this caller may not

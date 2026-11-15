@@ -1,0 +1,179 @@
+{
+    "2026-06:": {
+        "period": "2026-06",
+        "parentUnitId": "gemeente",
+        "units": [
+            {
+                "id": "burgerzaken",
+                "name": "Burgerzaken",
+                "members": 2,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": 0.0,
+                "wageCost": 60000.0
+            },
+            {
+                "id": "belastingen",
+                "name": "Belastingen",
+                "members": 2,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": 0.0,
+                "wageCost": 120000.0
+            },
+            {
+                "id": "leeg",
+                "name": "Leeg",
+                "members": 0,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": null,
+                "wageCost": null
+            }
+        ],
+        "notPlaced": {
+            "wageCost": 0.0
+        },
+        "total": {
+            "wageCost": 180000.0
+        }
+    },
+    "2026-06:gemeente": {
+        "period": "2026-06",
+        "parentUnitId": "gemeente",
+        "units": [
+            {
+                "id": "burgerzaken",
+                "name": "Burgerzaken",
+                "members": 2,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": 0.0,
+                "wageCost": 60000.0
+            },
+            {
+                "id": "belastingen",
+                "name": "Belastingen",
+                "members": 2,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": 0.0,
+                "wageCost": 120000.0
+            },
+            {
+                "id": "leeg",
+                "name": "Leeg",
+                "members": 0,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": null,
+                "wageCost": null
+            }
+        ],
+        "notPlaced": {
+            "wageCost": 0.0
+        },
+        "total": {
+            "wageCost": 180000.0
+        }
+    },
+    "2026-06:burgerzaken": {
+        "period": "2026-06",
+        "parentUnitId": "burgerzaken",
+        "units": [
+            {
+                "id": "balie",
+                "name": "Balie",
+                "members": 1,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": 0.0,
+                "wageCost": null
+            }
+        ],
+        "notPlaced": {
+            "wageCost": 180000.0
+        },
+        "total": {
+            "wageCost": 180000.0
+        }
+    },
+    "2026-05:gemeente": {
+        "period": "2026-05",
+        "parentUnitId": "gemeente",
+        "units": [
+            {
+                "id": "burgerzaken",
+                "name": "Burgerzaken",
+                "members": 2,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": 0.0,
+                "wageCost": null
+            },
+            {
+                "id": "belastingen",
+                "name": "Belastingen",
+                "members": 2,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": 0.0,
+                "wageCost": null
+            },
+            {
+                "id": "leeg",
+                "name": "Leeg",
+                "members": 0,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": null,
+                "wageCost": null
+            }
+        ],
+        "notPlaced": {
+            "wageCost": null
+        },
+        "total": {
+            "wageCost": null
+        }
+    },
+    "quarter:gemeente": {
+        "period": "quarter",
+        "parentUnitId": "gemeente",
+        "units": [
+            {
+                "id": "burgerzaken",
+                "name": "Burgerzaken",
+                "members": 2,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": 0.0,
+                "wageCost": 7777.78
+            },
+            {
+                "id": "belastingen",
+                "name": "Belastingen",
+                "members": 2,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": 0.0,
+                "wageCost": 3333.34
+            },
+            {
+                "id": "leeg",
+                "name": "Leeg",
+                "members": 0,
+                "openVacancies": 0,
+                "absenceRate": null,
+                "absenceFrequency": null,
+                "wageCost": null
+            }
+        ],
+        "notPlaced": {
+            "wageCost": 0.0
+        },
+        "total": {
+            "wageCost": 11111.12
+        }
+    }
+}

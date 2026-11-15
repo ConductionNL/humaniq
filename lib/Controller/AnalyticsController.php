@@ -3,6 +3,9 @@
 /**
  * Analytics Controller
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Backs the Dashboard's five trend widgets and the Obligations list
  * (humaniq-dashboard-steering-indicators): `GET /api/analytics/trends` and
  * `GET /api/analytics/obligations`, mirroring pipelinq's `AnalyticsController`
@@ -27,9 +30,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -111,6 +111,19 @@ class AnalyticsController extends Controller {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
+		return $this->trendsWithin(access: $access, orgUnitId: $orgUnitId);
+	}//end trends()
+
+	/**
+	 * The trend the caller asked for, inside the administration and unit
+	 * their access allows; service refusals and failures answer a static label.
+	 *
+	 * @param array{administrationId: string, minimumMembers: int} $access    The caller's administration and the small-unit rule.
+	 * @param string                                                $orgUnitId The unit asked about, or ''.
+	 *
+	 * @return JSONResponse
+	 */
+	private function trendsWithin(array $access, string $orgUnitId): JSONResponse {
 		$metric = (string)$this->request->getParam('metric', '');
 		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
 
@@ -119,8 +132,7 @@ class AnalyticsController extends Controller {
 				$metric,
 				$period,
 				$access['administrationId'],
-				($orgUnitId === '') ? null : $orgUnitId,
-				$access['minimumMembers']
+				($orgUnitId === '') ? null : ['id' => $orgUnitId, 'minimumMembers' => $access['minimumMembers']]
 			);
 
 			// The Dashboard's KPI tiles read a headline number from this same
@@ -139,13 +151,10 @@ class AnalyticsController extends Controller {
 			$label = ($e->getMessage() === 'Invalid period') ? 'Invalid period' : 'Unsupported metric';
 			return new JSONResponse(['message' => $label], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[AnalyticsController] trends failed',
-				context: ['error' => $e->getMessage()]
-			);
+			$this->logger->error('AnalyticsController: the trends could not be computed.', ['exceptionClass' => $e::class]);
 			return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}//end try
-	}//end trends()
+	}//end trendsWithin()
 
 	/**
 	 * `GET /api/analytics/obligations` — the merged, rule-badged Obligations
@@ -172,10 +181,7 @@ class AnalyticsController extends Controller {
 		try {
 			return new JSONResponse(['obligations' => $this->obligationsService->getObligations($administrationId)]);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[AnalyticsController] obligations failed',
-				context: ['error' => $e->getMessage()]
-			);
+			$this->logger->error('AnalyticsController: the obligations could not be computed.', ['exceptionClass' => $e::class]);
 			return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 	}//end obligations()

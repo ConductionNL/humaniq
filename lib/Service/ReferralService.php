@@ -37,12 +37,12 @@ class ReferralService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Reads and writes the register.
+	 * @param RecordStoreInterface $gateway Reads and writes the register.
 	 *
 	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 	) {
 	}//end __construct()
 

@@ -134,10 +134,7 @@ class AgendaAndAvailabilityTest extends TestCase {
 					['id' => 'booking-1', 'employeeId' => 'emp-1', 'resourceId' => 'room-2', 'start' => '2026-06-05T10:00:00+02:00', 'end' => '2026-06-05T12:00:00+02:00', 'purpose' => 'Hoorzitting'],
 				],
 			],
-			subjectType: 'employee',
-			subjectId: 'emp-1',
-			from: '2026-06-01',
-			to: '2026-06-07'
+			query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-06-01', 'to' => '2026-06-07']
 		);
 
 		$this->assertSame(['shift', 'leave', 'booking'], array_column($entries, 'kind'));
@@ -158,9 +155,9 @@ class AgendaAndAvailabilityTest extends TestCase {
 			],
 		];
 
-		$before = $this->agenda->compose(sources: $sources, subjectType: 'employee', subjectId: 'emp-1', from: '2026-06-01', to: '2026-06-07');
+		$before = $this->agenda->compose(sources: $sources, query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-06-01', 'to' => '2026-06-07']);
 		$sources['leaveRequests'][0]['status'] = 'draft';
-		$after = $this->agenda->compose(sources: $sources, subjectType: 'employee', subjectId: 'emp-1', from: '2026-06-01', to: '2026-06-07');
+		$after = $this->agenda->compose(sources: $sources, query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-06-01', 'to' => '2026-06-07']);
 
 		$this->assertCount(1, $before);
 		$this->assertSame([], $after, 'No sync stands between the two reads');
@@ -186,10 +183,7 @@ class AgendaAndAvailabilityTest extends TestCase {
 					],
 				],
 			],
-			subjectType: 'employee',
-			subjectId: 'emp-1',
-			from: '2026-06-01',
-			to: '2026-06-07'
+			query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-06-01', 'to' => '2026-06-07']
 		);
 
 		$this->assertCount(1, $entries);
@@ -216,10 +210,7 @@ class AgendaAndAvailabilityTest extends TestCase {
 					],
 				],
 			],
-			subjectType: 'employee',
-			subjectId: 'emp-1',
-			from: '2026-06-01',
-			to: '2026-06-07'
+			query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-06-01', 'to' => '2026-06-07']
 		);
 
 		$this->assertCount(1, $entries);
@@ -388,7 +379,7 @@ class AgendaAndAvailabilityTest extends TestCase {
 		$this->assertEqualsWithDelta(16.0, $answer[0]['committedHours'], 0.01);
 		$this->assertEqualsWithDelta(20.0, $answer[0]['freeHours'], 0.01);
 
-		$entries = $this->agenda->compose(sources: $sources, subjectType: 'employee', subjectId: 'emp-1', from: '2026-09-07', to: '2026-09-13');
+		$entries = $this->agenda->compose(sources: $sources, query: ['subjectType' => 'employee', 'subjectId' => 'emp-1', 'from' => '2026-09-07', 'to' => '2026-09-13']);
 		$this->assertSame(['secondment'], array_values(array_unique(array_column($entries, 'kind'))));
 		$this->assertSame('Secondment', $entries[0]['sourceType']);
 		$this->assertSame('sec-1', $entries[0]['sourceId']);
@@ -454,6 +445,79 @@ class AgendaAndAvailabilityTest extends TestCase {
 		$this->assertNull($report['employees'][0]['utilisationPercentage']);
 		$this->assertSame(1, $report['totals']['employeesWithoutContractedHours']);
 	}//end testAMissingContractIsSaidRatherThanSubstituted()
+
+	/**
+	 * The whole capacity answer for several people: duplicate ids
+	 * counted once, a contract with no hours in the window, a missing contract
+	 * with planned hours, and the totals over the contracted people only.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeCapacityAnswer(): void {
+		$report = $this->capacity->capacity(
+			employeeIds: ['emp-1', 'emp-1', 'emp-free', '7', 'emp-none'],
+			from: new DateTimeImmutable('2026-06-01'),
+			to: new DateTimeImmutable('2026-06-07'),
+			sources: [
+				'workingPatterns' => [
+					['employeeId' => 'emp-1', 'validFrom' => '2026-01-01', 'hoursMonday' => 8, 'hoursTuesday' => 8, 'hoursWednesday' => 8],
+					['employeeId' => 'emp-free', 'validFrom' => '2026-01-01'],
+					['employeeId' => '7', 'validFrom' => '2026-01-01', 'hoursMonday' => 4],
+				],
+				'nonWorkingDates' => [],
+				'shifts' => [['id' => 'shift-1', 'name' => 'Dagdienst']],
+				'assignments' => [
+					['id' => 'a-1', 'employeeId' => 'emp-1', 'shiftId' => 'shift-1', 'date' => '2026-06-01', 'plannedStart' => '2026-06-01T09:00:00+02:00', 'plannedEnd' => '2026-06-01T17:00:00+02:00'],
+					['id' => 'a-2', 'employeeId' => '7', 'shiftId' => 'shift-1', 'date' => '2026-06-01', 'plannedStart' => '2026-06-01T09:00:00+02:00', 'plannedEnd' => '2026-06-01T15:00:00+02:00'],
+					['id' => 'a-3', 'employeeId' => 'emp-none', 'shiftId' => 'shift-1', 'date' => '2026-06-02', 'plannedStart' => '2026-06-02T09:00:00+02:00', 'plannedEnd' => '2026-06-02T12:30:00+02:00'],
+				],
+			]
+		);
+
+		$this->assertSame(
+			[
+				'from' => '2026-06-01',
+				'to' => '2026-06-07',
+				'employees' => [
+					[
+						'employeeId' => 'emp-1',
+						'plannedHours' => 8.0,
+						'contractedHours' => 24.0,
+						'utilisationPercentage' => 33.3,
+						'hasContractedHours' => true,
+					],
+					[
+						'employeeId' => 'emp-free',
+						'plannedHours' => 0.0,
+						'contractedHours' => 0.0,
+						'utilisationPercentage' => null,
+						'hasContractedHours' => true,
+					],
+					[
+						'employeeId' => '7',
+						'plannedHours' => 4.0,
+						'contractedHours' => 4.0,
+						'utilisationPercentage' => 100.0,
+						'hasContractedHours' => true,
+					],
+					[
+						'employeeId' => 'emp-none',
+						'plannedHours' => 0.0,
+						'contractedHours' => null,
+						'utilisationPercentage' => null,
+						'hasContractedHours' => false,
+					],
+				],
+				'totals' => [
+					'plannedHours' => 12.0,
+					'contractedHours' => 28.0,
+					'utilisationPercentage' => 42.9,
+					'employeesWithoutContractedHours' => 1,
+				],
+			],
+			$report
+		);
+	}//end testTheWholeCapacityAnswer()
 
 	/**
 	 * The second booking of one room loses, and the refusal names the booking

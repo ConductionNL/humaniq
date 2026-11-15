@@ -614,4 +614,43 @@ class EmployeeCostRateServiceTest extends TestCase {
 		);
 
 	}//end testAdditionsWithoutAWageBaseYieldNull()
+
+	/**
+	 * The whole derived answer: the basis names the period and the trimmed
+	 * weekly hours, and the contract base never blends overtime.
+	 *
+	 * @return void
+	 */
+	public function testTheDerivedAnswerIsKeptWhole(): void {
+		$rate = $this->makeService()->resolve(
+			employee: ['grossMonthlySalary' => 4000.00],
+			contract: ['hoursPerWeek' => 36.5, 'aofTariff' => 'laag'],
+			period: self::PERIOD
+		);
+
+		$this->assertSame(
+			[
+				'totalCentsPerHour' => 3126,
+				'wageCostCents' => 3126,
+				'wageSource' => EmployeeCostRateService::SOURCE_CONTRACT,
+				'wageBasis' => 'proforma over the contract, 2026-07, 36.5h/week',
+				'wageBaseBlendsOvertime' => false,
+				'additions' => [],
+			],
+			$rate
+		);
+		$this->assertSame('laag', $this->lastProformaParams['aof']);
+	}//end testTheDerivedAnswerIsKeptWhole()
+
+	/**
+	 * No period, a non-positive salary, or a breakdown that costs nothing
+	 * gives no rate.
+	 *
+	 * @return void
+	 */
+	public function testNoPeriodNoSalaryOrANothingBreakdownYieldsNull(): void {
+		$this->assertNull($this->makeService()->resolve(employee: ['grossMonthlySalary' => 4000.00], contract: self::CONTRACT, period: ''));
+		$this->assertNull($this->makeService()->resolve(employee: ['grossMonthlySalary' => -5], contract: ['hoursPerWeek' => 36, 'hourlyWage' => 'x'], period: self::PERIOD));
+		$this->assertNull($this->makeService(['grossPay' => 0.0, 'werknemersverzekeringen' => 'n/a'])->resolve(employee: ['grossMonthlySalary' => 4000.00], contract: self::CONTRACT, period: self::PERIOD));
+	}//end testNoPeriodNoSalaryOrANothingBreakdownYieldsNull()
 }//end class
