@@ -23,6 +23,8 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The Administraties and Werkwijze steps, server side.
@@ -108,7 +110,9 @@ class SetupAdministrationsTest extends TestCase {
 			 * @param mixed               $schema   The schema.
 			 * @return array<string,mixed>
 			 */
-			public function saveObject(array $object, mixed $register = null, mixed $schema = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$row = $object + ['@self' => ['id' => 'obj-' . (count($this->rows[$schema]) + 1) . '-' . $schema]];
 				$this->rows[$schema][] = $row;
 				return $row;
@@ -121,7 +125,11 @@ class SetupAdministrationsTest extends TestCase {
 			 * @param mixed               $schema   The schema.
 			 * @return array<string,mixed>
 			 */
-			public function patchObject(string $objectId, array $data, mixed $register = null, mixed $schema = null): array {
+			public function patchObject(ObjectPatch $patch, bool $_rbac = true, bool $_multitenancy = true): array {
+				$objectId = $patch->objectId;
+				$data = $patch->data;
+				$register = $patch->target->register;
+				$schema = $patch->target->schema;
 				$this->patches[] = [$objectId, $data];
 				return $data;
 			}

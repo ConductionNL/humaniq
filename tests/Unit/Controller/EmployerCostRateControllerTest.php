@@ -32,6 +32,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The cost-rate endpoint answers, refuses and — above all — does not leak.
@@ -102,6 +103,7 @@ class EmployerCostRateControllerTest extends TestCase {
 			 * @throws \Throwable When the stub is a Throwable.
 			 */
 			public function find(...$args): mixed {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				if ($this->employee instanceof \Throwable) {
 					throw $this->employee;
 				}

@@ -31,6 +31,9 @@ namespace OCA\Humaniq\Service\Setup;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -192,8 +195,10 @@ class SetupAdministrations {
 					'active' => true,
 					'mode' => 'standard',
 				],
-				register: $this->settings->getRegisterSlug(),
-				schema: 'hrAdministration'
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(
+						register: $this->settings->getRegisterSlug(),
+						schema: 'hrAdministration'
+					))
 			)
 		);
 	}//end createOne()
@@ -240,10 +245,14 @@ class SetupAdministrations {
 		$written = 0;
 		foreach ($this->createdIds() as $id) {
 			$this->objects()->patchObject(
-				objectId: $id,
-				data: ['mode' => $mode],
-				register: $this->settings->getRegisterSlug(),
-				schema: 'hrAdministration'
+				new ObjectPatch(
+					objectId: $id,
+					data: ['mode' => $mode],
+					target: new ObjectFindTarget(
+							register: $this->settings->getRegisterSlug(),
+							schema: 'hrAdministration'
+						)
+				)
 			);
 			$written++;
 		}
@@ -282,8 +291,10 @@ class SetupAdministrations {
 
 			$this->objects()->saveObject(
 				object: ['userId' => $userId, 'administrationId' => $key, 'role' => 'hr'],
-				register: $this->settings->getRegisterSlug(),
-				schema: 'AdministrationAccess'
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(
+						register: $this->settings->getRegisterSlug(),
+						schema: 'AdministrationAccess'
+					))
 			);
 		}
 	}//end grantHr()
