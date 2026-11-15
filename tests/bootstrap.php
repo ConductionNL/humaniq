@@ -163,6 +163,16 @@ if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') ==
 	require __DIR__ . '/stubs/OpenRegisterLifecycleStub.php';
 }
 
+// The transition guard and its context (lifecycle-guards-see-the-stored-object):
+// a guard that judges the stored object. The context carries an ObjectEntity.
+if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleTransitionGuardInterface') === false) {
+	if (class_exists('OCA\\OpenRegister\\Db\\ObjectEntity') === false) {
+		require_once __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
+	}
+
+	require __DIR__ . '/stubs/OpenRegisterLifecycleTransitionStub.php';
+}
+
 // The notification recipient seam (absence-deadlines-and-signals D2): the
 // CaseManagerResolver implements it. It takes an ObjectEntity, so the object
 // events stub (which carries ObjectEntity) is loaded first.

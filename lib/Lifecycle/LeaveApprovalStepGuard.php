@@ -41,7 +41,8 @@ namespace OCA\Humaniq\Lifecycle;
 use OCA\Humaniq\Service\LeaveTypeResolver;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\OpenRegister\Lifecycle\GuardResult;
-use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
+use OCA\OpenRegister\Lifecycle\LifecycleGuardContext;
+use OCA\OpenRegister\Lifecycle\LifecycleTransitionGuardInterface;
 use OCP\IGroupManager;
 
 /**
@@ -49,7 +50,7 @@ use OCP\IGroupManager;
  *
  * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
  */
-final class LeaveApprovalStepGuard implements LifecycleGuardInterface {
+final class LeaveApprovalStepGuard implements LifecycleTransitionGuardInterface {
 
 	public const ACTION_APPROVE_MANAGER = 'approve-manager';
 	public const STATUS_MANAGER_APPROVED = 'manager-approved';
@@ -75,7 +76,33 @@ final class LeaveApprovalStepGuard implements LifecycleGuardInterface {
 	}//end __construct()
 
 	/**
+	 * Allow or refuse one step on a leave request, judged on its stored status.
+	 *
+	 * OpenRegister hands a guard the incoming data, whose status is already the
+	 * transition's target, so the step is read from the stored object: its
+	 * status and its earlier decisions. The rest (leave type, hours) is the
+	 * stored request with the incoming data over it.
+	 *
+	 * @param LifecycleGuardContext $context The incoming data, the stored request, the action and the caller.
+	 *
+	 * @return GuardResult
+	 *
+	 * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
+	 */
+	public function checkTransition(LifecycleGuardContext $context): GuardResult {
+		$stored  = $context->storedData();
+		$request = array_merge($stored, $context->object);
+		$request['status']    = ($stored['status'] ?? '');
+		$request['decisions'] = ($stored['decisions'] ?? []);
+
+		return $this->check(object: $request, action: $context->action, userId: $context->userId);
+	}//end checkTransition()
+
+	/**
 	 * Allow or refuse one step on a leave request.
+	 *
+	 * Callers that only have one array must pass the request at its current
+	 * (stored) status; OpenRegister itself calls checkTransition().
 	 *
 	 * @param array<string, mixed> $object The leave request as stored, at its current status.
 	 * @param string               $action approve-manager, approve or reject.
