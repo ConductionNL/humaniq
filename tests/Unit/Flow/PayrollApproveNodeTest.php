@@ -25,6 +25,7 @@ namespace OCA\Humaniq\Tests\Unit\Flow;
 
 use OCA\Humaniq\Flow\PayrollApproveNode;
 use OCA\Humaniq\Flow\PayrollFlowNodeServices;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use RuntimeException;
 
 /**
@@ -73,11 +74,11 @@ class PayrollApproveNodeTest extends FlowNodeTestCase {
 	public function testApprovesDraftRunStatusOnly(): void {
 		$objectService = $this->fakeObjectService(['PayrollRun' => [$this->draftRun()]]);
 
-		$out = $this->node($objectService)->execute(
-			[$this->item(['payroll' => ['runId' => 'run-1']])],
-			[],
-			[]
-		);
+		$out = $this->node($objectService)->execute(new FlowNodeCall(
+			items: [$this->item(['payroll' => ['runId' => 'run-1']])],
+			config: [],
+			context: []
+		));
 
 		$this->assertCount(1, $objectService->saved);
 		$write = $objectService->saved[0];
@@ -107,7 +108,7 @@ class PayrollApproveNodeTest extends FlowNodeTestCase {
 		$node = $this->node($objectService);
 
 		try {
-			$node->execute([$this->item(['payroll' => ['runId' => 'run-1']])], [], []);
+			$node->execute(new FlowNodeCall(items: [$this->item(['payroll' => ['runId' => 'run-1']])], config: [], context: []));
 			$this->fail('A posted run must refuse approval.');
 		} catch (RuntimeException $e) {
 			$this->assertStringContainsString('posted', $e->getMessage());
@@ -125,11 +126,11 @@ class PayrollApproveNodeTest extends FlowNodeTestCase {
 		$objectService = $this->fakeObjectService(['PayrollRun' => []]);
 
 		$this->expectException(RuntimeException::class);
-		$this->node($objectService)->execute(
-			[$this->item(['payroll' => ['runId' => 'run-404']])],
-			[],
-			[]
-		);
+		$this->node($objectService)->execute(new FlowNodeCall(
+			items: [$this->item(['payroll' => ['runId' => 'run-404']])],
+			config: [],
+			context: []
+		));
 	}//end testMissingRunRefuses()
 
 	/**
@@ -142,7 +143,7 @@ class PayrollApproveNodeTest extends FlowNodeTestCase {
 		$objectService = $this->fakeObjectService(['PayrollRun' => [$this->draftRun()]]);
 
 		$this->expectException(RuntimeException::class);
-		$this->node($objectService)->execute([$this->item([])], [], []);
+		$this->node($objectService)->execute(new FlowNodeCall(items: [$this->item([])], config: [], context: []));
 	}//end testMissingRunIdRefuses()
 
 	/**
@@ -154,11 +155,11 @@ class PayrollApproveNodeTest extends FlowNodeTestCase {
 		$other = array_merge($this->draftRun(), ['id' => 'run-2', '@self' => ['id' => 'run-2']]);
 		$objectService = $this->fakeObjectService(['PayrollRun' => [$this->draftRun(), $other]]);
 
-		$this->node($objectService)->execute(
-			[$this->item(['payroll' => ['runId' => 'run-1']])],
-			['runId' => 'run-2'],
-			[]
-		);
+		$this->node($objectService)->execute(new FlowNodeCall(
+			items: [$this->item(['payroll' => ['runId' => 'run-1']])],
+			config: ['runId' => 'run-2'],
+			context: []
+		));
 
 		$this->assertSame('run-2', $objectService->saved[0]['uuid']);
 	}//end testConfiguredRunIdWins()
@@ -171,7 +172,7 @@ class PayrollApproveNodeTest extends FlowNodeTestCase {
 	public function testEmptyFiringShortCircuits(): void {
 		$objectService = $this->fakeObjectService();
 
-		$this->assertSame([], $this->node($objectService)->execute([], [], []));
+		$this->assertSame([], $this->node($objectService)->execute(new FlowNodeCall(items: [], config: [], context: [])));
 		$this->assertSame([], $objectService->saved);
 	}//end testEmptyFiringShortCircuits()
 

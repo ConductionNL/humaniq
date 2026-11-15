@@ -511,6 +511,47 @@ class ReceiptExtractionServiceTest extends TestCase {
 
 	}//end testMissingReceiptFileFailsClosedWithoutCallingDocudesk()
 
+	/**
+	 * An empty or unknown Expense id fails with its own message, before any
+	 * ReceiptExtraction is written or docudesk is called.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyOrUnknownExpenseIdFailsWithItsOwnMessage(): void {
+		[$service, $fake, $fin] = $this->service(['Expense' => [$this->emptyExpense()]]);
+
+		$this->assertSame(
+			['expenseId' => '', 'status' => 'failed', 'message' => 'Geen expenseId opgegeven; extractie is geweigerd.', 'receiptExtractionId' => null],
+			$service->extractForExpense('  ', 'admin')
+		);
+		$this->assertSame(
+			['expenseId' => 'expense-404', 'status' => 'failed', 'message' => 'Expense niet gevonden: expense-404', 'receiptExtractionId' => null],
+			$service->extractForExpense(' expense-404 ', 'admin')
+		);
+		$this->assertCount(0, $fin->calls);
+		$this->assertCount(0, $this->savedFor($fake, 'ReceiptExtraction'));
+
+	}//end testAnEmptyOrUnknownExpenseIdFailsWithItsOwnMessage()
+
+	/**
+	 * A numeric receiptFile goes to docudesk as a file id, a path as a
+	 * document URI, and an occ run without a user is requested by `system`.
+	 *
+	 * @return void
+	 */
+	public function testTheReceiptIsSentAsAFileIdOrADocumentUri(): void {
+		[$service, , $fin] = $this->service(['Expense' => [$this->emptyExpense(['receiptFile' => '4711'])]]);
+		$service->extractForExpense('expense-1');
+		$this->assertSame(['fileId' => 4711, 'docType' => 'receipt'], $fin->calls[0]['data']);
+		$this->assertSame('system', $fin->calls[0]['requestedBy']);
+
+		[$service, , $fin] = $this->service(['Expense' => [$this->emptyExpense(['receiptFile' => '/Receipts/taxi.pdf'])]]);
+		$service->extractForExpense('expense-1', 'admin');
+		$this->assertSame(['documentUri' => '/Receipts/taxi.pdf', 'docType' => 'receipt'], $fin->calls[0]['data']);
+		$this->assertSame('admin', $fin->calls[0]['requestedBy']);
+
+	}//end testTheReceiptIsSentAsAFileIdOrADocumentUri()
+
 	// -- REQ-RCPT-003: duck-typed degradation --------------------------------
 
 	/**

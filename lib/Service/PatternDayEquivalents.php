@@ -60,13 +60,9 @@ final class PatternDayEquivalents {
 	 */
 	public function over(string $employeeId, ?array $range = null): float {
 		$range = ($range ?? [$this->period->start, $this->period->end]);
-		$resolved = $this->workingHours->contractedHoursOver(
-			employeeId: $employeeId,
-			from: $range[0],
-			to: $range[1],
-			patterns: $this->sources->workingPatterns,
-			nonWorkingTimes: $this->sources->nonWorkingTimes,
-			nonWorkingDates: $this->sources->nonWorkingDates
+		$resolved = $this->workingHours->hoursOver(
+			time: new EmployeeWorkingTime(employeeId: $employeeId, sources: $this->sources),
+			range: [$range[0], $range[1]]
 		);
 
 		return $this->workingHours->dayEquivalents(

@@ -131,4 +131,36 @@ class ChangeApproverRoleGuardTest extends TestCase {
 		self::assertFalse($this->guard->check($request, 'goedkeuren', '')->isAllowed());
 	}//end testTheSubjectAndTheRequesterAreRefused()
 
+	/**
+	 * A request without an approver role or without an administration names
+	 * nobody who holds the role, so only an administrator may decide on it.
+	 *
+	 * @return void
+	 */
+	public function testARequestWithoutRoleOrAdministrationIsRefusedToRoleHolders(): void {
+		$noRole = array_merge($this->request('hr'), ['approverRole' => '']);
+		$noAdministration = array_merge($this->request('hr'), ['administrationId' => '']);
+		$missingAdministration = $this->request('hr');
+		unset($missingAdministration['administrationId']);
+
+		self::assertFalse($this->guard->check($noRole, 'goedkeuren', 'hr.user')->isAllowed());
+		self::assertFalse($this->guard->check($noAdministration, 'goedkeuren', 'hr.user')->isAllowed());
+		self::assertFalse($this->guard->check($missingAdministration, 'goedkeuren', 'hr.user')->isAllowed());
+		self::assertTrue($this->guard->check($noAdministration, 'goedkeuren', 'root')->isAllowed());
+
+		// An access row without an administration, or without a role, must
+		// not match a request that names none: blank never grants.
+		$administrations = $this->createMock(AdministrationService::class);
+		$administrations->method('accessibleAdministrations')->willReturn([
+			['administrationId' => '', 'name' => 'Loose', 'role' => 'hr', 'mode' => 'standard'],
+			['administrationId' => 'ADM-001', 'name' => 'Demo', 'role' => '', 'mode' => 'standard'],
+		]);
+		$groups = $this->createMock(IGroupManager::class);
+		$groups->method('isAdmin')->willReturn(false);
+		$guard = new ChangeApproverRoleGuard(administrations: $administrations, groupManager: $groups);
+
+		self::assertFalse($guard->check($noAdministration, 'goedkeuren', 'hr.loose')->isAllowed());
+		self::assertFalse($guard->check($noRole, 'goedkeuren', 'hr.loose')->isAllowed());
+	}//end testARequestWithoutRoleOrAdministrationIsRefusedToRoleHolders()
+
 }//end class

@@ -48,38 +48,38 @@ final class WorkingTimeRules {
 	 * @return bool
 	 */
 	public static function dailyRestSatisfied(array $clock, mixed $index): bool {
-		if (is_array($index) === false) {
+		$sibling = (is_array($index) === true) ? self::previousDayClock(clock: $clock, index: $index) : null;
+		// No sibling on the immediately preceding calendar day — rest is
+		// implied to be >= 24h (or a free day sits in between); a sibling day
+		// still open is not decidable.
+		$siblingClockOut = (is_array($sibling) === true) ? strtotime((string)($sibling['clockOut'] ?? '')) : false;
+		if ($siblingClockOut === false) {
 			return true;
 		}
 
+		$restHours = (strtotime((string)$clock['clockIn']) - $siblingClockOut) / 3600;
+		return $restHours >= NlAttendanceChecks::MIN_REST_HOURS;
+	}//end dailyRestSatisfied()
+
+	/**
+	 * The employee's clock on the calendar day before this one, or null when the clock is not decidable.
+	 *
+	 * @param array<string, mixed> $clock The clock record.
+	 * @param array<string, mixed> $index Clocks by employee id and date.
+	 *
+	 * @return mixed The sibling clock, null when there is none.
+	 */
+	private static function previousDayClock(array $clock, array $index): mixed {
 		$employeeId = (string)($clock['employeeId'] ?? '');
 		$date = trim((string)($clock['date'] ?? ''));
-		$clockIn = strtotime((string)($clock['clockIn'] ?? ''));
-		if ($employeeId === '' || $date === '' || $clockIn === false) {
-			return true;
+		if ($employeeId === '' || $date === '' || strtotime((string)($clock['clockIn'] ?? '')) === false) {
+			return null;
 		}
 
 		$previousDate = self::previousCalendarDay($date);
-		if ($previousDate === null) {
-			return true;
-		}
 
-		$sibling = ($index[$employeeId][$previousDate] ?? null);
-		if (is_array($sibling) === false) {
-			// No sibling on the immediately preceding calendar day — rest is
-			// implied to be >= 24h (or a free day sits in between).
-			return true;
-		}
-
-		$siblingClockOut = strtotime((string)($sibling['clockOut'] ?? ''));
-		if ($siblingClockOut === false) {
-			// Sibling day still open — not decidable.
-			return true;
-		}
-
-		$restHours = ($clockIn - $siblingClockOut) / 3600;
-		return $restHours >= NlAttendanceChecks::MIN_REST_HOURS;
-	}//end dailyRestSatisfied()
+		return ($previousDate === null) ? null : ($index[$employeeId][$previousDate] ?? null);
+	}//end previousDayClock()
 
 	/**
 	 * True while `clockOut` is null (open day, not decidable), or when the
@@ -111,30 +111,35 @@ final class WorkingTimeRules {
 	 */
 	public static function pauzeSatisfied(array $clock, ?array $tiers): bool {
 		$elapsedHours = self::elapsedHours($clock);
-		if ($elapsedHours === null) {
+		if ($elapsedHours === null || $tiers === null) {
 			return true;
 		}
 
-		if ($tiers === null) {
-			return true;
-		}
+		$required = self::requiredBreakMinutes(tiers: $tiers, elapsedHours: $elapsedHours);
 
-		$breakMinutes = (float)($clock['breakMinutes'] ?? 0);
+		return $required === null || (float)($clock['breakMinutes'] ?? 0) >= $required;
+	}//end pauzeSatisfied()
 
+	/**
+	 * The longest break any tier requires for a shift this long, or null when no tier applies.
+	 *
+	 * @param array<int, mixed> $tiers The break tiers.
+	 * @param float $elapsedHours The shift length.
+	 *
+	 * @return float|null
+	 */
+	private static function requiredBreakMinutes(array $tiers, float $elapsedHours): float|null {
+		$required = null;
 		foreach ($tiers as $tier) {
 			$minHours = ($tier['minHours'] ?? null);
-			$required = ($tier['requiredBreakMinutes'] ?? null);
-			if (is_numeric($minHours) === false || is_numeric($required) === false) {
-				continue;
-			}
-
-			if ($elapsedHours > (float)$minHours && $breakMinutes < (float)$required) {
-				return false;
+			$minutes = ($tier['requiredBreakMinutes'] ?? null);
+			if (is_numeric($minHours) === true && is_numeric($minutes) === true && $elapsedHours > (float)$minHours) {
+				$required = max(($required ?? (float)$minutes), (float)$minutes);
 			}
 		}
 
-		return true;
-	}//end pauzeSatisfied()
+		return $required;
+	}//end requiredBreakMinutes()
 
 	/**
 	 * The elapsed `clockOut - clockIn` duration in hours, or null when
@@ -144,19 +149,11 @@ final class WorkingTimeRules {
 	 *
 	 * @return float|null
 	 */
-	private static function elapsedHours(array $clock): ?float {
+	private static function elapsedHours(array $clock): float|null {
 		$clockIn = strtotime((string)($clock['clockIn'] ?? ''));
-		if ($clockIn === false) {
-			return null;
-		}
-
-		$clockOutRaw = ($clock['clockOut'] ?? null);
-		if ($clockOutRaw === null || trim((string)$clockOutRaw) === '') {
-			return null;
-		}
-
-		$clockOut = strtotime((string)$clockOutRaw);
-		if ($clockOut === false) {
+		$clockOutRaw = (string)($clock['clockOut'] ?? '');
+		$clockOut = (trim($clockOutRaw) === '') ? false : strtotime($clockOutRaw);
+		if ($clockIn === false || $clockOut === false) {
 			return null;
 		}
 

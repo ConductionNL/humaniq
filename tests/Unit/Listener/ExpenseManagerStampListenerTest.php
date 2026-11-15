@@ -48,6 +48,7 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Humaniq\Service\HoursRegisterGateway
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\OrgResolutionService
+ * @uses \OCA\Humaniq\Listener\SchemaWriteFilter
  */
 class ExpenseManagerStampListenerTest extends TestCase {
 

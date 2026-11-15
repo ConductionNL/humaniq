@@ -3,6 +3,9 @@
 /**
  * Leave Schedule Controller
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Two guarded reads behind the department schedule: the schedule itself, and
  * the coverage warning an approver is shown before they approve.
  *
@@ -30,9 +33,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
@@ -42,12 +42,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Controller;
 
-use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\AgendaReadAccess;
 use OCA\Humaniq\Service\DepartmentLeaveScheduleService;
 use OCA\Humaniq\Service\RecordStoreInterface;
-use OCA\Humaniq\Service\LeaveCoverageService;
-use OCA\Humaniq\Service\OrgResolutionService;
+use OCA\Humaniq\Service\LeaveCoverageWarning;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -70,20 +69,19 @@ class LeaveScheduleController extends Controller {
 	 * @param IRequest $request The request object.
 	 * @param RecordStoreInterface $gateway The shared register plumbing.
 	 * @param DepartmentLeaveScheduleService $schedule Composes the schedule on read.
-	 * @param LeaveCoverageService $coverage Computes the coverage warning.
-	 * @param OrgResolutionService $orgResolution The shared org-chain rules (assignment validity).
+	 * @param LeaveCoverageWarning $warnings The coverage warning of one request.
 	 * @param RbacObjectReader $rbac Reads one object under the caller's own ambient RBAC.
+	 * @param AgendaReadAccess $access Who may read an org unit's agenda.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly RecordStoreInterface $gateway,
 		private readonly DepartmentLeaveScheduleService $schedule,
-		private readonly LeaveCoverageService $coverage,
-		private readonly OrgResolutionService $orgResolution,
+		private readonly LeaveCoverageWarning $warnings,
 		private readonly RbacObjectReader $rbac,
+		private readonly AgendaReadAccess $access,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
-
 	}//end __construct()
 
 	/**
@@ -93,7 +91,10 @@ class LeaveScheduleController extends Controller {
 	 * @param string|null $from First day of the period (ISO date).
 	 * @param string|null $to Last day of the period (ISO date).
 	 *
-	 * @return JSONResponse The entries, or 400 when the parameters are unusable.
+	 * Open to whoever may read the unit's agenda: its members, its managers
+	 * and their deputies, and HR.
+	 *
+	 * @return JSONResponse The entries, 400 when the parameters are unusable, 403 when the caller may not read the unit.
 	 *
 	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
 	 */
@@ -106,13 +107,15 @@ class LeaveScheduleController extends Controller {
 
 		$window = $this->window(from: $from, to: $to);
 		if ($window === null) {
-			return new JSONResponse(
-				['error' => 'from en to moeten geldige datums zijn, met to op of na from.'],
-				Http::STATUS_BAD_REQUEST
-			);
+			return self::unusableWindow();
 		}
 
-		$members = $this->members(orgUnitId: $orgUnitId, onDate: $window[0]);
+		$scope = $this->access->employeeScope(orgUnitId: $orgUnitId, onDate: $window[0]);
+		if ($scope === null) {
+			return new JSONResponse(['error' => 'Je hebt geen toegang tot het verlofrooster van deze afdeling.'], Http::STATUS_FORBIDDEN);
+		}
+
+		$members = $scope['ids'];
 		$requests = $this->gateway->loadAll('LeaveRequest');
 
 		return new JSONResponse([
@@ -156,87 +159,10 @@ class LeaveScheduleController extends Controller {
 			return new JSONResponse(['error' => 'Verlofaanvraag niet gevonden.'], Http::STATUS_NOT_FOUND);
 		}
 
-		$employeeId = trim((string)($request['employeeId'] ?? ''));
-		$orgUnitId = $this->orgUnitOf(employeeId: $employeeId);
-		if ($orgUnitId === null) {
-			// No unit, no administered minimum, so no warning. Said plainly
-			// rather than answered as "coverage is fine".
-			return new JSONResponse([
-				'belowMinimum' => false,
-				'dates' => [],
-				'message' => '',
-				'reason' => 'no-org-unit',
-			]);
-		}
-
-		$orgUnit = ($this->gateway->findObjectData($orgUnitId, 'OrgUnit') ?? []);
-
-		return new JSONResponse(
-			$this->coverage->warning(
-				request: $request,
-				orgUnit: $orgUnit,
-				memberEmployeeIds: $this->members(orgUnitId: $orgUnitId, onDate: new DateTimeImmutable('today')),
-				otherRequests: $this->gateway->loadAll('LeaveRequest')
-			)
-		);
+		// The composition is shared with the approval stamp, so the warning
+		// recorded on approval is the one shown here (REQ-LVM-S02).
+		return new JSONResponse($this->warnings->forRequest(request: $request));
 	}//end coverage()
-
-	/**
-	 * The employees placed in one org unit on one date.
-	 *
-	 * @param string $orgUnitId The org unit.
-	 * @param DateTimeImmutable $onDate The date the placement must be active on.
-	 *
-	 * @return array<int, string> The employee ids.
-	 *
-	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
-	 */
-	private function members(string $orgUnitId, DateTimeImmutable $onDate): array {
-		$assignments = $this->gateway->findFiltered('OrgAssignment', ['orgUnitId' => $orgUnitId]);
-
-		$members = [];
-		foreach ($assignments as $assignment) {
-			if ($this->orgResolution->isActiveOn($assignment, $onDate->format('Y-m-d')) === false) {
-				continue;
-			}
-
-			$employeeId = trim((string)($assignment['employeeId'] ?? ''));
-			if ($employeeId !== '') {
-				$members[$employeeId] = true;
-			}
-		}
-
-		return array_keys($members);
-	}//end members()
-
-	/**
-	 * The org unit one employee is placed in, or null.
-	 *
-	 * @param string $employeeId The employee.
-	 *
-	 * @return string|null The org unit id, or null.
-	 *
-	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
-	 */
-	private function orgUnitOf(string $employeeId): ?string {
-		if ($employeeId === '') {
-			return null;
-		}
-
-		$today = (new DateTimeImmutable('today'))->format('Y-m-d');
-		foreach ($this->gateway->findFiltered('OrgAssignment', ['employeeId' => $employeeId]) as $assignment) {
-			if ($this->orgResolution->isActiveOn($assignment, $today) === false) {
-				continue;
-			}
-
-			$orgUnitId = trim((string)($assignment['orgUnitId'] ?? ''));
-			if ($orgUnitId !== '') {
-				return $orgUnitId;
-			}
-		}
-
-		return null;
-	}//end orgUnitOf()
 
 	/**
 	 * The ids of the requests this caller may see in full.

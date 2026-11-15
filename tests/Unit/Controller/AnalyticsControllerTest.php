@@ -267,6 +267,25 @@ class AnalyticsControllerTest extends TestCase {
 	}//end testUnsupportedMetricReturns400()
 
 	/**
+	 * An invalid period and an unexpected failure keep their static labels.
+	 *
+	 * @return void
+	 */
+	public function testAnInvalidPeriodAndAFailureKeepTheirLabels(): void {
+		foreach ([[new \InvalidArgumentException('Invalid period'), Http::STATUS_BAD_REQUEST, 'Invalid period'], [new \RuntimeException('db: secret detail'), Http::STATUS_INTERNAL_SERVER_ERROR, 'Analytics unavailable']] as [$thrown, $status, $label]) {
+			$administrationService = $this->createMock(AdministrationService::class);
+			$administrationService->method('getActiveAdministrationId')->willReturn('ADM-001');
+			$administrationService->method('getActiveAdministrationRole')->willReturn('hr');
+			$analyticsService = $this->createMock(AnalyticsService::class);
+			$analyticsService->method('getTrends')->willThrowException($thrown);
+
+			$response = $this->buildController($analyticsService, $this->createMock(ObligationsService::class), $administrationService, 'hr-devries', ['metric' => 'headcount', 'period' => 'x'])->trends();
+
+			$this->assertSame([$status, ['message' => $label]], [$response->getStatus(), $response->getData()]);
+		}
+	}//end testAnInvalidPeriodAndAFailureKeepTheirLabels()
+
+	/**
 	 * department-figures: HR and accountants read any unit, without the
 	 * small-unit rule.
 	 *

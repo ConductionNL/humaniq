@@ -3,6 +3,9 @@
 /**
  * Payroll GL Post Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Posts one balanced loonjournaalpost per approved PayrollRun into shillinq's
  * JournalEntry register (payroll-glpost-shillinq). humaniq holds no bookkeeping
  * machinery of its own (design.md D1): the only artefact this service writes
@@ -30,9 +33,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/payroll-glpost-shillinq/spec.md
@@ -49,6 +49,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
 use OCA\Humaniq\Support\NormalisesRows;
+use OCA\Humaniq\Service\Connection\ConnectionReporter;
 use OCA\Humaniq\Support\ChecksShillinqAvailability;
 
 /**
@@ -100,14 +101,18 @@ class PayrollGLPostService {
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppManager $appManager To duck-type-probe shillinq's presence.
-	 * @param SettingsService $settingsService Register slug + configurable RGS account numbers.
+	 * @param SettingsService $settingsService Register slug.
+	 * @param PayrollBookkeepingSettings $bookkeeping The configurable RGS account numbers.
 	 * @param LoggerInterface $logger Logger.
+	 * @param ConnectionReporter|null $connections Reports whether shillinq answered to integriq; null reports nothing.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly SettingsService $settingsService,
+		private readonly PayrollBookkeepingSettings $bookkeeping,
 		private readonly LoggerInterface $logger,
+		private readonly ?ConnectionReporter $connections = null,
 	) {
 
 	}//end __construct()
@@ -156,7 +161,12 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', 'PayrollRun is missing id/period/administrationId; cannot post.');
 		}
 
-		$settled = $this->settledByActiveGlPost($run);
+		try {
+			$settled = $this->settledByActiveGlPost($run);
+		} catch (HandoffLookupFailed $e) {
+			return $this->outcome($runId, 'pending', $e->getMessage());
+		}
+
 		if ($settled !== null) {
 			return $settled;
 		}
@@ -171,6 +181,7 @@ class PayrollGLPostService {
 				]
 			);
 
+			$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'unavailable', message: 'Shillinq is not installed, or its journal entries cannot be reached.');
 			return $this->outcome($runId, 'skipped-no-shillinq', (string)($glPost['errorMessage'] ?? ''), $glPost);
 		}
 
@@ -188,7 +199,11 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', (string)$built['error'], $glPost);
 		}
 
-		$locked = (new HandoffLock($this->container))->holding('glpost/' . $this->journalNumber($run), fn (): array => $this->postUnderClaim($run, $built));
+		try {
+			$locked = (new HandoffLock($this->container))->holding('glpost/' . $this->journalNumber($run), fn (): array => $this->postUnderClaim($run, $built));
+		} catch (HandoffLookupFailed $e) {
+			return $this->outcome($runId, 'pending', $e->getMessage());
+		}
 
 		return ($locked ?? $this->outcome($runId, 'pending', 'Another process holds the hand-off lock for this journal number.'));
 	}//end postRun()
@@ -241,10 +256,17 @@ class PayrollGLPostService {
 			return $this->outcome($runId, 'failed', (string)$glPost['errorMessage'], $glPost);
 		}
 
+		$mismatch = self::adoptionMismatch(adopted: $adopted, lines: $built['lines'], journalNumber: $journalNumber);
+		if ($mismatch !== null) {
+			$glPost = $this->saveGlPost($active, ['status' => 'failed', 'errorMessage' => $mismatch]);
+			return $this->outcome($runId, 'failed', $mismatch, $glPost);
+		}
+
 		$journalEntryId = (string)($adopted['id'] ?? $adopted['@self']['id'] ?? '');
 		$glPost = $this->saveGlPost($active, ['status' => 'posted', 'journalEntryId' => $journalEntryId, 'journalNumber' => $journalNumber, 'postedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'errorMessage' => null]);
 		$this->applySuccessToRun($run, (float)$built['glExpensePosted'], (float)$built['glLiabilityPosted']);
 
+		$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'configured', message: 'Shillinq holds journal entry ' . $journalNumber . '.');
 		return $this->outcome($runId, 'posted', 'Bestaande shillinq-journaalpost overgenomen (crash-recovery).', $glPost, $journalEntryId);
 	}//end settledByActiveGlPost()
 
@@ -266,7 +288,13 @@ class PayrollGLPostService {
 		$journalNumber = $this->journalNumber($run);
 		$claim = $this->createGlPost(['payrollRunId' => $runId, 'period' => trim((string)($run['period'] ?? '')), 'status' => 'pending', 'journalNumber' => $journalNumber]);
 		$claims = new PendingClaims(self::ACTIVE_STATUSES);
-		$records = $this->glPostsWhere('journalNumber', $journalNumber);
+		try {
+			$records = $this->glPostsWhere('journalNumber', $journalNumber);
+		} catch (HandoffLookupFailed $e) {
+			$withdrawn = $this->saveGlPost($claim, ['status' => 'failed', 'errorMessage' => 'Withdrawn: ' . $e->getMessage()]);
+			return $this->outcome($runId, 'pending', $e->getMessage(), $withdrawn);
+		}
+
 		foreach ($claims->staleOthers($records, $claim) as $stale) {
 			$this->saveGlPost($stale, ['status' => 'failed', 'errorMessage' => 'Verlopen pending-poging met hetzelfde journaalnummer vervangen.']);
 		}
@@ -282,12 +310,14 @@ class PayrollGLPostService {
 			$journalEntryId = $this->createOrAdoptJournalEntry($run, $built['lines']);
 		} catch (\Throwable $e) {
 			$glPost = $this->saveGlPost($claim, ['status' => 'failed', 'errorMessage' => 'Aanmaken van de shillinq JournalEntry is mislukt: ' . $e->getMessage()]);
+			$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'error', message: 'Shillinq refused the journal entry: ' . $e->getMessage());
 			return $this->outcome($runId, 'failed', (string)$glPost['errorMessage'], $glPost);
 		}
 
 		$glPost = $this->saveGlPost($claim, ['status' => 'posted', 'journalEntryId' => $journalEntryId, 'postedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'lines' => $built['lines']]);
 		$this->applySuccessToRun($run, (float)$built['glExpensePosted'], (float)$built['glLiabilityPosted']);
 
+		$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'configured', message: 'Shillinq took journal entry ' . $journalNumber . '.');
 		return $this->outcome($runId, 'posted', 'Geboekt als shillinq journaalpost ' . $journalNumber . '.', $glPost, $journalEntryId);
 	}//end postUnderClaim()
 
@@ -343,15 +373,15 @@ class PayrollGLPostService {
 
 		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
 		$candidates = array_merge(
-			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'gross', 'totalCents' => $grossCents, 'account' => $this->settingsService->getGlPostAccountGross(), 'description' => 'Loonkosten bruto']),
-			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'employerCharges', 'totalCents' => $chargesCents, 'account' => $this->settingsService->getGlPostAccountEmployerCharges(), 'description' => 'Werkgeverslasten sociale premies'])
+			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'gross', 'totalCents' => $grossCents, 'account' => $this->bookkeeping->getGlPostAccountGross(), 'description' => 'Loonkosten bruto']),
+			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'employerCharges', 'totalCents' => $chargesCents, 'account' => $this->bookkeeping->getGlPostAccountEmployerCharges(), 'description' => 'Werkgeverslasten sociale premies'])
 		);
 		$liabilities = [
-			['side' => 'credit', 'accountNumber' => $this->settingsService->getGlPostAccountWageTaxLiability(), 'amount' => $loonheffingCents, 'description' => 'Loonheffing-schuld'],
-			['side' => 'credit', 'accountNumber' => $this->settingsService->getGlPostAccountNetWagesLiability(), 'amount' => $netLiabilityCents, 'description' => 'Netto-loonschuld'],
+			['side' => 'credit', 'accountNumber' => $this->bookkeeping->getGlPostAccountWageTaxLiability(), 'amount' => $loonheffingCents, 'description' => 'Loonheffing-schuld'],
+			['side' => 'credit', 'accountNumber' => $this->bookkeeping->getGlPostAccountNetWagesLiability(), 'amount' => $netLiabilityCents, 'description' => 'Netto-loonschuld'],
 		];
 		if ($reimbursementCents > 0) {
-			$candidates[] = ['side' => 'debit', 'accountNumber' => $this->settingsService->getGlPostAccountReimbursements(), 'amount' => $reimbursementCents, 'description' => 'Declaraties en onbelaste vergoedingen'];
+			$candidates[] = ['side' => 'debit', 'accountNumber' => $this->bookkeeping->getGlPostAccountReimbursements(), 'amount' => $reimbursementCents, 'description' => 'Declaraties en onbelaste vergoedingen'];
 		}
 
 		$candidates = array_merge($candidates, $liabilities);
@@ -495,6 +525,11 @@ class PayrollGLPostService {
 		$journalNumber = $this->journalNumber($run);
 		$adopted = $this->findJournalEntryByNumber($journalNumber);
 		if ($adopted !== null) {
+			$mismatch = self::adoptionMismatch(adopted: $adopted, lines: $lines, journalNumber: $journalNumber);
+			if ($mismatch !== null) {
+				throw new \RuntimeException($mismatch);
+			}
+
 			return (string)($adopted['id'] ?? $adopted['@self']['id'] ?? '');
 		}
 
@@ -523,6 +558,54 @@ class PayrollGLPostService {
 
 		return (string)($this->toArray($created)['id'] ?? $this->toArray($created)['@self']['id'] ?? '');
 	}//end createOrAdoptJournalEntry()
+
+	/**
+	 * Why an existing JournalEntry may not be adopted for these lines: its
+	 * debit or credit total differs from this run's. Null when both match.
+	 *
+	 * @param array<string, mixed> $adopted       The JournalEntry found by journal number.
+	 * @param array<int, mixed>    $lines         The run's balanced journal lines.
+	 * @param string               $journalNumber The journal number.
+	 *
+	 * @return string|null The refusal, or null to adopt.
+	 *
+	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-003
+	 */
+	private static function adoptionMismatch(array $adopted, array $lines, string $journalNumber): ?string {
+		$found = self::sideTotalsCents(lines: (array)($adopted['lines'] ?? []));
+		$expected = self::sideTotalsCents(lines: $lines);
+		if ($found === $expected) {
+			return null;
+		}
+
+		return sprintf(
+			'Shillinq-journaalpost %s heeft debet %.2f en credit %.2f, deze loonrun debet %.2f en credit %.2f; niet overgenomen, controleer die met de hand.',
+			$journalNumber,
+			($found['debit'] / 100),
+			($found['credit'] / 100),
+			($expected['debit'] / 100),
+			($expected['credit'] / 100)
+		);
+	}//end adoptionMismatch()
+
+	/**
+	 * The debit and credit totals of journal lines, in cents.
+	 *
+	 * @param array<int, mixed> $lines Lines with `side` and `amount` in euros.
+	 *
+	 * @return array{debit: int, credit: int}
+	 */
+	private static function sideTotalsCents(array $lines): array {
+		$totals = ['debit' => 0, 'credit' => 0];
+		foreach ($lines as $line) {
+			$side = (string)(is_array($line) === true ? ($line['side'] ?? '') : '');
+			if (isset($totals[$side]) === true) {
+				$totals[$side] += (int)round(((float)($line['amount'] ?? 0)) * 100);
+			}
+		}
+
+		return $totals;
+	}//end sideTotalsCents()
 
 	/**
 	 * The deterministic idempotency key of a run's JournalEntry: its trimmed
@@ -600,19 +683,20 @@ class PayrollGLPostService {
 
 	/**
 	 * Search shillinq for an existing JournalEntry with the given journalNumber
-	 * (the idempotency probe, design.md D6). Never throws — a lookup failure is
-	 * treated as "not found" by the caller's fall-through logic.
+	 * (the idempotency probe, design.md D6).
 	 *
 	 * @param string $journalNumber The deterministic idempotency key.
 	 *
 	 * @return array<string, mixed>|null
+	 *
+	 * @throws HandoffLookupFailed When the lookup fails, so it is never read as "not found".
 	 */
 	private function findJournalEntryByNumber(string $journalNumber): ?array {
 		try {
 			$rows = $this->objectService()->setRegister(self::SHILLINQ_REGISTER)->setSchema(self::SHILLINQ_SCHEMA)->findAll(['limit' => 10000, 'filters' => ['journalNumber' => $journalNumber]], false, false);
 		} catch (\Throwable $e) {
 			$this->logger->warning('PayrollGLPostService: the shillinq JournalEntry lookup failed.', ['exceptionClass' => $e::class]);
-			return null;
+			throw new HandoffLookupFailed('A lookup failed; the payroll run is tried again later.');
 		}
 
 		foreach ($this->normaliseRows($rows) as $row) {
@@ -634,13 +718,15 @@ class PayrollGLPostService {
 	 * @param string $value Its value.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @throws HandoffLookupFailed When the lookup fails, so it is never read as "none".
 	 */
 	private function glPostsWhere(string $field, string $value): array {
 		try {
 			$rows = $this->objectService()->setRegister($this->register())->setSchema(self::GLPOST_SCHEMA)->findAll(['limit' => 10000, 'filters' => [$field => $value]], false, false);
 		} catch (\Throwable $e) {
 			$this->logger->warning('PayrollGLPostService: the PayrollGLPost lookup failed.', ['exceptionClass' => $e::class]);
-			return [];
+			throw new HandoffLookupFailed('A lookup failed; the payroll run is tried again later.');
 		}
 
 		$out = [];

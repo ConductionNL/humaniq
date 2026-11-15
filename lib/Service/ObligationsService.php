@@ -3,6 +3,9 @@
 /**
  * Obligations Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Backs the Dashboard's full-width Obligations `object-table` widget
  * (humaniq-dashboard-steering-indicators REQ-DSI-008/009): merges every
  * due-and-not-done WVP milestone (`SickLeaveCase`), expiring temporary
@@ -31,9 +34,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -209,7 +209,7 @@ class ObligationsService {
 				continue;
 			}
 
-			$endDate = $this->parseDate($contract['endDate'] ?? null);
+			$endDate = DateValues::parse($contract['endDate'] ?? null);
 			if ($endDate === null || $endDate < $today || $endDate > $windowEnd) {
 				continue;
 			}
@@ -241,7 +241,7 @@ class ObligationsService {
 		$rows = [];
 		[$today, $windowEnd] = $this->expiryWindow(self::BHV_EXPIRY_WINDOW_DAYS);
 		foreach ($this->loadFiltered('BhvCertificering', $administrationId) as $certificate) {
-			$validUntil = $this->parseDate($certificate['certificaatGeldigTot'] ?? null);
+			$validUntil = DateValues::parse($certificate['certificaatGeldigTot'] ?? null);
 			if ($validUntil === null || $validUntil < $today || $validUntil > $windowEnd) {
 				continue;
 			}
@@ -287,27 +287,6 @@ class ObligationsService {
 	}//end expiryWindow()
 
 	/**
-	 * Parse a stored date value.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
-	 *
-	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
-	 */
-	private function parseDate(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception) {
-			return null;
-		}
-	}//end parseDate()
-
-	/**
 	 * Load all objects of a schema, filtered to those denormalized-scoped
 	 * to `$administrationId` — a row with a null/blank/mismatched
 	 * `administrationId` is excluded, the same implicit page-scoping rule
@@ -321,14 +300,7 @@ class ObligationsService {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadFiltered(string $schema, string $administrationId): array {
-		$rows = [];
-		foreach ($this->loadAll($schema) as $row) {
-			if ((string)($row['administrationId'] ?? '') === $administrationId) {
-				$rows[] = $row;
-			}
-		}
-
-		return $rows;
+		return AdministrationRows::scopedTo($this->loadAll($schema), $administrationId);
 	}//end loadFiltered()
 
 	/**

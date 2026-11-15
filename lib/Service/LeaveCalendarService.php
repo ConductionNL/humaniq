@@ -3,6 +3,9 @@
 /**
  * Leave Calendar Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Projects approved absence (LeaveRequest/SickLeaveCase) onto one configured
  * shared Nextcloud calendar as all-day VEVENTs (design.md D1-D6). humaniq holds
  * no calendar storage of its own — the sync is a stateless, idempotent
@@ -36,9 +39,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/leave-calendar-nc/spec.md
@@ -65,15 +65,6 @@ class LeaveCalendarService {
 	use ResolvesObjectService;
 	use NormalisesRows;
 	use ReadsIcsValues;
-
-	/**
-	 * The duck-typed CalDAV backend's FQCN, resolved from the container by
-	 * string (design.md D1) — never a `use` import, so humaniq carries no
-	 * composer/info.xml dependency on the dav app.
-	 *
-	 * @var string
-	 */
-	private const CALDAV_BACKEND_CLASS = 'OCA\DAV\CalDAV\CalDavBackend';
 
 	/**
 	 * @var string
@@ -113,12 +104,14 @@ class LeaveCalendarService {
 
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService/CalDavBackend resolution.
-	 * @param SettingsService $settingsService Target-calendar config (design.md D6).
+	 * @param SettingsService $settingsService Register slug.
+	 * @param CalendarSettings $calendars Target-calendar config (design.md D6).
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
+		private readonly CalendarSettings $calendars,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -149,8 +142,8 @@ class LeaveCalendarService {
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-006
 	 */
 	public function sync(?string $from = null): array {
-		$principal = $this->settingsService->getLeaveCalendarPrincipal();
-		$uri = $this->settingsService->getLeaveCalendarUri();
+		$principal = $this->calendars->getLeaveCalendarPrincipal();
+		$uri = $this->calendars->getLeaveCalendarUri();
 		if ($principal === '' || $uri === '') {
 			return [$this->skipOutcome('leave_calendar_principal/leave_calendar_uri is niet geconfigureerd.')];
 		}
@@ -652,7 +645,7 @@ class LeaveCalendarService {
 
 		return $existingDtstart === $event->dtstart
 			&& $existingDtend === $event->dtendExclusive
-			&& $this->unescapeText($existingSummary) === $event->summary;
+			&& IcsText::unescape($existingSummary) === $event->summary;
 
 	}//end veventUnchanged()
 
@@ -682,7 +675,7 @@ class LeaveCalendarService {
 			'DTSTAMP:' . $dtstamp,
 			'DTSTART;VALUE=DATE:' . $event->dtstart,
 			'DTEND;VALUE=DATE:' . $event->dtendExclusive,
-			'SUMMARY:' . $this->escapeText($event->summary),
+			'SUMMARY:' . IcsText::escape($event->summary),
 			'TRANSP:TRANSPARENT',
 			'SEQUENCE:0',
 			'END:VEVENT',
@@ -691,35 +684,6 @@ class LeaveCalendarService {
 
 		return implode("\r\n", $lines) . "\r\n";
 	}//end renderIcs()
-
-	/**
-	 * Escape a TEXT property value per RFC 5545 §3.3.11 (backslash,
-	 * semicolon, comma, newline) — employee names are data, not trusted
-	 * literal text.
-	 *
-	 * @param string $value The raw text.
-	 *
-	 * @return string
-	 */
-	private function escapeText(string $value): string {
-		$value = str_replace('\\', '\\\\', $value);
-		$value = str_replace([';', ',', "\n"], ['\\;', '\\,', '\\n'], $value);
-		return $value;
-	}//end escapeText()
-
-	/**
-	 * Reverse `escapeText()`, for comparing a stored SUMMARY back to the
-	 * desired unescaped value in `veventUnchanged()`.
-	 *
-	 * @param string $value The escaped text.
-	 *
-	 * @return string
-	 */
-	private function unescapeText(string $value): string {
-		$value = str_replace(['\\n', '\\,', '\\;'], ["\n", ',', ';'], $value);
-		$value = str_replace('\\\\', '\\', $value);
-		return $value;
-	}//end unescapeText()
 
 	/**
 	 * Parse a `Y-m-d` date strictly: a value that only parses by rolling
@@ -852,35 +816,7 @@ class LeaveCalendarService {
 	 * @return mixed The resolved backend, or null when unavailable.
 	 */
 	private function resolveBackend(): mixed {
-		try {
-			$backend = $this->container->get(self::CALDAV_BACKEND_CLASS);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if (is_object($backend) === false) {
-			return null;
-		}
-
-		$requiredMethods = [
-			'getCalendarByUri',
-			'getCalendarObjectByUID',
-			'createCalendarObject',
-			'updateCalendarObject',
-			'deleteCalendarObject',
-			'getCalendarObjects',
-		];
-		foreach ($requiredMethods as $method) {
-			if (method_exists($backend, $method) === false) {
-				// REQ-LC-006: a resolution miss degrades to skipped-no-calendar and
-				// SHALL log nothing above INFO -- this is an expected, healthy
-				// degradation path, not an error.
-				$this->logger->info('LeaveCalendarService: CalDavBackend mist methode ' . $method . '; kalendersync overgeslagen.');
-				return null;
-			}
-		}
-
-		return $backend;
+		return (new CalDavBackendResolver($this->container, $this->logger))->resolve('LeaveCalendarService');
 	}//end resolveBackend()
 
 	/**

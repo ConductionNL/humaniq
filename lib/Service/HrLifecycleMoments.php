@@ -68,13 +68,20 @@ class HrLifecycleMoments {
 			return [];
 		}
 
+		$change = new LifecycleChange();
+		$change->old = $old;
+		$change->new = $new;
+		$change->today = $today;
+		$change->employeeId = (string)$new['employeeId'];
+		$change->subjectId = (string)($new['id'] ?? '');
+
 		return match ($slug) {
-			'onboarding' => $this->onboarding(old: $old, new: $new, today: $today),
-			'offboarding' => $this->offboarding(old: $old, new: $new, today: $today),
-			'employmentcontract' => $this->contract(old: $old, new: $new, today: $today),
-			'orgassignment' => $this->placement(old: $old, new: $new, today: $today),
-			'leaverequest' => $this->leave(old: $old, new: $new, today: $today),
-			'sickleavecase' => $this->sickness(old: $old, new: $new, today: $today),
+			'onboarding' => $this->onboarding(change: $change),
+			'offboarding' => $this->offboarding(change: $change),
+			'employmentcontract' => $this->contract(change: $change),
+			'orgassignment' => $this->placement(change: $change),
+			'leaverequest' => $this->leave(change: $change),
+			'sickleavecase' => $this->sickness(change: $change),
 			default => [],
 		};
 	}//end moments()
@@ -82,248 +89,230 @@ class HrLifecycleMoments {
 	/**
 	 * Joining through a completed onboarding case.
 	 *
-	 * @param array<string, mixed>|null $old The stored case.
-	 * @param array<string, mixed> $new The saved case.
-	 * @param string $today The day.
+	 * @param LifecycleChange $change The write.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function onboarding(?array $old, array $new, string $today): array {
-		if ($this->entered(old: $old, new: $new, field: 'status', value: 'afgerond') === false) {
+	private function onboarding(LifecycleChange $change): array {
+		if ($this->entered(change: $change, status: 'afgerond') === false) {
 			return [];
 		}
 
-		$start = ($this->day(value: $new['startDate'] ?? null) ?? $today);
+		$start = ($this->day(value: $change->new['startDate'] ?? null) ?? $change->today);
 
-		return [$this->joined(employeeId: (string)$new['employeeId'], start: $start, today: $today)];
+		return [$this->joined(change: $change, start: $start)];
 	}//end onboarding()
 
 	/**
 	 * Leaving through a completed offboarding case.
 	 *
-	 * @param array<string, mixed>|null $old The stored case.
-	 * @param array<string, mixed> $new The saved case.
-	 * @param string $today The day.
+	 * @param LifecycleChange $change The write.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function offboarding(?array $old, array $new, string $today): array {
-		if ($this->entered(old: $old, new: $new, field: 'status', value: 'afgerond') === false) {
+	private function offboarding(LifecycleChange $change): array {
+		if ($this->entered(change: $change, status: 'afgerond') === false) {
 			return [];
 		}
 
-		$last = ($this->day(value: $new['lastWorkingDay'] ?? null) ?? $today);
+		$last = ($this->day(value: $change->new['lastWorkingDay'] ?? null) ?? $change->today);
 
-		return [$this->moment(type: 'employee.left', employeeId: (string)$new['employeeId'], occurredOn: $last, subjectId: '', data: ['lastWorkingDay' => $last])];
+		return [$this->left(change: $change, last: $last)];
 	}//end offboarding()
 
 	/**
 	 * A contract: the first one joins, a new function is a job change, the last one ending leaves.
 	 *
-	 * @param array<string, mixed>|null $old The stored contract.
-	 * @param array<string, mixed> $new The saved contract.
-	 * @param string $today The day.
+	 * @param LifecycleChange $change The write.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function contract(?array $old, array $new, string $today): array {
-		$employeeId = (string)$new['employeeId'];
-		$others = $this->others(schema: 'EmploymentContract', employeeId: $employeeId, id: (string)($new['id'] ?? ''));
-		if ($old === null) {
-			return ($others === []) ? [$this->joined(employeeId: $employeeId, start: ($this->day(value: $new['startDate'] ?? null) ?? $today), today: $today)] : [];
+	private function contract(LifecycleChange $change): array {
+		$others = $this->others(change: $change, schema: 'EmploymentContract');
+		if ($change->old === null) {
+			return ($others === []) ? [$this->joined(change: $change, start: ($this->day(value: $change->new['startDate'] ?? null) ?? $change->today))] : [];
 		}
 
-		return array_merge($this->functionChange(old: $old, new: $new, today: $today), $this->contractEnded(old: $old, new: $new, others: $others, today: $today));
+		return array_merge($this->functionChange(change: $change), $this->contractEnded(change: $change, others: $others));
 	}//end contract()
 
 	/**
 	 * A contract whose function changed.
 	 *
-	 * @param array<string, mixed> $old The stored contract.
-	 * @param array<string, mixed> $new The saved contract.
-	 * @param string $today The day.
+	 * @param LifecycleChange $change The write, with its stored contract.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function functionChange(array $old, array $new, string $today): array {
-		$oldFunction = $this->text(value: $old['normfunctieId'] ?? null);
-		$newFunction = $this->text(value: $new['normfunctieId'] ?? null);
+	private function functionChange(LifecycleChange $change): array {
+		$oldFunction = $this->text(value: $change->old['normfunctieId'] ?? null);
+		$newFunction = $this->text(value: $change->new['normfunctieId'] ?? null);
 		if ($oldFunction === null || $newFunction === null || $oldFunction === $newFunction) {
 			return [];
 		}
 
-		$employeeId = (string)$new['employeeId'];
-		$unit = $this->unitOn(employeeId: $employeeId, day: $today);
+		$unit = $this->unitOn(employeeId: $change->employeeId, day: $change->today);
+		$data = ['from' => ['orgUnitId' => $unit, 'normfunctieId' => $oldFunction], 'to' => ['orgUnitId' => $unit, 'normfunctieId' => $newFunction]];
 
-		return [
-			$this->moment(
-				type: 'employee.jobchanged',
-				employeeId: $employeeId,
-				occurredOn: $today,
-				subjectId: (string)($new['id'] ?? ''),
-				data: ['from' => ['orgUnitId' => $unit, 'normfunctieId' => $oldFunction], 'to' => ['orgUnitId' => $unit, 'normfunctieId' => $newFunction]]
-			),
-		];
+		return [array_merge($this->moment(change: $change, type: 'employee.jobchanged'), ['data' => $data])];
 	}//end functionChange()
 
 	/**
-	 * A contract that got an end date in the past while no other contract still runs.
+	 * A contract that ended before today, when no other contract runs on.
 	 *
-	 * @param array<string, mixed> $old The stored contract.
-	 * @param array<string, mixed> $new The saved contract.
+	 * @param LifecycleChange $change The write, with its stored contract.
 	 * @param array<int, array<string, mixed>> $others The employee's other contracts.
-	 * @param string $today The day.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function contractEnded(array $old, array $new, array $others, string $today): array {
-		$end = $this->day(value: $new['endDate'] ?? null);
-		if ($end === null || $end >= $today || $end === $this->day(value: $old['endDate'] ?? null)) {
+	private function contractEnded(LifecycleChange $change, array $others): array {
+		$end = $this->day(value: $change->new['endDate'] ?? null);
+		if ($end === null || $end >= $change->today || $end === $this->day(value: $change->old['endDate'] ?? null)) {
 			return [];
 		}
 
 		foreach ($others as $other) {
-			if (($this->day(value: $other['endDate'] ?? null) ?? '9999-12-31') >= $today) {
+			if (($this->day(value: $other['endDate'] ?? null) ?? '9999-12-31') >= $change->today) {
 				return [];
 			}
 		}
 
-		return [$this->moment(type: 'employee.left', employeeId: (string)$new['employeeId'], occurredOn: $end, subjectId: '', data: ['lastWorkingDay' => $end])];
+		return [$this->left(change: $change, last: $end)];
 	}//end contractEnded()
 
 	/**
-	 * A new placement for someone who already had one is a job change.
+	 * A new placement after an earlier one is a job change.
 	 *
-	 * @param array<string, mixed>|null $old The stored placement.
-	 * @param array<string, mixed> $new The saved placement.
-	 * @param string $today The day.
+	 * @param LifecycleChange $change The write.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function placement(?array $old, array $new, string $today): array {
-		if ($old !== null) {
+	private function placement(LifecycleChange $change): array {
+		if ($change->old !== null) {
 			return [];
 		}
 
-		$employeeId = (string)$new['employeeId'];
-		$others = $this->others(schema: 'OrgAssignment', employeeId: $employeeId, id: (string)($new['id'] ?? ''));
+		$others = $this->others(change: $change, schema: 'OrgAssignment');
 		if ($others === []) {
 			return [];
 		}
 
 		usort($others, fn (array $a, array $b): int => (string)($b['startDate'] ?? '') <=> (string)($a['startDate'] ?? ''));
+		$data = ['from' => ['orgUnitId' => $this->text(value: $others[0]['orgUnitId'] ?? null), 'normfunctieId' => null], 'to' => ['orgUnitId' => $this->text(value: $change->new['orgUnitId'] ?? null), 'normfunctieId' => null]];
 
-		return [
-			$this->moment(
-				type: 'employee.jobchanged',
-				employeeId: $employeeId,
-				occurredOn: ($this->day(value: $new['startDate'] ?? null) ?? $today),
-				subjectId: (string)($new['id'] ?? ''),
-				data: ['from' => ['orgUnitId' => $this->text(value: $others[0]['orgUnitId'] ?? null), 'normfunctieId' => null], 'to' => ['orgUnitId' => $this->text(value: $new['orgUnitId'] ?? null), 'normfunctieId' => null]]
-			),
-		];
+		return [array_merge($this->moment(change: $change, type: 'employee.jobchanged'), ['occurredOn' => ($this->day(value: $change->new['startDate'] ?? null) ?? $change->today), 'data' => $data])];
 	}//end placement()
 
 	/**
-	 * Leave approved, or an approved request no longer approved.
+	 * A leave request approved, or no longer approved.
 	 *
-	 * @param array<string, mixed>|null $old The stored request.
-	 * @param array<string, mixed> $new The saved request.
-	 * @param string $today The day.
+	 * @param LifecycleChange $change The write.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function leave(?array $old, array $new, string $today): array {
-		$type = null;
-		if ($this->entered(old: $old, new: $new, field: 'status', value: 'approved') === true) {
-			$type = 'leave.approved';
-		} else if ($old !== null && (string)($old['status'] ?? '') === 'approved' && (string)($new['status'] ?? '') !== 'approved') {
-			$type = 'leave.withdrawn';
-		}
-
+	private function leave(LifecycleChange $change): array {
+		$type = $this->leaveType(change: $change);
 		if ($type === null) {
 			return [];
 		}
 
-		return [
-			$this->moment(
-				type: $type,
-				employeeId: (string)$new['employeeId'],
-				occurredOn: $today,
-				subjectId: (string)($new['id'] ?? ''),
-				data: ['startDate' => $this->day(value: $new['startDate'] ?? null), 'endDate' => $this->day(value: $new['endDate'] ?? null), 'hours' => (isset($new['hours']) === true ? (float)$new['hours'] : null)]
-			),
-		];
+		$new = $change->new;
+		$data = ['startDate' => $this->day(value: $new['startDate'] ?? null), 'endDate' => $this->day(value: $new['endDate'] ?? null), 'hours' => (isset($new['hours']) === true ? (float)$new['hours'] : null)];
+
+		return [array_merge($this->moment(change: $change, type: $type), ['data' => $data])];
 	}//end leave()
 
 	/**
-	 * A sickness case reported, or recovered.
+	 * The leave moment a write marks, or null.
 	 *
-	 * @param array<string, mixed>|null $old The stored case.
-	 * @param array<string, mixed> $new The saved case.
-	 * @param string $today The day.
+	 * @param LifecycleChange $change The write.
+	 *
+	 * @return string|null
+	 */
+	private function leaveType(LifecycleChange $change): ?string {
+		if ($this->entered(change: $change, status: 'approved') === true) {
+			return 'leave.approved';
+		}
+
+		if ((string)($change->old['status'] ?? '') === 'approved' && (string)($change->new['status'] ?? '') !== 'approved') {
+			return 'leave.withdrawn';
+		}
+
+		return null;
+	}//end leaveType()
+
+	/**
+	 * A sickness reported, or recovered from.
+	 *
+	 * @param LifecycleChange $change The write.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function sickness(?array $old, array $new, string $today): array {
-		$from = $this->day(value: $new['firstSickDay'] ?? null);
-		if ($old === null) {
-			return [$this->moment(type: 'sickness.reported', employeeId: (string)$new['employeeId'], occurredOn: ($from ?? $today), subjectId: (string)($new['id'] ?? ''), data: ['from' => $from, 'to' => null])];
+	private function sickness(LifecycleChange $change): array {
+		$from = $this->day(value: $change->new['firstSickDay'] ?? null);
+		if ($change->old === null) {
+			return [array_merge($this->moment(change: $change, type: 'sickness.reported'), ['occurredOn' => ($from ?? $change->today), 'data' => ['from' => $from, 'to' => null]])];
 		}
 
-		if ($this->entered(old: $old, new: $new, field: 'status', value: 'hersteld') === false) {
+		if ($this->entered(change: $change, status: 'hersteld') === false) {
 			return [];
 		}
 
-		$to = $this->day(value: $new['recoveredDate'] ?? null);
+		$to = $this->day(value: $change->new['recoveredDate'] ?? null);
 
-		return [$this->moment(type: 'sickness.recovered', employeeId: (string)$new['employeeId'], occurredOn: ($to ?? $today), subjectId: (string)($new['id'] ?? ''), data: ['from' => $from, 'to' => $to])];
+		return [array_merge($this->moment(change: $change, type: 'sickness.recovered'), ['occurredOn' => ($to ?? $change->today), 'data' => ['from' => $from, 'to' => $to]])];
 	}//end sickness()
 
 	/**
 	 * A joined moment, with the unit the employee is placed in.
 	 *
-	 * @param string $employeeId The employee.
+	 * @param LifecycleChange $change The write.
 	 * @param string $start The first day.
-	 * @param string $today The day.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function joined(string $employeeId, string $start, string $today): array {
-		$unit = $this->unitOn(employeeId: $employeeId, day: max($start, $today));
+	private function joined(LifecycleChange $change, string $start): array {
+		$unit = $this->unitOn(employeeId: $change->employeeId, day: max($start, $change->today));
 
-		return $this->moment(type: 'employee.joined', employeeId: $employeeId, occurredOn: $start, subjectId: '', data: ['startDate' => $start, 'orgUnitId' => $unit]);
+		return array_merge($this->moment(change: $change, type: 'employee.joined'), ['occurredOn' => $start, 'subjectId' => '', 'data' => ['startDate' => $start, 'orgUnitId' => $unit]]);
 	}//end joined()
 
 	/**
-	 * One moment.
+	 * A left moment on the last working day.
 	 *
+	 * @param LifecycleChange $change The write.
+	 * @param string $last The last working day.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function left(LifecycleChange $change, string $last): array {
+		return array_merge($this->moment(change: $change, type: 'employee.left'), ['occurredOn' => $last, 'subjectId' => '', 'data' => ['lastWorkingDay' => $last]]);
+	}//end left()
+
+	/**
+	 * One moment about the written record, on the day of the write, with no fields yet.
+	 *
+	 * @param LifecycleChange $change The write.
 	 * @param string $type The type after the prefix.
-	 * @param string $employeeId The employee.
-	 * @param string $occurredOn The day.
-	 * @param string $subjectId The record, '' for moments one person has once a day.
-	 * @param array<string, mixed> $data The moment's own fields.
 	 *
 	 * @return array{type: string, employeeId: string, occurredOn: string, subjectId: string, data: array<string, mixed>}
 	 */
-	private function moment(string $type, string $employeeId, string $occurredOn, string $subjectId, array $data): array {
-		return ['type' => $type, 'employeeId' => $employeeId, 'occurredOn' => $occurredOn, 'subjectId' => $subjectId, 'data' => $data];
+	private function moment(LifecycleChange $change, string $type): array {
+		return ['type' => $type, 'employeeId' => $change->employeeId, 'occurredOn' => $change->today, 'subjectId' => $change->subjectId, 'data' => []];
 	}//end moment()
 
 	/**
 	 * The employee's other records of a schema.
 	 *
+	 * @param LifecycleChange $change The write, whose record is left out.
 	 * @param string $schema The schema.
-	 * @param string $employeeId The employee.
-	 * @param string $id The record to leave out.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function others(string $schema, string $employeeId, string $id): array {
+	private function others(LifecycleChange $change, string $schema): array {
 		return array_values(
 			array_filter(
-				$this->gateway->findFiltered($schema, ['employeeId' => $employeeId]),
-				static fn (array $row): bool => (string)($row['id'] ?? '') !== $id
+				$this->gateway->findFiltered($schema, ['employeeId' => $change->employeeId]),
+				static fn (array $row): bool => (string)($row['id'] ?? '') !== $change->subjectId
 			)
 		);
 	}//end others()
@@ -349,17 +338,15 @@ class HrLifecycleMoments {
 	}//end unitOn()
 
 	/**
-	 * Whether a field took this value on this write.
+	 * Whether the status took this value on this write.
 	 *
-	 * @param array<string, mixed>|null $old The stored record.
-	 * @param array<string, mixed> $new The saved record.
-	 * @param string $field The field.
-	 * @param string $value The value.
+	 * @param LifecycleChange $change The write.
+	 * @param string $status The status.
 	 *
 	 * @return bool
 	 */
-	private function entered(?array $old, array $new, string $field, string $value): bool {
-		return (string)($new[$field] ?? '') === $value && (string)(($old ?? [])[$field] ?? '') !== $value;
+	private function entered(LifecycleChange $change, string $status): bool {
+		return (string)($change->new['status'] ?? '') === $status && (string)(($change->old ?? [])['status'] ?? '') !== $status;
 	}//end entered()
 
 	/**

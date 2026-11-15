@@ -113,25 +113,62 @@ class DocumentController extends Controller {
 		}
 
 		if ($documentType === 'loonstrook') {
-			$payslipId = trim((string)$payslipId);
-			if ($payslipId === '') {
-				return new JSONResponse(['error' => 'payslipId is verplicht.'], Http::STATUS_BAD_REQUEST);
-			}
-
-			// No-admin-idor guard (ADR-005 Rule 3): the payslip must resolve
-			// through OpenRegister's ObjectService under the caller's RBAC
-			// before any docudesk call -- an unresolvable/unauthorized id
-			// never reaches it.
-			$payslipArray = $this->authorizePayslip($payslipId);
-			if ($payslipArray === null) {
-				return new JSONResponse(['error' => 'Loonstrook niet gevonden.'], Http::STATUS_NOT_FOUND);
-			}
-
-			$result = $this->hrDocumentService->generateLoonstrook($payslipId, $userId);
-			return new JSONResponse($result);
+			return $this->generatePayslip(payslipId: trim((string)$payslipId), userId: $userId);
 		}
 
 		$contractId = trim((string)$contractId);
+		$employeeId = $this->letterEmployeeId($contractId);
+		if ($employeeId instanceof JSONResponse) {
+			return $employeeId;
+		}
+
+		$result = $this->hrDocumentService->generate($employeeId, $contractId, $documentType, $userId);
+
+		return new JSONResponse($result);
+	}//end generate()
+
+	/**
+	 * Resolve one Payslip under the caller's RBAC, then render its
+	 * loonstrook. A blank id is 400; an unreadable one is 404 and nothing is
+	 * rendered.
+	 *
+	 * @param string $payslipId The Payslip id.
+	 * @param string|null $userId The acting user.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
+	 */
+	private function generatePayslip(string $payslipId, ?string $userId): JSONResponse {
+		if ($payslipId === '') {
+			return new JSONResponse(['error' => 'payslipId is verplicht.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		// No-admin-idor guard (ADR-005 Rule 3): the payslip must resolve
+		// through OpenRegister's ObjectService under the caller's RBAC
+		// before any docudesk call -- an unresolvable/unauthorized id
+		// never reaches it.
+		$payslipArray = $this->authorizePayslip($payslipId);
+		if ($payslipArray === null) {
+			return new JSONResponse(['error' => 'Loonstrook niet gevonden.'], Http::STATUS_NOT_FOUND);
+		}
+
+		$result = $this->hrDocumentService->generateLoonstrook($payslipId, $userId);
+		return new JSONResponse($result);
+	}//end generatePayslip()
+
+	/**
+	 * The employee a letter is generated for: the linked employee of the
+	 * contract, resolved under the caller's RBAC. A blank id is 400; an
+	 * unreadable contract or one without an employee is 404.
+	 *
+	 * @param string $contractId The EmploymentContract id.
+	 *
+	 * @return string|JSONResponse The employeeId, or the refusal.
+	 *
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
+	 */
+	private function letterEmployeeId(string $contractId): string|JSONResponse {
 		if ($contractId === '') {
 			return new JSONResponse(['error' => 'contractId is verplicht.'], Http::STATUS_BAD_REQUEST);
 		}
@@ -149,10 +186,8 @@ class DocumentController extends Controller {
 			return new JSONResponse(['error' => 'Contract heeft geen gekoppelde medewerker.'], Http::STATUS_NOT_FOUND);
 		}
 
-		$result = $this->hrDocumentService->generate($employeeId, $contractId, $documentType, $userId);
-
-		return new JSONResponse($result);
-	}//end generate()
+		return $employeeId;
+	}//end letterEmployeeId()
 
 	/**
 	 * Resolve one Jaaropgaaf under the caller's RBAC, then render it for its

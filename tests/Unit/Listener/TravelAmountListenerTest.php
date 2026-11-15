@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Listener;
 
 use OCA\Humaniq\Listener\TravelAmountListener;
+use OCA\Humaniq\Service\ExpenseSettings;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OrgResolutionService;
@@ -38,7 +39,9 @@ use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
+use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -82,7 +85,8 @@ class TravelAmountListenerTest extends TestCase {
 	private function listener(): TravelAmountListener {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
-		$settings->method('getMileageRatePerKm')->willReturn($this->employerRate);
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getAppValueString')->willReturn($this->employerRate === null ? '' : (string)$this->employerRate);
 		$gateway = new HoursRegisterGateway(
 			container: new FakeContainer([
 				'OCA\OpenRegister\Service\ObjectService' => $this->store,
@@ -95,7 +99,7 @@ class TravelAmountListenerTest extends TestCase {
 		return new TravelAmountListener(
 			gateway: $gateway,
 			calculator: new TravelAllowanceCalculator(),
-			settings: $settings,
+			settings: new ExpenseSettings($config),
 			marker: new InternalWriteMarker(),
 			logger: new NullLogger()
 		);
@@ -125,6 +129,54 @@ class TravelAmountListenerTest extends TestCase {
 	private function mileageClaim(): array {
 		return ['employeeId' => self::EMPLOYEE, 'title' => 'Klantbezoek', 'category' => 'travel', 'travelType' => 'business', 'distanceKm' => 150, 'transportMode' => 'car', 'fuelType' => 'gasoline', 'status' => 'draft'];
 	}//end mileageClaim()
+
+	/**
+	 * The whole stamp, refusal and stop of every kind of write, at the tax-free
+	 * rate and at a higher employer rate.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeOutcomeOfEveryWrite(): void {
+		$claim = $this->mileageClaim();
+		$arrangement = ['employeeId' => self::EMPLOYEE, 'distanceKmOneWay' => 18, 'daysPerWeek' => 4, 'startDate' => '2026-01-01', 'status' => 'submitted'];
+		$writes = [
+			'claim-distance' => ['Expense', $claim, 'create'],
+			'claim-distance-update' => ['Expense', $claim, 'update'],
+			'claim-zero-distance' => ['Expense', array_merge($claim, ['distanceKm' => 0, 'amount' => 12.5]), 'create'],
+			'claim-other-category' => ['Expense', array_merge($claim, ['category' => 'meal', 'amount' => '12']), 'create'],
+			'claim-nothing' => ['Expense', array_merge($claim, ['distanceKm' => null]), 'create'],
+			'claim-nothing-update' => ['Expense', array_merge($claim, ['category' => 'meal', 'amount' => null]), 'update'],
+			'claim-approved' => ['Expense', array_merge($claim, ['status' => 'approved', 'distanceKm' => null]), 'create'],
+			'arrangement' => ['CommuteArrangement', $arrangement, 'create'],
+			'arrangement-routeplanner' => ['CommuteArrangement', array_merge($arrangement, ['distanceSource' => 'routeplanner']), 'update'],
+			'arrangement-odd-source' => ['CommuteArrangement', array_merge($arrangement, ['distanceSource' => 'guess']), 'create'],
+			'arrangement-no-days' => ['CommuteArrangement', array_merge($arrangement, ['daysPerWeek' => null]), 'create'],
+			'arrangement-no-employee' => ['CommuteArrangement', array_merge($arrangement, ['employeeId' => ' ']), 'create'],
+			'arrangement-ended' => ['CommuteArrangement', array_merge($arrangement, ['status' => 'ended']), 'create'],
+			'other-schema' => ['Payslip', ['employeeId' => self::EMPLOYEE], 'create'],
+			'deleted' => ['Expense', $claim, 'delete'],
+		];
+		$got = [];
+		foreach ([null, 0.3] as $rate) {
+			$this->employerRate = $rate;
+			foreach ($writes as $name => [$schema, $data, $kind]) {
+				$entity = $this->entity($schema, $data);
+				$event = match ($kind) {
+					'create' => new ObjectCreatingEvent($entity),
+					'update' => new ObjectUpdatingEvent($entity, $this->entity($schema, [])),
+					default => new ObjectDeletedEvent($entity),
+				};
+				$this->listener()->handle($event);
+				$got[(string)$rate . ':' . $name] = [
+					'modified' => method_exists($event, 'getModifiedData') === true ? $event->getModifiedData() : null,
+					'errors' => method_exists($event, 'getErrors') === true ? $event->getErrors() : null,
+					'stopped' => $event->isPropagationStopped(),
+				];
+			}
+		}
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/travel-amount-writes.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)) . "\n");
+	}//end testTheWholeOutcomeOfEveryWrite()
 
 	/**
 	 * Scenario: an employee enters only the distance, 34.50 all tax free.

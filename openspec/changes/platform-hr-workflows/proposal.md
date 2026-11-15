@@ -22,6 +22,7 @@ employer switches on the ones it wants and adjusts them on the canvas.
 | row | capability | humaniq today |
 |---|---|---|
 | `plt-workflows` | Automate HR processes with configurable workflows and approvals. | `partial`: only the payroll flow is shipped; OpenRegister's flow pages exist |
+| `hir-onboarding-checklist` | Run an onboarding checklist of tasks for a new hire across HR, IT and the manager. | `partial`: the checklist covers HR and IT; no step is the manager's |
 
 ### Competitors rated yes
 

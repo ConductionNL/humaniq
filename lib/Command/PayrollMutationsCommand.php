@@ -73,25 +73,47 @@ class PayrollMutationsCommand extends Command {
 	 * @spec openspec/specs/payroll-mutation-reports/spec.md#REQ-MUT-004
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$toOption = $input->getOption('to');
-		$toRunId = (is_string($toOption) === true) ? trim($toOption) : '';
+		$toRunId = self::toRunIdOption($input);
 		if ($toRunId === '') {
 			$output->writeln('<error>--to is verplicht (de te beoordelen loonrun-id).</error>');
 			return 1;
 		}
 
-		$fromOption = $input->getOption('from');
-		$fromRunId = (is_string($fromOption) === true && trim($fromOption) !== '') ? trim($fromOption) : null;
-
-		$outcome = $this->service->diff($toRunId, $fromRunId);
-
+		$outcome = $this->service->diff($toRunId, CommandOptions::trimmed($input, 'from'));
 		if ((string)$outcome['status'] !== 'ok') {
 			$output->writeln('<error>' . (string)$outcome['message'] . '</error>');
 			return 1;
 		}
 
 		$report = $outcome['report'];
+		self::writeReport($output, $report);
 
+		return ((bool)$input->getOption('persist') === true) ? $this->persist($output, $report) : 0;
+	}//end execute()
+
+	/**
+	 * The trimmed --to run id, '' when it is not given.
+	 *
+	 * @param InputInterface $input Console input.
+	 *
+	 * @return string
+	 */
+	private static function toRunIdOption(InputInterface $input): string {
+		$toOption = $input->getOption('to');
+
+		return (is_string($toOption) === true) ? trim($toOption) : '';
+
+	}//end toRunIdOption()
+
+	/**
+	 * Write the runs compared, every changed employee line and the totals.
+	 *
+	 * @param OutputInterface      $output Console output.
+	 * @param array<string, mixed> $report The mutation report.
+	 *
+	 * @return void
+	 */
+	private static function writeReport(OutputInterface $output, array $report): void {
 		$output->writeln('<info>Humaniq payroll mutations</info>');
 		$output->writeln(sprintf('  van periode    : %s (%s)', (string)($report['fromPeriod'] ?? '(geen — eerste run)'), (string)($report['fromRunId'] ?? '-')));
 		$output->writeln(sprintf('  naar periode   : %s (%s)', (string)$report['toPeriod'], (string)$report['toRunId']));
@@ -99,22 +121,46 @@ class PayrollMutationsCommand extends Command {
 		$output->writeln('');
 
 		foreach ((array)$report['lines'] as $line) {
-			if ((string)$line['classification'] === 'unchanged') {
-				continue;
+			if ((string)$line['classification'] !== 'unchanged') {
+				self::writeLine($output, $line);
 			}
-
-			$output->writeln(sprintf(
-				'  %-10s %-36s bruto %+.2f  netto %+.2f  loonheffing %+.2f  werkgeverslasten %+.2f',
-				(string)$line['classification'],
-				(string)$line['employeeId'],
-				(float)$line['grossPayDelta'],
-				(float)$line['nettoPayDelta'],
-				(float)$line['loonheffingDelta'],
-				(float)$line['employerCostDelta']
-			));
 		}
 
 		$output->writeln('');
+		self::writeTotals($output, $report);
+
+	}//end writeReport()
+
+	/**
+	 * Write one employee's mutation line.
+	 *
+	 * @param OutputInterface      $output Console output.
+	 * @param array<string, mixed> $line   The employee's line.
+	 *
+	 * @return void
+	 */
+	private static function writeLine(OutputInterface $output, array $line): void {
+		$output->writeln(sprintf(
+			'  %-10s %-36s bruto %+.2f  netto %+.2f  loonheffing %+.2f  werkgeverslasten %+.2f',
+			(string)$line['classification'],
+			(string)$line['employeeId'],
+			(float)$line['grossPayDelta'],
+			(float)$line['nettoPayDelta'],
+			(float)$line['loonheffingDelta'],
+			(float)$line['employerCostDelta']
+		));
+
+	}//end writeLine()
+
+	/**
+	 * Write the head counts and the deltas of the report.
+	 *
+	 * @param OutputInterface      $output Console output.
+	 * @param array<string, mixed> $report The mutation report.
+	 *
+	 * @return void
+	 */
+	private static function writeTotals(OutputInterface $output, array $report): void {
 		$output->writeln(sprintf('  ingestroomd    : %d', (int)$report['enteredCount']));
 		$output->writeln(sprintf('  uitgestroomd   : %d', (int)$report['leftCount']));
 		$output->writeln(sprintf('  gewijzigd      : %d', (int)$report['changedCount']));
@@ -125,17 +171,26 @@ class PayrollMutationsCommand extends Command {
 		$output->writeln(sprintf('  werkgeverslastenΔ: %+.2f', (float)$report['employerCostDelta']));
 		$output->writeln(sprintf('  totale loonkostenΔ: %+.2f', (float)$report['totalWageCostDelta']));
 
-		if ((bool)$input->getOption('persist') === true) {
-			$persisted = $this->service->persist($report);
-			if ((string)$persisted['status'] !== 'ok') {
-				$output->writeln('<error>' . (string)$persisted['message'] . '</error>');
-				return 1;
-			}
+	}//end writeTotals()
 
-			$output->writeln(sprintf('  opgeslagen als : %s', (string)$persisted['reportId']));
+	/**
+	 * Store the report; 1 when the store is refused.
+	 *
+	 * @param OutputInterface      $output Console output.
+	 * @param array<string, mixed> $report The mutation report.
+	 *
+	 * @return int
+	 */
+	private function persist(OutputInterface $output, array $report): int {
+		$persisted = $this->service->persist($report);
+		if ((string)$persisted['status'] !== 'ok') {
+			$output->writeln('<error>' . (string)$persisted['message'] . '</error>');
+			return 1;
 		}
 
+		$output->writeln(sprintf('  opgeslagen als : %s', (string)$persisted['reportId']));
 		return 0;
-	}//end execute()
+
+	}//end persist()
 
 }//end class

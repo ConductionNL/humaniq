@@ -80,27 +80,69 @@ class ObjectHoursController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function week(?string $domainObjectType = null, ?string $domainObjectRef = null, ?string $date = null): JSONResponse {
+		$query = new ObjectWeekQuery();
+		$query->type = trim((string)$domainObjectType);
+		$query->ref = trim((string)$domainObjectRef);
+		$refusal = $this->refusalOf(query: $query, date: $date);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->weekOf(query: $query);
+	}//end week()
+
+	/**
+	 * Why the request is refused, or null with the day read into the query.
+	 *
+	 * @param ObjectWeekQuery $query The object asked for.
+	 * @param string|null $date Any day of the week, `YYYY-MM-DD`.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private function refusalOf(ObjectWeekQuery $query, ?string $date): JSONResponse|null {
+		$refusal = $this->accessRefusal(query: $query);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$query->day = $this->dayOf(date: $date);
+
+		return ($query->day === null) ? new JSONResponse(['error' => 'Geef de dag als JJJJ-MM-DD.'], Http::STATUS_BAD_REQUEST) : null;
+	}//end refusalOf()
+
+	/**
+	 * The refusal for a caller without a session, a missing object, or an object the caller may not read; else null.
+	 *
+	 * @param ObjectWeekQuery $query The object asked for.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private function accessRefusal(ObjectWeekQuery $query): JSONResponse|null {
 		if ($this->userSession->getUser() === null) {
 			return new JSONResponse(['error' => 'Log in om de uren te bekijken.'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$domainObjectType = trim((string)$domainObjectType);
-		$domainObjectRef  = trim((string)$domainObjectRef);
-		if ($domainObjectType === '' || $domainObjectRef === '') {
+		if ($query->type === '' || $query->ref === '') {
 			return new JSONResponse(['error' => 'domainObjectType en domainObjectRef zijn verplicht.'], Http::STATUS_BAD_REQUEST);
 		}
 
-		if ($this->hosts->canRead($domainObjectType, $domainObjectRef) === false) {
+		if ($this->hosts->canRead($query->type, $query->ref) === false) {
 			return new JSONResponse(['error' => 'Dit item bestaat niet of u mag het niet zien.'], Http::STATUS_NOT_FOUND);
 		}
 
-		$day = $this->dayOf(date: $date);
-		if ($day === null) {
-			return new JSONResponse(['error' => 'Geef de dag als JJJJ-MM-DD.'], Http::STATUS_BAD_REQUEST);
-		}
+		return null;
+	}//end accessRefusal()
 
+	/**
+	 * The week's hours on the object, or 500 when they cannot be read.
+	 *
+	 * @param ObjectWeekQuery $query The object and the day.
+	 *
+	 * @return JSONResponse
+	 */
+	private function weekOf(ObjectWeekQuery $query): JSONResponse {
 		try {
-			$week = $this->weekHours->forObject($domainObjectType, $domainObjectRef, $day);
+			$week = $this->weekHours->forObject($query->type, $query->ref, $query->day);
 		} catch (\Throwable $e) {
 			$this->logger->error('ObjectHoursController: the week of an object could not be read.', ['exceptionClass' => $e::class]);
 
@@ -108,7 +150,7 @@ class ObjectHoursController extends Controller {
 		}
 
 		return new JSONResponse($week);
-	}//end week()
+	}//end weekOf()
 
 	/**
 	 * The day asked for, today when none is given, or null when it is not a day.

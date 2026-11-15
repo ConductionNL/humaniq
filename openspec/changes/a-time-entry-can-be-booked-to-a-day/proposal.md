@@ -60,3 +60,7 @@ owner has no column for (pipelinq's `client`, `lead`, `billingCategory`,
 `contractorRef` and `hourlyRate`), a mapping for `task` onto the existing
 `domainObjectType`/`domainObjectRef` pair, a `user` to `employeeId` resolution,
 and a migration for existing rows.
+
+## Matrix rows
+
+Rows: `tim-weekly-timesheet`, `tim-log-against-object` (humaniq `openspec/parity/capabilities.json`).

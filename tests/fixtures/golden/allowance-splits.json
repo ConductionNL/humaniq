@@ -1,0 +1,104 @@
+{
+    "home-at-norm": {
+        "status": "paid",
+        "taxedCents": 0,
+        "untaxedCents": 1960,
+        "wkrCategory": "gericht-vrijgesteld"
+    },
+    "home-month-over-norm": {
+        "status": "paid",
+        "taxedCents": 7990,
+        "untaxedCents": 1960,
+        "wkrCategory": "gericht-vrijgesteld"
+    },
+    "home-free-margin": {
+        "status": "paid",
+        "taxedCents": 0,
+        "untaxedCents": 1960,
+        "wkrCategory": "vrije-ruimte"
+    },
+    "home-taxed": {
+        "status": "paid",
+        "taxedCents": 1960,
+        "untaxedCents": 0,
+        "wkrCategory": null
+    },
+    "home-no-norm": {
+        "status": "norm-unverified",
+        "taxedCents": 0,
+        "untaxedCents": 0,
+        "wkrCategory": null
+    },
+    "home-unverified-norm": {
+        "status": "norm-unverified",
+        "taxedCents": 0,
+        "untaxedCents": 0,
+        "wkrCategory": null
+    },
+    "home-no-days": {
+        "status": "days-missing",
+        "taxedCents": 0,
+        "untaxedCents": 0,
+        "wkrCategory": null
+    },
+    "home-no-amount": {
+        "status": "no-amount",
+        "taxedCents": 0,
+        "untaxedCents": 0,
+        "wkrCategory": null
+    },
+    "other-kind": {
+        "status": "paid",
+        "taxedCents": 0,
+        "untaxedCents": 2000,
+        "wkrCategory": "gericht-vrijgesteld"
+    },
+    "unknown-treatment": {
+        "status": "treatment-unknown",
+        "taxedCents": 0,
+        "untaxedCents": 0,
+        "wkrCategory": null
+    },
+    "travel": {
+        "status": "paid",
+        "taxedCents": 3595,
+        "untaxedCents": 11813,
+        "wkrCategory": "gericht-vrijgesteld"
+    },
+    "travel-allowance-only": {
+        "status": "paid",
+        "taxedCents": 0,
+        "untaxedCents": 8000,
+        "wkrCategory": "gericht-vrijgesteld"
+    },
+    "travel-no-amount": {
+        "status": "no-amount",
+        "taxedCents": 0,
+        "untaxedCents": 0,
+        "wkrCategory": null
+    },
+    "travel-no-arrangement": {
+        "status": "arrangement-missing",
+        "taxedCents": 0,
+        "untaxedCents": 0,
+        "wkrCategory": null
+    },
+    "travel-no-id": {
+        "status": "arrangement-missing",
+        "taxedCents": 0,
+        "untaxedCents": 0,
+        "wkrCategory": null
+    },
+    "travel-free-margin": {
+        "status": "paid",
+        "taxedCents": 3595,
+        "untaxedCents": 11813,
+        "wkrCategory": "vrije-ruimte"
+    },
+    "travel-taxed": {
+        "status": "paid",
+        "taxedCents": 4000,
+        "untaxedCents": 0,
+        "wkrCategory": null
+    }
+}

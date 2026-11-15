@@ -3,6 +3,9 @@
 /**
  * ADR-083 guard contract
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Twenty-nine classes reach OpenRegister through a private `objectService()`
  * that establishes availability first. Every one of those guards had its
  * refusing branch executed by NOTHING: the whole suite stubs
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

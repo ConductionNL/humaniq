@@ -642,6 +642,36 @@ class AgendaReadAccessTest extends TestCase {
 	}//end testABadRequestIsStillABadRequest()
 
 	/**
+	 * The refusals keep their sentences, and the answers their fields in order.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
+	 */
+	public function testTheAnswersKeepTheirSentencesAndFields(): void {
+		$window = [Http::STATUS_BAD_REQUEST, ['error' => 'from en to moeten geldige datums zijn, met to op of na from.']];
+		$answer = static fn (JSONResponse $response): array => [$response->getStatus(), $response->getData()];
+
+		$this->assertSame([Http::STATUS_BAD_REQUEST, ['error' => 'subjectType moet employee, orgUnit of resource zijn, met een subjectId.']], $answer($this->controller('hanna')->agenda(subjectType: 'room', subjectId: 'x', from: '2026-09-01', to: '2026-09-07')));
+		$this->assertSame([Http::STATUS_BAD_REQUEST, ['error' => 'subjectType moet employee, orgUnit of resource zijn, met een subjectId.']], $answer($this->controller('hanna')->agenda(subjectType: 'employee', subjectId: ' ', from: '2026-09-01', to: '2026-09-07')));
+		$this->assertSame($window, $answer($this->controller('hanna')->agenda(subjectType: 'employee', subjectId: 'emp-anna', from: '2026-09-07', to: '2026-09-01')));
+		$this->assertSame($window, $answer($this->controller('hanna')->availability(from: 'nope', to: '2026-09-07')));
+		$this->assertSame($window, $answer($this->controller('hanna')->capacity(from: '2026-09-07', to: '2026-09-01')));
+
+		$agenda = $this->controller('hanna')->agenda(subjectType: 'employee', subjectId: ' emp-anna ', from: '2026-09-01T10:00', to: '2026-09-07');
+		$this->assertSame(['subjectType', 'subjectId', 'from', 'to', 'entries'], array_keys($agenda->getData()));
+		$this->assertSame(['employee', 'emp-anna', '2026-09-01', '2026-09-07'], array_slice(array_values($agenda->getData()), 0, 4));
+
+		$available = $this->controller('hanna')->availability(from: '2026-09-01', to: '2026-09-07', orgUnitId: ' ', competences: ' bhv, ehbo ,bhv,, ');
+		$this->assertSame(['from', 'to', 'orgUnitId', 'competences', 'employees'], array_keys($available->getData()));
+		$this->assertSame(['2026-09-01', '2026-09-07', null, ['bhv', 'ehbo']], array_slice(array_values($available->getData()), 0, 4));
+
+		$unit = $this->controller('hanna')->availability(from: '2026-09-01', to: '2026-09-07', orgUnitId: 'unit-zorg');
+		$this->assertSame(['unit-zorg', []], [$unit->getData()['orgUnitId'], $unit->getData()['competences']]);
+	}//end testTheAnswersKeepTheirSentencesAndFields()
+
+	/**
 	 * Read availability or capacity for the first week of September 2026.
 	 *
 	 * @param string|null $viewer    The acting user.

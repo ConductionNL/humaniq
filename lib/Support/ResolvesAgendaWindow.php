@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Support;
 
 use DateTimeImmutable;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\JSONResponse;
 
 /**
  * Reads the requested date window of an agenda style endpoint.
@@ -54,4 +56,18 @@ trait ResolvesAgendaWindow {
 
 		return [$start, $end];
 	}//end window()
+
+	/**
+	 * The refusal of a period that is not usable.
+	 *
+	 * @return JSONResponse 400.
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
+	 */
+	private static function unusableWindow(): JSONResponse {
+		return new JSONResponse(
+			['error' => 'from en to moeten geldige datums zijn, met to op of na from.'],
+			Http::STATUS_BAD_REQUEST
+		);
+	}//end unusableWindow()
 }//end class

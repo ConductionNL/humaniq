@@ -93,33 +93,55 @@ class MachineReadableZone {
 	 * @return array{fields: array<string, array{0: string, 1: string}>, type: string, nationality: string}|null
 	 */
 	private function zoneFields(array $lines): ?array {
-		if (count($lines) === 2 && strlen($lines[0]) === 44 && strlen($lines[1]) === 44) {
-			$line = $lines[1];
-			return [
-				'fields' => [
-					'document number' => [substr($line, 0, 9), $line[9]],
-					'birth date' => [substr($line, 13, 6), $line[19]],
-					'expiry date' => [substr($line, 21, 6), $line[27]],
-				],
-				'type' => 'paspoort',
-				'nationality' => substr($line, 10, 3),
-			];
-		}
-
-		if (count($lines) === 3 && strlen($lines[0]) === 30 && strlen($lines[1]) === 30) {
-			return [
-				'fields' => [
-					'document number' => [substr($lines[0], 5, 9), $lines[0][14]],
-					'birth date' => [substr($lines[1], 0, 6), $lines[1][6]],
-					'expiry date' => [substr($lines[1], 8, 6), $lines[1][14]],
-				],
-				'type' => $this->cardType(code: substr($lines[0], 0, 2)),
-				'nationality' => substr($lines[1], 15, 3),
-			];
-		}
-
-		return null;
+		return ($this->passportFields(lines: $lines) ?? $this->cardFields(lines: $lines));
 	}//end zoneFields()
+
+	/**
+	 * The fields of a passport zone (two lines of 44), or null when it is not one.
+	 *
+	 * @param array<int, string> $lines The zone lines.
+	 *
+	 * @return array{fields: array<string, array{0: string, 1: string}>, type: string, nationality: string}|null
+	 */
+	private function passportFields(array $lines): array|null {
+		if (count($lines) !== 2 || strlen($lines[0]) !== 44 || strlen($lines[1]) !== 44) {
+			return null;
+		}
+
+		$line = $lines[1];
+		return [
+			'fields' => [
+				'document number' => [substr($line, 0, 9), $line[9]],
+				'birth date' => [substr($line, 13, 6), $line[19]],
+				'expiry date' => [substr($line, 21, 6), $line[27]],
+			],
+			'type' => 'paspoort',
+			'nationality' => substr($line, 10, 3),
+		];
+	}//end passportFields()
+
+	/**
+	 * The fields of a card zone (three lines, the first two of 30), or null when it is not one.
+	 *
+	 * @param array<int, string> $lines The zone lines.
+	 *
+	 * @return array{fields: array<string, array{0: string, 1: string}>, type: string, nationality: string}|null
+	 */
+	private function cardFields(array $lines): array|null {
+		if (count($lines) !== 3 || strlen($lines[0]) !== 30 || strlen($lines[1]) !== 30) {
+			return null;
+		}
+
+		return [
+			'fields' => [
+				'document number' => [substr($lines[0], 5, 9), $lines[0][14]],
+				'birth date' => [substr($lines[1], 0, 6), $lines[1][6]],
+				'expiry date' => [substr($lines[1], 8, 6), $lines[1][14]],
+			],
+			'type' => $this->cardType(code: substr($lines[0], 0, 2)),
+			'nationality' => substr($lines[1], 15, 3),
+		];
+	}//end cardFields()
 
 	/**
 	 * The document type a TD1 card code names: I-R (residence) or an ID card.

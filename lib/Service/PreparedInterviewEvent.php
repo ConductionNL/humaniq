@@ -40,6 +40,7 @@ final class PreparedInterviewEvent {
 	 * @param string $dtend Compact UTC DATE-TIME (YYYYMMDDTHHMMSSZ), for diffing.
 	 * @param string $summary The AVG-safe SUMMARY text (unescaped), for diffing.
 	 * @param string $location The LOCATION text (unescaped, '' means none), for diffing.
+	 * @param array<int, array{name: string, email: string}>|null $attendees The invited interviewers, or null when the attendees are not known.
 	 */
 	public function __construct(
 		public readonly string $storedUid,
@@ -50,6 +51,7 @@ final class PreparedInterviewEvent {
 		public readonly string $dtend,
 		public readonly string $summary,
 		public readonly string $location,
+		public readonly ?array $attendees = null,
 	) {
 
 	}//end __construct()

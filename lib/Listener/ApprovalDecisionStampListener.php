@@ -33,18 +33,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
-use OCP\EventDispatcher\Event;
-use OCP\EventDispatcher\IEventListener;
 use OCP\IUserSession;
 
 /**
  * Stamps the submit and decision moments of an approvable request.
  *
- * @template-implements IEventListener<Event>
- *
  * @spec openspec/specs/approvals-inbox/spec.md#REQ-API-001
  */
-class ApprovalDecisionStampListener implements IEventListener {
+class ApprovalDecisionStampListener extends ObjectUpdatingListener {
 
 	/**
 	 * The schemas this listener stamps, by slug.
@@ -65,24 +61,20 @@ class ApprovalDecisionStampListener implements IEventListener {
 	/**
 	 * Stamp a submit or a decision.
 	 *
-	 * @param Event $event The pre-save event.
+	 * @param ObjectUpdatingEvent $event The pre-save event.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/approvals-inbox/spec.md#REQ-API-001
 	 */
-	public function handle(Event $event): void {
-		if (($event instanceof ObjectUpdatingEvent) === false) {
-			return;
-		}
-
+	protected function onUpdating(ObjectUpdatingEvent $event): void {
 		$new = ($event->getNewObject()->getObject() ?? []);
 		$old = ($event->getOldObject()?->getObject() ?? []);
 		$stamps = $this->stampsFor(from: (string)($old['status'] ?? ''), to: (string)($new['status'] ?? ''));
 		if ($stamps !== []) {
 			$event->setModifiedData(array_merge($event->getModifiedData(), $stamps));
 		}
-	}//end handle()
+	}//end onUpdating()
 
 	/**
 	 * The fields a move from one status to another stamps.

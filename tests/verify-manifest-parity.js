@@ -203,16 +203,55 @@ function writeBaseline(effective) {
 	);
 }
 
-function main() {
-	const failures = [];
-	const effective = buildEffectiveManifest();
-
-	if (process.argv.includes("--update")) {
-		writeBaseline(effective);
-		process.exit(0);
+/**
+ * Print the first line where two canonical JSON renderings differ.
+ *
+ * @param {string} label What is compared, as it appears in the message.
+ * @param {*} before The baseline value.
+ * @param {*} after The effective value.
+ * @return {void}
+ */
+function printFirstDiff(label, before, after) {
+	const a = JSON.stringify(canonical(before), null, 1).split("\n");
+	const b = JSON.stringify(canonical(after), null, 1).split("\n");
+	for (let i = 0; i < Math.max(a.length, b.length); i++) {
+		if (a[i] !== b[i]) {
+			console.error(
+				`[parity]   ${label} at canonical line ${i}:\n    baseline:  ${a[i]}\n    effective: ${b[i]}`,
+			);
+			break;
+		}
 	}
+}
 
-	// --- Check 1: (id, route) pair set equality -----------------------------
+/**
+ * Count the menu entries that navigate somewhere, children included.
+ *
+ * @param {object[]} nodes Menu nodes.
+ * @return {number} The number of entries with a route, href or action.
+ */
+function countNavigable(nodes) {
+	return nodes.reduce(
+		(n, e) =>
+			n +
+			(e.route !== undefined ||
+			e.href !== undefined ||
+			e.action !== undefined
+				? 1
+				: 0) +
+			(Array.isArray(e.children) ? countNavigable(e.children) : 0),
+		0,
+	);
+}
+
+/**
+ * Check 1: the (id, route) pairs equal the baseline's.
+ *
+ * @param {object} effective The effective manifest.
+ * @param {string[]} failures Failures so far; appended to.
+ * @return {void}
+ */
+function checkPagePairs(effective, failures) {
 	const baselinePairs = JSON.parse(
 		fs.readFileSync(path.join(FIXTURE_DIR, "pages.json"), "utf8"),
 	);
@@ -238,8 +277,16 @@ function main() {
 	console.log(
 		`[parity] check 1 — (id, route) pairs: baseline=${baselineSet.size} effective=${effectiveSet.size} ${failures.length === 0 ? "EQUAL" : "NOT EQUAL"}`,
 	);
+}
 
-	// --- Check 2: menu tree structural equality -----------------------------
+/**
+ * Check 2: the menu tree is structurally equal to the baseline's.
+ *
+ * @param {object} effective The effective manifest.
+ * @param {string[]} failures Failures so far; appended to.
+ * @return {void}
+ */
+function checkMenuTree(effective, failures) {
 	const baselineMenu = JSON.parse(
 		fs.readFileSync(path.join(FIXTURE_DIR, "menu.json"), "utf8"),
 	);
@@ -249,37 +296,22 @@ function main() {
 		failures.push(
 			"menu tree differs from baseline (structure, order, or entry content)",
 		);
-		const a = JSON.stringify(canonical(baselineMenu), null, 1).split("\n");
-		const b = JSON.stringify(canonical(effective.menu), null, 1).split(
-			"\n",
-		);
-		for (let i = 0; i < Math.max(a.length, b.length); i++) {
-			if (a[i] !== b[i]) {
-				console.error(
-					`[parity]   first menu diff at canonical line ${i}:\n    baseline:  ${a[i]}\n    effective: ${b[i]}`,
-				);
-				break;
-			}
-		}
+		printFirstDiff("first menu diff", baselineMenu, effective.menu);
 	}
-	const countNavigable = (nodes) =>
-		nodes.reduce(
-			(n, e) =>
-				n +
-				(e.route !== undefined ||
-				e.href !== undefined ||
-				e.action !== undefined
-					? 1
-					: 0) +
-				(Array.isArray(e.children) ? countNavigable(e.children) : 0),
-			0,
-		);
 	console.log(
 		`[parity] check 2 — menu tree: ${effective.menu.length} top-level nodes, ${countNavigable(effective.menu)} navigable entries — ${menuEqual ? "STRUCTURALLY EQUAL" : "DIFFERS"}`,
 	);
+}
 
-	// --- Check 3: full-page deep equality (all pages, incl. every expanded
-	//     pageInstance vs its original page object) --------------------------
+/**
+ * Check 3: every page, including every expanded pageInstance, deep-equals
+ * its baseline page.
+ *
+ * @param {object} effective The effective manifest.
+ * @param {string[]} failures Failures so far; appended to.
+ * @return {void}
+ */
+function checkPageContent(effective, failures) {
 	const baselineManifest = JSON.parse(
 		fs.readFileSync(
 			path.join(FIXTURE_DIR, "manifest-canonical.json"),
@@ -296,34 +328,34 @@ function main() {
 			continue;
 		}
 		failures.push(`page CONTENT differs for ${page.id}`);
-		const a = JSON.stringify(canonical(original), null, 1).split("\n");
-		const b = JSON.stringify(canonical(page), null, 1).split("\n");
-		for (let i = 0; i < Math.max(a.length, b.length); i++) {
-			if (a[i] !== b[i]) {
-				console.error(
-					`[parity]   ${page.id} first diff at canonical line ${i}:\n    baseline:  ${a[i]}\n    effective: ${b[i]}`,
-				);
-				break;
-			}
-		}
+		printFirstDiff(`${page.id} first diff`, original, page);
 	}
 	console.log(
 		`[parity] check 3 — full-page deep equality: ${deepEqual}/${effective.pages.length} pages byte-identical (canonical form)`,
 	);
+}
 
-	// --- Check 4: static vs dynamic route collision pairs -------------------
-	// DERIVED from the effective manifest, not hardcoded. The list used to name
-	// the six approval routes literally, and those pages are now `menu[].query`
-	// presets over their canonical index (ADR-097 Decision 5). A hardcoded list
-	// that outlives its routes does not fail — it silently checks nothing — so
-	// the pairs are computed: every static route whose parent segment also has
-	// a dynamic `/:id` sibling, which is exactly the shape that can be shadowed.
+/**
+ * The static routes that sit under a parent which also has a dynamic `/:id`
+ * sibling, as [route, page id] pairs.
+ *
+ * DERIVED from the effective manifest, not hardcoded. The list used to name
+ * the six approval routes literally, and those pages are now `menu[].query`
+ * presets over their canonical index (ADR-097 Decision 5). A hardcoded list
+ * that outlives its routes does not fail — it silently checks nothing — so
+ * the pairs are computed: every static route whose parent segment also has
+ * a dynamic `/:id` sibling, which is exactly the shape that can be shadowed.
+ *
+ * @param {object} effective The effective manifest.
+ * @return {Array<[string, string]>} The pairs.
+ */
+function collisionPairsOf(effective) {
 	const dynamicParents = new Map();
 	for (const pg of effective.pages) {
 		if (!pg.route || !pg.route.includes(":")) continue;
 		dynamicParents.set(pg.route.slice(0, pg.route.lastIndexOf("/")), pg.id);
 	}
-	const collisionPairs = effective.pages
+	return effective.pages
 		.filter(
 			(pg) =>
 				pg.route
@@ -332,7 +364,18 @@ function main() {
 				&& dynamicParents.has(pg.route.slice(0, pg.route.lastIndexOf("/"))),
 		)
 		.map((pg) => [pg.route, pg.id]);
+}
 
+/**
+ * Check 4: every static route that a dynamic sibling could shadow resolves
+ * to its static page.
+ *
+ * @param {object} effective The effective manifest.
+ * @param {string[]} failures Failures so far; appended to.
+ * @return {void}
+ */
+function checkCollisionRoutes(effective, failures) {
+	const collisionPairs = collisionPairsOf(effective);
 	let resolved = 0;
 	for (const [routePath, expectedName] of collisionPairs) {
 		const name = resolveRouteName(effective, routePath);
@@ -351,33 +394,56 @@ function main() {
 			`[parity] check 4 — static/dynamic collision routes: ${resolved}/${collisionPairs.length} resolve to the static page`,
 		);
 	}
+}
 
-	// --- Check 5: the SHIPPED effective manifest is the effective manifest ---
-	//
-	// Without this the file is a snapshot nobody re-cuts, and the endpoint goes
-	// back to serving something that is not the app. A missing file is a
-	// failure, not a reason to fall back: a silent fallback to the base
-	// manifest is the defect this check exists to prevent.
+/**
+ * Check 5: the SHIPPED effective manifest is the effective manifest.
+ *
+ * Without this the file is a snapshot nobody re-cuts, and the endpoint goes
+ * back to serving something that is not the app. A missing file is a
+ * failure, not a reason to fall back: a silent fallback to the base
+ * manifest is the defect this check exists to prevent.
+ *
+ * @param {object} effective The effective manifest.
+ * @param {string[]} failures Failures so far; appended to.
+ * @return {void}
+ */
+function checkShippedManifest(effective, failures) {
 	if (fs.existsSync(SHIPPED_EFFECTIVE) === false) {
 		failures.push(
 			"src/manifest.effective.json is missing — the manifest endpoint has nothing correct to serve. Run `node tests/verify-manifest-parity.js --update`.",
 		);
-	} else {
-		const shipped = fs.readFileSync(SHIPPED_EFFECTIVE, "utf8");
-		const expected =
-			JSON.stringify(canonical(effective), null, "\t") + "\n";
-		if (shipped !== expected) {
-			failures.push(
-				"src/manifest.effective.json is STALE — it no longer matches the manifest this build produces. Run `node tests/verify-manifest-parity.js --update`.",
-			);
-		} else {
-			console.log(
-				`[parity] check 5 — shipped effective manifest: current (${effective.pages.length} pages)`,
-			);
-		}
+		return;
+	}
+	const shipped = fs.readFileSync(SHIPPED_EFFECTIVE, "utf8");
+	const expected =
+		JSON.stringify(canonical(effective), null, "\t") + "\n";
+	if (shipped !== expected) {
+		failures.push(
+			"src/manifest.effective.json is STALE — it no longer matches the manifest this build produces. Run `node tests/verify-manifest-parity.js --update`.",
+		);
+		return;
+	}
+	console.log(
+		`[parity] check 5 — shipped effective manifest: current (${effective.pages.length} pages)`,
+	);
+}
+
+function main() {
+	const failures = [];
+	const effective = buildEffectiveManifest();
+
+	if (process.argv.includes("--update")) {
+		writeBaseline(effective);
+		process.exit(0);
 	}
 
-	// --- Verdict ------------------------------------------------------------
+	checkPagePairs(effective, failures);
+	checkMenuTree(effective, failures);
+	checkPageContent(effective, failures);
+	checkCollisionRoutes(effective, failures);
+	checkShippedManifest(effective, failures);
+
 	if (failures.length > 0) {
 		console.error(`\n[parity] FAIL — ${failures.length} discrepancy(ies):`);
 		for (const f of failures) console.error(`  - ${f}`);
