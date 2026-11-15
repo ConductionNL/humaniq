@@ -29,7 +29,6 @@ use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\DeploymentPlanService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\HumaniqRoles;
-use OCA\Humaniq\Service\IptoExportService;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
@@ -127,7 +126,6 @@ class DeploymentControllerTest extends TestCase {
 			$gateway,
 			$rbac,
 			new DeploymentPlanService(static fn (string $caoId): ?float => null),
-			new IptoExportService(),
 			$roles,
 			$session,
 			$administrations

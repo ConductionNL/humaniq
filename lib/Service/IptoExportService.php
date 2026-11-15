@@ -101,46 +101,11 @@ class IptoExportService {
 		}
 
 		$schoolYear = DeploymentPlanService::schoolYearOf(day: $monday);
-		$rows = [];
-		$notConfirmed = [];
-		foreach ($plans as $plan) {
-			if ((string)($plan['schoolYear'] ?? '') !== $schoolYear) {
-				continue;
-			}
-
-			$employeeId = (string)($plan['employeeId'] ?? '');
-			$employee = ($employees[$employeeId] ?? []);
-			if (($plan['status'] ?? null) !== self::CONFIRMED_STATUS) {
-				$notConfirmed[] = [
-					'employeeId' => $employeeId,
-					'name'       => self::name(employee: $employee),
-					'planId'     => ($plan['id'] ?? null),
-					'status'     => ($plan['status'] ?? null),
-				];
-				continue;
-			}
-
-			foreach (self::teachingLines(plan: $plan) as $line) {
-				$key = $employeeId."\0".$line['subject']."\0".$line['educationLevel'];
-				if (isset($rows[$key]) === false) {
-					$rows[$key] = [
-						'employeeId'     => $employeeId,
-						'employeeNumber' => ($employee['employeeNumber'] ?? null),
-						'name'           => self::name(employee: $employee),
-						'subject'        => $line['subject'],
-						'educationLevel' => $line['educationLevel'],
-						'hoursPerWeek'   => 0.0,
-					];
-				}
-
-				$rows[$key]['hoursPerWeek'] = round($rows[$key]['hoursPerWeek'] + $line['hoursPerWeek'], 2);
-			}
-		}//end foreach
-
-		$rows = array_values($rows);
-		usort(
-			$rows,
-			static fn (array $left, array $right): int => [$left['name'], $left['subject'], $left['educationLevel']] <=> [$right['name'], $right['subject'], $right['educationLevel']]
+		$ofYear = array_filter($plans, static fn (array $plan): bool => (string)($plan['schoolYear'] ?? '') === $schoolYear);
+		$confirmed = array_filter($ofYear, static fn (array $plan): bool => ($plan['status'] ?? null) === self::CONFIRMED_STATUS);
+		$notConfirmed = array_map(
+			static fn (array $plan): array => self::notConfirmedRow(plan: $plan, employees: $employees),
+			array_values(array_diff_key($ofYear, $confirmed))
 		);
 
 		return [
@@ -149,10 +114,69 @@ class IptoExportService {
 			'referenceWeek'        => trim($referenceWeek),
 			'schoolYear'           => $schoolYear,
 			'specificationVersion' => self::SPECIFICATION_VERSION,
-			'rows'                 => $rows,
+			'rows'                 => self::teachingRows(plans: $confirmed, employees: $employees),
 			'notConfirmed'         => $notConfirmed,
 		];
 	}//end export()
+
+	/**
+	 * The row of a plan left out of the export because it is not confirmed.
+	 *
+	 * @param array<string, mixed>                $plan      The DeploymentPlan row.
+	 * @param array<string, array<string, mixed>> $employees The teachers, by employee id.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#scenario-a-draft-plan-is-left-out
+	 */
+	private static function notConfirmedRow(array $plan, array $employees): array {
+		$employeeId = (string)($plan['employeeId'] ?? '');
+
+		return [
+			'employeeId' => $employeeId,
+			'name'       => self::name(employee: ($employees[$employeeId] ?? [])),
+			'planId'     => ($plan['id'] ?? null),
+			'status'     => ($plan['status'] ?? null),
+		];
+	}//end notConfirmedRow()
+
+	/**
+	 * The teaching hours per week of the confirmed plans, one row per teacher, subject and education level.
+	 *
+	 * @param array<int, array<string, mixed>>    $plans     The confirmed DeploymentPlan rows of the school year.
+	 * @param array<string, array<string, mixed>> $employees The teachers, by employee id.
+	 *
+	 * @return array<int, array<string, mixed>> The rows, by name, subject and education level.
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#scenario-the-november-export
+	 */
+	private static function teachingRows(array $plans, array $employees): array {
+		$rows = [];
+		foreach ($plans as $plan) {
+			$employeeId = (string)($plan['employeeId'] ?? '');
+			$employee = ($employees[$employeeId] ?? []);
+			foreach (self::teachingLines(plan: $plan) as $line) {
+				$key = $employeeId."\0".$line['subject']."\0".$line['educationLevel'];
+				$rows[$key] ??= [
+					'employeeId'     => $employeeId,
+					'employeeNumber' => ($employee['employeeNumber'] ?? null),
+					'name'           => self::name(employee: $employee),
+					'subject'        => $line['subject'],
+					'educationLevel' => $line['educationLevel'],
+					'hoursPerWeek'   => 0.0,
+				];
+				$rows[$key]['hoursPerWeek'] = round($rows[$key]['hoursPerWeek'] + $line['hoursPerWeek'], 2);
+			}
+		}
+
+		$rows = array_values($rows);
+		usort(
+			$rows,
+			static fn (array $left, array $right): int => [$left['name'], $left['subject'], $left['educationLevel']] <=> [$right['name'], $right['subject'], $right['educationLevel']]
+		);
+
+		return $rows;
+	}//end teachingRows()
 
 	/**
 	 * A plan's teaching lines with a numeric weekly figure.

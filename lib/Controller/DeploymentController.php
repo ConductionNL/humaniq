@@ -62,7 +62,6 @@ class DeploymentController extends Controller {
 	 * @param RecordStoreInterface  $gateway         Register reads.
 	 * @param RbacObjectReader      $rbac            The unit and teachers, under the caller's RBAC.
 	 * @param DeploymentPlanService $plans           The plan arithmetic and the school view.
-	 * @param IptoExportService     $ipto            The IPTO staff count rows.
 	 * @param HumaniqRoles          $roles           The HR check.
 	 * @param IUserSession          $session         The caller.
 	 * @param AdministrationService $administrations The caller's active administration.
@@ -72,7 +71,6 @@ class DeploymentController extends Controller {
 		private readonly RecordStoreInterface $gateway,
 		private readonly RbacObjectReader $rbac,
 		private readonly DeploymentPlanService $plans,
-		private readonly IptoExportService $ipto,
 		private readonly HumaniqRoles $roles,
 		private readonly IUserSession $session,
 		private readonly AdministrationService $administrations,
@@ -104,17 +102,7 @@ class DeploymentController extends Controller {
 		}
 
 		$assignments = $this->gateway->findFiltered(schema: 'OrgAssignment', filters: ['orgUnitId' => $id]);
-		$readable = [];
-		foreach ($assignments as $assignment) {
-			$employeeId = (string)($assignment['employeeId'] ?? '');
-			if ($employeeId === '' || array_key_exists($employeeId, $readable) === true) {
-				continue;
-			}
-
-			$readable[$employeeId] = $this->rbac->findOrNull(id: $employeeId, schema: 'Employee');
-		}
-
-		$readable = array_filter($readable, static fn (?array $employee): bool => $employee !== null);
+		$readable = $this->readableEmployees(assignments: $assignments);
 		$plans = $this->gateway->findFiltered(
 			schema: 'DeploymentPlan',
 			filters: ['orgUnitId' => $id, 'schoolYear' => $year],
@@ -152,32 +140,101 @@ class DeploymentController extends Controller {
 			return new JSONResponse(['message' => 'referenceWeek must be YYYY-Www'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$administrationId = $this->administrations->getActiveAdministrationId((string)$uid);
-		$administration = null;
-		if ($administrationId !== null) {
-			$administration = ($this->gateway->findFiltered(schema: 'hrAdministration', filters: ['administrationId' => $administrationId])[0] ?? null);
-		}
-
+		$administration = $this->activeAdministration(uid: (string)$uid);
 		if ($administration === null) {
 			return new JSONResponse(['message' => 'No active administration'], Http::STATUS_FORBIDDEN);
 		}
 
-		$administration['id'] = $administrationId;
 		if (trim((string)($administration['brinNummer'] ?? '')) === '') {
 			return new JSONResponse(['message' => 'The administration has no BRIN number'], Http::STATUS_CONFLICT);
 		}
 
+		$plans = $this->plansOf(administrationId: (string)$administration['id']);
+
+		return new JSONResponse((new IptoExportService())->export(administration: $administration, plans: $plans, employees: $this->employeesOf(plans: $plans), referenceWeek: $referenceWeek));
+	}//end iptoExport()
+
+	/**
+	 * The employees of a unit's assignments the caller may read, by employee id.
+	 *
+	 * @param array<int, array<string, mixed>> $assignments The unit's OrgAssignment rows.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-a-school-leader-shall-see-every-teacher-s-plan-for-their-school-req-edu-002
+	 */
+	private function readableEmployees(array $assignments): array {
+		$readable = [];
+		foreach ($assignments as $assignment) {
+			$employeeId = (string)($assignment['employeeId'] ?? '');
+			if ($employeeId === '' || array_key_exists($employeeId, $readable) === true) {
+				continue;
+			}
+
+			$readable[$employeeId] = $this->rbac->findOrNull(id: $employeeId, schema: 'Employee');
+		}
+
+		return array_filter($readable, static fn (?array $employee): bool => $employee !== null);
+	}//end readableEmployees()
+
+	/**
+	 * The caller's active hrAdministration with its `id`, or null when there is none.
+	 *
+	 * @param string $uid The caller.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-the-ipto-staff-count-file-shall-be-produced-from-the-confirmed-plans-req-edu-003
+	 */
+	private function activeAdministration(string $uid): ?array {
+		$administrationId = $this->administrations->getActiveAdministrationId($uid);
+		if ($administrationId === null) {
+			return null;
+		}
+
+		$administration = ($this->gateway->findFiltered(schema: 'hrAdministration', filters: ['administrationId' => $administrationId])[0] ?? null);
+		if ($administration === null) {
+			return null;
+		}
+
+		$administration['id'] = $administrationId;
+
+		return $administration;
+	}//end activeAdministration()
+
+	/**
+	 * The DeploymentPlan rows of the org units of one administration.
+	 *
+	 * @param string $administrationId The administration.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-the-ipto-staff-count-file-shall-be-produced-from-the-confirmed-plans-req-edu-003
+	 */
+	private function plansOf(string $administrationId): array {
 		$units = [];
 		foreach ($this->gateway->findFiltered(schema: 'OrgUnit', filters: ['administrationId' => $administrationId]) as $unit) {
 			$units[(string)($unit['id'] ?? '')] = true;
 		}
 
-		$plans = array_values(
+		return array_values(
 			array_filter(
 				$this->gateway->loadAll('DeploymentPlan'),
 				static fn (array $plan): bool => isset($units[(string)($plan['orgUnitId'] ?? '')]) === true
 			)
 		);
+	}//end plansOf()
+
+	/**
+	 * The teachers of the plans, by employee id.
+	 *
+	 * @param array<int, array<string, mixed>> $plans The DeploymentPlan rows.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#scenario-the-november-export
+	 */
+	private function employeesOf(array $plans): array {
 		$employees = [];
 		foreach ($plans as $plan) {
 			$employeeId = (string)($plan['employeeId'] ?? '');
@@ -186,6 +243,6 @@ class DeploymentController extends Controller {
 			}
 		}
 
-		return new JSONResponse($this->ipto->export(administration: $administration, plans: $plans, employees: $employees, referenceWeek: $referenceWeek));
-	}//end iptoExport()
+		return $employees;
+	}//end employeesOf()
 }//end class
