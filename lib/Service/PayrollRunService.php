@@ -184,6 +184,9 @@ use OCA\Humaniq\Payroll\SickPayWage;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -380,8 +383,7 @@ class PayrollRunService {
 						'jurisdiction' => 'NL',
 						'status' => 'draft',
 					],
-					register: $this->register(),
-					schema: 'PayrollRun',
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: 'PayrollRun')),
 					_rbac: false,
 					_multitenancy: false
 				)
@@ -1069,9 +1071,10 @@ class PayrollRunService {
 			$orphanId = $this->idOf($orphan);
 			try {
 				$this->objectService()->deleteObject(
-					uuid: $orphanId,
-					register: $this->register(),
-					schema: 'Payslip',
+					new ObjectDeletion(
+						uuid: $orphanId,
+						target: new ObjectFindTarget(register: $this->register(), schema: 'Payslip')
+					),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -1133,9 +1136,10 @@ class PayrollRunService {
 		try {
 			$this->objectService()->saveObject(
 				object: $runUpdate,
-				register: $this->register(),
-				schema: 'PayrollRun',
-				uuid: ($state['runId'] === '' ? null : $state['runId']),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'PayrollRun'),
+					uuid: $state['runId'] === '' ? null : $state['runId']
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1558,9 +1562,10 @@ class PayrollRunService {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: 'Payslip',
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: 'Payslip'),
+				uuid: $uuid
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

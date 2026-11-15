@@ -36,6 +36,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\Humaniq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Session users: "clerk" (no role), "hr-only" (humaniq-hr), "pay-only"
@@ -128,6 +129,7 @@ abstract class CallerIdentityTestCase extends TestCase {
 				return $this;
 			}
 			public function find(...$a) {
+				$a = LegacyObjectArgs::flatten(args: $a);
 				$id = $a['id'] ?? $a[0];
 				return $this->rows[$id] ?? null;
 			}

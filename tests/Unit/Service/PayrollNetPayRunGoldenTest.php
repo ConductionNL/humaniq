@@ -27,6 +27,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use OCA\Humaniq\Tests\Unit\Service\Support\InMemoryLocks;
 use OCP\Lock\ILockingProvider;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Golden test for {@see PayrollNetPayService::processRun()}.
@@ -250,12 +251,13 @@ class PayrollNetPayRunGoldenTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): mixed {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$recorded = $object;
 				foreach (['createdAt'] as $key) {
 					if (isset($recorded[$key]) === true) {

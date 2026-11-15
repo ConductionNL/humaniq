@@ -245,7 +245,7 @@ jobs:
       #
       # So this pin made humaniq's CI test the app against a foundation it is not
       # built on, and reported the difference as an application bug.
-      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"main"}]'
 
       # ── Hydra mechanical gates ───────────────────────────────────────────
       # Enabled here for the FIRST time. This repo previously left
