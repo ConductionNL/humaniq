@@ -1,3 +1,0 @@
-- [x] rowHours.mjs: parseHours, isForObject, ROW_RECORDED_EVENT
-- [x] CnHoursWidget: row surface = one Hours field, books on the host's recorded-note event
-- [x] tests/js/rowHours.test.mjs (npm run test:js)
