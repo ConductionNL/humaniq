@@ -41,6 +41,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Restamping open records.
@@ -49,6 +50,9 @@ use Psr\Log\LoggerInterface;
  * @uses   \OCA\Humaniq\Service\HoursRegisterGateway
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\OrgResolutionService
+ * @uses \OCA\Humaniq\Service\HumaniqRoles
+ * @uses \OCA\Humaniq\Service\ManagerDeputies
+ * @uses \OCA\Humaniq\Service\OrgLookups
  */
 class ManagerStampRepairTest extends TestCase {
 
@@ -183,20 +187,21 @@ class ManagerStampRepairTest extends TestCase {
 			 */
 			public function saveObject(
 				array|object $object,
-				?array $extend = [],
-				mixed $register = null,
-				mixed $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): \OCA\OpenRegister\Db\ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($this->failOn !== null && $uuid === $this->failOn) {
 					throw new \RuntimeException('validation failed');
 				}
 
 				$this->saved[] = $this->marker->isInternal();
 
-				return parent::saveObject($object, $extend, $register, $schema, $uuid, $_rbac, $_multitenancy);
+				return parent::saveObject($object, $options, $_rbac, $_multitenancy);
 			}//end saveObject()
 		};
 

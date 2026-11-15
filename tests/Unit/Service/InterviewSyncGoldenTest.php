@@ -45,6 +45,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Golden cases for the interview calendar sync.
@@ -61,6 +63,9 @@ use RuntimeException;
  * @uses   \OCA\Humaniq\Support\ResolvesObjectService
  * @uses   \OCA\Humaniq\Support\NormalisesRows
  * @uses   \OCA\Humaniq\Support\ReadsIcsValues
+ * @uses \OCA\Humaniq\Service\CalDavBackendResolver
+ * @uses \OCA\Humaniq\Service\IcsText
+ * @uses   \OCA\Humaniq\Service\CalendarSettings
  *
  * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-003
  */
@@ -213,7 +218,9 @@ class InterviewSyncGoldenTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				foreach (($this->rows[(string)$schema] ?? []) as $row) {
 					if ((string)($row['id'] ?? '') === $id) {
 						return $row;
@@ -233,7 +240,10 @@ class InterviewSyncGoldenTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, string $register, string $schema, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->test->calls[] = ['saveObject', $register, $schema, $uuid, $_rbac, $_multitenancy, $object];
 				if ($this->failSave === true) {
 					throw new RuntimeException('save refused');

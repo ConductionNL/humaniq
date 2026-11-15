@@ -32,6 +32,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * PayrollMutationsCommand over a PayrollMutationService double.
  *
  * @covers \OCA\Humaniq\Command\PayrollMutationsCommand
+ * @uses \OCA\Humaniq\Command\CommandOptions
  */
 class PayrollMutationsCommandTest extends TestCase {
 

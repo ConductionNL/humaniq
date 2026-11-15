@@ -37,6 +37,7 @@ use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Settling the shipped example claim.
@@ -46,6 +47,7 @@ use Psr\Log\LoggerInterface;
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
  * @uses   \OCA\Humaniq\Service\PayrollExpenseFoldService
  * @uses   \OCA\Humaniq\Service\AllowanceSplitter
+ * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
  */
 class SettleShippedExampleClaimTest extends TestCase {
 
@@ -144,20 +146,21 @@ class SettleShippedExampleClaimTest extends TestCase {
 			 */
 			public function saveObject(
 				array|object $object,
-				?array $extend = [],
-				mixed $register = null,
-				mixed $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): \OCA\OpenRegister\Db\ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($this->failSave === true) {
 					throw new \RuntimeException('store down');
 				}
 
 				$this->internal[] = $this->marker->isInternal();
 
-				return parent::saveObject($object, $extend, $register, $schema, $uuid, $_rbac, $_multitenancy);
+				return parent::saveObject($object, $options, $_rbac, $_multitenancy);
 			}//end saveObject()
 		};
 		$this->store->seed('Employee', self::EMPLOYEE, ['@self' => ['slug' => 'employee-devries'], 'nextcloudUserId' => 'devries']);

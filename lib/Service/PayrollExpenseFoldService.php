@@ -159,7 +159,7 @@ class PayrollExpenseFoldService {
 	 */
 	private function foldClaims(ExpenseFold $fold): void {
 		foreach ((array)$fold->inputs['expenses'] as $claim) {
-			if ((string)($claim['employeeId'] ?? '') === $fold->employeeId && $this->isPayable(claim: $claim, lastDay: $fold->lastDay, runId: $fold->runId) === true) {
+			if ((string)($claim['employeeId'] ?? '') === $fold->employeeId && $this->isPayable(claim: $claim, fold: $fold) === true) {
 				$fold->totals['claimCents'] += (int)round(((float)$claim['amount']) * 100);
 				$fold->totals['claimIds'][] = self::idOf($claim);
 			}
@@ -317,25 +317,48 @@ class PayrollExpenseFoldService {
 	}//end markReimbursed()
 
 	/**
-	 * Whether a claim is paid by this run.
+	 * Whether a claim is paid by this run: an approved payroll claim with an
+	 * untaxed amount, approved by the period's last day and held by no other run.
 	 *
-	 * @param array<string, mixed> $claim   The Expense.
-	 * @param string               $lastDay The period's last day.
-	 * @param string               $runId   The run.
+	 * @param array<string, mixed> $claim The Expense.
+	 * @param ExpenseFold          $fold  The fold: the period's last day and the run.
 	 *
 	 * @return bool
 	 */
-	private function isPayable(array $claim, string $lastDay, string $runId): bool {
-		$heldBy = (string)($claim['payrollRunId'] ?? '');
-		$approvedOn = substr((string)($claim['approvedAt'] ?? ''), 0, 10);
+	private function isPayable(array $claim, ExpenseFold $fold): bool {
+		return $this->hasUntaxedAmount(claim: $claim) === true && self::isDueInRun(claim: $claim, fold: $fold) === true;
+	}//end isPayable()
+
+	/**
+	 * Whether a claim is an approved payroll claim with an amount and no
+	 * taxable part.
+	 *
+	 * @param array<string, mixed> $claim The Expense.
+	 *
+	 * @return bool
+	 */
+	private function hasUntaxedAmount(array $claim): bool {
 		$isPayrollClaim = ((string)($claim['status'] ?? '') === 'approved' && (string)($claim['reimbursementRoute'] ?? '') === 'payroll');
 
 		return $isPayrollClaim === true
 			&& $this->splitter->positive($claim['amount'] ?? null) === true
-			&& $this->splitter->positive($claim['taxableAmount'] ?? null) === false
-			&& $approvedOn !== '' && $approvedOn <= $lastDay
-			&& ($heldBy === '' || $heldBy === $runId);
-	}//end isPayable()
+			&& $this->splitter->positive($claim['taxableAmount'] ?? null) === false;
+	}//end hasUntaxedAmount()
+
+	/**
+	 * Whether a claim was approved by the period's last day and no other run holds it.
+	 *
+	 * @param array<string, mixed> $claim The Expense.
+	 * @param ExpenseFold          $fold  The fold: the period's last day and the run.
+	 *
+	 * @return bool
+	 */
+	private static function isDueInRun(array $claim, ExpenseFold $fold): bool {
+		$heldBy = (string)($claim['payrollRunId'] ?? '');
+		$approvedOn = substr((string)($claim['approvedAt'] ?? ''), 0, 10);
+
+		return $approvedOn !== '' && $approvedOn <= $fold->lastDay && ($heldBy === '' || $heldBy === $fold->runId);
+	}//end isDueInRun()
 
 	/**
 	 * One internal write, without the id fields.

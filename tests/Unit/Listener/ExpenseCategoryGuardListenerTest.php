@@ -45,6 +45,7 @@ use PHPUnit\Framework\TestCase;
  * @uses   \OCA\Humaniq\Service\ExpenseCategoryPolicy
  * @uses   \OCA\Humaniq\Service\HoursRegisterGateway
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
+ * @uses \OCA\Humaniq\Listener\SchemaWriteFilter
  */
 class ExpenseCategoryGuardListenerTest extends TestCase {
 

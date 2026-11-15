@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlAbsenceChecks;
+use OCA\Humaniq\Standards\RuleCatalogue;
 use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
@@ -66,6 +67,16 @@ class NlAbsenceChecksTest extends TestCase {
 		$this->payslipChecks = NlAbsenceChecks::checks()['Payslip'];
 
 	}//end setUp()
+
+	/**
+	 * Restore the real rule catalogue after a test seeded a variation of it.
+	 *
+	 * @return void
+	 */
+	protected function tearDown(): void {
+		RuleCatalogue::reset();
+
+	}//end tearDown()
 
 	/**
 	 * A minimal, fully-compliant open SickLeaveCase fixture; each test
@@ -470,5 +481,122 @@ class NlAbsenceChecksTest extends TestCase {
 		$this->assertNotContains('nl-loondoorbetaling-floor', $compliantRuleIds, 'A correctly-floored payslip must report zero violations.');
 
 	}//end testLoondoorbetalingFloorFiresThroughTheRealRuleEngine()
+	// -- corpus-parameter fallbacks ------------------------------------------
+
+	/**
+	 * A case whose probleemanalyse Due is a week late, while every other Due is
+	 * derived correctly from its first sick day.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function caseWithLateProbleemanalyse(): array {
+		return $this->sickCase(['probleemanalyseDue' => '2026-07-13']);
+
+	}//end caseWithLateProbleemanalyse()
+
+	/**
+	 * Without the nl-wvp-milestone-derivation corpus rule, or with a rule
+	 * whose parameters or milestoneWeeks map cannot be read, the week offsets
+	 * are unknown: the derivation is not decidable and passes vacuously,
+	 * even for a Due that is a week late or missing on an open case.
+	 *
+	 * @return void
+	 */
+	public function testDerivationIsVacuousWhenTheCorpusWeeksCannotBeRead(): void {
+		$check = $this->checks['nl-wvp-milestone-derivation'];
+		$late = $this->caseWithLateProbleemanalyse();
+		$missing = $this->sickCase(['probleemanalyseDue' => null]);
+		$this->assertFalse($check($late), 'Sanity: with the real corpus the late Due is a violation.');
+
+		CatalogueOverride::without('nl-wvp-milestone-derivation');
+		$this->assertTrue($check($late));
+		$this->assertTrue($check($missing));
+
+		CatalogueOverride::rewrite('nl-wvp-milestone-derivation', static fn (array $rule): array => array_merge($rule, ['parameters' => 'zie bijlage']));
+		$this->assertTrue($check($late));
+
+		CatalogueOverride::rewrite('nl-wvp-milestone-derivation', static fn (array $rule): array => array_merge($rule, ['parameters' => ['milestoneWeeks' => null]]));
+		$this->assertTrue($check($late));
+
+	}//end testDerivationIsVacuousWhenTheCorpusWeeksCannotBeRead()
+
+	/**
+	 * A milestone whose corpus week offset is not numeric is skipped; the
+	 * other milestones are still held to their derived Due.
+	 *
+	 * @return void
+	 */
+	public function testDerivationSkipsOnlyTheMilestoneWithANonNumericWeekOffset(): void {
+		$check = $this->checks['nl-wvp-milestone-derivation'];
+		CatalogueOverride::rewrite(
+			'nl-wvp-milestone-derivation',
+			static function (array $rule): array {
+				$rule['parameters']['milestoneWeeks']['probleemanalyse'] = 'zes';
+				return $rule;
+			}
+		);
+
+		$this->assertTrue($check($this->caseWithLateProbleemanalyse()), 'The undecidable probleemanalyse milestone is skipped.');
+		$this->assertTrue($check($this->sickCase(['probleemanalyseDue' => null])), 'Even a missing Due on that milestone is skipped.');
+		$this->assertFalse($check($this->sickCase(['planVanAanpakDue' => '2026-07-27'])), 'planVanAanpak is still derived from its 8 weeks.');
+
+	}//end testDerivationSkipsOnlyTheMilestoneWithANonNumericWeekOffset()
+
+	/**
+	 * A not-Done milestone with an unparseable Due date is skipped by the
+	 * overdue check; a past Due on another milestone still flags the case.
+	 *
+	 * @return void
+	 */
+	public function testOverdueSkipsAMilestoneWithAnUnparseableDue(): void {
+		$future = date('Y-m-d', strtotime('+60 days'));
+		$case = $this->sickCase(
+			[
+				'probleemanalyseDue' => 'n.v.t.',
+				'planVanAanpakDue' => $future,
+				'uwv42WeekMeldingDue' => $future,
+				'eerstejaarsevaluatieDue' => $future,
+			]
+		);
+		$this->assertTrue(($this->checks['nl-wvp-milestone-overdue'])($case));
+
+		$case['planVanAanpakDue'] = date('Y-m-d', strtotime('-1 day'));
+		$this->assertFalse(($this->checks['nl-wvp-milestone-overdue'])($case));
+
+	}//end testOverdueSkipsAMilestoneWithAnUnparseableDue()
+
+	/**
+	 * A sick-pay payslip that lacks a numeric reference wage or doorbetaald
+	 * loon cannot show it meets the floor: a violation.
+	 *
+	 * @return void
+	 */
+	public function testLoondoorbetalingFloorViolatedWhenAnAmountIsNotNumeric(): void {
+		$check = $this->payslipChecks['nl-loondoorbetaling-floor'];
+
+		$this->assertFalse($check($this->sickPayslip(['sickPayReferenceWage' => null])));
+		$this->assertFalse($check($this->sickPayslip(['sickPayReferenceWage' => 'onbekend'])));
+		$this->assertFalse($check($this->sickPayslip(['doorbetaaldLoon' => null])));
+
+	}//end testLoondoorbetalingFloorViolatedWhenAnAmountIsNotNumeric()
+
+	/**
+	 * Without the nl-loondoorbetaling-floor corpus rule (or with unreadable
+	 * parameters) the floor is not decidable: even a payslip hand-edited far
+	 * below the 70% floor passes vacuously.
+	 *
+	 * @return void
+	 */
+	public function testLoondoorbetalingFloorIsVacuousWhenTheCorpusRuleCannotBeRead(): void {
+		$check = $this->payslipChecks['nl-loondoorbetaling-floor'];
+		$subFloor = $this->sickPayslip(['doorbetaaldLoon' => 2000.00]);
+
+		CatalogueOverride::without('nl-loondoorbetaling-floor');
+		$this->assertTrue($check($subFloor));
+
+		CatalogueOverride::rewrite('nl-loondoorbetaling-floor', static fn (array $rule): array => array_merge($rule, ['parameters' => null]));
+		$this->assertTrue($check($subFloor));
+
+	}//end testLoondoorbetalingFloorIsVacuousWhenTheCorpusRuleCannotBeRead()
 
 }//end class

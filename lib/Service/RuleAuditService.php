@@ -967,7 +967,7 @@ class RuleAuditService {
 	 *   awfTariff}` (last-loaded contract wins per employee -- the
 	 *   `related.EmploymentContract.byEmployeeId` MVP simplification).
 	 * - `aofTariff` / `whkPercentageOverride`: the SAME config keys and
-	 *   fallback semantics as `SettingsService::getPayrollAofTariff()` /
+	 *   fallback semantics as `EmployerPremiumSettings::getPayrollAofTariff()` /
 	 *   `getPayrollWhkPercentage()` (payroll-core-engine), read directly via
 	 *   the already-injected `IAppConfig` so this context builder needs no
 	 *   new service dependency -- NlRetroChecks itself stays a pure predicate

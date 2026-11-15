@@ -51,11 +51,14 @@ namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
 use OCA\Humaniq\Support\NormalisesRows;
+use OCA\Humaniq\Service\Connection\ConnectionReporter;
 use OCA\Humaniq\Support\ChecksShillinqAvailability;
 
 /**
@@ -118,12 +121,14 @@ class PayrollNetPayService {
 	 * @param IAppManager $appManager To duck-type-probe shillinq's presence.
 	 * @param SettingsService $settingsService Register slug + net-pay config.
 	 * @param LoggerInterface $logger Logger.
+	 * @param ConnectionReporter|null $connections Reports whether shillinq answered to integriq; null reports nothing.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly ?ConnectionReporter $connections = null,
 	) {
 
 	}//end __construct()
@@ -191,6 +196,7 @@ class PayrollNetPayService {
 				]
 			);
 
+			$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'unavailable', message: 'Shillinq is not installed, or its payment runs cannot be reached.');
 			return $this->outcome($runId, 'skipped-no-shillinq', (string)($batch['errorMessage'] ?? ''), $batch);
 		}
 
@@ -288,6 +294,7 @@ class PayrollNetPayService {
 			$paymentRunId = $this->createOrAdoptPaymentRun($run, $collected);
 		} catch (\Throwable $e) {
 			$batch = $this->saveBatch($claim, ['status' => 'failed', 'errorMessage' => 'Aanmaken van de shillinq PaymentRun is mislukt: ' . $e->getMessage()]);
+			$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'error', message: 'Shillinq refused the payment run: ' . $e->getMessage());
 			return $this->outcome($runId, 'failed', (string)$batch['errorMessage'], $batch);
 		}
 
@@ -302,6 +309,7 @@ class PayrollNetPayService {
 			]
 		);
 
+		$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'configured', message: 'Shillinq took payment run ' . $runNumber . '.');
 		return $this->outcome($runId, 'created', 'Klaargezet in shillinq als PaymentRun ' . $runNumber . '.', $batch, $paymentRunId);
 	}//end createUnderClaim()
 
@@ -461,6 +469,7 @@ class PayrollNetPayService {
 			]
 		);
 
+		$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'configured', message: 'Shillinq holds payment run ' . $runNumber . '.');
 		return $this->outcome($runId, 'created', 'Bestaande shillinq PaymentRun overgenomen (crash-recovery).', $batch, $paymentRunId);
 	}//end recoverStalePending()
 
@@ -505,8 +514,7 @@ class PayrollNetPayService {
 
 		$created = $this->objectService()->saveObject(
 			object: $payload,
-			register: self::SHILLINQ_REGISTER,
-			schema: self::SHILLINQ_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::SHILLINQ_REGISTER, schema: self::SHILLINQ_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -692,8 +700,7 @@ class PayrollNetPayService {
 	private function createBatch(array $fields): array {
 		$created = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->register(),
-			schema: self::BATCH_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::BATCH_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -717,9 +724,10 @@ class PayrollNetPayService {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::BATCH_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::BATCH_SCHEMA),
+				uuid: $id === '' ? null : $id
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

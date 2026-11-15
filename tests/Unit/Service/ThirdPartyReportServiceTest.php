@@ -36,6 +36,7 @@ use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Design D2 (the report) over the real gateway and the real XSD.
@@ -141,7 +142,7 @@ class ThirdPartyReportServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPayeeWithoutABsnIsABlockingFinding(): void {
-		$payee = $this->store->find('payee-member', schema: 'ThirdPartyPayee')->getObject();
+		$payee = $this->store->find('payee-member', new ObjectFindOptions(schema: 'ThirdPartyPayee'))->getObject();
 		unset($payee['bsn']);
 		$this->store->seed('ThirdPartyPayee', 'payee-member', $payee);
 
@@ -167,7 +168,7 @@ class ThirdPartyReportServiceTest extends TestCase {
 		$report = $this->rowsOf('ThirdPartyReport')[0];
 		self::assertSame(['administrationId', 'year', 'status', 'deadline', 'lineCount', 'totalAmount', 'assembledAt', 'assembledBy', 'messageXml', 'messageFileName', 'leveringsId', 'findings', 'blockingFindings', 'warningFindings'], array_values(array_diff(array_keys($report), ['id', '@self'])));
 
-		$payee = $this->store->find('payee-member', schema: 'ThirdPartyPayee')->getObject();
+		$payee = $this->store->find('payee-member', new ObjectFindOptions(schema: 'ThirdPartyPayee'))->getObject();
 		unset($payee['bsn'], $payee['dateOfBirth']);
 		$this->store->seed('ThirdPartyPayee', 'payee-member', $payee);
 		$again = $this->service->assemble(administrationId: 'ADM-001', year: 2026, userId: 'payroll-2');

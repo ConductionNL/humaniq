@@ -24,6 +24,7 @@ require_once __DIR__ . '/../../fixtures/golden/transition-payment.input.php';
  * Golden test for {@see TransitionPaymentCalculator::calculate()}.
  *
  * @covers \OCA\Humaniq\Service\TransitionPaymentCalculator
+ * @uses \OCA\Humaniq\Service\DateValues
  */
 class TransitionPaymentGoldenTest extends TestCase {
 

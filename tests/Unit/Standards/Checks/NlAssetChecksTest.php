@@ -291,5 +291,32 @@ class NlAssetChecksTest extends TestCase {
 		$this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $context));
 
 	}//end testClosedAssignmentNeverChecksOffboardingCompletion()
+	/**
+	 * An open assignment with no employeeId cannot be matched to an
+	 * offboarding case: not an inname violation, whatever the index holds.
+	 *
+	 * @return void
+	 */
+	public function testOpenAssignmentWithoutAnEmployeeIdSkipsTheOffboardingCheck(): void {
+		$assignment = $this->assignment(['employeeId' => '  ', 'returnedOn' => null]);
+		$context = $this->context([], [], ['' => date('Y-m-d', strtotime('-1 day')), '  ' => date('Y-m-d', strtotime('-1 day'))]);
+
+		$this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $context));
+
+	}//end testOpenAssignmentWithoutAnEmployeeIdSkipsTheOffboardingCheck()
+
+	/**
+	 * An offboarding planned-completion date that is not a date cannot have
+	 * passed: not an inname violation.
+	 *
+	 * @return void
+	 */
+	public function testOpenAssignmentWithAnUnparseableOffboardingCompletionSatisfied(): void {
+		$assignment = $this->assignment(['employeeId' => 'employee-jansen', 'returnedOn' => null]);
+		$context = $this->context([], [], ['employee-jansen' => 'onbekend']);
+
+		$this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $context));
+
+	}//end testOpenAssignmentWithAnUnparseableOffboardingCompletionSatisfied()
 
 }//end class

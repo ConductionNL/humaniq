@@ -35,8 +35,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Service\ProformaPayslipService;
 use OCA\Humaniq\Service\SettingsService;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -284,18 +286,14 @@ class ProformaPayslipServiceTest extends TestCase {
 	}//end testAMissingKortingParameterAppliesTheKortingAndFalseReachesTheCalculator()
 
 	/**
-	 * Build a `ProformaPayslipService` with a mocked `SettingsService`
+	 * Build a `ProformaPayslipService` with the default employer premiums
 	 * (the real `nl-2026` `TaxTables` load is exercised for real — no fake
 	 * of the engine under test).
 	 *
 	 * @return ProformaPayslipService
 	 */
 	private function buildService(): ProformaPayslipService {
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getPayrollAofTariff')->willReturn('laag');
-		$settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
-
-		return new ProformaPayslipService(new PayrollCalculator(), $settings);
+		return new ProformaPayslipService(new PayrollCalculator(), new EmployerPremiumSettings($this->createMock(IAppConfig::class)));
 	}//end buildService()
 
 	/**

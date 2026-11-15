@@ -33,6 +33,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  *
  * @covers \OCA\Humaniq\Command\PayrollAdjustCommand
  * @uses   \OCA\Humaniq\Service\RetroCorrection
+ * @uses \OCA\Humaniq\Command\CommandOptions
  */
 class PayrollAdjustCommandTest extends TestCase {
 

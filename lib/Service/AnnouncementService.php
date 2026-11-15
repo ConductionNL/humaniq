@@ -75,33 +75,73 @@ class AnnouncementService {
 			return [];
 		}
 
-		$employeeId = $this->membership->rowId($employee);
-		$units = $this->unitsOf(employeeId: $employeeId, today: $today);
-		$confirmed = $this->confirmationsOf(employeeId: $employeeId);
-
-		$rows = [];
-		foreach ($this->gateway->findFiltered(self::ANNOUNCEMENT, ['status' => self::PUBLISHED]) as $announcement) {
-			if ($this->reaches(announcement: $announcement, employee: $employee, units: $units, today: $today) === false) {
-				continue;
-			}
-
-			$id = $this->membership->rowId($announcement);
-			$rows[] = [
-				'id' => $id,
-				'title' => (string)($announcement['title'] ?? ''),
-				'body' => (string)($announcement['body'] ?? ''),
-				'publishFrom' => ($announcement['publishFrom'] ?? null),
-				'publishUntil' => ($announcement['publishUntil'] ?? null),
-				'requiresConfirmation' => (($announcement['requiresConfirmation'] ?? false) === true),
-				'confirmed' => isset($confirmed[$id]),
-				'confirmedAt' => ($confirmed[$id] ?? null),
-			];
-		}
-
+		$reader = $this->readerOf(employee: $employee, units: $this->unitsOf(employeeId: $this->membership->rowId($employee), today: $today));
+		$reader->today = $today;
+		$rows = $this->rowsFor(reader: $reader, confirmed: $this->confirmationsOf(employeeId: $reader->employeeId));
 		usort($rows, static fn (array $a, array $b): int => (string)($b['publishFrom'] ?? '') <=> (string)($a['publishFrom'] ?? ''));
 
 		return $rows;
 	}//end mine()
+
+	/**
+	 * An employee as a reader, with the units of their live placements.
+	 *
+	 * @param array<string, mixed> $employee The Employee.
+	 * @param array<int, string>   $units    The units of the employee's live assignments.
+	 *
+	 * @return AnnouncementReader
+	 */
+	private function readerOf(array $employee, array $units): AnnouncementReader {
+		$reader = new AnnouncementReader();
+		$reader->employee = $employee;
+		$reader->employeeId = $this->membership->rowId($employee);
+		$reader->units = $units;
+
+		return $reader;
+	}//end readerOf()
+
+	/**
+	 * The published announcements that reach the reader on the day, each
+	 * with the reader's confirmation.
+	 *
+	 * @param AnnouncementReader   $reader    The reader and the day.
+	 * @param array<string, mixed> $confirmed The reader's confirmations, confirmedAt by announcement id.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function rowsFor(AnnouncementReader $reader, array $confirmed): array {
+		$rows = [];
+		foreach ($this->gateway->findFiltered(self::ANNOUNCEMENT, ['status' => self::PUBLISHED]) as $announcement) {
+			if ($this->reaches(announcement: $announcement, reader: $reader) === true) {
+				$rows[] = $this->readerRow(announcement: $announcement, confirmed: $confirmed);
+			}
+		}
+
+		return $rows;
+	}//end rowsFor()
+
+	/**
+	 * One announcement as the reader lists it.
+	 *
+	 * @param array<string, mixed> $announcement The announcement.
+	 * @param array<string, mixed> $confirmed    The reader's confirmations, confirmedAt by announcement id.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function readerRow(array $announcement, array $confirmed): array {
+		$id = $this->membership->rowId($announcement);
+
+		return [
+			'id' => $id,
+			'title' => (string)($announcement['title'] ?? ''),
+			'body' => (string)($announcement['body'] ?? ''),
+			'publishFrom' => ($announcement['publishFrom'] ?? null),
+			'publishUntil' => ($announcement['publishUntil'] ?? null),
+			'requiresConfirmation' => (($announcement['requiresConfirmation'] ?? false) === true),
+			'confirmed' => isset($confirmed[$id]),
+			'confirmedAt' => ($confirmed[$id] ?? null),
+		];
+	}//end readerRow()
 
 	/**
 	 * Confirm, as the caller, that they read an announcement.
@@ -167,24 +207,29 @@ class AnnouncementService {
 		$assignments = $this->gateway->loadAll('OrgAssignment');
 		$confirmed   = $this->confirmationTimes(announcementId: $announcementId);
 
-		$rows = [];
-		foreach ($this->gateway->loadAll('Employee') as $employee) {
-			$employeeId = $this->membership->rowId($employee);
-			$units = $this->activeUnits(employeeId: $employeeId, assignments: $assignments, today: $today);
-			if ($this->reaches(announcement: $announcement, employee: $employee, units: $units, today: '') === false) {
-				continue;
-			}
-
-			$rows[] = [
-				'id' => $employeeId,
-				'name' => $this->nameOf(employee: $employee),
-				'confirmed' => array_key_exists($employeeId, $confirmed),
-				'confirmedAt' => ($confirmed[$employeeId] ?? null),
-			];
-		}
+		$readers = array_map(fn (array $employee): AnnouncementReader => $this->readerOf(employee: $employee, units: $this->activeUnits(employeeId: $this->membership->rowId($employee), assignments: $assignments, today: $today)), $this->gateway->loadAll('Employee'));
+		$audience = array_filter($readers, fn (AnnouncementReader $reader): bool => $this->reaches(announcement: $announcement, reader: $reader));
+		$rows = array_map(fn (AnnouncementReader $reader): array => $this->confirmationRow(reader: $reader, confirmed: $confirmed), array_values($audience));
 
 		return $this->overviewOf(announcementId: $announcementId, rows: $rows);
 	}//end overview()
+
+	/**
+	 * One person of the audience in the overview: whether and when they confirmed.
+	 *
+	 * @param AnnouncementReader   $reader    The person.
+	 * @param array<string, mixed> $confirmed When each employee confirmed, keyed by employee id.
+	 *
+	 * @return array{id: string, name: string, confirmed: bool, confirmedAt: mixed}
+	 */
+	private function confirmationRow(AnnouncementReader $reader, array $confirmed): array {
+		return [
+			'id' => $reader->employeeId,
+			'name' => $this->nameOf(employee: $reader->employee),
+			'confirmed' => array_key_exists($reader->employeeId, $confirmed),
+			'confirmedAt' => ($confirmed[$reader->employeeId] ?? null),
+		];
+	}//end confirmationRow()
 
 	/**
 	 * When each employee confirmed the announcement, keyed by employee id;
@@ -264,33 +309,67 @@ class AnnouncementService {
 	 * administration, and to everyone or to a department they are in.
 	 *
 	 * @param array<string, mixed> $announcement The announcement.
-	 * @param array<string, mixed> $employee     The employee.
-	 * @param array<int, string>   $units        The units of the employee's live assignments.
-	 * @param string               $today        The day, or '' for audience only.
+	 * @param AnnouncementReader   $reader       The employee, the units of their live assignments and the day ('' for audience only).
 	 *
 	 * @return bool
 	 */
-	private function reaches(array $announcement, array $employee, array $units, string $today): bool {
-		if ($today !== '' && $this->inPeriod(announcement: $announcement, today: $today) === false) {
+	private function reaches(array $announcement, AnnouncementReader $reader): bool {
+		if ($reader->today !== '' && $this->inPeriod(announcement: $announcement, today: $reader->today) === false) {
 			return false;
 		}
 
-		$ended = trim((string)($employee['endDate'] ?? ''));
-		if ($ended !== '' && $ended < ($today !== '' ? $today : gmdate('Y-m-d'))) {
+		if (self::hasLeft(reader: $reader) === true || self::inAdministration(announcement: $announcement, employee: $reader->employee) === false) {
 			return false;
 		}
 
-		$administration = trim((string)($announcement['administrationId'] ?? ''));
-		if ($administration !== '' && $administration !== trim((string)($employee['administrationId'] ?? ''))) {
-			return false;
-		}
+		return $this->inAudience(announcement: $announcement, reader: $reader);
+	}//end reaches()
 
+	/**
+	 * Whether the reader is in the announcement's audience: everyone, or a
+	 * department (or a unit under it) the reader is placed in.
+	 *
+	 * @param array<string, mixed> $announcement The announcement.
+	 * @param AnnouncementReader   $reader       The units of the reader's live assignments.
+	 *
+	 * @return bool
+	 */
+	private function inAudience(array $announcement, AnnouncementReader $reader): bool {
 		if (($announcement['audience'] ?? 'administration') !== 'orgUnits') {
 			return true;
 		}
 
-		return array_intersect($units, $this->audienceUnits(announcement: $announcement)) !== [];
-	}//end reaches()
+		return array_intersect($reader->units, $this->audienceUnits(announcement: $announcement)) !== [];
+	}//end inAudience()
+
+	/**
+	 * Whether the employee left before the day (or before today when the
+	 * day is empty).
+	 *
+	 * @param AnnouncementReader $reader The employee and the day.
+	 *
+	 * @return bool
+	 */
+	private static function hasLeft(AnnouncementReader $reader): bool {
+		$ended = trim((string)($reader->employee['endDate'] ?? ''));
+
+		return $ended !== '' && $ended < ($reader->today !== '' ? $reader->today : gmdate('Y-m-d'));
+	}//end hasLeft()
+
+	/**
+	 * Whether the employee is in the announcement's administration; an
+	 * announcement without one is for every administration.
+	 *
+	 * @param array<string, mixed> $announcement The announcement.
+	 * @param array<string, mixed> $employee     The employee.
+	 *
+	 * @return bool
+	 */
+	private static function inAdministration(array $announcement, array $employee): bool {
+		$administration = trim((string)($announcement['administrationId'] ?? ''));
+
+		return $administration === '' || $administration === trim((string)($employee['administrationId'] ?? ''));
+	}//end inAdministration()
 
 	/**
 	 * Whether an announcement is published and shown on a day.

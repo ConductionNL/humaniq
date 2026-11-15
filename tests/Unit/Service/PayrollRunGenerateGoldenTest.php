@@ -37,6 +37,7 @@ use OCA\Humaniq\Service\AwfReviewService;
 use OCA\Humaniq\Service\CaoComponentCalculator;
 use OCA\Humaniq\Service\CaoComponentPayService;
 use OCA\Humaniq\Service\CostAllocationService;
+use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Service\EmploymentTermsResolver;
 use OCA\Humaniq\Service\HoursPayService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
@@ -47,9 +48,12 @@ use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WorkingCalendarReader;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Golden cases for PayrollRunService::runFor() and recalculateRun().
@@ -278,13 +282,11 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getPayrollAofTariff')->willReturn('laag');
-		$settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
 
 		$logger = $this->recorder(LoggerInterface::class);
 		$guard = $this->recorder(PayrollRetentionGuardService::class);
 		if ($withFolds === false) {
-			return new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $guard, $logger);
+			return new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $guard, $logger);
 		}
 
 		$throw = static function (): never {
@@ -296,6 +298,7 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 		return new PayrollRunService(
 			$container,
 			$settings,
+			new EmployerPremiumSettings($this->createMock(IAppConfig::class)),
 			new PayrollCalculator(),
 			new SickPayCalculator(),
 			$guard,
@@ -601,7 +604,10 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, ?string $register = null, ?string $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$target = ($schema ?? $this->schema);
 				$this->saved[] = ['schema' => $target, 'register' => $register, 'uuid' => $uuid, 'rbac' => $_rbac, 'multitenancy' => $_multitenancy, 'object' => $object];
 				if ($this->failSave !== null && ($this->failSave)($target, $object) === true) {
@@ -622,7 +628,10 @@ class PayrollRunGenerateGoldenTest extends TestCase {
 			 *
 			 * @return bool
 			 */
-			public function deleteObject(string $uuid, ?string $register = null, ?string $schema = null, bool $_rbac = true, bool $_multitenancy = true): bool {
+			public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool {
+				$uuid = $deletion->uuid;
+				$register = $deletion->target->register;
+				$schema = $deletion->target->schema;
 				$this->deleted[] = $schema . ':' . $uuid . ':' . var_export($_rbac, true) . ':' . var_export($_multitenancy, true);
 				if ($this->failDelete !== null && ($this->failDelete)($uuid) === true) {
 					throw new \RuntimeException('delete refused');
