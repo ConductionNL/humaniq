@@ -24,8 +24,29 @@
   "allowances": {
     "value": {
       "ploegentoeslag": {
-        "percentage": 10,
+        "kind": "percentage-of-wage",
+        "pct": 10,
         "note": "FICTIONAL example allowance."
+      },
+      "nachttoeslag": {
+        "kind": "hourly-surcharge",
+        "windows": [
+          {
+            "label": "nacht",
+            "days": [
+              "monday",
+              "tuesday",
+              "wednesday",
+              "thursday",
+              "friday"
+            ],
+            "from": "00:00",
+            "to": "06:00",
+            "pct": 40
+          }
+        ],
+        "holidayPct": 100,
+        "note": "FICTIONAL example night premium: 40% for hours worked between 00:00 and 06:00 on a weekday, 100% on a public holiday."
       }
     },
     "source": "FICTIONAL example allowances. Display-only, as with every other CLA in the corpus.",

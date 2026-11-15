@@ -120,6 +120,10 @@
 		"route": "/formation-scenarios/:id"
 	},
 	{
+		"id": "PayrollHandoffDetail",
+		"route": "/payroll-handoffs/:id"
+	},
+	{
 		"id": "NormfunctieDetail",
 		"route": "/normfuncties/:id"
 	},
@@ -200,6 +204,18 @@
 		"route": "/rosters/:id"
 	},
 	{
+		"id": "SurveyDetail",
+		"route": "/surveys/:id"
+	},
+	{
+		"id": "SurveyInvitationDetail",
+		"route": "/survey-invitations/:id"
+	},
+	{
+		"id": "ThirdPartyReportDetail",
+		"route": "/third-party-reports/:id"
+	},
+	{
 		"id": "TimesheetDetail",
 		"route": "/timesheets/:id"
 	},
@@ -218,6 +234,18 @@
 	{
 		"id": "MijnHr",
 		"route": "/mijn"
+	},
+	{
+		"id": "Integrations",
+		"route": "/configuratie/koppelingen"
+	},
+	{
+		"id": "TaakbeleidScholen",
+		"route": "/taakbeleid"
+	},
+	{
+		"id": "Taakbeleid",
+		"route": "/taakbeleid/:id"
 	},
 	{
 		"id": "ManagerDeputies",
@@ -348,6 +376,22 @@
 		"route": "/comp-adjustments/:id"
 	},
 	{
+		"id": "CostAllocations",
+		"route": "/cost-allocations"
+	},
+	{
+		"id": "CostAllocationDetail",
+		"route": "/cost-allocations/:id"
+	},
+	{
+		"id": "WageCosts",
+		"route": "/wage-costs"
+	},
+	{
+		"id": "WageCostAllocationDetail",
+		"route": "/wage-costs/:id"
+	},
+	{
 		"id": "GeneratedDocuments",
 		"route": "/documents"
 	},
@@ -456,6 +500,18 @@
 		"route": "/gl-posts/:id"
 	},
 	{
+		"id": "PayrollHandoffs",
+		"route": "/payroll-handoffs"
+	},
+	{
+		"id": "PayrollHandoffMutations",
+		"route": "/payroll-handoff-mutations"
+	},
+	{
+		"id": "PayrollHandoffMutationDetail",
+		"route": "/payroll-handoff-mutations/:id"
+	},
+	{
 		"id": "Normfuncties",
 		"route": "/normfuncties"
 	},
@@ -540,6 +596,10 @@
 		"route": "/wkr-assessments"
 	},
 	{
+		"id": "PayrollRunFindingDetail",
+		"route": "/payroll-run-findings/:id"
+	},
+	{
 		"id": "KeyResultDetail",
 		"route": "/key-results/:id"
 	},
@@ -588,6 +648,14 @@
 		"route": "/pension-filings/:id"
 	},
 	{
+		"id": "PensionSchemes",
+		"route": "/pension-schemes"
+	},
+	{
+		"id": "PensionSchemeDetail",
+		"route": "/pension-schemes/:id"
+	},
+	{
 		"id": "ReviewCycles",
 		"route": "/review-cycles"
 	},
@@ -606,6 +674,14 @@
 	{
 		"id": "RelationsCaseDetail",
 		"route": "/relations-cases/:id"
+	},
+	{
+		"id": "WageTaxRemittances",
+		"route": "/wage-tax-remittances"
+	},
+	{
+		"id": "WageTaxRemittanceDetail",
+		"route": "/wage-tax-remittances/:id"
 	},
 	{
 		"id": "PayrollAdjustments",
@@ -656,6 +732,34 @@
 		"route": "/stagiairs/:id"
 	},
 	{
+		"id": "Surveys",
+		"route": "/surveys"
+	},
+	{
+		"id": "SurveyInvitations",
+		"route": "/survey-invitations"
+	},
+	{
+		"id": "ThirdPartyPayees",
+		"route": "/third-party-payees"
+	},
+	{
+		"id": "ThirdPartyPayeeDetail",
+		"route": "/third-party-payees/:id"
+	},
+	{
+		"id": "ThirdPartyPayments",
+		"route": "/third-party-payments"
+	},
+	{
+		"id": "ThirdPartyPaymentDetail",
+		"route": "/third-party-payments/:id"
+	},
+	{
+		"id": "ThirdPartyReports",
+		"route": "/third-party-reports"
+	},
+	{
 		"id": "Timesheets",
 		"route": "/timesheets"
 	},
@@ -702,5 +806,21 @@
 	{
 		"id": "NonWorkingTimeDetail",
 		"route": "/niet-werkdagen/:id"
+	},
+	{
+		"id": "BenefitEntitlements",
+		"route": "/benefit-entitlements"
+	},
+	{
+		"id": "BenefitEntitlementDetail",
+		"route": "/benefit-entitlements/:id"
+	},
+	{
+		"id": "DeploymentPlans",
+		"route": "/deployment-plans"
+	},
+	{
+		"id": "DeploymentPlanDetail",
+		"route": "/deployment-plans/:id"
 	}
 ]

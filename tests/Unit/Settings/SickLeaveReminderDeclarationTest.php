@@ -55,7 +55,7 @@ class SickLeaveReminderDeclarationTest extends TestCase {
 		$resolver = 'OCA\Humaniq\Notification\CaseManagerResolver';
 
 		self::assertTrue(class_exists($resolver));
-		self::assertContains('OCA\OpenRegister\Service\Notification\RecipientResolverInterface', class_implements($resolver));
+		self::assertContains('OCA\OpenRegister\Notifications\Service\Notification\RecipientResolverInterface', class_implements($resolver));
 
 		foreach (self::MILESTONES as $milestone) {
 			$field = $milestone . 'DaysLeft';

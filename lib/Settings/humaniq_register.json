@@ -3,7 +3,7 @@
     "info": {
         "title": "Humaniq Register",
         "description": "Register containing all schemas for the Humaniq application.",
-        "version": "0.48.0"
+        "version": "0.63.0"
     },
     "x-openregister": {
         "type": "application",
@@ -18,7 +18,13 @@
                 "slug": "humaniq",
                 "title": "Humaniq Register",
                 "description": "Humaniq: open-source HR & payroll administration for Dutch SMBs. Holds every HR, verzuim, verlof, roostering, ATS, performance and payroll object the app reads and writes.",
-                "version": "0.48.0",
+                "version": "0.63.0",
+                "authorization": {
+                    "read": ["humaniq-hr"],
+                    "create": ["humaniq-hr"],
+                    "update": ["humaniq-hr"],
+                    "delete": ["humaniq-hr"]
+                },
                 "schemas": [
                     "hrAdministration",
                     "AdministrationAccess",
@@ -35,6 +41,7 @@
                     "CompAdjustment",
                     "CompReviewCycle",
                     "CostAdditionPolicy",
+                    "CostAllocation",
                     "DsrRequest",
                     "DossierRequirement",
                     "Employee",
@@ -70,13 +77,22 @@
                     "Onboarding",
                     "OrgAssignment",
                     "OrgUnit",
+                    "DeploymentPlan",
                     "PayrollAdjustment",
                     "PayrollGLPost",
                     "PayrollMutationReport",
                     "PayrollPaymentBatch",
                     "PayrollRun",
+                    "PayrollHandoff",
+                    "PayrollHandoffMutation",
+                    "ThirdPartyPayee",
+                    "ThirdPartyPayment",
+                    "ThirdPartyReport",
+                    "PayrollRunFinding",
+                    "WageCostAllocation",
                     "Payslip",
                     "PensionFiling",
+                    "PensionScheme",
                     "PerformanceReview",
                     "PersonnelDocument",
                     "ReceiptExtraction",
@@ -104,7 +120,12 @@
                     "WkrAssessment",
                     "WkrDeclaration",
                     "WntDisclosure",
-                    "WorkingPattern"
+                    "WorkingPattern",
+                    "Survey",
+                    "SurveyInvitation",
+                    "SurveyResponse",
+                    "WageTaxRemittance",
+                    "BenefitEntitlement"
                 ]
             }
         },

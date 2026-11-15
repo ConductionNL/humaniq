@@ -1,0 +1,404 @@
+<?php
+
+/**
+ * Salary Bureau Exchange Service
+ *
+ * The exchange with an outside salary bureau.
+ * Compiles one period's payroll mutations for an administration whose
+ * payroll an outside bureau runs, as differences from what the previous
+ * handoffs sent (payroll-external-bureau-handoff D2), and checks the
+ * bureau's returned payslips for completeness (D4). Delivery and return go
+ * through integriq on the handoff's declared lifecycle; this service holds
+ * no bureau format or credential.
+ *
+ * @category Service
+ * @package  OCA\Humaniq\Service
+ *
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @link https://conduction.nl
+ *
+ * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-002
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Humaniq\Service;
+
+use Psr\Log\LoggerInterface;
+
+/**
+ * Compiles what an outside salary bureau receives and checks what it
+ * sends back. The schemas keep their PayrollHandoff names (stored data).
+ *
+ * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-002
+ */
+class SalaryBureauExchangeService {
+
+	/**
+	 * The period items (D2).
+	 *
+	 * @var HandoffPeriodItems
+	 */
+	private readonly HandoffPeriodItems $items;
+
+	/**
+	 * The employee-level view (D2).
+	 *
+	 * @var HandoffEmployeeView
+	 */
+	private readonly HandoffEmployeeView $view;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param RecordStoreInterface     $gateway The register plumbing.
+	 * @param LoggerInterface          $logger  The logger.
+	 * @param HandoffPeriodItems|null  $items   The period items; built on the gateway when absent.
+	 * @param HandoffEmployeeView|null $view    The employee view; built on the gateway when absent.
+	 */
+	public function __construct(
+		private readonly RecordStoreInterface $gateway,
+		private readonly LoggerInterface $logger,
+		?HandoffPeriodItems $items = null,
+		?HandoffEmployeeView $view = null,
+	) {
+		$this->items = ($items ?? new HandoffPeriodItems($gateway));
+		$this->view = ($view ?? new HandoffEmployeeView(gateway: $gateway, items: $this->items));
+	}//end __construct()
+
+	/**
+	 * Compile (or recompile, while in concept) the handoff of one
+	 * administration and period.
+	 *
+	 * @param string $administrationId The administration.
+	 * @param string $period           The wage period, YYYY-MM.
+	 * @param string $userId           The account compiling it.
+	 *
+	 * @return array{status: string, handoffId: string, mutationCount: int, message?: string}
+	 *
+	 * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-002
+	 */
+	public function compile(string $administrationId, string $period, string $userId): array {
+		if ($this->isOutsourced($administrationId) === false) {
+			return ['status' => 'refused-engine', 'handoffId' => '', 'mutationCount' => 0, 'message' => 'Deze administratie wordt door humaniq verloond; er is geen overdracht.'];
+		}
+
+		$run = new HandoffCompilation();
+		$run->administrationId = $administrationId;
+		$run->period = $period;
+		$run->userId = $userId;
+		$run->handoffs = $this->gateway->findFiltered('PayrollHandoff', ['administrationId' => $administrationId]);
+		$run->current = $this->handoffOf(handoffs: $run->handoffs, period: $period);
+
+		return ($this->notConceptRefusal(run: $run) ?? $this->compileConcept(run: $run));
+	}//end compile()
+
+	/**
+	 * The refusal when the period's handoff is no longer a concept, or null.
+	 *
+	 * @param HandoffCompilation $run The compilation: the period's handoff.
+	 *
+	 * @return array{status: string, handoffId: string, mutationCount: int, message: string}|null
+	 */
+	private function notConceptRefusal(HandoffCompilation $run): ?array {
+		$current = $run->current;
+		if ($current === null || (string)($current['status'] ?? '') === 'concept') {
+			return null;
+		}
+
+		return ['status' => 'refused-not-concept', 'handoffId' => (string)$current['id'], 'mutationCount' => (int)($current['mutationCount'] ?? 0), 'message' => 'Deze overdracht is al klaargezet of verzonden; heropen hem eerst.'];
+	}//end notConceptRefusal()
+
+	/**
+	 * Clear the period's concept, then save the handoff and its mutations
+	 * against what earlier handoffs sent.
+	 *
+	 * @param HandoffCompilation $run The compilation.
+	 *
+	 * @return array{status: string, handoffId: string, mutationCount: int}
+	 */
+	private function compileConcept(HandoffCompilation $run): array {
+		$run->handoffId = $this->clearConcept($run->current);
+		$mutations = $this->mutationsOf(run: $run, baseline: $this->baseline(run: $run));
+
+		$payload = array_merge(($run->current ?? []), ['administrationId' => $run->administrationId, 'period' => $run->period, 'status' => 'concept', 'compiledBy' => $run->userId, 'compiledAt' => gmdate('Y-m-d\TH:i:s\Z'), 'mutationCount' => count($mutations)]);
+		unset($payload['id']);
+		$saved = $this->gateway->save(payload: $payload, schema: 'PayrollHandoff', uuid: ($run->handoffId === '' ? null : $run->handoffId));
+		$handoffId = (string)$saved->getUuid();
+
+		foreach ($mutations as $mutation) {
+			$this->gateway->save(payload: array_merge($mutation, ['handoffId' => $handoffId, 'administrationId' => $run->administrationId]), schema: 'PayrollHandoffMutation');
+		}
+
+		return ['status' => 'compiled', 'handoffId' => $handoffId, 'mutationCount' => count($mutations)];
+	}//end compileConcept()
+
+	/**
+	 * The administration's handoff of a period, or null.
+	 *
+	 * @param list<array<string, mixed>> $handoffs The administration's handoffs.
+	 * @param string                     $period   The period.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function handoffOf(array $handoffs, string $period): ?array {
+		foreach ($handoffs as $handoff) {
+			if ((string)($handoff['period'] ?? '') === $period) {
+				return $handoff;
+			}
+		}
+
+		return null;
+	}//end handoffOf()
+
+	/**
+	 * Remove the mutations of a concept handoff about to be recompiled.
+	 *
+	 * @param array<string, mixed>|null $current The handoff, or null.
+	 *
+	 * @return string The handoff id, or '' when there is none yet.
+	 */
+	private function clearConcept(?array $current): string {
+		if ($current === null) {
+			return '';
+		}
+
+		$handoffId = (string)$current['id'];
+		foreach ($this->gateway->findFiltered('PayrollHandoffMutation', ['handoffId' => $handoffId]) as $stale) {
+			$this->gateway->delete((string)$stale['id'], 'PayrollHandoffMutation');
+		}
+
+		return $handoffId;
+	}//end clearConcept()
+
+	/**
+	 * The mutations of every employee of the administration in the period.
+	 *
+	 * @param HandoffCompilation                  $run      The administration and period.
+	 * @param array<string, array<string, mixed>> $baseline What earlier handoffs sent, per employee.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function mutationsOf(HandoffCompilation $run, array $baseline): array {
+		$administrationId = $run->administrationId;
+		$period = $run->period;
+		$mutations = [];
+		foreach ($this->employeesIn(administrationId: $administrationId, period: $period) as $employee) {
+			$employeeId = (string)$employee['id'];
+			$sent = ($baseline[$employeeId] ?? null);
+			$mutations = array_merge(
+				$mutations,
+				$this->view->differences(employee: $employee, sent: $sent, period: $period),
+				$this->items->mutationsFor(employeeId: $employeeId, period: $period, sent: ($sent ?? []))
+			);
+		}
+
+		return $mutations;
+	}//end mutationsOf()
+
+	/**
+	 * Check the bureau's returned payslips: every employee of the period
+	 * has exactly one, and none names someone outside the administration.
+	 * Returned payslips are stamped with the employee's account.
+	 *
+	 * @param string $handoffId The handoff.
+	 *
+	 * @return array{blocking: int, findings: list<array<string, mixed>>}
+	 *
+	 * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-004
+	 */
+	public function checkIntake(string $handoffId): array {
+		$handoff = $this->gateway->findObjectData($handoffId, 'PayrollHandoff');
+		if ($handoff === null) {
+			return ['blocking' => 0, 'findings' => []];
+		}
+
+		$expected = $this->expectedEmployees(handoff: $handoff);
+		$intake = $this->takeInPayslips(handoffId: $handoffId, expected: $expected);
+		$findings = array_merge($intake['findings'], self::countFindings(expected: $expected, returned: $intake['returned']));
+
+		$payload = array_merge($handoff, ['intakeFindings' => $findings, 'blockingFindings' => count($findings)]);
+		unset($payload['id']);
+		$this->gateway->save(payload: $payload, schema: 'PayrollHandoff', uuid: $handoffId);
+
+		return ['blocking' => count($findings), 'findings' => $findings];
+	}//end checkIntake()
+
+	/**
+	 * The employees of the handoff's administration and period, by id.
+	 *
+	 * @param array<string, mixed> $handoff The PayrollHandoff.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function expectedEmployees(array $handoff): array {
+		$expected = [];
+		foreach ($this->employeesIn(administrationId: (string)($handoff['administrationId'] ?? ''), period: (string)($handoff['period'] ?? '')) as $employee) {
+			$expected[(string)$employee['id']] = $employee;
+		}
+
+		return $expected;
+	}//end expectedEmployees()
+
+	/**
+	 * Count the returned payslips per employee, stamp those of expected
+	 * employees, and name those of anyone else.
+	 *
+	 * @param string                              $handoffId The handoff.
+	 * @param array<string, array<string, mixed>> $expected  The expected employees by id.
+	 *
+	 * @return array{returned: array<string, int>, findings: list<array<string, mixed>>}
+	 */
+	private function takeInPayslips(string $handoffId, array $expected): array {
+		$returned = [];
+		$findings = [];
+		foreach ($this->gateway->findFiltered('Payslip', ['payrollHandoffId' => $handoffId]) as $payslip) {
+			$employeeId = (string)($payslip['employeeId'] ?? '');
+			$returned[$employeeId] = (($returned[$employeeId] ?? 0) + 1);
+			if (isset($expected[$employeeId]) === false) {
+				$findings[] = ['kind' => 'unknown-employee', 'employeeId' => $employeeId, 'message' => 'Het bureau leverde een loonstrook voor iemand buiten deze administratie.'];
+				continue;
+			}
+
+			$this->stampPayslip(payslip: $payslip, employee: $expected[$employeeId]);
+		}
+
+		return ['returned' => $returned, 'findings' => $findings];
+	}//end takeInPayslips()
+
+	/**
+	 * A finding for each expected employee with no payslip or more than one.
+	 *
+	 * @param array<string, array<string, mixed>> $expected The expected employees by id.
+	 * @param array<string, int>                  $returned The payslips returned per employee.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private static function countFindings(array $expected, array $returned): array {
+		$findings = [];
+		foreach (array_keys($expected) as $employeeId) {
+			$count = ($returned[$employeeId] ?? 0);
+			if ($count === 0) {
+				$findings[] = ['kind' => 'missing-payslip', 'employeeId' => $employeeId, 'message' => 'Geen loonstrook terug van het bureau.'];
+			} else if ($count > 1) {
+				$findings[] = ['kind' => 'duplicate-payslip', 'employeeId' => $employeeId, 'message' => 'Meer dan één loonstrook terug van het bureau.'];
+			}
+		}
+
+		return $findings;
+	}//end countFindings()
+
+	/**
+	 * Whether an outside bureau runs the administration's payroll.
+	 *
+	 * @param string $administrationId The administration.
+	 *
+	 * @return bool
+	 */
+	private function isOutsourced(string $administrationId): bool {
+		foreach ($this->gateway->findFiltered('hrAdministration', ['administrationId' => $administrationId]) as $administration) {
+			if (($administration['payrollProcessing'] ?? 'engine') === 'external-bureau') {
+				return true;
+			}
+		}
+
+		return false;
+	}//end isOutsourced()
+
+	/**
+	 * What earlier handoffs sent, per employee: their mutations' sent state
+	 * folded in period order. A handoff still in concept sent nothing.
+	 *
+	 * @param HandoffCompilation $run The administration's handoffs, the period being compiled and the handoff being compiled.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function baseline(HandoffCompilation $run): array {
+		$handoffs = $run->handoffs;
+		usort($handoffs, static fn (array $a, array $b): int => strcmp((string)($a['period'] ?? ''), (string)($b['period'] ?? '')));
+		$sent = [];
+		foreach ($handoffs as $handoff) {
+			if ($this->isEarlierSent(run: $run, handoff: $handoff) === false) {
+				continue;
+			}
+
+			foreach ($this->gateway->findFiltered('PayrollHandoffMutation', ['handoffId' => (string)$handoff['id']]) as $mutation) {
+				$employeeId = (string)($mutation['employeeId'] ?? '');
+				$sent[$employeeId] = array_merge(($sent[$employeeId] ?? []), (array)($mutation['sentState'] ?? []));
+			}
+		}
+
+		return $sent;
+	}//end baseline()
+
+	/**
+	 * Whether a handoff counts for the baseline: another one, out of
+	 * concept, of this period or before.
+	 *
+	 * @param HandoffCompilation   $run     The period being compiled and the handoff being compiled.
+	 * @param array<string, mixed> $handoff The handoff.
+	 *
+	 * @return bool
+	 */
+	private function isEarlierSent(HandoffCompilation $run, array $handoff): bool {
+		return ((string)$handoff['id'] === $run->handoffId || ($handoff['status'] ?? '') === 'concept' || (string)($handoff['period'] ?? '') > $run->period) === false;
+	}//end isEarlierSent()
+
+	/**
+	 * The employees of the administration employed in any day of the period.
+	 *
+	 * @param string $administrationId The administration.
+	 * @param string $period           The period.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private function employeesIn(string $administrationId, string $period): array {
+		$first = $period . '-01';
+		$last = date('Y-m-t', (int)strtotime($first));
+		$out = [];
+		foreach ($this->gateway->findFiltered('Employee', ['administrationId' => $administrationId]) as $employee) {
+			$start = (string)($employee['startDate'] ?? '');
+			$end = (string)($employee['endDate'] ?? '');
+			if (($start === '' || $start <= $last) && ($end === '' || $end >= $first)) {
+				$out[] = $employee;
+			}
+		}
+
+		return $out;
+	}//end employeesIn()
+
+	/**
+	 * Stamp a returned payslip with the employee's account and its source.
+	 *
+	 * @param array<string, mixed> $payslip  The payslip.
+	 * @param array<string, mixed> $employee The employee.
+	 *
+	 * @return void
+	 */
+	private function stampPayslip(array $payslip, array $employee): void {
+		$stamps = ['externalSource' => 'external-bureau'];
+		$account = trim((string)($employee['nextcloudUserId'] ?? ''));
+		if (trim((string)($payslip['userId'] ?? '')) === '' && $account !== '') {
+			$stamps['userId'] = $account;
+		}
+
+		if (array_diff_assoc($stamps, array_intersect_key($payslip, $stamps)) === []) {
+			return;
+		}
+
+		$id = (string)$payslip['id'];
+		unset($payslip['id']);
+		try {
+			$this->gateway->save(payload: array_merge($payslip, $stamps), schema: 'Payslip', uuid: $id);
+		} catch (\Throwable $e) {
+			$this->logger->warning('SalaryBureauExchangeService: could not stamp payslip ' . $id . ': ' . $e->getMessage());
+		}
+	}//end stampPayslip()
+
+}//end class

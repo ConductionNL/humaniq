@@ -40,7 +40,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Flow;
 
 use OCA\Humaniq\Service\SettingsService;
-use OCA\OpenRegister\Service\Flow\IFlowNode;
+use Closure;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
+use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\WorkflowEngine\IManager;
@@ -59,7 +62,11 @@ use RuntimeException;
  *
  * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
  */
-abstract class PayrollFlowNodeBase implements IFlowNode {
+abstract class PayrollFlowNodeBase implements ICallFlowNode {
+
+	use ConvertsRowsToArrays {
+		toArray as protected;
+	}
 
 	/**
 	 * Max PayrollRun objects scanned when resolving a run by id — the
@@ -68,6 +75,14 @@ abstract class PayrollFlowNodeBase implements IFlowNode {
 	 * @var int
 	 */
 	protected const LIMIT = 10000;
+
+	/**
+	 * The key a node's outcome travels under on the item's record; every
+	 * node names its own.
+	 *
+	 * @var string
+	 */
+	public const OUTCOME_KEY = '';
 
 	/**
 	 * The `{{ dotted.path }}` placeholder shape, mirroring OpenRegister's
@@ -80,19 +95,45 @@ abstract class PayrollFlowNodeBase implements IFlowNode {
 	private const PLACEHOLDER = '/\{\{\s*([A-Za-z0-9_@.]+)\s*\}\}/';
 
 	/**
-	 * @param IL10N $l10n Localisation for palette strings.
-	 * @param IURLGenerator $urls URL generator for the node icon.
-	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
-	 * @param SettingsService $settingsService Register slug + OpenRegister availability.
+	 * Localisation for palette strings.
+	 *
+	 * @var IL10N
+	 */
+	protected readonly IL10N $l10n;
+
+	/**
+	 * URL generator for the node icon.
+	 *
+	 * @var IURLGenerator
+	 */
+	protected readonly IURLGenerator $urls;
+
+	/**
+	 * DI container for lazy ObjectService resolution.
+	 *
+	 * @var ContainerInterface
+	 */
+	protected readonly ContainerInterface $container;
+
+	/**
+	 * Register slug + OpenRegister availability.
+	 *
+	 * @var SettingsService
+	 */
+	protected readonly SettingsService $settingsService;
+
+	/**
+	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		protected readonly IL10N $l10n,
-		protected readonly IURLGenerator $urls,
-		protected readonly ContainerInterface $container,
-		protected readonly SettingsService $settingsService,
+		PayrollFlowNodeServices $services,
 		protected readonly LoggerInterface $logger,
 	) {
+		$this->l10n = $services->l10n;
+		$this->urls = $services->urls;
+		$this->container = $services->container;
+		$this->settingsService = $services->settingsService;
 
 	}//end __construct()
 
@@ -229,28 +270,6 @@ abstract class PayrollFlowNodeBase implements IFlowNode {
 	}//end findRun()
 
 	/**
-	 * Normalise an ObjectService row (entity or array) to an array — the
-	 * PayrollRunService convention.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
-	 */
-	protected function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * The object id of a row, falling back to `@self.id`.
 	 *
 	 * @param array<string, mixed> $row The row.
@@ -285,6 +304,76 @@ abstract class PayrollFlowNodeBase implements IFlowNode {
 
 		return $item;
 	}//end withOutcome()
+
+	/**
+	 * Run a step once per item, in order, and place each outcome on its item
+	 * under the node's outcome key.
+	 *
+	 * @param FlowNodeCall $call The input items.
+	 * @param Closure      $step The step: the item's record in, the service outcome out.
+	 *
+	 * @return array<int, array<string, mixed>> The items, each carrying its outcome.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 */
+	protected function stampEachItem(FlowNodeCall $call, Closure $step): array {
+		$out = [];
+		foreach ($call->items as $item) {
+			$json = (array)(((array)$item)['json'] ?? []);
+			$out[] = $this->withOutcome((array)$item, static::OUTCOME_KEY, $step($json));
+		}
+
+		return $out;
+	}//end stampEachItem()
+
+	/**
+	 * Load each item's approved run and hand it to the step; an empty firing
+	 * returns empty without loading anything.
+	 *
+	 * @param FlowNodeCall $call The input items and the step configuration.
+	 * @param Closure      $step The step: the loaded run in, the service outcome out.
+	 *
+	 * @return array<int, array<string, mixed>> The items, each carrying its outcome.
+	 *
+	 * @throws RuntimeException When an item's run cannot be resolved.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+	 */
+	protected function stampEachRun(FlowNodeCall $call, Closure $step): array {
+		$config = $call->config;
+		if ($call->items === []) {
+			return [];
+		}
+
+		return $this->stampEachItem(
+			$call,
+			fn (array $json): array => $step($this->requireRun(config: $config, json: $json))
+		);
+	}//end stampEachRun()
+
+	/**
+	 * Let an outcome through when the service reported an accepted status;
+	 * throw otherwise, so the step's onError policy decides.
+	 *
+	 * @param array<string, mixed> $outcome  The service outcome.
+	 * @param ExpectedStatus       $expected The accepted statuses and the refusal's opening words.
+	 *
+	 * @return array<string, mixed> The outcome, unchanged.
+	 *
+	 * @throws RuntimeException When the status is not accepted.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 */
+	protected function requireStatus(array $outcome, ExpectedStatus $expected): array {
+		$status = (string)($outcome['status'] ?? '');
+		if (in_array($status, $expected->accepted, true) === false) {
+			throw new RuntimeException(
+				$expected->refusal . ' (' . $status . '): ' . (string)($outcome['message'] ?? '')
+			);
+		}
+
+		return $outcome;
+	}//end requireStatus()
 
 	/**
 	 * @return mixed The OpenRegister ObjectService (ADR-083: availability

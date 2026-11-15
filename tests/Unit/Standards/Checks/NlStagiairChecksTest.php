@@ -3,6 +3,9 @@
 /**
  * Unit tests for the stagiair/BBL BPV-overeenkomst check (NlStagiairChecks).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pins the single `hr-stagiair` predicate `nl-bpv-overeenkomst-vereist`
  * (spec.md REQ-STAG-005), registered under BOTH object types:
  *
@@ -26,9 +29,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

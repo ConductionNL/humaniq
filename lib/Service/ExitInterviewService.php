@@ -49,14 +49,14 @@ class ExitInterviewService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway The register read and write.
+	 * @param RecordStoreInterface $gateway The register read and write.
 	 * @param InternalWriteMarker  $marker  Marks humaniq's own writes.
 	 * @param IL10N                $l10n    The reason labels.
 	 *
 	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-001
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly InternalWriteMarker $marker,
 		private readonly IL10N $l10n,
 	) {

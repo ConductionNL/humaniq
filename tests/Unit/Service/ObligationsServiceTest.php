@@ -349,4 +349,28 @@ class ObligationsServiceTest extends TestCase {
 		};
 	}//end fakeObjectService()
 
+	/**
+	 * Golden: only rows whose administrationId is exactly the caller's administration are read.
+	 *
+	 * @return void
+	 */
+	public function testOnlyRowsOfExactlyTheAdministrationAreRead(): void {
+		$service = $this->buildService([
+			'PayrollRun' => [
+				['id' => 'own', 'administrationId' => 'ADM-001'],
+				['id' => 'padded', 'administrationId' => ' ADM-001'],
+				['id' => 'lower', 'administrationId' => 'adm-001'],
+				['id' => 'null', 'administrationId' => null],
+				['id' => 'missing'],
+				['id' => 'other', 'administrationId' => 'ADM-OTHER'],
+				['id' => 'own-too', 'administrationId' => 'ADM-001'],
+			],
+		]);
+		$read = (new \ReflectionMethod($service, 'loadFiltered'))->invoke($service, 'PayrollRun', 'ADM-001');
+
+		$this->assertSame(['own', 'own-too'], array_column($read, 'id'));
+		$this->assertSame(['null', 'missing'], array_column((new \ReflectionMethod($service, 'loadFiltered'))->invoke($service, 'PayrollRun', ''), 'id'), 'An empty administration matches the rows that carry none.');
+
+	}//end testOnlyRowsOfExactlyTheAdministrationAreRead()
+
 }//end class

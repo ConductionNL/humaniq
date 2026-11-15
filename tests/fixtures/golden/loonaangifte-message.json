@@ -1,0 +1,239 @@
+{
+    "complete with corrections": {
+        "tree": {
+            "Bericht": {
+                "IdBer": "LA202603",
+                "DatTdAanm": "2026-04-02T10:00:00",
+                "ContPers": "Sanne de Vries",
+                "TelNr": "0201234567",
+                "RelNr": "12345678",
+                "GebrSwPakket": "humaniq loonaangifte module"
+            },
+            "AdministratieveEenheid": {
+                "LhNr": "123456782L01",
+                "NmIP": "Gemeente Voorbeeld",
+                "TijdvakAangifte": {
+                    "DatAanvTv": "2026-03-01",
+                    "DatEindTv": "2026-03-31",
+                    "VolledigeAangifte": {
+                        "CollectieveAangifte": {
+                            "TotLnLbPh": "2501",
+                            "TotLnSV": "2528",
+                            "TotPrlnAofAnwLg": "2555",
+                            "TotPrlnAofAnwHg": "2582",
+                            "TotPrlnAofAnwUit": "2608",
+                            "TotPrlnWhkAnw": "2635",
+                            "TotPrlnAwfAnwLg": "2662",
+                            "TotPrlnAwfAnwHg": "2689",
+                            "TotPrlnAwfAnwHz": "2715",
+                            "TotPrlnAwfAnwUit": "2742",
+                            "PrLnUFO": "2769",
+                            "IngLbPh": "2796",
+                            "TotPrAofLg": "2822",
+                            "TotPrAofHg": "2849",
+                            "TotPrAofUit": "2876",
+                            "TotOpslWko": "2903",
+                            "TotPrGediffWhk": "2929",
+                            "TotPrAwfLg": "2956",
+                            "TotPrAwfHg": "2983",
+                            "TotPrAwfHz": "3010",
+                            "TotPrAwfUit": "3036",
+                            "PrUFO": "3063",
+                            "IngBijdrZvw": "3090",
+                            "TotWghZvw": "3117",
+                            "TotTeBet": "38430",
+                            "SaldoCorrectiesVoorgaandTijdvak": [
+                                {
+                                    "DatAanvTv": "2026-01-01",
+                                    "DatEindTv": "2026-01-31",
+                                    "Saldo": "1250"
+                                },
+                                {
+                                    "DatAanvTv": "2026-02-01",
+                                    "DatEindTv": "2026-02-28",
+                                    "Saldo": "-310"
+                                }
+                            ],
+                            "TotGen": "39370"
+                        },
+                        "InkomstenverhoudingInitieel": [
+                            {
+                                "NumIV": "1",
+                                "SofiNr": "123456782"
+                            },
+                            {
+                                "NumIV": "2",
+                                "SofiNr": "111222333"
+                            }
+                        ]
+                    }
+                },
+                "TijdvakCorrectie": [
+                    {
+                        "DatAanvTv": "2026-01-01",
+                        "DatEindTv": "2026-01-31",
+                        "X": "a"
+                    },
+                    {
+                        "DatAanvTv": "2026-02-01",
+                        "DatEindTv": "2026-02-28",
+                        "X": "b"
+                    }
+                ]
+            }
+        },
+        "collective": {
+            "TotLnLbPh": 2501,
+            "TotLnSV": 2528,
+            "TotPrlnAofAnwLg": 2555,
+            "TotPrlnAofAnwHg": 2582,
+            "TotPrlnAofAnwUit": 2608,
+            "TotPrlnWhkAnw": 2635,
+            "TotPrlnAwfAnwLg": 2662,
+            "TotPrlnAwfAnwHg": 2689,
+            "TotPrlnAwfAnwHz": 2715,
+            "TotPrlnAwfAnwUit": 2742,
+            "PrLnUFO": 2769,
+            "IngLbPh": 2796,
+            "TotPrAofLg": 2822,
+            "TotPrAofHg": 2849,
+            "TotPrAofUit": 2876,
+            "TotOpslWko": 2903,
+            "TotPrGediffWhk": 2929,
+            "TotPrAwfLg": 2956,
+            "TotPrAwfHg": 2983,
+            "TotPrAwfHz": 3010,
+            "TotPrAwfUit": 3036,
+            "PrUFO": 3063,
+            "IngBijdrZvw": 3090,
+            "TotWghZvw": 3117,
+            "TotTeBet": 38430,
+            "TotGen": 39370
+        },
+        "findings": [
+            {
+                "kind": "line-x",
+                "element": "SofiNr",
+                "problem": "p"
+            }
+        ]
+    },
+    "incomplete, no corrections": {
+        "tree": {
+            "Bericht": {
+                "IdBer": "LA202603",
+                "DatTdAanm": "2026-04-02T10:00:00",
+                "ContPers": "",
+                "TelNr": "",
+                "RelNr": "123",
+                "GebrSwPakket": "humaniq loonaangifte module"
+            },
+            "AdministratieveEenheid": {
+                "LhNr": "123456789L00",
+                "NmIP": "",
+                "TijdvakAangifte": {
+                    "DatAanvTv": "2026-03-01",
+                    "DatEindTv": "2026-03-31",
+                    "VolledigeAangifte": {
+                        "CollectieveAangifte": {
+                            "TotLnLbPh": "0",
+                            "TotLnSV": "0",
+                            "TotPrlnAofAnwLg": "0",
+                            "TotPrlnAofAnwHg": "0",
+                            "TotPrlnAofAnwUit": "0",
+                            "TotPrlnWhkAnw": "0",
+                            "TotPrlnAwfAnwLg": "0",
+                            "TotPrlnAwfAnwHg": "0",
+                            "TotPrlnAwfAnwHz": "0",
+                            "TotPrlnAwfAnwUit": "0",
+                            "PrLnUFO": "0",
+                            "IngLbPh": "0",
+                            "TotPrAofLg": "0",
+                            "TotPrAofHg": "0",
+                            "TotPrAofUit": "0",
+                            "TotOpslWko": "0",
+                            "TotPrGediffWhk": "0",
+                            "TotPrAwfLg": "0",
+                            "TotPrAwfHg": "0",
+                            "TotPrAwfHz": "0",
+                            "TotPrAwfUit": "0",
+                            "PrUFO": "0",
+                            "IngBijdrZvw": "0",
+                            "TotWghZvw": "0",
+                            "TotTeBet": "0",
+                            "SaldoCorrectiesVoorgaandTijdvak": [],
+                            "TotGen": "0"
+                        },
+                        "InkomstenverhoudingInitieel": []
+                    }
+                },
+                "TijdvakCorrectie": []
+            }
+        },
+        "collective": {
+            "TotLnLbPh": 0,
+            "TotLnSV": 0,
+            "TotPrlnAofAnwLg": 0,
+            "TotPrlnAofAnwHg": 0,
+            "TotPrlnAofAnwUit": 0,
+            "TotPrlnWhkAnw": 0,
+            "TotPrlnAwfAnwLg": 0,
+            "TotPrlnAwfAnwHg": 0,
+            "TotPrlnAwfAnwHz": 0,
+            "TotPrlnAwfAnwUit": 0,
+            "PrLnUFO": 0,
+            "IngLbPh": 0,
+            "TotPrAofLg": 0,
+            "TotPrAofHg": 0,
+            "TotPrAofUit": 0,
+            "TotOpslWko": 0,
+            "TotPrGediffWhk": 0,
+            "TotPrAwfLg": 0,
+            "TotPrAwfHg": 0,
+            "TotPrAwfHz": 0,
+            "TotPrAwfUit": 0,
+            "PrUFO": 0,
+            "IngBijdrZvw": 0,
+            "TotWghZvw": 0,
+            "TotTeBet": 0,
+            "TotGen": 0
+        },
+        "findings": [
+            {
+                "kind": "administration-tax-number-invalid",
+                "severity": "blocking",
+                "employeeId": "",
+                "element": "LhNr",
+                "problem": "Het loonheffingennummer van de administratie moet bestaan uit negen cijfers die aan de elfproef voldoen, de letter L en een subnummer van 01 tot en met 99."
+            },
+            {
+                "kind": "administration-without-nmip",
+                "severity": "blocking",
+                "employeeId": "",
+                "element": "NmIP",
+                "problem": "De administratie heeft geen naam."
+            },
+            {
+                "kind": "administration-without-contpers",
+                "severity": "blocking",
+                "employeeId": "",
+                "element": "ContPers",
+                "problem": "De administratie heeft geen contactpersoon voor de aangifte."
+            },
+            {
+                "kind": "administration-without-telnr",
+                "severity": "blocking",
+                "employeeId": "",
+                "element": "TelNr",
+                "problem": "De administratie heeft geen telefoonnummer van de contactpersoon voor de aangifte."
+            },
+            {
+                "kind": "software-relation-number-missing",
+                "severity": "blocking",
+                "employeeId": "",
+                "element": "RelNr",
+                "problem": "Het relatienummer van de softwareleverancier bij de Belastingdienst (acht tekens) is niet ingesteld."
+            }
+        ]
+    }
+}

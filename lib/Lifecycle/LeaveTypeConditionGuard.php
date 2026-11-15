@@ -3,6 +3,9 @@
 /**
  * Leave Type Condition Guard
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Denies the `LeaveRequest` `submit` transition when the request's leave type
  * asks for something the request does not carry: a reason, a document, or a
  * start no further ahead than the type allows.
@@ -33,9 +36,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/leave-management/spec.md#REQ-LVM-T02
@@ -46,7 +46,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Lifecycle;
 
 use DateTimeImmutable;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\LeaveSubmissionConditionService;
 use OCA\Humaniq\Service\LeaveTypeResolver;
 use OCA\OpenRegister\Lifecycle\GuardResult;
@@ -62,12 +62,12 @@ final class LeaveTypeConditionGuard implements LifecycleGuardInterface {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway The shared register plumbing (the LeaveType lookup).
+	 * @param RecordStoreInterface $gateway The shared register plumbing (the LeaveType lookup).
 	 * @param LeaveTypeResolver $resolver Resolves a request's stored code to its type.
 	 * @param LeaveSubmissionConditionService $conditions The conditions themselves.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly LeaveTypeResolver $resolver = new LeaveTypeResolver(),
 		private readonly LeaveSubmissionConditionService $conditions = new LeaveSubmissionConditionService(),
 	) {

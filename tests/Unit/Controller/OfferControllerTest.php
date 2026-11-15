@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\OfferController;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\SettingsService;
@@ -44,6 +45,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for OfferController.
@@ -230,7 +232,9 @@ class OfferControllerTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->findCalled = true;
 				return $this->row;
 			}//end find()
@@ -261,7 +265,7 @@ class OfferControllerTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		return [
-			new OfferController($request, $container, $offerEsignService, $settings, $userSession, new HumaniqRoles($groupManager), $logger),
+			new OfferController($request, $offerEsignService, $settings, new CallerContext($userSession, new HumaniqRoles($groupManager), $container, $logger)),
 			$fake,
 			$offerEsignService,
 		];

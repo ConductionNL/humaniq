@@ -3,12 +3,9 @@
 /**
  * Humaniq Settings Service
  *
- * Loads the humaniq OpenRegister register from lib/Settings/humaniq_register.json,
- * deep-merging any modular schema fragments from lib/Settings/register.d/*.json
- * (ADR-037), and hands the merged configuration to OpenRegister's
- * ConfigurationService::importFromApp. The fragment-content signature is folded
- * into the version so OpenRegister re-imports whenever a fragment changes. This is
- * the only configuration humaniq owns — every HR/labour object lives in the register.
+ * Reads humaniq's app config: the register slug, whether OpenRegister is
+ * available, and the per-feature settings. The register import itself lives in
+ * RegisterImporter.
  *
  * @category Service
  * @package  OCA\Humaniq\Service
@@ -32,36 +29,32 @@ namespace OCA\Humaniq\Service;
 use OCA\Humaniq\AppInfo\Application;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
- * Imports the humaniq register into OpenRegister.
+ * Reads humaniq's app config.
  */
 class SettingsService {
 
 	/**
 	 * @param IAppConfig $appConfig The app config interface.
 	 * @param IAppManager $appManager The app manager.
-	 * @param ContainerInterface $container The DI container.
-	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly IAppManager $appManager,
-		private readonly ContainerInterface $container,
-		private readonly LoggerInterface $logger,
 	) {
 
 	}//end __construct()
 
 	/**
-	 * Whether OpenRegister is installed and available.
+	 * Whether OpenRegister is installed and available. Delegates to
+	 * OpenRegisterAvailability, which callers that need nothing else from
+	 * this class inject directly.
 	 *
 	 * @return bool
 	 */
 	public function isOpenRegisterAvailable(): bool {
-		return $this->appManager->isInstalled('openregister');
+		return (new OpenRegisterAvailability($this->appManager))->isAvailable();
 	}//end isOpenRegisterAvailable()
 
 	/**
@@ -94,91 +87,6 @@ class SettingsService {
 
 		return $slug;
 	}//end getRegisterSlug()
-
-	/**
-	 * The RGS-coded GL account for gross wages (payroll-glpost-shillinq D2 line 1:
-	 * debit loonkosten bruto), configurable via app config key
-	 * `glpost_account_gross`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountGross(): string {
-		return $this->glPostAccount('glpost_account_gross', '4001');
-	}//end getGlPostAccountGross()
-
-	/**
-	 * The RGS-coded GL account for employer social charges (payroll-glpost-shillinq
-	 * D2 line 2: debit werkgeverslasten sociale premies), configurable via app
-	 * config key `glpost_account_employer_charges`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountEmployerCharges(): string {
-		return $this->glPostAccount('glpost_account_employer_charges', '4002');
-	}//end getGlPostAccountEmployerCharges()
-
-	/**
-	 * The RGS-coded GL account for the wage-tax liability (payroll-glpost-shillinq
-	 * D2 line 3: credit loonheffing-schuld), configurable via app config key
-	 * `glpost_account_wage_tax_liability`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountWageTaxLiability(): string {
-		return $this->glPostAccount('glpost_account_wage_tax_liability', '1701');
-	}//end getGlPostAccountWageTaxLiability()
-
-	/**
-	 * The RGS-coded GL account for the net-wages liability (payroll-glpost-shillinq
-	 * D2 line 4: credit netto-loonschuld, which absorbs the balancing remainder R),
-	 * configurable via app config key `glpost_account_net_wages_liability`.
-	 *
-	 * @return string
-	 */
-	public function getGlPostAccountNetWagesLiability(): string {
-		return $this->glPostAccount('glpost_account_net_wages_liability', '1702');
-	}//end getGlPostAccountNetWagesLiability()
-
-	/**
-	 * The GL account for employee expense reimbursements paid through payroll
-	 * (payroll-expenses-and-allowances D6: debit declaraties), configurable via
-	 * app config key `glpost_account_reimbursements`.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-004
-	 */
-	public function getGlPostAccountReimbursements(): string {
-		return $this->glPostAccount('glpost_account_reimbursements', '4010');
-	}//end getGlPostAccountReimbursements()
-
-	/**
-	 * The route an approved claim takes by default, `payroll` or `direct`
-	 * (payroll-expenses-and-allowances D1), configurable via app config key
-	 * `expense_reimbursement_route`. Unset or unknown keeps today's direct route.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
-	 */
-	public function getExpenseReimbursementRoute(): string {
-		$value = $this->appConfig->getValueString(Application::APP_ID, 'expense_reimbursement_route', 'direct');
-		return $value === 'payroll' ? 'payroll' : 'direct';
-	}//end getExpenseReimbursementRoute()
-
-	/**
-	 * Read a `glpost_account_*` config key, falling back to its placeholder
-	 * default when unset or blank.
-	 *
-	 * @param string $key The app config key.
-	 * @param string $default The placeholder default account number.
-	 *
-	 * @return string
-	 */
-	private function glPostAccount(string $key, string $default): string {
-		$value = $this->appConfig->getValueString(Application::APP_ID, $key, $default);
-		return $value === '' ? $default : $value;
-	}//end glPostAccount()
 
 	/**
 	 * The day of the wage-period month used as the shillinq PaymentRun
@@ -333,120 +241,6 @@ class SettingsService {
 	}//end getOfferSigningDeadlineDays()
 
 	/**
-	 * The employer's Aof (arbeidsongeschiktheidsfonds) tariff classification
-	 * (payroll-core-engine design.md D2 step 9): `laag` for small employers,
-	 * `hoog` for other employers — a per-employer fact the tax-year tables
-	 * cannot know. Configurable via app config key `payroll_aof_tariff`;
-	 * anything other than `hoog` falls back to the honest default `laag`.
-	 *
-	 * @return string `laag` or `hoog`.
-	 *
-	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
-	 */
-	public function getPayrollAofTariff(): string {
-		$value = strtolower(trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_aof_tariff', 'laag')));
-		return $value === 'hoog' ? 'hoog' : 'laag';
-	}//end getPayrollAofTariff()
-
-	/**
-	 * The employer's gedifferentieerde Whk (Werkhervattingskas) percentage
-	 * (payroll-core-engine design.md D2 step 9) — employer-specific, set by
-	 * the Belastingdienst Whk-beschikking. Configurable via app config key
-	 * `payroll_whk_percentage`; unset/blank/non-numeric falls back to the
-	 * tables' flagged national average passed in by the caller (the tables
-	 * file marks its `whk` value `placeholder: true`).
-	 *
-	 * @param float $tablesDefault The tables' flagged national-average Whk percentage.
-	 *
-	 * @return float The Whk percentage (percentage scale, e.g. 1.52).
-	 *
-	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
-	 */
-	public function getPayrollWhkPercentage(float $tablesDefault): float {
-		$value = trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_whk_percentage', ''));
-		if ($value === '' || is_numeric($value) === false) {
-			return $tablesDefault;
-		}
-
-		$percentage = (float)$value;
-		return $percentage >= 0.0 ? $percentage : $tablesDefault;
-	}//end getPayrollWhkPercentage()
-
-	/**
-	 * The CalDAV principal that owns the target shared calendar
-	 * (leave-calendar-nc design.md D6), e.g. `principals/users/hr`,
-	 * configurable via app config key `leave_calendar_principal`. Empty
-	 * (the default) means the sync is not configured and every run ends
-	 * `skipped-no-calendar`. The configured calendar SHOULD be one the
-	 * owning account shares with the team — the sync is a one-way
-	 * projection, so events manually edited on the calendar are overwritten
-	 * by the next `occ humaniq:calendar:sync`.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-001
-	 */
-	public function getLeaveCalendarPrincipal(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'leave_calendar_principal', '');
-	}//end getLeaveCalendarPrincipal()
-
-	/**
-	 * The CalDAV calendar URI (on the principal above) the sync writes
-	 * approved-leave/sickness events into (leave-calendar-nc design.md D6),
-	 * as shown in the Calendar app's link/edit dialog, configurable via app
-	 * config key `leave_calendar_uri`. Empty (the default) means the sync is
-	 * not configured and every run ends `skipped-no-calendar`. One-way
-	 * projection caveat: manual edits to events on this calendar are
-	 * overwritten by the next sync.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-001
-	 */
-	public function getLeaveCalendarUri(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'leave_calendar_uri', '');
-	}//end getLeaveCalendarUri()
-
-	/**
-	 * The CalDAV principal that owns the target shared calendar interview
-	 * events are projected onto (interview-scheduling design.md D6), e.g.
-	 * `principals/users/recruiting`, configurable via app config key
-	 * `interview_calendar_principal`. Empty (the default) means the sync is
-	 * not configured and every run ends `skipped-no-calendar`. Deliberately
-	 * a SEPARATE key from `leave_calendar_principal` — an org may want
-	 * interviews on the recruiting team's own shared calendar, distinct from
-	 * the company-wide absence calendar. The configured calendar SHOULD be
-	 * one the owning account shares with the interview panel — the sync is
-	 * a one-way projection, so events manually edited on the calendar are
-	 * overwritten by the next `occ humaniq:interview:sync`.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-002
-	 */
-	public function getInterviewCalendarPrincipal(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'interview_calendar_principal', '');
-	}//end getInterviewCalendarPrincipal()
-
-	/**
-	 * The CalDAV calendar URI (on the principal above) the interview sync
-	 * writes VEVENTs into (interview-scheduling design.md D6), as shown in
-	 * the Calendar app's link/edit dialog, configurable via app config key
-	 * `interview_calendar_uri`. Empty (the default) means the sync is not
-	 * configured and every run ends `skipped-no-calendar`. Deliberately a
-	 * SEPARATE key from `leave_calendar_uri` (design.md D6). One-way
-	 * projection caveat: manual edits to events on this calendar are
-	 * overwritten by the next sync.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-002
-	 */
-	public function getInterviewCalendarUri(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'interview_calendar_uri', '');
-	}//end getInterviewCalendarUri()
-
-	/**
 	 * Whether `LeaveAccrualJob` may run (leave-accrual-job design.md D6) — an
 	 * operator off-switch, configurable via app config key
 	 * `leave_accrual_enabled`. Defaults to `true`; the job returns immediately
@@ -477,117 +271,6 @@ class SettingsService {
 	}//end isRetentionExpiryEnabled()
 
 	/**
-	 * The leave type codes the net FTE of a formation leaves out
-	 * (people-formation-positions design.md D3), configurable via app config
-	 * key `formation_net_fte_leave_types` as a comma-separated list. Defaults
-	 * to parental leave and pregnancy and childbirth leave, the tender's
-	 * categories; long-term sickness is the separate threshold below.
-	 *
-	 * @return array<int, string>
-	 *
-	 * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-003
-	 */
-	public function getFormationNetFteLeaveTypes(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, 'formation_net_fte_leave_types', 'parental,zwangerschap');
-
-		return array_values(array_filter(array_map('trim', explode(',', $raw)), static fn (string $code): bool => $code !== ''));
-	}//end getFormationNetFteLeaveTypes()
-
-	/**
-	 * The number of weeks after which a sickness case counts against the net
-	 * FTE of a formation (people-formation-positions design.md D3),
-	 * configurable via app config key `formation_long_term_sick_weeks`.
-	 * Defaults to 6.
-	 *
-	 * @return int
-	 *
-	 * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-003
-	 */
-	public function getFormationLongTermSickWeeks(): int {
-		return max(0, $this->appConfig->getValueInt(Application::APP_ID, 'formation_long_term_sick_weeks', 6));
-	}//end getFormationLongTermSickWeeks()
-
-	/**
-	 * department-figures: the fewest people a unit must hold in a period
-	 * before its manager sees its figures, so a small team's absence or wage
-	 * cost cannot be traced to one person. App config key
-	 * `department_figures_minimum_members`, default 5; HR and accountants are
-	 * not bound by it.
-	 *
-	 * @return int
-	 *
-	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-002
-	 */
-	public function getDepartmentFiguresMinimumMembers(): int {
-		return max(1, $this->appConfig->getValueInt(Application::APP_ID, 'department_figures_minimum_members', 5));
-	}//end getDepartmentFiguresMinimumMembers()
-
-	/**
-	 * reporting-pay-transparency: the fewest women and the fewest men a group
-	 * needs before the pay transparency report shows its figures. App config
-	 * key `pay_transparency_minimum_group`, default 5.
-	 *
-	 * @return int
-	 *
-	 * @spec openspec/specs/pay-transparency/spec.md#REQ-PTR-002
-	 */
-	public function getPayTransparencyMinimumGroup(): int {
-		return max(1, $this->appConfig->getValueInt(Application::APP_ID, 'pay_transparency_minimum_group', 5));
-	}//end getPayTransparencyMinimumGroup()
-
-	/**
-	 * expenses-travel-calculation: the rate per kilometre the employer pays
-	 * for business and commuting travel. App config key
-	 * `mileage_rate_per_km` (for example `0.30`); null when unset or not a
-	 * positive number, and the caller then pays the tax-free rate from the
-	 * rule corpus.
-	 *
-	 * @return float|null
-	 *
-	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
-	 */
-	public function getMileageRatePerKm(): ?float {
-		$raw = trim(str_replace(',', '.', $this->appConfig->getValueString(Application::APP_ID, 'mileage_rate_per_km', '')));
-		if (is_numeric($raw) === false || (float)$raw <= 0.0) {
-			return null;
-		}
-
-		return (float)$raw;
-	}//end getMileageRatePerKm()
-
-	/**
-	 * expenses-travel-calculation: the integriq source that answers the road
-	 * distance between two postcodes (app config `route_distance_source`, a
-	 * source uuid) and the path on it (`route_distance_endpoint`, default
-	 * empty). Empty source means no route planner is configured.
-	 *
-	 * @return array{source: string, endpoint: string}
-	 *
-	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-003
-	 */
-	public function getRouteDistanceSource(): array {
-		return [
-			'source' => trim($this->appConfig->getValueString(Application::APP_ID, 'route_distance_source', '')),
-			'endpoint' => trim($this->appConfig->getValueString(Application::APP_ID, 'route_distance_endpoint', '')),
-		];
-	}//end getRouteDistanceSource()
-
-	/**
-	 * The integriq source uuid a base register is called through
-	 * (people-register-prefill D1): app config `prefill_rdw_source` or
-	 * `prefill_brp_source`. Empty when not configured.
-	 *
-	 * @param string $register The register key: `rdw` or `brp`.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/specs/register-prefill/spec.md#REQ-RPF-001
-	 */
-	public function getRegisterPrefillSource(string $register): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, 'prefill_' . $register . '_source', ''));
-	}//end getRegisterPrefillSource()
-
-	/**
 	 * The annual bovenwettelijk (above-statutory) leave hours LeaveAccrualJob
 	 * accrues 1/12 of per month (leave-accrual-job design.md D3), configurable
 	 * via app config key `leave_bovenwettelijk_annual_hours`. Defaults to `0`
@@ -607,228 +290,5 @@ class SettingsService {
 		$hours = (float)$value;
 		return $hours >= 0.0 ? $hours : 0.0;
 	}//end getLeaveBovenwettelijkAnnualHours()
-
-	/**
-	 * Import the register idempotently (skips when the version is unchanged).
-	 *
-	 * @return array<string, mixed> Result with success flag, message, and version.
-	 */
-	public function loadConfiguration(): array {
-		return $this->runLoadConfiguration(force: false);
-	}//end loadConfiguration()
-
-	/**
-	 * Force re-import of the register (bypasses the already-configured guard).
-	 *
-	 * @return array<string, mixed> Result with success flag, message, and version.
-	 */
-	public function loadConfigurationForced(): array {
-		return $this->runLoadConfiguration(force: true);
-	}//end loadConfigurationForced()
-
-	/**
-	 * Load and parse humaniq_register.json, deep-merging register.d/*.json fragments.
-	 *
-	 * @return array<string, mixed> Either ['data' => array, 'version' => string]
-	 *                              or ['success' => false, 'message' => string].
-	 */
-	private function loadRegisterConfigData(): array {
-		$configPath = __DIR__ . '/../Settings/humaniq_register.json';
-		if (file_exists($configPath) === false) {
-			$this->logger->error('Humaniq: humaniq_register.json not found at ' . $configPath);
-			return [
-				'success' => false,
-				'message' => 'Configuration file humaniq_register.json not found.',
-			];
-		}
-
-		$configContent = file_get_contents($configPath);
-		if ($configContent === false) {
-			$this->logger->error('Humaniq: failed to read humaniq_register.json');
-			return [
-				'success' => false,
-				'message' => 'Failed to read configuration file.',
-			];
-		}
-
-		$configData = json_decode($configContent, true);
-		if (json_last_error() !== JSON_ERROR_NONE) {
-			$this->logger->error('Humaniq: failed to parse humaniq_register.json: ' . json_last_error_msg());
-			return [
-				'success' => false,
-				'message' => 'Failed to parse configuration file: ' . json_last_error_msg(),
-			];
-		}
-
-		// ADR-037: merge modular register fragments from Settings/register.d/*.json.
-		// Each domain CheckProvider drops its own schema fragment here instead of
-		// editing the monolith, so concurrent builds touch disjoint files. OpenAPI
-		// `components.schemas` is a keyed object, so disjoint fragments union by key.
-		$fragmentDir = __DIR__ . '/../Settings/register.d';
-		$fragmentSig = '';
-		if (is_dir($fragmentDir) === true) {
-			$fragmentFiles = (glob($fragmentDir . '/*.json') ?: []);
-			sort($fragmentFiles);
-			foreach ($fragmentFiles as $fragmentFile) {
-				$fragmentContent = file_get_contents($fragmentFile);
-				if ($fragmentContent === false) {
-					continue;
-				}
-
-				$fragmentData = json_decode($fragmentContent, true);
-				if (json_last_error() !== JSON_ERROR_NONE) {
-					$this->logger->warning(
-						'Humaniq: skipping malformed register fragment ' . basename($fragmentFile)
-						. ': ' . json_last_error_msg()
-					);
-					continue;
-				}
-
-				$configData = self::deepMergeConfig(base: $configData, overlay: $fragmentData);
-				$fragmentSig .= basename($fragmentFile) . ':' . md5($fragmentContent) . ';';
-			}
-		}//end if
-
-		// Fold the fragment signature into the version so OpenRegister's
-		// version-gated importFromApp re-imports whenever fragments change.
-		$version = ($configData['info']['version'] ?? '0.0.0');
-		if ($fragmentSig !== '') {
-			$version .= '+frag.' . substr(md5($fragmentSig), 0, 8);
-		}
-
-		return [
-			'data' => $configData,
-			'version' => $version,
-		];
-
-	}//end loadRegisterConfigData()
-
-	/**
-	 * Deep-merge a register fragment onto the base config (ADR-037).
-	 *
-	 * Associative arrays (OpenAPI objects like `components.schemas`) are merged by
-	 * key union (recursing on shared keys); list arrays are concatenated; scalars
-	 * in the fragment overwrite the base. Disjoint fragments never collide.
-	 *
-	 * @param array<mixed> $base The accumulated config.
-	 * @param array<mixed> $overlay The fragment to merge in.
-	 *
-	 * @return array<mixed> The merged config.
-	 */
-	private static function deepMergeConfig(array $base, array $overlay): array {
-		foreach ($overlay as $key => $value) {
-			$base[$key] = self::mergeConfigValue(($base[$key] ?? null), $value);
-		}
-
-		return $base;
-	}//end deepMergeConfig()
-
-	/**
-	 * Merge a single overlay value onto its base counterpart (ADR-037).
-	 *
-	 * Extracted from {@see self::deepMergeConfig()} so the per-key decision
-	 * reads as a sequence of guards rather than nested if/else branches. The
-	 * behaviour is unchanged: only when BOTH sides are arrays does anything
-	 * other than a plain overwrite happen. `is_array($baseValue)` subsumes the
-	 * former `isset($base[$key])` test — a null base can never be an array.
-	 *
-	 * @param mixed $baseValue The current value in the base config, or null when absent.
-	 * @param mixed $value The overlay value to merge in.
-	 *
-	 * @return mixed The merged value for this key.
-	 */
-	private static function mergeConfigValue(mixed $baseValue, mixed $value): mixed {
-		if (is_array($value) === false || is_array($baseValue) === false) {
-			return $value;
-		}
-
-		$baseIsList = ($baseValue === [] || array_keys($baseValue) === range(0, (count($baseValue) - 1)));
-		$overlayIsList = ($value === [] || array_keys($value) === range(0, (count($value) - 1)));
-		if ($baseIsList === true && $overlayIsList === true) {
-			return array_merge($baseValue, $value);
-		}
-
-		return self::deepMergeConfig(base: $baseValue, overlay: $value);
-	}//end mergeConfigValue()
-
-	/**
-	 * Internal implementation for loadConfiguration / loadConfigurationForced.
-	 *
-	 * @param bool $force Force re-import even if already configured.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function runLoadConfiguration(bool $force): array {
-		if ($this->isOpenRegisterAvailable() === false) {
-			$this->logger->warning('Humaniq: OpenRegister not available, skipping register initialization');
-			return [
-				'success' => false,
-				'message' => 'OpenRegister is not installed or enabled.',
-			];
-		}
-
-		try {
-			$configLoad = $this->loadRegisterConfigData();
-			if (isset($configLoad['success']) === true && $configLoad['success'] === false) {
-				return $configLoad;
-			}
-
-			$configData = $configLoad['data'];
-			$configVersion = $configLoad['version'];
-
-			$configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
-			$result = $configurationService->importFromApp(
-				appId: Application::APP_ID,
-				data: $configData,
-				version: $configVersion,
-				force: $force
-			);
-
-			if (empty($result) === false) {
-				$errors = ($result['errors'] ?? []);
-				$warnings = ($result['warnings'] ?? []);
-
-				if (empty($errors) === false) {
-					$this->logger->error('Humaniq: register configuration imported with errors', ['errors' => $errors]);
-					return [
-						'success' => false,
-						'message' => 'Configuration import completed with errors.',
-						'errors' => $errors,
-						'warnings' => $warnings,
-						'version' => ($result['version'] ?? 'unknown'),
-					];
-				}
-
-				if (empty($warnings) === false) {
-					$this->logger->warning('Humaniq: register configuration imported with warnings', ['warnings' => $warnings]);
-				}
-
-				$this->logger->info('Humaniq: register configuration imported successfully');
-				return [
-					'success' => true,
-					'message' => 'Configuration imported successfully.',
-					'warnings' => $warnings,
-					'version' => ($result['version'] ?? 'unknown'),
-				];
-			}//end if
-
-			// OR's importFromApp returns an all-empty result on the version-unchanged
-			// idempotent-skip path (force=false, same version). That is success, not
-			// failure — the register is already up-to-date.
-			$this->logger->info('Humaniq: register configuration already up-to-date (version-unchanged skip)');
-			return [
-				'success' => true,
-				'skipped' => true,
-				'message' => 'Configuration already up-to-date (version-unchanged skip).',
-			];
-		} catch (\Throwable $e) {
-			$this->logger->error('Humaniq: configuration import failed', ['exception' => $e->getMessage()]);
-			return [
-				'success' => false,
-				'message' => $e->getMessage(),
-			];
-		}//end try
-
-	}//end runLoadConfiguration()
 
 }//end class

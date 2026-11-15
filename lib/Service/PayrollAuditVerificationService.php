@@ -3,6 +3,9 @@
 /**
  * Payroll Audit Verification Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Chain-of-custody verification for a `PayrollRun` (audit-trail-payroll
  * design.md D2, fixing hrmq#98): resolves the audit-trail row id range
  * covering the run's and its payslips' create/update rows, then hands that
@@ -30,9 +33,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/audit-trail-payroll/spec.md#REQ-AUDP-003
@@ -44,13 +44,15 @@ namespace OCA\Humaniq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Resolves a PayrollRun's audit-row range and verifies it via OpenRegister's
  * global hash chain.
  */
 final class PayrollAuditVerificationService {
+
+	use ResolvesObjectService;
 
 	/**
 	 * @var string
@@ -112,7 +114,7 @@ final class PayrollAuditVerificationService {
 		$uuids = [$runId];
 		foreach ($this->loadAll(self::PAYSLIP_SCHEMA) as $payslip) {
 			if ((string)($payslip['payrollRunId'] ?? '') === $runId) {
-				$uuids[] = $this->idOf($payslip);
+				$uuids[] = RegisterRows::idOf($payslip);
 			}
 		}
 
@@ -225,13 +227,7 @@ final class PayrollAuditVerificationService {
 			return null;
 		}
 
-		foreach ($this->loadAll($schema) as $row) {
-			if ($this->idOf($row) === $id) {
-				return $row;
-			}
-		}
-
-		return null;
+		return RegisterRows::byId($this->loadAll($schema), $id);
 	}//end findById()
 
 	/**
@@ -254,76 +250,21 @@ final class PayrollAuditVerificationService {
 			return [];
 		}
 
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
+		return RegisterRows::fromRows($rows);
 	}//end loadAll()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to a plain array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		if (is_object($row) === true && method_exists($row, 'getObject') === true) {
-			return (array)$row->getObject();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
-	 * @param array<string, mixed> $row The row.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $row): string {
-		return (string)($row['id'] ?? $row['@self']['id'] ?? '');
-	}//end idOf()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
 
 	/**
 	 * @return mixed OpenRegister's per-object audit-log read path.
 	 */
 	private function auditHandler(): mixed {
-		return $this->container->get('OCA\OpenRegister\Service\Object\AuditHandler');
+		return $this->openRegisterService('OCA\OpenRegister\Service\Object\AuditHandler');
 	}//end auditHandler()
 
 	/**
 	 * @return mixed OpenRegister's hash-chain verification service.
 	 */
 	private function auditHashService(): mixed {
-		return $this->container->get('OCA\OpenRegister\Service\AuditHashService');
+		return $this->openRegisterService('OCA\OpenRegister\Service\AuditHashService');
 	}//end auditHashService()
 
 	/**
@@ -332,5 +273,4 @@ final class PayrollAuditVerificationService {
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

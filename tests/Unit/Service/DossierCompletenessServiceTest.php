@@ -178,6 +178,32 @@ class DossierCompletenessServiceTest extends TestCase {
 	}//end testAnotherEmployeesDocumentIsNotEvidence()
 
 	/**
+	 * The contract-type scope reads running contracts only, an unknown scope
+	 * never applies, the start falls back to the earliest contract, and a
+	 * missing requirement's row is complete.
+	 *
+	 * @return void
+	 */
+	public function testContractTypeScopeUnknownScopeAndTheContractStart(): void {
+		$rows = $this->rows(documents: [$this->document('vog', '2024-08-13', null)]);
+		$rows['employee'] = ['id' => 'emp-1'];
+		$rows['EmploymentContract'][] = ['id' => 'c-0', 'employeeId' => 'emp-1', 'type' => 'temporary', 'startDate' => '2025-01-01', 'endDate' => '2025-02-28'];
+		$rows['EmploymentContract'][] = ['id' => 'c-2', 'employeeId' => 'emp-1', 'type' => 'oncall', 'startDate' => '2027-01-01'];
+		$rows['DossierRequirement'][] = ['code' => 'perm', 'label' => 'Permanent only', 'scope' => 'contractType', 'scopeValues' => ['permanent'], 'evidenceKind' => 'personnel-document', 'active' => true];
+		$rows['DossierRequirement'][] = ['code' => 'temp', 'label' => 'Temporary only', 'scope' => 'contractType', 'scopeValues' => ['temporary', 'oncall'], 'evidenceKind' => 'personnel-document', 'active' => true];
+		$rows['DossierRequirement'][] = ['code' => 'odd', 'label' => 'Odd', 'scope' => 'planet', 'evidenceKind' => 'personnel-document', 'active' => true];
+
+		$status = $this->service()->statusFor('emp-1', self::DATE, $rows);
+		$codes = array_column($status, 'requirementCode');
+		$this->assertSame(['id', 'contract', 'vog', 'big', 'perm'], $codes);
+		$this->assertSame('aanwezig', $this->statusOf('vog', $rows), 'Issued 140 days before the earliest contract start, within 180.');
+		$this->assertSame(
+			['requirementCode' => 'perm', 'label' => 'Permanent only', 'status' => 'ontbreekt', 'evidence' => null, 'issuedOn' => null, 'validUntil' => null],
+			$status[4]
+		);
+	}//end testContractTypeScopeUnknownScopeAndTheContractStart()
+
+	/**
 	 * The status of one requirement.
 	 *
 	 * @param string $code The requirement code.

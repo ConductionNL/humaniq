@@ -44,11 +44,23 @@
       "jurisdiction": "NL",
       "framework": "nl-loonheffingen",
       "source": "Wfsv (Wab) Awf low/high tariff",
-      "statement": "The Algemeen werkloosheidsfonds (Awf) premium shall apply the low tariff for permanent written contracts and the high tariff (5 percentage points higher) for flexible/temporary contracts.",
+      "statement": "The Algemeen werkloosheidsfonds (Awf) premium shall apply the low tariff for permanent written contracts, for signed BBL contracts without an uitzendbeding and for employees under 21 at the start of the period paid at most 52 hours in a month (48 in four weeks), and the high tariff (5 percentage points higher) for every other contract.",
       "severity": "conditional",
       "machineCheckable": true,
       "effectiveDate": "2020-01-01",
       "sourceUrl": "https://wetten.overheid.nl/BWBR0019057"
+    },
+    {
+      "id": "nl-awf-herziening-uren-signaal",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Handboek Loonheffingen 2026 par. 7.2.3 (herzien lage premie AWf)",
+      "statement": "An employee charged the low Awf premium on an average of 30 contracted hours a week or less who is paid more than 30 percent above the contracted hours in a calendar year shall have the low premium reviewed to the high premium over that year; the payroll should signal the overrun while the year runs.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": "2025-01-01",
+      "sourceUrl": "https://download.belastingdienst.nl/belastingdienst/docs/handboek-loonheffingen-lh0221t61fd.pdf"
     },
     {
       "id": "nl-zvw-werkgeversheffing",
@@ -1331,6 +1343,18 @@
       "sourceUrl": null
     },
     {
+      "id": "nl-cao-component-onbekend",
+      "domain": "pay",
+      "jurisdiction": "NL",
+      "framework": "cao",
+      "source": "CAO-tekst allowances (per the contract's referenced CAO in lib/Standards/cao/)",
+      "statement": "When an employment contract names collective labour agreement components (caoComponents), each named component shall be declared in the allowances of the agreement the contract follows. A contract naming a component its agreement does not have pays nothing for it and shall be corrected. Vacuous when the contract names no component.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": null
+    },
+    {
       "id": "nl-hr21-vervallen-functie",
       "domain": "pay",
       "jurisdiction": "NL",
@@ -1416,6 +1440,42 @@
       "machineCheckable": true,
       "effectiveDate": "2013-01-01",
       "sourceUrl": "https://wetten.overheid.nl/BWBR0032249"
+    },
+    {
+      "id": "nl-ubd-deadline",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Belastingdienst, opgaaf uitbetaalde bedragen aan derden (art. 53 AWR, art. 22 Uitv.reg. AWR)",
+      "statement": "A ThirdPartyPayment whose year's ThirdPartyReport for the same administration is not in verzonden by 31 January of the next year is a violation, to be surfaced by occ humaniq:rules:audit.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2024-01-01",
+      "sourceUrl": "https://odb.belastingdienst.nl/opgaven-derden-uitbetalingen-ib47/"
+    },
+    {
+      "id": "nl-ubd-payee-identification",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Belastingdienst, Handleiding gegevensaanlevering uitbetalingen aan derden, Deel 2 (ONTVANGER, bSN)",
+      "statement": "A ThirdPartyPayee with at least one ThirdPartyPayment and no BSN or no date of birth is a violation: the UBD message cannot identify them.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2024-01-01",
+      "sourceUrl": "https://odb.belastingdienst.nl/documentatie/uitbetaalde-bedragen-aan-derden-v08/"
+    },
+    {
+      "id": "nl-loonaangifte-message-drift",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Belastingdienst, Gegevensspecificaties aangifte loonheffingen 2026 v3.0, 4.1 Collectieve aangifte (0001, 0002, 2315)",
+      "statement": "A LoonaangifteFiling whose message was made from a PayrollRun that has since been recalculated, changed in total wage tax or removed is a violation: the message no longer reports the run. Make the message again.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://odb.belastingdienst.nl/documentatie/loonheffingen-aangifte-2026v09/"
     }
   ]
 }

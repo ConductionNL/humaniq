@@ -44,19 +44,30 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Service\AwfReviewService;
+use OCA\Humaniq\Service\CaoComponentCalculator;
+use OCA\Humaniq\Service\CaoComponentPayService;
+use OCA\Humaniq\Service\CostAllocationService;
+use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Service\EmploymentTermsResolver;
 use OCA\Humaniq\Service\HoursPayService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\PayrollBookkeepingSettings;
 use OCA\Humaniq\Service\PayrollExpenseFoldService;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
+use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for PayrollRunService.
@@ -101,6 +112,13 @@ class PayrollRunServiceTest extends TestCase {
 			 * @var array<int, string>
 			 */
 			public array $deleted = [];
+
+			/**
+			 * Every find() call: the one ObjectService read that leaves a `read` audit entry.
+			 *
+			 * @var array<int, array<string, mixed>>
+			 */
+			public array $found = [];
 
 			/**
 			 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
@@ -151,12 +169,13 @@ class PayrollRunServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
@@ -192,13 +211,28 @@ class PayrollRunServiceTest extends TestCase {
 			 *
 			 * @return bool
 			 */
+			/**
+			 * A single-object read, recorded; it answers nothing.
+			 *
+			 * @param mixed ...$args The call's arguments.
+			 *
+			 * @return null
+			 */
+			public function find(mixed ...$args): mixed {
+				$args = LegacyObjectArgs::flatten(args: $args);
+				$this->found[] = $args;
+				return null;
+			}//end find()
+
 			public function deleteObject(
-				string $uuid,
-				?string $register = null,
-				?string $schema = null,
+				ObjectDeletion $deletion,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
+				bool $_retentionSweep = false
 			): bool {
+				$uuid = $deletion->uuid;
+				$register = $deletion->target->register;
+				$schema = $deletion->target->schema;
 				$this->deleted[] = $uuid;
 
 				$targetSchema = ($schema ?? $this->schema);
@@ -225,13 +259,16 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
 	 * @param PayrollRetentionGuardService|null $retentionGuard A mocked retention guard, or null for a permissive default (hrmq#99 -- `savePayslip()` places the AWR floor hold on every seal; most tests here are not exercising that behaviour, so a plain mock with no expectations is the default).
-	 *
 	 * @param HoursPayService|null $hoursPay The hours-and-overtime fold, or null for a run without it.
 	 * @param PayrollExpenseFoldService|null $expenses The claims-and-allowances fold, or null for a run without it.
+	 * @param PayrollRunCheckService|null $runCheck The run check, or null for a run without it.
+	 * @param CaoComponentPayService|null $caoComponents The CAO components fold, or null for a run without it.
+	 * @param CostAllocationService|null $costAllocation The cost allocation, or null for a run without it.
+	 * @param AwfReviewService|null $awfReview The Awf review, or null for a run without it.
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -243,8 +280,6 @@ class PayrollRunServiceTest extends TestCase {
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getPayrollAofTariff')->willReturn('laag');
-		$settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
 
 		$logger = $this->createMock(LoggerInterface::class);
 
@@ -253,7 +288,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses),
+			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview),
 			$fake,
 			$retentionGuard,
 		];
@@ -313,6 +348,33 @@ class PayrollRunServiceTest extends TestCase {
 		);
 
 	}//end contract()
+
+	/**
+	 * A calculation reads its rows as lists, never one object at a time, so the
+	 * audit trail lists the people who opened a record and not the payroll job
+	 * (record-history-on-every-detail-page REQ-RAH-001, design D5): only
+	 * ObjectService::find() records a `read` entry.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-every-read-and-every-change-of-a-humaniq-record-shall-be-recorded-in-openregisters-audit-trail-req-rah-001
+	 */
+	public function testACalculationMakesNoSingleObjectReadsThatWouldBeAudited(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(), $this->employee(['id' => 'emp-2', 'employeeNumber' => 'EMP-NL-0002'])],
+				'EmploymentContract' => [$this->contract(), $this->contract(['id' => 'ct-2', 'employeeId' => 'emp-2'])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$result = $service->runFor('2026-02');
+		$service->runFor('2026-02', recalculate: true);
+
+		$this->assertCount(2, $result['computed']);
+		$this->assertSame([], $fake->found);
+	}//end testACalculationMakesNoSingleObjectReadsThatWouldBeAudited()
 
 	/**
 	 * @return void
@@ -444,6 +506,57 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertSame(3081.17, $payslip['nettoPay']);
 
 	}//end testNonGrantedRulingPayslipIsByteIdenticalWithNullExemption()
+
+	/**
+	 * A ruling rate on an employee whose ruling is not granted changes
+	 * nothing: the payslip is the plain anchor.
+	 *
+	 * @return void
+	 */
+	public function testARulingRateWithoutTheGrantLeavesNetPayUnchanged(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['thirtyPercentRulingRate' => 30.0])],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$this->assertNull($payslip['thirtyPercentRulingExemption']);
+		$this->assertSame(718.83, $payslip['loonheffing']);
+		$this->assertSame(3081.17, $payslip['nettoPay']);
+
+	}//end testARulingRateWithoutTheGrantLeavesNetPayUnchanged()
+
+	/**
+	 * An employee without the loonheffingskorting election gets it applied,
+	 * the same payslip as an explicit election.
+	 *
+	 * @return void
+	 */
+	public function testAnEmployeeWithoutTheKortingElectionGetsItApplied(): void {
+		$employee = $this->employee();
+		unset($employee['loonheffingskortingToegepast']);
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$employee],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$this->assertSame(718.83, $payslip['loonheffing']);
+		$this->assertSame(3081.17, $payslip['nettoPay']);
+
+	}//end testAnEmployeeWithoutTheKortingElectionGetsItApplied()
 
 	/**
 	 * hrmq#99 regression fix: `savePayslip()` places the AWR art. 52 lid 4
@@ -992,16 +1105,12 @@ class PayrollRunServiceTest extends TestCase {
 		$run = $fake->rowsBySchema['PayrollRun'][0];
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getGlPostAccountGross')->willReturn('4001');
-		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
-		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
-		$settings->method('getGlPostAccountReimbursements')->willReturn('4010');
 
 		$glPost = new PayrollGLPostService(
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
 			$settings,
+			new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)),
 			$this->createMock(LoggerInterface::class)
 		);
 		$built = $glPost->buildLines($run);
@@ -1785,6 +1894,37 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testASalariedEmployeeWithoutOvertimeKeepsAnIdenticalPayslip()
 
 	/**
+	 * A contract naming the example agreement's 10% shift allowance gets it
+	 * on the payslip, in the gross the wage tax is computed over; a contract
+	 * naming no component keeps a byte-identical payslip with the fold wired.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-003
+	 */
+	public function testCaoComponentsArePaidAsWage(): void {
+		$rows = ['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
+		$fold = new CaoComponentPayService(new EmploymentTermsResolver(), new CaoComponentCalculator(), $this->createMock(LoggerInterface::class));
+		[$plainService, $plainFake] = $this->service($rows);
+		$plainService->runFor('2026-05');
+		$plain = $this->savedFor($plainFake, 'Payslip');
+		[$unnamed, $unnamedFake] = $this->service($rows, null, null, null, null, $fold);
+		$unnamed->runFor('2026-05');
+		$this->assertEquals($plain, $this->savedFor($unnamedFake, 'Payslip'));
+
+		$rows['EmploymentContract'] = [$this->contract(['cao' => 'cao-voorbeeld', 'caoComponents' => ['ploegentoeslag']])];
+		[$service, $fake] = $this->service($rows, null, null, null, null, $fold);
+		$service->runFor('2026-05');
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		$this->assertEqualsWithDelta(($plain[0]['grossPay'] + 380.00), $payslip['grossPay'], 0.001);
+		$this->assertGreaterThan($plain[0]['loonheffing'], $payslip['loonheffing']);
+		$this->assertSame(380.0, $payslip['caoComponentsTotal']);
+		$this->assertSame('ploegentoeslag', $payslip['caoComponentLines'][0]['key']);
+		$this->assertSame([], $payslip['caoComponentsUnresolved']);
+	}//end testCaoComponentsArePaidAsWage()
+
+	/**
 	 * The claims-and-allowances fold over the given rows, recording its writes.
 	 *
 	 * @param array<string, array<int, array<string, mixed>>> $rows Rows keyed by schema.
@@ -1896,12 +2036,7 @@ class PayrollRunServiceTest extends TestCase {
 		$run['totalReimbursements'] = 27.40;
 		$run['totalNet'] = ($run['totalNet'] + 27.40);
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getGlPostAccountGross')->willReturn('4001');
-		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
-		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
-		$settings->method('getGlPostAccountReimbursements')->willReturn('4010');
-		$built = (new PayrollGLPostService($this->createMock(ContainerInterface::class), $this->createMock(IAppManager::class), $settings, $this->createMock(LoggerInterface::class)))->buildLines($run);
+		$built = (new PayrollGLPostService($this->createMock(ContainerInterface::class), $this->createMock(IAppManager::class), $settings, new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)), $this->createMock(LoggerInterface::class)))->buildLines($run);
 
 		$this->assertNull($built['error']);
 		$byAccount = array_column($built['lines'], 'amount', 'accountNumber');
@@ -1909,5 +2044,238 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertEqualsWithDelta(($byAccount['4001'] + $byAccount['4002'] + $byAccount['4010']), ($byAccount['1701'] + $byAccount['1702']), 0.001);
 		$this->assertEqualsWithDelta($plainJournal['1702'] + 27.40, $byAccount['1702'], 0.001);
 	}//end testReimbursementsReachTheJournalBalanced()
+
+	/**
+	 * payroll-run-checks D2: a calculation runs the check with the skipped
+	 * list and returns its summary; a failing check does not fail the run.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
+	 */
+	public function testACalculationRunsTheCheckWithTheSkippedList(): void {
+		$rows = ['Employee' => [$this->employee(), ['id' => 'emp-nocontract', 'firstName' => 'Kees', 'lastName' => 'Zonder', 'startDate' => '2020-01-01']], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
+		$check = $this->createMock(PayrollRunCheckService::class);
+		$check->expects($this->once())->method('check')->with(
+			$this->isType('string'),
+			$this->callback(static fn (array $skipped): bool => $skipped !== [] && ($skipped[0]['employeeId'] ?? '') === 'emp-nocontract')
+		)->willReturn(['blocking' => 1, 'warning' => 0, 'info' => 0]);
+		[$service] = $this->service($rows, null, null, null, $check);
+
+		$result = $service->runFor('2026-05');
+
+		$this->assertSame('calculated', $result['status']);
+		$this->assertSame(1, $result['check']['blocking']);
+
+		$failing = $this->createMock(PayrollRunCheckService::class);
+		$failing->method('check')->willThrowException(new \RuntimeException('down'));
+		[$service] = $this->service($rows, null, null, null, $failing);
+		$this->assertSame('calculated', $service->runFor('2026-05')['status']);
+	}//end testACalculationRunsTheCheckWithTheSkippedList()
+
+	/**
+	 * payroll-cost-allocation D3: a calculation hands every saved payslip's
+	 * gross and employer charges to the allocation once, with the run; a
+	 * failing allocation is logged and does not fail the run.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-001
+	 */
+	public function testACalculationAllocatesEveryPayslip(): void {
+		$rows = ['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
+		$allocation = $this->createMock(CostAllocationService::class);
+		$allocation->expects($this->once())->method('allocateRun')->with(
+			$this->isType('string'),
+			'2026-05',
+			$this->isType('string'),
+			$this->callback(static fn (array $payslips): bool => count($payslips) === 1 && $payslips[0]['grossCents'] > 0 && $payslips[0]['chargesCents'] > 0 && ($payslips[0]['payslipId'] ?? '') !== '' && ($payslips[0]['employeeId'] ?? '') !== '')
+		)->willReturn(1);
+		[$service] = $this->service($rows, null, null, null, null, null, $allocation);
+
+		$result = $service->runFor('2026-05');
+		self::assertSame('calculated', $result['status']);
+		self::assertSame(1, $result['allocationLines']);
+
+		$failing = $this->createMock(CostAllocationService::class);
+		$failing->method('allocateRun')->willThrowException(new \RuntimeException('down'));
+		[$service] = $this->service($rows, null, null, null, null, null, $failing);
+		self::assertSame('calculated', $service->runFor('2026-05')['status']);
+	}//end testACalculationAllocatesEveryPayslip()
+
+	/**
+	 * payroll-external-bureau-handoff D1: the engine refuses an
+	 * administration whose payroll an outside bureau processes, both when a
+	 * run is created and when an existing one is recalculated, and says why.
+	 * Another administration still calculates.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-001
+	 */
+	public function testTheEngineStaysOutOfAnOutsourcedAdministration(): void {
+		$rows = [
+			'Employee' => [$this->employee()],
+			'EmploymentContract' => [$this->contract()],
+			'PayrollRun' => [['id' => 'run-adm6', 'period' => '2026-04', 'administrationId' => 'ADM-006', 'status' => 'draft']],
+			'Payslip' => [],
+			'hrAdministration' => [['id' => 'adm-6', 'administrationId' => 'ADM-006', 'name' => 'Stichting Buitenbureau', 'payrollProcessing' => 'external-bureau', 'payrollBureauName' => 'Loonbureau Noord']],
+		];
+		[$service, $fake] = $this->service($rows);
+
+		$refused = $service->runFor('2026-05', 'ADM-006');
+		self::assertSame('refused-external-bureau', $refused['status']);
+		self::assertStringContainsString('Loonbureau Noord', $refused['message']);
+		self::assertSame('refused-external-bureau', $service->recalculateRun('run-adm6')['status']);
+		self::assertSame([], array_filter($fake->saved, static fn (array $s): bool => $s['schema'] === 'Payslip'));
+
+		self::assertSame('calculated', $service->runFor('2026-05', 'ADM-001')['status']);
+	}//end testTheEngineStaysOutOfAnOutsourcedAdministration()
+
+	/**
+	 * payroll-period-edge-cases REQ-PPE-001: a monthly administration
+	 * refuses a four-weekly period and writes nothing; a four-weekly one
+	 * gets past the period check with it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	public function testARunTakesOnlyPeriodsOfTheAdministrationsFrequency(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [],
+				'EmploymentContract' => [],
+				'PayrollRun' => [],
+				'Payslip' => [],
+				'hrAdministration' => [
+					['id' => 'adm-1', 'administrationId' => 'ADM-001', 'name' => 'Monthly'],
+					['id' => 'adm-5', 'administrationId' => 'ADM-005', 'name' => 'Four-weekly', 'payFrequency' => 'four-weekly'],
+				],
+			]
+		);
+
+		$refused = $service->runFor('2026-P05', 'ADM-001');
+		self::assertSame('failed', $refused['status']);
+		self::assertSame('Ongeldige periode "2026-P05": "2026-P05" is not a monthly period: this administration pays monthly.', $refused['message']);
+		self::assertSame([], $fake->saved);
+
+		$accepted = $service->runFor('2026-P05', 'ADM-005');
+		self::assertStringNotContainsString('Ongeldige periode', (string)$accepted['message']);
+
+		self::assertSame('failed', $service->runFor('2026-05', 'ADM-005')['status']);
+	}//end testARunTakesOnlyPeriodsOfTheAdministrationsFrequency()
+
+	/**
+	 * filings-premium-differentiation REQ-AWF-101: a signed BBL
+	 * praktijkovereenkomst is charged the low Awf rate, and the payslip says
+	 * so and why.
+	 *
+	 * @return void
+	 */
+	public function testABblApprenticeIsChargedTheLowPremium(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['dateOfBirth' => '2004-09-01'])],
+				'EmploymentContract' => [$this->contract(['type' => 'bbl', 'writtenContract' => true, 'bpvOvereenkomstOndertekend' => true, 'awfTariff' => null, 'hoursPerWeek' => 32.0])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-06')['status']);
+
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+		$this->assertSame(['low', 'bbl'], [$payslip['awfTariff'], $payslip['awfTariffBasis']]);
+		$this->assertSame('low', $payslip['engineInputSnapshot']['awfTariff']);
+
+	}//end testABblApprenticeIsChargedTheLowPremium()
+
+	/**
+	 * REQ-AWF-101: a 19-year-old on a temporary 10-hour contract, salaried,
+	 * is paid the contract's 43,33 hours a month (10 x 13/3), within the
+	 * 52-hour norm: low. On 16 hours (69,33) the rate stays high.
+	 *
+	 * @return void
+	 */
+	public function testAYoungPartTimerIsChargedTheLowPremiumWithinTheHoursNorm(): void {
+		foreach ([[10.0, 'low', 'young-part-time'], [16.0, 'high', 'flex']] as [$hours, $tariff, $basis]) {
+			[$service, $fake] = $this->service(
+				[
+					'Employee' => [$this->employee(['dateOfBirth' => '2007-02-10', 'grossMonthlySalary' => 600.00])],
+					'EmploymentContract' => [$this->contract(['type' => 'temporary', 'awfTariff' => null, 'hoursPerWeek' => $hours])],
+					'PayrollRun' => [],
+					'Payslip' => [],
+				]
+			);
+
+			$service->runFor('2026-06');
+
+			$payslip = $this->savedFor($fake, 'Payslip')[0];
+			$this->assertSame([$tariff, $basis], [$payslip['awfTariff'], $payslip['awfTariffBasis']], $hours . ' hours a week');
+			$this->assertSame($tariff, $payslip['engineInputSnapshot']['awfTariff']);
+		}
+
+	}//end testAYoungPartTimerIsChargedTheLowPremiumWithinTheHoursNorm()
+
+	/**
+	 * REQ-AWF-102: a low contract that ends within two months is charged the
+	 * high rate in its last period already.
+	 *
+	 * @return void
+	 */
+	public function testAContractEndingWithinTwoMonthsIsChargedHighInTheRun(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['startDate' => '2026-01-01'])],
+				'EmploymentContract' => [$this->contract(['startDate' => '2026-01-01', 'endDate' => '2026-02-11', 'awfTariff' => 'low'])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$service->runFor('2026-02');
+
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+		$this->assertSame(['high', 'early-end'], [$payslip['awfTariff'], $payslip['awfTariffBasis']]);
+
+	}//end testAContractEndingWithinTwoMonthsIsChargedHighInTheRun()
+
+	/**
+	 * REQ-AWF-102: the review runs before the run reads its adjustments, so
+	 * an awf-herziening it writes is settled in this run's employer charges
+	 * (net pay untouched), and the payslip carries the year-to-date figures
+	 * the signal rule reads.
+	 *
+	 * @return void
+	 */
+	public function testTheReviewSettlesInTheRunAndThePayslipCarriesTheYearToDateHours(): void {
+		$review = $this->createMock(AwfReviewService::class);
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'EmploymentContract' => [$this->contract(['hoursPerWeek' => 24.0])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			],
+			awfReview: $review
+		);
+		$review->expects($this->once())->method('review')->with('2026-06', $this->anything())->willReturnCallback(
+			static function () use ($fake): array {
+				$fake->rowsBySchema['PayrollAdjustment'][] = ['id' => 'adj-awf', 'employeeId' => 'emp-1', 'originalPeriod' => '2026-01', 'correctionType' => 'awf-herziening', 'correctionRef' => 'awf-herziening-early-end-x', 'status' => 'applied', 'settlementPeriod' => '2026-06', 'deltaNet' => 0.0, 'deltaGross' => 0.0, 'deltaLoonheffing' => 0.0, 'deltaWerknemersverzekeringen' => 150.00];
+				return ['earlyEnd' => 1, 'extraHours' => 0, 'skipped' => []];
+			}
+		);
+		$review->method('yearToDate')->willReturn(['paid' => 883.98, 'contract' => 624.0, 'averageHoursPerWeek' => 25, 'overrunPercent' => 41]);
+
+		$plain = $this->service(['Employee' => [$this->employee()], 'EmploymentContract' => [$this->contract(['hoursPerWeek' => 24.0])], 'PayrollRun' => [], 'Payslip' => []])[0]->runFor('2026-06');
+		$result = $service->runFor('2026-06');
+
+		$this->assertSame(round($plain['totals']['totalEmployerCharges'] + 150.00, 2), $result['totals']['totalEmployerCharges']);
+		$this->assertSame($plain['totals']['totalNet'], $result['totals']['totalNet']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+		$this->assertSame([883.98, 624.0, 25, 41], [$payslip['awfPaidHoursYearToDate'], $payslip['awfContractHoursYearToDate'], $payslip['awfAverageContractHoursPerWeek'], $payslip['awfOverrunPercentYearToDate']]);
+
+	}//end testTheReviewSettlesInTheRunAndThePayslipCarriesTheYearToDateHours()
 
 }//end class

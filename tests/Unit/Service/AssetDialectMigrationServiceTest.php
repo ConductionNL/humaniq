@@ -3,6 +3,9 @@
 /**
  * Unit tests for AssetDialectMigrationService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pins the hrmq-asset-fleet-merge blocking-defect fix (tasks.md section 13):
  * an old-dialect `Asset`/`AssetAssignment` row is rewritten to the new
  * dialect; a row already in the new dialect is untouched (idempotent),
@@ -63,9 +66,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
@@ -80,6 +80,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for AssetDialectMigrationService.
@@ -184,7 +185,7 @@ class AssetDialectMigrationServiceTest extends TestCase {
 			private int $nextId = 1;
 
 			/**
-			 * Every SUCCESSFUL saveObject() call, as `['schema'=>, 'id'=>, 'object'=>]`.
+			 * Every SUCCESSFUL saveObject() call, as `['schema'=>, 'id'=>, 'object'=>, 'register'=>]`.
 			 *
 			 * @var array<int, array<string, mixed>>
 			 */
@@ -248,7 +249,7 @@ class AssetDialectMigrationServiceTest extends TestCase {
 			 * holding. Every other write succeeds.
 			 *
 			 * @param array<string, mixed> $object The object to save.
-			 * @param string|null $register Register slug (unused by the fake).
+			 * @param string|null $register Register slug, recorded with the save.
 			 * @param string|null $schema Schema name.
 			 * @param string|null $uuid Existing id when updating.
 			 * @param bool $_rbac Unused by the fake.
@@ -259,13 +260,14 @@ class AssetDialectMigrationServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $_validation = true,
+				bool $_multitenancy = true
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$_validation = $options->policy->validation ?? true;
 				$targetSchema = ($schema ?? $this->schema);
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
 
@@ -316,7 +318,7 @@ class AssetDialectMigrationServiceTest extends TestCase {
 				}//end if
 
 				$saved = array_merge($object, ['id' => $id]);
-				$this->saved[] = ['schema' => $targetSchema, 'id' => $id, 'object' => $saved];
+				$this->saved[] = ['schema' => $targetSchema, 'id' => $id, 'object' => $saved, 'register' => $register];
 
 				if ($existingIndex !== null) {
 					$rows[$existingIndex] = $saved;
@@ -389,6 +391,7 @@ class AssetDialectMigrationServiceTest extends TestCase {
 		self::assertSame(0, $report['Asset']['alreadyCurrent']);
 		self::assertSame(0, $report['Asset']['skipped'], 'expand/contract clears both gates — nothing is left behind');
 		self::assertCount(0, $report['Asset']['skipReasons']);
+		self::assertSame(['humaniq'], array_values(array_unique(array_column($fake->saved, 'register'))), 'every write goes to the resolved register');
 
 		$saved = $fake->rowsBySchema['Asset'][0];
 		self::assertSame('vehicle', $saved['category']);

@@ -21,6 +21,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://conduction.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -35,6 +38,9 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
+use OCP\IUserSession;
+use OCA\Humaniq\Service\Setup\SetupAdministrations;
+use OCA\Humaniq\Service\Setup\SetupHealthCheck;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Service\DemoDataService;
 
@@ -69,10 +75,11 @@ class SetupController extends Controller {
 	 * App-config key holding WHICH dataset the operator picked.
 	 *
 	 * Separate from DEMO_DECIDED_KEY on purpose: that one records that the step
-	 * was dealt with, this one records the answer. The load step reads this back
-	 * and hands it to the importer, so "none" and "not asked yet" have to be
-	 * tellable apart — an empty value means the question is still open, and
-	 * `none` means it was answered with a no.
+	 * was dealt with, this one records the answer. A card's Load button posts
+	 * `{ dataset }` and the load action stores it here once the load succeeds;
+	 * a pick saved through the config endpoint lands here too. "none" and "not
+	 * asked yet" have to be tellable apart: an empty value means the question
+	 * is still open, and `none` means it was answered with a no.
 	 *
 	 * @var string
 	 */
@@ -85,6 +92,9 @@ class SetupController extends Controller {
 	 * @param IAppConfig      $appConfig       Records the demo-data decision.
 	 * @param LoggerInterface $logger          Records a failed import.
 	 * @param DemoDataService $demoDataService Imports the shipped demo dataset.
+	 * @param SetupAdministrations $setupAdministrations Creates the Administraties step's administrations and writes the working mode.
+	 * @param IUserSession    $userSession     The administrator running the wizard.
+	 * @param SetupHealthCheck $healthCheck    The Klaar step's health check.
 	 *
 	 * @return void
 	 */
@@ -93,6 +103,9 @@ class SetupController extends Controller {
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly DemoDataService $demoDataService,
+		private readonly SetupAdministrations $setupAdministrations,
+		private readonly IUserSession $userSession,
+		private readonly SetupHealthCheck $healthCheck,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -118,7 +131,8 @@ class SetupController extends Controller {
 	 *       comment would silently read as a real declaration), which would
 	 *       additionally admit delegated settings admins.
 	 *
-	 * @spec exclude Setup status document; ADR-042 contract, no per-app behavioural spec.
+	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
 	public function status(): JSONResponse {
@@ -135,14 +149,15 @@ class SetupController extends Controller {
 				'datasets'  => $this->demoDataService->listChoices(),
 				'steps'     => [
 					'welcome'        => ['done' => true],
+					// Exactly the ids of `manifest.setup.steps`: a step the
+					// server never reports stays open and reopens the wizard.
 					'demo-data'      => ['done' => ($demoDecided === true || $picked !== '')],
-					// "None" is an ANSWER, so the load step is finished the
-					// moment it is chosen: there is nothing left to run.
-					'load-demo-data' => [
-						'done' => ($demoDecided === true || $picked === DemoDataService::NONE_DATASET),
-					],
 					'done'           => ['done' => true],
 				],
+				// The Klaar step's health check: what the import left, whether
+				// background jobs run, which payroll tables are loaded. A
+				// failure reads as failed, never as passed.
+				'health'    => $this->healthCheck->check(),
 			]
 		);
 
@@ -176,6 +191,11 @@ class SetupController extends Controller {
 			return $this->loadDataset(actionId: $actionId);
 		}
 
+		$administrations = $this->administrationsAction(actionId: $actionId);
+		if ($administrations !== null) {
+			return $administrations;
+		}
+
 		// DECLINING IS AN ANSWER — see DEMO_DECIDED_KEY.
 		if ($actionId === 'skip-demo-data') {
 			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
@@ -202,6 +222,28 @@ class SetupController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
 	public function saveConfig(): JSONResponse {
+		$refused = $this->refuseStoredChoices();
+		if ($refused !== null) {
+			return $refused;
+		}
+
+		$this->storeParams();
+		$this->applyWorkingMode();
+
+		return new JSONResponse(data: ['success' => true]);
+
+	}//end saveConfig()
+
+	/**
+	 * A 400 for a posted value the app reads back that it does not know, or null.
+	 *
+	 * Nothing is stored when one is refused.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-unknown-mode-is-not-stored
+	 */
+	private function refuseStoredChoices(): ?JSONResponse {
 		// 🔴 THE DATASET IS VALIDATED BEFORE IT IS STORED. Everything else is
 		// written as posted, because a `config-fields` step declares its own
 		// keys and this endpoint cannot know them. The dataset is different: the
@@ -223,6 +265,22 @@ class SetupController extends Controller {
 			}
 		}
 
+		// The working mode and the fallback language are read back by the app
+		// (the mode is written onto the administrations, the language picks the
+		// documents' language), so an unknown value is refused before anything
+		// is stored, like the dataset.
+		return $this->refuseChoice(key: 'working_mode', known: SetupAdministrations::MODES)
+			?? $this->refuseChoice(key: 'default_language', known: ['nl', 'en']);
+	}//end refuseStoredChoices()
+
+	/**
+	 * Store every posted value as app config, a scalar as is and anything else as JSON.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude First-time setup wizard backend (ADR-042); no per-app behavioural spec.
+	 */
+	private function storeParams(): void {
 		foreach ($this->request->getParams() as $key => $value) {
 			if ($key === '_route') {
 				continue;
@@ -235,25 +293,140 @@ class SetupController extends Controller {
 
 			$this->appConfig->setValueString(Application::APP_ID, (string)$key, $stored);
 		}
-
-		return new JSONResponse(data: ['success' => true]);
-
-	}//end saveConfig()
+	}//end storeParams()
 
 	/**
-	 * Act on the dataset the operator picked in the previous step.
+	 * Write a posted working mode onto the wizard's administrations.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-werkwijze-step-shall-set-the-mode-of-the-wizards-administrations-req-fts-009
+	 */
+	private function applyWorkingMode(): void {
+		$mode = $this->request->getParam('working_mode');
+		if (is_string($mode) === true) {
+			$this->setupAdministrations->applyMode(mode: $mode);
+		}
+	}//end applyWorkingMode()
+
+	/**
+	 * Run the Administraties step's create or skip action, or null for any other action.
+	 *
+	 * @param string $actionId The action.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-administraties-step-shall-create-the-administrations-humaniq-starts-with-req-fts-008
+	 */
+	private function administrationsAction(string $actionId): ?JSONResponse {
+		if ($actionId === 'create-administrations') {
+			return $this->createAdministrations();
+		}
+
+		if ($actionId === 'skip-administrations') {
+			$this->setupAdministrations->skip();
+
+			return new JSONResponse(data: ['success' => true, 'message' => 'Administrations skipped.']);
+		}
+
+		return null;
+	}//end administrationsAction()
+
+	/**
+	 * A 400 for a posted value of a choice the app reads back that is not one of its options, or null.
+	 *
+	 * @param string            $key   The app-config key.
+	 * @param array<int,string> $known The options.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-unknown-mode-is-not-stored
+	 */
+	private function refuseChoice(string $key, array $known): ?JSONResponse {
+		$value = $this->request->getParam($key);
+		if ($value === null || (is_string($value) === true && in_array($value, $known, true) === true)) {
+			return null;
+		}
+
+		$named = 'that';
+		if (is_scalar($value) === true) {
+			$named = (string)$value;
+		}
+
+		return new JSONResponse(
+			data: ['success' => false, 'message' => '"' . $named . '" is not a known ' . str_replace('_', ' ', $key) . '.'],
+			statusCode: Http::STATUS_BAD_REQUEST,
+		);
+	}//end refuseChoice()
+
+	/**
+	 * Create or reuse the administrations the Administraties step posted.
+	 *
+	 * Every entry is checked before anything is created: a refused list
+	 * creates nothing.
+	 *
+	 * @return JSONResponse `{ success, message, administrations }`.
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-administraties-step-shall-create-the-administrations-humaniq-starts-with-req-fts-008
+	 */
+	private function createAdministrations(): JSONResponse {
+		$entries = $this->request->getParam('administrations');
+		$refusal = SetupAdministrations::refusal(entries: $entries);
+		if ($refusal !== null) {
+			return new JSONResponse(data: ['success' => false, 'message' => $refusal], statusCode: Http::STATUS_BAD_REQUEST);
+		}
+
+		$userId = (string)($this->userSession->getUser()?->getUID() ?? '');
+		if ($userId === '') {
+			return new JSONResponse(data: ['success' => false, 'message' => 'Setup needs a signed-in administrator.'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		try {
+			$keys = $this->setupAdministrations->create(entries: $entries, userId: $userId);
+		} catch (\Throwable $e) {
+			$this->logger->error('Setup: creating the administrations failed: ' . $e::class);
+
+			return new JSONResponse(
+				data: ['success' => false, 'message' => 'The administrations could not be created.'],
+				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR,
+			);
+		}
+
+		return new JSONResponse(data: ['success' => true, 'message' => count($keys) . ' administration(s) ready.', 'administrations' => $keys]);
+	}//end createAdministrations()
+
+	/**
+	 * Act on the dataset a card's Load button posted as `dataset`, or on the
+	 * stored pick when nothing is posted.
 	 *
 	 * @param string $actionId The action that asked, which decides what an
 	 *                         unanswered choice means.
 	 *
 	 * @return JSONResponse The outcome.
+	 *
+	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
 	 */
 	private function loadDataset(string $actionId): JSONResponse {
 		$picked = $this->appConfig->getValueString(Application::APP_ID, self::DATASET_KEY, '');
 
+		// The card's Load button names its dataset in the body. An older wizard
+		// posts nothing and relies on the pick stored a step earlier. Nothing is
+		// stored before the load succeeds: a failed load must leave the step
+		// open for an operator who asked for data and got none.
+		$posted = $this->request->getParam('dataset');
+		if ($posted !== null) {
+			$refusal = $this->refuseDataset(value: $posted);
+			if ($refusal !== null) {
+				return $refusal;
+			}
+
+			$picked = (string)$posted;
+		}
+
 		// Declining is an answer, and the work is already done: record that the
 		// step is finished and import nothing.
 		if ($picked === DemoDataService::NONE_DATASET) {
+			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoDataService::NONE_DATASET);
 			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
 
 			return new JSONResponse(data: ['success' => true, 'message' => 'No example data imported, as chosen.']);
@@ -270,9 +443,40 @@ class SetupController extends Controller {
 			);
 		}
 
-		return $this->installDemoData();
+		if ($picked === '') {
+			$picked = DemoDataService::DEMO_DATASET;
+		}
+
+		return $this->installDemoData(dataset: $picked);
 
 	}//end loadDataset()
+
+	/**
+	 * Refuse a posted dataset id no dataset answers to.
+	 *
+	 * @param mixed $value The posted value.
+	 *
+	 * @return JSONResponse|null The refusal, or null when the dataset is known.
+	 *
+	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
+	 */
+	private function refuseDataset(mixed $value): ?JSONResponse {
+		$named = 'that';
+		if (is_scalar($value) === true) {
+			$named = (string)$value;
+		}
+
+		$known = array_column($this->demoDataService->listChoices(), 'id');
+		if (is_scalar($value) === true && in_array($named, $known, true) === true) {
+			return null;
+		}
+
+		return new JSONResponse(
+			data: ['success' => false, 'message' => 'No dataset is called "' . $named . '".'],
+			statusCode: Http::STATUS_BAD_REQUEST,
+		);
+
+	}//end refuseDataset()
 
 	/**
 	 * Import the shipped demo dataset.
@@ -281,16 +485,18 @@ class SetupController extends Controller {
 	 * demo data and got none must be told, which is why DemoDataService::install()
 	 * throws instead of returning an empty result.
 	 *
+	 * @param string $dataset The dataset id, recorded as the pick once the
+	 *                        import succeeded.
+	 *
 	 * @return JSONResponse `{ success, message }`.
+	 *
+	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
 	 */
-	private function installDemoData(): JSONResponse {
+	private function installDemoData(string $dataset): JSONResponse {
 		try {
 			$imported = $this->demoDataService->install();
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				'Setup install-demo-data failed: ' . $e->getMessage(),
-				['app' => Application::APP_ID, 'exception' => $e]
-			);
+			$this->logger->error('SetupController: installing the demo data failed.', ['exceptionClass' => $e::class]);
 
 			return new JSONResponse(
 				data: ['success' => false, 'message' => 'Could not import the demo data: ' . $e->getMessage()],
@@ -298,6 +504,8 @@ class SetupController extends Controller {
 			);
 		}
 
+		// Loading IS choosing the set, so the pick is recorded too.
+		$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, $dataset);
 		$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'installed');
 
 		return new JSONResponse(

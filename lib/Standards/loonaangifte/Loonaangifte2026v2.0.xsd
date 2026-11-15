@@ -1,0 +1,748 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://xml.belastingdienst.nl/schemas/Loonaangifte/2026/01" targetNamespace="http://xml.belastingdienst.nl/schemas/Loonaangifte/2026/01" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="Loonaangifte">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Bericht" type="BerichtType"/>
+				<xs:element name="AdministratieveEenheid">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="LhNr" type="SubNr"/>
+							<xs:element name="NmIP" type="NmIP"/>
+							<xs:choice>
+								<xs:sequence>
+									<xs:element name="TijdvakAangifte" type="TijdvakAangifteType"/>
+									<xs:element name="TijdvakCorrectie" type="TijdvakCorrectieType" minOccurs="0" maxOccurs="13"/>
+								</xs:sequence>
+								<xs:sequence>
+									<xs:element name="TijdvakCorrectie" type="TijdvakCorrectieType" maxOccurs="13"/>
+								</xs:sequence>
+							</xs:choice>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="version" use="required">
+				<xs:simpleType>
+					<xs:restriction base="xs:token">
+						<xs:enumeration value="2.0"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<xs:simpleType name="Aant">
+		<xs:restriction base="xs:decimal">
+			<xs:pattern value="\-?\d{1,3}|\-?\d{1,3}\.\d{1,2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="AantU">
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="5"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Appl">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="27"/>
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Bedrag10.2">
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="10"/>
+			<xs:fractionDigits value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Bedrag10">
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="10"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CdAard">
+		<xs:restriction base="xs:nonNegativeInteger">
+			<xs:totalDigits value="2"/>
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="4"/>
+			<xs:enumeration value="6"/>
+			<xs:enumeration value="7"/>
+			<xs:enumeration value="11"/>
+			<xs:enumeration value="18"/>
+			<xs:enumeration value="21"/>
+			<xs:enumeration value="22"/>
+			<xs:enumeration value="23"/>
+			<xs:enumeration value="24"/>
+			<xs:enumeration value="79"/>
+			<xs:enumeration value="81"/>
+			<xs:enumeration value="82"/>
+			<xs:enumeration value="83"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CdCAO">
+		<xs:restriction base="xs:nonNegativeInteger">
+			<xs:totalDigits value="4"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CdIncInkVerm">
+		<xs:restriction base="xs:string">
+			<xs:length value="1"/>
+			<xs:enumeration value="K"/>
+			<xs:enumeration value="O"/>
+			<xs:enumeration value="S"/>
+			<xs:enumeration value="Z"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CdInvlVzp">
+		<xs:restriction base="xs:string">
+			<xs:length value="1"/>
+			<xs:enumeration value="A"/>
+			<xs:enumeration value="B"/>
+			<xs:enumeration value="D"/>
+			<xs:enumeration value="E"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CdRdnEindArbov">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="2"/>
+			<xs:enumeration value="01"/>
+			<xs:enumeration value="03"/>
+			<xs:enumeration value="04"/>
+			<xs:enumeration value="05"/>
+			<xs:enumeration value="06"/>
+			<xs:enumeration value="20"/>
+			<xs:enumeration value="21"/>
+			<xs:enumeration value="30"/>
+			<xs:enumeration value="32"/>
+			<xs:enumeration value="33"/>
+			<xs:enumeration value="34"/>
+			<xs:enumeration value="40"/>
+			<xs:enumeration value="41"/>
+			<xs:enumeration value="50"/>
+			<xs:enumeration value="51"/>
+			<xs:enumeration value="90"/>
+			<xs:enumeration value="91"/>
+			<xs:enumeration value="92"/>
+			<xs:enumeration value="99"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CdRdnGnBijt">
+		<xs:restriction base="xs:string">
+			<xs:length value="1"/>
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="2"/>
+			<xs:enumeration value="3"/>
+			<xs:enumeration value="5"/>
+			<xs:enumeration value="7"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CdSrtIV">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="2"/>
+			<xs:enumeration value="11"/>
+			<xs:enumeration value="13"/>
+			<xs:enumeration value="15"/>
+			<xs:enumeration value="17"/>
+			<xs:enumeration value="18"/>
+			<xs:enumeration value="22"/>
+			<xs:enumeration value="23"/>
+			<xs:enumeration value="24"/>
+			<xs:enumeration value="31"/>
+			<xs:enumeration value="32"/>
+			<xs:enumeration value="33"/>
+			<xs:enumeration value="34"/>
+			<xs:enumeration value="36"/>
+			<xs:enumeration value="37"/>
+			<xs:enumeration value="38"/>
+			<xs:enumeration value="39"/>
+			<xs:enumeration value="40"/>
+			<xs:enumeration value="42"/>
+			<xs:enumeration value="43"/>
+			<xs:enumeration value="45"/>
+			<xs:enumeration value="46"/>
+			<xs:enumeration value="50"/>
+			<xs:enumeration value="52"/>
+			<xs:enumeration value="53"/>
+			<xs:enumeration value="55"/>
+			<xs:enumeration value="56"/>
+			<xs:enumeration value="57"/>
+			<xs:enumeration value="58"/>
+			<xs:enumeration value="59"/>
+			<xs:enumeration value="60"/>
+			<xs:enumeration value="61"/>
+			<xs:enumeration value="62"/>
+			<xs:enumeration value="63"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CdZvw">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="1"/>
+			<xs:enumeration value="A"/>
+			<xs:enumeration value="B"/>
+			<xs:enumeration value="G"/>
+			<xs:enumeration value="H"/>
+			<xs:enumeration value="I"/>
+			<xs:enumeration value="K"/>
+			<xs:enumeration value="L"/>
+			<xs:enumeration value="M"/>
+			<xs:enumeration value="N"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ContPers">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="35"/>
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DatAanvTv">
+		<xs:restriction base="xs:date">
+			<xs:enumeration value="2026-01-01"/>
+			<xs:enumeration value="2026-01-26"/>
+			<xs:enumeration value="2026-02-01"/>
+			<xs:enumeration value="2026-02-23"/>
+			<xs:enumeration value="2026-03-01"/>
+			<xs:enumeration value="2026-03-23"/>
+			<xs:enumeration value="2026-04-01"/>
+			<xs:enumeration value="2026-04-20"/>
+			<xs:enumeration value="2026-05-01"/>
+			<xs:enumeration value="2026-05-18"/>
+			<xs:enumeration value="2026-06-01"/>
+			<xs:enumeration value="2026-06-15"/>
+			<xs:enumeration value="2026-07-01"/>
+			<xs:enumeration value="2026-07-13"/>
+			<xs:enumeration value="2026-08-01"/>
+			<xs:enumeration value="2026-08-10"/>
+			<xs:enumeration value="2026-09-01"/>
+			<xs:enumeration value="2026-09-07"/>
+			<xs:enumeration value="2026-10-01"/>
+			<xs:enumeration value="2026-10-05"/>
+			<xs:enumeration value="2026-11-01"/>
+			<xs:enumeration value="2026-11-02"/>
+			<xs:enumeration value="2026-11-30"/>
+			<xs:enumeration value="2026-12-01"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DatEindTv">
+		<xs:restriction base="xs:date">
+			<xs:enumeration value="2026-01-25"/>
+			<xs:enumeration value="2026-01-31"/>
+			<xs:enumeration value="2026-02-22"/>
+			<xs:enumeration value="2026-02-28"/>
+			<xs:enumeration value="2026-03-22"/>
+			<xs:enumeration value="2026-03-31"/>
+			<xs:enumeration value="2026-04-19"/>
+			<xs:enumeration value="2026-04-30"/>
+			<xs:enumeration value="2026-05-17"/>
+			<xs:enumeration value="2026-05-31"/>
+			<xs:enumeration value="2026-06-14"/>
+			<xs:enumeration value="2026-06-30"/>
+			<xs:enumeration value="2026-07-12"/>
+			<xs:enumeration value="2026-07-31"/>
+			<xs:enumeration value="2026-08-09"/>
+			<xs:enumeration value="2026-08-31"/>
+			<xs:enumeration value="2026-09-06"/>
+			<xs:enumeration value="2026-09-30"/>
+			<xs:enumeration value="2026-10-04"/>
+			<xs:enumeration value="2026-10-31"/>
+			<xs:enumeration value="2026-11-01"/>
+			<xs:enumeration value="2026-11-29"/>
+			<xs:enumeration value="2026-11-30"/>
+			<xs:enumeration value="2026-12-31"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FsIndFZ">
+		<xs:restriction base="xs:nonNegativeInteger">
+			<xs:totalDigits value="2"/>
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="3"/>
+			<xs:enumeration value="4"/>
+			<xs:enumeration value="5"/>
+			<xs:enumeration value="6"/>
+			<xs:enumeration value="17"/>
+			<xs:enumeration value="18"/>
+			<xs:enumeration value="19"/>
+			<xs:enumeration value="38"/>
+			<xs:enumeration value="40"/>
+			<xs:enumeration value="41"/>
+			<xs:enumeration value="43"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Gesl">
+		<xs:restriction base="xs:nonNegativeInteger">
+			<xs:totalDigits value="1"/>
+			<xs:enumeration value="0"/>
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="2"/>
+			<xs:enumeration value="9"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="HuisNr">
+		<xs:restriction base="xs:positiveInteger">
+			<xs:totalDigits value="5"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="HuisNrBtl">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="9"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="HuisNrToev">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="4"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="IdBer">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="32"/>
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Indicatie">
+		<xs:restriction base="xs:string">
+			<xs:length value="1"/>
+			<xs:enumeration value="J"/>
+			<xs:enumeration value="N"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="IndicatieJ">
+		<xs:restriction base="xs:string">
+			<xs:length value="1"/>
+			<xs:enumeration value="J"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LandCd">
+		<xs:restriction base="xs:string">
+			<xs:length value="2"/>
+			<xs:pattern value="[A-Z]{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LbTab">
+		<xs:restriction base="xs:string">
+			<xs:length value="3"/>
+			<xs:enumeration value="010"/>
+			<xs:enumeration value="011"/>
+			<xs:enumeration value="012"/>
+			<xs:enumeration value="013"/>
+			<xs:enumeration value="014"/>
+			<xs:enumeration value="015"/>
+			<xs:enumeration value="020"/>
+			<xs:enumeration value="021"/>
+			<xs:enumeration value="022"/>
+			<xs:enumeration value="023"/>
+			<xs:enumeration value="024"/>
+			<xs:enumeration value="025"/>
+			<xs:enumeration value="210"/>
+			<xs:enumeration value="220"/>
+			<xs:enumeration value="221"/>
+			<xs:enumeration value="224"/>
+			<xs:enumeration value="225"/>
+			<xs:enumeration value="226"/>
+			<xs:enumeration value="227"/>
+			<xs:enumeration value="228"/>
+			<xs:enumeration value="250"/>
+			<xs:enumeration value="310"/>
+			<xs:enumeration value="311"/>
+			<xs:enumeration value="312"/>
+			<xs:enumeration value="313"/>
+			<xs:enumeration value="314"/>
+			<xs:enumeration value="315"/>
+			<xs:enumeration value="320"/>
+			<xs:enumeration value="321"/>
+			<xs:enumeration value="322"/>
+			<xs:enumeration value="323"/>
+			<xs:enumeration value="324"/>
+			<xs:enumeration value="325"/>
+			<xs:enumeration value="510"/>
+			<xs:enumeration value="511"/>
+			<xs:enumeration value="512"/>
+			<xs:enumeration value="513"/>
+			<xs:enumeration value="514"/>
+			<xs:enumeration value="515"/>
+			<xs:enumeration value="520"/>
+			<xs:enumeration value="521"/>
+			<xs:enumeration value="522"/>
+			<xs:enumeration value="523"/>
+			<xs:enumeration value="524"/>
+			<xs:enumeration value="525"/>
+			<xs:enumeration value="610"/>
+			<xs:enumeration value="611"/>
+			<xs:enumeration value="612"/>
+			<xs:enumeration value="613"/>
+			<xs:enumeration value="614"/>
+			<xs:enumeration value="615"/>
+			<xs:enumeration value="620"/>
+			<xs:enumeration value="621"/>
+			<xs:enumeration value="622"/>
+			<xs:enumeration value="623"/>
+			<xs:enumeration value="624"/>
+			<xs:enumeration value="625"/>
+			<xs:enumeration value="710"/>
+			<xs:enumeration value="711"/>
+			<xs:enumeration value="712"/>
+			<xs:enumeration value="713"/>
+			<xs:enumeration value="714"/>
+			<xs:enumeration value="715"/>
+			<xs:enumeration value="720"/>
+			<xs:enumeration value="721"/>
+			<xs:enumeration value="722"/>
+			<xs:enumeration value="723"/>
+			<xs:enumeration value="724"/>
+			<xs:enumeration value="725"/>
+			<xs:enumeration value="940"/>
+			<xs:enumeration value="950"/>
+			<xs:enumeration value="999"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LocOms">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="35"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Natio">
+		<xs:restriction base="xs:nonNegativeInteger">
+			<xs:totalDigits value="4"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="NmIP">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="200"/>
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="NumIV">
+		<xs:restriction base="xs:nonNegativeInteger">
+			<xs:totalDigits value="4"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Pc">
+		<xs:restriction base="xs:string">
+			<xs:length value="6"/>
+			<xs:pattern value="[1-9][0-9]{3}[A-Z]{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="PcBtl">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="9"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="PersNr">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="35"/>
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Reg">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="24"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RelNr">
+		<xs:restriction base="xs:string">
+			<xs:length value="8"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Sect">
+		<xs:restriction base="xs:nonNegativeInteger">
+			<xs:totalDigits value="3"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="SignNm">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="200"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="SofiNr">
+		<xs:restriction base="xs:nonNegativeInteger">
+			<xs:totalDigits value="9"/>
+			<xs:pattern value="([1-9]\d\d|\d[1-9]\d|\d\d[1-9])(\d{6})"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Strt">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="24"/>
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="SubNr">
+		<xs:restriction base="xs:string">
+			<xs:length value="12"/>
+			<xs:pattern value="([1-9]\d\d|\d[1-9]\d|\d\d[1-9])(\d){6}L([1-9]\d|\d[1-9])"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TelNr">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="25"/>
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Voorl">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="6"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Voorv">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="10"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Woonpl">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="24"/>
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="AdresBinnenlandType">
+		<xs:sequence>
+			<xs:element name="Str" type="Strt"/>
+			<xs:element name="HuisNr" type="HuisNr" minOccurs="0"/>
+			<xs:element name="HuisNrToev" type="HuisNrToev" minOccurs="0"/>
+			<xs:element name="LocOms" type="LocOms" minOccurs="0"/>
+			<xs:element name="Pc" type="Pc"/>
+			<xs:element name="Woonpl" type="Woonpl"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AdresBuitenlandType">
+		<xs:sequence>
+			<xs:element name="Str" type="Strt"/>
+			<xs:element name="HuisNr" type="HuisNrBtl" minOccurs="0"/>
+			<xs:element name="LocOms" type="LocOms" minOccurs="0"/>
+			<xs:element name="Pc" type="PcBtl" minOccurs="0"/>
+			<xs:element name="Woonpl" type="Woonpl"/>
+			<xs:element name="Reg" type="Reg" minOccurs="0"/>
+			<xs:element name="LandCd" type="LandCd"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="BerichtType">
+		<xs:sequence>
+			<xs:element name="IdBer" type="IdBer"/>
+			<xs:element name="DatTdAanm" type="xs:dateTime"/>
+			<xs:element name="ContPers" type="ContPers"/>
+			<xs:element name="TelNr" type="TelNr"/>
+			<xs:element name="RelNr" type="RelNr"/>
+			<xs:element name="GebrSwPakket" type="Appl"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CollectieveAangifteTijdvakAangifteType">
+		<xs:complexContent>
+			<xs:extension base="CollectieveAangifteType">
+				<xs:sequence>
+					<xs:element name="SaldoCorrectiesVoorgaandTijdvak" minOccurs="0" maxOccurs="unbounded">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="DatAanvTv" type="DatAanvTv"/>
+								<xs:element name="DatEindTv" type="DatEindTv"/>
+								<xs:element name="Saldo" type="Bedrag10"/>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="TotGen" type="Bedrag10"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="CollectieveAangifteType">
+		<xs:sequence>
+			<xs:element name="TotLnLbPh" type="Bedrag10"/>
+			<xs:element name="TotLnSV" type="Bedrag10"/>
+			<xs:element name="TotPrlnAofAnwLg" type="Bedrag10"/>
+			<xs:element name="TotPrlnAofAnwHg" type="Bedrag10"/>
+			<xs:element name="TotPrlnAofAnwUit" type="Bedrag10"/>
+			<xs:element name="TotPrlnWhkAnw" type="Bedrag10"/>
+			<xs:element name="TotPrlnAwfAnwLg" type="Bedrag10"/>
+			<xs:element name="TotPrlnAwfAnwHg" type="Bedrag10"/>
+			<xs:element name="TotPrlnAwfAnwHz" type="Bedrag10"/>
+			<xs:element name="TotPrlnAwfAnwUit" type="Bedrag10"/>
+			<xs:element name="PrLnUFO" type="Bedrag10"/>
+			<xs:element name="IngLbPh" type="Bedrag10"/>
+			<xs:element name="EHPubUitk" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="EHGebrAuto" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="EHVUT" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="EhOvsFrfWrkkstrg" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="AVZeev" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="VrlAVSO" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="TotPrAofLg" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="TotPrAofHg" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="TotPrAofUit" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="TotOpslWko" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="TotPrGediffWhk" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="TotPrAwfLg" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="TotPrAwfHg" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="TotPrAwfHz" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="TotPrAwfUit" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="PrUFO" type="Bedrag10" minOccurs="0"/>
+			<xs:element name="IngBijdrZvw" type="Bedrag10"/>
+			<xs:element name="TotWghZvw" type="Bedrag10"/>
+			<xs:element name="TotTeBet" type="Bedrag10"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="InkomstenperiodeInitieelType">
+		<xs:sequence>
+			<xs:element name="DatAanv" type="xs:date"/>
+			<xs:element name="SrtIV" type="CdSrtIV"/>
+			<xs:element name="CdAard" type="CdAard" minOccurs="0"/>
+			<xs:element name="CdInvlVpl" type="CdInvlVzp" minOccurs="0"/>
+			<xs:element name="FsIndFZ" type="FsIndFZ" minOccurs="0"/>
+			<xs:element name="CAO" type="CdCAO" minOccurs="0"/>
+			<xs:element name="CdCaoInl" type="CdCAO" minOccurs="0"/>
+			<xs:element name="IndArbovOnbepTd" type="Indicatie" minOccurs="0"/>
+			<xs:element name="IndSchriftArbov" type="Indicatie" minOccurs="0"/>
+			<xs:element name="IndOprov" type="Indicatie" minOccurs="0"/>
+			<xs:element name="IndJrurennrm" type="IndicatieJ" minOccurs="0"/>
+			<xs:element name="IndPubAanOnbepTd" type="Indicatie" minOccurs="0"/>
+			<xs:element name="IndAvrLkvOudrWn" type="Indicatie" minOccurs="0"/>
+			<xs:element name="IndAvrLkvAgWn" type="Indicatie" minOccurs="0"/>
+			<xs:element name="IndAvrLkvDgBaf" type="Indicatie" minOccurs="0"/>
+			<xs:element name="IndAvrLkvHpAgWn" type="Indicatie" minOccurs="0"/>
+			<xs:element name="IndLhKort" type="Indicatie"/>
+			<xs:element name="CdRdnGnBijt" type="CdRdnGnBijt" minOccurs="0"/>
+			<xs:element name="LbTab" type="LbTab"/>
+			<xs:element name="IndWAO" type="Indicatie"/>
+			<xs:element name="IndWW" type="Indicatie"/>
+			<xs:element name="IndZW" type="Indicatie"/>
+			<xs:element name="IndWgldOudRegl" type="Indicatie" minOccurs="0"/>
+			<xs:element name="CdZvw" type="CdZvw"/>
+			<xs:element name="IndDeelnTijdspf" type="Indicatie" minOccurs="0"/>
+			<xs:element name="IndSA71" type="Indicatie" minOccurs="0"/>
+			<xs:element name="IndSA72" type="Indicatie" minOccurs="0"/>
+			<xs:element name="IndSA03" type="Indicatie" minOccurs="0"/>
+			<xs:element name="CdIncInkVerm" type="CdIncInkVerm" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="InkomstenverhoudingInitieelType">
+		<xs:complexContent>
+			<xs:extension base="InkomstenverhoudingType">
+				<xs:sequence>
+					<xs:element name="NatuurlijkPersoon">
+						<xs:complexType>
+							<xs:complexContent>
+								<xs:extension base="NatuurlijkPersoonType">
+									<xs:choice minOccurs="0">
+										<xs:element name="AdresBinnenland" type="AdresBinnenlandType"/>
+										<xs:element name="AdresBuitenland" type="AdresBuitenlandType"/>
+									</xs:choice>
+								</xs:extension>
+							</xs:complexContent>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="Inkomstenperiode" type="InkomstenperiodeInitieelType" maxOccurs="99"/>
+					<xs:element name="Werknemersgegevens" type="WerknemersgegevensType"/>
+					<xs:element name="Sector" type="SectorType" minOccurs="0" maxOccurs="5"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="InkomstenverhoudingIntrekkingType">
+		<xs:sequence>
+			<xs:element name="NumIV" type="NumIV"/>
+			<xs:element name="SofiNr" type="SofiNr" minOccurs="0"/>
+			<xs:element name="PersNr" type="PersNr" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="InkomstenverhoudingType">
+		<xs:sequence>
+			<xs:element name="NumIV" type="NumIV"/>
+			<xs:element name="DatAanv" type="xs:date"/>
+			<xs:element name="DatEind" type="xs:date" minOccurs="0"/>
+			<xs:element name="CdRdnEindArbov" type="CdRdnEindArbov" minOccurs="0"/>
+			<xs:element name="PersNr" type="PersNr" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="NatuurlijkPersoonType">
+		<xs:sequence>
+			<xs:element name="SofiNr" type="SofiNr" minOccurs="0"/>
+			<xs:element name="Voorl" type="Voorl" minOccurs="0"/>
+			<xs:element name="Voorv" type="Voorv" minOccurs="0"/>
+			<xs:element name="SignNm" type="SignNm" minOccurs="0"/>
+			<xs:element name="Gebdat" type="xs:date" minOccurs="0"/>
+			<xs:element name="Nat" type="Natio" minOccurs="0"/>
+			<xs:element name="Gesl" type="Gesl" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="WerknemersgegevensType">
+		<xs:sequence>
+			<xs:element name="LnLbPh" type="Bedrag10.2"/>
+			<xs:element name="LnSV" type="Bedrag10.2"/>
+			<xs:element name="PrlnAofAnwLg" type="Bedrag10.2"/>
+			<xs:element name="PrlnAofAnwHg" type="Bedrag10.2"/>
+			<xs:element name="PrlnAofAnwUit" type="Bedrag10.2"/>
+			<xs:element name="PrlnWhkAnw" type="Bedrag10.2"/>
+			<xs:element name="PrlnAwfAnwLg" type="Bedrag10.2"/>
+			<xs:element name="PrlnAwfAnwHg" type="Bedrag10.2"/>
+			<xs:element name="PrlnAwfAnwHz" type="Bedrag10.2"/>
+			<xs:element name="PrlnAwfAnwUit" type="Bedrag10.2"/>
+			<xs:element name="PrLnUfo" type="Bedrag10.2"/>
+			<xs:element name="LnTabBB" type="Bedrag10.2"/>
+			<xs:element name="VakBsl" type="Bedrag10.2"/>
+			<xs:element name="OpgRchtVakBsl" type="Bedrag10.2"/>
+			<xs:element name="OpnAvwb" type="Bedrag10.2"/>
+			<xs:element name="OpbAvwb" type="Bedrag10.2"/>
+			<xs:element name="LnInGld" type="Bedrag10.2"/>
+			<xs:element name="WrdLn" type="Bedrag10.2"/>
+			<xs:element name="LnOwrk" type="Bedrag10.2"/>
+			<xs:element name="VerstrAanv" type="Bedrag10.2"/>
+			<xs:element name="IngLbPh" type="Bedrag10.2"/>
+			<xs:element name="PrAofLg" type="Bedrag10.2"/>
+			<xs:element name="PrAofHg" type="Bedrag10.2"/>
+			<xs:element name="PrAofUit" type="Bedrag10.2"/>
+			<xs:element name="OpslWko" type="Bedrag10.2"/>
+			<xs:element name="PrGediffWhk" type="Bedrag10.2"/>
+			<xs:element name="PrAwfLg" type="Bedrag10.2"/>
+			<xs:element name="PrAwfHg" type="Bedrag10.2"/>
+			<xs:element name="PrAwfHz" type="Bedrag10.2"/>
+			<xs:element name="PrAwfUit" type="Bedrag10.2"/>
+			<xs:element name="PrUFO" type="Bedrag10.2"/>
+			<xs:element name="BijdrZvw" type="Bedrag10.2"/>
+			<xs:element name="WghZvw" type="Bedrag10.2"/>
+			<xs:element name="WrdPrGebrAut" type="Bedrag10.2"/>
+			<xs:element name="WrknBijdrAut" type="Bedrag10.2"/>
+			<xs:element name="Reisk" type="Bedrag10.2"/>
+			<xs:element name="VerrArbKrt" type="Bedrag10.2"/>
+			<xs:element name="AantVerlU" type="AantU"/>
+			<xs:element name="Ctrctln" type="Bedrag10.2" minOccurs="0"/>
+			<xs:element name="AantCtrcturenPWk" type="Aant" minOccurs="0"/>
+			<xs:element name="BedrRntKstvPersl" type="Bedrag10.2"/>
+			<xs:element name="BedrAlInWWB" type="Bedrag10.2" minOccurs="0"/>
+			<xs:element name="BedrRchtAl" type="Bedrag10.2" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SectorType">
+		<xs:sequence>
+			<xs:element name="DatAanvSect" type="xs:date"/>
+			<xs:element name="DatEindSect" type="xs:date" minOccurs="0"/>
+			<xs:element name="Sect" type="Sect"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TijdvakAangifteType">
+		<xs:sequence>
+			<xs:element name="DatAanvTv" type="DatAanvTv"/>
+			<xs:element name="DatEindTv" type="DatEindTv"/>
+			<xs:choice>
+				<xs:element name="VolledigeAangifte">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="CollectieveAangifte" type="CollectieveAangifteTijdvakAangifteType"/>
+							<xs:element name="InkomstenverhoudingInitieel" type="InkomstenverhoudingInitieelType" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="AanvullendeAangifte">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="CollectieveAangifte" type="CollectieveAangifteTijdvakAangifteType"/>
+							<xs:element name="InkomstenverhoudingInitieel" type="InkomstenverhoudingInitieelType" minOccurs="0" maxOccurs="unbounded"/>
+							<xs:element name="InkomstenverhoudingIntrekking" type="InkomstenverhoudingIntrekkingType" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TijdvakCorrectieType">
+		<xs:sequence>
+			<xs:element name="DatAanvTv" type="DatAanvTv"/>
+			<xs:element name="DatEindTv" type="DatEindTv"/>
+			<xs:element name="CollectieveAangifte" type="CollectieveAangifteType"/>
+			<xs:element name="InkomstenverhoudingInitieel" type="InkomstenverhoudingInitieelType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="InkomstenverhoudingIntrekking" type="InkomstenverhoudingIntrekkingType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

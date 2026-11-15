@@ -3,6 +3,9 @@
 /**
  * OpenRegister pre-save mutation contract (hours-process-redesign task V1)
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The hours-process redesign's Decisions 4 and 5 stand on ONE load-bearing
  * assumption: a listener on OpenRegister's pre-save `ObjectCreatingEvent` /
  * `ObjectUpdatingEvent` can hand back modified payload data (via
@@ -32,9 +35,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
@@ -45,6 +45,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 
 /**
  * Proves (or disproves) that pre-save event payload mutation persists.
@@ -157,9 +162,10 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 		foreach ($this->createdUuids as $uuid) {
 			try {
 				$this->objectService?->deleteObject(
-					uuid: $uuid,
-					register: self::REGISTER,
-					schema: self::SCHEMA,
+					new ObjectDeletion(
+						uuid: $uuid,
+						target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)
+					),
 					_rbac: false
 				);
 			} catch (\Throwable $e) {
@@ -207,10 +213,11 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 				'status' => 'draft',
 				'description' => 'v1-probe-create',
 			],
-			register: self::REGISTER,
-			schema: self::SCHEMA,
-			_rbac: false,
-			_validation: false
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+				policy: new SavePolicy(validation: false)
+			),
+			_rbac: false
 		);
 		$uuid = (string)$saved->getUuid();
 		$this->assertNotSame('', $uuid, 'Probe object did not save.');
@@ -245,11 +252,12 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 				'status' => 'draft',
 				'description' => 'v1-probe-update',
 			],
-			register: self::REGISTER,
-			schema: self::SCHEMA,
-			uuid: $uuid,
-			_rbac: false,
-			_validation: false
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+				uuid: $uuid,
+				policy: new SavePolicy(validation: false)
+			),
+			_rbac: false
 		);
 
 		$persisted = $this->readBack($uuid);
@@ -270,11 +278,12 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 				'status' => 'draft',
 				'description' => 'v1-probe-control',
 			],
-			register: self::REGISTER,
-			schema: self::SCHEMA,
-			uuid: $uuid,
-			_rbac: false,
-			_validation: false
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+				uuid: $uuid,
+				policy: new SavePolicy(validation: false)
+			),
+			_rbac: false
 		);
 
 		$persisted = $this->readBack($uuid);
@@ -297,8 +306,7 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 	private function readBack(string $uuid): array {
 		$entity = $this->objectService->find(
 			id: $uuid,
-			register: self::REGISTER,
-			schema: self::SCHEMA,
+			options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA),
 			_rbac: false
 		);
 		$data = $entity->getObject();

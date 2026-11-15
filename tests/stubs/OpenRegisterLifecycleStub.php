@@ -40,7 +40,11 @@ namespace OCA\OpenRegister\Lifecycle;
  */
 interface LifecycleGuardInterface {
 	/**
-	 * @param array<string, mixed> $object The loaded object payload at its current state.
+	 * OpenRegister documents $object as array<string, mixed>. The stub states the
+	 * native type, because psalm reads a stub's docblock types as the signature
+	 * and would then call every guard's native `array` a mismatch.
+	 *
+	 * @param array $object The loaded object payload at its current state.
 	 * @param string $action The transition action being applied.
 	 * @param string $userId The uid of the caller.
 	 *

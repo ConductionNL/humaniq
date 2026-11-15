@@ -1,0 +1,33 @@
+{
+  "name": "rvu-final-levy — a monthly early-retirement benefit of 3000.00 above a threshold of 2286.00 (payroll-special-regimes D4): the employer owes the final levy at 52% on the 714.00 excess only, as an employer cost that leaves net unchanged; the Zvw is withheld",
+  "input": {
+    "grossMonthly": 3000.00,
+    "taxTableColor": "groen",
+    "dateOfBirth": "1961-03-15",
+    "loonheffingskortingToegepast": true,
+    "awfTariff": "low",
+    "aofTariff": "laag",
+    "whkPercentage": 1.52,
+    "verzekeringsplichtig": false,
+    "zvwMode": "inhouding",
+    "rvuThreshold": 2286.00,
+    "rvuFinalLevyRate": 52.0,
+    "period": "2026-07"
+  },
+  "expected": {
+    "loonheffing": 845.00,
+    "arbeidskorting": 0.00,
+    "volksverzekeringen": 653.55,
+    "zvw": 0.00,
+    "zvwInhouding": 145.50,
+    "awf": 0.00,
+    "aof": 0.00,
+    "wko": 0.00,
+    "whk": 0.00,
+    "werknemersverzekeringen": 0.00,
+    "rvuEindheffing": 371.28,
+    "employerCharges": 371.28,
+    "vakantiegeldReserved": 240.00,
+    "nettoPay": 2009.50
+  }
+}

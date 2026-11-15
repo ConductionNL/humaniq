@@ -33,15 +33,22 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Loads and updates one `DsrRequest` record's lifecycle fields.
  */
 final class AvgDsrRequestStore {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
 
 	/**
 	 * @param ContainerInterface $container DI container for the lazy ObjectService resolve.
@@ -69,8 +76,10 @@ final class AvgDsrRequestStore {
 		try {
 			$entity = $this->objectService()->find(
 				id: $dsrRequestId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'DsrRequest'
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: 'DsrRequest'
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->info('AvgDsrRequestStore: DsrRequest ' . $dsrRequestId . ' kon niet worden opgehaald: ' . $e->getMessage());
@@ -234,9 +243,13 @@ final class AvgDsrRequestStore {
 
 		$saved = $this->objectService()->saveObject(
 			object: $object,
-			register: $this->settingsService->getRegisterSlug(),
-			schema: 'DsrRequest',
-			uuid: ($id === '' ? null : $id)
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+						register: $this->settingsService->getRegisterSlug(),
+						schema: 'DsrRequest'
+					),
+				uuid: $id === '' ? null : $id
+			)
 		);
 
 		return $this->toArray($saved);
@@ -250,42 +263,4 @@ final class AvgDsrRequestStore {
 	private function currentUserId(): string {
 		return (string)($this->userSession->getUser()?->getUID() ?? '');
 	}//end currentUserId()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
 }//end class

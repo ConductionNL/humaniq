@@ -3,6 +3,9 @@
 /**
  * Unit tests for MigrateAppConfigKeys.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The step carries `oc_appconfig` across the `hrmq` -> `humaniq` app-id
  * rename. Nextcloud namespaces app config by app id, and there is no in-place
  * app-id upgrade — the new id is discovered as a different app — so without
@@ -30,9 +33,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -314,6 +314,39 @@ class MigrateAppConfigKeysTest extends TestCase {
 
 		$this->assertSame(['humaniq:good=y'], $writes);
 	}//end testAThrowingWriteIsLoggedAndTheLoopContinues()
+
+	/**
+	 * The report names all four counts, and a failed write is logged with its key.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/app-identity/spec.md#REQ-AID-001
+	 */
+	public function testTheReportAndTheWarningOfAMixedRun(): void {
+		$writes = [];
+		$output = $this->outputDouble();
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'Humaniq: could not migrate one app config key; leaving it under the old namespace',
+			['key' => 'bad', 'exception' => 'write refused']
+		);
+
+		(new MigrateAppConfigKeys(
+			$this->appConfig(
+				['enabled' => 'yes', 'types' => 'x', 'blank' => '', 'kept' => 'old', 'bad' => 'x', 'good' => 'y', 'also' => 'z'],
+				['kept' => 'new'],
+				$writes,
+				throwsOn: 'bad'
+			),
+			$logger
+		))->run($output);
+
+		$this->assertSame(['humaniq:good=y', 'humaniq:also=z'], $writes);
+		$this->assertSame(
+			['MigrateAppConfigKeys: 2 key(s) migrated, 1 already present, 1 had no value to migrate, 2 skipped as Nextcloud-reserved.'],
+			$output->infos
+		);
+	}//end testTheReportAndTheWarningOfAMixedRun()
 
 	/**
 	 * An unreadable old namespace degrades to "nothing to do", never a throw.

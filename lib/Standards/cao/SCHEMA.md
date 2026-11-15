@@ -45,7 +45,7 @@ One file per CAO, named `{cao-id}.json` (lowercase, hyphenated slug — the CAO'
 | `effectiveDate`     | yes      | ISO date the revision took effect                                     |
 | `basedOn`           | no       | list of `{doc, url}` primary source citations                          |
 | `payScales`         | yes      | leaf — `value` is `{ schaal: minimum maandloon in integer CENTS }`    |
-| `allowances`        | yes      | leaf — `value` is `{ allowanceKey: {...} }` (e.g. ploegentoeslag)     |
+| `allowances`        | yes      | leaf — `value` is `{ componentKey: component }`, see `allowances` below |
 | `leaveEntitlement`  | yes      | leaf — `value` is `{ vakantiedagenWettelijk, vakantiedagenBovenwettelijk }` (full-time day counts) |
 | `workingTime`       | yes      | leaf — `value` is `{ fulltimeHoursPerWeek }` (informational/display only — not read by any resolver) |
 | `overtime`          | no       | leaf — `value` is `{ toeslagPercentages: { doordeweeks, zaterdag, zondag, feestdag }, compensationPreference }` |
@@ -67,6 +67,32 @@ Employment terms resolve **CAO first, contract override second**: a contract may
 carry its own `overtimeToeslagPercentages`, which wins in full (it is not merged
 per-category — a partial merge would silently mix two documents' terms). See
 `EmploymentTermsResolver`.
+
+### `allowances`
+
+Every entry is a component the payroll run can compute (payroll-cao-components).
+`kind` is one of three:
+
+```jsonc
+{ "kind": "percentage-of-wage", "pct": 13.3, "minAmountCents": 45200 }  // minAmountCents optional
+{ "kind": "fixed-monthly", "amountCents": 5000 }                        // pro rata for a part month
+{ "kind": "hourly-surcharge",
+  "windows": [ { "label": "nacht", "days": ["monday", "tuesday"], "from": "00:00", "to": "06:00", "pct": 40 } ],
+  "holidayPct": 100 }                                                    // null when the CAO has none
+```
+
+- `pct` is the percentage paid, of the regular wage for `percentage-of-wage` and of the
+  hourly rate for each hour inside a window for `hourly-surcharge`.
+- `days` are lowercase English weekday names; `from` and `to` are `HH:MM` local time,
+  `to` may be `24:00`, and a window whose `from` is after its `to` runs into the next day.
+  A window with `days`, `from` or `to` set to `null` has not been transcribed: it never pays.
+- `holidayPct` applies to every hour on a public holiday instead of the windows.
+- Other keys (`label`, `note`, `pctFrom`, `effectiveDate`, `ikbUrenPerJaar`) are kept for
+  the reader and ignored by the run.
+
+`CaoComponents::confirmed()` returns the components only when the leaf is verified and not a
+placeholder; otherwise the run pays a component only through a contract override with a
+reason (`EmploymentContract.caoComponentOverrides`).
 
 ## Leaf shape
 

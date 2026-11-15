@@ -3,6 +3,9 @@
 /**
  * Administration Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The multi-administratie (accountant multi-client) access + active-selection
  * service (design.md D4/D7):
  *
@@ -29,9 +32,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-002
@@ -46,13 +46,17 @@ use OCA\Humaniq\AppInfo\Application;
 use OCP\IConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\KeepsReadableRows;
+use OCA\Humaniq\Support\ResolvesObjectServiceWithReload;
 
 /**
  * Accountant multi-client access resolution + per-user active-administration
  * pointer.
  */
 class AdministrationService {
+
+	use KeepsReadableRows;
+	use ResolvesObjectServiceWithReload;
 
 	/**
 	 * The `IConfig` user-value key the active administratie id is stored
@@ -96,12 +100,14 @@ class AdministrationService {
 	 * @param IConfig $config Per-user config store for the active-administration pointer.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param LoggerInterface $logger Logger.
+	 * @param AdministrationAccessTrust $trust Keeps only the access rows granted with standing.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IConfig $config,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly AdministrationAccessTrust $trust,
 	) {
 
 	}//end __construct()
@@ -288,9 +294,11 @@ class AdministrationService {
 	}//end context()
 
 	/**
-	 * Every `AdministrationAccess` row belonging to `$userId`, as plain
-	 * arrays. Degrades to an empty list when the schema does not exist yet
-	 * in the register (fresh install before the fragment is imported).
+	 * Every believed `AdministrationAccess` row belonging to `$userId`, as
+	 * plain arrays. The whole schema is read so the trust check can see who
+	 * granted each row; a row without standing is dropped. Degrades to an
+	 * empty list when the schema does not exist yet in the register (fresh
+	 * install before the fragment is imported).
 	 *
 	 * @param string $userId The Nextcloud user id.
 	 *
@@ -298,7 +306,7 @@ class AdministrationService {
 	 */
 	private function accessRowsForUser(string $userId): array {
 		$rows = [];
-		foreach ($this->loadAll('AdministrationAccess') as $row) {
+		foreach ($this->trust->trusted($this->loadAll(schema: 'AdministrationAccess', asSystem: true)) as $row) {
 			if ((string)($row['userId'] ?? '') === $userId) {
 				$rows[] = $row;
 			}
@@ -350,16 +358,17 @@ class AdministrationService {
 	 * Load all objects of a schema (capped), as plain arrays — the
 	 * RuleAuditService::loadAll() precedent.
 	 *
-	 * @param string $schema The schema name.
+	 * @param string $schema   The schema name.
+	 * @param bool   $asSystem Read every row, not only what the caller may see.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function loadAll(string $schema): array {
+	private function loadAll(string $schema, bool $asSystem = false): array {
 		try {
 			$rows = $this->objectService()
 				->setRegister($this->settingsService->getRegisterSlug())
 				->setSchema($schema)
-				->findAll(['limit' => self::LIMIT]);
+				->findAll(['limit' => self::LIMIT], !$asSystem, !$asSystem);
 		} catch (\Throwable $e) {
 			$this->logger->warning('AdministrationService: could not load ' . $schema . ': ' . $e->getMessage());
 			return [];
@@ -367,54 +376,4 @@ class AdministrationService {
 
 		return $this->normaliseRows($rows);
 	}//end loadAll()
-
-	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$out[] = (array)$row->jsonSerialize();
-			}
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
-	 * The OpenRegister ObjectService, once availability has been established.
-	 *
-	 * ADR-083: the reach is guarded rather than blind. humaniq owns no database
-	 * tables — every object it manages lives in OpenRegister — so this is not
-	 * an optional capability in the sense of a feature that degrades. What the
-	 * guard buys is the ADR's rule 3 promise: an instance without OpenRegister
-	 * must still reach a start screen that EXPLAINS ITSELF. Unguarded, the
-	 * container raises `NotFoundExceptionInterface` naming a class the admin
-	 * has never heard of; guarded, they are told which app to install.
-	 *
-	 * @return mixed The OpenRegister ObjectService.
-	 *
-	 * @throws \RuntimeException When OpenRegister is not installed.
-	 */
-	private function objectService(): mixed {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance. '
-				. 'Install and enable it, then reload.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
 }//end class

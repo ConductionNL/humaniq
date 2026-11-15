@@ -64,7 +64,7 @@ test.describe("app chrome (ADR-114)", () => {
 		await dismissSetupWizard(page);
 	});
 
-	test("the footer reads Documentation, Store, Reports, Features & roadmap, each with a glyph", async ({
+	test("the footer reads Documentation, Store, Features & roadmap, each with a glyph", async ({
 		page,
 	}) => {
 		const footer = page.locator(
@@ -74,7 +74,7 @@ test.describe("app chrome (ADR-114)", () => {
 
 		const rows = footer.locator("li");
 
-		// Assert the four by MANIFEST ID, not by label. CnAppNav emits
+		// Assert the three by MANIFEST ID, not by label. CnAppNav emits
 		// `data-testid="cn-nav-entry-<id>"` on every entry, and an id is not
 		// translated. Filtering rows by /Documentation|Store|Reports|roadmap/
 		// matched 2 of 4 on an instance whose admin language is `nl`, where the
@@ -83,7 +83,6 @@ test.describe("app chrome (ADR-114)", () => {
 		const chromeIds = [
 			"Documentation",
 			"StoreMenu",
-			"ReportsMenu",
 			"FeaturesRoadmapMenu",
 		];
 		const footerIds = await rows.evaluateAll((els) => els
@@ -92,7 +91,7 @@ test.describe("app chrome (ADR-114)", () => {
 			.map((t) => t.replace("cn-nav-entry-", "")));
 		expect(
 			footerIds,
-			"ADR-114 Decision 4: the footer carries these four, in this order",
+			"the footer carries these three, in this order; Reports sits in the Advanced foldout",
 		).toEqual(chromeIds);
 
 		for (const row of await rows.all()) {
@@ -104,6 +103,8 @@ test.describe("app chrome (ADR-114)", () => {
 
 	test("Reports lists all three reports", async ({ page }) => {
 		const nav = page.locator('[data-testid="cn-nav"]');
+		// Reports sits in the Advanced foldout, so open it first.
+		await nav.locator('[data-testid="cn-nav-settings"]').click();
 		await nav
 			.locator('[data-testid="cn-nav-entry-ReportsMenu"] a')
 			.first()

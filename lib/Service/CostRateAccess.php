@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\IUserSession;
 use RuntimeException;
@@ -61,7 +62,7 @@ class CostRateAccess {
 	 *
 	 * @param IAppManager          $appManager Whether planninq is installed.
 	 * @param ContainerInterface   $container  Resolves OpenRegister's ObjectService.
-	 * @param HoursRegisterGateway $gateway    System reads of humaniq objects.
+	 * @param RecordStoreInterface $gateway    System reads of humaniq objects.
 	 * @param SettingsService      $settings   Register slug and OpenRegister availability.
 	 * @param IUserSession         $userSession The caller.
 	 * @param LoggerInterface      $logger     Logger.
@@ -71,7 +72,7 @@ class CostRateAccess {
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly SettingsService $settings,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
@@ -109,8 +110,7 @@ class CostRateAccess {
 		try {
 			$employee = $this->objectService()->find(
 				id: $employeeId,
-				register: $this->settings->getRegisterSlug(),
-				schema: 'Employee'
+				options: new ObjectFindOptions(register: $this->settings->getRegisterSlug(), schema: 'Employee')
 			);
 		} catch (\Throwable $e) {
 			$this->logger->info('humaniq cost rate: employee ' . $employeeId . ' not retrievable: ' . $e->getMessage());
