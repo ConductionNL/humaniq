@@ -91,6 +91,34 @@ class AnnouncementServiceTest extends TestCase {
 	}//end testAnEmployeeSeesWhatIsPublishedToThemToday()
 
 	/**
+	 * Golden audience matrix: another administration's employee, an employee
+	 * who left and an announcement of another administration are kept apart
+	 * both ways; a visible row carries every field.
+	 *
+	 * @return void
+	 */
+	public function testTheAudienceMatrix(): void {
+		$this->store->seed('Employee', 'emp-elders', ['firstName' => 'Els', 'lastName' => 'Elders', 'nextcloudUserId' => 'els', 'administrationId' => 'ADM-002']);
+		$this->store->seed('Announcement', 'ann-adm2', ['title' => 'Alleen ADM-002', 'body' => 'Elders.', 'audience' => 'administration', 'status' => 'gepubliceerd', 'administrationId' => 'ADM-002', 'publishFrom' => '2026-10-05', 'publishUntil' => '2026-10-05']);
+		$this->store->seed('Announcement', 'ann-open', ['title' => 'Voor iedereen', 'body' => 'Overal.', 'status' => 'gepubliceerd']);
+
+		self::assertSame(
+			['anna' => ['ann-all', 'ann-bz', 'ann-open'], 'els' => ['ann-adm2', 'ann-open'], 'oud' => [], 'bram' => ['ann-all', 'ann-open']],
+			[
+				'anna' => $this->ids($this->service()->mine('anna', self::TODAY)),
+				'els' => $this->ids($this->service()->mine('els', self::TODAY)),
+				'oud' => $this->ids($this->service()->mine('oud', self::TODAY)),
+				'bram' => $this->ids($this->service()->mine('bram', self::TODAY)),
+			]
+		);
+		self::assertSame(
+			['id' => 'ann-adm2', 'title' => 'Alleen ADM-002', 'body' => 'Elders.', 'publishFrom' => '2026-10-05', 'publishUntil' => '2026-10-05', 'requiresConfirmation' => false, 'confirmed' => false, 'confirmedAt' => null],
+			$this->service()->mine('els', self::TODAY)[0]
+		);
+		self::assertSame(['Els Elders'], array_column($this->service()->overview('ann-adm2', '2027-01-01')['rows'], 'name'), 'The overview takes the audience, not the publication period.');
+	}//end testTheAudienceMatrix()
+
+	/**
 	 * A row carries what the page shows, and the caller's own confirmation.
 	 *
 	 * @return void
@@ -161,6 +189,32 @@ class AnnouncementServiceTest extends TestCase {
 		self::assertSame(['Anna Bakker', 'Cor Smit'], array_column($team['rows'], 'name'));
 		self::assertNull($this->service()->overview('ann-missing', self::TODAY));
 	}//end testHrSeesWhoHasNotConfirmed()
+
+	/**
+	 * A confirmation counts by its presence, even without a time; the row
+	 * and the overview carry their fields in a fixed order.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-002
+	 */
+	public function testAConfirmationCountsByItsPresence(): void {
+		$this->store->seed('AnnouncementConfirmation', 'conf-cor', ['announcementId' => 'ann-all', 'employeeId' => 'emp-cor', 'confirmedAt' => null]);
+		$this->store->seed('AnnouncementConfirmation', 'conf-other', ['announcementId' => 'ann-bz', 'employeeId' => 'emp-anna', 'confirmedAt' => '2026-10-01T08:00:00+00:00']);
+
+		$overview = $this->service()->overview('ann-all', self::TODAY);
+
+		self::assertSame(['announcementId', 'total', 'confirmed', 'rows'], array_keys($overview));
+		self::assertSame(['ann-all', 3, 1], [$overview['announcementId'], $overview['total'], $overview['confirmed']]);
+		self::assertSame(
+			[
+				['id' => 'emp-anna', 'name' => 'Anna Bakker', 'confirmed' => false, 'confirmedAt' => null],
+				['id' => 'emp-bram', 'name' => 'Bram Visser', 'confirmed' => false, 'confirmedAt' => null],
+				['id' => 'emp-cor', 'name' => 'Cor Smit', 'confirmed' => true, 'confirmedAt' => null],
+			],
+			$overview['rows']
+		);
+	}//end testAConfirmationCountsByItsPresence()
 
 	/**
 	 * A confirmation created past the endpoint is placed on the caller, and a

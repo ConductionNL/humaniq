@@ -3,6 +3,9 @@
 /**
  * Jurisdiction Pack Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The OpenRegister-backed home for UPLOADED jurisdiction packs, and the
  * implementation of the pure `PackSourceInterface` seam the resolver depends
  * on (jurisdiction-packs design.md D7).
@@ -31,9 +34,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -84,13 +84,13 @@ class JurisdictionPackService implements PackSourceInterface {
 	 * would be a dependency cycle, and a resolver that already consults
 	 * uploads would answer the wrong question anyway.
 	 *
-	 * @param HoursRegisterGateway $gateway The humaniq register gateway (guards OpenRegister's absence).
+	 * @param RecordStoreInterface $gateway The humaniq register gateway (guards OpenRegister's absence).
 	 * @param PackValidator $validator The blocking upload validator.
 	 * @param TaxTableSetService $tableSets The uploaded tables home.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly PackValidator $validator,
 		private readonly TaxTableSetService $tableSets,
 		private readonly LoggerInterface $logger,

@@ -38,12 +38,12 @@ class SurveyAudience {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway       Reads employees, placements and contracts.
+	 * @param RecordStoreInterface $gateway       Reads employees, placements and contracts.
 	 * @param UnitMembership       $membership    Row ids and unit subtrees.
 	 * @param OrgResolutionService $orgResolution Whether a placement is active on a day.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly UnitMembership $membership,
 		private readonly OrgResolutionService $orgResolution,
 	) {

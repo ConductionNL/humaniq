@@ -41,13 +41,13 @@ class OvertimeCreditService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Reads timesheets and balances, writes both.
+	 * @param RecordStoreInterface $gateway Reads timesheets and balances, writes both.
 	 * @param InternalWriteMarker  $marker  Marks the writes as humaniq's own.
 	 *
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly InternalWriteMarker $marker,
 	) {
 	}//end __construct()

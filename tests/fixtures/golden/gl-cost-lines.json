@@ -1,0 +1,65 @@
+{
+    "gross, total above coded": [
+        {
+            "side": "debit",
+            "accountNumber": "4000",
+            "amount": 110000,
+            "description": "Loonkosten bruto",
+            "costCenterCode": "KP100",
+            "projectCode": "P-7"
+        },
+        {
+            "side": "debit",
+            "accountNumber": "4000",
+            "amount": 50000,
+            "description": "Loonkosten bruto",
+            "costCenterCode": "KP200"
+        },
+        {
+            "side": "debit",
+            "accountNumber": "4000",
+            "amount": 40000,
+            "description": "Loonkosten bruto"
+        }
+    ],
+    "charges, total below coded": [
+        {
+            "side": "debit",
+            "accountNumber": "4100",
+            "amount": 26056,
+            "description": "Werkgeverslasten sociale premies",
+            "costCenterCode": "KP100",
+            "projectCode": "P-7"
+        },
+        {
+            "side": "debit",
+            "accountNumber": "4100",
+            "amount": 500,
+            "description": "Werkgeverslasten sociale premies",
+            "costCenterCode": "KP300",
+            "projectCode": "P-1"
+        },
+        {
+            "side": "debit",
+            "accountNumber": "4100",
+            "amount": -26456,
+            "description": "Werkgeverslasten sociale premies"
+        }
+    ],
+    "no allocations": [
+        {
+            "side": "debit",
+            "accountNumber": "4000",
+            "amount": 123456,
+            "description": "Loonkosten bruto"
+        }
+    ],
+    "other run only": [
+        {
+            "side": "debit",
+            "accountNumber": "4000",
+            "amount": 5,
+            "description": "x"
+        }
+    ]
+}

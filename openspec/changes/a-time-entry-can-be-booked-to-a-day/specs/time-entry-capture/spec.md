@@ -45,6 +45,18 @@ cost-centre lookup.
 - **THEN** the entry persists with a server-derived `hours` of 8.00 and a stamped `date` of
   2026-05-04
 
+#### Scenario: A manager may not approve their own hours
+
+- **GIVEN** a submitted Timesheet whose `employeeId` resolves to the acting user
+- **WHEN** the acting user attempts the `approve` transition
+- **THEN** `NoSelfApprovalGuard` denies the transition (unchanged from the pre-redesign
+  contract)
+
+#### Scenario: An impossible time span is refused
+
+- **WHEN** a TimeEntry is written whose `endedAt` is not after its `startedAt`
+- **THEN** the write is refused with a structured 422 and no object is persisted
+
 #### Scenario: A duration is booked to a day
 
 - **GIVEN** an employee with a linked Nextcloud account

@@ -3,6 +3,9 @@
 /**
  * Humaniq Migrate Hours Process Repair Step
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * hours-process-redesign Decision 9: idempotent one-pass migration of
  * pre-existing Timesheet rows onto the entry/aggregate split. Per row:
  *
@@ -47,9 +50,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
@@ -64,10 +64,13 @@ use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\TimesheetAggregationService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Support\KeepsReadableRows;
 
 /**
  * Backfills identity caches, synthesizes migration entries, recomputes
@@ -76,6 +79,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
  */
 class MigrateHoursProcess implements IRepairStep {
+
+	use KeepsReadableRows;
 
 	/**
 	 * Upper bound for lookup queries (dev-stage volumes).
@@ -192,9 +197,12 @@ class MigrateHoursProcess implements IRepairStep {
 	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
 	 */
 	public function migrate(): array {
-		$employeesById = $this->indexById($this->loadAll('Employee'));
-		$unitsById = $this->indexById($this->loadAll('OrgUnit'));
-		$assignmentsByEmployeeId = $this->assignmentsByEmployeeId($this->loadAll('OrgAssignment'));
+		$identity = new TimesheetIdentityCaches(
+			orgResolution: $this->orgResolution,
+			employeesById: $this->indexById($this->loadAll('Employee')),
+			unitsById: $this->indexById($this->loadAll('OrgUnit')),
+			assignmentsByEmployeeId: $this->assignmentsByEmployeeId($this->loadAll('OrgAssignment'))
+		);
 		$entryCountByTimesheetId = $this->entryCountsByTimesheetId($this->loadAll('TimeEntry'));
 
 		$processed = 0;
@@ -202,7 +210,7 @@ class MigrateHoursProcess implements IRepairStep {
 		$unresolvable = 0;
 
 		foreach ($this->loadAll('Timesheet') as $timesheet) {
-			$id = trim((string)($timesheet['id'] ?? $timesheet['@self']['id'] ?? ''));
+			$id = $this->rowId($timesheet);
 			if ($id === '') {
 				continue;
 			}
@@ -210,13 +218,7 @@ class MigrateHoursProcess implements IRepairStep {
 			$processed++;
 
 			// 1. Backfill the identity caches.
-			$resolvedUser = $this->backfillCaches(
-				timesheetId: $id,
-				timesheet: $timesheet,
-				employeesById: $employeesById,
-				unitsById: $unitsById,
-				assignmentsByEmployeeId: $assignmentsByEmployeeId
-			);
+			$resolvedUser = $this->backfillCaches(timesheet: $timesheet, identity: $identity);
 			if ($resolvedUser === false) {
 				$unresolvable++;
 			}
@@ -244,43 +246,16 @@ class MigrateHoursProcess implements IRepairStep {
 	 * Backfill `userId` / `managerUserId` / `administrationId` on one row.
 	 * Writes only when a value changes (pure recompute — a re-run no-ops).
 	 *
-	 * @param string $timesheetId The timesheet uuid.
 	 * @param array<string, mixed> $timesheet The timesheet payload.
-	 * @param array<string, array<string, mixed>> $employeesById Employee index.
-	 * @param array<string, array<string, mixed>> $unitsById OrgUnit index.
-	 * @param array<string, array<int, array<string, mixed>>> $assignmentsByEmployeeId OrgAssignment index.
+	 * @param TimesheetIdentityCaches $identity The run's cache resolver.
 	 *
 	 * @return bool True when the user link resolved, false when it stays null.
 	 *
 	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
 	 */
-	private function backfillCaches(
-		string $timesheetId,
-		array $timesheet,
-		array $employeesById,
-		array $unitsById,
-		array $assignmentsByEmployeeId,
-	): bool {
-		$employeeId = trim((string)($timesheet['employeeId'] ?? ''));
-		$employee = ($employeesById[$employeeId] ?? []);
-
-		$userId = $this->nullableTrim($employee['nextcloudUserId'] ?? null);
-		$administrationId = $this->nullableTrim($employee['administrationId'] ?? null);
-		$managerUserId = $this->orgResolution->uniqueOrNull(
-			$this->orgResolution->resolveManagerUserIds(
-				employeeId: $employeeId,
-				assignmentsByEmployeeId: $assignmentsByEmployeeId,
-				unitsById: $unitsById,
-				employeesById: $employeesById,
-				onDate: gmdate('Y-m-d')
-			)
-		);
-
-		$caches = [
-			'userId' => $userId,
-			'managerUserId' => $managerUserId,
-			'administrationId' => $administrationId,
-		];
+	private function backfillCaches(array $timesheet, TimesheetIdentityCaches $identity): bool {
+		$timesheetId = $this->rowId($timesheet);
+		$caches = $identity->resolve($timesheet);
 
 		$changed = false;
 		foreach ($caches as $field => $value) {
@@ -295,16 +270,20 @@ class MigrateHoursProcess implements IRepairStep {
 			$this->marker->runInternal(function () use ($payload, $timesheetId): void {
 				$this->objects()->saveObject(
 					object: $payload,
-					register: $this->settingsService->getRegisterSlug(),
-					schema: 'Timesheet',
-					uuid: $timesheetId,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+								register: $this->settingsService->getRegisterSlug(),
+								schema: 'Timesheet'
+							),
+						uuid: $timesheetId
+					),
 					_rbac: false,
 					_multitenancy: false
 				);
 			});
 		}
 
-		return $userId !== null;
+		return $caches['userId'] !== null;
 	}//end backfillCaches()
 
 	/**
@@ -359,8 +338,10 @@ class MigrateHoursProcess implements IRepairStep {
 		$this->marker->runInternal(function () use ($entry): void {
 			$this->objects()->saveObject(
 				object: $entry,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'TimeEntry',
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(
+						register: $this->settingsService->getRegisterSlug(),
+						schema: 'TimeEntry'
+					)),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -442,7 +423,7 @@ class MigrateHoursProcess implements IRepairStep {
 	private function indexById(array $rows): array {
 		$index = [];
 		foreach ($rows as $row) {
-			$id = trim((string)($row['id'] ?? $row['@self']['id'] ?? ''));
+			$id = $this->rowId($row);
 			if ($id !== '') {
 				$index[$id] = $row;
 			}
@@ -450,6 +431,17 @@ class MigrateHoursProcess implements IRepairStep {
 
 		return $index;
 	}//end indexById()
+
+	/**
+	 * A row's id, falling back to `@self.id`, trimmed ('' when absent).
+	 *
+	 * @param array<string, mixed> $row The row.
+	 *
+	 * @return string The id.
+	 */
+	private function rowId(array $row): string {
+		return trim((string)($row['id'] ?? $row['@self']['id'] ?? ''));
+	}//end rowId()
 
 	/**
 	 * Load every row of a schema as arrays (the AssetDialectMigrationService
@@ -470,19 +462,7 @@ class MigrateHoursProcess implements IRepairStep {
 			return [];
 		}
 
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$out[] = (array)$row->jsonSerialize();
-			}
-		}
-
-		return $out;
+		return $this->normaliseRows($rows);
 	}//end loadAll()
 
 	/**

@@ -37,6 +37,10 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -46,6 +50,8 @@ use RuntimeException;
  * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
  */
 class TimesheetAggregationService {
+
+	use ConvertsRowsToArrays;
 
 	/**
 	 * Upper bound for the entries query (dev-stage volumes).
@@ -112,9 +118,13 @@ class TimesheetAggregationService {
 		$this->marker->runInternal(function () use ($payload, $timesheetId): void {
 			$this->objects()->saveObject(
 				object: $payload,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Timesheet',
-				uuid: $timesheetId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $this->settingsService->getRegisterSlug(),
+							schema: 'Timesheet'
+						),
+					uuid: $timesheetId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -222,8 +232,10 @@ class TimesheetAggregationService {
 		try {
 			$entity = $this->objects()->find(
 				id: $timesheetId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Timesheet',
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: 'Timesheet'
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -275,24 +287,5 @@ class TimesheetAggregationService {
 
 		return clone $service;
 	}//end objects()
-
-	/**
-	 * Normalise a findAll row to an array.
-	 *
-	 * @param mixed $row The row (array or ObjectEntity).
-	 *
-	 * @return array<string, mixed> The payload array.
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 }//end class

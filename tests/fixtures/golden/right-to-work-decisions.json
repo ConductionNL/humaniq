@@ -1,0 +1,167 @@
+{
+    "no-type": {
+        "documentType": "",
+        "nationality": "SYR",
+        "documentExpiry": "2030-01-01",
+        "endorsement": "",
+        "twvValidUntil": "",
+        "method": "handmatig",
+        "result": "mislukt",
+        "reasonCode": "geen-document",
+        "reason": "No identity document with an expiry date was recorded."
+    },
+    "type-none": {
+        "documentType": "geen",
+        "nationality": "SYR",
+        "documentExpiry": "2030-01-01",
+        "endorsement": "",
+        "twvValidUntil": "",
+        "method": "handmatig",
+        "result": "mislukt",
+        "reasonCode": "geen-document",
+        "reason": "No identity document with an expiry date was recorded."
+    },
+    "no-expiry": {
+        "documentType": "verblijfsdocument",
+        "nationality": "SYR",
+        "documentExpiry": "2030-02-30",
+        "endorsement": "",
+        "twvValidUntil": "",
+        "method": "handmatig",
+        "result": "mislukt",
+        "reasonCode": "geen-document",
+        "reason": "No identity document with an expiry date was recorded."
+    },
+    "expired": {
+        "documentType": "verblijfsdocument",
+        "nationality": "SYR",
+        "documentExpiry": "2026-08-31",
+        "endorsement": "",
+        "twvValidUntil": "",
+        "method": "handmatig",
+        "result": "mislukt",
+        "reasonCode": "document-verlopen",
+        "reason": "The document expires on 2026-08-31, before the start date 2026-09-01."
+    },
+    "expires-on-start": {
+        "documentType": "paspoort",
+        "nationality": "NLD",
+        "documentExpiry": "2026-09-01",
+        "endorsement": "",
+        "twvValidUntil": "",
+        "method": "handmatig",
+        "result": "geslaagd",
+        "reasonCode": "eer-onderdaan",
+        "reason": "EU, EEA or Swiss national with a valid document."
+    },
+    "eea": {
+        "documentType": "paspoort",
+        "nationality": "NLD",
+        "documentExpiry": "2030-01-01",
+        "endorsement": "",
+        "twvValidUntil": "",
+        "method": "handmatig",
+        "result": "geslaagd",
+        "reasonCode": "eer-onderdaan",
+        "reason": "EU, EEA or Swiss national with a valid document."
+    },
+    "eea-alias": {
+        "documentType": "paspoort",
+        "nationality": "DEU",
+        "documentExpiry": "2030-01-01",
+        "endorsement": "",
+        "twvValidUntil": "",
+        "method": "handmatig",
+        "result": "geslaagd",
+        "reasonCode": "eer-onderdaan",
+        "reason": "EU, EEA or Swiss national with a valid document."
+    },
+    "free-work": {
+        "documentType": "verblijfsdocument",
+        "nationality": "SYR",
+        "documentExpiry": "2030-01-01",
+        "endorsement": "Arbeid VRIJ toegestaan. TWV niet vereist",
+        "twvValidUntil": "",
+        "method": "handmatig",
+        "result": "geslaagd",
+        "reasonCode": "verblijf-arbeid-vrij",
+        "reason": "The residence document allows work."
+    },
+    "twv-covers": {
+        "documentType": "verblijfsdocument",
+        "nationality": "SYR",
+        "documentExpiry": "2030-01-01",
+        "endorsement": "Arbeid alleen toegestaan met TWV",
+        "twvValidUntil": "2026-09-01",
+        "method": "handmatig",
+        "result": "geslaagd",
+        "reasonCode": "twv-geldig",
+        "reason": "A work permit covers the start date."
+    },
+    "twv-short": {
+        "documentType": "verblijfsdocument",
+        "nationality": "SYR",
+        "documentExpiry": "2030-01-01",
+        "endorsement": "",
+        "twvValidUntil": "2026-08-31",
+        "method": "handmatig",
+        "result": "mislukt",
+        "reasonCode": "geen-arbeidstoestemming",
+        "reason": "No permission to work: the residence document does not allow work and there is no work permit covering the start date."
+    },
+    "no-permission": {
+        "documentType": "verblijfsdocument",
+        "nationality": "SYR",
+        "documentExpiry": "2030-01-01",
+        "endorsement": "",
+        "twvValidUntil": "",
+        "method": "handmatig",
+        "result": "mislukt",
+        "reasonCode": "geen-arbeidstoestemming",
+        "reason": "No permission to work: the residence document does not allow work and there is no work permit covering the start date."
+    },
+    "not-scalar": {
+        "documentType": "verblijfsdocument",
+        "nationality": "",
+        "documentExpiry": "2030-01-01",
+        "endorsement": "12",
+        "twvValidUntil": "",
+        "method": "handmatig",
+        "result": "mislukt",
+        "reasonCode": "geen-arbeidstoestemming",
+        "reason": "No permission to work: the residence document does not allow work and there is no work permit covering the start date."
+    },
+    "bad-zone": {
+        "documentType": "verblijfsdocument",
+        "nationality": "SYR",
+        "documentExpiry": "2030-01-01",
+        "endorsement": "",
+        "twvValidUntil": "",
+        "method": "extractie",
+        "result": "mislukt",
+        "reasonCode": "controlecijfer-onjuist",
+        "reason": "A check digit in the machine-readable zone is wrong (expiry date)."
+    },
+    "zone": {
+        "documentType": "verblijfsdocument",
+        "nationality": "SYR",
+        "documentExpiry": "2029-05-01",
+        "endorsement": "",
+        "twvValidUntil": "",
+        "method": "extractie",
+        "result": "mislukt",
+        "reasonCode": "geen-arbeidstoestemming",
+        "reason": "No permission to work: the residence document does not allow work and there is no work permit covering the start date."
+    },
+    "empty-zone": {
+        "documentType": "verblijfsdocument",
+        "nationality": "SYR",
+        "documentExpiry": "2030-01-01",
+        "endorsement": "",
+        "twvValidUntil": "",
+        "method": "handmatig",
+        "result": "mislukt",
+        "reasonCode": "geen-arbeidstoestemming",
+        "reason": "No permission to work: the residence document does not allow work and there is no work permit covering the start date."
+    }
+}

@@ -3,6 +3,9 @@
 /**
  * Sick Pay Calculator
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The pure, stateless, table-driven loondoorbetaling-bij-ziekte calculator
  * (design.md D2): implements the statutory continued-wage chain over a
  * `SickPayInput` + `TaxTables` parameter set — the non-worked base and
@@ -28,9 +31,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -130,14 +130,8 @@ final class SickPayCalculator {
 		$payableGross = ($l - $wd);
 
 		return new SickPayResult(
-			doorbetaaldLoonCents: $l,
-			wachtdagDeductionCents: $wd,
-			payableGrossCents: $payableGross,
-			minimumWageFloorCents: $m,
-			floorApplied: $floorApplied,
-			appliedPercentage: $p,
-			yearOne: $in->yearOne,
-			referenceWageCents: $w
+			amounts: new SickPayAmounts(doorbetaaldLoonCents: $l, wachtdagDeductionCents: $wd, payableGrossCents: $payableGross, minimumWageFloorCents: $m),
+			basis: new SickPayBasis(floorApplied: $floorApplied, appliedPercentage: $p, yearOne: $in->yearOne, referenceWageCents: $w)
 		);
 
 	}//end compute()

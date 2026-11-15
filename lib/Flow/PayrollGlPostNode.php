@@ -31,11 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\Humaniq\Service\PayrollGLPostService;
-use OCA\Humaniq\Service\SettingsService;
-use OCP\IL10N;
-use OCP\IURLGenerator;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -60,24 +57,18 @@ class PayrollGlPostNode extends PayrollFlowNodeBase {
 	public const OUTCOME_KEY = 'glpost';
 
 	/**
-	 * @param IL10N $l10n Localisation.
-	 * @param IURLGenerator $urls URL generator.
-	 * @param ContainerInterface $container DI container.
-	 * @param SettingsService $settingsService Settings bridge.
+	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
 	 * @param LoggerInterface $logger Logger.
 	 * @param PayrollGLPostService $glPostService The existing GL handoff service, reused as-is.
 	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	public function __construct(
-		IL10N $l10n,
-		IURLGenerator $urls,
-		ContainerInterface $container,
-		SettingsService $settingsService,
+		PayrollFlowNodeServices $services,
 		LoggerInterface $logger,
 		private readonly PayrollGLPostService $glPostService,
 	) {
-		parent::__construct($l10n, $urls, $container, $settingsService, $logger);
+		parent::__construct($services, $logger);
 
 	}//end __construct()
 
@@ -117,44 +108,22 @@ class PayrollGlPostNode extends PayrollFlowNodeBase {
 	/**
 	 * Post the run each item names.
 	 *
-	 * @param array $items The input items.
-	 * @param array $config The step configuration (`runId`, default `{{ payroll.runId }}`).
-	 * @param array $context Run-level metadata.
+	 * @param FlowNodeCall $call The input items, the step configuration and the run-level metadata.
 	 *
 	 * @return array The items, each carrying the outcome under `glpost`.
 	 *
 	 * @throws RuntimeException When the service reports `failed`.
 	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $context is part of the
-	 *     IFlowNode::execute() contract; this adapter reads no run-level
-	 *     metadata (the acting identity is applied by the dispatcher).
-	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
-	public function execute(array $items, array $config, array $context): array {
-		if ($items === []) {
-			return [];
-		}
-
-		$out = [];
-		foreach ($items as $item) {
-			$json = (array)(((array)$item)['json'] ?? []);
-			$run = $this->requireRun(config: $config, json: $json);
-
-			$outcome = $this->glPostService->postRun($run);
-
-			$status = (string)($outcome['status'] ?? '');
-			if (in_array($status, ['posted', 'skipped-no-shillinq'], true) === false) {
-				throw new RuntimeException(
-					'Loonjournaalpost voor loonrun ' . $this->idOf($run) . ' is mislukt (' . $status . '): '
-					. (string)($outcome['message'] ?? '')
-				);
-			}
-
-			$out[] = $this->withOutcome((array)$item, self::OUTCOME_KEY, $outcome);
-		}//end foreach
-
-		return $out;
+	public function execute(FlowNodeCall $call): array {
+		return $this->stampEachRun(
+			$call,
+			fn (array $run): array => $this->requireStatus(
+				$this->glPostService->postRun($run),
+				new ExpectedStatus(['posted', 'skipped-no-shillinq'], 'Loonjournaalpost voor loonrun ' . $this->idOf($run) . ' is mislukt')
+			)
+		);
 	}//end execute()
 
 }//end class

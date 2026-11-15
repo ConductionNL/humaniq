@@ -1,13 +1,13 @@
 ## 1. Sources
 
-- [ ] 1.1 Add read-only `x-openregister-mcp` to `Announcement`, `LeaveType`, the CAO display
+- [x] 1.1 Add read-only `x-openregister-mcp` to `Announcement`, `LeaveType`, the CAO display
       schema and `Normfunctie`. Verify: the MCP tool list shows four new search and get tools and
       still none for `LeaveBalance`, `SickLeaveCase`, `Payslip` or `Employee`; the
       `humaniq-mcp-surface` refusal tests still pass.
 
 ## 2. Assistant
 
-- [ ] 2.1 Add the HR-vraagbaak agent definition in the form hermiq loads. Verify: on a dev
+- [x] 2.1 Add the HR-vraagbaak agent definition in the form hermiq loads. Verify: on a dev
       instance with hermiq the agent appears in the companion's picker.
 - [ ] 2.2 Preselect it on Mijn HR routes. Verify: `npm run lint` exits 0.
 

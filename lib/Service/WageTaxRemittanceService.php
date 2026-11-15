@@ -28,10 +28,12 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Writes one draft shillinq APTransaction per confirmed wage tax return.
@@ -39,6 +41,8 @@ use RuntimeException;
  * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 class WageTaxRemittanceService {
+
+	use ResolvesObjectService;
 
 	/**
 	 * Humaniq's log of each hand-off.
@@ -71,15 +75,17 @@ class WageTaxRemittanceService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container       For the lazy ObjectService.
-	 * @param IAppManager        $appManager      To probe for shillinq.
-	 * @param SettingsService    $settingsService Register slug, payee and account.
-	 * @param LoggerInterface    $logger          The logger.
+	 * @param ContainerInterface         $container       For the lazy ObjectService.
+	 * @param IAppManager                $appManager      To probe for shillinq.
+	 * @param SettingsService            $settingsService Register slug.
+	 * @param PayrollBookkeepingSettings $bookkeeping     The payee and the wage tax liability account.
+	 * @param LoggerInterface            $logger          The logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		IAppManager $appManager,
 		private readonly SettingsService $settingsService,
+		private readonly PayrollBookkeepingSettings $bookkeeping,
 		private readonly LoggerInterface $logger,
 	) {
 		$this->payables = new ShillinqPayables(container: $container, appManager: $appManager, settingsService: $settingsService, logger: $logger);
@@ -154,12 +160,17 @@ class WageTaxRemittanceService {
 			return $this->finish(runId: $runId, fields: $base + ['status' => 'nothing-to-pay']);
 		}
 
-		$problem = $this->problemWith(reference: $reference, payeeId: $this->settingsService->getWageTaxPayeeId());
+		$problem = $this->problemWith(reference: $reference, payeeId: $this->bookkeeping->getWageTaxPayeeId());
 		if ($problem !== null) {
 			return $this->finish(runId: $runId, fields: $base + ['status' => 'failed', 'errorMessage' => $problem]);
 		}
 
-		$payload = (new WageTaxPayable())->build(run: $run, filing: $filing, amount: $amount, payeeId: $this->settingsService->getWageTaxPayeeId(), account: $this->settingsService->getGlPostAccountWageTaxLiability());
+		try {
+			$payload = (new WageTaxPayable(amount: $amount, payeeId: $this->bookkeeping->getWageTaxPayeeId(), account: $this->bookkeeping->getGlPostAccountWageTaxLiability()))->build(run: $run, filing: $filing);
+		} catch (\InvalidArgumentException $e) {
+			return $this->finish(runId: $runId, fields: $base + ['status' => 'failed', 'errorMessage' => $e->getMessage()]);
+		}
+
 		try {
 			$payableId = $this->payables->createOrAdopt(payload: $payload);
 		} catch (\Throwable $e) {
@@ -247,8 +258,10 @@ class WageTaxRemittanceService {
 	private function finish(string $runId, array $fields, ?string $payableId=null): array {
 		$saved = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->settingsService->getRegisterSlug(),
-			schema: self::RECORD_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: self::RECORD_SCHEMA
+				)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -275,19 +288,6 @@ class WageTaxRemittanceService {
 
 		return array_map(fn (mixed $row): array => $this->payables->toArray(row: $row), array_values((array)$rows));
 	}//end rowsOf()
-
-	/**
-	 * The ObjectService, after checking OpenRegister is there (ADR-083).
-	 *
-	 * @return mixed
-	 */
-	private function objectService(): mixed {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException('humaniq requires the OpenRegister app, which is not installed on this instance.');
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
 
 	/**
 	 * An outcome array.
@@ -325,5 +325,4 @@ class WageTaxRemittanceService {
 
 		return $text;
 	}//end nullable()
-
 }//end class

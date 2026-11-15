@@ -66,6 +66,18 @@ class DossierCompletenessService {
 	];
 
 	/**
+	 * Per scope a requirement may have besides `all`: the schema of the rows
+	 * it reads and the field that must carry one of its scope values.
+	 *
+	 * @var array<string, array{0: string, 1: string}>
+	 */
+	private const SCOPED_BY = [
+		'contractType' => ['EmploymentContract', 'type'],
+		'normfunctie' => ['EmploymentContract', 'normfunctieId'],
+		'orgUnit' => ['OrgAssignment', 'orgUnitId'],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param AbsenceProgression $progression The shared date parser.
@@ -88,7 +100,23 @@ class DossierCompletenessService {
 	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
 	 */
 	public function statusFor(string $employeeId, string $date, array $rows): array {
-		$day = ($this->progression->date(value: $date) ?? new DateTimeImmutable('today'))->setTime(0, 0);
+		$check = new DossierCheck();
+		$check->day = ($this->progression->date(value: $date) ?? new DateTimeImmutable('today'))->setTime(0, 0);
+		$check->rows = $this->employeeRows(employeeId: $employeeId, rows: $rows);
+		$check->start = $this->startOf(employee: (array)($rows['employee'] ?? []), contracts: $check->rows['EmploymentContract']);
+
+		return $this->statusRows(check: $check);
+	}//end statusFor()
+
+	/**
+	 * The rows of one employee per source schema; every requirement.
+	 *
+	 * @param string               $employeeId The employee.
+	 * @param array<string, mixed> $rows       One list per SOURCES schema.
+	 *
+	 * @return array<string, array<int, array<string, mixed>>>
+	 */
+	private function employeeRows(string $employeeId, array $rows): array {
 		$mine = [];
 		foreach (self::SOURCES as $schema) {
 			$mine[$schema] = array_values(
@@ -99,18 +127,28 @@ class DossierCompletenessService {
 			);
 		}
 
-		$start = $this->startOf(employee: (array)($rows['employee'] ?? []), contracts: $mine['EmploymentContract']);
+		return $mine;
+	}//end employeeRows()
+
+	/**
+	 * One status row per active requirement that applies.
+	 *
+	 * @param DossierCheck $check The dossier being judged.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function statusRows(DossierCheck $check): array {
 		$out = [];
-		foreach ($mine['DossierRequirement'] as $requirement) {
-			if (($requirement['active'] ?? true) === false || $this->applies(requirement: $requirement, rows: $mine, day: $day) === false) {
+		foreach ($check->rows['DossierRequirement'] as $requirement) {
+			if (($requirement['active'] ?? true) === false || $this->applies(requirement: $requirement, check: $check) === false) {
 				continue;
 			}
 
-			$out[] = $this->judge(requirement: $requirement, evidence: $this->evidence(requirement: $requirement, rows: $mine), day: $day, start: $start);
+			$out[] = $this->judge(requirement: $requirement, check: $check);
 		}
 
 		return $out;
-	}//end statusFor()
+	}//end statusRows()
 
 	/**
 	 * Whether any row is not present.
@@ -135,46 +173,54 @@ class DossierCompletenessService {
 	 * Whether a requirement applies to the employee on the day.
 	 *
 	 * @param array<string, mixed> $requirement The requirement.
-	 * @param array<string, array<int, array<string, mixed>>> $rows The employee's rows.
-	 * @param DateTimeImmutable $day The day.
+	 * @param DossierCheck         $check       The dossier: the employee's rows and the day.
 	 *
 	 * @return bool
 	 */
-	private function applies(array $requirement, array $rows, DateTimeImmutable $day): bool {
+	private function applies(array $requirement, DossierCheck $check): bool {
 		$scope = (string)($requirement['scope'] ?? 'all');
-		$values = array_map('strval', (array)($requirement['scopeValues'] ?? []));
+		if ($scope === 'all') {
+			return true;
+		}
 
-		return match ($scope) {
-			'all' => true,
-			'contractType' => $this->anyRunning(rows: $rows['EmploymentContract'], field: 'type', values: $values, day: $day),
-			'normfunctie' => $this->anyRunning(rows: $rows['EmploymentContract'], field: 'normfunctieId', values: $values, day: $day),
-			'orgUnit' => $this->anyRunning(rows: $rows['OrgAssignment'], field: 'orgUnitId', values: $values, day: $day),
-			default => false,
-		};
+		return (array_key_exists($scope, self::SCOPED_BY) === true && $this->anyRunning(requirement: $requirement, check: $check) === true);
 	}//end applies()
 
 	/**
-	 * Whether a row running on the day carries one of the values.
+	 * Whether a contract or placement running on the day carries one of the
+	 * requirement's scope values.
 	 *
-	 * @param array<int, array<string, mixed>> $rows Contracts or placements.
-	 * @param string $field The field to match.
-	 * @param array<int, string> $values The values.
-	 * @param DateTimeImmutable $day The day.
+	 * @param array<string, mixed> $requirement The requirement, its scope one of SCOPED_BY.
+	 * @param DossierCheck         $check       The dossier: the employee's rows and the day.
 	 *
 	 * @return bool
 	 */
-	private function anyRunning(array $rows, string $field, array $values, DateTimeImmutable $day): bool {
-		foreach ($rows as $row) {
-			$start = $this->progression->date(value: ($row['startDate'] ?? null));
-			$end = $this->progression->date(value: ($row['endDate'] ?? null));
-			$running = ($start === null || $start <= $day) && ($end === null || $end >= $day);
-			if ($running === true && in_array((string)($row[$field] ?? ''), $values, true) === true) {
+	private function anyRunning(array $requirement, DossierCheck $check): bool {
+		[$schema, $field] = self::SCOPED_BY[(string)$requirement['scope']];
+		$values = array_map('strval', (array)($requirement['scopeValues'] ?? []));
+		foreach ($check->rows[$schema] as $row) {
+			if ($this->runsOn(row: $row, day: $check->day) === true && in_array((string)($row[$field] ?? ''), $values, true) === true) {
 				return true;
 			}
 		}
 
 		return false;
 	}//end anyRunning()
+
+	/**
+	 * Whether a contract or placement runs on the day.
+	 *
+	 * @param array<string, mixed> $row The contract or placement.
+	 * @param DateTimeImmutable    $day The day.
+	 *
+	 * @return bool
+	 */
+	private function runsOn(array $row, DateTimeImmutable $day): bool {
+		$start = $this->progression->date(value: ($row['startDate'] ?? null));
+		$end = $this->progression->date(value: ($row['endDate'] ?? null));
+
+		return ($start === null || $start <= $day) && ($end === null || $end >= $day);
+	}//end runsOn()
 
 	/**
 	 * The newest evidence for a requirement, normalised.
@@ -236,14 +282,36 @@ class DossierCompletenessService {
 	 * The status row for one requirement.
 	 *
 	 * @param array<string, mixed> $requirement The requirement.
-	 * @param array{schema: string, id: string, issuedOn: string|null, validUntil: string|null}|null $evidence The newest evidence.
-	 * @param DateTimeImmutable $day The day.
-	 * @param DateTimeImmutable|null $start The employment start.
+	 * @param DossierCheck         $check       The dossier; the requirement and its newest evidence are set on it.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function judge(array $requirement, ?array $evidence, DateTimeImmutable $day, ?DateTimeImmutable $start): array {
-		$row = [
+	private function judge(array $requirement, DossierCheck $check): array {
+		$check->requirement = $requirement;
+		$check->evidence = $this->evidence(requirement: $requirement, rows: $check->rows);
+		$row = $this->blankRow(requirement: $requirement);
+		if ($check->evidence === null) {
+			$row['status'] = 'ontbreekt';
+			return $row;
+		}
+
+		$row['evidence'] = ['schema' => $check->evidence['schema'], 'id' => $check->evidence['id']];
+		$row['issuedOn'] = $check->evidence['issuedOn'];
+		$row['validUntil'] = $check->evidence['validUntil'];
+		$row['status'] = $this->statusOf(check: $check);
+
+		return $row;
+	}//end judge()
+
+	/**
+	 * A requirement's status row before its evidence is read.
+	 *
+	 * @param array<string, mixed> $requirement The requirement.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function blankRow(array $requirement): array {
+		return [
 			'requirementCode' => (string)($requirement['code'] ?? ''),
 			'label' => (string)($requirement['label'] ?? ($requirement['code'] ?? '')),
 			'status' => self::PRESENT,
@@ -251,64 +319,57 @@ class DossierCompletenessService {
 			'issuedOn' => null,
 			'validUntil' => null,
 		];
-		if ($evidence === null) {
-			$row['status'] = 'ontbreekt';
-			return $row;
-		}
-
-		$row['evidence'] = ['schema' => $evidence['schema'], 'id' => $evidence['id']];
-		$row['issuedOn'] = $evidence['issuedOn'];
-		$row['validUntil'] = $evidence['validUntil'];
-		$row['status'] = $this->statusOf(requirement: $requirement, evidence: $evidence, day: $day, start: $start);
-
-		return $row;
-	}//end judge()
+	}//end blankRow()
 
 	/**
 	 * Verlopen, te-oud-bij-start, verloopt-binnenkort or aanwezig, in that order.
 	 *
-	 * @param array<string, mixed> $requirement The requirement.
-	 * @param array{schema: string, id: string, issuedOn: string|null, validUntil: string|null} $evidence The evidence.
-	 * @param DateTimeImmutable $day The day.
-	 * @param DateTimeImmutable|null $start The employment start.
+	 * @param DossierCheck $check The dossier: the requirement, its evidence, the day and the employment start.
 	 *
 	 * @return string
 	 */
-	private function statusOf(array $requirement, array $evidence, DateTimeImmutable $day, ?DateTimeImmutable $start): string {
-		$validUntil = $this->progression->date(value: $evidence['validUntil']);
-		if ($validUntil !== null && $validUntil < $day) {
+	private function statusOf(DossierCheck $check): string {
+		$validUntil = $this->progression->date(value: $check->evidence['validUntil']);
+		if ($validUntil !== null && $validUntil < $check->day) {
 			return 'verlopen';
 		}
 
-		if ($this->tooOldAtStart(requirement: $requirement, issuedOn: $evidence['issuedOn'], start: $start) === true) {
+		if ($this->tooOldAtStart(check: $check) === true) {
 			return 'te-oud-bij-start';
 		}
 
-		$warn = $requirement['warnDaysBefore'] ?? null;
-		if ($validUntil !== null && is_numeric($warn) === true && $validUntil <= $day->modify('+' . (int)$warn . ' days')) {
-			return 'verloopt-binnenkort';
-		}
-
-		return self::PRESENT;
+		return ($this->expiresSoon(check: $check, validUntil: $validUntil) === true ? 'verloopt-binnenkort' : self::PRESENT);
 	}//end statusOf()
+
+	/**
+	 * Whether the evidence expires within the requirement's warning days.
+	 *
+	 * @param DossierCheck           $check      The dossier: the requirement and the day.
+	 * @param DateTimeImmutable|null $validUntil The evidence's expiry.
+	 *
+	 * @return bool
+	 */
+	private function expiresSoon(DossierCheck $check, ?DateTimeImmutable $validUntil): bool {
+		$warn = $check->requirement['warnDaysBefore'] ?? null;
+
+		return ($validUntil !== null && is_numeric($warn) === true && $validUntil <= $check->day->modify('+' . (int)$warn . ' days'));
+	}//end expiresSoon()
 
 	/**
 	 * Whether the evidence was issued longer before the start than the requirement allows.
 	 *
-	 * @param array<string, mixed> $requirement The requirement.
-	 * @param string|null $issuedOn The evidence's issue date.
-	 * @param DateTimeImmutable|null $start The employment start.
+	 * @param DossierCheck $check The dossier: the requirement, its evidence and the employment start.
 	 *
 	 * @return bool
 	 */
-	private function tooOldAtStart(array $requirement, ?string $issuedOn, ?DateTimeImmutable $start): bool {
-		$maxAge = $requirement['maxAgeDaysAtStart'] ?? null;
-		$issued = $this->progression->date(value: $issuedOn);
-		if (is_numeric($maxAge) === false || $start === null || $issued === null) {
+	private function tooOldAtStart(DossierCheck $check): bool {
+		$maxAge = $check->requirement['maxAgeDaysAtStart'] ?? null;
+		$issued = $this->progression->date(value: $check->evidence['issuedOn']);
+		if (is_numeric($maxAge) === false || $check->start === null || $issued === null) {
 			return false;
 		}
 
-		return $issued < $start->modify('-' . (int)$maxAge . ' days');
+		return $issued < $check->start->modify('-' . (int)$maxAge . ' days');
 	}//end tooOldAtStart()
 
 	/**

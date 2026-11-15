@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
+use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Controller\DocumentController;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\SettingsService;
@@ -39,6 +41,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * The annual statement triggers on the document endpoint.
@@ -85,7 +88,9 @@ class DocumentControllerTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->finds[] = ['id' => $id, 'schema' => $schema];
 				return $this->row;
 			}//end find()
@@ -108,11 +113,9 @@ class DocumentControllerTest extends TestCase {
 
 		return new DocumentController(
 			$this->createMock(IRequest::class),
-			$container,
 			$this->service,
 			$settings,
-			$session,
-			$this->createMock(LoggerInterface::class),
+			new CallerContext($session, $this->createMock(HumaniqRoles::class), $container, $this->createMock(LoggerInterface::class)),
 		);
 	}//end controller()
 

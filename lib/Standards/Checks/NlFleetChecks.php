@@ -3,6 +3,9 @@
 /**
  * NL Fleet Bijtelling Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Two fleet-bijtelling executable checks, auto-discovered by
  * `RuleEngine::providers()` with zero manual registration:
  *
@@ -42,9 +45,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
@@ -57,12 +57,15 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Standards\Checks;
 
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Support\RoundsToCents;
 
 /**
  * Fleet bijtelling arithmetic-consistency + vehicle-fiscal-completeness
  * executable checks.
  */
 final class NlFleetChecks implements CheckProvider {
+
+	use RoundsToCents;
 
 	/**
 	 * {@inheritDoc}
@@ -239,22 +242,4 @@ final class NlFleetChecks implements CheckProvider {
 
 		return max(0, ((int)round($baseCents / 12)) - $employeeContributionCents);
 	}//end monthlyBijtellingCents()
-
-	/**
-	 * Convert a euro-denominated value to integer cents (`round($euros *
-	 * 100)`, the `NlWageGarnishmentChecks::cents()` precedent). Non-numeric/null
-	 * values convert to 0.
-	 *
-	 * @param mixed $euros The raw field value.
-	 *
-	 * @return int
-	 */
-	private static function cents(mixed $euros): int {
-		if (is_numeric($euros) === false) {
-			return 0;
-		}
-
-		return (int)round(((float)$euros) * 100);
-	}//end cents()
-
 }//end class

@@ -63,10 +63,32 @@ class AllowanceSplitter {
 			return self::unpaid('treatment-unknown');
 		}
 
-		if ((string)($allowance['kind'] ?? '') === 'reiskosten' && $treatment !== 'belast') {
-			return $this->travelSplit(allowance: $allowance, arrangement: $arrangement, treatment: $treatment);
-		}
+		return ($this->isUntaxedTravel(allowance: $allowance) === true)
+			? $this->travelSplit(allowance: $allowance, arrangement: $arrangement, treatment: $treatment)
+			: $this->amountSplit(allowance: $allowance, norm: $norm);
+	}//end split()
 
+	/**
+	 * Whether an allowance is a travel allowance not wholly taxed, which reads its commuting arrangement.
+	 *
+	 * @param array<string, mixed> $allowance The allowance.
+	 *
+	 * @return bool
+	 */
+	private function isUntaxedTravel(array $allowance): bool {
+		return (string)($allowance['kind'] ?? '') === 'reiskosten' && (string)($allowance['taxTreatment'] ?? '') !== 'belast';
+	}//end isUntaxedTravel()
+
+	/**
+	 * The split of an allowance paid from its own amount: taxed, from the free margin, untaxed, or a home-working allowance against the norm.
+	 *
+	 * @param array<string, mixed> $allowance The allowance, with a known treatment.
+	 * @param array{perDayCents: int, verified: bool}|null $norm The home-working norm, or null.
+	 *
+	 * @return array{status: string, taxedCents: int, untaxedCents: int, wkrCategory: string|null}
+	 */
+	private function amountSplit(array $allowance, array|null $norm): array {
+		$treatment = (string)$allowance['taxTreatment'];
 		$amountCents = $this->amountCents($allowance);
 		if ($amountCents === null) {
 			return self::unpaid('no-amount');
@@ -81,7 +103,7 @@ class AllowanceSplitter {
 		}
 
 		return $this->homeWorkingSplit(allowance: $allowance, amountCents: $amountCents, norm: $norm);
-	}//end split()
+	}//end amountSplit()
 
 	/**
 	 * Whether an allowance pays in a period: active, and its dates cover it.

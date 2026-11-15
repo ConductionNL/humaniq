@@ -99,7 +99,7 @@ export function handlerOf(host) {
  *
  * @return {Promise<object[]>} The entries.
  *
- * @throws {Error} When humaniq refuses or cannot answer.
+ * @throws {Error} When humaniq refuses or cannot answer; its `status` is the HTTP status.
  */
 export async function readAgenda(subjectType, subjectId, from, to) {
 	const url = generateUrl('/apps/humaniq/api/agenda?subjectType={subjectType}&subjectId={subjectId}&from={from}&to={to}', {
@@ -111,7 +111,7 @@ export async function readAgenda(subjectType, subjectId, from, to) {
 
 	const response = await fetch(url, { headers: { 'OCS-APIRequest': 'true' } })
 	if (!response.ok) {
-		throw new Error(`agenda request failed: ${response.status}`)
+		throw Object.assign(new Error(`agenda request failed: ${response.status}`), { status: response.status })
 	}
 
 	const body = await response.json()

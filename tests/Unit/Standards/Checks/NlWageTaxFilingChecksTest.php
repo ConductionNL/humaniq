@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlWageTaxFilingChecks;
+use OCA\Humaniq\Standards\RuleCatalogue;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -54,6 +55,16 @@ class NlWageTaxFilingChecksTest extends TestCase {
 		$this->checks = NlWageTaxFilingChecks::checks()['LoonaangifteFiling'];
 
 	}//end setUp()
+
+	/**
+	 * Restore the real rule catalogue after a test seeded a variation of it.
+	 *
+	 * @return void
+	 */
+	protected function tearDown(): void {
+		RuleCatalogue::reset();
+
+	}//end tearDown()
 
 	/**
 	 * A minimal NL loonaangifte base fixture; each test overrides the fields
@@ -251,5 +262,47 @@ class NlWageTaxFilingChecksTest extends TestCase {
 		$this->assertFalse($rule($filing, $changed), 'the wage tax changed');
 		$this->assertFalse($rule($filing, ['payroll' => ['runsById' => []]]), 'the run is gone');
 	}//end testTheMessageDriftRule()
+
+	/**
+	 * Vierweken periods map by index; undecidable period shapes and tijdvakken are not flagged.
+	 *
+	 * @return void
+	 */
+	public function testTijdvakcodeForVierwekenAndUndecidableShapes(): void {
+		$check = $this->checks['nl-loonaangifte-tijdvakcode'];
+
+		$this->assertTrue($check($this->filing(['tijdvak' => 'vierweken', 'period' => '2026-P01', 'tijdvakcode' => '6710'])));
+		$this->assertTrue($check($this->filing(['tijdvak' => 'vierweken', 'period' => '2026-P13', 'tijdvakcode' => '7190'])));
+		$this->assertFalse($check($this->filing(['tijdvak' => 'vierweken', 'period' => '2026-P02', 'tijdvakcode' => '6710'])));
+		$this->assertTrue($check($this->filing(['tijdvak' => 'vierweken', 'period' => '2026-P14', 'tijdvakcode' => '9999'])), 'No code at that index.');
+		$this->assertTrue($check($this->filing(['tijdvak' => 'vierweken', 'period' => '2026-04', 'tijdvakcode' => '9999'])), 'Not a P## period.');
+		$this->assertTrue($check($this->filing(['tijdvak' => 'maand', 'period' => '2026-4', 'tijdvakcode' => '9999'])), 'Not a YYYY-MM period.');
+		$this->assertTrue($check($this->filing(['tijdvak' => 'maand', 'period' => '2026-13', 'tijdvakcode' => '9999'])), 'No code for that month.');
+		$this->assertTrue($check($this->filing(['tijdvak' => 'week', 'period' => '2026-04', 'tijdvakcode' => '9999'])), 'An unmapped tijdvak.');
+		$this->assertTrue($check($this->filing(['tijdvak' => null, 'period' => null, 'tijdvakcode' => '9999'])), 'No tijdvak at all.');
+
+	}//end testTijdvakcodeForVierwekenAndUndecidableShapes()
+	/**
+	 * Without the nl-loonaangifte-tijdvakcode corpus rule, or with parameters
+	 * that are not an object, there are no code tables: a filed tijdvakcode
+	 * cannot be checked and is not flagged, while a missing one on a
+	 * non-concept filing still is.
+	 *
+	 * @return void
+	 */
+	public function testTijdvakcodeIsUndecidableWithoutTheCorpusCodeTables(): void {
+		$check = $this->checks['nl-loonaangifte-tijdvakcode'];
+		$wrong = $this->filing(['period' => '2026-04', 'tijdvakcode' => '6050']);
+		$missing = $this->filing(['tijdvakcode' => '', 'status' => 'klaargezet']);
+
+		CatalogueOverride::without('nl-loonaangifte-tijdvakcode');
+		$this->assertTrue($check($wrong));
+		$this->assertFalse($check($missing));
+
+		CatalogueOverride::rewrite('nl-loonaangifte-tijdvakcode', static fn (array $rule): array => array_merge($rule, ['parameters' => 'zie Handboek Loonheffingen']));
+		$this->assertTrue($check($wrong));
+		$this->assertFalse($check($missing));
+
+	}//end testTijdvakcodeIsUndecidableWithoutTheCorpusCodeTables()
 
 }//end class

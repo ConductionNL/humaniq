@@ -94,4 +94,20 @@ class XsdValidationUnderNextcloudTest extends TestCase {
 
 		self::assertSame([], UbdMessage::errors($xml));
 	}//end testTheThirdPartyReportValidatesUnderNextcloud()
+
+	/**
+	 * An empty or broken third-party report is answered with the same
+	 * errors as before: a fixed sentence when libxml says nothing, the
+	 * libxml message with its line otherwise.
+	 *
+	 * @return void
+	 */
+	public function testABrokenThirdPartyReportNamesItsErrors(): void {
+		self::assertSame(['Het bericht is geen geldige XML.'], UbdMessage::errors(''));
+
+		$errors = UbdMessage::errors("<a>\n<b></a>");
+		self::assertNotSame([], $errors);
+		self::assertStringEndsWith(' (regel 2)', $errors[0]);
+		self::assertFalse(libxml_use_internal_errors(false), 'The previous libxml error mode is restored.');
+	}//end testABrokenThirdPartyReportNamesItsErrors()
 }//end class

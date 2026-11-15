@@ -57,6 +57,19 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'leaves.js'),
 		filename: appId + '-leaves.js',
 	},
+	// The admin page, /settings/admin/humaniq. A bundle of its own because the
+	// admin page has no CnAppRoot and must not load the whole SPA.
+	settings: {
+		import: path.join(__dirname, 'src', 'settings.js'),
+		filename: appId + '-settings.js',
+	},
+	// self-service-mobile (design.md D2): the Mijn HR service worker. Served by
+	// PwaController from js/humaniq-service-worker.js; the name is what the
+	// controller reads, so renaming it turns the installable app off.
+	'service-worker': {
+		import: path.join(__dirname, 'src', 'service-worker.js'),
+		filename: appId + '-service-worker.js',
+	},
 }
 
 // Build against the DECLARED dependency unless a developer deliberately asks

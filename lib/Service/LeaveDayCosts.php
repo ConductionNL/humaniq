@@ -62,17 +62,12 @@ final class LeaveDayCosts {
 		}
 
 		$hoursService = new WorkingHoursService();
+		$employeeTime = self::employeeTimeOf(request: $request, workingTime: $workingTime);
 		$total = 0.0;
 		$days = [];
 		$usedPattern = false;
 		foreach ($this->datesIn(request: $request, year: $year) as $date) {
-			$answer = $hoursService->contractedHoursOn(
-				employeeId: (string)($request['employeeId'] ?? ''),
-				date: $date,
-				patterns: (array)($workingTime['patterns'] ?? []),
-				nonWorkingTimes: (array)($workingTime['nonWorkingTimes'] ?? []),
-				nonWorkingDates: $calendar
-			);
+			$answer = $hoursService->hoursOn(time: $employeeTime, date: $date);
 			$day = $this->dayCost(date: $date, answer: $answer, average: $average, calendar: $calendar);
 			if ($day === null) {
 				return ['hours' => 0.0, 'derivable' => false, 'basis' => 'contract-average', 'days' => []];
@@ -85,6 +80,27 @@ final class LeaveDayCosts {
 
 		return ['hours' => round($total, 2), 'derivable' => true, 'basis' => $this->basis(usedPattern: $usedPattern, calendar: $calendar), 'days' => $days];
 	}//end cost()
+
+	/**
+	 * The requester and the records their contracted hours are read from.
+	 *
+	 * @param array<string, mixed> $request     The LeaveRequest row.
+	 * @param array<string, mixed> $workingTime patterns, nonWorkingTimes, nonWorkingDates (null or absent: calendar unread).
+	 *
+	 * @return EmployeeWorkingTime
+	 *
+	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-001
+	 */
+	private static function employeeTimeOf(array $request, array $workingTime): EmployeeWorkingTime {
+		return new EmployeeWorkingTime(
+			employeeId: (string)($request['employeeId'] ?? ''),
+			sources: new WorkingTimeSources(
+				workingPatterns: (array)($workingTime['patterns'] ?? []),
+				nonWorkingTimes: (array)($workingTime['nonWorkingTimes'] ?? []),
+				nonWorkingDates: (is_array($workingTime['nonWorkingDates'] ?? null) === true ? array_values($workingTime['nonWorkingDates']) : null)
+			)
+		);
+	}//end employeeTimeOf()
 
 	/**
 	 * The days of a request that fall in the year; none when the dates are unusable.

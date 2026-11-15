@@ -3,6 +3,9 @@
 /**
  * Unit test for the seeder's Employee-UUID resolution.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Several CheckProviders' seed samples (NlPayrollChecks' EmploymentContract /
  * Payslip, NlWageGarnishmentChecks' Loonbeslag) reference their anchor employee via
  * a synthetic `employeeNumber`-shaped placeholder in `employeeId`
@@ -28,9 +31,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  */
 
@@ -48,6 +48,7 @@ use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests the Employee-UUID resolution the seeder applies before writing
@@ -140,7 +141,11 @@ class RuleTestDataSeederEmployeeIdTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(mixed $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, mixed $currentUser = null): array {
+			public function saveObject(mixed $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
+				$currentUser = $options->actor->currentUser;
 				$object = (array)$object;
 
 				if ($uuid !== null && $uuid !== '') {

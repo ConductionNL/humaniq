@@ -237,14 +237,10 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.payroll-packs {
-	padding: 20px;
+@use '../css/admin-widget.scss';
 
-	&__intro {
-		color: var(--color-text-maxcontrast);
-		margin-bottom: 16px;
-		max-width: 720px;
-	}
+.payroll-packs {
+	@include admin-widget.panel;
 
 	&__form {
 		display: flex;
@@ -266,21 +262,8 @@ export default {
 	}
 
 	&__table {
-		border-collapse: collapse;
-		width: 100%;
+		@include admin-widget.data-table;
 		margin-top: 16px;
-
-		th,
-		td {
-			border-bottom: 1px solid var(--color-border);
-			padding: 8px;
-			text-align: start;
-		}
-
-		th {
-			color: var(--color-text-maxcontrast);
-			font-weight: normal;
-		}
 	}
 }
 </style>

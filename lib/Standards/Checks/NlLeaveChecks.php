@@ -110,55 +110,103 @@ final class NlLeaveChecks implements CheckProvider, ProvidesTables {
 				// BW art. 7:634 — the yearly entitlement is at least 4x the
 				// contractual weekly working time (vacuous pass when the
 				// contractHoursPerWeek snapshot is absent).
-				'nl-verlof-wettelijk-minimum' => [
-					'derive' => static function (array $o): ?array {
-						$contractHoursPerWeek = ($o['contractHoursPerWeek'] ?? null);
-						if ($contractHoursPerWeek === null || $contractHoursPerWeek === '') {
-							return null;
-						}
-
-						return ['shortfallHours' => ((4 * (float)$contractHoursPerWeek) - (float)($o['entitledHours'] ?? 0))];
-					},
-					'table' => self::gateTable('shortfallHours', 'number', '<=0'),
-				],
+				'nl-verlof-wettelijk-minimum' => self::tableCheck(self::statutoryShortfall(...), self::gateTable('shortfallHours', 'number', '<=0')),
 				// BW art. 7:634 jo. 7:638 — used hours never exceed the total entitlement.
-				'nl-verlof-saldo-niet-negatief' => [
-					'derive' => static fn (array $o): array => [
-						'overdraftHours' => ((float)($o['usedHours'] ?? 0) - ((float)($o['entitledHours'] ?? 0) + (float)($o['bovenwettelijkHours'] ?? 0))),
-					],
-					'table' => self::gateTable('overdraftHours', 'number', '<=0'),
-				],
+				'nl-verlof-saldo-niet-negatief' => self::tableCheck(self::overdraft(...), self::gateTable('overdraftHours', 'number', '<=0')),
 				// BW art. 7:640a — statutory hours lapse 1 July of the following
 				// year (vacuous pass when nothing can lapse or the required
 				// year field is absent — the object shape is then invalid and
 				// not this check's concern to flag).
-				'nl-verlof-vervaltermijn' => [
-					'derive' => static function (array $o): ?array {
-						$entitledHours = (float)($o['entitledHours'] ?? 0);
-						if ($entitledHours <= 0) {
-							return null;
-						}
-
-						$year = (int)($o['year'] ?? 0);
-						if ($year <= 0) {
-							return null;
-						}
-
-						$expected = sprintf('%04d-07-01', ($year + 1));
-						return ['expiryOnStatutoryDate' => ((string)($o['expiryDate'] ?? '') === $expected)];
-					},
-					'table' => self::gateTable('expiryOnStatutoryDate', 'boolean', 'true'),
-				],
+				'nl-verlof-vervaltermijn' => self::tableCheck(self::expiryOnStatutoryDate(...), self::gateTable('expiryOnStatutoryDate', 'boolean', 'true')),
 				// leave-buy-sell — audit-time backstop: bovenwettelijkHours may never go negative.
-				'nl-verlof-bovenwettelijk-niet-negatief' => [
-					'derive' => static fn (array $o): array => [
-						'bovenwettelijkHours' => (float)($o['bovenwettelijkHours'] ?? 0),
-					],
-					'table' => self::gateTable('bovenwettelijkHours', 'number', '>=0'),
-				],
+				'nl-verlof-bovenwettelijk-niet-negatief' => self::tableCheck(self::bovenwettelijkBalance(...), self::gateTable('bovenwettelijkHours', 'number', '>=0')),
 			],
 		];
 	}//end tables()
+
+	/**
+	 * One table check: the derivation of its inputs and the gate table over them.
+	 *
+	 * @param \Closure            $derive The derivation, object to inputs (or null for a vacuous pass).
+	 * @param array<string, mixed> $table  The gate table.
+	 *
+	 * @return array{derive: \Closure, table: array<string, mixed>}
+	 */
+	private static function tableCheck(\Closure $derive, array $table): array {
+		return [
+			'derive' => $derive,
+			'table' => $table,
+		];
+
+	}//end tableCheck()
+
+	/**
+	 * How many hours the entitlement falls short of four contractual weeks; null without a weekly snapshot.
+	 *
+	 * @param array<string, mixed> $o The LeaveBalance.
+	 *
+	 * @return array<string, float>|null
+	 */
+	private static function statutoryShortfall(array $o): ?array {
+		$contractHoursPerWeek = ($o['contractHoursPerWeek'] ?? null);
+		if ($contractHoursPerWeek === null || $contractHoursPerWeek === '') {
+			return null;
+		}
+
+		return ['shortfallHours' => ((4 * (float)$contractHoursPerWeek) - (float)($o['entitledHours'] ?? 0))];
+
+	}//end statutoryShortfall()
+
+	/**
+	 * How many hours the used hours exceed the statutory and extra entitlement together.
+	 *
+	 * @param array<string, mixed> $o The LeaveBalance.
+	 *
+	 * @return array<string, float>
+	 */
+	private static function overdraft(array $o): array {
+		return [
+			'overdraftHours' => ((float)($o['usedHours'] ?? 0) - ((float)($o['entitledHours'] ?? 0) + (float)($o['bovenwettelijkHours'] ?? 0))),
+		];
+
+	}//end overdraft()
+
+	/**
+	 * Whether the expiry date is 1 July of the following year; null when nothing can lapse or the year is absent.
+	 *
+	 * @param array<string, mixed> $o The LeaveBalance.
+	 *
+	 * @return array<string, bool>|null
+	 */
+	private static function expiryOnStatutoryDate(array $o): ?array {
+		$entitledHours = (float)($o['entitledHours'] ?? 0);
+		if ($entitledHours <= 0) {
+			return null;
+		}
+
+		$year = (int)($o['year'] ?? 0);
+		if ($year <= 0) {
+			return null;
+		}
+
+		$expected = sprintf('%04d-07-01', ($year + 1));
+		return ['expiryOnStatutoryDate' => ((string)($o['expiryDate'] ?? '') === $expected)];
+
+	}//end expiryOnStatutoryDate()
+
+	/**
+	 * The bovenwettelijk balance.
+	 *
+	 * @param array<string, mixed> $o The LeaveBalance.
+	 *
+	 * @return array<string, float>
+	 */
+	private static function bovenwettelijkBalance(array $o): array {
+		return [
+			'bovenwettelijkHours' => (float)($o['bovenwettelijkHours'] ?? 0),
+		];
+
+	}//end bovenwettelijkBalance()
 
 	/**
 	 * The pre-conversion closure predicates, kept as the PARITY ORACLE only:

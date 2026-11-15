@@ -96,6 +96,18 @@ final class PersonPart {
 			return;
 		}
 
+		self::checkIdentified(facts: $facts, bsn: $bsn);
+	}//end check()
+
+	/**
+	 * Record the findings for an employee with a BSN: an invalid BSN, no last name, no date of birth.
+	 *
+	 * @param LineFacts $facts The income relationship's facts.
+	 * @param string $bsn The nine-digit BSN.
+	 *
+	 * @return void
+	 */
+	private static function checkIdentified(LineFacts $facts, string $bsn): void {
 		if (self::elfproef($bsn) === false) {
 			$facts->find('employee-bsn-invalid', 'SofiNr', 'Het burgerservicenummer van ' . $facts->name() . ' voldoet niet aan de elfproef.');
 		}
@@ -107,7 +119,7 @@ final class PersonPart {
 		if ($facts->filled('dateOfBirth') === null) {
 			$facts->find('employee-without-date-of-birth', 'Gebdat', $facts->name() . ' heeft geen geboortedatum.');
 		}
-	}//end check()
+	}//end checkIdentified()
 
 	/**
 	 * The Dutch address when every required part is there; otherwise omitted (it is optional).
@@ -118,25 +130,52 @@ final class PersonPart {
 	 */
 	private static function address(LineFacts $facts): ?array {
 		$postcode = strtoupper(str_replace(' ', '', (string)($facts->employee['postcode'] ?? '')));
-		$street = $facts->filled('straat');
-		$place = $facts->filled('woonplaats');
-		$country = strtoupper((string)($facts->employee['land'] ?? 'NL'));
-		if ($street === null || $place === null || preg_match('/^[1-9]\d{3}[A-Z]{2}$/', $postcode) !== 1 || in_array($country, ['', 'NL', 'NEDERLAND'], true) === false) {
+		if (self::isDomesticAddress(facts: $facts, postcode: $postcode) === false) {
 			return null;
 		}
 
+		[$houseNumber, $addition] = self::houseNumber(facts: $facts);
+
+		return [
+			'Str' => mb_substr((string)$facts->filled('straat'), 0, 24),
+			'HuisNr' => $houseNumber,
+			'HuisNrToev' => $addition,
+			'Pc' => $postcode,
+			'Woonpl' => mb_substr((string)$facts->filled('woonplaats'), 0, 24),
+		];
+	}//end address()
+
+	/**
+	 * Whether the employee has a complete Dutch address: a street, a place, a valid postcode and a Dutch country.
+	 *
+	 * @param LineFacts $facts The income relationship's facts.
+	 * @param string $postcode The postcode, upper-cased without spaces.
+	 *
+	 * @return bool
+	 */
+	private static function isDomesticAddress(LineFacts $facts, string $postcode): bool {
+		$country = strtoupper((string)($facts->employee['land'] ?? 'NL'));
+
+		return $facts->filled('straat') !== null
+			&& $facts->filled('woonplaats') !== null
+			&& preg_match('/^[1-9]\d{3}[A-Z]{2}$/', $postcode) === 1
+			&& in_array($country, ['', 'NL', 'NEDERLAND'], true) === true;
+	}//end isDomesticAddress()
+
+	/**
+	 * The house number without leading zeros, and its addition when there is a number.
+	 *
+	 * @param LineFacts $facts The income relationship's facts.
+	 *
+	 * @return array{0: string|null, 1: string|null}
+	 */
+	private static function houseNumber(LineFacts $facts): array {
 		preg_match('/^\s*(\d{1,5})\s*[-\s]?\s*(.{0,4})/', (string)($facts->employee['huisnummer'] ?? ''), $number);
 		$houseNumber = ((int)($number[1] ?? 0) > 0) ? (string)(int)$number[1] : null;
 		$addition = trim((string)($number[2] ?? ''));
 
-		return [
-			'Str' => mb_substr($street, 0, 24),
-			'HuisNr' => $houseNumber,
-			'HuisNrToev' => ($houseNumber !== null && $addition !== '') ? $addition : null,
-			'Pc' => $postcode,
-			'Woonpl' => mb_substr($place, 0, 24),
-		];
-	}//end address()
+		return [$houseNumber, ($houseNumber !== null && $addition !== '') ? $addition : null];
+	}//end houseNumber()
 
 	/**
 	 * The initials of the given names, at most six (GS p67).
