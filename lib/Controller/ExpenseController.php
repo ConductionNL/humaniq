@@ -40,6 +40,7 @@ use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\ReceiptExtractionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -138,8 +139,7 @@ class ExpenseController extends Controller {
 		try {
 			$expense = $this->objectService()->find(
 				id: $expenseId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Expense'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Expense')
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('ExpenseController: an expense lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);

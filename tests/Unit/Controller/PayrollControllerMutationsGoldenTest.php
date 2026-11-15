@@ -46,6 +46,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\Humaniq\Tests\Support\LegacyObjectArgs;
 
 /**
  * PayrollController::mutations() outcomes.
@@ -98,6 +99,7 @@ class PayrollControllerMutationsGoldenTest extends TestCase {
 			 * @return array<string, mixed>|null
 			 */
 			public function find(string $id, mixed ...$rest): ?array {
+				$rest = LegacyObjectArgs::flatten(args: $rest);
 				$this->finds[] = $id;
 				$rows = ['run-7' => ['id' => 'run-7'], 'run-6' => ['id' => 'run-6']];
 				return ($rows[$id] ?? null);

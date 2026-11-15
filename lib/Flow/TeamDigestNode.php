@@ -31,7 +31,7 @@ namespace OCA\Humaniq\Flow;
 use InvalidArgumentException;
 use OCA\Humaniq\Service\TeamDigestComposer;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
-use OCA\OpenRegister\Service\Flow\IFlowNode;
+use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\WorkflowEngine\IManager;
@@ -41,7 +41,7 @@ use OCP\WorkflowEngine\IManager;
  *
  * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
  */
-class TeamDigestNode implements IFlowNode {
+class TeamDigestNode implements ICallFlowNode {
 
 	public const OUTCOME_KEY = 'digest';
 

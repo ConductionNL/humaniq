@@ -42,6 +42,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use OCA\Humaniq\Tests\Support\LegacyObjectArgs;
 
 /**
  * AvgDsrRectifyCommand outcomes.
@@ -109,6 +110,7 @@ class AvgDsrRectifyCommandOutcomesTest extends TestCase {
 			 * @return object|null
 			 */
 			public function find(string $id, mixed ...$rest): ?object {
+				$rest = LegacyObjectArgs::flatten(args: $rest);
 				$this->finds[] = $id;
 				if ($this->employee instanceof \Throwable) {
 					throw $this->employee;
