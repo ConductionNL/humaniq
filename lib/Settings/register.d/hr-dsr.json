@@ -4,6 +4,7 @@
         "schemas": {
             "DsrRequest": {
                 "slug": "DsrRequest",
+                "authorization": {"read": ["humaniq-hr"], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "ShieldAccountOutline",
                 "version": "0.3.0",
                 "title": "Data subject request",

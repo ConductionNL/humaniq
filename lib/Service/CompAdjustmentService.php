@@ -3,6 +3,9 @@
 /**
  * Comp Adjustment Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The imperative effective-dating write for compensation review cycles
  * (comp-cycles design.md D5): lifecycle guards are read-only per
  * OpenRegister's contract, so `CompEffectiveDateGuard` alone cannot stamp the
@@ -43,9 +46,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

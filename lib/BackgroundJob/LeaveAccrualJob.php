@@ -3,6 +3,9 @@
 /**
  * Leave Accrual Job
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The automatic producer for the leave-verzuim `LeaveBalance` ledger
  * (leave-accrual-job): a `TimedJob` that provisions each active employee's
  * current-year `holiday` LeaveBalance with the full statutory (BW art. 7:634)
@@ -33,9 +36,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -186,84 +186,184 @@ class LeaveAccrualJob extends TimedJob {
 			return self::DISABLED_SUMMARY;
 		}
 
+		$pass = $this->startPass();
+		foreach ($this->loadAll('Employee') as $employee) {
+			$this->accrueEmployee($employee, $pass);
+		}
+
+		return $pass->summary;
+	}//end runAccrual()
+
+	/**
+	 * Open the pass for the current period: the month being accrued, the
+	 * contracts and this year's holiday balances loaded once, and an empty
+	 * enabled summary.
+	 *
+	 * @return LeaveAccrualPass
+	 */
+	private function startPass(): LeaveAccrualPass {
 		$now = (new DateTimeImmutable())->setTimestamp($this->time->getTime());
 		$period = $now->format('Y-m');
 		$year = (int)$now->format('Y');
 
-		$contractsByEmployeeKey = $this->contractsByEmployeeKey();
-		$balancesByEmployeeId = $this->holidayBalancesByEmployeeId($year);
-		$month = ['year' => $year, 'period' => $period, 'deltaBovenwettelijk' => $this->round1($this->settingsService->getLeaveBovenwettelijkAnnualHours() / 12)];
-		$summary = ['period' => $period, 'year' => $year] + self::DISABLED_SUMMARY;
-		$summary['enabled'] = true;
+		$pass = new LeaveAccrualPass();
+		$pass->contractsByEmployeeKey = $this->contractsByEmployeeKey();
+		$pass->balancesByEmployeeId = $this->holidayBalancesByEmployeeId($year);
+		$pass->month = ['year' => $year, 'period' => $period, 'deltaBovenwettelijk' => $this->round1($this->settingsService->getLeaveBovenwettelijkAnnualHours() / 12)];
+		$pass->summary = ['period' => $period, 'year' => $year] + self::DISABLED_SUMMARY;
+		$pass->summary['enabled'] = true;
 
-		foreach ($this->loadAll('Employee') as $employee) {
-			if ($this->coversPeriod((string)($employee['startDate'] ?? ''), (string)($employee['endDate'] ?? ''), $period) === false) {
-				// Not employed in this period — not selected, not reported.
-				continue;
-			}
+		return $pass;
+	}//end startPass()
 
-			$employeeId = $this->idOf($employee);
-			$employeeLabel = $this->employeeLabel($employee);
+	/**
+	 * Accrue one employee for the pass's month: not employed in the period
+	 * is not selected and not reported; otherwise the employee is skipped
+	 * with a reason, provisioned, counted as a no-op, or accrued.
+	 *
+	 * @param array<string, mixed> $employee The Employee row.
+	 * @param LeaveAccrualPass $pass The pass being run.
+	 *
+	 * @return void
+	 */
+	private function accrueEmployee(array $employee, LeaveAccrualPass $pass): void {
+		if ($this->coversPeriod((string)($employee['startDate'] ?? ''), (string)($employee['endDate'] ?? ''), $pass->month['period']) === false) {
+			// Not employed in this period — not selected, not reported.
+			return;
+		}
 
-			if ($employeeId === '') {
-				$summary['skipped'][] = ['employee' => $employeeLabel, 'reason' => 'no-employee-identity'];
-				continue;
-			}
+		$pass->begin($this->employeeLabel($employee));
+		$grant = $this->grantFor($employee, $pass);
+		if ($grant === null) {
+			return;
+		}
 
-			$contract = $this->coveringContract($employee, $contractsByEmployeeKey, $period);
-			if ($contract === null) {
-				$summary['skipped'][] = ['employee' => $employeeLabel, 'reason' => 'no-covering-contract'];
-				continue;
-			}
+		if (isset($pass->balancesByEmployeeId[$grant['employeeId']]) === false) {
+			$this->provisionBalance($grant, $pass);
+			return;
+		}
 
-			$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
-			if (is_numeric($hoursPerWeek) === false || ((float)$hoursPerWeek) <= 0.0) {
-				$summary['skipped'][] = ['employee' => $employeeLabel, 'reason' => 'no-hours-per-week'];
-				continue;
-			}
+		$this->accrueBalance($grant, $pass);
+	}//end accrueEmployee()
 
-			$existing = ($balancesByEmployeeId[$employeeId] ?? null);
-			// humaniq-personal-dashboard REQ-ACCR-006: the denormalized account
-			// link, resolved from the SAME Employee row this iteration already
-			// selected. Null for an employee with no linked account — never
-			// guessed, never another account (fail-closed for @me surfaces).
-			$grant = $month + ['employeeId' => $employeeId, 'hoursPerWeek' => (float)$hoursPerWeek, 'userId' => $this->nullableTrim($employee['nextcloudUserId'] ?? null)];
+	/**
+	 * The month's grant for an employee, or null after reporting why the
+	 * employee is skipped.
+	 *
+	 * @param array<string, mixed> $employee The Employee row.
+	 * @param LeaveAccrualPass $pass The pass being run.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function grantFor(array $employee, LeaveAccrualPass $pass): ?array {
+		$employeeId = $this->idOf($employee);
+		if ($employeeId === '') {
+			$pass->skip('no-employee-identity');
+			return null;
+		}
 
-			if ($existing === null) {
-				try {
-					$saved = $this->provision($grant);
-				} catch (\Throwable $e) {
-					$this->logger->warning('LeaveAccrualJob: kon LeaveBalance niet aanmaken voor ' . $employeeLabel . ': ' . $e->getMessage());
-					$summary['skipped'][] = ['employee' => $employeeLabel, 'reason' => 'save-failed'];
-					continue;
-				}
+		$hoursPerWeek = $this->contractHoursPerWeek($employee, $pass);
+		if ($hoursPerWeek === null) {
+			return null;
+		}
 
-				$summary['provisioned'][] = ['employee' => $employeeLabel, 'leaveBalanceId' => $this->idOf($saved)];
-				continue;
-			}//end if
+		// humaniq-personal-dashboard REQ-ACCR-006: the denormalized account
+		// link, resolved from the SAME Employee row this iteration already
+		// selected. Null for an employee with no linked account — never
+		// guessed, never another account (fail-closed for @me surfaces).
+		return $pass->month + ['employeeId' => $employeeId, 'hoursPerWeek' => $hoursPerWeek, 'userId' => $this->nullableTrim($employee['nextcloudUserId'] ?? null)];
+	}//end grantFor()
 
-			$lastAccruedPeriod = (string)($existing['lastAccruedPeriod'] ?? '');
-			if ($lastAccruedPeriod === $period) {
-				// Already accrued this employee-month — a hard no-op, no write
-				// (design.md D5, REQ-ACCR-004): correctness must not depend on
-				// how often the TimedJob fires.
-				$summary['noop']++;
-				continue;
-			}
+	/**
+	 * The hours per week of the employee's contract covering the pass's
+	 * period, or null after reporting the employee as skipped when no
+	 * contract covers it or its hours per week are not positive.
+	 *
+	 * @param array<string, mixed> $employee The Employee row.
+	 * @param LeaveAccrualPass $pass The pass being run.
+	 *
+	 * @return float|null
+	 */
+	private function contractHoursPerWeek(array $employee, LeaveAccrualPass $pass): ?float {
+		$contract = $this->coveringContract($employee, $pass->contractsByEmployeeKey, $pass->month['period']);
+		if ($contract === null) {
+			$pass->skip('no-covering-contract');
+			return null;
+		}
 
-			try {
-				$saved = $this->accrueExisting($existing, $grant);
-			} catch (\Throwable $e) {
-				$this->logger->warning('LeaveAccrualJob: kon LeaveBalance niet bijwerken voor ' . $employeeLabel . ': ' . $e->getMessage());
-				$summary['skipped'][] = ['employee' => $employeeLabel, 'reason' => 'save-failed'];
-				continue;
-			}
+		$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
+		if (is_numeric($hoursPerWeek) === false || ((float)$hoursPerWeek) <= 0.0) {
+			$pass->skip('no-hours-per-week');
+			return null;
+		}
 
-			$summary['accrued'][] = ['employee' => $employeeLabel, 'leaveBalanceId' => $this->idOf($saved)];
-		}//end foreach
+		return (float)$hoursPerWeek;
+	}//end contractHoursPerWeek()
 
-		return $summary;
-	}//end runAccrual()
+	/**
+	 * Provision the employee's first balance of the year, reporting it as
+	 * provisioned, or as `save-failed` when the write fails.
+	 *
+	 * @param array<string, mixed> $grant The month and the employee.
+	 * @param LeaveAccrualPass $pass The pass being run.
+	 *
+	 * @return void
+	 */
+	private function provisionBalance(array $grant, LeaveAccrualPass $pass): void {
+		try {
+			$saved = $this->provision($grant);
+		} catch (\Throwable $e) {
+			$this->logger->warning('LeaveAccrualJob: kon LeaveBalance niet aanmaken voor ' . $pass->employeeLabel() . ': ' . $e->getMessage());
+			$pass->skip('save-failed');
+			return;
+		}
+
+		$pass->written('provisioned', $this->idOf($saved));
+	}//end provisionBalance()
+
+	/**
+	 * Accrue the month onto the employee's existing balance, reporting it as
+	 * accrued, as a no-op when this month was already accrued, or as
+	 * `save-failed` when the write fails.
+	 *
+	 * @param array<string, mixed> $grant The month and the employee.
+	 * @param LeaveAccrualPass $pass The pass being run.
+	 *
+	 * @return void
+	 */
+	private function accrueBalance(array $grant, LeaveAccrualPass $pass): void {
+		$existing = $pass->balancesByEmployeeId[$grant['employeeId']];
+		if ($this->alreadyAccrued($existing, $grant) === true) {
+			// Already accrued this employee-month — a hard no-op, no write
+			// (design.md D5, REQ-ACCR-004): correctness must not depend on
+			// how often the TimedJob fires.
+			$pass->noop();
+			return;
+		}
+
+		try {
+			$saved = $this->accrueExisting($existing, $grant);
+		} catch (\Throwable $e) {
+			$this->logger->warning('LeaveAccrualJob: kon LeaveBalance niet bijwerken voor ' . $pass->employeeLabel() . ': ' . $e->getMessage());
+			$pass->skip('save-failed');
+			return;
+		}
+
+		$pass->written('accrued', $this->idOf($saved));
+	}//end accrueBalance()
+
+	/**
+	 * Whether the existing balance was already accrued for the grant's period
+	 * (its `lastAccruedPeriod` idempotency marker).
+	 *
+	 * @param array<string, mixed> $existing The existing LeaveBalance.
+	 * @param array<string, mixed> $grant The month and the employee.
+	 *
+	 * @return bool
+	 */
+	private function alreadyAccrued(array $existing, array $grant): bool {
+		return (string)($existing['lastAccruedPeriod'] ?? '') === $grant['period'];
+	}//end alreadyAccrued()
 
 	/**
 	 * First-accrual provisioning (design.md D2/D5): the full annual statutory

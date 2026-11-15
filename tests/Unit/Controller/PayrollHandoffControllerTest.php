@@ -28,6 +28,7 @@ use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\SalaryBureauExchangeService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\PayrollDeskAccess;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -137,11 +138,14 @@ class PayrollHandoffControllerTest extends TestCase {
 		$roles->method('isHr')->willReturn($hr);
 		$roles->method('isPayroll')->willReturn($payroll);
 
+		$caller = new CallerContext($session, $roles, $container, new NullLogger());
+
 		return new PayrollHandoffController(
 			$this->createMock(IRequest::class),
 			$settings,
 			($service ?? $this->createMock(SalaryBureauExchangeService::class)),
-			new CallerContext($session, $roles, $container, new NullLogger())
+			$caller,
+			new PayrollDeskAccess($caller, $settings)
 		);
 	}//end controller()
 

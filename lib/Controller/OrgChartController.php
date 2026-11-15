@@ -30,6 +30,7 @@ namespace OCA\Humaniq\Controller;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\RecordStoreInterface;
+use OCA\Humaniq\Service\OrgChartRequest;
 use OCA\Humaniq\Service\OrgChartService;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
@@ -80,12 +81,7 @@ class OrgChartController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function chart(?string $rootId = null, ?string $date = null, ?string $withPeople = null): JSONResponse {
-		$uid = $this->session->getUser()?->getUID();
-		$administrationId = null;
-		if ($uid !== null && $uid !== '') {
-			$administrationId = $this->administrations->getActiveAdministrationId($uid);
-		}
-
+		$administrationId = $this->callerAdministrationId();
 		if ($administrationId === null) {
 			return new JSONResponse(['message' => 'No active administration'], Http::STATUS_FORBIDDEN);
 		}
@@ -95,22 +91,54 @@ class OrgChartController extends Controller {
 			return new JSONResponse(['message' => 'date must be YYYY-MM-DD'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$units = $this->inAdministration(rows: $this->gateway->loadAll('OrgUnit'), administrationId: $administrationId);
-		$assignments = $this->inAdministration(rows: $this->gateway->loadAll('OrgAssignment'), administrationId: $administrationId);
-		$employees = [];
-		foreach ($this->gateway->loadAll('Employee') as $employee) {
-			$employees[(string)($employee['id'] ?? '')] = $employee;
-		}
-
-		$readable = null;
+		$request = $this->requestIn(administrationId: $administrationId, day: $day);
+		$request->rootId = $rootId;
 		if (in_array($withPeople, ['true', '1'], true) === true) {
-			$readable = $this->readableEmployees(assignments: $assignments);
+			$request->readableEmployeeIds = $this->readableEmployees(assignments: $request->assignments);
 		}
 
-		$chart = $this->charts->chart(units: $units, assignments: $assignments, employeesById: $employees, date: $day, rootId: $rootId, readableEmployeeIds: $readable);
-
-		return new JSONResponse(array_merge(['date' => $day], $chart));
+		return new JSONResponse(array_merge(['date' => $day], $this->charts->chart(request: $request)));
 	}//end chart()
+
+	/**
+	 * The signed-in caller's active administration, or null.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-001
+	 */
+	private function callerAdministrationId(): ?string {
+		$uid = $this->session->getUser()?->getUID();
+		if ($uid === null || $uid === '') {
+			return null;
+		}
+
+		return $this->administrations->getActiveAdministrationId($uid);
+	}//end callerAdministrationId()
+
+	/**
+	 * The chart request over the administration's units and placements and
+	 * every employee, on the day; it lists no people yet.
+	 *
+	 * @param string $administrationId The caller's administration.
+	 * @param string $day              The day (Y-m-d).
+	 *
+	 * @return OrgChartRequest
+	 *
+	 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-001
+	 */
+	private function requestIn(string $administrationId, string $day): OrgChartRequest {
+		$request = new OrgChartRequest();
+		$request->units = $this->inAdministration(rows: $this->gateway->loadAll('OrgUnit'), administrationId: $administrationId);
+		$request->assignments = $this->inAdministration(rows: $this->gateway->loadAll('OrgAssignment'), administrationId: $administrationId);
+		foreach ($this->gateway->loadAll('Employee') as $employee) {
+			$request->employeesById[(string)($employee['id'] ?? '')] = $employee;
+		}
+
+		$request->date = $day;
+
+		return $request;
+	}//end requestIn()
 
 	/**
 	 * Rows of the administration, and rows that carry none.

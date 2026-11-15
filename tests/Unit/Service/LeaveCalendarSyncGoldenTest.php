@@ -31,8 +31,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\CalendarSettings;
 use OCA\Humaniq\Service\LeaveCalendarService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -472,8 +475,7 @@ class LeaveCalendarSyncGoldenTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn($config['register']);
-		$settings->method('getLeaveCalendarPrincipal')->willReturn($config['principal']);
-		$settings->method('getLeaveCalendarUri')->willReturn($config['uri']);
+		$calendars = new CalendarSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), ['leave_calendar_principal' => $config['principal'], 'leave_calendar_uri' => $config['uri']]));
 
 		$logger = $this->createMock(LoggerInterface::class);
 		foreach (['info', 'warning', 'error'] as $level) {
@@ -484,7 +486,7 @@ class LeaveCalendarSyncGoldenTest extends TestCase {
 			);
 		}
 
-		return new LeaveCalendarService($container, $settings, $logger);
+		return new LeaveCalendarService($container, $settings, $calendars, $logger);
 
 	}//end service()
 

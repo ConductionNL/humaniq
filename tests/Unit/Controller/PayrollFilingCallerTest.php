@@ -37,6 +37,7 @@ use OCA\Humaniq\Service\PayrollTaxFilingServices;
 use OCA\Humaniq\Service\ThirdPartyPaymentServices;
 use OCA\Humaniq\Service\ThirdPartyReportService;
 use OCA\Humaniq\Service\ThirdPartyStatementService;
+use OCA\Humaniq\Service\PayrollDeskAccess;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -70,7 +71,8 @@ class PayrollFilingCallerTest extends CallerIdentityTestCase {
 	 * @return ThirdPartyReportController
 	 */
 	private function tpCtl(string $uid, ContainerInterface $c, ?ThirdPartyReportService $r = null, ?ThirdPartyStatementService $s = null): ThirdPartyReportController {
-		return new ThirdPartyReportController($this->request('boss'), $this->settings(), new ThirdPartyPaymentServices($r ?? $this->createMock(ThirdPartyReportService::class), $s ?? $this->createMock(ThirdPartyStatementService::class)), $this->context($uid, $c));
+		$ctx = $this->context($uid, $c);
+		return new ThirdPartyReportController($this->request('boss'), $this->settings(), new ThirdPartyPaymentServices($r ?? $this->createMock(ThirdPartyReportService::class), $s ?? $this->createMock(ThirdPartyStatementService::class)), $ctx, new PayrollDeskAccess($ctx, $this->settings()));
 	}
 
 	/**

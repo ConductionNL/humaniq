@@ -61,3 +61,7 @@ employee can claim other costs too, when the employer allows them.
 - Leave requests: their stamp stays HR-populated until their own process redesign.
 - Which categories an employer allows: the schema's category list is the allowed set today.
   A setting that narrows it is follow-up work.
+
+## Matrix rows
+
+Rows: `ess-manager-team`, `exp-team-approval` (humaniq `openspec/parity/capabilities.json`).

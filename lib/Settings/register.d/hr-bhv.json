@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "BhvCertificering": {
+                "configuration": {"exportable": true},
                 "slug": "BhvCertificering",
                 "icon": "ShieldCheckOutline",
                 "version": "0.1.0",

@@ -35,9 +35,7 @@ namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\Humaniq\Service\TrainingCompetenceWriter;
-use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
-use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -84,7 +82,7 @@ class TrainingRecordListener implements IEventListener {
 	 * @spec openspec/specs/training-and-lms-sync/spec.md#REQ-TRN-001
 	 */
 	public function handle(Event $event): void {
-		$entity = $this->entityOf($event);
+		$entity = PreSaveEvents::entityOf($event);
 		if ($entity === null || strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::TRAINING_SLUG) {
 			return;
 		}
@@ -105,24 +103,5 @@ class TrainingRecordListener implements IEventListener {
 			$this->logger->warning('humaniq: TrainingRecordListener could not process a training record', ['exception' => $e->getMessage()]);
 		}
 	}//end handle()
-
-	/**
-	 * The entity an event is about, or null for any other event.
-	 *
-	 * @param Event $event The event.
-	 *
-	 * @return object|null
-	 */
-	private function entityOf(Event $event): ?object {
-		if ($event instanceof ObjectCreatingEvent || $event instanceof ObjectCreatedEvent) {
-			return $event->getObject();
-		}
-
-		if ($event instanceof ObjectUpdatingEvent || $event instanceof ObjectUpdatedEvent) {
-			return $event->getNewObject();
-		}
-
-		return null;
-	}//end entityOf()
 
 }//end class

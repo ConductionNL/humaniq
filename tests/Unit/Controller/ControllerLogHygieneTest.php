@@ -72,6 +72,19 @@ class ControllerLogHygieneTest extends TestCase {
 	}//end testTheScanFindsEveryVariableButTheExceptionClass()
 
 	/**
+	 * A parenthesis inside a string or a comment does not end the call.
+	 *
+	 * @return void
+	 */
+	public function testAParenthesisInAStringDoesNotEndTheCall(): void {
+		$source = "<?php\n\$this->logger->error('failed :)', ['exception' => \$e]);\n\$this->logger->info(/* ) */ 'x', [\$id]);\n";
+
+		$calls = $this->logCalls($source);
+
+		$this->assertSame([['$e'], ['$id']], array_map(fn (string $call): array => $this->variablesIn($call), $calls));
+	}//end testAParenthesisInAStringDoesNotEndTheCall()
+
+	/**
 	 * The variables a log call's arguments use, leaving out `$e::class`.
 	 *
 	 * @param string $call The log call, from `logger->` to its closing parenthesis.
@@ -87,20 +100,33 @@ class ControllerLogHygieneTest extends TestCase {
 	/**
 	 * The full text of every `logger->level(...)` call in a source.
 	 *
+	 * Parentheses are counted over PHP tokens, so one inside a string or a
+	 * comment does not end the call early.
+	 *
 	 * @param string $source PHP source.
 	 *
 	 * @return list<string>
 	 */
 	private function logCalls(string $source): array {
-		$calls = [];
-		preg_match_all('/logger->\w+\(/', $source, $matches, PREG_OFFSET_CAPTURE);
-		foreach ($matches[0] as [$text, $offset]) {
-			$end = ($offset + strlen($text));
-			for ($depth = 1; $depth > 0 && $end < strlen($source); $end++) {
-				$depth += ($source[$end] === '(' ? 1 : ($source[$end] === ')' ? -1 : 0));
+		$tokens = array_values(array_filter(
+			token_get_all($source),
+			static fn ($token): bool => is_array($token) === false || in_array($token[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true) === false
+		));
+		$text   = static fn ($token): string => (is_array($token) === true ? $token[1] : $token);
+		$calls  = [];
+		foreach ($tokens as $at => $token) {
+			if ($text($token) !== 'logger' || $text($tokens[$at + 1] ?? '') !== '->' || $text($tokens[$at + 3] ?? '') !== '(') {
+				continue;
 			}
 
-			$calls[] = substr($source, $offset, ($end - $offset));
+			$call = 'logger->' . $text($tokens[$at + 2]) . '(';
+			for ($next = ($at + 4), $depth = 1; $depth > 0 && isset($tokens[$next]) === true; $next++) {
+				$piece  = $text($tokens[$next]);
+				$depth += ($piece === '(' ? 1 : ($piece === ')' ? -1 : 0));
+				$call  .= $piece;
+			}
+
+			$calls[] = $call;
 		}
 
 		return $calls;

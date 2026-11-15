@@ -33,6 +33,7 @@ use OCA\Humaniq\Flow\PayrollNetPayNode;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\PayrollRunService;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCP\WorkflowEngine\IManager;
 
 /**
@@ -87,7 +88,7 @@ class PayrollFlowNodeBehaviourTest extends FlowNodeTestCase {
 		$service = $this->createMock(PayrollGLPostService::class);
 		$service->method('postRun')->willReturnCallback(static fn (array $run): array => ['runId' => $run['id'], 'status' => 'posted']);
 
-		$out = (new PayrollGlPostNode($this->services(), $this->logger(), $service))->execute($this->twoRuns(), [], []);
+		$out = (new PayrollGlPostNode($this->services(), $this->logger(), $service))->execute(new FlowNodeCall(items: $this->twoRuns(), config: [], context: []));
 
 		$this->assertSame(['run-2', 'run-1'], array_column(array_column(array_column($out, 'json'), 'glpost'), 'runId'));
 		$this->assertSame(['b', 'a'], array_column(array_column($out, 'json'), 'tag'));
@@ -102,7 +103,7 @@ class PayrollFlowNodeBehaviourTest extends FlowNodeTestCase {
 		$service = $this->createMock(PayrollNetPayService::class);
 		$service->method('processRun')->willReturnCallback(static fn (array $run): array => ['runId' => $run['id'], 'status' => 'created']);
 
-		$out = (new PayrollNetPayNode($this->services(), $this->logger(), $service))->execute($this->twoRuns(), [], []);
+		$out = (new PayrollNetPayNode($this->services(), $this->logger(), $service))->execute(new FlowNodeCall(items: $this->twoRuns(), config: [], context: []));
 
 		$this->assertSame(['run-2', 'run-1'], array_column(array_column(array_column($out, 'json'), 'netpay'), 'runId'));
 		$this->assertSame(['b', 'a'], array_column(array_column($out, 'json'), 'tag'));
@@ -117,11 +118,11 @@ class PayrollFlowNodeBehaviourTest extends FlowNodeTestCase {
 		$service = $this->createMock(PayrollRunService::class);
 		$service->method('runFor')->willReturnCallback(static fn (string $period): array => ['runId' => 'run-' . $period, 'period' => $period, 'status' => 'calculated']);
 
-		$out = (new PayrollCalculateNode($this->services(), $this->logger(), $service))->execute(
-			[$this->item(['maand' => '2026-06', 'tag' => 'b']), $this->item(['maand' => '2026-05', 'tag' => 'a'])],
-			['period' => '{{ maand }}'],
-			[]
-		);
+		$out = (new PayrollCalculateNode($this->services(), $this->logger(), $service))->execute(new FlowNodeCall(
+			items: [$this->item(['maand' => '2026-06', 'tag' => 'b']), $this->item(['maand' => '2026-05', 'tag' => 'a'])],
+			config: ['period' => '{{ maand }}'],
+			context: []
+		));
 
 		$this->assertSame(['2026-06', '2026-05'], array_column(array_column(array_column($out, 'json'), 'payroll'), 'period'));
 		$this->assertSame(['b', 'a'], array_column(array_column($out, 'json'), 'tag'));

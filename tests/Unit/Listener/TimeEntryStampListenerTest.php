@@ -725,4 +725,45 @@ class TimeEntryStampListenerTest extends TestCase {
 		$this->assertSame(2.0, $modified['hours']);
 	}//end testAFinishedBookingClaimingTheTimerMarkerIsStampedManual()
 
+
+	/**
+	 * Golden matrix of the parent lock: which writes land on which timesheet
+	 * and which are refused, so the guard order is pinned in one place.
+	 *
+	 * @return void
+	 */
+	public function testTheParentLockMatrix(): void {
+		$this->store->seed('Timesheet', 'ts-draft', ['employeeId' => 'employee-jansen', 'period' => '2026-05', 'status' => 'draft']);
+		$this->store->seed('Timesheet', 'ts-rejected', ['employeeId' => 'employee-jansen', 'period' => '2026-05', 'status' => 'rejected']);
+		$this->store->seed('Timesheet', 'ts-approved', ['employeeId' => 'employee-jansen', 'period' => '2026-04', 'status' => 'approved']);
+		$stored = ['employeeId' => 'employee-jansen', 'timesheetId' => 'ts-draft', 'startedAt' => '2026-05-04T09:00:00Z', 'endedAt' => '2026-05-04T17:00:00Z'];
+		$outcome = function (array $incoming, ?array $old): array {
+			$event = ($old === null)
+				? new ObjectCreatingEvent($this->entryEntity($incoming))
+				: new ObjectUpdatingEvent($this->entryEntity($incoming, 'entry-1'), $this->entryEntity($old, 'entry-1'));
+			$this->listener->handle($event);
+			return $event->isPropagationStopped() === true ? ['refused'] : ['landed', $event->getModifiedData()['timesheetId'] ?? null];
+		};
+
+		$this->assertSame(
+			[
+				'update keeps its parent' => ['landed', 'ts-draft'],
+				'update without a parent keeps the stored one' => ['landed', 'ts-draft'],
+				'reparent to a rejected timesheet' => ['landed', 'ts-rejected'],
+				'reparent to an approved timesheet' => ['refused'],
+				'update under an approved parent' => ['refused'],
+				'create without a parent finds the draft' => ['landed', 'ts-draft'],
+				'create onto an approved timesheet' => ['refused'],
+			],
+			[
+				'update keeps its parent' => $outcome(array_merge($stored, ['description' => 'x']), $stored),
+				'update without a parent keeps the stored one' => $outcome(array_diff_key($stored, ['timesheetId' => true]), $stored),
+				'reparent to a rejected timesheet' => $outcome(array_merge($stored, ['timesheetId' => 'ts-rejected']), $stored),
+				'reparent to an approved timesheet' => $outcome(array_merge($stored, ['timesheetId' => 'ts-approved']), $stored),
+				'update under an approved parent' => $outcome(array_merge($stored, ['timesheetId' => 'ts-draft']), array_merge($stored, ['timesheetId' => 'ts-approved'])),
+				'create without a parent finds the draft' => $outcome(array_diff_key($stored, ['timesheetId' => true]), null),
+				'create onto an approved timesheet' => $outcome(array_merge($stored, ['timesheetId' => 'ts-approved']), null),
+			]
+		);
+	}//end testTheParentLockMatrix()
 }//end class

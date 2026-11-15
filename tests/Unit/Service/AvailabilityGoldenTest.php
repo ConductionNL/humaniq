@@ -48,6 +48,9 @@ use PHPUnit\Framework\TestCase;
  * @uses   \OCA\Humaniq\Service\AgendaWindow
  * @uses   \OCA\Humaniq\Service\CompetenceCheckService
  * @uses   \OCA\Humaniq\Service\WorkingHoursService
+ * @uses \OCA\Humaniq\Service\EmployeeWorkingTime
+ * @uses \OCA\Humaniq\Service\WorkingDay
+ * @uses \OCA\Humaniq\Service\WorkingTimeSources
  *
  * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
  */

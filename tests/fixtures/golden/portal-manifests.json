@@ -1,0 +1,535 @@
+{
+    "external-employee": {
+        "label": "Werk en uren",
+        "collections": [
+            {
+                "id": "myEmployeeRecord",
+                "register": "humaniq",
+                "schema": "Employee",
+                "scopeField": "id",
+                "scopeClaim": "employeeId",
+                "minTrust": "low",
+                "label": "Mijn personeelsgegevens",
+                "listable": false
+            },
+            {
+                "id": "payslips",
+                "register": "humaniq",
+                "schema": "Payslip",
+                "scopeField": "employeeId",
+                "scopeClaim": "employeeId",
+                "minTrust": "low",
+                "label": "Mijn loonstroken",
+                "listable": true
+            },
+            {
+                "id": "employmentContracts",
+                "register": "humaniq",
+                "schema": "EmploymentContract",
+                "scopeField": "employeeId",
+                "scopeClaim": "employeeId",
+                "minTrust": "low",
+                "label": "Mijn arbeidscontracten",
+                "listable": true
+            },
+            {
+                "id": "timesheets",
+                "register": "humaniq",
+                "schema": "Timesheet",
+                "scopeField": "employeeId",
+                "scopeClaim": "employeeId",
+                "minTrust": "low",
+                "label": "Mijn urenstaten",
+                "listable": true
+            },
+            {
+                "id": "expenses",
+                "register": "humaniq",
+                "schema": "Expense",
+                "scopeField": "employeeId",
+                "scopeClaim": "employeeId",
+                "minTrust": "low",
+                "label": "Mijn declaraties",
+                "listable": true
+            },
+            {
+                "id": "leaveRequests",
+                "register": "humaniq",
+                "schema": "LeaveRequest",
+                "scopeField": "employeeId",
+                "scopeClaim": "employeeId",
+                "minTrust": "low",
+                "label": "Mijn verlofaanvragen",
+                "listable": true
+            }
+        ],
+        "actions": [
+            {
+                "id": "createTimesheet",
+                "type": "create",
+                "label": "Uren schrijven",
+                "register": "humaniq",
+                "schema": "Timesheet",
+                "fields": [
+                    "period",
+                    "hours",
+                    "description",
+                    "projectId",
+                    "costCenter",
+                    "billable",
+                    "clientRef"
+                ]
+            },
+            {
+                "id": "createExpense",
+                "type": "create",
+                "label": "Een declaratie indienen",
+                "register": "humaniq",
+                "schema": "Expense",
+                "fields": [
+                    "title",
+                    "description",
+                    "amount",
+                    "currency",
+                    "category",
+                    "expenseDate"
+                ]
+            },
+            {
+                "id": "createLeaveRequest",
+                "type": "create",
+                "label": "Verlof aanvragen",
+                "register": "humaniq",
+                "schema": "LeaveRequest",
+                "fields": [
+                    "leaveType",
+                    "startDate",
+                    "endDate",
+                    "hours",
+                    "reason"
+                ]
+            }
+        ],
+        "notifications": [],
+        "pages": [
+            {
+                "group": "Werk en uren",
+                "id": "payslips",
+                "label": "Mijn loonstroken",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "payslips"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "payslips"
+                    }
+                ]
+            },
+            {
+                "group": "Werk en uren",
+                "id": "employmentContracts",
+                "label": "Mijn arbeidscontracten",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "employmentContracts"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "employmentContracts"
+                    }
+                ]
+            },
+            {
+                "group": "Werk en uren",
+                "id": "timesheets",
+                "label": "Mijn urenstaten",
+                "blocks": [
+                    {
+                        "type": "action",
+                        "action": "createTimesheet"
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "timesheets"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "timesheets"
+                    }
+                ]
+            },
+            {
+                "group": "Werk en uren",
+                "id": "expenses",
+                "label": "Mijn declaraties",
+                "blocks": [
+                    {
+                        "type": "action",
+                        "action": "createExpense"
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "expenses"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "expenses"
+                    }
+                ]
+            },
+            {
+                "group": "Werk en uren",
+                "id": "leaveRequests",
+                "label": "Mijn verlofaanvragen",
+                "blocks": [
+                    {
+                        "type": "action",
+                        "action": "createLeaveRequest"
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "leaveRequests"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "leaveRequests"
+                    }
+                ]
+            }
+        ]
+    },
+    "client": {
+        "label": "Werk en uren",
+        "collections": [
+            {
+                "id": "clientTimesheets",
+                "register": "humaniq",
+                "schema": "Timesheet",
+                "scopeField": "clientRef",
+                "scopeClaim": "clientId",
+                "minTrust": "low",
+                "label": "Te beoordelen urenstaten",
+                "listable": true
+            }
+        ],
+        "actions": [],
+        "notifications": [],
+        "pages": [
+            {
+                "group": "Werk en uren",
+                "id": "clientTimesheets",
+                "label": "Te beoordelen urenstaten",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "clientTimesheets"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "clientTimesheets"
+                    }
+                ]
+            }
+        ]
+    },
+    "manager": {
+        "label": "Werk en uren",
+        "collections": [
+            {
+                "id": "teamTimesheets",
+                "register": "humaniq",
+                "schema": "Timesheet",
+                "scopeField": "costCenter",
+                "scopeClaim": "costCenter",
+                "minTrust": "low",
+                "label": "Urenstaten van uw team",
+                "listable": true,
+                "fields": [
+                    "employeeId",
+                    "period",
+                    "hours",
+                    "status",
+                    "description"
+                ],
+                "columns": [
+                    {
+                        "field": "employeeId",
+                        "label": "Medewerker"
+                    },
+                    {
+                        "field": "period",
+                        "label": "Periode"
+                    },
+                    {
+                        "field": "hours",
+                        "label": "Uren"
+                    },
+                    {
+                        "field": "status",
+                        "label": "Status",
+                        "render": "badge"
+                    }
+                ],
+                "detail": {
+                    "layout": "card",
+                    "fields": [
+                        "employeeId",
+                        "period",
+                        "hours",
+                        "status",
+                        "description"
+                    ]
+                },
+                "defaultSort": {
+                    "field": "period",
+                    "direction": "desc"
+                }
+            }
+        ],
+        "actions": [],
+        "pages": [
+            {
+                "group": "Werk en uren",
+                "id": "timesheets",
+                "label": "Urenstaten van uw team",
+                "icon": "ClockCheck",
+                "blocks": [
+                    {
+                        "type": "richText",
+                        "markdown": "Bekijk de ingediende urenstaten van uw kostenplaats."
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "teamTimesheets"
+                    }
+                ]
+            }
+        ],
+        "notifications": []
+    },
+    "candidate": {
+        "label": "Vacatures",
+        "collections": [
+            {
+                "id": "openVacancies",
+                "register": "humaniq",
+                "schema": "Vacancy",
+                "anonymous": true,
+                "minTrust": "low",
+                "filter": {
+                    "status": "gepubliceerd"
+                },
+                "fields": [
+                    "title",
+                    "description",
+                    "department",
+                    "closingDate",
+                    "questions"
+                ],
+                "label": "Vacatures",
+                "listable": true
+            }
+        ],
+        "actions": [
+            {
+                "id": "applyToVacancy",
+                "type": "create",
+                "label": "Solliciteren",
+                "register": "humaniq",
+                "schema": "job-application",
+                "anonymous": true,
+                "minTrust": "low",
+                "fields": [
+                    "vacancyId",
+                    "candidateName",
+                    "email",
+                    "phone",
+                    "motivation",
+                    "talentPoolOptIn",
+                    "answers"
+                ]
+            }
+        ],
+        "notifications": [],
+        "pages": [
+            {
+                "group": "Vacatures",
+                "id": "openVacancies",
+                "label": "Vacatures",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "openVacancies"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "openVacancies"
+                    }
+                ]
+            }
+        ]
+    },
+    "new-hire": {
+        "label": "Uw nieuwe baan",
+        "collections": [
+            {
+                "id": "myEmployeeRecord",
+                "register": "humaniq",
+                "schema": "Employee",
+                "scopeField": "id",
+                "scopeClaim": "employeeId",
+                "minTrust": "low",
+                "label": "Mijn gegevens",
+                "listable": false
+            },
+            {
+                "id": "myOnboarding",
+                "register": "humaniq",
+                "schema": "Onboarding",
+                "scopeField": "employeeId",
+                "scopeClaim": "employeeId",
+                "minTrust": "low",
+                "fields": [
+                    "startDate",
+                    "status",
+                    "contractSigned",
+                    "widCheckDone",
+                    "bsnValidated",
+                    "ibanVerified",
+                    "itProvisioned",
+                    "pensioenAangemeld"
+                ],
+                "filesUpload": true,
+                "label": "Voor uw eerste werkdag",
+                "listable": true
+            }
+        ],
+        "actions": [
+            {
+                "id": "updateMyDetails",
+                "type": "update",
+                "label": "Mijn bankrekening en BSN doorgeven",
+                "register": "humaniq",
+                "schema": "Employee",
+                "scopeField": "id",
+                "scopeClaim": "employeeId",
+                "minTrust": "substantial",
+                "fields": [
+                    "iban",
+                    "tenaamstelling",
+                    "bsn"
+                ]
+            }
+        ],
+        "notifications": [],
+        "pages": [
+            {
+                "group": "Uw nieuwe baan",
+                "id": "myOnboarding",
+                "label": "Voor uw eerste werkdag",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "myOnboarding"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "myOnboarding"
+                    }
+                ]
+            }
+        ]
+    },
+    "former-employee": {
+        "label": "Uw vroegere baan",
+        "collections": [
+            {
+                "id": "payslips",
+                "register": "humaniq",
+                "schema": "Payslip",
+                "scopeField": "employeeId",
+                "scopeClaim": "employeeId",
+                "minTrust": "low",
+                "label": "Mijn loonstroken",
+                "listable": true
+            },
+            {
+                "id": "annualStatements",
+                "register": "humaniq",
+                "schema": "Jaaropgaaf",
+                "scopeField": "employeeId",
+                "scopeClaim": "employeeId",
+                "minTrust": "low",
+                "label": "Mijn jaaropgaven",
+                "listable": true
+            },
+            {
+                "id": "myDocuments",
+                "register": "humaniq",
+                "schema": "HrGeneratedDocument",
+                "scopeField": "employeeId",
+                "scopeClaim": "employeeId",
+                "minTrust": "low",
+                "filter": {
+                    "status": "generated"
+                },
+                "label": "Mijn brieven en verklaringen",
+                "listable": true
+            }
+        ],
+        "actions": [],
+        "notifications": [],
+        "pages": [
+            {
+                "group": "Uw vroegere baan",
+                "id": "payslips",
+                "label": "Mijn loonstroken",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "payslips"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "payslips"
+                    }
+                ]
+            },
+            {
+                "group": "Uw vroegere baan",
+                "id": "annualStatements",
+                "label": "Mijn jaaropgaven",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "annualStatements"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "annualStatements"
+                    }
+                ]
+            },
+            {
+                "group": "Uw vroegere baan",
+                "id": "myDocuments",
+                "label": "Mijn brieven en verklaringen",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "myDocuments"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "myDocuments"
+                    }
+                ]
+            }
+        ]
+    },
+    "staff": null,
+    "(none)": null
+}

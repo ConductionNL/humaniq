@@ -3,6 +3,9 @@
 /**
  * Humaniq ExpensePayoutFieldsListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` and
  * `ObjectUpdatingEvent` for `Expense`. Payroll pays an approved claim from
  * its amounts, its approval date and the run that holds it, and an edit that
@@ -31,9 +34,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -135,18 +135,11 @@ class ExpensePayoutFieldsListener implements IEventListener {
 	 * @spec openspec/changes/approved-claim-keeps-its-amounts/specs/humaniq-expenses/spec.md#Requirement:-An-approved-expense-claim-SHALL-keep-the-amounts-it-was-approved-for
 	 */
 	public function handle(Event $event): void {
-		if ($this->marker->isInternal() === true) {
+		if ((new SchemaWriteFilter($this->gateway, $this->marker))->judges($event, self::SLUG) === false) {
 			return;
 		}
 
-		if (($event instanceof ObjectCreatingEvent) === false && ($event instanceof ObjectUpdatingEvent) === false) {
-			return;
-		}
-
-		$entity = ($event instanceof ObjectCreatingEvent) ? $event->getObject() : $event->getNewObject();
-		if (strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::SLUG) {
-			return;
-		}
+		$entity = SchemaWriteFilter::pendingObject($event);
 
 		if ($event instanceof ObjectCreatingEvent) {
 			$this->onCreate(event: $event, claim: ($entity->getObject() ?? []));

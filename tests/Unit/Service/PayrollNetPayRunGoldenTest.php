@@ -121,7 +121,7 @@ class PayrollNetPayRunGoldenTest extends TestCase {
 			'rows' => [
 				'Employee' => $employees,
 				'Payslip' => $payslips('2026-05'),
-				'PaymentRun' => [['id' => 'pr-other', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-002'], ['id' => 'pr-9', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001']],
+				'PaymentRun' => [['id' => 'pr-other', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-002'], ['id' => 'pr-9', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001', 'totalAmount' => 3932.87]],
 			],
 		];
 		$cases['adopts a PaymentRun whose id is in @self'] = [
@@ -129,7 +129,7 @@ class PayrollNetPayRunGoldenTest extends TestCase {
 			'rows' => [
 				'Employee' => $employees,
 				'Payslip' => $payslips('2026-05'),
-				'PaymentRun' => [['@self' => ['id' => 'pr-self'], 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001']],
+				'PaymentRun' => [['@self' => ['id' => 'pr-self'], 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001', 'totalAmount' => 3932.87]],
 			],
 		];
 		$cases['does not adopt a near run number'] = [
@@ -148,21 +148,25 @@ class PayrollNetPayRunGoldenTest extends TestCase {
 				'Employee' => $employees,
 				'Payslip' => $payslips('2026-05'),
 				'PayrollPaymentBatch' => [['id' => 'b-1', 'payrollRunId' => 'run-1', 'status' => 'pending']],
-				'PaymentRun' => [['id' => 'pr-9', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001']],
+				'PaymentRun' => [['id' => 'pr-9', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001', 'totalAmount' => 3932.87]],
 			],
 		];
 		$cases['stale pending, run id only in @self, adopts'] = [
 			'run' => $run(['id' => null, '@self' => ['id' => 'run-self']]),
 			'rows' => [
+				'Employee' => $employees,
+				'Payslip' => $payslips('2026-05'),
 				'PayrollPaymentBatch' => [['id' => 'b-3', 'payrollRunId' => 'run-self', 'status' => 'pending']],
-				'PaymentRun' => [['id' => 'pr-9', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001']],
+				'PaymentRun' => [['id' => 'pr-9', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001', 'totalAmount' => 3932.87]],
 			],
 		];
 		$cases['stale pending with a different stored runNumber, padded administration, adopts'] = [
 			'run' => $run(['administrationId' => ' ADM-001 ']),
 			'rows' => [
+				'Employee' => $employees,
+				'Payslip' => $payslips('2026-05'),
 				'PayrollPaymentBatch' => [['id' => 'b-4', 'payrollRunId' => 'run-1', 'status' => 'pending', 'runNumber' => 'HRMQ-NETPAY-2026-04-ADM-OLD']],
-				'PaymentRun' => [['id' => 'pr-old', 'runNumber' => 'HRMQ-NETPAY-2026-04-ADM-OLD'], ['id' => 'pr-9', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001']],
+				'PaymentRun' => [['id' => 'pr-old', 'runNumber' => 'HRMQ-NETPAY-2026-04-ADM-OLD'], ['id' => 'pr-9', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001', 'totalAmount' => 3932.87]],
 			],
 		];
 		$cases['already created'] = ['run' => $run(), 'rows' => ['PayrollPaymentBatch' => [['id' => 'b-2', 'payrollRunId' => 'run-1', 'status' => 'created', 'shillinqPaymentRunRef' => 'pr-1']]]];

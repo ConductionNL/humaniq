@@ -204,6 +204,34 @@ class SurveyServiceTest extends TestCase {
 	}//end testOneAnswerPerPerson()
 
 	/**
+	 * Every refusal keeps its message, and the stored invitation and survey
+	 * keep their fields.
+	 *
+	 * @return void
+	 */
+	public function testTheRefusalsAndStoredRowsKeepTheirShape(): void {
+		$none = ['invited' => 0, 'withoutAccount' => 0];
+		self::assertSame(['status' => 404, 'message' => 'Survey not found.'] + $none, $this->service()->open('srv-x', self::TODAY));
+		$this->store->seed('Survey', 'srv-empty', $this->survey(['questions' => ['not a question']]));
+		self::assertSame(['status' => 409, 'message' => 'Add at least one question before you open the survey.'] + $none, $this->service()->open('srv-empty', self::TODAY));
+
+		$this->service()->open(self::SURVEY_ID, self::TODAY);
+		self::assertSame(['status' => 409, 'message' => 'Only a draft survey can be opened.'] + $none, $this->service()->open(self::SURVEY_ID, self::TODAY));
+		$invitation = array_values(array_filter($this->rows('SurveyInvitation'), static fn (array $row): bool => $row['userId'] === 'h5'))[0];
+		unset($invitation['id']);
+		self::assertSame(['surveyId' => self::SURVEY_ID, 'employeeId' => 'emp-h5', 'userId' => 'h5', 'status' => 'open', 'closesOn' => '2026-10-20', 'administrationId' => 'ADM-001'], array_intersect_key($invitation, array_flip(['surveyId', 'employeeId', 'userId', 'status', 'closesOn', 'administrationId'])));
+		self::assertSame(['surveyId', 'employeeId', 'userId', 'status', 'closesOn', 'administrationId'], array_values(array_diff(array_keys($invitation), ['@self'])));
+
+		$answers = ['werkplezier' => 3, 'aanbevelen' => 7, 'werkdruk' => 'goed'];
+		self::assertSame(['status' => 404, 'message' => 'You have no invitation for this survey.'], $this->service()->respond(self::SURVEY_ID, 'l1', $answers, self::TODAY));
+		self::assertSame(['status' => 409, 'message' => 'This survey does not take answers now.'], $this->service()->respond(self::SURVEY_ID, 'h1', $answers, '2026-10-21'));
+		self::assertSame(['status' => 400, 'message' => 'Answer every required question: aanbevelen.'], $this->service()->respond(self::SURVEY_ID, 'h1', ['werkplezier' => 3, 'werkdruk' => 'goed'], self::TODAY));
+		self::assertSame(['status' => 201, 'message' => null], $this->service()->respond(self::SURVEY_ID, 'h1', $answers, self::TODAY));
+		self::assertSame(['status' => 409, 'message' => 'You already answered this survey.'], $this->service()->respond(self::SURVEY_ID, 'h1', $answers, self::TODAY));
+		self::assertSame([self::SURVEY_ID, 'unit-hr', 'permanent', 'ADM-001'], array_values(array_intersect_key($this->rows('SurveyResponse')[0], array_flip(['surveyId', 'orgUnitId', 'contractType', 'administrationId']))));
+	}//end testTheRefusalsAndStoredRowsKeepTheirShape()
+
+	/**
 	 * Scenario: a small team stays anonymous. With minimum 5, Finance (7)
 	 * and HR (5) are shown, Legal (2) is not, and the overall figures count
 	 * all 14 responses.

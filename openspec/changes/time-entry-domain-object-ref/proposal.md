@@ -32,3 +32,7 @@ from drifting apart again. Decision D11 asks humaniq to write this now.
 
 - The leaf itself (`hours-leaf-for-any-object`).
 - A back-reference from the case to the entry. The filter is the link.
+
+## Matrix rows
+
+Rows: `tim-log-against-object` (humaniq `openspec/parity/capabilities.json`).

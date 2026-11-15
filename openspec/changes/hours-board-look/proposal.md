@@ -21,3 +21,7 @@ Three props a host sets, all off by default so other hosts keep today's card:
 - With `compactHeader` the header also reads as the host's card header (no rule, the host's title size and inset), and the empty required fields are not drawn red before anything is typed (they stay `aria-required`; Record hours stays disabled until they are filled).
 - `sourceNote`: a band under the card saying hours come through humaniq and the
   card is left out without it.
+
+## Matrix rows
+
+Rows: `plt-hours-leaf`, `tim-log-against-object` (humaniq `openspec/parity/capabilities.json`).

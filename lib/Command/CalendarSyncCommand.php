@@ -79,33 +79,28 @@ class CalendarSyncCommand extends Command {
 	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-007
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$fromOption = $input->getOption('from');
-		$from = (is_string($fromOption) === true && trim($fromOption) !== '') ? trim($fromOption) : null;
-
-		$results = $this->service->sync($from);
+		$results = $this->service->sync(CommandOptions::trimmed($input, 'from'));
 
 		$output->writeln('<info>Humaniq leave calendar sync</info>');
 
-		$failed = 0;
-		foreach ($results as $result) {
-			$status = (string)$result['status'];
-			$label = ($result['type'] !== null && $result['sourceId'] !== null)
-				? sprintf('%s %s', (string)$result['type'], (string)$result['sourceId'])
-				: 'run';
-			$line = sprintf('  %s: %s — %s', $label, $status, (string)$result['message']);
-
-			if ($status === 'failed') {
-				$failed++;
-				$output->writeln('<error>' . $line . '</error>');
-				continue;
-			}
-
-			$output->writeln($line);
-		}
-
-		$output->writeln(sprintf('  %d uitkomst(en), %d mislukt.', count($results), $failed));
-
-		return $failed > 0 ? 1 : 0;
+		return (new OutcomeReport($output, '  %d uitkomst(en), %d mislukt.'))->exitCode($results, self::describeOutcome(...));
 	}//end execute()
+
+	/**
+	 * The report line for one sync outcome: per source, or for the run as a whole.
+	 *
+	 * @param array<string, mixed> $result The outcome.
+	 * @param string               $status The outcome's status.
+	 *
+	 * @return string
+	 */
+	private static function describeOutcome(array $result, string $status): string {
+		$label = ($result['type'] !== null && $result['sourceId'] !== null)
+			? sprintf('%s %s', (string)$result['type'], (string)$result['sourceId'])
+			: 'run';
+
+		return sprintf('  %s: %s — %s', $label, $status, (string)$result['message']);
+
+	}//end describeOutcome()
 
 }//end class

@@ -101,9 +101,8 @@ class EmployeeHistoryController extends Controller {
 			return $this->notFound();
 		}
 
-		try {
-			$day = new DateTimeImmutable(trim((string)$date) === '' ? 'today' : (string)$date);
-		} catch (\Exception $e) {
+		$day = self::dayOf(date: $date);
+		if ($day === null) {
 			return new JSONResponse(['error' => 'date moet een geldige datum zijn.'], Http::STATUS_BAD_REQUEST);
 		}
 
@@ -113,13 +112,6 @@ class EmployeeHistoryController extends Controller {
 			date: $day,
 			fullTimeHoursWeek: AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK
 		);
-		$year = (int)$day->format('Y');
-		$balances = array_values(
-			array_filter(
-				$this->readable(schema: 'LeaveBalance', employeeId: $id),
-				static fn (array $row): bool => (int)($row['year'] ?? 0) === $year
-			)
-		);
 
 		return new JSONResponse(
 			array_merge(
@@ -127,11 +119,45 @@ class EmployeeHistoryController extends Controller {
 				[
 					'fullTimeHoursPerWeek' => AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK,
 					'normSource' => 'AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK',
-					'leaveBalances' => $balances,
+					'leaveBalances' => $this->balancesOfYear(employeeId: $id, year: (int)$day->format('Y')),
 				]
 			)
 		);
 	}//end employments()
+
+	/**
+	 * The day asked about, today when none is given; null when it is not a date.
+	 *
+	 * @param string|null $date The day.
+	 *
+	 * @return DateTimeImmutable|null
+	 */
+	private static function dayOf(?string $date): ?DateTimeImmutable {
+		try {
+			return new DateTimeImmutable(trim((string)$date) === '' ? 'today' : (string)$date);
+		} catch (\Exception $e) {
+			return null;
+		}
+	}//end dayOf()
+
+	/**
+	 * The employee's leave balances of one year the caller may read.
+	 *
+	 * @param string $employeeId The employee.
+	 * @param int    $year       The year.
+	 *
+	 * @return list<array<string, mixed>>
+	 *
+	 * @spec openspec/specs/employee-history/spec.md#REQ-EHI-003
+	 */
+	private function balancesOfYear(string $employeeId, int $year): array {
+		return array_values(
+			array_filter(
+				$this->readable(schema: 'LeaveBalance', employeeId: $employeeId),
+				static fn (array $row): bool => (int)($row['year'] ?? 0) === $year
+			)
+		);
+	}//end balancesOfYear()
 
 	/**
 	 * The employee's rows of one schema the caller may read.

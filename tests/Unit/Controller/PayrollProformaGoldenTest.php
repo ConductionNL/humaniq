@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
+use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Service\PayrollRunServices;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Controller\PayrollController;
@@ -48,6 +49,7 @@ use OCA\Humaniq\Service\WkrService;
 use OCA\Humaniq\Tests\Unit\Support\NextcloudDispatch;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Services\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
@@ -220,8 +222,6 @@ class PayrollProformaGoldenTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn($register !== 'unavailable');
-		$settings->method('getPayrollAofTariff')->willReturn('laag');
-		$settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
 
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
@@ -235,7 +235,7 @@ class PayrollProformaGoldenTest extends TestCase {
 
 		return new PayrollController(
 			$request,
-			new PayrollRunServices($this->createMock(PayrollRunService::class), $this->createMock(PayrollMutationService::class), new ProformaPayslipService(new PayrollCalculator(), $settings), $this->createMock(RetroAdjustmentService::class)),
+			new PayrollRunServices($this->createMock(PayrollRunService::class), $this->createMock(PayrollMutationService::class), new ProformaPayslipService(new PayrollCalculator(), new EmployerPremiumSettings($this->createMock(IAppConfig::class))), $this->createMock(RetroAdjustmentService::class)),
 			$this->createMock(WkrService::class),
 			$settings,
 			new CallerContext($session, new HumaniqRoles($this->createMock(IGroupManager::class)), $container, $this->logger())

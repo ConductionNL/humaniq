@@ -37,6 +37,14 @@ if (is_dir(__DIR__ . '/../vendor/nextcloud/ocp/OCP') === true) {
 	$autoloader->addPsr4('NCU\\', __DIR__ . '/../vendor/nextcloud/ocp/NCU/');
 }
 
+// Integriq's connection status event, for the reporter's tests. Integriq is
+// optional and absent here; the stub mirrors its constructor and loads only
+// when the real class is not already loaded. The check must not autoload:
+// Composer remembers a class it failed to find and would then skip the stub.
+if (class_exists('OCA\\Integriq\\Event\\ConnectionStatusReportedEvent', false) === false) {
+	$autoloader->addPsr4('OCA\\Integriq\\', __DIR__ . '/stubs/Integriq/');
+}
+
 // Doctrine placeholders, loaded BEFORE anything can mock an OCP DB interface.
 // IQueryBuilder evaluates constants referencing Doctrine\DBAL\ParameterType at
 // parse time, and IDBConnection::getQueryBuilder() returns IQueryBuilder — so
@@ -145,8 +153,24 @@ if (is_file($humaniqNcRoot . '/lib/base.php') === true) {
 // loaded via composer.json autoload, and skipped entirely when the real classes
 // are already resolvable (e.g. a full server checkout with OpenRegister installed
 // via the base.php include above) — the real classes always win.
+// RetentionService::placeHold()/releaseHold() take a HoldOrder (openregister,
+// since 2026-11-10). Load the test-only mirror when OpenRegister is absent.
+if (class_exists('OCA\\OpenRegister\\Service\\HoldOrder') === false) {
+	require __DIR__ . '/stubs/OpenRegisterHoldOrderStub.php';
+}
+
 if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') === false) {
 	require __DIR__ . '/stubs/OpenRegisterLifecycleStub.php';
+}
+
+// The transition guard and its context (lifecycle-guards-see-the-stored-object):
+// a guard that judges the stored object. The context carries an ObjectEntity.
+if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleTransitionGuardInterface') === false) {
+	if (class_exists('OCA\\OpenRegister\\Db\\ObjectEntity') === false) {
+		require_once __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
+	}
+
+	require __DIR__ . '/stubs/OpenRegisterLifecycleTransitionStub.php';
 }
 
 // The notification recipient seam (absence-deadlines-and-signals D2): the
@@ -170,11 +194,18 @@ if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterObjectServiceStub.php';
 }
 
-// Same rule, different class: WorkingCalendarReader asks class_exists() for
-// openregister's working calendar before reaching for it (working-hours-per-person,
-// REQ-WHP-004). Without the name present the reader can only ever answer
-// "no working calendar on this instance", and the resolved path would be dark.
-if (class_exists('OCA\\OpenRegister\\Service\\WorkingCalendarService') === false) {
+// FieldReadAccess builds openregister's SchemaProperty and PropertyAccessRequest
+// to ask PropertyRbacHandler::canReadProperty() (REQ-RFA-002). Without them the
+// suite could not reach the handler double at all.
+if (class_exists('OCA\\OpenRegister\\Service\\SchemaProperty') === false) {
+	require __DIR__ . '/stubs/OpenRegisterPropertyAccessStub.php';
+}
+
+// WorkingCalendarReader asks the container for openregister's
+// Flow\Timer\WorkingCalendarService by class and reads the resolved calendar
+// (working-hours-per-person, REQ-WHP-004). The stub declares that public shape
+// so the reader's typed calls load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Service\\Flow\\Timer\\WorkingCalendarService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterWorkingCalendarStub.php';
 }
 

@@ -58,30 +58,47 @@ class CompProposalBuilder {
 			return ['skip' => 'no-salary'];
 		}
 
-		$raise = $this->raiseOf($cycle);
 		$proposal = [
 			'contractId' => (string)$contract['id'],
 			'effectiveDate' => $effectiveDate,
 			'adjustmentKind' => 'collective',
 		];
 
+		return $proposal + $this->raisedPay(
+			raise: $this->raiseOf($cycle),
+			terms: ['current' => $current, 'hourlyWage' => ($contract['hourlyWage'] ?? null), 'cycleName' => (string)($cycle['name'] ?? '')]
+		);
+	}//end raiseProposal()
+
+	/**
+	 * The raised salary and its rationale; a percentage also raises a
+	 * recorded hourly wage.
+	 *
+	 * @param array{percentage: float|null, amount: int|null}|null           $raise The cycle's raise.
+	 * @param array{current: int, hourlyWage: mixed, cycleName: string} $terms The current salary in cents, the contract's hourly wage and the cycle's name.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function raisedPay(?array $raise, array $terms): array {
 		if ($raise['percentage'] !== null) {
 			$factor = (1 + ($raise['percentage'] / 100));
-			$proposal['proposedSalary'] = (int)round($current * $factor);
-			$proposal['rationale'] = 'Collectieve verhoging van ' . $this->number($raise['percentage']) . '% (' . (string)($cycle['name'] ?? '') . ').';
-			$hourly = ($contract['hourlyWage'] ?? null);
+			$pay = [
+				'proposedSalary' => (int)round($terms['current'] * $factor),
+				'rationale' => 'Collectieve verhoging van ' . $this->number($raise['percentage']) . '% (' . $terms['cycleName'] . ').',
+			];
+			$hourly = $terms['hourlyWage'];
 			if (is_numeric($hourly) === true && (float)$hourly > 0) {
-				$proposal['proposedHourlyWage'] = round(((float)$hourly) * $factor, 2);
+				$pay['proposedHourlyWage'] = round(((float)$hourly) * $factor, 2);
 			}
 
-			return $proposal;
+			return $pay;
 		}
 
-		$proposal['proposedSalary'] = ($current + (int)$raise['amount']);
-		$proposal['rationale'] = 'Collectieve verhoging van ' . $this->number($raise['amount'] / 100) . ' euro per maand (' . (string)($cycle['name'] ?? '') . ').';
-
-		return $proposal;
-	}//end raiseProposal()
+		return [
+			'proposedSalary' => ($terms['current'] + (int)$raise['amount']),
+			'rationale' => 'Collectieve verhoging van ' . $this->number($raise['amount'] / 100) . ' euro per maand (' . $terms['cycleName'] . ').',
+		];
+	}//end raisedPay()
 
 	/**
 	 * The contract that carries a band and a step, or null.

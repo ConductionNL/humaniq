@@ -3,6 +3,9 @@
 /**
  * Humaniq TimesheetApprovedEvent.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Typed `IEventDispatcher` cross-app command event (ADR-041) emitted by
  * {@see \OCA\Humaniq\Service\TimeEntryEventService::maybeDispatchApproved()} on the
  * SAME approval edge that already dispatches the `nl.conduction.hrmq.timeentry.approved`
@@ -37,9 +40,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

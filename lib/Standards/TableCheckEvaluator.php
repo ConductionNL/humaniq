@@ -3,6 +3,9 @@
 /**
  * Table Check Evaluator
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The one door from humaniq's compliance engine to OpenRegister's shared
  * decision-table evaluator (`OCA\OpenRegister\Service\Dmn\DecisionTableEvaluator`,
  * the engine behind the `openregister.decision-table` flow node). humaniq
@@ -26,9 +29,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

@@ -3,6 +3,9 @@
 /**
  * Privileged Session Resolver
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The shared `--as-user` privileged-session establishment mechanism
  * (avg-dsr design.md D3) every `occ humaniq:avg:*` command uses BEFORE calling
  * `AvgDsrService`/OpenRegister's `DsarService`: there is no ambient
@@ -27,9 +30,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
@@ -42,6 +42,8 @@ namespace OCA\Humaniq\Command;
 use OCP\IGroupManager;
 use OCP\IUserManager;
 use OCP\IUserSession;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Resolves, validates, and establishes the `--as-user` privileged session
@@ -90,5 +92,27 @@ final class PrivilegedSessionResolver {
 
 		return null;
 	}//end establish()
+
+	/**
+	 * Establish the session for the command's `--as-user`; write the
+	 * controlled error and answer true when it is refused.
+	 *
+	 * @param InputInterface  $input  Console input, with an `as-user` option.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return bool True when the session was refused.
+	 *
+	 * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
+	 */
+	public function refuses(InputInterface $input, OutputInterface $output): bool {
+		$sessionError = $this->establish((string)$input->getOption('as-user'));
+		if ($sessionError === null) {
+			return false;
+		}
+
+		$output->writeln('<error>' . $sessionError . '</error>');
+
+		return true;
+	}//end refuses()
 
 }//end class

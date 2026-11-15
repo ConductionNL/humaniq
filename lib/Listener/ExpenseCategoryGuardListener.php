@@ -79,18 +79,11 @@ class ExpenseCategoryGuardListener implements IEventListener {
 	 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
 	 */
 	public function handle(Event $event): void {
-		if ($this->marker->isInternal() === true) {
+		if ((new SchemaWriteFilter($this->gateway, $this->marker))->judges($event, self::SLUG) === false) {
 			return;
 		}
 
-		if (($event instanceof ObjectCreatingEvent) === false && ($event instanceof ObjectUpdatingEvent) === false) {
-			return;
-		}
-
-		$entity = ($event instanceof ObjectCreatingEvent) ? $event->getObject() : $event->getNewObject();
-		if (strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::SLUG) {
-			return;
-		}
+		$entity = SchemaWriteFilter::pendingObject($event);
 
 		$claim = ($entity->getObject() ?? []);
 		$stored = ($event instanceof ObjectUpdatingEvent) ? ($event->getOldObject()?->getObject() ?? []) : null;

@@ -238,6 +238,26 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	}//end testADraftRunIsNotFiled()
 
 	/**
+	 * The stored filing keeps its render fields in order, rendered and
+	 * blocked, and the outcome its fields.
+	 *
+	 * @return void
+	 */
+	public function testTheStoredRenderFieldsKeepTheirOrder(): void {
+		$before = array_keys($this->filing());
+		$outcome = $this->service->render($this->filing(), 'payroll-1');
+		self::assertSame(['status', 'filingId', 'blockingFindings', 'warningFindings', 'messageFileName'], array_keys($outcome));
+		$added = array_values(array_diff(array_keys($this->filingRow()), $before, ['id', '@self']));
+		self::assertSame(['messageRenderedAt', 'messageRenderedBy', 'messageVersion', 'messageRunId', 'messageRunCalculatedAt', 'messageRunTotalLoonheffing', 'collectiveTotals', 'carriedCorrectionIds', 'messageFindings', 'blockingFindings', 'warningFindings', 'messageXml', 'messageFileName'], $added);
+
+		$run = $this->store->find('run-06', schema: 'PayrollRun')->getObject();
+		$this->store->seed('PayrollRun', 'run-06', array_merge($run, ['status' => 'draft']));
+		$blocked = $this->service->render($this->filing(), 'payroll-2');
+		self::assertSame(['status', 'filingId', 'blockingFindings', 'warningFindings'], array_keys($blocked));
+		self::assertSame(['kind' => 'run-not-approved', 'severity' => 'blocking', 'employeeId' => '', 'element' => 'TijdvakAangifte', 'problem' => 'Er is voor 2026-06 geen goedgekeurde loonrun; de aangifte wordt alleen gemaakt uit een goedgekeurde, geboekte of betaalde loonrun.'], $this->filingRow()['messageFindings'][0]);
+	}//end testTheStoredRenderFieldsKeepTheirOrder()
+
+	/**
 	 * An employee without a BSN: the filing stays without a message and lists
 	 * that employee with the missing citizen service number.
 	 *

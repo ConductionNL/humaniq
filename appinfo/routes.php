@@ -10,8 +10,11 @@ declare(strict_types=1);
  * routes here — only the SPA shell + the bundled-manifest endpoint (ADR-024 §4).
  */
 
-return [
+// Every unversioned API route is also served under /api/v1/; see ApiPathAliases.
+return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
     'routes' => [
+        // The OpenAPI document of humaniq's own API, public, served under /api/v1/ too.
+        ['name' => 'openApi#show', 'url' => '/api/openapi.json', 'verb' => 'GET'],
         // SPA shell — boots the Vue manifest renderer.
         // First-time setup wizard (ADR-042) - the standard CnSetupWizard contract.
         ['name' => 'setup#status',    'url' => '/api/setup/status',            'verb' => 'GET'],
@@ -94,6 +97,9 @@ return [
         // people-flex-contract-rules: the fixed-term chain of a contract, and the on-call average hours (HR).
         ['name' => 'flexContract#onCallAverages', 'url' => '/api/contracts/on-call-averages', 'verb' => 'GET'],
         ['name' => 'flexContract#chain', 'url' => '/api/contracts/{id}/chain', 'verb' => 'GET'],
+        // education-staff-deployment-and-count D3: every teacher's deployment plan for one school and school year.
+        ['name' => 'deployment#orgUnit', 'url' => '/api/deployment/org-units/{id}', 'verb' => 'GET'],
+        ['name' => 'deployment#iptoExport', 'url' => '/api/deployment/ipto-export', 'verb' => 'POST'],
         // people-org-chart-view: the organisation chart of the caller's administration on a date.
         ['name' => 'orgChart#chart', 'url' => '/api/org/chart', 'verb' => 'GET'],
         ['name' => 'dossier#incomplete', 'url' => '/api/dossier/incomplete', 'verb' => 'GET'],
@@ -225,6 +231,10 @@ return [
         ['name' => 'survey#respond', 'url' => '/api/surveys/{id}/responses', 'verb' => 'POST'],
         ['name' => 'survey#results', 'url' => '/api/surveys/results', 'verb' => 'GET'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
+        // self-service-mobile (design.md D1): the web manifest and service worker of the
+        // installable Mijn HR. Public static assets, declared before the catch-all.
+        ['name' => 'pwa#manifest',      'url' => '/manifest.webmanifest', 'verb' => 'GET'],
+        ['name' => 'pwa#serviceWorker', 'url' => '/service-worker.js',    'verb' => 'GET'],
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],
-];
+]);

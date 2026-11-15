@@ -74,39 +74,68 @@ class LeaveCostService {
 			$dates = $this->calendar->nonWorkingDates(new DateTimeImmutable($start), new DateTimeImmutable($end))['dates'];
 		}
 
-		$workingTime = [
-			'patterns' => $this->gateway->findFiltered('WorkingPattern', ['employeeId' => $employeeId]),
-			'nonWorkingTimes' => $this->gateway->findFiltered('NonWorkingTime', ['employeeId' => $employeeId]),
-			'nonWorkingDates' => $dates,
-		];
+		$workingTime   = $this->workingTimeOf(employeeId: $employeeId, nonWorkingDates: $dates);
 		$contractHours = $this->contractHoursByYear(employeeId: $employeeId, leaveType: (string)($request['leaveType'] ?? ''));
 
-		$years = [];
-		$days = [];
-		$total = 0.0;
-		$basis = 'contract-average';
 		// The balance projection's own rule, referenced as a callable as
 		// LeaveAllocationCalculator does, so both answer the same per day.
 		$requestHours = [LeaveHoursCalculator::class, 'requestHours'];
+		$resolved     = [];
 		for ($year = $startYear; $startYear > 0 && $year <= $endYear; $year++) {
-			$resolved = $requestHours($request, ($contractHours[$year] ?? null), $year, $workingTime);
-			$years[] = ['year' => $year, 'hours' => (float)$resolved['hours'], 'basis' => $resolved['basis'], 'basisLabel' => $this->basisLabel(basis: $resolved['basis'])];
-			$total += (float)$resolved['hours'];
-			$basis = $resolved['basis'];
-			foreach ($resolved['days'] as $day) {
-				$days[] = array_merge($day, ['label' => $this->label(reason: $day['reason'])]);
-			}
+			$resolved[$year] = $requestHours($request, ($contractHours[$year] ?? null), $year, $workingTime);
 		}
+
+		$tally = $this->tallied(resolvedByYear: $resolved);
 
 		return [
 			'requestId' => (string)($request['id'] ?? ''),
-			'hours' => round($total, 2),
-			'basis' => $basis,
+			'hours' => $tally['hours'],
+			'basis' => $tally['basis'],
 			'calendarRead' => $dates !== null,
-			'years' => $years,
-			'days' => $days,
+			'years' => $tally['years'],
+			'days' => $tally['days'],
 		];
 	}//end costOf()
+
+	/**
+	 * The employee's patterns and non-working times, read in that order, with the calendar's dates.
+	 *
+	 * @param string                  $employeeId      The employee.
+	 * @param array<int, string>|null $nonWorkingDates The calendar's non-working dates, null when unread.
+	 *
+	 * @return array{patterns: array<int, array<string, mixed>>, nonWorkingTimes: array<int, array<string, mixed>>, nonWorkingDates: array<int, string>|null}
+	 */
+	private function workingTimeOf(string $employeeId, ?array $nonWorkingDates): array {
+		return [
+			'patterns' => $this->gateway->findFiltered('WorkingPattern', ['employeeId' => $employeeId]),
+			'nonWorkingTimes' => $this->gateway->findFiltered('NonWorkingTime', ['employeeId' => $employeeId]),
+			'nonWorkingDates' => $nonWorkingDates,
+		];
+	}//end workingTimeOf()
+
+	/**
+	 * The year lines, the labelled days, the rounded total and the basis of
+	 * the last year (contract-average when no year was costed).
+	 *
+	 * @param array<int, array{hours: float|int, basis: string, days: array<int, array<string, mixed>>}> $resolvedByYear The calculator's answer per year.
+	 *
+	 * @return array{hours: float, basis: string, years: array<int, array<string, mixed>>, days: array<int, array<string, mixed>>}
+	 */
+	private function tallied(array $resolvedByYear): array {
+		$tally = ['hours' => 0.0, 'basis' => 'contract-average', 'years' => [], 'days' => []];
+		foreach ($resolvedByYear as $year => $resolved) {
+			$tally['years'][] = ['year' => $year, 'hours' => (float)$resolved['hours'], 'basis' => $resolved['basis'], 'basisLabel' => $this->basisLabel(basis: $resolved['basis'])];
+			$tally['hours']  += (float)$resolved['hours'];
+			$tally['basis']   = $resolved['basis'];
+			foreach ($resolved['days'] as $day) {
+				$tally['days'][] = array_merge($day, ['label' => $this->label(reason: $day['reason'])]);
+			}
+		}
+
+		$tally['hours'] = round($tally['hours'], 2);
+
+		return $tally;
+	}//end tallied()
 
 	/**
 	 * Contract hours per week by balance year, for days without a pattern.

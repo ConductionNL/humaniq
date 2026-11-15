@@ -447,6 +447,79 @@ class AgendaAndAvailabilityTest extends TestCase {
 	}//end testAMissingContractIsSaidRatherThanSubstituted()
 
 	/**
+	 * The whole capacity answer for several people: duplicate ids
+	 * counted once, a contract with no hours in the window, a missing contract
+	 * with planned hours, and the totals over the contracted people only.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeCapacityAnswer(): void {
+		$report = $this->capacity->capacity(
+			employeeIds: ['emp-1', 'emp-1', 'emp-free', '7', 'emp-none'],
+			from: new DateTimeImmutable('2026-06-01'),
+			to: new DateTimeImmutable('2026-06-07'),
+			sources: [
+				'workingPatterns' => [
+					['employeeId' => 'emp-1', 'validFrom' => '2026-01-01', 'hoursMonday' => 8, 'hoursTuesday' => 8, 'hoursWednesday' => 8],
+					['employeeId' => 'emp-free', 'validFrom' => '2026-01-01'],
+					['employeeId' => '7', 'validFrom' => '2026-01-01', 'hoursMonday' => 4],
+				],
+				'nonWorkingDates' => [],
+				'shifts' => [['id' => 'shift-1', 'name' => 'Dagdienst']],
+				'assignments' => [
+					['id' => 'a-1', 'employeeId' => 'emp-1', 'shiftId' => 'shift-1', 'date' => '2026-06-01', 'plannedStart' => '2026-06-01T09:00:00+02:00', 'plannedEnd' => '2026-06-01T17:00:00+02:00'],
+					['id' => 'a-2', 'employeeId' => '7', 'shiftId' => 'shift-1', 'date' => '2026-06-01', 'plannedStart' => '2026-06-01T09:00:00+02:00', 'plannedEnd' => '2026-06-01T15:00:00+02:00'],
+					['id' => 'a-3', 'employeeId' => 'emp-none', 'shiftId' => 'shift-1', 'date' => '2026-06-02', 'plannedStart' => '2026-06-02T09:00:00+02:00', 'plannedEnd' => '2026-06-02T12:30:00+02:00'],
+				],
+			]
+		);
+
+		$this->assertSame(
+			[
+				'from' => '2026-06-01',
+				'to' => '2026-06-07',
+				'employees' => [
+					[
+						'employeeId' => 'emp-1',
+						'plannedHours' => 8.0,
+						'contractedHours' => 24.0,
+						'utilisationPercentage' => 33.3,
+						'hasContractedHours' => true,
+					],
+					[
+						'employeeId' => 'emp-free',
+						'plannedHours' => 0.0,
+						'contractedHours' => 0.0,
+						'utilisationPercentage' => null,
+						'hasContractedHours' => true,
+					],
+					[
+						'employeeId' => '7',
+						'plannedHours' => 4.0,
+						'contractedHours' => 4.0,
+						'utilisationPercentage' => 100.0,
+						'hasContractedHours' => true,
+					],
+					[
+						'employeeId' => 'emp-none',
+						'plannedHours' => 0.0,
+						'contractedHours' => null,
+						'utilisationPercentage' => null,
+						'hasContractedHours' => false,
+					],
+				],
+				'totals' => [
+					'plannedHours' => 12.0,
+					'contractedHours' => 28.0,
+					'utilisationPercentage' => 42.9,
+					'employeesWithoutContractedHours' => 1,
+				],
+			],
+			$report
+		);
+	}//end testTheWholeCapacityAnswer()
+
+	/**
 	 * The second booking of one room loses, and the refusal names the booking
 	 * that blocks it.
 	 *

@@ -3,6 +3,9 @@
 /**
  * NL HR21 (functiehuis) Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable check for the functiehuis-hr21 corpus rule
  * (lib/Standards/rules/payroll.json): `nl-hr21-schaal-consistentie` — a
  * contract's own `caoSchaal` must agree with the Cao Gemeenten schaal its
@@ -33,9 +36,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
