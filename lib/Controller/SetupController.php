@@ -38,6 +38,9 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
+use OCP\IUserSession;
+use OCA\Humaniq\Service\Setup\SetupAdministrations;
+use OCA\Humaniq\Service\Setup\SetupHealthCheck;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Service\DemoDataService;
 
@@ -89,6 +92,9 @@ class SetupController extends Controller {
 	 * @param IAppConfig      $appConfig       Records the demo-data decision.
 	 * @param LoggerInterface $logger          Records a failed import.
 	 * @param DemoDataService $demoDataService Imports the shipped demo dataset.
+	 * @param SetupAdministrations $setupAdministrations Creates the Administraties step's administrations and writes the working mode.
+	 * @param IUserSession    $userSession     The administrator running the wizard.
+	 * @param SetupHealthCheck $healthCheck    The Klaar step's health check.
 	 *
 	 * @return void
 	 */
@@ -97,6 +103,9 @@ class SetupController extends Controller {
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly DemoDataService $demoDataService,
+		private readonly SetupAdministrations $setupAdministrations,
+		private readonly IUserSession $userSession,
+		private readonly SetupHealthCheck $healthCheck,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -123,6 +132,7 @@ class SetupController extends Controller {
 	 *       additionally admit delegated settings admins.
 	 *
 	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
 	public function status(): JSONResponse {
@@ -144,6 +154,10 @@ class SetupController extends Controller {
 					'demo-data'      => ['done' => ($demoDecided === true || $picked !== '')],
 					'done'           => ['done' => true],
 				],
+				// The Klaar step's health check: what the import left, whether
+				// background jobs run, which payroll tables are loaded. A
+				// failure reads as failed, never as passed.
+				'health'    => $this->healthCheck->check(),
 			]
 		);
 
@@ -177,6 +191,11 @@ class SetupController extends Controller {
 			return $this->loadDataset(actionId: $actionId);
 		}
 
+		$administrations = $this->administrationsAction(actionId: $actionId);
+		if ($administrations !== null) {
+			return $administrations;
+		}
+
 		// DECLINING IS AN ANSWER — see DEMO_DECIDED_KEY.
 		if ($actionId === 'skip-demo-data') {
 			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
@@ -203,6 +222,28 @@ class SetupController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
 	public function saveConfig(): JSONResponse {
+		$refused = $this->refuseStoredChoices();
+		if ($refused !== null) {
+			return $refused;
+		}
+
+		$this->storeParams();
+		$this->applyWorkingMode();
+
+		return new JSONResponse(data: ['success' => true]);
+
+	}//end saveConfig()
+
+	/**
+	 * A 400 for a posted value the app reads back that it does not know, or null.
+	 *
+	 * Nothing is stored when one is refused.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-unknown-mode-is-not-stored
+	 */
+	private function refuseStoredChoices(): ?JSONResponse {
 		// 🔴 THE DATASET IS VALIDATED BEFORE IT IS STORED. Everything else is
 		// written as posted, because a `config-fields` step declares its own
 		// keys and this endpoint cannot know them. The dataset is different: the
@@ -224,6 +265,22 @@ class SetupController extends Controller {
 			}
 		}
 
+		// The working mode and the fallback language are read back by the app
+		// (the mode is written onto the administrations, the language picks the
+		// documents' language), so an unknown value is refused before anything
+		// is stored, like the dataset.
+		return $this->refuseChoice(key: 'working_mode', known: SetupAdministrations::MODES)
+			?? $this->refuseChoice(key: 'default_language', known: ['nl', 'en']);
+	}//end refuseStoredChoices()
+
+	/**
+	 * Store every posted value as app config, a scalar as is and anything else as JSON.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude First-time setup wizard backend (ADR-042); no per-app behavioural spec.
+	 */
+	private function storeParams(): void {
 		foreach ($this->request->getParams() as $key => $value) {
 			if ($key === '_route') {
 				continue;
@@ -236,10 +293,107 @@ class SetupController extends Controller {
 
 			$this->appConfig->setValueString(Application::APP_ID, (string)$key, $stored);
 		}
+	}//end storeParams()
 
-		return new JSONResponse(data: ['success' => true]);
+	/**
+	 * Write a posted working mode onto the wizard's administrations.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-werkwijze-step-shall-set-the-mode-of-the-wizards-administrations-req-fts-009
+	 */
+	private function applyWorkingMode(): void {
+		$mode = $this->request->getParam('working_mode');
+		if (is_string($mode) === true) {
+			$this->setupAdministrations->applyMode(mode: $mode);
+		}
+	}//end applyWorkingMode()
 
-	}//end saveConfig()
+	/**
+	 * Run the Administraties step's create or skip action, or null for any other action.
+	 *
+	 * @param string $actionId The action.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-administraties-step-shall-create-the-administrations-humaniq-starts-with-req-fts-008
+	 */
+	private function administrationsAction(string $actionId): ?JSONResponse {
+		if ($actionId === 'create-administrations') {
+			return $this->createAdministrations();
+		}
+
+		if ($actionId === 'skip-administrations') {
+			$this->setupAdministrations->skip();
+
+			return new JSONResponse(data: ['success' => true, 'message' => 'Administrations skipped.']);
+		}
+
+		return null;
+	}//end administrationsAction()
+
+	/**
+	 * A 400 for a posted value of a choice the app reads back that is not one of its options, or null.
+	 *
+	 * @param string            $key   The app-config key.
+	 * @param array<int,string> $known The options.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-unknown-mode-is-not-stored
+	 */
+	private function refuseChoice(string $key, array $known): ?JSONResponse {
+		$value = $this->request->getParam($key);
+		if ($value === null || (is_string($value) === true && in_array($value, $known, true) === true)) {
+			return null;
+		}
+
+		$named = 'that';
+		if (is_scalar($value) === true) {
+			$named = (string)$value;
+		}
+
+		return new JSONResponse(
+			data: ['success' => false, 'message' => '"' . $named . '" is not a known ' . str_replace('_', ' ', $key) . '.'],
+			statusCode: Http::STATUS_BAD_REQUEST,
+		);
+	}//end refuseChoice()
+
+	/**
+	 * Create or reuse the administrations the Administraties step posted.
+	 *
+	 * Every entry is checked before anything is created: a refused list
+	 * creates nothing.
+	 *
+	 * @return JSONResponse `{ success, message, administrations }`.
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-administraties-step-shall-create-the-administrations-humaniq-starts-with-req-fts-008
+	 */
+	private function createAdministrations(): JSONResponse {
+		$entries = $this->request->getParam('administrations');
+		$refusal = SetupAdministrations::refusal(entries: $entries);
+		if ($refusal !== null) {
+			return new JSONResponse(data: ['success' => false, 'message' => $refusal], statusCode: Http::STATUS_BAD_REQUEST);
+		}
+
+		$userId = (string)($this->userSession->getUser()?->getUID() ?? '');
+		if ($userId === '') {
+			return new JSONResponse(data: ['success' => false, 'message' => 'Setup needs a signed-in administrator.'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		try {
+			$keys = $this->setupAdministrations->create(entries: $entries, userId: $userId);
+		} catch (\Throwable $e) {
+			$this->logger->error('Setup: creating the administrations failed: ' . $e::class);
+
+			return new JSONResponse(
+				data: ['success' => false, 'message' => 'The administrations could not be created.'],
+				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR,
+			);
+		}
+
+		return new JSONResponse(data: ['success' => true, 'message' => count($keys) . ' administration(s) ready.', 'administrations' => $keys]);
+	}//end createAdministrations()
 
 	/**
 	 * Act on the dataset a card's Load button posted as `dataset`, or on the

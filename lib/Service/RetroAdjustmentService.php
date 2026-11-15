@@ -49,6 +49,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Payroll\AwfTariffResolver;
+use OCA\Humaniq\Payroll\PayPeriod;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
@@ -82,13 +83,15 @@ class RetroAdjustmentService {
 
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
-	 * @param SettingsService $settingsService Register slug + employer-level payroll config.
+	 * @param SettingsService $settingsService Register slug.
+	 * @param EmployerPremiumSettings $premiums The employer's Aof tariff and Whk percentage.
 	 * @param PayrollCalculator $calculator The pure gross-to-net calculator (reused, never modified).
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
+		private readonly EmployerPremiumSettings $premiums,
 		private readonly PayrollCalculator $calculator,
 		private readonly LoggerInterface $logger,
 	) {
@@ -165,7 +168,7 @@ class RetroAdjustmentService {
 	 * @return string|null The refusal message.
 	 */
 	private function correctionRefusal(RetroCorrection $correction): ?string {
-		if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $correction->originalPeriod) !== 1) {
+		if (self::isMonth(period: $correction->originalPeriod) === false) {
 			return 'Ongeldige originele periode "' . $correction->originalPeriod . '" (verwacht JJJJ-MM).';
 		}
 
@@ -381,8 +384,8 @@ class RetroAdjustmentService {
 			return ['status' => 'failed', 'message' => 'Geen contract gevonden dat de originele periode dekt.'];
 		}
 
-		$aofTariff = $this->settingsService->getPayrollAofTariff();
-		$whkPercentage = $this->settingsService->getPayrollWhkPercentage($tables->werknemersverzekeringen()['whkDefault']);
+		$aofTariff = $this->premiums->getPayrollAofTariff();
+		$whkPercentage = $this->premiums->getPayrollWhkPercentage($tables->werknemersverzekeringen()['whkDefault']);
 
 		$input = CalculationInput::fromDecoded([
 			'grossMonthlySalaryCents' => (int)round($correctedGrossMonthlySalary * 100),
@@ -715,4 +718,23 @@ class RetroAdjustmentService {
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
+	/**
+	 * Whether a period id is a month. Read through PayPeriod; this path
+	 * still converts by month, so four-weekly and weekly ids wait for the
+	 * run's conversions to move to the period's share of the year.
+	 *
+	 * @param string $period The period id.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private static function isMonth(string $period): bool {
+		try {
+			return PayPeriod::parse(id: $period)->tijdvak === PayPeriod::TIJDVAK_MAAND;
+		} catch (\InvalidArgumentException) {
+			return false;
+		}
+	}//end isMonth()
+
 }//end class

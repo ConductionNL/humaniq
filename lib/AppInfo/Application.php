@@ -38,6 +38,7 @@ use OCA\Humaniq\Lifecycle\HandoffReleaseGuard;
 use OCA\Humaniq\Lifecycle\HrReopenGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Humaniq\Lifecycle\LoonaangifteMessageGuard;
+use OCA\Humaniq\Lifecycle\LeaveApprovalStepGuard;
 use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
@@ -56,8 +57,9 @@ use OCA\Humaniq\Listener\FrequentAbsenceListener;
 use OCA\Humaniq\Listener\HandoffIntakeListener;
 use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
+use OCA\Humaniq\Listener\OfferHrAssistantListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
-use OCA\Humaniq\Listener\ManagerAccessListeners;
+use OCA\Humaniq\Listener\FilteredObjectSubscriptions;
 use OCA\Humaniq\Listener\ManagerDeputyListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
@@ -70,6 +72,7 @@ use OCA\Humaniq\Listener\ReferralListener;
 use OCA\Humaniq\Listener\ExpenseCategoryGuardListener;
 use OCA\Humaniq\Listener\ExpenseManagerStampListener;
 use OCA\Humaniq\Listener\ExpensePayoutFieldsListener;
+use OCA\Humaniq\Listener\DeploymentPlanTotalsListener;
 use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\PayrollRunApprovedListener;
 use OCA\Humaniq\Listener\CaoComponentOverrideListener;
@@ -86,6 +89,7 @@ use OCA\Humaniq\Listener\TimeEstimateListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
 use OCA\Humaniq\Listener\TimesheetApprovalListener;
 use OCA\Humaniq\Listener\TimesheetProcessStampListener;
+use OCA\Humaniq\Listener\LeaveRequestProcessStampListener;
 use OCA\Humaniq\Listener\TrainingRecordListener;
 use OCA\Humaniq\Listener\TravelAmountListener;
 use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
@@ -163,6 +167,9 @@ class Application extends App implements IBootstrap {
 			\OCA\Humaniq\Listener\PwaHeadListener::class
 		);
 
+		// self-service-policy-assistant D2: offer Hermiq the HR-vraagbaak template.
+		// The event is named by string, so humaniq installs without Hermiq.
+		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);
 		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class)));
 		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
 		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
@@ -220,14 +227,12 @@ class Application extends App implements IBootstrap {
 		// condition. It loads the administered LeaveTypes, so it takes the shared
 		// register gateway; keyed by its FQCN so OpenRegister's
 		// LifecycleGuardRegistry resolves the `requires` tag on that transition.
-		$context->registerService(
-			LeaveTypeConditionGuard::class,
-			static function ($c): LeaveTypeConditionGuard {
-				return new LeaveTypeConditionGuard(
-					gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class)
-				);
-			}
-		);
+		$context->registerService(LeaveTypeConditionGuard::class, static fn ($c): LeaveTypeConditionGuard => new LeaveTypeConditionGuard(gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class)));
+
+		// leave-approval-steps-and-history D2: the guard on approve-manager,
+		// approve and reject of a LeaveRequest; keyed by its FQCN for the
+		// LifecycleGuardRegistry, like the guard above.
+		$context->registerService(LeaveApprovalStepGuard::class, static fn ($c): LeaveApprovalStepGuard => new LeaveApprovalStepGuard(gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class), groupManager: $c->get(\OCP\IGroupManager::class)));
 
 		// hours-process-redesign: the request-scoped internal-writer marker MUST
 		// be shared — the aggregation service / repair step set it and the
@@ -520,7 +525,7 @@ class Application extends App implements IBootstrap {
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 		$this->registerApprovalsInboxListeners($dispatcher);
-		(new ManagerAccessListeners())->register(fn (array $on) => $this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $on['event'], listener: $on['listener'], registers: null, schemas: $on['schemas']));
+		(new FilteredObjectSubscriptions())->register(fn (array $on) => $this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $on['event'], listener: $on['listener'], registers: null, schemas: $on['schemas']));
 		$this->registerOvertimeCreditListener($dispatcher);
 		$this->registerExpensePayrollListeners($dispatcher);
 		$this->registerHrLifecycleEventListener($dispatcher);
@@ -572,6 +577,12 @@ class Application extends App implements IBootstrap {
 				registers: null,
 				schemas: [TimesheetProcessStampListener::TIMESHEET_SLUG]
 			);
+		}
+
+		// leave-approval-steps-and-history D1: pre-save stamping of who decided
+		// a leave request and when, with each step kept in `decisions`.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: LeaveRequestProcessStampListener::class, registers: null, schemas: [LeaveRequestProcessStampListener::LEAVE_REQUEST_SLUG]);
 		}
 
 		// hours-process-redesign Decision 3: post-save aggregate recompute of
@@ -982,7 +993,7 @@ class Application extends App implements IBootstrap {
 	 */
 	private function registerExpensePayrollListeners(IEventDispatcher $dispatcher): void {
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
-			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG, PayrollRunFindingStampListener::class => PayrollRunFindingStampListener::SLUG, CaoComponentOverrideListener::class => CaoComponentOverrideListener::SLUG, CostAllocationGuardListener::class => CostAllocationGuardListener::COSTALLOCATION_SLUG, ExpenseCategoryGuardListener::class => ExpenseCategoryGuardListener::SLUG, ExpenseManagerStampListener::class => ExpenseManagerStampListener::SLUG, ExpensePayoutFieldsListener::class => ExpensePayoutFieldsListener::SLUG] as $listener => $slug) {
+			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG, PayrollRunFindingStampListener::class => PayrollRunFindingStampListener::SLUG, CaoComponentOverrideListener::class => CaoComponentOverrideListener::SLUG, CostAllocationGuardListener::class => CostAllocationGuardListener::COSTALLOCATION_SLUG, ExpenseCategoryGuardListener::class => ExpenseCategoryGuardListener::SLUG, ExpenseManagerStampListener::class => ExpenseManagerStampListener::SLUG, ExpensePayoutFieldsListener::class => ExpensePayoutFieldsListener::SLUG, DeploymentPlanTotalsListener::class => DeploymentPlanTotalsListener::SLUG] as $listener => $slug) {
 				$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: $listener, registers: null, schemas: [$slug]);
 			}
 		}

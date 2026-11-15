@@ -58,6 +58,7 @@ final class CalculationInputMapper {
 	 *
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-007
 	 * @spec openspec/specs/30-procent-regeling/spec.md#REQ-30P-003
+	 * @spec openspec/changes/payroll-special-regimes
 	 */
 	public function toPackInputs(CalculationInput $input): array {
 		return [
@@ -70,6 +71,9 @@ final class CalculationInputMapper {
 			'whkPercentage' => $input->whkPercentage,
 			'verzekeringsplichtig' => $input->verzekeringsplichtig,
 			'thirtyPercentRulingRate' => $input->thirtyPercentRulingRate,
+			'zvwMode' => $input->zvwMode,
+			'rvuThreshold' => $input->rvuThresholdCents,
+			'rvuFinalLevyRate' => $input->rvuFinalLevyRate,
 		];
 
 	}//end toPackInputs()

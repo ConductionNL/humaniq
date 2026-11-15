@@ -1,6 +1,6 @@
 ## 1. Detail pages
 
-- [ ] 1.1 Add a manifest check (in `npm run check:manifest`) that every `type: "detail"` page
+- [x] 1.1 Add a manifest check (in `npm run check:manifest`) that every `type: "detail"` page
       in `src/manifest.json` and `src/manifest.d/*.json` sets `sidebar.showMetadata: true`, and
       set it where it is missing. Verify: the check exits 0, and 1 on a page without it.
 
@@ -14,7 +14,7 @@
 
 ## 3. Machine reads
 
-- [ ] 3.1 Check humaniq's backend reads inside one operation (`PayrollRunService`,
+- [x] 3.1 Check humaniq's backend reads inside one operation (`PayrollRunService`,
       `PayrollMutationService`) and pass `_audit: false` where they read through
       `ObjectService::find()`. Verify: unit test that a payroll calculation writes no `read`
       entry.

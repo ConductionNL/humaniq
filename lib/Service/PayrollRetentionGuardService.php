@@ -142,6 +142,13 @@ class PayrollRetentionGuardService {
 	private const RETENTION_SERVICE_FQCN = 'OCA\OpenRegister\Service\RetentionService';
 
 	/**
+	 * OpenRegister's hold order, by name: the reason and matter one placeHold() call records.
+	 *
+	 * @var string
+	 */
+	private const HOLD_ORDER_FQCN = 'OCA\OpenRegister\Service\HoldOrder';
+
+	/**
 	 * The legal-hold reason recorded when this service places one.
 	 *
 	 * @var string
@@ -227,7 +234,7 @@ class PayrollRetentionGuardService {
 		}
 
 		$reason = self::HOLD_REASON_PREFIX . $ceiling->format('Y-m-d') . ' (' . $source . ')';
-		$held = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
+		$held = $this->placeHold(object: $object, reason: $reason);
 
 		if ($this->persist(held: $held, schema: $schema) === false) {
 			return ['held' => false, 'ceiling' => $ceiling->format('Y-m-d'), 'source' => $source];
@@ -306,7 +313,7 @@ class PayrollRetentionGuardService {
 		}
 
 		$ceiling = sprintf('%04d-12-31', ($periodYear + $floor->years));
-		$held = $this->retentionService()->placeLegalHold(object: $object, reason: $this->floorReason(floor: $floor, period: [$ceiling, $periodValue]));
+		$held = $this->placeHold(object: $object, reason: $this->floorReason(floor: $floor, period: [$ceiling, $periodValue]));
 
 		if ($this->persist(held: $held, schema: $floor->schema) === false) {
 			return ['held' => false, 'ceiling' => $ceiling];
@@ -420,7 +427,7 @@ class PayrollRetentionGuardService {
 		}
 
 		$reason = 'Geërfd van retentie-/legal-hold-status van ' . $sourceDescription . ' (hrmq#99).';
-		$held = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
+		$held = $this->placeHold(object: $object, reason: $reason);
 
 		return $this->persist(held: $held, schema: $schema);
 	}//end inheritLegalHold()
@@ -494,6 +501,28 @@ class PayrollRetentionGuardService {
 
 		return true;
 	}//end persist()
+
+	/**
+	 * Place a legal hold through OpenRegister: `placeHold(object, HoldOrder)` where
+	 * OpenRegister offers it, else the release's `placeLegalHold(object, reason)`.
+	 *
+	 * @param object $object The OpenRegister ObjectEntity to hold.
+	 * @param string $reason Why it is held.
+	 *
+	 * @return mixed The held entity.
+	 *
+	 * @psalm-suppress UndefinedClass HoldOrder exists only when OpenRegister is installed; it is checked with class_exists() first.
+	 */
+	private function placeHold(object $object, string $reason): mixed {
+		$service = $this->retentionService();
+		if (method_exists($service, 'placeHold') === true && class_exists(self::HOLD_ORDER_FQCN) === true) {
+			$order = self::HOLD_ORDER_FQCN;
+
+			return $service->placeHold(object: $object, order: new $order(reason: $reason));
+		}
+
+		return $service->placeLegalHold(object: $object, reason: $reason);
+	}//end placeHold()
 
 	/**
 	 * @return mixed OpenRegister's RetentionService.
