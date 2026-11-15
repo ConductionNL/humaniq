@@ -23,7 +23,7 @@ use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Service\Support\InMemoryLocks;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\Lock\ILockingProvider;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;

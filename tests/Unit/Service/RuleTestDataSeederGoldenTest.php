@@ -38,7 +38,7 @@ use OCA\Humaniq\Standards\Checks\CheckProvider;
 use OCA\Humaniq\Standards\Checks\SeedsObjects;
 use OCA\Humaniq\Standards\Checks\UpsertsObjects;
 use OCA\Humaniq\Standards\RuleEngine;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;

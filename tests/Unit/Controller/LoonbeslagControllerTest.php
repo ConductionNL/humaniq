@@ -37,7 +37,7 @@ use OCA\Humaniq\Controller\LoonbeslagController;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\SettingsService;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
 use OCP\IRequest;

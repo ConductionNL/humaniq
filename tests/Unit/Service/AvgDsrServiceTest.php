@@ -49,7 +49,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\AvgDsrService;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\SettingsService;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;

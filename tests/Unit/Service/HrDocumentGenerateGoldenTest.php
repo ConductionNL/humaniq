@@ -37,7 +37,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\SettingsService;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;

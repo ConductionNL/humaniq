@@ -43,7 +43,7 @@ use OCA\Humaniq\BackgroundJob\LeaveAccrualJob;
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Standards\RuleEngine;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;

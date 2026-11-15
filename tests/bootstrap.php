@@ -262,6 +262,6 @@ if (class_exists('OCA\\OpenRegister\\Service\\Dmn\\DecisionTableEvaluator') === 
 // ObjectService::saveObject() takes an ObjectSaveOptions with its target,
 // policy and actor. The stub declares them so humaniq's save calls, and the
 // doubles that receive them, load in the standalone suite.
-if (class_exists('OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions') === false) {
+if (class_exists('OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions') === false) {
 	require __DIR__ . '/stubs/OpenRegisterSaveOptionsStub.php';
 }

@@ -39,7 +39,7 @@ use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\TimesheetAggregationService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\BackgroundJob\IJobList;
 use OCP\IGroupManager;
 use OCP\IUser;

@@ -32,7 +32,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Flow;
 
 use OCA\Humaniq\Service\SettingsService;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;

@@ -46,7 +46,7 @@ use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\OfferLetterService;
 use OCA\Humaniq\Service\OfferSigningRecoveryService;
 use OCA\Humaniq\Service\SettingsService;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\IUser;
 use OCP\IUserManager;

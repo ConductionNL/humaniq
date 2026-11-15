@@ -41,7 +41,7 @@ use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Service\RetroAdjustmentService;
 use OCA\Humaniq\Service\RetroCorrection;
 use OCA\Humaniq\Service\SettingsService;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;

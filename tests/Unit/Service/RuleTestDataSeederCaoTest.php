@@ -33,7 +33,7 @@ use OCA\Humaniq\Service\RuleTestDataEmployeeIndex;
 use OCA\Humaniq\Service\RuleTestDataSeeder;
 use OCA\Humaniq\Standards\CaoRegistry;
 use OCA\Humaniq\Standards\RuleEngine;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUserManager;
