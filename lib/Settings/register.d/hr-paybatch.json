@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "PayrollPaymentBatch": {
+                "configuration": {"exportable": true},
                 "slug": "PayrollPaymentBatch",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "BankTransfer",

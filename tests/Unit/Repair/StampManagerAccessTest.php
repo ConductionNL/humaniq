@@ -37,7 +37,7 @@ class StampManagerAccessTest extends TestCase {
 	/**
 	 * A fake IOutput that records what the step told the operator.
 	 *
-	 * @return IOutput An IOutput double exposing `infos` and `warnings` arrays.
+	 * @return IOutput&object{infos: list<string>, warnings: list<string>} An IOutput double exposing `infos` and `warnings` arrays.
 	 *                 Named `outputDouble` because PHPUnit\Framework\TestCase::output()
 	 *                 is final and cannot be overridden.
 	 */
@@ -110,7 +110,7 @@ class StampManagerAccessTest extends TestCase {
 	 *
 	 * @param bool $done The done.
 	 *
-	 * @return IAppConfig
+	 * @return IAppConfig&\PHPUnit\Framework\MockObject\MockObject
 	 */
 	private function appConfig(bool $done): IAppConfig {
 		$double = $this->createMock(IAppConfig::class);
@@ -182,5 +182,31 @@ class StampManagerAccessTest extends TestCase {
 
 		$this->step($stamps, $this->appConfig(true))->run($this->outputDouble());
 	}//end testTheStepRunsOnlyOnce()
+
+	/**
+	 * A pass that throws warns, logs and leaves the marker unset, so the step
+	 * runs again on the next upgrade or repair.
+	 *
+	 * @return void
+	 */
+	public function testAThrowingPassWarnsAndLeavesTheMarkerUnset(): void {
+		$stamps = $this->createMock(ManagerAccessStamps::class);
+		$stamps->expects(self::once())->method('run')->willThrowException(new \RuntimeException('register unreachable'));
+		$config = $this->appConfig(false);
+		$config->expects(self::never())->method('setValueBool');
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())->method('error')
+			->with('Humaniq: manager access stamp failed', ['exception' => 'register unreachable']);
+
+		$step = new StampManagerAccess($stamps, $settings, $logger, $config);
+		$out = $this->outputDouble();
+		$step->run($out);
+
+		self::assertSame([], $out->infos);
+		self::assertSame(['The manager access fields were not stamped and the step runs again: register unreachable'], $out->warnings);
+		self::assertSame('Stamp the manager and deputies on humaniq records they may read', $step->getName());
+	}//end testAThrowingPassWarnsAndLeavesTheMarkerUnset()
 
 }//end class

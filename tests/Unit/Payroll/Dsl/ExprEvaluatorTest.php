@@ -161,6 +161,78 @@ class ExprEvaluatorTest extends TestCase {
 	}//end testRefsAreCollectableWithoutEvaluating()
 
 	/**
+	 * Each malformed expression is refused at parse time with its exact message.
+	 *
+	 * @param string $expression The expression.
+	 * @param string $message    The expected message.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider malformedExpressions
+	 */
+	public function testAMalformedExpressionIsRejectedAtParseTime(string $expression, string $message): void {
+		$this->expectException(DslException::class);
+		$this->expectExceptionMessage($message);
+
+		(new ExprEvaluator())->parse($expression);
+
+	}//end testAMalformedExpressionIsRejectedAtParseTime()
+
+	/**
+	 * Malformed expressions and their refusals.
+	 *
+	 * @return array<string, array{0: string, 1: string}>
+	 */
+	public static function malformedExpressions(): array {
+		return [
+			'blank' => ['   ', 'Pack: lege expressie.'],
+			'trailing operand' => ['1 2', 'Pack: onverwacht vervolg in expressie "1 2".'],
+			'dangling operator' => ['1 +', 'Pack: onverwacht einde van expressie.'],
+			'stray close paren' => [')', 'Pack: onverwacht teken ")" in expressie.'],
+			'too few arguments' => ['min(1)', 'Pack: functie "min" verwacht 2-2 argumenten, kreeg 1.'],
+			'too many arguments' => ['round(1, 2, 3)', 'Pack: functie "round" verwacht 1-2 argumenten, kreeg 3.'],
+			'call without paren' => ['abs 1', 'Pack: "(" verwacht in expressie.'],
+			'unclosed paren' => ['(1 + 2', 'Pack: ")" verwacht in expressie.'],
+			'unbalanced ref bracket' => ['@table.a[b + 1', 'Pack: ongebalanceerde "[" in een expressie-verwijzing.'],
+		];
+
+	}//end malformedExpressions()
+
+	/**
+	 * References resolve through the context, including a bracketed segment
+	 * and `:cents`, and a one-argument `round` rounds to an integer.
+	 *
+	 * @return void
+	 */
+	public function testReferencesResolveInsideAnExpression(): void {
+		$expr = new ExprEvaluator();
+		$ctx = new StepContext(['gross' => 1000], TaxTables::load('nl-2026'), '2026-02', []);
+		$ctx->setStep('tax', 250);
+
+		$tree = $expr->parse('@input.gross * 2 - @step.tax + round(2.5) + @table.zvw[maximumbijdrageloon]:cents');
+
+		$this->assertSame(['@input.gross', '@step.tax', '@table.zvw[maximumbijdrageloon]:cents'], $expr->refsOf($tree));
+		$this->assertSame(7942653.0, $expr->evaluate($tree, $ctx, new RefResolver()), '2000 - 250 + 3 + 79409 euro in cents');
+
+	}//end testReferencesResolveInsideAnExpression()
+
+	/**
+	 * A reference that resolves to a non-number cannot take part in arithmetic.
+	 *
+	 * @return void
+	 */
+	public function testANonNumericReferenceIsRejectedAtEvaluation(): void {
+		$expr = new ExprEvaluator();
+		$ctx = new StepContext(['aow' => false], TaxTables::load('nl-2026'), '2026-02', []);
+
+		$this->expectException(DslException::class);
+		$this->expectExceptionMessage('Pack: verwijzing "@input.aow" levert geen getal op en kan niet in een expressie worden gebruikt.');
+
+		$expr->evaluate($expr->parse('@input.aow + 1'), $ctx, new RefResolver());
+
+	}//end testANonNumericReferenceIsRejectedAtEvaluation()
+
+	/**
 	 * Evaluate an expression with no references.
 	 *
 	 * @param string $expression The expression.

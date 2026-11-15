@@ -380,5 +380,75 @@ class NlEngineChecksTest extends TestCase {
 		$this->assertTrue($check($deleted, $deletedContext));
 
 	}//end testUnresolvableArtefactStaysVacuousUnderProvenance()
+	/**
+	 * A stamp whose artefact part is empty (`@1.0.0`) names no engine
+	 * artefact, so an engine run carrying it violates.
+	 *
+	 * @return void
+	 */
+	public function testEngineRunWithAnEmptyArtefactViolates(): void {
+		$check = $this->checks['PayrollRun']['nl-engine-table-version'];
+
+		$this->assertFalse($check(['engineVersion' => '@1.0.0', 'calculatedAt' => '2026-07-14T10:00:00Z'], []));
+
+	}//end testEngineRunWithAnEmptyArtefactViolates()
+
+	/**
+	 * The bundled-pack lookup is memoised: after a reset the first unknown
+	 * stamp loads the packs, the second is answered from the memo, and both
+	 * give the same verdict as a known pack stamp alongside them.
+	 *
+	 * @return void
+	 */
+	public function testThePackLookupAnswersAgainFromItsMemoAfterAReset(): void {
+		$check = $this->checks['PayrollRun']['nl-engine-table-version'];
+		$run = static fn (string $stamp): array => ['engineVersion' => $stamp, 'calculatedAt' => '2026-07-14T10:00:00Z'];
+
+		NlEngineChecks::resetBundledPackIdsCache();
+		$this->assertFalse($check($run('nl-2099@1.0.0'), []));
+		$this->assertFalse($check($run('nl-2098@1.0.0'), []));
+		$this->assertTrue($check($run('nl-2026@1.0.0'), []));
+
+		// The provenance predicate's pack-by-id memo is cleared by the same hook.
+		NlEngineChecks::resetBundledPackIdsCache();
+		$provenance = $this->checks['Payslip']['nl-engine-provenance-complete'];
+		$context = $this->context(['run-1' => ['id' => 'run-1', 'engineVersion' => 'nl-2026@1.0.0']]);
+		$this->assertFalse($provenance($this->payslip(['engineInputSnapshot' => '{"jurisdiction":"DE"}']), $context));
+
+	}//end testThePackLookupAnswersAgainFromItsMemoAfterAReset()
+
+	/**
+	 * A snapshot that decodes but carries no (or a blank) jurisdiction cannot
+	 * be checked against the run's pack: a provenance violation.
+	 *
+	 * @return void
+	 */
+	public function testSnapshotWithoutAJurisdictionViolatesProvenance(): void {
+		$check = $this->checks['Payslip']['nl-engine-provenance-complete'];
+		$context = $this->context(['run-1' => ['id' => 'run-1', 'engineVersion' => 'nl-2026@1.0.0']]);
+
+		$this->assertFalse($check($this->payslip(['engineInputSnapshot' => '{"period":"2026-02"}']), $context));
+		$this->assertFalse($check($this->payslip(['engineInputSnapshot' => '{"jurisdiction":"  "}']), $context));
+		$this->assertFalse($check($this->payslip(['engineInputSnapshot' => '[1,2]']), $context));
+
+	}//end testSnapshotWithoutAJurisdictionViolatesProvenance()
+
+	/**
+	 * A snapshot read back already decoded (OpenRegister's MagicMapper
+	 * json_decode()s it) is checked like the JSON string: a consistent one
+	 * passes, an inconsistent or jurisdiction-less one violates.
+	 *
+	 * @return void
+	 */
+	public function testAnAlreadyDecodedSnapshotIsCheckedLikeItsJson(): void {
+		$check = $this->checks['Payslip']['nl-engine-provenance-complete'];
+		$context = $this->context(['run-1' => ['id' => 'run-1', 'engineVersion' => 'nl-2026@1.0.0']]);
+
+		$this->assertTrue($check($this->payslip(['engineInputSnapshot' => ['jurisdiction' => 'nl', 'period' => '2026-02']]), $context));
+		$this->assertFalse($check($this->payslip(['engineInputSnapshot' => ['jurisdiction' => 'DE']]), $context));
+		$this->assertFalse($check($this->payslip(['engineInputSnapshot' => ['period' => '2026-02']]), $context));
+		$this->assertFalse($check($this->payslip(['engineInputSnapshot' => []]), $context));
+
+	}//end testAnAlreadyDecodedSnapshotIsCheckedLikeItsJson()
 
 }//end class

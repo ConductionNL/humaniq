@@ -225,6 +225,26 @@
         "verified": true,
         "note": "2025: EUR 35.468. Reduced norm for employees under 30 with a qualifying (NL-equivalent) master's degree -- Employee.thirtyPercentRulingReducedNormApplies gates which norm nl-30-regeling-salarisnorm compares against (30-procent-regeling)."
       }
+    },
+    "specialRegimes": {
+      "_note": "Per-regime treatment for pay that is not ordinary wage from a current employment (payroll-special-regimes design.md D2). The run reads the regime of a BenefitEntitlement (its kind) or of a political-office contract and passes these values to the pack; any unverified leaf the regime needs stops that payslip with regime-unverified until a maintainer confirms it.",
+      "rvu": {
+        "taxTableColor": {"value": "groen", "source": "Wet op de loonbelasting 1964 (loon uit vroegere dienstbetrekking)", "verified": false, "checkAgainst": "Belastingdienst Handboek Loonheffingen 2026, hoofdstuk Tabellen en toepassing (witte/groene tabel) and Regeling premiepercentages 2026", "note": "An early-retirement benefit is wage from a former employment: green table, arbeidskorting skipped."},
+        "werknemersverzekeringen": {"value": false, "source": "Wet financiering sociale verzekeringen (premieloon)", "verified": false, "checkAgainst": "Handboek Loonheffingen 2026, hoofdstuk Premies werknemersverzekeringen: RVU-uitkering", "note": "No employee insurance premiums on an RVU benefit."},
+        "zvwMode": {"value": "inhouding", "source": "Zorgverzekeringswet art. 43", "verified": false, "checkAgainst": "Handboek Loonheffingen 2026, hoofdstuk Zvw: ingehouden bijdrage over uitkeringen en loon uit vroegere dienstbetrekking"},
+        "thresholdPerMonth": {"value": 2286.0, "source": "Wet op de loonbelasting 1964 art. 32ba (RVU-drempelvrijstelling)", "verified": false, "checkAgainst": "Belastingdienst Nieuwsbrief Loonheffingen 2026: RVU-drempelvrijstelling per maand", "note": "Monthly amount (euro) of the benefit free of the final levy; the excess carries it."},
+        "finalLevyRate": {"value": 52.0, "source": "Wet op de loonbelasting 1964 art. 32ba (pseudo-eindheffing RVU)", "verified": false, "checkAgainst": "Wet op de loonbelasting 1964 art. 32ba, tekst geldend op 1 januari 2026", "note": "Percentage the employer owes on the part of the benefit above the threshold."}
+      },
+      "wachtgeld": {
+        "taxTableColor": {"value": "groen", "source": "Wet op de loonbelasting 1964 (loon uit vroegere dienstbetrekking)", "verified": false, "checkAgainst": "Belastingdienst Handboek Loonheffingen 2026, hoofdstuk Tabellen en toepassing (witte/groene tabel) and Regeling premiepercentages 2026", "note": "Wachtgeld under the Appa is a benefit after the office ends: green table."},
+        "werknemersverzekeringen": {"value": false, "source": "Algemene pensioenwet politieke ambtsdragers (Appa)", "verified": false, "checkAgainst": "Handboek Loonheffingen 2026, hoofdstuk Politieke ambtsdragers: Appa-uitkering"},
+        "zvwMode": {"value": "inhouding", "source": "Zorgverzekeringswet art. 43", "verified": false, "checkAgainst": "Handboek Loonheffingen 2026, hoofdstuk Zvw: ingehouden bijdrage over uitkeringen"}
+      },
+      "politiek-ambt": {
+        "taxTableColor": {"value": "wit", "source": "Wet op de loonbelasting 1964 art. 3 (politieke ambtsdragers als werknemer)", "verified": false, "checkAgainst": "Belastingdienst Handboek Loonheffingen 2026, hoofdstuk Tabellen en toepassing (witte/groene tabel) and Regeling premiepercentages 2026", "note": "An office holder in office is taxed as current wage: white table."},
+        "werknemersverzekeringen": {"value": false, "source": "Wet financiering sociale verzekeringen; Appa", "verified": false, "checkAgainst": "Handboek Loonheffingen 2026, hoofdstuk Politieke ambtsdragers: niet verzekerd voor WW, WIA en ZW", "note": "Office holders are not insured for unemployment, disability or sickness."},
+        "zvwMode": {"value": "werkgeversheffing", "source": "Zorgverzekeringswet art. 42", "verified": false, "checkAgainst": "Handboek Loonheffingen 2026, hoofdstuk Zvw: werkgeversheffing over loon van politieke ambtsdragers"}
+      }
     }
   },
   "_notes": {

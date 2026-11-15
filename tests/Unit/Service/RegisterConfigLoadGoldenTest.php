@@ -49,6 +49,7 @@ use RuntimeException;
  * @covers \OCA\Humaniq\Service\RegisterConfigReader
  * @uses   \OCA\Humaniq\Service\SettingsService
  * @uses   \OCA\Humaniq\Service\InternalWriteMarker
+ * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
  *
  * @spec openspec/specs/hrm-rule-engine/spec.md
  */

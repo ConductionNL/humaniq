@@ -140,6 +140,25 @@ class PayrollExpenseFoldServiceTest extends TestCase {
 	}//end testOnlyTheRightClaimsAreSelected()
 
 	/**
+	 * A claim without an approval date, or held by no run, is not selected
+	 * unless it is approved in or before the period.
+	 *
+	 * @return void
+	 */
+	public function testAnUndatedApprovalIsNotSelected(): void {
+		$service = $this->service([
+			'Expense' => [
+				$this->claim(['id' => 'undated', 'approvedAt' => null]),
+				$this->claim(['id' => 'lastday', 'approvedAt' => '2026-05-31T23:00:00Z', 'payrollRunId' => '']),
+			],
+		]);
+
+		$fold = $service->foldFor(inputs: $service->inputs(norm: null), employeeId: 'emp-1', period: '2026-05', runId: 'run-5');
+
+		$this->assertSame(['lastday'], $fold['claimIds']);
+	}//end testAnUndatedApprovalIsNotSelected()
+
+	/**
 	 * Without claims or allowances the payslip gains no field at all.
 	 *
 	 * @return void

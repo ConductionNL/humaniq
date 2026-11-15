@@ -35,6 +35,7 @@ use Psr\Log\LoggerInterface;
  * The repair step runs the restamp pass for real and never aborts an upgrade.
  *
  * @covers \OCA\Humaniq\Repair\RestampOpenManagerRecords
+ * @uses   \OCA\Humaniq\Service\OpenRegisterAvailability
  */
 class RestampOpenManagerRecordsTest extends TestCase {
 

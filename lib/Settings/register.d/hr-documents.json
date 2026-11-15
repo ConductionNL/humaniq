@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "HrGeneratedDocument": {
+                "configuration": {"exportable": true},
                 "slug": "HrGeneratedDocument",
                 "icon": "FileDocumentOutline",
                 "version": "0.4.0",
@@ -115,6 +116,7 @@
                 }
             },
             "Jaaropgaaf": {
+                "configuration": {"exportable": true},
                 "slug": "Jaaropgaaf",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "FileCertificateOutline",

@@ -38,9 +38,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Service\RetroAdjustmentService;
 use OCA\Humaniq\Service\RetroCorrection;
 use OCA\Humaniq\Service\SettingsService;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
@@ -134,10 +136,8 @@ class RetroAdjustmentGoldenTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getPayrollAofTariff')->willReturn('laag');
-		$settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
 
-		$service = new RetroAdjustmentService($container, $settings, new PayrollCalculator(), $this->logger());
+		$service = new RetroAdjustmentService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), $this->logger());
 		$results = [];
 		foreach ($s['calls'] as $call) {
 			$results[] = ($call[0] === 'recompute') ? $service->recomputeAdjustment($call[1]) : $this->adjust($service, $call[1]);

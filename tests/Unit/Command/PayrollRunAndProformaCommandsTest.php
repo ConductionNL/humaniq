@@ -36,6 +36,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  *
  * @covers \OCA\Humaniq\Command\PayrollRunCommand
  * @covers \OCA\Humaniq\Command\ProformaPayslipCommand
+ * @uses \OCA\Humaniq\Command\CommandOptions
  */
 class PayrollRunAndProformaCommandsTest extends TestCase {
 

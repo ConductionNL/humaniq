@@ -2,12 +2,12 @@
 kind: code
 ---
 
-# Write the requirements thirteen matrix rows still lack
+# Write the requirements fifteen matrix rows still lack
 
 ## Why
 
 Every row in `openspec/parity/capabilities.json` should name the requirement that says it. For
-most rows a shipped spec already does, and the row now records that requirement. For the thirteen
+most rows a shipped spec already does, and the row now records that requirement. For the fifteen
 rows below, the cited spec covers only part of the row, or states the rule in prose with no
 scenario. This change writes the missing half as requirements with scenarios.
 
@@ -28,6 +28,8 @@ scenario. This change writes the missing half as requirements with scenarios.
 | `dm-expense-vat` | the VAT to reclaim; the spec only adds the field |
 | `cmp-rule-engine` | a page with the violations; the audit is reachable through `occ` only |
 | `cmp-coverage` | the same page shows the corpus coverage; today only `occ` prints it |
+| `fil-premium-differentiation` | the low premium for a permanent written contract and the high one for flex; the spec only covers the exceptions |
+| `rep-billable-ratio` | the billable share per team and per person; the spec only gives one ratio per administration |
 
 ## What changes
 
@@ -48,6 +50,8 @@ scenario. This change writes the missing half as requirements with scenarios.
 - `hris-api-public`: an integrator reads and writes through the objects API.
 - `receipt-ocr`: the VAT to reclaim per period.
 - `hrm-rule-engine`: a page with the audit's violations and coverage.
+- `awf-premium-review`: the low and high premium by contract.
+- `humaniq-dashboard-steering-indicators`: the billable share per team and per person.
 
 ## Impact
 

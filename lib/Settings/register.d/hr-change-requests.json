@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "EmployeeChangeRequest": {
+                "configuration": {"exportable": true},
                 "slug": "EmployeeChangeRequest",
                 "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr"]},
                 "icon": "PencilOutline",
@@ -234,6 +235,7 @@
                 }
             },
             "ChangeApprovalRule": {
+                "configuration": {"exportable": true},
                 "slug": "ChangeApprovalRule",
                 "icon": "ShieldAccountOutline",
                 "version": "0.1.0",
