@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\OrgChartRequest;
 use OCA\Humaniq\Service\OrgChartService;
 use OCA\Humaniq\Service\OrgResolutionService;
 use PHPUnit\Framework\TestCase;
@@ -90,7 +91,7 @@ class OrgChartServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAThreeLevelTreeWithManagersAndHeadcounts(): void {
-		$chart = $this->service()->chart(units: $this->units(), assignments: $this->assignments(), employeesById: $this->employees(), date: '2026-06-01');
+		$chart = $this->service()->chart(request: self::request(units: $this->units(), assignments: $this->assignments(), employeesById: $this->employees(), date: '2026-06-01'));
 
 		self::assertCount(1, $chart['tree']);
 		$root = $chart['tree'][0];
@@ -111,7 +112,7 @@ class OrgChartServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnEndedPlacementCountsOnlyBeforeItsEnd(): void {
-		$chart = $this->service()->chart(units: $this->units(), assignments: $this->assignments(), employeesById: $this->employees(), date: '2026-01-15');
+		$chart = $this->service()->chart(request: self::request(units: $this->units(), assignments: $this->assignments(), employeesById: $this->employees(), date: '2026-01-15'));
 
 		self::assertSame(3, $chart['tree'][0]['children'][0]['children'][0]['headcount']);
 		self::assertSame(0, $chart['tree'][0]['children'][1]['children'][0]['headcount']);
@@ -127,7 +128,7 @@ class OrgChartServiceTest extends TestCase {
 		$units = $this->units();
 		$units[2]['active'] = false;
 
-		$chart = $this->service()->chart(units: $units, assignments: [], employeesById: [], date: '2026-06-01');
+		$chart = $this->service()->chart(request: self::request(units: $units, assignments: [], employeesById: [], date: '2026-06-01'));
 
 		self::assertSame(['Gemeente', 'Team 3'], array_column($chart['tree'], 'label'));
 		self::assertNotContains('dir-b', array_column($chart['nodes'], 'id'));
@@ -140,10 +141,10 @@ class OrgChartServiceTest extends TestCase {
 	 */
 	public function testPeopleAreListedOnlyWhenAskedAndReadable(): void {
 		$service = $this->service();
-		$without = $service->chart(units: $this->units(), assignments: $this->assignments(), employeesById: $this->employees(), date: '2026-06-01');
+		$without = $service->chart(request: self::request(units: $this->units(), assignments: $this->assignments(), employeesById: $this->employees(), date: '2026-06-01'));
 		self::assertArrayNotHasKey('people', $without['tree'][0]['children'][0]['children'][0]);
 
-		$with = $service->chart(units: $this->units(), assignments: $this->assignments(), employeesById: $this->employees(), date: '2026-06-01', readableEmployeeIds: ['e-2']);
+		$with = $service->chart(request: self::request(units: $this->units(), assignments: $this->assignments(), employeesById: $this->employees(), date: '2026-06-01', readableEmployeeIds: ['e-2']));
 		$team1 = $with['tree'][0]['children'][0]['children'][0];
 		self::assertSame([['id' => 'e-2', 'name' => 'Kim de Vries', 'role' => 'Adviseur']], $team1['people']);
 		self::assertSame(2, $team1['headcount']);
@@ -155,7 +156,7 @@ class OrgChartServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testARootNarrowsTheChart(): void {
-		$chart = $this->service()->chart(units: $this->units(), assignments: [], employeesById: [], date: '2026-06-01', rootId: 'dir-a');
+		$chart = $this->service()->chart(request: self::request(units: $this->units(), assignments: [], employeesById: [], date: '2026-06-01', rootId: 'dir-a'));
 
 		self::assertSame(['Directie A'], array_column($chart['tree'], 'label'));
 		$ids = array_column($chart['nodes'], 'id');
@@ -170,7 +171,7 @@ class OrgChartServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheLayoutPlacesChildrenBelowTheirParent(): void {
-		$chart = $this->service()->chart(units: $this->units(), assignments: [], employeesById: [], date: '2026-06-01');
+		$chart = $this->service()->chart(request: self::request(units: $this->units(), assignments: [], employeesById: [], date: '2026-06-01'));
 		$byId = array_column($chart['nodes'], null, 'id');
 
 		$positions = array_map(static fn (array $node): string => $node['x'] . ',' . $node['y'], $chart['nodes']);
@@ -185,4 +186,70 @@ class OrgChartServiceTest extends TestCase {
 		self::assertSame(3, $chart['width']);
 		self::assertSame(3, $chart['depth']);
 	}//end testTheLayoutPlacesChildrenBelowTheirParent()
+
+	/**
+	 * The whole chart, recorded once: with people listed for some readable
+	 * employees, a cycle between two units, an inactive unit, a unit without
+	 * a name and a root that does not exist.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeChartMatchesTheRecordedAnswer(): void {
+		$units = array_merge(
+			$this->units(),
+			[
+				['id' => 'loop-a', 'parentUnitId' => 'loop-b'],
+				['id' => 'loop-b', 'name' => 'Lus B', 'parentUnitId' => 'loop-a', 'managerId' => 'e-ghost'],
+				['id' => 'self', 'name' => 'Zelf', 'parentUnitId' => 'self'],
+				['id' => 'gone', 'name' => 'Opgeheven', 'active' => false],
+				['name' => 'Zonder id'],
+			]
+		);
+		$cases = [
+			'people' => $this->chartOf(units: $units, view: ['readable' => ['e-1', 'e-3', 'e-x']]),
+			'no people' => $this->chartOf(units: $units, view: []),
+			'root' => $this->chartOf(units: $units, view: ['rootId' => 'dir-b', 'readable' => []]),
+			'unknown root' => $this->chartOf(units: $units, view: ['rootId' => 'nope']),
+			'empty root' => $this->chartOf(units: $units, view: ['rootId' => '']),
+		];
+
+		$fixture = dirname(__DIR__, 2) . '/fixtures/golden/org-chart.json';
+		self::assertSame(json_decode((string)file_get_contents($fixture), true), json_decode((string)json_encode($cases), true));
+	}//end testTheWholeChartMatchesTheRecordedAnswer()
+
+	/**
+	 * The chart of the units on 1 June 2026.
+	 *
+	 * @param array<int, array<string, mixed>> $units The units.
+	 * @param array<string, mixed>             $view  rootId and readable, when set.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function chartOf(array $units, array $view): array {
+		return $this->service()->chart(request: self::request(units: $units, assignments: $this->assignments(), employeesById: $this->employees(), date: '2026-06-01', rootId: ($view['rootId'] ?? null), readableEmployeeIds: ($view['readable'] ?? null)));
+	}//end chartOf()
+
+	/**
+	 * A chart request.
+	 *
+	 * @param array<int, array<string, mixed>>    $units               OrgUnit rows.
+	 * @param array<int, array<string, mixed>>    $assignments         OrgAssignment rows.
+	 * @param array<string, array<string, mixed>> $employeesById       Employee rows by id.
+	 * @param string                              $date                The day.
+	 * @param string|null                         $rootId              Only this unit's subtree.
+	 * @param array<int, string>|null             $readableEmployeeIds List these people.
+	 *
+	 * @return OrgChartRequest
+	 */
+	private static function request(array $units, array $assignments, array $employeesById, string $date, ?string $rootId=null, ?array $readableEmployeeIds=null): OrgChartRequest {
+		$request = new OrgChartRequest();
+		$request->units = $units;
+		$request->assignments = $assignments;
+		$request->employeesById = $employeesById;
+		$request->date = $date;
+		$request->rootId = $rootId;
+		$request->readableEmployeeIds = $readableEmployeeIds;
+
+		return $request;
+	}//end request()
 }//end class

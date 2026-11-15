@@ -33,6 +33,7 @@ use OCA\Humaniq\Flow\RevokeAccessNode;
 use OCA\Humaniq\Service\AccessRevocationService;
 use OCA\Humaniq\Service\ExitInterviewService;
 use OCA\Humaniq\Flow\TeamDigestNode;
+use OCA\Humaniq\Flow\PayrollFlowNodeServices;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\PayrollRunService;
@@ -58,10 +59,7 @@ class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 	 */
 	private function buildNode(string $nodeClass): object {
 		$common = [
-			$this->l10n(),
-			$this->urls(),
-			$this->container($this->fakeObjectService()),
-			$this->settings(),
+			new PayrollFlowNodeServices($this->l10n(), $this->urls(), $this->container($this->fakeObjectService()), $this->settings()),
 			$this->logger(),
 		];
 

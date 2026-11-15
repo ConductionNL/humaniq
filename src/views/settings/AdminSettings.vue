@@ -10,6 +10,7 @@
  look; this file only fills its sections.
 
  @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
+ @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
 -->
 <template>
 	<div class="humaniq-admin">
@@ -65,6 +66,27 @@
 						{{ t('humaniq', 'The groups are fixed: OpenRegister guards the sensitive fields by these group names. Add people to a group under Users and groups.') }}
 					</p>
 				</CnSettingsSection>
+
+				<!-- Which expense categories employees may claim. The server refuses
+				     a claim in a category that is off. -->
+				<CnSettingsSection
+					:name="t('humaniq', 'Expense categories')"
+					:description="t('humaniq', 'Choose what employees may claim. A claim in a category that is off cannot be made or submitted.')"
+					data-testid="humaniq-admin-expense-categories">
+					<NcCheckboxRadioSwitch
+						v-for="category in expenseCategories"
+						:key="category.id"
+						type="switch"
+						:modelValue="category.allowed"
+						:disabled="savingCategories"
+						:data-category="category.id"
+						@update:modelValue="toggleCategory(category.id, $event)">
+						{{ categoryLabel(category.id) }}
+					</NcCheckboxRadioSwitch>
+					<p v-if="categoryError" class="humaniq-admin__note" role="alert">
+						{{ categoryError }}
+					</p>
+				</CnSettingsSection>
 			</div>
 		</CnAdminSettingsShell>
 	</div>
@@ -72,10 +94,15 @@
 
 <script>
 import { CnAdminSettingsShell, CnSettingsSection } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import { defineComponent } from 'vue'
+import { allowedAfterToggle, loadCategories, saveCategories } from './expenseCategories.js'
+
+const CATEGORIES_URL = generateUrl('/apps/humaniq/api/expense-categories')
 
 export default defineComponent({
 	name: 'AdminSettings',
@@ -83,11 +110,15 @@ export default defineComponent({
 	components: {
 		CnAdminSettingsShell,
 		CnSettingsSection,
+		NcCheckboxRadioSwitch,
 	},
 
 	data() {
 		return {
 			roleGroups: loadState('humaniq', 'roleGroups', {}),
+			expenseCategories: [],
+			savingCategories: false,
+			categoryError: '',
 		}
 	},
 
@@ -116,41 +147,145 @@ export default defineComponent({
 		 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
 		 */
 		roles() {
-			return [
-				{
-					id: 'hr',
-					label: t('humaniq', 'HR'),
-					group: this.groupId('hr', 'humaniq-hr'),
-					may: t('humaniq', 'employees, contracts, leave, absence, GDPR requests'),
-					members: this.memberCount('hr'),
-				},
-				{
-					id: 'payroll',
-					label: t('humaniq', 'Payroll administration'),
-					group: this.groupId('payroll', 'humaniq-payroll'),
-					may: t('humaniq', 'calculate and approve payroll runs, tax returns, payments'),
-					members: this.memberCount('payroll'),
-				},
-				{
-					id: 'manager',
-					label: t('humaniq', 'Manager'),
-					group: t('humaniq', 'from the org chart'),
-					may: t('humaniq', 'own team: approve leave, hours and reviews'),
-					members: '',
-				},
-				{
-					id: 'employee',
-					label: t('humaniq', 'Employee'),
-					group: t('humaniq', 'everyone'),
-					may: t('humaniq', 'own details, payslips, leave and expense claims'),
-					members: '',
-				},
-			]
+			return [...this.groupRoles(), ...this.derivedRoles()]
 		},
+	},
+
+	/**
+	 * Read the expense category switches.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
+	 */
+	async mounted() {
+		try {
+			this.expenseCategories = await loadCategories(axios, CATEGORIES_URL)
+		} catch {
+			this.categoryError = t('humaniq', 'The expense categories could not be loaded.')
+		}
 	},
 
 	methods: {
 		t,
+
+		/**
+		 * The label of an expense category.
+		 *
+		 * @param {string} id The category id.
+		 * @return {string}
+		 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
+		 */
+		categoryLabel(id) {
+			const labels = {
+				travel: t('humaniq', 'Travel'),
+				accommodation: t('humaniq', 'Accommodation'),
+				meals: t('humaniq', 'Meals'),
+				supplies: t('humaniq', 'Supplies'),
+				software: t('humaniq', 'Software'),
+				training: t('humaniq', 'Training'),
+				other: t('humaniq', 'Other'),
+			}
+			return labels[id] ?? id
+		},
+
+		/**
+		 * Save one switch; the page shows what the server stored.
+		 *
+		 * @param {string} id The category.
+		 * @param {boolean} on Whether it is now on.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
+		 */
+		async toggleCategory(id, on) {
+			this.savingCategories = true
+			this.categoryError = ''
+			try {
+				this.expenseCategories = await saveCategories(axios, CATEGORIES_URL, allowedAfterToggle(this.expenseCategories, id, on))
+			} catch {
+				this.categoryError = t('humaniq', 'The expense categories could not be saved.')
+			} finally {
+				this.savingCategories = false
+			}
+		},
+
+		/**
+		 * The two roles that are Nextcloud groups: HR and payroll, each with
+		 * its group id and member count from the server.
+		 *
+		 * @return {Array<{id: string, label: string, group: string, may: string, members: string}>}
+		 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
+		 */
+		groupRoles() {
+			return [
+				this.groupRole('hr', {
+					label: t('humaniq', 'HR'),
+					may: t('humaniq', 'employees, contracts, leave, absence, GDPR requests'),
+				}),
+				this.groupRole('payroll', {
+					label: t('humaniq', 'Payroll administration'),
+					may: t('humaniq', 'calculate and approve payroll runs, tax returns, payments'),
+				}),
+			]
+		},
+
+		/**
+		 * The two roles without a group to count: managers follow from the org
+		 * chart, employees from their own account.
+		 *
+		 * @return {Array<{id: string, label: string, group: string, may: string, members: string}>}
+		 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
+		 */
+		derivedRoles() {
+			return [
+				this.derivedRole('manager', {
+					label: t('humaniq', 'Manager'),
+					group: t('humaniq', 'from the org chart'),
+					may: t('humaniq', 'own team: approve leave, hours and reviews'),
+				}),
+				this.derivedRole('employee', {
+					label: t('humaniq', 'Employee'),
+					group: t('humaniq', 'everyone'),
+					may: t('humaniq', 'own details, payslips, leave and expense claims'),
+				}),
+			]
+		},
+
+		/**
+		 * A role row for a role group (`humaniq-<key>` unless the server
+		 * reported another id).
+		 *
+		 * @param {string} key The role key in the initial state.
+		 * @param {{label: string, may: string}} texts The role's name and what it may do.
+		 * @return {{id: string, label: string, group: string, may: string, members: string}}
+		 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
+		 */
+		groupRole(key, texts) {
+			return {
+				id: key,
+				label: texts.label,
+				group: this.groupId(key, 'humaniq-' + key),
+				may: texts.may,
+				members: this.memberCount(key),
+			}
+		},
+
+		/**
+		 * A role row for a role without a group: nothing to count.
+		 *
+		 * @param {string} key The role id.
+		 * @param {{label: string, group: string, may: string}} texts The role's name, where it comes from and what it may do.
+		 * @return {{id: string, label: string, group: string, may: string, members: string}}
+		 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
+		 */
+		derivedRole(key, texts) {
+			return {
+				id: key,
+				label: texts.label,
+				group: texts.group,
+				may: texts.may,
+				members: '',
+			}
+		},
 
 		/**
 		 * The group id the server reported for a role, or the fixed id.

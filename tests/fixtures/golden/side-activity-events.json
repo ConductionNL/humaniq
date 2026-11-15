@@ -1,0 +1,84 @@
+{
+    "own-report": {
+        "errors": [],
+        "modified": {
+            "employeeId": "4f2b8c1d-6e3a-4d7b-9a1c-0b5e7f2d3c41",
+            "userId": "ingrid",
+            "managerUserId": null,
+            "administrationId": "ADM-001"
+        },
+        "stopped": false,
+        "attested": false
+    },
+    "empty-report": {
+        "errors": {
+            "message": "Describe the activity, or tick Nothing to report."
+        },
+        "modified": [],
+        "stopped": true,
+        "attested": false
+    },
+    "someone-else": {
+        "errors": {
+            "message": "You can only report your own side activities."
+        },
+        "modified": [],
+        "stopped": true,
+        "attested": false
+    },
+    "hr-for-her": {
+        "errors": [],
+        "modified": {
+            "employeeId": "4f2b8c1d-6e3a-4d7b-9a1c-0b5e7f2d3c41",
+            "userId": "ingrid",
+            "managerUserId": null,
+            "administrationId": "ADM-001"
+        },
+        "stopped": false,
+        "attested": false
+    },
+    "ticked-by-hand": {
+        "errors": [],
+        "modified": {
+            "nevenwerkzaamhedenGemeld": false
+        },
+        "stopped": false,
+        "attested": false
+    },
+    "employee-other-field": {
+        "errors": [],
+        "modified": [],
+        "stopped": false,
+        "attested": false
+    },
+    "employee-created": {
+        "errors": [],
+        "modified": [],
+        "stopped": false,
+        "attested": false
+    },
+    "activity-updating": {
+        "errors": [],
+        "modified": [],
+        "stopped": false,
+        "attested": false
+    },
+    "activity-created": {
+        "errors": null,
+        "modified": null,
+        "stopped": false,
+        "attested": true
+    },
+    "activity-deleted": {
+        "errors": null,
+        "modified": null,
+        "stopped": false,
+        "attested": false
+    },
+    "other-schema": {
+        "errors": [],
+        "modified": [],
+        "stopped": false,
+        "attested": false
+    }
+}

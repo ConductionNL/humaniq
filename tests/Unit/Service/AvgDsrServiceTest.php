@@ -3,6 +3,9 @@
 /**
  * Unit tests for AvgDsrService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * hrmq#99 (consume-not-rebuild correction): pins the avg-dsr contract as it
  * now consumes OpenRegister's guarded, RBAC/tenant-scoped
  * `Gdpr\DataSubjectRequestService` directly -- retention enforcement is the
@@ -29,9 +32,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

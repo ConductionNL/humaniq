@@ -1,0 +1,322 @@
+{
+    "month, everything": {
+        "getters": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "2026-07",
+            "periodGrain": "month",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        },
+        "fields": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "2026-07",
+            "periodGrain": "month",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        }
+    },
+    "week": {
+        "getters": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "2026-W29",
+            "periodGrain": "week",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        },
+        "fields": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "2026-W29",
+            "periodGrain": "week",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        }
+    },
+    "day": {
+        "getters": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "2026-W29-3",
+            "periodGrain": "day",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        },
+        "fields": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "2026-W29-3",
+            "periodGrain": "day",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        }
+    },
+    "unknown grain": {
+        "getters": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "juli",
+            "periodGrain": "unknown",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        },
+        "fields": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "juli",
+            "periodGrain": "unknown",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        }
+    },
+    "empty period": {
+        "getters": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "",
+            "periodGrain": "unknown",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        },
+        "fields": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "",
+            "periodGrain": "unknown",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        }
+    },
+    "uuid instead of id": {
+        "getters": {
+            "eventId": "ts-uuid",
+            "timesheetId": "ts-uuid",
+            "employeeId": "emp-1",
+            "period": "2026-07",
+            "periodGrain": "month",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        },
+        "fields": {
+            "eventId": "ts-uuid",
+            "timesheetId": "ts-uuid",
+            "employeeId": "emp-1",
+            "period": "2026-07",
+            "periodGrain": "month",
+            "hours": 36.5,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        }
+    },
+    "string hours, not billable": {
+        "getters": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "2026-07",
+            "periodGrain": "month",
+            "hours": 7.25,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": false,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        },
+        "fields": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "2026-07",
+            "periodGrain": "month",
+            "hours": 7.25,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": false,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        }
+    },
+    "integer hours": {
+        "getters": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "2026-07",
+            "periodGrain": "month",
+            "hours": 8.0,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        },
+        "fields": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "emp-1",
+            "period": "2026-07",
+            "periodGrain": "month",
+            "hours": 8.0,
+            "projectId": "proj-alpha",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "ADM-001",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        }
+    },
+    "bare": {
+        "getters": {
+            "eventId": "ts-2",
+            "timesheetId": "ts-2",
+            "employeeId": "",
+            "period": "",
+            "periodGrain": "unknown",
+            "hours": 0.0,
+            "projectId": "",
+            "costCenter": "",
+            "billable": false,
+            "clientRef": "",
+            "administrationId": "",
+            "approvedBy": "",
+            "approvedAt": "2026-01-02T03:04:05Z"
+        },
+        "fields": {
+            "eventId": "ts-2",
+            "timesheetId": "ts-2",
+            "employeeId": "",
+            "period": "",
+            "periodGrain": "unknown",
+            "hours": 0.0,
+            "projectId": "",
+            "costCenter": "",
+            "billable": false,
+            "clientRef": "",
+            "administrationId": "",
+            "approvedBy": "",
+            "approvedAt": "2026-01-02T03:04:05Z"
+        }
+    },
+    "numeric references": {
+        "getters": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "12",
+            "period": "2026-07",
+            "periodGrain": "month",
+            "hours": 36.5,
+            "projectId": "3",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "7",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        },
+        "fields": {
+            "eventId": "ts-1",
+            "timesheetId": "ts-1",
+            "employeeId": "12",
+            "period": "2026-07",
+            "periodGrain": "month",
+            "hours": 36.5,
+            "projectId": "3",
+            "costCenter": "cc-42",
+            "billable": true,
+            "clientRef": "client-7",
+            "administrationId": "7",
+            "approvedBy": "manager-jansen",
+            "approvedAt": "2026-07-15T10:00:00Z"
+        }
+    }
+}

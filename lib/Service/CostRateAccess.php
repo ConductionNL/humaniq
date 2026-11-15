@@ -61,7 +61,7 @@ class CostRateAccess {
 	 *
 	 * @param IAppManager          $appManager Whether planninq is installed.
 	 * @param ContainerInterface   $container  Resolves OpenRegister's ObjectService.
-	 * @param HoursRegisterGateway $gateway    System reads of humaniq objects.
+	 * @param RecordStoreInterface $gateway    System reads of humaniq objects.
 	 * @param SettingsService      $settings   Register slug and OpenRegister availability.
 	 * @param IUserSession         $userSession The caller.
 	 * @param LoggerInterface      $logger     Logger.
@@ -71,7 +71,7 @@ class CostRateAccess {
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly SettingsService $settings,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,

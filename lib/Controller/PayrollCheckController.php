@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
@@ -35,9 +35,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * The on-demand run check.
@@ -50,23 +47,17 @@ class PayrollCheckController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest               $request     The request.
-	 * @param ContainerInterface     $container   Resolves OpenRegister's ObjectService.
 	 * @param SettingsService        $settings    The register slug.
 	 * @param PayrollRunCheckService $check       The run check.
-	 * @param IUserSession           $userSession The caller.
-	 * @param HumaniqRoles           $roles       Whether the caller is HR or payroll.
-	 * @param LoggerInterface        $logger      The logger.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 *
 	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly SettingsService $settings,
 		private readonly PayrollRunCheckService $check,
-		private readonly IUserSession $userSession,
-		private readonly HumaniqRoles $roles,
-		private readonly LoggerInterface $logger,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -83,8 +74,8 @@ class PayrollCheckController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function check(?string $runId = null): JSONResponse {
-		$uid = $this->userSession->getUser()?->getUID();
-		if ($this->roles->isHr($uid) === false && $this->roles->isPayroll($uid) === false) {
+		$uid = $this->caller->userSession->getUser()?->getUID();
+		if ($this->caller->roles->isHr($uid) === false && $this->caller->roles->isPayroll($uid) === false) {
 			return new JSONResponse(['error' => 'Alleen HR, de salarisadministratie en beheerders mogen een loonrun controleren.'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -94,9 +85,9 @@ class PayrollCheckController extends Controller {
 		}
 
 		try {
-			$run = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(id: $runId, register: $this->settings->getRegisterSlug(), schema: 'PayrollRun');
+			$run = $this->caller->container->get('OCA\OpenRegister\Service\ObjectService')->find(id: $runId, register: $this->settings->getRegisterSlug(), schema: 'PayrollRun');
 		} catch (\Throwable $e) {
-			$this->logger->info('PayrollCheckController: run ' . $runId . ' could not be read: ' . $e->getMessage());
+			$this->caller->logger->warning('PayrollCheckController: a payroll run lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			$run = null;
 		}
 

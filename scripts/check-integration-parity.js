@@ -154,6 +154,75 @@ for (const [id, p] of php) {
 	}
 }
 
+// 3. THE LEAVES BUNDLE — every leaf the PHP half declares must have its client
+//    registration reachable from `src/leaves.js`, the entry webpack builds into
+//    `js/<app>-leaves.js`. That file is what OpenRegister's LeafScriptListener
+//    enqueues on OTHER apps' pages, and it skips an app without one silently.
+//    Both halves above can agree perfectly while the client half is compiled
+//    into the app's own main bundle only, and the leaf then renders on no
+//    consuming page at all: that is how `humaniq-hours` stayed dark
+//    (hours-leaf-loads-on-a-consuming-page, REQ-HLD-002).
+//
+//    Reachability follows relative `import ... from './x'` statements from the
+//    entry, so a registration the entry pulls in through another module counts.
+
+/**
+ * The file a relative import names, trying the extensions the build resolves.
+ *
+ * @param {string} from      The importing file.
+ * @param {string} specifier The relative specifier.
+ * @return {string|null} The absolute path, or null when nothing matches.
+ */
+function resolveImport(from, specifier) {
+	const base = path.resolve(path.dirname(from), specifier)
+	const candidates = [base, ...['.js', '.mjs', '.ts', '.vue'].map((ext) => base + ext), path.join(base, 'index.js')]
+	return candidates.find((c) => fs.existsSync(c) && fs.statSync(c).isFile()) || null
+}
+
+/**
+ * Every file reachable from `entry` through relative imports, the entry included.
+ *
+ * @param {string} entry The entry file.
+ * @return {Set<string>} Paths relative to ROOT.
+ */
+function reachableFrom(entry) {
+	const seen = new Set()
+	const queue = [entry]
+	while (queue.length > 0) {
+		const file = queue.shift()
+		if (seen.has(file)) {
+			continue
+		}
+		seen.add(file)
+		const src = fs.readFileSync(file, 'utf8')
+		for (const m of src.matchAll(/\bimport\s*(?:[^'"]*?\sfrom\s*)?['"](\.{1,2}\/[^'"]+)['"]/g)) {
+			const target = resolveImport(file, m[1])
+			if (target !== null) {
+				queue.push(target)
+			}
+		}
+	}
+	return new Set([...seen].map((f) => path.relative(ROOT, f)))
+}
+
+if (php.size > 0) {
+	const entry = path.join(ROOT, 'src', 'leaves.js')
+	if (!fs.existsSync(entry)) {
+		failures.push('src/leaves.js: missing. It is the leaves bundle a consuming page loads; without it '
+			+ `every leaf declared here (${[...php.keys()].join(', ')}) renders on no other app's page.`)
+	} else {
+		const reachable = reachableFrom(entry)
+		for (const [id] of php) {
+			const j = js.get(id)
+			if (j && !reachable.has(j.file)) {
+				failures.push(`'${id}': its client registration ${j.file} is not reachable from src/leaves.js, `
+					+ 'so the leaves bundle a consuming page loads does not carry it and the leaf renders nowhere '
+					+ 'but on this app\'s own pages (REQ-HLD-002).')
+			}
+		}
+	}
+}
+
 if (failures.length > 0) {
 	console.error(`✗ integration parity: ${failures.length} finding(s)`)
 	for (const f of failures) {
@@ -168,4 +237,4 @@ if (php.size === 0 && js.size === 0) {
 }
 
 console.log(`✓ integration parity: ${php.size} leaf/leaves correlated on both halves `
-	+ `(${[...php.keys()].join(', ')}) — id, label, icon, group, referenceType, renderMode and surfaces all agree.`)
+	+ `(${[...php.keys()].join(', ')}) — id, label, icon, group, referenceType, renderMode and surfaces all agree, and each is carried by src/leaves.js.`)

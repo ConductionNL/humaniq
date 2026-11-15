@@ -35,6 +35,7 @@ namespace OCA\Humaniq\Controller;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\RosterCheckService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -43,7 +44,7 @@ use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Guarded endpoint that runs the on-demand ATW cross-check for one roster.
@@ -51,6 +52,9 @@ use RuntimeException;
  * @spec openspec/specs/rostering/spec.md#REQ-ROST-C05
  */
 class RosterController extends Controller {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
 
 	/**
 	 * @param IRequest $request The request object.
@@ -163,7 +167,7 @@ class RosterController extends Controller {
 				schema: 'Roster'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('RosterController: roster ' . $rosterId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->logger->warning('RosterController: a roster lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -173,42 +177,4 @@ class RosterController extends Controller {
 
 		return $this->toArray($roster);
 	}//end authorizeRoster()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
 }//end class

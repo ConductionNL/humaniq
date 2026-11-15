@@ -28,12 +28,13 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\ExpenseSettings;
 use OCA\Humaniq\Service\RouteDistanceService;
 use OCA\Humaniq\Service\RouteDistanceUnavailableException;
-use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -60,8 +61,11 @@ class RouteDistanceServiceTest extends TestCase {
 	private function service(bool $installed, string $sourceId, array $response=[]): RouteDistanceService {
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('isInstalled')->willReturnCallback(static fn (string $app): bool => $installed === true && $app === 'integriq');
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRouteDistanceSource')->willReturn(['source' => $sourceId, 'endpoint' => '/route']);
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getAppValueString')->willReturnCallback(
+			static fn (string $key): string => ['route_distance_source' => $sourceId, 'route_distance_endpoint' => '/route'][$key]
+		);
+		$settings = new ExpenseSettings($config);
 
 		$test = $this;
 		$environment = new class {

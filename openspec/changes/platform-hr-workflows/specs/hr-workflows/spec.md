@@ -9,13 +9,20 @@ offboarding flow that starts when an offboarding case is created, each giving th
 or the manager a task per checklist step and ticking the case's checklist field when the task
 is done. Both SHALL arrive disabled, with their adoption steps in the description.
 
-Rows: `plt-workflows` (humaniq matrix).
+Rows: `plt-workflows`, `hir-onboarding-checklist` (humaniq matrix).
 
 #### Scenario: IT gets a task when a hire starts onboarding
 - **GIVEN** the enabled onboarding flow
 - **WHEN** an HR adviser creates an onboarding case for a new employee
 - **THEN** the IT contact group has a task to provide the account, and when it is marked done
   `itProvisioned` is ticked on `OnboardingDetail`
+
+#### Scenario: The manager gets their own onboarding steps
+- **GIVEN** the enabled onboarding flow and a new hire whose unit is led by Hanneke de Wit
+- **WHEN** an HR adviser creates the onboarding case
+- **THEN** Hanneke de Wit has tasks to arrange the workplace and a buddy, share the first month's
+  programme and plan the probation talk, and `OnboardingDetail` lists them under the manager
+  next to the HR and IT steps
 
 #### Scenario: A shipped flow does nothing until adopted
 - **GIVEN** a fresh install

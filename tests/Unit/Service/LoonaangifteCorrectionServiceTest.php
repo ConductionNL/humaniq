@@ -29,6 +29,10 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DOMDocument;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\Loonaangifte\PayslipRecalculator;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
@@ -111,6 +115,30 @@ class LoonaangifteCorrectionServiceTest extends TestCase {
 		self::assertSame('refused-not-sent', $this->service('2026-05-15')->open($this->row('filing-04'), 'payroll-1')['status']);
 		self::assertSame('refused-not-nl', $this->service('2026-05-15')->open(array_merge($this->row('filing-03'), ['jurisdiction' => 'DE']), 'payroll-1')['status']);
 	}//end testOnlyASentReturnCanBeCorrected()
+
+	/**
+	 * Opening keeps its messages and its payload; a made correction keeps its
+	 * stored fields in order on both routes.
+	 *
+	 * @return void
+	 */
+	public function testTheOpenAndRenderShapes(): void {
+		self::assertSame(['status' => 'refused-not-sent', 'filingId' => 'filing-04', 'message' => 'Alleen een verzonden aangifte wordt gecorrigeerd; heropen een aangifte die nog niet is verzonden.'], $this->service('2026-05-15')->open($this->row('filing-04'), 'payroll-1'));
+		self::assertSame(['status' => 'refused-not-nl', 'filingId' => 'filing-03', 'message' => 'Alleen een Nederlandse loonaangifte kan worden gecorrigeerd.'], $this->service('2026-05-15')->open(array_merge($this->row('filing-03'), ['filingType' => 'jaaropgaaf']), 'payroll-1'));
+
+		$opened = $this->service('2027-02-01')->open($this->row('filing-03'), 'payroll-1');
+		self::assertSame(['status', 'filingId'], array_keys($opened));
+		$correction = $this->row($opened['filingId']);
+		self::assertSame(['period' => '2026-03', 'jurisdiction' => 'NL', 'filingType' => 'correctie', 'tijdvak' => 'maand', 'deadline' => '2026-04-30', 'status' => 'concept', 'administrationId' => 'ADM-001', 'corrects' => 'filing-03', 'correctionRoute' => 'correctiebericht'], array_intersect_key($correction, array_flip(['period', 'jurisdiction', 'filingType', 'tijdvak', 'deadline', 'status', 'administrationId', 'corrects', 'correctionRoute'])));
+		self::assertSame(['status' => 'exists', 'filingId' => $opened['filingId'], 'message' => 'Er staat al een correctie open voor 2026-03.'], $this->service('2027-02-01')->open($this->row('filing-03'), 'payroll-1'));
+
+		$this->seedSlip('slip-bakker-03', 'run-03', 'emp-bakker', '2026-03', 2600.00, false);
+		$before = array_keys($correction);
+		$this->service('2027-02-01')->render($this->row($opened['filingId']), 'payroll-1');
+		$added = array_values(array_diff(array_keys($this->row($opened['filingId'])), $before, ['id', '@self']));
+		self::assertSame(['messageXml', 'messageFileName', 'messageRenderedAt', 'messageRenderedBy', 'messageVersion', 'messageRunId', 'messageRunCalculatedAt', 'messageRunTotalLoonheffing', 'collectiveTotals', 'correctionLines', 'correctionTree', 'correctionSaldo', 'messageFindings', 'blockingFindings', 'warningFindings'], $added);
+		self::assertStringStartsWith('LHC_111222333L01_2026-03_', (string)$this->row($opened['filingId'])['messageFileName']);
+	}//end testTheOpenAndRenderShapes()
 
 	/**
 	 * One employee's retro pay rise: one correction line, for that employee,
@@ -320,7 +348,7 @@ class LoonaangifteCorrectionServiceTest extends TestCase {
 	 * @return void
 	 */
 	private function seedSlip(string $uuid, string $runId, string $employeeId, string $period, float $gross, bool $korting): void {
-		$snapshot = (new CalculationInput(grossMonthlySalaryCents: (int)round($gross * 100), taxTableColor: 'wit', loonheffingskortingToegepast: $korting, dateOfBirth: '1988-01-01', period: $period, awfTariff: 'low', aofTariff: 'laag', whkPercentage: 1.52))->toArray();
+		$snapshot = (new CalculationInput(wage: new CalculationWage(grossMonthlySalaryCents: (int)round($gross * 100), dateOfBirth: '1988-01-01', period: $period), levies: new CalculationLevies(wageTax: new WageTaxElection(taxTableColor: 'wit', loonheffingskortingToegepast: $korting), insurance: new InsuranceTariffs(awfTariff: 'low', aofTariff: 'laag', whkPercentage: 1.52))))->toArray();
 		$result = (new PayrollCalculator())->calculate(CalculationInput::fromDecoded($snapshot), TaxTables::load('nl-2026'));
 		$this->store->seed('Payslip', $uuid, [
 			'employeeId' => $employeeId,

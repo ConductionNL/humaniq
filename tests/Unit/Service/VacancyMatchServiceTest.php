@@ -26,6 +26,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\MatchCandidate;
 use OCA\Humaniq\Service\VacancyMatchService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
@@ -75,9 +76,7 @@ class VacancyMatchServiceTest extends TestCase {
 	public function testAFullMatchScoresOneHundred(): void {
 		$result = VacancyMatchService::score(
 			requirements: $this->requirements(),
-			educationLevel: 6,
-			experienceYears: 5.0,
-			competences: ['loonheffing', 'excel-gevorderd', 'afas']
+			candidate: $this->candidate(educationLevel: 6, experienceYears: 5.0, competences: ['loonheffing', 'excel-gevorderd', 'afas'])
 		);
 
 		self::assertSame(100, $result['total']);
@@ -92,9 +91,7 @@ class VacancyMatchServiceTest extends TestCase {
 	public function testAMissingRequiredCompetenceCostsItsShare(): void {
 		$result = VacancyMatchService::score(
 			requirements: $this->requirements(),
-			educationLevel: 5,
-			experienceYears: 2.0,
-			competences: ['loonheffing']
+			candidate: $this->candidate(educationLevel: 5, experienceYears: 2.0, competences: ['loonheffing'])
 		);
 
 		self::assertSame(25.0, $result['points']['education']);
@@ -128,6 +125,38 @@ class VacancyMatchServiceTest extends TestCase {
 	}//end testAnEmployeeCountsOnlyCurrentCompetences()
 
 	/**
+	 * The whole ranked answer when colleagues hold competences that are
+	 * current, not yet issued, expired, open-ended, on their boundary days,
+	 * or not linked to an employee.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeAnswerForEveryShapeOfColleagueCompetence(): void {
+		$this->store->seed('Employee', 'emp-1', ['firstName' => 'Petra', 'lastName' => 'Jansen']);
+		$this->store->seed('Employee', 'emp-2', ['firstName' => 'Ali', 'lastName' => '']);
+		$this->store->seed('Employee', 'emp-3', ['lastName' => 'Zonder']);
+		$competences = [
+			['employeeId' => 'emp-1', 'competenceCode' => 'loonheffing', 'issuedOn' => '2026-09-30', 'validUntil' => '2026-09-30'],
+			['employeeId' => 'emp-1', 'competenceCode' => 'afas'],
+			['employeeId' => 'emp-1', 'competenceCode' => 'excel-gevorderd', 'issuedOn' => '2026-10-01'],
+			['employeeId' => 'emp-2', 'competenceCode' => 'loonheffing', 'validUntil' => '2026-09-29'],
+			['employeeId' => 'emp-2', 'competenceCode' => 'excel-gevorderd', 'issuedOn' => '2020-01-01'],
+			['employeeId' => 'emp-3', 'competenceCode' => 'afas', 'validUntil' => '2026-09-29'],
+			['employeeId' => 'emp-gone', 'competenceCode' => 'loonheffing'],
+			['employeeId' => '', 'competenceCode' => 'loonheffing'],
+			['competenceCode' => 'loonheffing'],
+			['employeeId' => 'emp-2'],
+		];
+		foreach ($competences as $index => $competence) {
+			$this->store->seed('EmployeeCompetence', 'c-' . $index, $competence);
+		}
+
+		$matches = $this->service()->matchesFor(vacancyId: self::VACANCY, today: '2026-09-30');
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/vacancy-colleague-matches.json'), json_encode($matches, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)) . "\n");
+	}//end testTheWholeAnswerForEveryShapeOfColleagueCompetence()
+
+	/**
 	 * A rejected applicant without talent-pool consent is not proposed; one
 	 * with consent and time left is, and the list is ranked.
 	 *
@@ -148,6 +177,44 @@ class VacancyMatchServiceTest extends TestCase {
 
 		self::assertSame(['Actief', 'In de pool'], $names);
 	}//end testARejectedApplicantWithoutConsentIsNotProposed()
+
+	/**
+	 * The whole row for an applicant below the education minimum and one
+	 * for a vacancy that asks nothing, which gives every pool in full.
+	 *
+	 * @return void
+	 */
+	public function testTheRowsBelowTheMinimumAndWithoutRequirements(): void {
+		$this->store->seed('job-application', 'a-1', ['candidateName' => 'Laag', 'status' => 'nieuw', 'educationLevel' => 3, 'experienceYears' => 6, 'competenceCodes' => ['afas', ' loonheffing ']]);
+		$this->store->seed('Vacancy', 'vac-open', ['title' => 'Open', 'status' => 'gepubliceerd', 'minExperienceYears' => 0]);
+
+		self::assertSame(
+			[['kind' => 'applicant', 'id' => 'a-1', 'name' => 'Laag', 'total' => 55, 'educationPoints' => 0.0, 'experiencePoints' => 25.0, 'requiredPoints' => 20.0, 'preferredPoints' => 10.0, 'missing' => 'education level 5, excel-gevorderd']],
+			$this->service()->matchesFor(vacancyId: self::VACANCY, today: '2026-09-30')
+		);
+		self::assertSame(
+			[['kind' => 'applicant', 'id' => 'a-1', 'name' => 'Laag', 'total' => 100, 'educationPoints' => 25.0, 'experiencePoints' => 25.0, 'requiredPoints' => 40.0, 'preferredPoints' => 10.0, 'missing' => '']],
+			$this->service()->matchesFor(vacancyId: 'vac-open', today: '2026-09-30')
+		);
+	}//end testTheRowsBelowTheMinimumAndWithoutRequirements()
+
+	/**
+	 * A candidate with a profile to score.
+	 *
+	 * @param int          $educationLevel  The education level.
+	 * @param float        $experienceYears The years of experience.
+	 * @param list<string> $competences     The competence codes held.
+	 *
+	 * @return MatchCandidate
+	 */
+	private function candidate(int $educationLevel, float $experienceYears, array $competences): MatchCandidate {
+		$candidate = new MatchCandidate();
+		$candidate->educationLevel = $educationLevel;
+		$candidate->experienceYears = $experienceYears;
+		$candidate->competences = $competences;
+
+		return $candidate;
+	}//end candidate()
 
 	/**
 	 * The requirements as the service reads them from the vacancy.

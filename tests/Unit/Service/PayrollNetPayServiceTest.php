@@ -35,10 +35,13 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\Connection\ConnectionReporter;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Tests\Unit\Service\Support\InMemoryLocks;
+use OCP\Lock\ILockingProvider;
 
 /**
  * Tests for PayrollNetPayService.
@@ -78,6 +81,20 @@ class PayrollNetPayServiceTest extends TestCase {
 			 * @var array<int, array<string, mixed>>
 			 */
 			public array $saved = [];
+
+			/**
+			 * Schemas whose filtered lookups fail; the availability probe is unfiltered.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $lookupFails = [];
+
+			/**
+			 * Schemas whose save throws, as a store that refuses the write.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $saveFails = [];
 
 			/**
 			 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
@@ -121,6 +138,10 @@ class PayrollNetPayServiceTest extends TestCase {
 					throw new \RuntimeException('shillinq register unavailable');
 				}
 
+				if (isset($options['filters']) === true && in_array($this->schema, $this->lookupFails, true) === true) {
+					throw new \RuntimeException('lookup failed');
+				}
+
 				return $this->rowsBySchema[$this->schema] ?? [];
 			}//end findAll()
 
@@ -147,6 +168,10 @@ class PayrollNetPayServiceTest extends TestCase {
 				$targetSchema = ($schema ?? $this->schema);
 				if ($targetSchema === 'PaymentRun' && $this->shillinqThrows === true) {
 					throw new \RuntimeException('shillinq register unavailable');
+				}
+
+				if (in_array($targetSchema, $this->saveFails, true) === true) {
+					throw new \RuntimeException('shillinq refused the write');
 				}
 
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
@@ -188,11 +213,15 @@ class PayrollNetPayServiceTest extends TestCase {
 	 *
 	 * @return array{0: PayrollNetPayService, 1: object}
 	 */
-	private function service(array $rowsBySchema = [], bool $shillinqThrows = false, bool $shillinqInstalled = true, string $debtorIban = ''): array {
+	private function service(array $rowsBySchema = [], bool $shillinqThrows = false, bool $shillinqInstalled = true, string $debtorIban = '', ?ConnectionReporter $connections = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema, $shillinqThrows);
 
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($fake);
+		$locks = new InMemoryLocks();
+		$container->method('get')->willReturnCallback(static fn (string $id): object => match ($id) {
+			'OCA\OpenRegister\Service\ObjectService' => $fake,
+			ILockingProvider::class => $locks,
+		});
 
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('isInstalled')->willReturn($shillinqInstalled);
@@ -208,7 +237,7 @@ class PayrollNetPayServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new PayrollNetPayService($container, $appManager, $settings, $logger), $fake];
+		return [new PayrollNetPayService($container, $appManager, $settings, $logger, $connections), $fake];
 	}//end service()
 
 	/**
@@ -514,11 +543,15 @@ class PayrollNetPayServiceTest extends TestCase {
 		$this->assertCount(1, $paymentRunSaves[0]['paymentLines']);
 		$this->assertSame('2026-05-25', $paymentRunSaves[0]['executionDate']);
 
+		// The run is claimed with a pending batch before shillinq is written,
+		// and that same batch is then settled as created.
 		$batchSaves = $this->savedFor($fake, 'PayrollPaymentBatch');
-		$this->assertCount(1, $batchSaves);
-		$this->assertSame('created', $batchSaves[0]['status']);
-		$this->assertEqualsWithDelta(2698.00, $batchSaves[0]['totalAmount'], 0.001);
-		$this->assertSame(1, $batchSaves[0]['lineCount']);
+		$this->assertCount(2, $batchSaves);
+		$this->assertSame('pending', $batchSaves[0]['status']);
+		$this->assertSame('created', $batchSaves[1]['status']);
+		$this->assertSame($batchSaves[0]['id'], $batchSaves[1]['id']);
+		$this->assertEqualsWithDelta(2698.00, $batchSaves[1]['totalAmount'], 0.001);
+		$this->assertSame(1, $batchSaves[1]['lineCount']);
 
 		// humaniq writes NOTHING back to the PayrollRun (design.md D4).
 		$this->assertCount(0, $this->savedFor($fake, 'PayrollRun'));
@@ -625,7 +658,7 @@ class PayrollNetPayServiceTest extends TestCase {
 			'Employee' => [$this->employee()],
 			'Payslip' => [$this->payslip()],
 			'PaymentRun' => [
-				['id' => 'pr-existing', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001'],
+				['id' => 'pr-existing', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001', 'totalAmount' => $this->collectedTotal()],
 			],
 		];
 		[$service, $fake] = $this->service($rows);
@@ -637,6 +670,113 @@ class PayrollNetPayServiceTest extends TestCase {
 		$this->assertCount(0, $this->savedFor($fake, 'PaymentRun'));
 
 	}//end testProcessRunAdoptsExistingPaymentRunByNumberInsteadOfDuplicating()
+
+	/**
+	 * The total this run's one payable payslip collects.
+	 *
+	 * @return float
+	 */
+	private function collectedTotal(): float {
+		[$service] = $this->service(['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]]);
+
+		return (float)$service->collectLines($this->payrollRun())['totalAmount'];
+	}//end collectedTotal()
+
+	/**
+	 * An existing PaymentRun with another total is not adopted, fresh or stale.
+	 *
+	 * @return void
+	 */
+	public function testAPaymentRunWithAnotherTotalIsNotAdopted(): void {
+		$other = ['id' => 'pr-other', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001', 'totalAmount' => ($this->collectedTotal() + 1)];
+		[$service, $fake] = $this->service(['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()], 'PaymentRun' => [$other]]);
+		$fresh = $service->processRun($this->payrollRun());
+
+		[$staleService, $staleFake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'Payslip' => [$this->payslip()],
+				'PaymentRun' => [$other],
+				'PayrollPaymentBatch' => [['id' => 'pb-1', 'payrollRunId' => 'run-1', 'period' => '2026-05', 'status' => 'pending']],
+			]
+		);
+		$stale = $staleService->processRun($this->payrollRun());
+
+		foreach ([[$fresh, $fake], [$stale, $staleFake]] as [$result, $store]) {
+			$this->assertSame('failed', $result['status']);
+			$this->assertStringContainsString('niet overgenomen', (string)$result['message']);
+			$this->assertCount(0, $this->savedFor($store, 'PaymentRun'));
+		}
+	}//end testAPaymentRunWithAnotherTotalIsNotAdopted()
+
+	/**
+	 * A stale claim of a run whose period is not a month adopts nothing.
+	 *
+	 * @return void
+	 */
+	public function testAStaleClaimWithANonMonthPeriodAdoptsNothing(): void {
+		[$service, $fake] = $this->service(
+			[
+				'PaymentRun' => [['id' => 'pr-mei', 'runNumber' => 'HRMQ-NETPAY-mei-ADM-001', 'totalAmount' => 0]],
+				'PayrollPaymentBatch' => [['id' => 'pb-1', 'payrollRunId' => 'run-1', 'period' => 'mei', 'status' => 'pending']],
+			]
+		);
+
+		$result = $service->processRun($this->payrollRun(['period' => 'mei']));
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertNull($result['paymentRunId'] ?? null);
+		$this->assertSame('failed', $this->savedFor($fake, 'PayrollPaymentBatch')[0]['status'] ?? null);
+	}//end testAStaleClaimWithANonMonthPeriodAdoptsNothing()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedPaymentRunLookupCreatesNoPaymentRun(): void {
+		[$service, $fake] = $this->service(['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]]);
+		$fake->lookupFails = ['PaymentRun'];
+
+		$result = $service->processRun($this->payrollRun());
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'PaymentRun'));
+		$this->assertSame('failed', array_column($this->savedFor($fake, 'PayrollPaymentBatch'), 'status')[1] ?? null);
+	}//end testAFailedPaymentRunLookupCreatesNoPaymentRun()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedPaymentRunLookupLeavesAStalePendingBatchAlone(): void {
+		$rows = [
+			'Employee' => [$this->employee()],
+			'Payslip' => [$this->payslip()],
+			'PayrollPaymentBatch' => [
+				['id' => 'pb-1', 'payrollRunId' => 'run-1', 'period' => '2026-05', 'status' => 'pending'],
+			],
+		];
+		[$service, $fake] = $this->service($rows);
+		$fake->lookupFails = ['PaymentRun'];
+
+		$result = $service->processRun($this->payrollRun());
+
+		$this->assertSame('pending', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'PaymentRun'));
+		$this->assertCount(0, $this->savedFor($fake, 'PayrollPaymentBatch'));
+	}//end testAFailedPaymentRunLookupLeavesAStalePendingBatchAlone()
+
+	/**
+	 * @return void
+	 */
+	public function testAFailedBatchLookupWritesNothing(): void {
+		[$service, $fake] = $this->service(['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]]);
+		$fake->lookupFails = ['PayrollPaymentBatch'];
+
+		$result = $service->processRun($this->payrollRun());
+
+		$this->assertSame('pending', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'PaymentRun'));
+		$this->assertCount(0, $this->savedFor($fake, 'PayrollPaymentBatch'));
+	}//end testAFailedBatchLookupWritesNothing()
 
 	/**
 	 * @return void
@@ -667,8 +807,10 @@ class PayrollNetPayServiceTest extends TestCase {
 	 */
 	public function testStalePendingBatchAdoptsExistingPaymentRunOnCrashRecovery(): void {
 		$rows = [
+			'Employee' => [$this->employee()],
+			'Payslip' => [$this->payslip()],
 			'PaymentRun' => [
-				['id' => 'pr-existing', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001'],
+				['id' => 'pr-existing', 'runNumber' => 'HRMQ-NETPAY-2026-05-ADM-001', 'totalAmount' => $this->collectedTotal()],
 			],
 			'PayrollPaymentBatch' => [
 				['id' => 'pb-1', 'payrollRunId' => 'run-1', 'period' => '2026-05', 'status' => 'pending'],
@@ -759,4 +901,63 @@ class PayrollNetPayServiceTest extends TestCase {
 
 	}//end testProcessPayableRunsSelectsApprovedAndPostedRunsForTheGivenPeriod()
 
+
+	/**
+	 * A payment run shillinq took reports the ledger as configured (platform-integrations-catalogue D2).
+	 *
+	 * @return void
+	 */
+	public function testAPaymentRunShillinqTookReportsTheLedgerConfigured(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'configured', 'Shillinq took payment run HRMQ-NETPAY-2026-05-ADM-001.')
+			->willReturn(true);
+		[$service] = $this->service(rowsBySchema: ['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]], connections: $connections);
+
+		$this->assertSame('created', $service->processRun($this->payrollRun())['status']);
+	}//end testAPaymentRunShillinqTookReportsTheLedgerConfigured()
+
+	/**
+	 * A payment run shillinq refused reports the ledger as an error with the reason.
+	 *
+	 * @return void
+	 */
+	public function testAPaymentRunShillinqRefusedReportsTheLedgerError(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'error', 'Shillinq refused the payment run: shillinq refused the write')
+			->willReturn(true);
+		[$service, $fake] = $this->service(rowsBySchema: ['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]], connections: $connections);
+		$fake->saveFails = ['PaymentRun'];
+
+		$this->assertSame('failed', $service->processRun($this->payrollRun())['status']);
+	}//end testAPaymentRunShillinqRefusedReportsTheLedgerError()
+
+	/**
+	 * Without shillinq the ledger is reported unavailable.
+	 *
+	 * @return void
+	 */
+	public function testAMissingShillinqReportsTheLedgerUnavailableForNetPay(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'unavailable', 'Shillinq is not installed, or its payment runs cannot be reached.')
+			->willReturn(true);
+		[$service] = $this->service(shillinqInstalled: false, connections: $connections);
+
+		$this->assertSame('skipped-no-shillinq', $service->processRun($this->payrollRun())['status']);
+	}//end testAMissingShillinqReportsTheLedgerUnavailableForNetPay()
+
+	/**
+	 * A payslip without an IBAN stops the run in humaniq, before shillinq: nothing is reported.
+	 *
+	 * @return void
+	 */
+	public function testAMissingIbanReportsNothing(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->never())->method('report');
+		[$service] = $this->service(rowsBySchema: ['Employee' => [$this->employee(['iban' => ''])], 'Payslip' => [$this->payslip()]], connections: $connections);
+
+		$this->assertSame('failed', $service->processRun($this->payrollRun())['status']);
+	}//end testAMissingIbanReportsNothing()
 }//end class

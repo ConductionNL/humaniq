@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlAttendanceChecks;
+use OCA\Humaniq\Standards\RuleCatalogue;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -55,6 +56,16 @@ class NlAttendanceChecksTest extends TestCase {
 		$this->checks = NlAttendanceChecks::checks()['AttendanceRecord'];
 
 	}//end setUp()
+
+	/**
+	 * Restore the real rule catalogue after a test seeded a variation of it.
+	 *
+	 * @return void
+	 */
+	protected function tearDown(): void {
+		RuleCatalogue::reset();
+
+	}//end tearDown()
 
 	/**
 	 * A minimal AttendanceRecord fixture; each test overrides the fields it
@@ -295,5 +306,37 @@ class NlAttendanceChecksTest extends TestCase {
 		$this->assertTrue(($this->checks['nl-atw-pauze'])($record, []));
 
 	}//end testOpenDayPassesPauzeVacuously()
+	/**
+	 * The break tiers are read from the nl-atw-pauze corpus rule; without
+	 * the rule, or with parameters that are not an object or carry no tier
+	 * list, they are null and the pauze check passes vacuously, even for an
+	 * eight-hour day without a break.
+	 *
+	 * @return void
+	 */
+	public function testPauzeIsVacuousWhenTheCorpusBreakTiersCannotBeRead(): void {
+		$noBreak = $this->record(['clockIn' => '2026-07-10T08:00:00Z', 'clockOut' => '2026-07-10T16:00:00Z', 'breakMinutes' => 0]);
+		$this->assertSame(
+			[['minHours' => 5.5, 'requiredBreakMinutes' => 30], ['minHours' => 10, 'requiredBreakMinutes' => 45]],
+			NlAttendanceChecks::breakTiers()
+		);
+
+		$shapes = [
+			'missing' => null,
+			'text-parameters' => static fn (array $rule): array => array_merge($rule, ['parameters' => 'ATW art. 5:4']),
+			'no-tiers' => static fn (array $rule): array => array_merge($rule, ['parameters' => ['breakTiers' => 'zie ATW']]),
+		];
+		foreach ($shapes as $shape => $rewrite) {
+			if ($rewrite === null) {
+				CatalogueOverride::without('nl-atw-pauze');
+			} else {
+				CatalogueOverride::rewrite('nl-atw-pauze', $rewrite);
+			}
+
+			$this->assertNull(NlAttendanceChecks::breakTiers(), $shape);
+			$this->assertTrue(($this->checks['nl-atw-pauze'])($noBreak, []), $shape);
+		}
+
+	}//end testPauzeIsVacuousWhenTheCorpusBreakTiersCannotBeRead()
 
 }//end class

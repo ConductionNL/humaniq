@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlAtsChecks;
+use OCA\Humaniq\Standards\RuleCatalogue;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -53,6 +54,16 @@ class NlAtsChecksTest extends TestCase {
 		$this->checks = NlAtsChecks::checks()['job-application'];
 
 	}//end setUp()
+
+	/**
+	 * Restore the real rule catalogue after a test seeded a variation of it.
+	 *
+	 * @return void
+	 */
+	protected function tearDown(): void {
+		RuleCatalogue::reset();
+
+	}//end tearDown()
 
 	/**
 	 * A minimal Application fixture; each test overrides the fields it exercises.
@@ -253,5 +264,80 @@ class NlAtsChecksTest extends TestCase {
 		$this->assertArrayHasKey('nl-ats-retentie-verlopen', $this->checks);
 
 	}//end testBothRuleIdsAreRegistered()
+	/**
+	 * A rejected application whose rejectedDate or retentionExpiryDate is not
+	 * a date cannot show a correct derivation: a violation.
+	 *
+	 * @return void
+	 */
+	public function testDerivatieUnparseableDateOnAfgewezenIsAViolation(): void {
+		$check = $this->checks['nl-ats-retentie-derivatie'];
+
+		$this->assertFalse($check($this->application(['status' => 'afgewezen', 'rejectedDate' => 'gisteren', 'retentionExpiryDate' => '2026-06-29'])));
+		$this->assertFalse($check($this->application(['status' => 'afgewezen', 'rejectedDate' => '2026-06-01', 'retentionExpiryDate' => 'over vier weken'])));
+
+	}//end testDerivatieUnparseableDateOnAfgewezenIsAViolation()
+
+	/**
+	 * An unparseable retentionExpiryDate runs no clock that can have expired:
+	 * not a verlopen violation.
+	 *
+	 * @return void
+	 */
+	public function testVerlopenUnparseableRetentionExpiryDateIsNotAViolation(): void {
+		$application = $this->application(['status' => 'afgewezen', 'rejectedDate' => '2020-01-01', 'retentionExpiryDate' => 'onbekend']);
+
+		$this->assertTrue(($this->checks['nl-ats-retentie-verlopen'])($application));
+
+	}//end testVerlopenUnparseableRetentionExpiryDateIsNotAViolation()
+
+	/**
+	 * The offsets are read from the corpus rule's parameters: a corpus that
+	 * sets a 10-day retention makes the 28-day expiry a violation and the
+	 * 10-day one correct.
+	 *
+	 * @return void
+	 */
+	public function testDerivatieReadsItsOffsetFromTheCorpusParameters(): void {
+		$check = $this->checks['nl-ats-retentie-derivatie'];
+		$rejected = ['status' => 'afgewezen', 'rejectedDate' => '2026-06-01', 'talentPoolOptIn' => false];
+
+		CatalogueOverride::rewrite(
+			'nl-ats-retentie-derivatie',
+			static function (array $rule): array {
+				$rule['parameters']['retentionDays'] = 10;
+				return $rule;
+			}
+		);
+
+		$this->assertFalse($check($this->application(array_merge($rejected, ['retentionExpiryDate' => '2026-06-29']))));
+		$this->assertTrue($check($this->application(array_merge($rejected, ['retentionExpiryDate' => '2026-06-11']))));
+
+	}//end testDerivatieReadsItsOffsetFromTheCorpusParameters()
+
+	/**
+	 * Without the corpus rule (or with unreadable parameters) the derivation
+	 * falls back to 28 days, or 365 with talentPoolOptIn.
+	 *
+	 * @return void
+	 */
+	public function testDerivatieFallsBackToTheStatutoryOffsetsWithoutTheCorpusRule(): void {
+		$check = $this->checks['nl-ats-retentie-derivatie'];
+		$rejected = ['status' => 'afgewezen', 'rejectedDate' => '2026-06-01'];
+
+		foreach (['missing', 'unreadable'] as $shape) {
+			if ($shape === 'missing') {
+				CatalogueOverride::without('nl-ats-retentie-derivatie');
+			} else {
+				CatalogueOverride::rewrite('nl-ats-retentie-derivatie', static fn (array $rule): array => array_merge($rule, ['parameters' => '28/365']));
+			}
+
+			$this->assertTrue($check($this->application(array_merge($rejected, ['talentPoolOptIn' => false, 'retentionExpiryDate' => '2026-06-29']))), $shape);
+			$this->assertFalse($check($this->application(array_merge($rejected, ['talentPoolOptIn' => false, 'retentionExpiryDate' => '2026-06-11']))), $shape);
+			$this->assertTrue($check($this->application(array_merge($rejected, ['talentPoolOptIn' => true, 'retentionExpiryDate' => '2027-06-01']))), $shape);
+			$this->assertFalse($check($this->application(array_merge($rejected, ['talentPoolOptIn' => true, 'retentionExpiryDate' => '2026-06-29']))), $shape);
+		}
+
+	}//end testDerivatieFallsBackToTheStatutoryOffsetsWithoutTheCorpusRule()
 
 }//end class

@@ -80,9 +80,8 @@ class AvgDsrExportCommand extends Command {
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$employeeId = trim((string)$input->getOption('employee'));
-		if ($employeeId === '') {
-			$output->writeln('<error>--employee is verplicht.</error>');
+		$employeeId = DsrOptions::requiredEmployeeId(input: $input, output: $output);
+		if ($employeeId === null) {
 			return 1;
 		}
 
@@ -95,14 +94,11 @@ class AvgDsrExportCommand extends Command {
 		// Privileged-session establishment BEFORE any AvgDsrService/DsarService
 		// call (REQ-DSR-004, design.md D3): an unknown/non-admin --as-user is
 		// refused here, with DsarService never invoked.
-		$sessionError = $this->sessionResolver->establish((string)$input->getOption('as-user'));
-		if ($sessionError !== null) {
-			$output->writeln('<error>' . $sessionError . '</error>');
+		if ($this->sessionResolver->refuses(input: $input, output: $output) === true) {
 			return 1;
 		}
 
-		$dsrRequestIdOption = $input->getOption('dsr-request-id');
-		$dsrRequestId = (is_string($dsrRequestIdOption) === true && trim($dsrRequestIdOption) !== '') ? trim($dsrRequestIdOption) : null;
+		$dsrRequestId = DsrOptions::dsrRequestId(input: $input);
 
 		// Defense-in-depth (design.md D3 step 4): a RuntimeException from
 		// assertPrivileged() (e.g. a stale race after step above) is still
@@ -115,15 +111,28 @@ class AvgDsrExportCommand extends Command {
 		}
 
 		$output->writeln('<info>Humaniq AVG-export (' . $right . ')</info>');
-		$output->writeln('  aantal objecten: ' . (int)($result['count'] ?? 0));
+		self::writeObjects(output: $output, result: $result);
 
+		return 0;
+	}//end execute()
+
+	/**
+	 * The count and one line per exported object: its schema and id.
+	 *
+	 * @param OutputInterface      $output Console output.
+	 * @param array<string, mixed> $result The export.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-003
+	 */
+	private static function writeObjects(OutputInterface $output, array $result): void {
+		$output->writeln('  aantal objecten: ' . (int)($result['count'] ?? 0));
 		foreach ((array)($result['objects'] ?? []) as $entry) {
 			$object = (isset($entry['object']) === true) ? (array)$entry['object'] : (array)$entry;
 			$self = (array)($object['@self'] ?? []);
 			$output->writeln('  - ' . (string)($self['schema'] ?? '?') . ' / ' . (string)($object['id'] ?? '?'));
 		}
-
-		return 0;
-	}//end execute()
+	}//end writeObjects()
 
 }//end class

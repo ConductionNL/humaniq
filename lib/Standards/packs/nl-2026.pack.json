@@ -64,6 +64,19 @@
     "thirtyPercentRulingRate": {
       "type": "percent",
       "default": 0
+    },
+    "zvwMode": {
+      "type": "enum",
+      "values": ["werkgeversheffing", "inhouding"],
+      "default": "werkgeversheffing"
+    },
+    "rvuThreshold": {
+      "type": "cents",
+      "default": 0
+    },
+    "rvuFinalLevyRate": {
+      "type": "percent",
+      "default": 0
     }
   },
   "bindings": [
@@ -264,11 +277,28 @@
       }
     },
     {
+      "id": "zvwMode",
+      "_note": "Which Zvw the wage carries: the employer's levy (default, every ordinary wage) or the contribution withheld from net pay, which a benefit regime names (payroll-special-regimes D3).",
+      "op": "derive",
+      "using": {
+        "op": "match",
+        "on": "@input.zvwMode",
+        "cases": {
+          "werkgeversheffing": "werkgeversheffing",
+          "inhouding": "inhouding"
+        }
+      }
+    },
+    {
       "id": "zvwRate",
       "op": "derive",
       "using": {
-        "op": "expr",
-        "expression": "@table.zvw.werkgeversheffing"
+        "op": "match",
+        "on": "@input.zvwMode",
+        "cases": {
+          "werkgeversheffing": "@table.zvw.werkgeversheffing",
+          "inhouding": "@table.zvw.inhouding"
+        }
       }
     },
     {
@@ -452,9 +482,32 @@
     },
     {
       "id": "zvw",
-      "_note": "Zvw werkgeversheffing over the capped bijdrageloon. EMPLOYER-COST.",
+      "_note": "Zvw werkgeversheffing over the capped bijdrageloon. EMPLOYER-COST. Off when the wage carries the withheld contribution instead.",
       "op": "cappedRate",
       "incidence": "employer-cost",
+      "when": {
+        "op": "eq",
+        "left": "@input.zvwMode",
+        "right": "werkgeversheffing"
+      },
+      "base": "@binding.belastbaarLoon",
+      "rate": "@binding.zvwRate",
+      "cap": "@binding.premieloonCap",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "zvwInhouding",
+      "_note": "The withheld Zvw contribution (ingehouden bijdrage Zvw) at the tables' inhouding rate over the same capped base. REDUCES-NET: the employee pays it, the employer owes no levy (payroll-special-regimes D3).",
+      "op": "cappedRate",
+      "incidence": "reduces-net",
+      "when": {
+        "op": "eq",
+        "left": "@input.zvwMode",
+        "right": "inhouding"
+      },
       "base": "@binding.belastbaarLoon",
       "rate": "@binding.zvwRate",
       "cap": "@binding.premieloonCap",
@@ -518,6 +571,22 @@
       }
     },
     {
+      "id": "rvuEindheffing",
+      "_note": "The employer's final levy on an early-retirement benefit (RVU): the rate times the part of the period's benefit above the threshold. EMPLOYER-COST, so net is unchanged. Gated on a positive threshold, which only an RVU payslip carries. Threshold and rate are inputs: the run reads them from the tables' specialRegimes.rvu leaves and refuses the payslip while either is unverified (D2); for a lump sum the run passes the threshold times the months it covers (payroll-special-regimes D4).",
+      "op": "expr",
+      "incidence": "employer-cost",
+      "when": {
+        "op": "gt",
+        "left": "@input.rvuThreshold",
+        "right": 0
+      },
+      "expression": "max(0, @binding.tvl - @input.rvuThreshold) * @input.rvuFinalLevyRate / 100",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
       "id": "werknemersverzekeringen",
       "_note": "An informative roll-up of the four employer premium lines. It must NOT declare employer-cost: its components already did, and the interpreter's fold would double-count it.",
       "op": "expr",
@@ -549,6 +618,8 @@
       "arbeidskorting": "@step.arbeidskorting",
       "volksverzekeringen": "@step.volksverzekeringen",
       "zvw": "@step.zvw",
+      "zvwInhouding": "@step.zvwInhouding",
+      "rvuEindheffing": "@step.rvuEindheffing",
       "awf": "@step.awf",
       "aof": "@step.aof",
       "wko": "@step.wko",
@@ -568,7 +639,9 @@
       { "$fixture": "payroll-2026/part-time.json" },
       { "$fixture": "payroll-2026/bijtelling-anchor.json" },
       { "$fixture": "payroll-2026/dga-anchor.json" },
-      { "$fixture": "payroll-2026/thirty-percent-ruling-anchor.json" }
+      { "$fixture": "payroll-2026/thirty-percent-ruling-anchor.json" },
+      { "$fixture": "payroll-2026/zvw-inhouding.json" },
+      { "$fixture": "payroll-2026/rvu-final-levy.json" }
     ]
   }
 }
