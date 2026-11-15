@@ -160,6 +160,13 @@ class Application extends App implements IBootstrap {
 		// reverse order, so it sees the final response of every other middleware.
 		$context->registerMiddleware(class: ApiContractMiddleware::class);
 
+		// self-service-mobile (design.md D1): link the web manifest from the
+		// head of humaniq's own pages, so a phone browser offers to install Mijn HR.
+		$context->registerEventListener(
+			\OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent::class,
+			\OCA\Humaniq\Listener\PwaHeadListener::class
+		);
+
 		// self-service-policy-assistant D2: offer Hermiq the HR-vraagbaak template.
 		// The event is named by string, so humaniq installs without Hermiq.
 		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);

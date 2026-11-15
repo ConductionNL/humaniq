@@ -3862,7 +3862,16 @@ OC.L10N.register(
         "Benefit entitlements": "Uitkeringsrechten",
         "Benefits paid to a person from a decision rather than for work: an early-retirement benefit or a former office holder's benefit. Each active entitlement gets its own payslip in the payroll run, next to any salary payslip, also after the person has left. Record the decision as a draft; another HR adviser activates it.": "Uitkeringen die iemand ontvangt op grond van een besluit in plaats van voor werk: een RVU-uitkering of de uitkering van een voormalig ambtsdrager. Elk actief uitkeringsrecht krijgt een eigen loonstrook in de loonrun, naast een eventuele salarisstrook, ook nadat iemand uit dienst is. Leg het besluit vast als concept; een andere HR-adviseur activeert het.",
         "No benefit entitlements": "Geen uitkeringsrechten",
-        "Record benefit entitlement": "Uitkeringsrecht vastleggen"
+        "Record benefit entitlement": "Uitkeringsrecht vastleggen",
+        "Request leave": "Verlof aanvragen",
+        "Submit an expense": "Declaratie indienen",
+        "Notifications on this device": "Meldingen op dit apparaat",
+        "Your browser blocks notifications for this site. Allow them in the browser settings first.": "Je browser blokkeert meldingen voor deze site. Sta ze eerst toe in de instellingen van je browser.",
+        "On an iPhone or iPad, add My HR to the home screen first, then turn notifications on from there.": "Zet Mijn HR op een iPhone of iPad eerst op het beginscherm en zet daar de meldingen aan.",
+        "This browser cannot receive notifications.": "Deze browser kan geen meldingen ontvangen.",
+        "Notifications to devices are not set up on this server.": "Meldingen naar apparaten zijn op deze server niet ingesteld.",
+        "Decisions on your requests reach this device, also when the app is closed.": "Besluiten over je aanvragen komen op dit apparaat binnen, ook als de app gesloten is.",
+        "The notification setting could not be changed.": "De meldingsinstelling kon niet worden gewijzigd."
     },
     "nplurals=2; plural=(n != 1);"
 )

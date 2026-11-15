@@ -3796,8 +3796,6 @@
         "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.": "Choose what employees may claim. A claim in a category that is off cannot be made or submitted.",
         "The expense categories could not be loaded.": "The expense categories could not be loaded.",
         "The expense categories could not be saved.": "The expense categories could not be saved.",
-        "The account of the employee's manager, who may read this record.": "The account of the employee's manager, who may read this record.",
-        "The accounts standing in for the manager today, who may read this record too.": "The accounts standing in for the manager today, who may read this record too.",
         "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on.",
         "Own fields": "Own fields",
         "Manage fields": "Manage fields",
@@ -3863,7 +3861,16 @@
         "Benefit entitlements": "Benefit entitlements",
         "Benefits paid to a person from a decision rather than for work: an early-retirement benefit or a former office holder's benefit. Each active entitlement gets its own payslip in the payroll run, next to any salary payslip, also after the person has left. Record the decision as a draft; another HR adviser activates it.": "Benefits paid to a person from a decision rather than for work: an early-retirement benefit or a former office holder's benefit. Each active entitlement gets its own payslip in the payroll run, next to any salary payslip, also after the person has left. Record the decision as a draft; another HR adviser activates it.",
         "No benefit entitlements": "No benefit entitlements",
-        "Record benefit entitlement": "Record benefit entitlement"
+        "Record benefit entitlement": "Record benefit entitlement",
+        "Request leave": "Request leave",
+        "Submit an expense": "Submit an expense",
+        "Notifications on this device": "Notifications on this device",
+        "Your browser blocks notifications for this site. Allow them in the browser settings first.": "Your browser blocks notifications for this site. Allow them in the browser settings first.",
+        "On an iPhone or iPad, add My HR to the home screen first, then turn notifications on from there.": "On an iPhone or iPad, add My HR to the home screen first, then turn notifications on from there.",
+        "This browser cannot receive notifications.": "This browser cannot receive notifications.",
+        "Notifications to devices are not set up on this server.": "Notifications to devices are not set up on this server.",
+        "Decisions on your requests reach this device, also when the app is closed.": "Decisions on your requests reach this device, also when the app is closed.",
+        "The notification setting could not be changed.": "The notification setting could not be changed."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
