@@ -66,6 +66,16 @@ class LeaveRequestProcessStampListener implements IEventListener {
 
 	use StampsProcessFields;
 
+	/**
+	 * The warning logged when stamping throws.
+	 */
+	private const STAMP_FAILURE = 'humaniq: LeaveRequestProcessStampListener could not stamp a LeaveRequest write';
+
+	/**
+	 * The user-facing message a write is refused with when stamping throws.
+	 */
+	private const STAMP_REFUSAL = 'De verlofaanvraag kon niet worden verwerkt; probeer het later opnieuw.';
+
 	public const LEAVE_REQUEST_SLUG = 'leaverequest';
 
 	/**
@@ -99,11 +109,7 @@ class LeaveRequestProcessStampListener implements IEventListener {
 	 * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
 	 */
 	public function handle(Event $event): void {
-		$this->stampOrRefuse(
-			event: $event,
-			failure: 'humaniq: LeaveRequestProcessStampListener could not stamp a LeaveRequest write',
-			refusal: 'De verlofaanvraag kon niet worden verwerkt; probeer het later opnieuw.'
-		);
+		$this->stampOrRefuse(event: $event);
 	}//end handle()
 
 	/**
@@ -206,7 +212,7 @@ class LeaveRequestProcessStampListener implements IEventListener {
 				'decision' => ['step' => 'manager', 'decision' => 'approved'],
 				'coverageWarningAccepted' => $this->acceptedWarning(request: array_merge($stored, $incoming)),
 			],
-			'approved', 'rejected' => $this->verdict(from: $from, incoming: $incoming, stored: $stored),
+			'approved', 'rejected' => $this->verdict(incoming: $incoming, stored: $stored),
 			default => [],
 		};
 	}//end stampEdge()
@@ -214,14 +220,14 @@ class LeaveRequestProcessStampListener implements IEventListener {
 	/**
 	 * The stamps of a final approval or rejection, by the manager or, after the manager, by HR.
 	 *
-	 * @param string               $from     The stored status.
 	 * @param array<string, mixed> $incoming The incoming payload, its status `approved` or `rejected`.
 	 * @param array<string, mixed> $stored   The stored request.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function verdict(string $from, array $incoming, array $stored): array {
-		$to = strtolower(trim((string)($incoming['status'] ?? '')));
+	private function verdict(array $incoming, array $stored): array {
+		$from = strtolower(trim((string)($stored['status'] ?? '')));
+		$to   = strtolower(trim((string)($incoming['status'] ?? '')));
 		$step = 'manager';
 		if ($from === 'manager-approved') {
 			$step = 'hr';

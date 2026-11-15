@@ -55,17 +55,23 @@ final class LeaveApprovalStepGuard implements LifecycleGuardInterface {
 	public const STATUS_MANAGER_APPROVED = 'manager-approved';
 
 	/**
+	 * Matches a request to its leave type.
+	 *
+	 * @var LeaveTypeResolver
+	 */
+	private readonly LeaveTypeResolver $resolver;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param RecordStoreInterface $gateway      Reads the leave types.
 	 * @param IGroupManager        $groupManager The HR check (admin until distinct HR roles land).
-	 * @param LeaveTypeResolver    $resolver     Matches a request to its leave type.
 	 */
 	public function __construct(
 		private readonly RecordStoreInterface $gateway,
 		private readonly IGroupManager $groupManager,
-		private readonly LeaveTypeResolver $resolver = new LeaveTypeResolver(),
 	) {
+		$this->resolver = new LeaveTypeResolver();
 	}//end __construct()
 
 	/**

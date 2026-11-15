@@ -34,8 +34,10 @@ use OCP\EventDispatcher\Event;
 /**
  * Shared dispatch, refusal, clock and trimming of the process-stamp listeners.
  *
- * The using class has a `$logger` (LoggerInterface) and its own
- * stampCreating() and stampUpdating().
+ * The using class has a `$logger` (LoggerInterface), its own
+ * stampCreating() and stampUpdating(), and the constants STAMP_FAILURE (the
+ * warning logged when stamping throws) and STAMP_REFUSAL (the user-facing
+ * message the write is refused with).
  *
  * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-approval-steps/spec.md#requirement-every-leave-decision-shall-be-stamped-on-the-request-by-the-server-req-las-001
  */
@@ -44,13 +46,11 @@ trait StampsProcessFields {
 	/**
 	 * Stamp a create or an update; when stamping throws, log it and refuse the write.
 	 *
-	 * @param Event  $event   The pre-save event.
-	 * @param string $failure The warning logged when stamping throws.
-	 * @param string $refusal The user-facing message the write is refused with.
+	 * @param Event $event The pre-save event.
 	 *
 	 * @return void
 	 */
-	private function stampOrRefuse(Event $event, string $failure, string $refusal): void {
+	private function stampOrRefuse(Event $event): void {
 		try {
 			if ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent) {
 				$this->stampCreating(event: $event);
@@ -61,8 +61,8 @@ trait StampsProcessFields {
 				$this->stampUpdating(event: $event);
 			}
 		} catch (\Throwable $e) {
-			$this->logger->warning($failure, ['exception' => $e->getMessage()]);
-			$this->refuse(event: $event, message: $refusal);
+			$this->logger->warning(self::STAMP_FAILURE, ['exception' => $e->getMessage()]);
+			$this->refuse(event: $event, message: self::STAMP_REFUSAL);
 		}
 	}//end stampOrRefuse()
 

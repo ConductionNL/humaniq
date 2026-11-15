@@ -75,6 +75,16 @@ class TimesheetProcessStampListener implements IEventListener {
 	use StampsProcessFields;
 
 	/**
+	 * The warning logged when stamping throws.
+	 */
+	private const STAMP_FAILURE = 'humaniq: TimesheetProcessStampListener could not stamp a Timesheet write';
+
+	/**
+	 * The user-facing message a write is refused with when stamping throws.
+	 */
+	private const STAMP_REFUSAL = 'De urenstaat kon niet worden verwerkt; probeer het later opnieuw.';
+
+	/**
 	 * Lower-cased slug of the schema this listener stamps.
 	 *
 	 * @var string
@@ -135,11 +145,7 @@ class TimesheetProcessStampListener implements IEventListener {
 	 * @spec openspec/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
 	 */
 	public function handle(Event $event): void {
-		$this->stampOrRefuse(
-			event: $event,
-			failure: 'humaniq: TimesheetProcessStampListener could not stamp a Timesheet write',
-			refusal: 'De urenstaat kon niet worden verwerkt; probeer het later opnieuw.'
-		);
+		$this->stampOrRefuse(event: $event);
 	}//end handle()
 
 	/**
