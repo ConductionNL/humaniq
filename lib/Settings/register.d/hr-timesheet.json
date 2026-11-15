@@ -3,7 +3,9 @@
     "components": {
         "schemas": {
             "TimeEntry": {
+                "configuration": {"exportable": true},
                 "slug": "TimeEntry",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "ClockPlusOutline",
                 "version": "0.2.0",
                 "title": "Time entry",
@@ -156,6 +158,7 @@
             },
             "Timesheet": {
                 "slug": "Timesheet",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr"]},
                 "icon": "ClockCheckOutline",
                 "version": "0.9.0",
                 "title": "Timesheet",
@@ -168,6 +171,7 @@
                     "period"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-notifications": {
                             "timesheet-approved": {
                                 "trigger": {

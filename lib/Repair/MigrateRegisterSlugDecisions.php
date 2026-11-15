@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Repair;
 
+use Closure;
+
 /**
  * Pure predicates for the register-slug migration.
  *
@@ -140,4 +142,27 @@ class MigrateRegisterSlugDecisions {
 	public function placeholders(int $count): string {
 		return implode(',', array_fill(0, max(0, $count), '?'));
 	}//end placeholders()
+
+	/**
+	 * Carry out the planned renames in order and count the ones that took.
+	 *
+	 * @param array<string, string> $renames Old slug => new slug, from `plan()`.
+	 * @param Closure               $rename  Renames one slug: (old, new) in, whether it took out.
+	 *
+	 * @return int The number of renames that took.
+	 *
+	 * @spec exclude No canonical spec covers the `hrmq` -> `humaniq`
+	 *  register-slug migration. Pointing this at an existing spec would report
+	 *  conformance to a requirement that says nothing about it.
+	 */
+	public function countRenamed(array $renames, Closure $rename): int {
+		$renamed = 0;
+		foreach ($renames as $old => $new) {
+			if ($rename($old, $new) === true) {
+				$renamed++;
+			}
+		}
+
+		return $renamed;
+	}//end countRenamed()
 }//end class

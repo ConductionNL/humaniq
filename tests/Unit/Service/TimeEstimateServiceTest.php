@@ -271,6 +271,27 @@ class TimeEstimateServiceTest extends TestCase {
 	}//end testOneRoleOneEstimate()
 
 	/**
+	 * The duplicate refusal names the role only when there is one, an
+	 * estimate without its object refuses nothing, and an existing estimate
+	 * without an id is still a duplicate.
+	 *
+	 * @return void
+	 */
+	public function testTheDuplicateEstimateRefusals(): void {
+		$existing = [array_merge($this->estimate(6.0), ['id' => '']), $this->estimate(6.0, 'juridisch', false, 'est-jur')];
+
+		$this->assertSame(
+			'Voor dit object bestaat al een schatting. Pas de bestaande schatting aan in plaats van een tweede toe te voegen.',
+			$this->service->refusalForEstimate(estimate: $this->estimate(2.0, null, false, 'est-new'), existing: $existing)
+		);
+		$this->assertSame(
+			'Voor dit object bestaat al een schatting voor de rol juridisch. Pas de bestaande schatting aan in plaats van een tweede toe te voegen.',
+			$this->service->refusalForEstimate(estimate: $this->estimate(2.0, 'juridisch', false, 'est-new'), existing: $existing)
+		);
+		$this->assertNull($this->service->refusalForEstimate(estimate: array_merge($this->estimate(2.0), ['domainObjectRef' => ' ']), existing: $existing));
+	}//end testTheDuplicateEstimateRefusals()
+
+	/**
 	 * A booking past a capped estimate is refused, with the ceiling and the
 	 * hours left named in the refusal.
 	 *

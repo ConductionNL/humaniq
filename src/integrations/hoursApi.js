@@ -124,6 +124,33 @@ export async function fetchEntries(domainObjectType, domainObjectRef) {
 }
 
 /**
+ * The week on one host object, per person: `{ week, weekStart, weekEnd, total,
+ * people: [{ userId, displayName, team, hours }] }`. The server counts only the
+ * entries the caller may read.
+ *
+ * @param {string} domainObjectType The `<app>:<schema>` literal of the host object.
+ * @param {string} domainObjectRef  The host object's uuid.
+ * @param {string} [date]           Any day of the week, `YYYY-MM-DD`; today when left out.
+ *
+ * @return {Promise<object|null>} The week, or null when there is nothing to ask about.
+ *
+ * @throws {Error} When humaniq refuses or cannot answer.
+ */
+export async function fetchWeek(domainObjectType, domainObjectRef, date) {
+	if (!domainObjectType || !domainObjectRef) {
+		return null
+	}
+
+	const params = { domainObjectType, domainObjectRef }
+	if (typeof date === 'string' && date !== '') {
+		params.date = date
+	}
+	const { data } = await axios.get(generateUrl('/apps/humaniq/api/time-entries/week'), { params })
+
+	return data
+}
+
+/**
  * Book hours against a host object.
  *
  * Sends the day shape: a date and a number of hours. A person booking against a

@@ -103,10 +103,6 @@ class AbsenceProgression {
 	/**
 	 * Sum an ordered step list into FTE-weighted day-equivalents.
 	 *
-	 * Each step holds its percentage until the day before the next begins; the
-	 * last runs to the end of the window. Every segment is clipped to the
-	 * window before it counts.
-	 *
 	 * @param list<array{from: DateTimeImmutable, percentage: float}> $steps Ordered ascending by `from`.
 	 * @param DateTimeImmutable $windowStart First day counted, inclusive.
 	 * @param DateTimeImmutable $windowEnd Last day counted, inclusive.
@@ -123,25 +119,46 @@ class AbsenceProgression {
 		float $fte,
 	): float {
 		$total = 0.0;
-		$count = count($steps);
-		for ($i = 0; $i < $count; $i++) {
-			$segmentEnd = $windowEnd;
-			if (isset($steps[($i + 1)]) === true) {
-				$segmentEnd = $steps[($i + 1)]['from']->modify('-1 day');
-			}
-
-			$clippedStart = ($steps[$i]['from'] > $windowStart) ? $steps[$i]['from'] : $windowStart;
-			$clippedEnd = ($segmentEnd < $windowEnd) ? $segmentEnd : $windowEnd;
-			if ($clippedStart > $clippedEnd) {
-				continue;
-			}
-
-			$days = $this->inclusiveDays(from: $clippedStart, to: $clippedEnd);
-			$total += ($days * ($steps[$i]['percentage'] / 100.0) * $fte);
+		foreach ($this->segments(steps: $steps, window: [$windowStart, $windowEnd]) as $segment) {
+			$days = $this->inclusiveDays(from: $segment['from'], to: $segment['to']);
+			$total += ($days * ($segment['percentage'] / 100.0) * $fte);
 		}
 
 		return $total;
 	}//end sum()
+
+	/**
+	 * Clip an ordered step list to a window, one segment per step.
+	 *
+	 * Each step holds its percentage until the day before the next begins; the
+	 * last runs to the end of the window. A step that falls outside the window
+	 * yields no segment.
+	 *
+	 * @param list<array{from: DateTimeImmutable, percentage: float}> $steps Ordered ascending by `from`.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $window First and last day counted, inclusive.
+	 *
+	 * @return list<array{from: DateTimeImmutable, to: DateTimeImmutable, percentage: float}>
+	 *
+	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-002
+	 */
+	public function segments(array $steps, array $window): array {
+		$segments = [];
+		$count = count($steps);
+		for ($i = 0; $i < $count; $i++) {
+			$segmentEnd = $window[1];
+			if (isset($steps[($i + 1)]) === true) {
+				$segmentEnd = $steps[($i + 1)]['from']->modify('-1 day');
+			}
+
+			$clippedStart = ($steps[$i]['from'] > $window[0]) ? $steps[$i]['from'] : $window[0];
+			$clippedEnd = ($segmentEnd < $window[1]) ? $segmentEnd : $window[1];
+			if ($clippedStart <= $clippedEnd) {
+				$segments[] = ['from' => $clippedStart, 'to' => $clippedEnd, 'percentage' => $steps[$i]['percentage']];
+			}
+		}
+
+		return $segments;
+	}//end segments()
 
 	/**
 	 * Inclusive day count between two dates.

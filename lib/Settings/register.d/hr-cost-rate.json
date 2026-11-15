@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "Employee": {
+                "configuration": {"exportable": true},
                 "properties": {
                     "hourlyCostRateOverrideCents": {
                         "type": "integer",
@@ -77,6 +78,7 @@
                 }
             },
             "CostAdditionPolicy": {
+                "configuration": {"exportable": true},
                 "slug": "CostAdditionPolicy",
                 "icon": "CashPlus",
                 "version": "0.1.0",
@@ -156,6 +158,7 @@
                 }
             },
             "EmploymentContract": {
+                "configuration": {"exportable": true},
                 "properties": {
                     "overtimeToeslagPercentages": {
                         "type": "object",
@@ -194,6 +197,7 @@
                 }
             },
             "TimeEntry": {
+                "configuration": {"exportable": true},
                 "x-notes": "hours-process-redesign: this cost-allocation extension moved from Timesheet to TimeEntry — allocation describes what a specific booking was worked on, which is per-entry, not per-period. The former Timesheet-level copies were dropped rather than kept as denormalized aggregates: no PHP, manifest or event-contract consumer reads them (PayrollGLPostService and the approved-time-entry CloudEvent were checked), so a retained copy would be a dead declaration. None of these three properties ever appears on a form: they are written by integrations, not people.",
                 "properties": {
                     "domainObjectRef": {

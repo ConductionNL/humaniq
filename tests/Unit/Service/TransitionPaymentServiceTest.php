@@ -39,24 +39,25 @@ class TransitionPaymentServiceTest extends TestCase {
 	/**
 	 * The service over a gateway holding one case.
 	 *
-	 * @param string $reason The departure reason.
+	 * @param string $reason        The departure reason.
+	 * @param string $contractStart The start of the employee's one contract.
 	 *
 	 * @return TransitionPaymentService
 	 */
-	private function service(string $reason): TransitionPaymentService {
+	private function service(string $reason, string $contractStart = '2019-01-01'): TransitionPaymentService {
 		$store = [
 			'case-1' => ['employeeId' => 'emp-1', 'lastWorkingDay' => '2025-12-31', 'reason' => $reason, 'status' => 'afronding_gepland', 'notes' => 'keep me', '@self' => ['id' => 'case-1']],
 			'emp-1' => ['grossMonthlySalary' => 4000.0, 'startDate' => '2019-01-01'],
 		];
 		$gateway = $this->createMock(HoursRegisterGateway::class);
 		$gateway->method('findObjectData')->willReturnCallback(static fn (string $id): ?array => ($store[$id] ?? null));
-		$gateway->method('findFiltered')->willReturnCallback(static function (string $schema, array $filters): array {
+		$gateway->method('findFiltered')->willReturnCallback(static function (string $schema, array $filters) use ($contractStart): array {
 			if ($filters !== ['employeeId' => 'emp-1']) {
 				return [];
 			}
 
 			if ($schema === 'EmploymentContract') {
-				return [['id' => 'c-1', 'type' => 'permanent', 'startDate' => '2019-01-01', 'endDate' => null]];
+				return [['id' => 'c-1', 'type' => 'permanent', 'startDate' => $contractStart, 'endDate' => null]];
 			}
 
 			return ($schema === 'Payslip') ? [['period' => '2025-12', 'grossPay' => 4000.0, 'vakantiegeldRate' => 0.08]] : [];
@@ -90,6 +91,20 @@ class TransitionPaymentServiceTest extends TestCase {
 		self::assertSame([], array_values(array_diff(array_keys($payload), array_keys(RegisterSchemaValidator::schema('Offboarding')['properties']))), 'Every field written is an Offboarding property; OpenRegister drops the others.');
 		self::assertSame([], RegisterSchemaValidator::errors('Offboarding', array_merge($payload, ['employeeId' => '0127394a-be27-48b4-a592-b6a41774b221'])));
 	}//end testTheAmountAndBreakdownLandOnTheCase()
+
+	/**
+	 * The service reads the employee's contracts as contracts: a contract
+	 * that started before the employee's recorded start date sets the
+	 * service start, which the payslips could not.
+	 *
+	 * @return void
+	 */
+	public function testTheContractsSetTheServiceStart(): void {
+		$result = $this->service('opzegging-werkgever', '2017-05-01')->calculateFor('case-1');
+
+		self::assertSame('2017-05-01', $result['serviceStart']);
+		self::assertSame(8, $result['serviceYears']);
+	}//end testTheContractsSetTheServiceStart()
 
 	/**
 	 * A settlement agreement answers zero with the reason and writes nothing.

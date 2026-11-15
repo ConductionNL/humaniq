@@ -41,6 +41,20 @@ use PHPUnit\Framework\TestCase;
 class PersonnelBudgetServiceTest extends TestCase {
 
 	/**
+	 * The budget's fields in order and its whole basis.
+	 *
+	 * @return void
+	 */
+	public function testTheBudgetFieldsAndBasis(): void {
+		$budget = $this->service()->budget(scenario: $this->scenario(), rows: $this->rows(), year: 2027);
+
+		self::assertSame(['scenarioId', 'year', 'basis', 'lines', 'byUnit', 'byFunction', 'byCostCenter', 'total'], array_keys($budget));
+		self::assertSame(['caoRaisePercentage', 'holidayAllowancePercentage', 'employerChargesPercentage', 'employerChargesBasis', 'fullTimeHoursPerWeek', 'monthRule'], array_keys($budget['basis']));
+		self::assertSame('a contract or change counts in a month when it applies on the first of that month', $budget['basis']['monthRule']);
+		self::assertSame(round(array_sum(array_column($budget['lines'], 'total')), 2), $budget['total']);
+	}//end testTheBudgetFieldsAndBasis()
+
+	/**
 	 * The scenario payloads are valid register objects.
 	 *
 	 * @return void

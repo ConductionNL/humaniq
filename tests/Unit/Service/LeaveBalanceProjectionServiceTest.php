@@ -39,11 +39,13 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\LeaveHoursCalculator;
 use OCA\Humaniq\Service\LeaveTypeResolver;
+use OCA\Humaniq\Service\LeaveUsedHoursScope;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\WorkingCalendarReader;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for LeaveBalanceProjectionService.
@@ -124,12 +126,13 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 				$id = ($uuid ?? (string)($object['id'] ?? ''));
 				$saved = array_merge($object, ['id' => $id]);
@@ -411,6 +414,19 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 	}//end testAMissingBalanceIsNeverCreated()
 
 	/**
+	 * The whole answer of each basis: explicit hours in their own year and
+	 * in another, no contract, and the contract average.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeRequestHoursAnswers(): void {
+		self::assertSame(['hours' => 6.5, 'derivable' => true, 'basis' => 'explicit', 'days' => []], LeaveHoursCalculator::requestHours(['hours' => '6.5', 'startDate' => '2026-12-31'], null, 2026));
+		self::assertSame(['hours' => 0.0, 'derivable' => true, 'basis' => 'explicit', 'days' => []], LeaveHoursCalculator::requestHours(['hours' => 6.5, 'startDate' => '2026-12-31'], 40.0, 2027));
+		self::assertSame(['hours' => 0.0, 'derivable' => false, 'basis' => 'contract-average', 'days' => []], LeaveHoursCalculator::requestHours(['startDate' => '2026-06-01', 'endDate' => '2026-06-05'], 0.0, 2026));
+		self::assertSame(['hours' => 16.0, 'derivable' => true, 'basis' => 'contract-average', 'days' => []], LeaveHoursCalculator::requestHours(['hours' => 0, 'startDate' => '2026-12-30', 'endDate' => '2027-01-04'], 40.0, 2027));
+	}//end testTheWholeRequestHoursAnswers()
+
+	/**
 	 * A full working week with no explicit hours derives from the contract.
 	 *
 	 * @return void
@@ -523,16 +539,40 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 					'status' => 'approved',
 				],
 			],
-			'emp-1',
-			2026,
-			'holiday',
-			null
+			$this->balance()
 		);
 
 		$this->assertSame(0.0, $projection['usedHours']);
 		$this->assertSame(['req-1'], $projection['underivable']);
 
 	}//end testAnUnderivableRequestIsNamed()
+
+	/**
+	 * Only the balance's own approved requests touching its year count, a
+	 * request without an id is named "unknown", and the total is rounded.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-001
+	 */
+	public function testOnlyTheBalancesOwnApprovedRequestsCount(): void {
+		$request = ['employeeId' => 'emp-1', 'leaveType' => 'holiday', 'status' => 'approved', 'startDate' => '2026-03-02', 'endDate' => '2026-03-02'];
+		$projection = LeaveHoursCalculator::usedHoursFor(
+			[
+				['id' => 'r-1', 'hours' => 2.333] + $request,
+				['id' => 'r-2', 'hours' => 1.111] + $request,
+				['id' => 'r-other', 'hours' => 8, 'employeeId' => 'emp-2'] + $request,
+				['id' => 'r-type', 'hours' => 8, 'leaveType' => 'unpaid'] + $request,
+				['id' => 'r-draft', 'hours' => 8, 'status' => 'submitted'] + $request,
+				['id' => 'r-2025', 'hours' => 8, 'startDate' => '2025-03-02', 'endDate' => '2025-03-02'] + $request,
+				['hours' => 0, 'startDate' => '2026-03-02', 'endDate' => '2026-03-03'] + $request,
+			],
+			$this->balance()
+		);
+
+		$this->assertSame(['usedHours' => 3.44, 'underivable' => ['unknown']], $projection);
+
+	}//end testOnlyTheBalancesOwnApprovedRequestsCount()
 
 	/**
 	 * A derived request spanning New Year splits across both years.
@@ -673,4 +713,18 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 		$this->assertSame(16.0, $this->writtenBalance($fake, 'bal-1')['usedHours'] ?? null, 'Monday and Tuesday of a Monday to Wednesday pattern.');
 		$this->assertSame(16.0, $this->writtenBalance($fake, 'bal-2')['usedHours'] ?? null, 'No pattern: two days of the 40-hour contract average.');
 	}//end testTheCalendarIsReadOncePerProjection()
+
+	/**
+	 * The 2026 holiday balance of emp-1, without a contract hours snapshot.
+	 *
+	 * @return LeaveUsedHoursScope
+	 */
+	private function balance(): LeaveUsedHoursScope {
+		$balance = new LeaveUsedHoursScope();
+		$balance->employeeId = 'emp-1';
+		$balance->year = 2026;
+		$balance->leaveType = 'holiday';
+
+		return $balance;
+	}//end balance()
 }

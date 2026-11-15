@@ -421,5 +421,38 @@ class NlFleetChecksTest extends TestCase {
 		self::assertNotContains('nl-asset-voertuig-fiscale-velden-compleet', $ruleIds);
 
 	}//end testRealRuleEngineIsSilentForACompleteVehicleAsset()
+	/**
+	 * A payslip whose period resolves to no tax-year table (an unparseable
+	 * period, or a year with no table file) is out of this rule's scope:
+	 * the bijtelling arithmetic is not checked, even when it is wrong.
+	 *
+	 * @return void
+	 */
+	public function testPeriodWithoutAResolvableTaxTableIsVacuouslyCompliant(): void {
+		$check = $this->checks['Payslip']['nl-bijtelling-auto-privegebruik'];
+		$context = $this->context([$this->assetAssignment()], [$this->vehicleAsset()]);
+
+		self::assertFalse($check($this->payslip(['bijtelling' => 600.00]), $context), 'Sanity: with the 2026 table the tampered value violates.');
+		self::assertTrue($check($this->payslip(['bijtelling' => 600.00, 'period' => 'februari']), $context));
+		self::assertTrue($check($this->payslip(['bijtelling' => 600.00, 'period' => '']), $context));
+		self::assertTrue($check($this->payslip(['bijtelling' => 600.00, 'period' => '2099-02']), $context));
+
+	}//end testPeriodWithoutAResolvableTaxTableIsVacuouslyCompliant()
+
+	/**
+	 * A vehicle without a numeric listPrice re-derives a bijtelling of
+	 * zero: only a payslip recording no (or zero) bijtelling matches.
+	 *
+	 * @return void
+	 */
+	public function testVehicleWithoutANumericListPriceExpectsZeroBijtelling(): void {
+		$check = $this->checks['Payslip']['nl-bijtelling-auto-privegebruik'];
+		$context = $this->context([$this->assetAssignment()], [$this->vehicleAsset(['listPrice' => null])]);
+
+		self::assertTrue($check($this->payslip(['bijtelling' => 0.00]), $context));
+		self::assertTrue($check($this->payslip(['bijtelling' => null]), $context));
+		self::assertFalse($check($this->payslip(['bijtelling' => 500.00]), $context));
+
+	}//end testVehicleWithoutANumericListPriceExpectsZeroBijtelling()
 
 }//end class

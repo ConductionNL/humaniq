@@ -36,6 +36,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { detailPagesWithoutHistory } = require("./manifest-detail-history.js");
 const { buildEffectiveManifest } = require("./verify-manifest-parity.js");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -199,6 +200,19 @@ function main() {
 	console.log(`[validate-manifest] manifest.version: ${manifest.version}`);
 	console.log(
 		`[validate-manifest] effective pages validated: ${(manifest.pages || []).length} (base + manifest.d fragments + expanded page templates)`,
+	);
+
+	// Every detail page shows the record's audit history (REQ-RAH-002).
+	const withoutHistory = detailPagesWithoutHistory(manifest);
+	if (withoutHistory.length > 0) {
+		console.error(
+			"[validate-manifest] detail pages without sidebar.showMetadata: true (the record's history): FAIL",
+		);
+		for (const id of withoutHistory) console.error(`  - ${id}`);
+		process.exit(1);
+	}
+	console.log(
+		"[validate-manifest] every detail page shows the record's history: PASS",
 	);
 
 	const schemaPath = findSchemaPath();

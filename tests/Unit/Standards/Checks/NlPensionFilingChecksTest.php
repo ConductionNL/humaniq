@@ -263,5 +263,18 @@ class NlPensionFilingChecksTest extends TestCase {
 		$this->assertTrue(($this->filingChecks['nl-upa-deadline-alert'])($filing, []));
 
 	}//end testDeadlineAlertNeverFiresOnceSent()
+	/**
+	 * An approved NL run without a period cannot be matched to a filing: out
+	 * of scope, even with no filings at all.
+	 *
+	 * @return void
+	 */
+	public function testMonthlyCompletenessOutOfScopeForRunWithoutPeriod(): void {
+		$run = $this->payrollRun(['period' => '', 'status' => 'approved']);
+
+		$this->assertTrue(($this->runChecks['nl-upa-monthly-completeness'])($run, $this->context([], [])));
+		$this->assertFalse(($this->runChecks['nl-upa-monthly-completeness'])($this->payrollRun(), $this->context([], [])), 'Sanity: the same run with a period is a violation.');
+
+	}//end testMonthlyCompletenessOutOfScopeForRunWithoutPeriod()
 
 }//end class
