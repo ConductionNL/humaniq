@@ -59,6 +59,18 @@ class CompBandValidator {
 			];
 		}
 
+		return $this->rangeRefusal(band: $band, proposedSalaryCents: $proposedSalaryCents);
+	}//end evaluate()
+
+	/**
+	 * The refusal for a band without a valid range, or a salary outside it; null when the salary fits.
+	 *
+	 * @param array<string, mixed> $band The loaded band.
+	 * @param int $proposedSalaryCents The proposed salary, in cents.
+	 *
+	 * @return array{status: string, message: string}|null
+	 */
+	private function rangeRefusal(array $band, int $proposedSalaryCents): array|null {
 		$minSalary = ($band['minSalary'] ?? null);
 		$maxSalary = ($band['maxSalary'] ?? null);
 		if (is_numeric($minSalary) === false || is_numeric($maxSalary) === false) {
@@ -68,14 +80,14 @@ class CompBandValidator {
 			];
 		}
 
-		if ($proposedSalaryCents < (int)$minSalary || $proposedSalaryCents > (int)$maxSalary) {
-			return [
-				'status' => 'refused-out-of-band',
-				'message' => 'Het voorgestelde salaris valt buiten de schaal (' . ((int)$minSalary) . '-' . ((int)$maxSalary) . ' cent); effectueren is geweigerd.',
-			];
+		if ($proposedSalaryCents >= (int)$minSalary && $proposedSalaryCents <= (int)$maxSalary) {
+			return null;
 		}
 
-		return null;
-	}//end evaluate()
+		return [
+			'status' => 'refused-out-of-band',
+			'message' => 'Het voorgestelde salaris valt buiten de schaal (' . ((int)$minSalary) . '-' . ((int)$maxSalary) . ' cent); effectueren is geweigerd.',
+		];
+	}//end rangeRefusal()
 
 }//end class

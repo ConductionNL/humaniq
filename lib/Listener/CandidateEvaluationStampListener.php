@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
@@ -51,13 +51,13 @@ class CandidateEvaluationStampListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway     Resolves the schema slug.
+	 * @param OrgLookupInterface   $gateway     Resolves the schema slug.
 	 * @param IUserSession         $userSession The signed-in user.
 	 *
 	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-001
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly OrgLookupInterface $gateway,
 		private readonly IUserSession $userSession,
 	) {
 	}//end __construct()

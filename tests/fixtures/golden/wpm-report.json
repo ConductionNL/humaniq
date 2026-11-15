@@ -1,0 +1,66 @@
+{
+    "empty": {
+        "administrationId": "ADM-1",
+        "year": 2026,
+        "employeeCount": 1,
+        "meetsThreshold": false,
+        "businessKm": [],
+        "commuteKm": [],
+        "totalBusinessKm": 0.0,
+        "totalCommuteKm": 0.0,
+        "tripsWithoutMode": [],
+        "compiledBy": "hr-1"
+    },
+    "mixed": {
+        "administrationId": "ADM-1",
+        "year": 2026,
+        "employeeCount": 1,
+        "meetsThreshold": false,
+        "businessKm": [
+            {
+                "transportMode": "car",
+                "fuelType": null,
+                "km": 12.3
+            },
+            {
+                "transportMode": "car",
+                "fuelType": "electric",
+                "km": 20.0
+            },
+            {
+                "transportMode": "train",
+                "fuelType": null,
+                "km": 101.3
+            }
+        ],
+        "commuteKm": [
+            {
+                "transportMode": "bike",
+                "fuelType": null,
+                "km": 5778.0
+            },
+            {
+                "transportMode": "car",
+                "fuelType": "diesel",
+                "km": 642.0
+            }
+        ],
+        "totalBusinessKm": 133.6,
+        "totalCommuteKm": 6420.0,
+        "tripsWithoutMode": [
+            {
+                "schema": "Expense",
+                "id": "c4",
+                "title": "Zonder vervoer",
+                "km": 12.3
+            },
+            {
+                "schema": "CommuteArrangement",
+                "id": "a4",
+                "title": null,
+                "km": 2568.0
+            }
+        ],
+        "compiledBy": "hr-1"
+    }
+}

@@ -125,4 +125,33 @@ class CostAllocationSharesTest extends TestCase {
 		$this->assertSame('KP-1', $shares->codeOrNull(' KP-1 '));
 	}//end testCodeOrNull()
 
+	/**
+	 * The whole hours split for every shape of time entry, with and without a fallback.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeHoursSplitForEveryShapeOfEntry(): void {
+		$entries = [
+			['hours' => 4, 'costCenter' => 'CC-1', 'projectId' => 'P-1'],
+			['hours' => '2.5', 'costCenter' => ' CC-1 ', 'projectId' => 'P-1'],
+			['hours' => 3, 'costCenter' => 'CC-2'],
+			['hours' => 1, 'projectId' => 'P-9'],
+			['hours' => 1.5],
+			['hours' => 0, 'costCenter' => 'CC-3'],
+			['hours' => -2, 'costCenter' => 'CC-3'],
+			['hours' => 'veel', 'costCenter' => 'CC-3'],
+			['costCenter' => 'CC-3'],
+			['hours' => 2, 'costCenter' => ''],
+		];
+		$shares = new CostAllocationShares();
+		$got = [
+			'fallback' => $shares->hoursShares($entries, 'CC-F'),
+			'no-fallback' => $shares->hoursShares($entries, null),
+			'no-hours' => $shares->hoursShares([['hours' => 0], ['costCenter' => 'CC-1']], 'CC-F'),
+			'none' => $shares->hoursShares([], null),
+		];
+
+		$this->assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/cost-allocation-hours-shares.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION)) . "\n");
+	}//end testTheWholeHoursSplitForEveryShapeOfEntry()
+
 }//end class

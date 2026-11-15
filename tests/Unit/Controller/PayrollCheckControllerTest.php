@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\PayrollCheckController;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\SettingsService;
@@ -31,7 +32,10 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use OCA\Humaniq\Tests\Unit\Support\RecordingLogger;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Who may check a run, and what an unreadable run answers.
@@ -48,7 +52,7 @@ class PayrollCheckControllerTest extends TestCase {
 	 *
 	 * @return PayrollCheckController
 	 */
-	private function controller(bool $hr, bool $payroll, array $runs, ?PayrollRunCheckService $check = null): PayrollCheckController {
+	private function controller(bool $hr, bool $payroll, array $runs, ?PayrollRunCheckService $check = null, ?LoggerInterface $logger = null): PayrollCheckController {
 		$objects = new class($runs) {
 
 			/**
@@ -64,7 +68,9 @@ class PayrollCheckControllerTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
 				if ($id === 'forbidden') {
 					throw new \RuntimeException('Forbidden');
 				}
@@ -88,12 +94,9 @@ class PayrollCheckControllerTest extends TestCase {
 
 		return new PayrollCheckController(
 			$this->createMock(IRequest::class),
-			$container,
 			$settings,
 			($check ?? $this->createMock(PayrollRunCheckService::class)),
-			$session,
-			$roles,
-			new NullLogger()
+			new CallerContext($session, $roles, $container, ($logger ?? new NullLogger()))
 		);
 	}//end controller()
 
@@ -116,6 +119,20 @@ class PayrollCheckControllerTest extends TestCase {
 		$this->assertSame(404, $this->controller(true, false, [])->check('run-x')->getStatus());
 		$this->assertSame(400, $this->controller(true, false, [])->check(' ')->getStatus());
 	}//end testAnUnreadableRunIs404()
+
+	/**
+	 * A run lookup that throws is logged as a warning with the exception
+	 * class only: neither the caller's id nor the exception text.
+	 *
+	 * @return void
+	 */
+	public function testAFailedRunLookupLogsOnlyTheExceptionClass(): void {
+		$logger = new RecordingLogger();
+
+		$this->assertSame(404, $this->controller(true, false, [], null, $logger)->check('forbidden')->getStatus());
+
+		$this->assertSame([['warning', 'PayrollCheckController: a payroll run lookup failed and is answered as not found.', ['exceptionClass' => \RuntimeException::class]]], $logger->records);
+	}//end testAFailedRunLookupLogsOnlyTheExceptionClass()
 
 	/**
 	 * HR or payroll checks a readable run and gets the summary.

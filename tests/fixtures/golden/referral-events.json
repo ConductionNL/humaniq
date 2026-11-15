@@ -1,0 +1,70 @@
+{
+    "events": {
+        "create": {
+            "errors": [],
+            "modified": {
+                "referrerUserId": "employee.one",
+                "vacancyTitle": "Payroll adviseur",
+                "status": "nieuw"
+            },
+            "stopped": false
+        },
+        "create-refused": {
+            "errors": {
+                "message": "The candidate has to agree before you refer them. Tick that they agreed."
+            },
+            "modified": [],
+            "stopped": true
+        },
+        "created": {
+            "errors": null,
+            "modified": null,
+            "stopped": false
+        },
+        "followed": {
+            "errors": null,
+            "modified": null,
+            "stopped": false
+        },
+        "not-referred": {
+            "errors": null,
+            "modified": null,
+            "stopped": false
+        },
+        "referral-updated": {
+            "errors": null,
+            "modified": null,
+            "stopped": false
+        },
+        "application-created": {
+            "errors": null,
+            "modified": null,
+            "stopped": false
+        },
+        "application-creating": {
+            "errors": [],
+            "modified": [],
+            "stopped": false
+        }
+    },
+    "referralStatus": {
+        "ref-2": "gesprek",
+        "ref-3": "nieuw",
+        "ref-1": null
+    },
+    "applications": [
+        {
+            "vacancyId": "5d1d6c1e-0000-4000-8000-00000000000a",
+            "candidateName": "Ahmed Yilmaz",
+            "email": "ahmed@example.org",
+            "phone": "0612345678",
+            "motivation": "Oud-collega, sterk in loonheffing.",
+            "status": "nieuw",
+            "talentPoolOptIn": false,
+            "source": "referral",
+            "referredByUserId": "forged",
+            "candidateConsented": true,
+            "administrationId": "ADM-001"
+        }
+    ]
+}

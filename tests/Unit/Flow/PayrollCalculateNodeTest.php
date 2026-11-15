@@ -24,7 +24,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Flow;
 
 use OCA\Humaniq\Flow\PayrollCalculateNode;
+use OCA\Humaniq\Flow\PayrollFlowNodeServices;
 use OCA\Humaniq\Service\PayrollRunService;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use RuntimeException;
 use UnexpectedValueException;
 
@@ -44,10 +46,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 	 */
 	private function node(PayrollRunService $service): PayrollCalculateNode {
 		return new PayrollCalculateNode(
-			$this->l10n(),
-			$this->urls(),
-			$this->container(),
-			$this->settings(),
+			new PayrollFlowNodeServices($this->l10n(), $this->urls(), $this->container(), $this->settings()),
 			$this->logger(),
 			$service
 		);
@@ -100,11 +99,11 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 			->with('2026-05', 'ADM-002', true)
 			->willReturn($this->outcome('calculated'));
 
-		$out = $this->node($service)->execute(
-			[$this->item(['maand' => '2026-05'])],
-			['period' => '{{ maand }}', 'administrationId' => 'ADM-002'],
-			[]
-		);
+		$out = $this->node($service)->execute(new FlowNodeCall(
+			items: [$this->item(['maand' => '2026-05'])],
+			config: ['period' => '{{ maand }}', 'administrationId' => 'ADM-002'],
+			context: []
+		));
 
 		$this->assertCount(1, $out);
 		$this->assertSame('calculated', $out[0]['json']['payroll']['status']);
@@ -123,7 +122,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 			->with(gmdate('Y-m'), null, true)
 			->willReturn($this->outcome('exists'));
 
-		$out = $this->node($service)->execute([$this->item([])], [], []);
+		$out = $this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: [], context: []));
 
 		$this->assertSame('exists', $out[0]['json']['payroll']['status']);
 	}//end testDefaultPeriodIsCurrentMonth()
@@ -140,7 +139,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 			->with(gmdate('Y-m'), null, false)
 			->willReturn($this->outcome('exists'));
 
-		$this->node($service)->execute([$this->item([])], ['recalculate' => false], []);
+		$this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: ['recalculate' => false], context: []));
 	}//end testRecalculateFalseIsForwarded()
 
 	/**
@@ -154,7 +153,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 		$service->method('runFor')->willReturn($this->outcome('refused-not-draft'));
 
 		$this->expectException(RuntimeException::class);
-		$this->node($service)->execute([$this->item([])], [], []);
+		$this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: [], context: []));
 	}//end testRefusedNotDraftThrows()
 
 	/**
@@ -167,8 +166,36 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 		$service->method('runFor')->willReturn($this->outcome('failed'));
 
 		$this->expectException(RuntimeException::class);
-		$this->node($service)->execute([$this->item([])], [], []);
+		$this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: [], context: []));
 	}//end testFailedThrows()
+
+	/**
+	 * The refusal names the period, the status and the service's message.
+	 *
+	 * @return void
+	 */
+	public function testTheRefusalMessageNamesPeriodStatusAndReason(): void {
+		$service = $this->createMock(PayrollRunService::class);
+		$service->method('runFor')->willReturn($this->outcome('failed'));
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Loonrun berekenen voor 2026-05 is geweigerd (failed): msg');
+		$this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: ['period' => '2026-05'], context: []));
+	}//end testTheRefusalMessageNamesPeriodStatusAndReason()
+
+	/**
+	 * An outcome without status or message is refused with empty parts.
+	 *
+	 * @return void
+	 */
+	public function testAnOutcomeWithoutStatusIsRefused(): void {
+		$service = $this->createMock(PayrollRunService::class);
+		$service->method('runFor')->willReturn([]);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Loonrun berekenen voor 2026-05 is geweigerd (): ');
+		$this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: ['period' => '2026-05'], context: []));
+	}//end testAnOutcomeWithoutStatusIsRefused()
 
 	/**
 	 * An empty firing returns empty without touching the service.
@@ -179,7 +206,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 		$service = $this->createMock(PayrollRunService::class);
 		$service->expects($this->never())->method('runFor');
 
-		$this->assertSame([], $this->node($service)->execute([], [], []));
+		$this->assertSame([], $this->node($service)->execute(new FlowNodeCall(items: [], config: [], context: [])));
 	}//end testEmptyFiringShortCircuits()
 
 	/**

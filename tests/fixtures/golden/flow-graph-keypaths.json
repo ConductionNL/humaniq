@@ -1,0 +1,190 @@
+{
+    "json": [
+        {
+            "exits": [
+                {
+                    "condition": {
+                        "==": [
+                            {
+                                "var": "json.check.status"
+                            },
+                            "ok"
+                        ]
+                    }
+                },
+                {
+                    "condition": {
+                        "and": [
+                            {
+                                "var": [
+                                    "json.check",
+                                    "fallback"
+                                ]
+                            },
+                            {
+                                "!": {
+                                    "var": "other.flag"
+                                }
+                            },
+                            {
+                                "in": [
+                                    {
+                                        "var": "checks"
+                                    },
+                                    [
+                                        "a",
+                                        "b"
+                                    ]
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "condition": {
+                        "var": "json.check"
+                    }
+                },
+                {
+                    "condition": {
+                        "var": [
+                            ""
+                        ]
+                    }
+                },
+                {
+                    "condition": true
+                },
+                {
+                    "condition": {
+                        "missing": "check.status"
+                    }
+                },
+                {
+                    "condition": {
+                        "or": [
+                            {
+                                "var": "json.check.status"
+                            },
+                            {
+                                "var": "json.check.status.deep"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "condition": {
+                        "==": [
+                            {
+                                "var": "checker"
+                            },
+                            1
+                        ]
+                    }
+                },
+                {
+                    "label": "no condition"
+                },
+                "not-an-exit"
+            ]
+        },
+        {
+            "exits": "none"
+        },
+        "not-a-node"
+    ],
+    "back": [
+        {
+            "exits": [
+                {
+                    "condition": {
+                        "==": [
+                            {
+                                "var": "check.status"
+                            },
+                            "ok"
+                        ]
+                    }
+                },
+                {
+                    "condition": {
+                        "and": [
+                            {
+                                "var": [
+                                    "check",
+                                    "fallback"
+                                ]
+                            },
+                            {
+                                "!": {
+                                    "var": "other.flag"
+                                }
+                            },
+                            {
+                                "in": [
+                                    {
+                                        "var": "checks"
+                                    },
+                                    [
+                                        "a",
+                                        "b"
+                                    ]
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "condition": {
+                        "var": "check"
+                    }
+                },
+                {
+                    "condition": {
+                        "var": [
+                            ""
+                        ]
+                    }
+                },
+                {
+                    "condition": true
+                },
+                {
+                    "condition": {
+                        "missing": "check.status"
+                    }
+                },
+                {
+                    "condition": {
+                        "or": [
+                            {
+                                "var": "check.status"
+                            },
+                            {
+                                "var": "check.status.deep"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "condition": {
+                        "==": [
+                            {
+                                "var": "checker"
+                            },
+                            1
+                        ]
+                    }
+                },
+                {
+                    "label": "no condition"
+                },
+                "not-an-exit"
+            ]
+        },
+        {
+            "exits": "none"
+        },
+        "not-a-node"
+    ]
+}

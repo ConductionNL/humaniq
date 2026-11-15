@@ -3,6 +3,9 @@
 /**
  * WKR (Werkkostenregeling) Assessment Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Rolls the cross-object fiscale loonsom (Σ Payslip.grossPay) and the
  * administration's WkrDeclarations into an idempotent, per-(administrationId,
  * year) `WkrAssessment` (wkr-administration design.md D5): reads the SAME
@@ -33,9 +36,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/wkr-administration/spec.md#REQ-WKR-003
@@ -47,15 +47,25 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Standards\Checks\NlWkrChecks;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\LoadsAllRows;
+use OCA\Humaniq\Support\RoundsToCents;
 
 /**
  * Cross-object loonsom -> vrije-ruimte roll-up, upserted as an idempotent
  * WkrAssessment per (administrationId, year).
  */
 class WkrService {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use LoadsAllRows;
+	use RoundsToCents;
 
 	/**
 	 * Max objects loaded per type.
@@ -148,9 +158,10 @@ class WkrService {
 			$saved = $this->toArray(
 				$this->objectService()->saveObject(
 					object: $payload,
-					register: $this->register(),
-					schema: 'WkrAssessment',
-					uuid: ($existing === null ? null : $this->idOf($existing)),
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $this->register(), schema: 'WkrAssessment'),
+						uuid: $existing === null ? null : $this->idOf($existing)
+					),
 					_rbac: false,
 					_multitenancy: false
 				)
@@ -196,23 +207,26 @@ class WkrService {
 	 * @return array<string, array<int, array<string, float>>>
 	 */
 	private function buildAggregate(): array {
-		$runsById = [];
-		foreach ($this->loadAll('PayrollRun') as $run) {
-			$id = $this->idOf($run);
-			if ($id !== '') {
-				$runsById[$id] = (string)($run['administrationId'] ?? '');
-			}
-		}
+		$aggregate = new WkrAggregate();
+		$this->addPayslips($aggregate, $this->administrationIdsByRun());
+		$this->addDeclarations($aggregate);
 
-		$aggregate = [];
+		return $aggregate->toArray();
+	}//end buildAggregate()
 
+	/**
+	 * Add every attributable Payslip's grossPay and wkrUsed to the bucket of
+	 * its effective administrationId and wage year; a payslip without either
+	 * is left out.
+	 *
+	 * @param WkrAggregate $aggregate The aggregate being built.
+	 * @param array<string, string> $runsById Run administrationIds keyed by run id.
+	 *
+	 * @return void
+	 */
+	private function addPayslips(WkrAggregate $aggregate, array $runsById): void {
 		foreach ($this->loadAll('Payslip') as $payslip) {
-			$administrationId = trim((string)($payslip['administrationId'] ?? ''));
-			if ($administrationId === '') {
-				$runId = (string)($payslip['payrollRunId'] ?? '');
-				$administrationId = trim((string)($runsById[$runId] ?? ''));
-			}
-
+			$administrationId = $this->payslipAdministrationId($payslip, $runsById);
 			if ($administrationId === '') {
 				continue;
 			}
@@ -222,14 +236,22 @@ class WkrService {
 				continue;
 			}
 
-			$bucket = &$aggregate[$administrationId][$year];
-			$bucket['loonsom'] = (($bucket['loonsom'] ?? 0.0) + ((float)($payslip['grossPay'] ?? 0)));
-			$bucket['payslipWkrUsed'] = (($bucket['payslipWkrUsed'] ?? 0.0) + ((float)($payslip['wkrUsed'] ?? 0)));
-			$bucket['vrijeRuimteDeclared'] = ($bucket['vrijeRuimteDeclared'] ?? 0.0);
-			$bucket['eindheffingDeclared'] = ($bucket['eindheffingDeclared'] ?? 0.0);
-			unset($bucket);
-		}//end foreach
+			$aggregate->at($administrationId, $year)
+				->add('loonsom', (float)($payslip['grossPay'] ?? 0))
+				->add('payslipWkrUsed', (float)($payslip['wkrUsed'] ?? 0));
+		}
+	}//end addPayslips()
 
+	/**
+	 * Add every counted WkrDeclaration's amount to its (administrationId,
+	 * year) bucket; declarations without an administration or year, and
+	 * gericht-vrijgesteld ones, are left out.
+	 *
+	 * @param WkrAggregate $aggregate The aggregate being built.
+	 *
+	 * @return void
+	 */
+	private function addDeclarations(WkrAggregate $aggregate): void {
 		foreach ($this->loadAll('WkrDeclaration') as $declaration) {
 			$administrationId = trim((string)($declaration['administrationId'] ?? ''));
 			$year = (int)($declaration['year'] ?? 0);
@@ -238,23 +260,46 @@ class WkrService {
 				continue;
 			}
 
-			$bucket = &$aggregate[$administrationId][$year];
-			$bucket['loonsom'] = ($bucket['loonsom'] ?? 0.0);
-			$bucket['payslipWkrUsed'] = ($bucket['payslipWkrUsed'] ?? 0.0);
-			$bucket['vrijeRuimteDeclared'] = ($bucket['vrijeRuimteDeclared'] ?? 0.0);
-			$bucket['eindheffingDeclared'] = ($bucket['eindheffingDeclared'] ?? 0.0);
+			$aggregate->at($administrationId, $year)->addDeclared($category, (float)($declaration['amount'] ?? 0));
+		}
+	}//end addDeclarations()
 
-			if ($category === 'vrije-ruimte') {
-				$bucket['vrijeRuimteDeclared'] += ((float)($declaration['amount'] ?? 0));
-			} elseif ($category === 'eindheffing') {
-				$bucket['eindheffingDeclared'] += ((float)($declaration['amount'] ?? 0));
+	/**
+	 * Each PayrollRun's administrationId, keyed by run id (runs without an id
+	 * are left out).
+	 *
+	 * @return array<string, string>
+	 */
+	private function administrationIdsByRun(): array {
+		$runsById = [];
+		foreach ($this->loadAll('PayrollRun') as $run) {
+			$id = $this->idOf($run);
+			if ($id !== '') {
+				$runsById[$id] = (string)($run['administrationId'] ?? '');
 			}
+		}
 
-			unset($bucket);
-		}//end foreach
+		return $runsById;
+	}//end administrationIdsByRun()
 
-		return $aggregate;
-	}//end buildAggregate()
+	/**
+	 * A Payslip's effective administrationId: its own field, else its
+	 * `payrollRunId` -> PayrollRun.administrationId; '' when neither is set.
+	 *
+	 * @param array<string, mixed> $payslip The payslip row.
+	 * @param array<string, string> $runsById Run administrationIds keyed by run id.
+	 *
+	 * @return string
+	 */
+	private function payslipAdministrationId(array $payslip, array $runsById): string {
+		$administrationId = trim((string)($payslip['administrationId'] ?? ''));
+		if ($administrationId !== '') {
+			return $administrationId;
+		}
+
+		$runId = (string)($payslip['payrollRunId'] ?? '');
+		return trim((string)($runsById[$runId] ?? ''));
+	}//end payslipAdministrationId()
 
 	/**
 	 * Derive a calendar year from a wage period (`YYYY-MM`/`YYYY-Pnn`) — the
@@ -309,23 +354,6 @@ class WkrService {
 	}//end outcome()
 
 	/**
-	 * Convert a euro-denominated value to integer cents (`round($euros *
-	 * 100)`, the PayrollMutationService read-time boundary). Non-numeric/null
-	 * values convert to 0.
-	 *
-	 * @param mixed $euros The raw value.
-	 *
-	 * @return int
-	 */
-	private static function cents(mixed $euros): int {
-		if (is_numeric($euros) === false) {
-			return 0;
-		}
-
-		return (int)round(((float)$euros) * 100);
-	}//end cents()
-
-	/**
 	 * Convert integer cents to a euro float rounded to 2 decimals — the
 	 * write-time boundary (the PayrollMutationService::euros() precedent).
 	 *
@@ -336,50 +364,6 @@ class WkrService {
 	private static function euros(int $cents): float {
 		return round(($cents / 100), 2);
 	}//end euros()
-
-	/**
-	 * Load all objects of a schema (capped), as plain arrays. Degrades
-	 * gracefully to an empty list when the schema does not exist yet in the
-	 * register.
-	 *
-	 * @param string $schema The schema name.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function loadAll(string $schema): array {
-		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema($schema)->findAll(['limit' => self::LIMIT]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('WkrService: kon ' . $schema . ' niet laden: ' . $e->getMessage());
-			return [];
-		}
-
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end loadAll()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * The object id of a row, falling back to `@self.id`.
@@ -393,28 +377,9 @@ class WkrService {
 	}//end idOf()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

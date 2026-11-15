@@ -38,6 +38,8 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use OCA\Humaniq\Tests\Unit\Support\RecordingLogger;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -53,13 +55,21 @@ class TimeEntryControllerTest extends TestCase {
 	private RunningTimerService $timers;
 
 	/**
+	 * The register gateway, mocked.
+	 *
+	 * @var HoursRegisterGateway&MockObject
+	 */
+	private HoursRegisterGateway $gateway;
+
+	/**
 	 * {@inheritDoc}
 	 *
 	 * @return void
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		$this->timers = $this->createMock(RunningTimerService::class);
+		$this->timers  = $this->createMock(RunningTimerService::class);
+		$this->gateway = $this->createMock(HoursRegisterGateway::class);
 	}//end setUp()
 
 	/**
@@ -69,7 +79,7 @@ class TimeEntryControllerTest extends TestCase {
 	 *
 	 * @return TimeEntryController The subject.
 	 */
-	private function controller(?string $uid): TimeEntryController {
+	private function controller(?string $uid, ?LoggerInterface $logger = null): TimeEntryController {
 		$session = $this->createMock(IUserSession::class);
 		if ($uid === null) {
 			$session->method('getUser')->willReturn(null);
@@ -83,8 +93,8 @@ class TimeEntryControllerTest extends TestCase {
 			$this->createMock(IRequest::class),
 			$session,
 			$this->timers,
-			new NullLogger(),
-			$this->createMock(HoursRegisterGateway::class),
+			($logger ?? new NullLogger()),
+			$this->gateway,
 			$this->createMock(TimeEstimateService::class)
 		);
 	}//end controller()
@@ -245,5 +255,150 @@ class TimeEntryControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertSame('Er is geen medewerker gekoppeld aan je account.', $response->getData()['error']);
 	}//end testARefusalKeepsItsMessage()
+
+	/**
+	 * A refusal is logged at info without its text, which can name the
+	 * person; the response still carries it.
+	 *
+	 * @return void
+	 */
+	public function testARefusalIsLoggedWithoutItsText(): void {
+		$this->timers->method('running')->willThrowException(new HoursWriteRefusedException('Er is geen medewerker gekoppeld aan je account.'));
+		$logger = new RecordingLogger();
+
+		$this->controller('alice', $logger)->timer();
+
+		$this->assertSame([['info', 'TimeEntryController: a timer request was refused.', ['exceptionClass' => HoursWriteRefusedException::class]]], $logger->records);
+	}//end testARefusalIsLoggedWithoutItsText()
+
+	/**
+	 * The day's hours are read with the CALLER's id and the asked date, and
+	 * summed; an entry without hours (a running timer) adds nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 */
+	public function testSummarySumsTheCallersOwnEntriesOfTheDay(): void {
+		$this->gateway->expects($this->once())
+			->method('findFiltered')
+			->with('TimeEntry', ['userId' => 'alice', 'date' => '2026-10-07'])
+			->willReturn([
+				['userId' => 'alice', 'date' => '2026-10-07', 'hours' => 1.5],
+				['userId' => 'alice', 'date' => '2026-10-07', 'hours' => '0.75'],
+				['userId' => 'alice', 'date' => '2026-10-07', 'hours' => 0.5],
+				['userId' => 'alice', 'date' => '2026-10-07', 'startedAt' => '2026-10-07T15:00:00Z'],
+			]);
+
+		$response = $this->controller('alice')->summary('2026-10-07');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['date' => '2026-10-07', 'hours' => 2.75, 'entries' => 3], $response->getData());
+	}//end testSummarySumsTheCallersOwnEntriesOfTheDay()
+
+	/**
+	 * A row the store hands back for someone else is never counted.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 */
+	public function testSummaryNeverCountsAnotherUsersEntry(): void {
+		$this->gateway->method('findFiltered')->willReturn([
+			['userId' => 'alice', 'date' => '2026-10-07', 'hours' => 2],
+			['userId' => 'bob', 'date' => '2026-10-07', 'hours' => 8],
+		]);
+
+		$response = $this->controller('alice')->summary('2026-10-07');
+
+		$this->assertSame(2.0, $response->getData()['hours']);
+		$this->assertSame(1, $response->getData()['entries']);
+	}//end testSummaryNeverCountsAnotherUsersEntry()
+
+	/**
+	 * Without a date the summary is of today.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 */
+	public function testSummaryDefaultsToToday(): void {
+		$today = (new \DateTimeImmutable('now'))->format('Y-m-d');
+		$this->gateway->expects($this->once())
+			->method('findFiltered')
+			->with('TimeEntry', ['userId' => 'alice', 'date' => $today])
+			->willReturn([]);
+
+		$response = $this->controller('alice')->summary();
+
+		$this->assertSame(['date' => $today, 'hours' => 0.0, 'entries' => 0], $response->getData());
+	}//end testSummaryDefaultsToToday()
+
+	/**
+	 * No session is 401 before anything is read; a date that is not a day is 400.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 */
+	public function testSummaryRefusesWithoutASessionAndOnABadDate(): void {
+		$this->gateway->expects($this->never())->method('findFiltered');
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller(null)->summary('2026-10-07')->getStatus());
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller('alice')->summary('2026-13-40')->getStatus());
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller('alice')->summary('yesterday')->getStatus());
+	}//end testSummaryRefusesWithoutASessionAndOnABadDate()
+
+	/**
+	 * A failed read is a 500 with a sentence, never a zero that reads as "no hours".
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 */
+	public function testSummaryFailsClosed(): void {
+		$this->gateway->method('findFiltered')->willThrowException(new \RuntimeException('register down'));
+
+		$response = $this->controller('alice')->summary('2026-10-07');
+
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$this->assertArrayNotHasKey('hours', $response->getData());
+	}//end testSummaryFailsClosed()
+
+	/**
+	 * A failed read is logged with the exception class only, and an entry
+	 * without numeric hours is neither summed nor counted.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 */
+	public function testSummaryLogsAFailedReadAndSkipsEntriesWithoutHours(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')
+			->with('TimeEntryController: the hours of a day could not be read.', ['exceptionClass' => \RuntimeException::class]);
+		$calls = 0;
+		$this->gateway->method('findFiltered')->willReturnCallback(
+			static function () use (&$calls): array {
+				$calls++;
+				if ($calls === 1) {
+					throw new \RuntimeException('register down');
+				}
+
+				return [
+					['userId' => 'alice', 'hours' => 'n/a'],
+					['userId' => 'alice', 'hours' => null],
+					['userId' => 'alice', 'hours' => '1.25'],
+					['userId' => 'alice', 'hours' => 2],
+				];
+			}
+		);
+
+		$failed = $this->controller('alice', $logger)->summary('2026-10-07');
+		$this->assertSame(['error' => 'Je uren konden niet worden gelezen.'], $failed->getData());
+
+		$response = $this->controller('alice')->summary(' 2026-10-07 ');
+		$this->assertSame(['date' => '2026-10-07', 'hours' => 3.25, 'entries' => 2], $response->getData());
+	}//end testSummaryLogsAFailedReadAndSkipsEntriesWithoutHours()
 
 }//end class

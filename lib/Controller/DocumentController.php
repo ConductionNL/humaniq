@@ -39,38 +39,37 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceThroughCaller;
 
 /**
  * Guarded endpoint that triggers a single HR-document generation attempt.
  */
 class DocumentController extends Controller {
 
+	use ConvertsRowsToArrays;
+	use ResolvesObjectServiceThroughCaller;
+
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param HrDocumentService $hrDocumentService The document-generation service.
 	 * @param SettingsService $settingsService The register-slug source.
-	 * @param IUserSession $userSession The current user session (acting userId).
-	 * @param LoggerInterface $logger Logger.
+	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly HrDocumentService $hrDocumentService,
 		private readonly SettingsService $settingsService,
-		private readonly IUserSession $userSession,
-		private readonly LoggerInterface $logger,
+		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -108,32 +107,69 @@ class DocumentController extends Controller {
 		?string $jaaropgaafId = null,
 	): JSONResponse {
 		$documentType = trim($documentType);
-		$userId = $this->userSession->getUser()?->getUID();
+		$userId = $this->caller->userSession->getUser()?->getUID();
 
 		if ($documentType === 'jaaropgaaf') {
 			return $this->generateStatement(jaaropgaafId: trim((string)$jaaropgaafId), userId: $userId);
 		}
 
 		if ($documentType === 'loonstrook') {
-			$payslipId = trim((string)$payslipId);
-			if ($payslipId === '') {
-				return new JSONResponse(['error' => 'payslipId is verplicht.'], Http::STATUS_BAD_REQUEST);
-			}
-
-			// No-admin-idor guard (ADR-005 Rule 3): the payslip must resolve
-			// through OpenRegister's ObjectService under the caller's RBAC
-			// before any docudesk call -- an unresolvable/unauthorized id
-			// never reaches it.
-			$payslipArray = $this->authorizePayslip($payslipId);
-			if ($payslipArray === null) {
-				return new JSONResponse(['error' => 'Loonstrook niet gevonden.'], Http::STATUS_NOT_FOUND);
-			}
-
-			$result = $this->hrDocumentService->generateLoonstrook($payslipId, $userId);
-			return new JSONResponse($result);
+			return $this->generatePayslip(payslipId: trim((string)$payslipId), userId: $userId);
 		}
 
 		$contractId = trim((string)$contractId);
+		$employeeId = $this->letterEmployeeId($contractId);
+		if ($employeeId instanceof JSONResponse) {
+			return $employeeId;
+		}
+
+		$result = $this->hrDocumentService->generate($employeeId, $contractId, $documentType, $userId);
+
+		return new JSONResponse($result);
+	}//end generate()
+
+	/**
+	 * Resolve one Payslip under the caller's RBAC, then render its
+	 * loonstrook. A blank id is 400; an unreadable one is 404 and nothing is
+	 * rendered.
+	 *
+	 * @param string $payslipId The Payslip id.
+	 * @param string|null $userId The acting user.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
+	 */
+	private function generatePayslip(string $payslipId, ?string $userId): JSONResponse {
+		if ($payslipId === '') {
+			return new JSONResponse(['error' => 'payslipId is verplicht.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		// No-admin-idor guard (ADR-005 Rule 3): the payslip must resolve
+		// through OpenRegister's ObjectService under the caller's RBAC
+		// before any docudesk call -- an unresolvable/unauthorized id
+		// never reaches it.
+		$payslipArray = $this->authorizePayslip($payslipId);
+		if ($payslipArray === null) {
+			return new JSONResponse(['error' => 'Loonstrook niet gevonden.'], Http::STATUS_NOT_FOUND);
+		}
+
+		$result = $this->hrDocumentService->generateLoonstrook($payslipId, $userId);
+		return new JSONResponse($result);
+	}//end generatePayslip()
+
+	/**
+	 * The employee a letter is generated for: the linked employee of the
+	 * contract, resolved under the caller's RBAC. A blank id is 400; an
+	 * unreadable contract or one without an employee is 404.
+	 *
+	 * @param string $contractId The EmploymentContract id.
+	 *
+	 * @return string|JSONResponse The employeeId, or the refusal.
+	 *
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
+	 */
+	private function letterEmployeeId(string $contractId): string|JSONResponse {
 		if ($contractId === '') {
 			return new JSONResponse(['error' => 'contractId is verplicht.'], Http::STATUS_BAD_REQUEST);
 		}
@@ -151,10 +187,8 @@ class DocumentController extends Controller {
 			return new JSONResponse(['error' => 'Contract heeft geen gekoppelde medewerker.'], Http::STATUS_NOT_FOUND);
 		}
 
-		$result = $this->hrDocumentService->generate($employeeId, $contractId, $documentType, $userId);
-
-		return new JSONResponse($result);
-	}//end generate()
+		return $employeeId;
+	}//end letterEmployeeId()
 
 	/**
 	 * Resolve one Jaaropgaaf under the caller's RBAC, then render it for its
@@ -198,11 +232,10 @@ class DocumentController extends Controller {
 		try {
 			$row = $this->objectService()->find(
 				id: $id,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: $schema
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: $schema)
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('DocumentController: ' . $schema . ' ' . $id . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('DocumentController: a document subject lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -230,11 +263,13 @@ class DocumentController extends Controller {
 		try {
 			$contract = $this->objectService()->find(
 				id: $contractId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'EmploymentContract'
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: 'EmploymentContract'
+				)
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('DocumentController: contract ' . $contractId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('DocumentController: a contract lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -263,11 +298,10 @@ class DocumentController extends Controller {
 		try {
 			$payslip = $this->objectService()->find(
 				id: $payslipId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Payslip'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Payslip')
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('DocumentController: payslip ' . $payslipId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->caller->logger->warning('DocumentController: a payslip lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -277,42 +311,4 @@ class DocumentController extends Controller {
 
 		return $this->toArray($payslip);
 	}//end authorizePayslip()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
 }//end class

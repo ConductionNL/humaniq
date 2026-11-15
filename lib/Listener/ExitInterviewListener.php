@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\ExitInterviewService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCP\EventDispatcher\Event;
@@ -53,14 +53,14 @@ class ExitInterviewListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param ExitInterviewService $interviews The exit interview rules.
-	 * @param HoursRegisterGateway $gateway    Resolves the schema slug.
+	 * @param OrgLookupInterface   $gateway    Resolves the schema slug.
 	 * @param LoggerInterface      $logger     The logger.
 	 *
 	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-001
 	 */
 	public function __construct(
 		private readonly ExitInterviewService $interviews,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly OrgLookupInterface $gateway,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -85,20 +85,31 @@ class ExitInterviewListener implements IEventListener {
 			return;
 		}
 
-		$data = ($entity->getObject() ?? []);
 		try {
-			if ($event instanceof ObjectCreatingEvent) {
-				$stamps = $this->interviews->fillIn(interview: $data);
-				if ($stamps !== []) {
-					$event->setModifiedData($stamps);
-				}
-
-				return;
-			}
-
-			$this->interviews->stampCase(interview: $data);
+			$this->apply(event: $event, data: ($entity->getObject() ?? []));
 		} catch (\Throwable $e) {
 			$this->logger->warning('humaniq: an exit interview could not be filled in or stamped', ['exception' => $e->getMessage()]);
 		}
 	}//end handle()
+
+	/**
+	 * Fill in a new interview before it is saved, or stamp its case once it is.
+	 *
+	 * @param ObjectCreatingEvent|ObjectCreatedEvent $event The create event.
+	 * @param array<string, mixed> $data The interview.
+	 *
+	 * @return void
+	 */
+	private function apply(ObjectCreatingEvent|ObjectCreatedEvent $event, array $data): void {
+		if ($event instanceof ObjectCreatingEvent) {
+			$stamps = $this->interviews->fillIn(interview: $data);
+			if ($stamps !== []) {
+				$event->setModifiedData($stamps);
+			}
+
+			return;
+		}
+
+		$this->interviews->stampCase(interview: $data);
+	}//end apply()
 }//end class

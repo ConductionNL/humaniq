@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "Formatieplaats": {
+                "configuration": {"exportable": true},
                 "slug": "Formatieplaats",
                 "icon": "AccountGroupOutline",
                 "version": "0.1.0",
@@ -83,6 +84,7 @@
                 }
             },
             "FormationScenario": {
+                "configuration": {"exportable": true},
                 "slug": "FormationScenario",
                 "icon": "ChartBoxOutline",
                 "version": "0.1.0",
@@ -164,6 +166,7 @@
                 }
             },
             "ScenarioMutation": {
+                "configuration": {"exportable": true},
                 "slug": "ScenarioMutation",
                 "icon": "PlusCircleOutline",
                 "version": "0.1.0",

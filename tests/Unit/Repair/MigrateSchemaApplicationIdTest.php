@@ -138,6 +138,31 @@ final class MigrateSchemaApplicationIdTest extends TestCase {
 	}//end testTheCollisionCheckIsCaseInsensitive()
 
 	/**
+	 * The refusal is logged with the slug as stored and both application ids,
+	 * and the report names both counts exactly.
+	 *
+	 * @return void
+	 */
+	public function testTheRefusalContextAndTheReport(): void {
+		$written = [];
+		$db = $this->db(['case'], ['Case', 'task'], $written);
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())->method('warning')->with(
+			'MigrateSchemaApplicationId: schema slug already exists under the new application id; '
+			. 'refusing to create a duplicate (application, slug) pair. Merge them by hand.',
+			['slug' => 'Case', 'old' => 'hrmq', 'new' => 'humaniq']
+		);
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects(self::once())->method('info')->with('MigrateSchemaApplicationId: 1 schema(s) moved to humaniq, 1 refused as duplicates.');
+
+		(new MigrateSchemaApplicationId($db, $logger))->run($output);
+
+		self::assertSame([['humaniq', 'hrmq', 'task']], $written);
+	}//end testTheRefusalContextAndTheReport()
+
+	/**
 	 * Nothing on the old application id is a no-op, and says so.
 	 *
 	 * @return void
@@ -208,6 +233,42 @@ final class MigrateSchemaApplicationIdTest extends TestCase {
 		$step->run($output);
 
 	}//end testAFailingUpdateIsLoggedNotThrown()
+
+	/**
+	 * A failed read of the OLD application id is logged and treated as
+	 * "nothing to move": no UPDATE runs.
+	 *
+	 * @return void
+	 */
+	public function testAFailedReadOfTheOldAppIdMovesNothing(): void {
+		$underNew = $this->createMock(IResult::class);
+		$underNew->method('fetchAll')->willReturn([['slug' => 'case']]);
+
+		$db = $this->createMock(IDBConnection::class);
+		$db->method('executeQuery')->willReturnCallback(
+			static function (string $sql, array $params) use ($underNew): IResult {
+				if ($params === ['hrmq']) {
+					throw new \OCP\DB\Exception('old read failed');
+				}
+
+				return $underNew;
+			}
+		);
+		$db->expects(self::never())->method('executeStatement');
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())->method('warning')->with(
+			'MigrateSchemaApplicationId: could not read schemas on the old application id; skipping.',
+			['exception' => 'old read failed']
+		);
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects(self::once())->method('info')
+			->with('MigrateSchemaApplicationId: no schemas on the old application id; nothing to do.');
+
+		(new MigrateSchemaApplicationId($db, $logger))->run($output);
+
+	}//end testAFailedReadOfTheOldAppIdMovesNothing()
 
 	/**
 	 * The shipped ids are a repair step's, and they actually differ.

@@ -3,6 +3,9 @@
 /**
  * Humaniq TimesheetAggregateListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Post-save listener on OpenRegister's `ObjectCreatedEvent` /
  * `ObjectUpdatedEvent` / `ObjectDeletedEvent` for the `TimeEntry` schema
  * (hours-process-redesign Decision 3, REQ-TEC-004): every entry write
@@ -31,9 +34,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
@@ -43,7 +43,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\TimesheetAggregationService;
 use OCP\EventDispatcher\Event;
@@ -71,13 +71,13 @@ class TimesheetAggregateListener implements IEventListener {
 	 *
 	 * @param TimesheetAggregationService $aggregationService The shared recompute.
 	 * @param InternalWriteMarker $marker The request-scoped internal-writer marker.
-	 * @param HoursRegisterGateway $gateway The shared register plumbing (schema-slug resolution).
+	 * @param OrgLookupInterface   $gateway The shared register plumbing (schema-slug resolution).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly TimesheetAggregationService $aggregationService,
 		private readonly InternalWriteMarker $marker,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly OrgLookupInterface $gateway,
 		private readonly LoggerInterface $logger,
 	) {
 

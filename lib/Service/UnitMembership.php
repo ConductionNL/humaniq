@@ -95,7 +95,7 @@ class UnitMembership {
 			$ranges[trim((string)($assignment['employeeId'] ?? ''))][] = $assignment;
 		}
 
-		return $this->shares($ranges, $start, $end);
+		return $this->shares(rangesByEmployee: $ranges, window: $this->window(start: $start, end: $end));
 	}//end sharesInWindow()
 
 	/**
@@ -116,7 +116,7 @@ class UnitMembership {
 			$ranges[trim((string)($contract['employeeId'] ?? ''))][] = $contract;
 		}
 
-		return $this->shares($ranges, $start, $end);
+		return $this->shares(rangesByEmployee: $ranges, window: $this->window(start: $start, end: $end));
 	}//end contractShares()
 
 	/**
@@ -196,18 +196,31 @@ class UnitMembership {
 	}//end restrict()
 
 	/**
+	 * The whole days from the first to the last day.
+	 *
+	 * @param DateTimeImmutable $start First day.
+	 * @param DateTimeImmutable $end   Last day.
+	 *
+	 * @return ShareWindow
+	 */
+	private function window(DateTimeImmutable $start, DateTimeImmutable $end): ShareWindow {
+		$window = new ShareWindow();
+		$window->start = $start->setTime(0, 0);
+		$window->end = $end->setTime(0, 0);
+
+		return $window;
+	}//end window()
+
+	/**
 	 * Shares from date ranges per employee.
 	 *
 	 * @param array<string, list<array<string, mixed>>> $rangesByEmployee Records with startDate/endDate per employee.
-	 * @param DateTimeImmutable                         $start            First day.
-	 * @param DateTimeImmutable                         $end              Last day.
+	 * @param ShareWindow                               $window           The whole days measured over.
 	 *
 	 * @return array<string, float>
 	 */
-	private function shares(array $rangesByEmployee, DateTimeImmutable $start, DateTimeImmutable $end): array {
-		$start = $start->setTime(0, 0);
-		$end = $end->setTime(0, 0);
-		$total = ((int)$start->diff($end)->days + 1);
+	private function shares(array $rangesByEmployee, ShareWindow $window): array {
+		$total = ((int)$window->start->diff($window->end)->days + 1);
 
 		$shares = [];
 		foreach ($rangesByEmployee as $employeeId => $ranges) {
@@ -215,7 +228,7 @@ class UnitMembership {
 				continue;
 			}
 
-			$days = $this->coveredDays($ranges, $start, $end);
+			$days = $this->coveredDays(ranges: $ranges, window: $window);
 			if ($days > 0) {
 				$shares[(string)$employeeId] = round(($days / $total), 4);
 			}
@@ -228,16 +241,15 @@ class UnitMembership {
 	 * The number of days in the window covered by at least one range.
 	 *
 	 * @param list<array<string, mixed>> $ranges Records with startDate/endDate.
-	 * @param DateTimeImmutable          $start  First day.
-	 * @param DateTimeImmutable          $end    Last day.
+	 * @param ShareWindow                $window The whole days measured over.
 	 *
 	 * @return int
 	 */
-	private function coveredDays(array $ranges, DateTimeImmutable $start, DateTimeImmutable $end): int {
+	private function coveredDays(array $ranges, ShareWindow $window): int {
 		$covered = [];
 		foreach ($ranges as $range) {
-			$from = max($start, ($this->date($range['startDate'] ?? null) ?? $start));
-			$until = min($end, ($this->date($range['endDate'] ?? null) ?? $end));
+			$from = max($window->start, ($this->date($range['startDate'] ?? null) ?? $window->start));
+			$until = min($window->end, ($this->date($range['endDate'] ?? null) ?? $window->end));
 			for ($day = $from; $day <= $until; $day = $day->modify('+1 day')) {
 				$covered[$day->format('Y-m-d')] = true;
 			}
