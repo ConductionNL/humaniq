@@ -136,34 +136,51 @@ class DossierController extends Controller {
 
 		$out = [];
 		foreach ($this->gateway->loadAll('Employee') as $employee) {
-			$employeeId = (string)($employee['id'] ?? '');
-			if ($employeeId === '' || $this->rbac->findOrNull(id: $employeeId, schema: 'Employee') === null) {
-				continue;
+			$row = $this->incompleteRow(sources: array_merge($rows, ['employee' => $employee]), day: $day);
+			if ($row !== null) {
+				$out[] = $row;
 			}
-
-			$gaps = array_values(
-				array_filter(
-					$this->labelled(rows: $this->completeness->statusFor(employeeId: $employeeId, date: $day, rows: array_merge($rows, ['employee' => $employee]))),
-					static fn (array $row): bool => $row['status'] !== DossierCompletenessService::PRESENT
-				)
-			);
-			if ($gaps === []) {
-				continue;
-			}
-
-			$out[] = [
-				'id' => $employeeId,
-				'name' => trim((string)($employee['firstName'] ?? '') . ' ' . (string)($employee['lastName'] ?? '')),
-				'employeeNumber' => ($employee['employeeNumber'] ?? null),
-				'gapCount' => count($gaps),
-				'gaps' => implode(', ', array_map(static fn (array $row): string => $row['label'] . ': ' . $row['statusLabel'], $gaps)),
-			];
-		}//end foreach
+		}
 
 		usort($out, static fn (array $a, array $b): int => [$b['gapCount'], $a['name']] <=> [$a['gapCount'], $b['name']]);
 
 		return new JSONResponse(['date' => $day, 'employees' => $out]);
 	}//end incomplete()
+
+	/**
+	 * The listing row of the employee in the sources, or null when the caller
+	 * may not read them or their file has no gap.
+	 *
+	 * @param array<string, mixed> $sources The source rows, with the employee under 'employee'.
+	 * @param string               $day     The day to judge on.
+	 *
+	 * @return array{id: string, name: string, employeeNumber: mixed, gapCount: int, gaps: string}|null
+	 */
+	private function incompleteRow(array $sources, string $day): ?array {
+		$employee   = $sources['employee'];
+		$employeeId = (string)($employee['id'] ?? '');
+		if ($employeeId === '' || $this->rbac->findOrNull(id: $employeeId, schema: 'Employee') === null) {
+			return null;
+		}
+
+		$gaps = array_values(
+			array_filter(
+				$this->labelled(rows: $this->completeness->statusFor(employeeId: $employeeId, date: $day, rows: $sources)),
+				static fn (array $row): bool => $row['status'] !== DossierCompletenessService::PRESENT
+			)
+		);
+		if ($gaps === []) {
+			return null;
+		}
+
+		return [
+			'id' => $employeeId,
+			'name' => trim((string)($employee['firstName'] ?? '') . ' ' . (string)($employee['lastName'] ?? '')),
+			'employeeNumber' => ($employee['employeeNumber'] ?? null),
+			'gapCount' => count($gaps),
+			'gaps' => implode(', ', array_map(static fn (array $row): string => $row['label'] . ': ' . $row['statusLabel'], $gaps)),
+		];
+	}//end incompleteRow()
 
 	/**
 	 * Keep only the rows the caller may read.

@@ -1,0 +1,93 @@
+{
+    "other": {
+        "stamps": {
+            "employeeId": "0127394a-be27-48b4-a592-b6a41774b221",
+            "changes": {
+                "straat": "Stationsplein"
+            },
+            "previousValues": {
+                "straat": "Oudegracht"
+            },
+            "approverRole": "hr",
+            "requestedBy": "hr.user",
+            "userId": "a.visser",
+            "managerUserId": null,
+            "administrationId": "ADM-001",
+            "status": "ingediend"
+        },
+        "error": null
+    },
+    "own": {
+        "stamps": {
+            "employeeId": "0127394a-be27-48b4-a592-b6a41774b221",
+            "changes": {
+                "huisnummer": "1",
+                "straat": "Stationsplein"
+            },
+            "previousValues": {
+                "huisnummer": "12",
+                "straat": "Oudegracht"
+            },
+            "approverRole": "none",
+            "requestedBy": "a.visser",
+            "userId": "a.visser",
+            "managerUserId": null,
+            "administrationId": "ADM-001",
+            "status": "goedgekeurd",
+            "decidedAt": "2026-09-29T10:00:00+00:00"
+        },
+        "error": null
+    },
+    "concept": {
+        "stamps": {
+            "employeeId": "0127394a-be27-48b4-a592-b6a41774b221",
+            "changes": {
+                "iban": "NL02RABO0123456789"
+            },
+            "previousValues": {
+                "iban": "NL91ABNA0417164300"
+            },
+            "approverRole": "hr",
+            "requestedBy": "a.visser",
+            "userId": "a.visser",
+            "managerUserId": null,
+            "administrationId": "ADM-001",
+            "status": "concept"
+        },
+        "error": null
+    },
+    "anon": {
+        "stamps": {
+            "employeeId": "0127394a-be27-48b4-a592-b6a41774b221",
+            "changes": {
+                "iban": "NL02RABO0123456789"
+            },
+            "previousValues": {
+                "iban": "NL91ABNA0417164300"
+            },
+            "approverRole": "hr",
+            "requestedBy": null,
+            "userId": "a.visser",
+            "managerUserId": null,
+            "administrationId": "ADM-001",
+            "status": "ingediend"
+        },
+        "error": null
+    },
+    "nobody": {
+        "stamps": [],
+        "error": "Er is geen medewerker gevonden voor dit wijzigingsverzoek."
+    },
+    "kind": {
+        "stamps": [],
+        "error": "Er is geen goedkeuringsregel voor dit soort wijziging."
+    },
+    "empty": {
+        "stamps": [],
+        "error": "Dit wijzigingsverzoek bevat geen wijziging."
+    },
+    "outside": {
+        "stamps": [],
+        "error": "Deze velden horen niet bij dit soort wijziging: iban."
+    }
+}

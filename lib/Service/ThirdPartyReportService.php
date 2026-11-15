@@ -114,31 +114,30 @@ class ThirdPartyReportService {
 			return ['status' => 'nothing-to-report', 'reportId' => (string)($current['id'] ?? ''), 'message' => 'Er zijn in ' . $year . ' geen betalingen aan derden geregistreerd.'];
 		}
 
-		$administration = ($this->gateway->findFiltered('hrAdministration', ['administrationId' => $administrationId])[0] ?? []);
-		$findings = $this->administrationFindings($administration);
-		$lines = $this->lines(totals: $totals, administrationId: $administrationId, year: $year, findings: $findings);
+		$run = new ThirdPartyReportRun();
+		$run->administrationId = $administrationId;
+		$run->year = $year;
+		$run->userId = $userId;
+		$run->current = $current;
+		$run->totals = $totals;
 
-		$payload = array_merge(($current ?? []), [
-			'administrationId' => $administrationId,
-			'year' => $year,
-			'status' => 'concept',
-			'deadline' => ($year + 1) . '-01-31',
-			'lineCount' => count($lines),
-			'totalAmount' => array_sum(array_column($lines, 'amount')),
-			'assembledAt' => gmdate('Y-m-d\TH:i:s\Z'),
-			'assembledBy' => $userId,
-		]);
-		unset($payload['id'], $payload['messageXml'], $payload['messageFileName'], $payload['leveringsId']);
+		return $this->assembled(run: $run);
+	}//end assemble()
 
-		if ($this->blocking($findings) === 0) {
-			$payload = array_merge($payload, $this->message(administration: $administration, lines: $lines, year: $year, findings: $findings));
-		}
+	/**
+	 * Build the lines, the findings and the message, and store the report.
+	 *
+	 * @param ThirdPartyReportRun $run The report being assembled.
+	 *
+	 * @return array{status: string, reportId: string, lineCount: int, totalAmount: int, blockingFindings: int, warningFindings: int}
+	 */
+	private function assembled(ThirdPartyReportRun $run): array {
+		$run->administration = ($this->gateway->findFiltered('hrAdministration', ['administrationId' => $run->administrationId])[0] ?? []);
+		$run->findings = $this->administrationFindings($run->administration);
+		$run->lines = $this->lines(run: $run);
 
-		$payload['findings'] = $findings;
-		$payload['blockingFindings'] = $this->blocking($findings);
-		$payload['warningFindings'] = (count($findings) - $payload['blockingFindings']);
-
-		$saved = $this->gateway->save(payload: $payload, schema: 'ThirdPartyReport', uuid: (isset($current['id']) === true ? (string)$current['id'] : null));
+		$payload = $this->reportPayload(run: $run);
+		$saved = $this->gateway->save(payload: $payload, schema: 'ThirdPartyReport', uuid: (isset($run->current['id']) === true ? (string)$run->current['id'] : null));
 
 		return [
 			'status' => 'assembled',
@@ -148,7 +147,47 @@ class ThirdPartyReportService {
 			'blockingFindings' => $payload['blockingFindings'],
 			'warningFindings' => $payload['warningFindings'],
 		];
-	}//end assemble()
+	}//end assembled()
+
+	/**
+	 * The report to store: what was stored, the year's figures, the message
+	 * when nothing blocks it, and the findings.
+	 *
+	 * @param ThirdPartyReportRun $run The report being assembled.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function reportPayload(ThirdPartyReportRun $run): array {
+		$payload = array_merge(($run->current ?? []), [
+			'administrationId' => $run->administrationId,
+			'year' => $run->year,
+			'status' => 'concept',
+			'deadline' => ($run->year + 1) . '-01-31',
+			'lineCount' => count($run->lines),
+			'totalAmount' => array_sum(array_column($run->lines, 'amount')),
+			'assembledAt' => gmdate('Y-m-d\TH:i:s\Z'),
+			'assembledBy' => $run->userId,
+		]);
+		unset($payload['id'], $payload['messageXml'], $payload['messageFileName'], $payload['leveringsId']);
+
+		if ($this->blocking($run->findings) === 0) {
+			$payload = array_merge($payload, $this->message(run: $run));
+		}
+
+		return array_merge($payload, self::findingCounts(findings: $run->findings, blocking: $this->blocking($run->findings)));
+	}//end reportPayload()
+
+	/**
+	 * The findings and how many of them block and warn.
+	 *
+	 * @param list<array<string, string>> $findings The findings.
+	 * @param int                         $blocking How many block.
+	 *
+	 * @return array{findings: list<array<string, string>>, blockingFindings: int, warningFindings: int}
+	 */
+	private static function findingCounts(array $findings, int $blocking): array {
+		return ['findings' => $findings, 'blockingFindings' => $blocking, 'warningFindings' => (count($findings) - $blocking)];
+	}//end findingCounts()
 
 	/**
 	 * The initials as the format takes them: at most six characters, a
@@ -242,52 +281,75 @@ class ThirdPartyReportService {
 	 * One line per payee whose total is at least one euro; a payee that
 	 * cannot be reported adds a blocking finding instead.
 	 *
-	 * @param array<string, array{cents: int, first: string, last: string}> $totals           The totals per payee.
-	 * @param string                                                         $administrationId The administration.
-	 * @param int                                                            $year             The year.
-	 * @param list<array<string, string>>                                    $findings         The findings, appended to.
+	 * @param ThirdPartyReportRun $run The report being assembled; its findings are appended to.
 	 *
 	 * @return list<array<string, string|int>>
 	 */
-	private function lines(array $totals, string $administrationId, int $year, array &$findings): array {
+	private function lines(ThirdPartyReportRun $run): array {
 		$lines = [];
-		foreach ($totals as $payeeId => $total) {
+		foreach ($run->totals as $payeeId => $total) {
 			$amount = intdiv($total['cents'], 100);
 			if ($amount < 1) {
 				continue;
 			}
 
-			$payee = $this->gateway->findObjectData(uuid: (string)$payeeId, schema: 'ThirdPartyPayee');
-			$name = trim((string)($payee['initials'] ?? '') . ' ' . (string)($payee['lastName'] ?? ''));
-			$missing = $this->missing(payee: ($payee ?? []), amount: $amount);
-			foreach ($missing as $kind) {
-				$findings[] = ['kind' => $kind, 'severity' => 'blocking', 'payeeId' => (string)$payeeId, 'message' => $this->missingMessage(kind: $kind, name: ($name === '' ? (string)$payeeId : $name))];
+			$payee = new ReportedPayee(payeeId: (string)$payeeId, row: $this->gateway->findObjectData(uuid: (string)$payeeId, schema: 'ThirdPartyPayee'));
+			$missing = $this->missing(payee: ($payee->row ?? []), amount: $amount);
+			$run->findings = array_merge($run->findings, $this->payeeFindings(payee: $payee, missing: $missing));
+			if ($missing === []) {
+				$lines[] = self::line(run: $run, payee: $payee);
 			}
-
-			if ($missing !== []) {
-				continue;
-			}
-
-			$lines[] = [
-				'meldingsId' => substr(hash('sha256', $administrationId . '|' . $year . '|' . $payeeId), 0, 32),
-				'amount' => $amount,
-				'paidOn' => $total['last'],
-				'lastName' => (string)$payee['lastName'],
-				'prefix' => (string)($payee['prefix'] ?? ''),
-				'initials' => self::initials((string)($payee['initials'] ?? '')),
-				'dateOfBirth' => (string)$payee['dateOfBirth'],
-				'street' => (string)$payee['street'],
-				'houseNumber' => (string)$payee['houseNumber'],
-				'houseNumberAddition' => (string)($payee['houseNumberAddition'] ?? ''),
-				'postcode' => (string)$payee['postcode'],
-				'city' => (string)$payee['city'],
-				'country' => (string)($payee['country'] ?? 'NL'),
-				'bsn' => (string)$payee['bsn'],
-			];
-		}//end foreach
+		}
 
 		return $lines;
 	}//end lines()
+
+	/**
+	 * One blocking finding per kind a payee raises.
+	 *
+	 * @param ReportedPayee $payee   The payee.
+	 * @param list<string>  $missing The finding kinds.
+	 *
+	 * @return list<array<string, string>>
+	 */
+	private function payeeFindings(ReportedPayee $payee, array $missing): array {
+		$findings = [];
+		foreach ($missing as $kind) {
+			$findings[] = ['kind' => $kind, 'severity' => 'blocking', 'payeeId' => $payee->payeeId, 'message' => $this->missingMessage(kind: $kind, name: $payee->label())];
+		}
+
+		return $findings;
+	}//end payeeFindings()
+
+	/**
+	 * The melding of one reportable payee.
+	 *
+	 * @param ThirdPartyReportRun $run   The report being assembled.
+	 * @param ReportedPayee       $payee The payee, with every required field.
+	 *
+	 * @return array<string, string|int>
+	 */
+	private static function line(ThirdPartyReportRun $run, ReportedPayee $payee): array {
+		$row = (array)$payee->row;
+		$total = $run->totals[$payee->payeeId];
+
+		return [
+			'meldingsId' => substr(hash('sha256', $run->administrationId . '|' . $run->year . '|' . $payee->payeeId), 0, 32),
+			'amount' => intdiv($total['cents'], 100),
+			'paidOn' => $total['last'],
+			'lastName' => (string)$row['lastName'],
+			'prefix' => (string)($row['prefix'] ?? ''),
+			'initials' => self::initials((string)($row['initials'] ?? '')),
+			'dateOfBirth' => (string)$row['dateOfBirth'],
+			'street' => (string)$row['street'],
+			'houseNumber' => (string)$row['houseNumber'],
+			'houseNumberAddition' => (string)($row['houseNumberAddition'] ?? ''),
+			'postcode' => (string)$row['postcode'],
+			'city' => (string)$row['city'],
+			'country' => (string)($row['country'] ?? 'NL'),
+			'bsn' => (string)$row['bsn'],
+		];
+	}//end line()
 
 	/**
 	 * The finding kinds a payee raises, without duplicates.
@@ -338,19 +400,16 @@ class ThirdPartyReportService {
 	 * The rendered, validated message and its delivery fields; a message
 	 * that does not validate adds a blocking finding instead.
 	 *
-	 * @param array<string, mixed>            $administration The hrAdministration.
-	 * @param list<array<string, string|int>> $lines          The lines.
-	 * @param int                             $year           The year.
-	 * @param list<array<string, string>>     $findings       The findings, appended to.
+	 * @param ThirdPartyReportRun $run The report being assembled; its findings are appended to.
 	 *
 	 * @return array<string, string>
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) UbdMessage is a stateless renderer and validator.
 	 */
-	private function message(array $administration, array $lines, int $year, array &$findings): array {
+	private function message(ThirdPartyReportRun $run): array {
 		$now = new DateTimeImmutable('now', new DateTimeZone('Europe/Amsterdam'));
-		$leveringsId = 'UBD' . $year . $now->format('YmdHis');
-		$taxNumber = (string)$administration['loonheffingennummer'];
+		$leveringsId = 'UBD' . $run->year . $now->format('YmdHis');
+		$taxNumber = (string)$run->administration['loonheffingennummer'];
 		$xml = UbdMessage::render(
 			header: [
 				'aanmaakmoment' => $now->format('Y-m-d\TH:i:s'),
@@ -358,17 +417,17 @@ class ThirdPartyReportService {
 				'relNr' => trim($this->appConfig->getValueString(Application::APP_ID, self::RELNR_KEY, '')),
 				'software' => 'humaniq',
 				'softwareVersion' => $this->softwareVersion(),
-				'name' => mb_substr(trim((string)($administration['name'] ?? '')), 0, 200),
+				'name' => mb_substr(trim((string)($run->administration['name'] ?? '')), 0, 200),
 				'loonheffingennummer' => $taxNumber,
-				'postalAddress' => mb_substr(trim((string)$administration['postalAddress']), 0, 250),
+				'postalAddress' => mb_substr(trim((string)$run->administration['postalAddress']), 0, 250),
 			],
-			lines: $lines
+			lines: $run->lines
 		);
 
 		$errors = UbdMessage::errors($xml);
 		if ($errors !== []) {
 			$this->logger->warning('ThirdPartyReportService: the UBD message does not validate: ' . implode('; ', $errors));
-			$findings[] = ['kind' => 'message-invalid', 'severity' => 'blocking', 'message' => 'Het bericht voldoet niet aan het XSD van de Belastingdienst: ' . implode('; ', $errors)];
+			$run->findings[] = ['kind' => 'message-invalid', 'severity' => 'blocking', 'message' => 'Het bericht voldoet niet aan het XSD van de Belastingdienst: ' . implode('; ', $errors)];
 			return [];
 		}
 

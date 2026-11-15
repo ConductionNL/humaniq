@@ -1,0 +1,51 @@
+{
+    "all-keys": [
+        {
+            "employeeId": "emp-b",
+            "name": "Bos",
+            "matchedOn": "bsn",
+            "hasLeft": true,
+            "endDate": "2024-12-31",
+            "startDate": null
+        },
+        {
+            "employeeId": "emp-a",
+            "name": "Kim Bos",
+            "matchedOn": "name-and-birth-date",
+            "hasLeft": false,
+            "endDate": null,
+            "startDate": "2020-01-01"
+        },
+        {
+            "employeeId": "emp-c",
+            "name": "BOS",
+            "matchedOn": "name-and-birth-date",
+            "hasLeft": false,
+            "endDate": null,
+            "startDate": null
+        }
+    ],
+    "email-only": [
+        {
+            "employeeId": "emp-a",
+            "name": "Kim Bos",
+            "matchedOn": "private-email",
+            "hasLeft": false,
+            "endDate": null,
+            "startDate": "2020-01-01"
+        },
+        {
+            "employeeId": "emp-c",
+            "name": "BOS",
+            "matchedOn": "private-email",
+            "hasLeft": false,
+            "endDate": null,
+            "startDate": null
+        }
+    ],
+    "name-without-date": [],
+    "date-without-name": [],
+    "bsn-letters": [],
+    "nobody": [],
+    "empty": []
+}

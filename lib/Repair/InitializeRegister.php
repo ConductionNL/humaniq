@@ -4,7 +4,7 @@
  * Humaniq Initialize Register Repair Step
  *
  * Post-migration repair step that imports the humaniq OpenRegister register on
- * install/upgrade. It delegates to SettingsService::loadConfiguration() (NOT the
+ * install/upgrade. It delegates to RegisterImporter::loadConfiguration() (NOT the
  * forced variant — see the run() body), which reads lib/Settings/humaniq_register.json,
  * deep-merges the modular schema
  * fragments under lib/Settings/register.d/*.json, and hands the result to
@@ -31,22 +31,25 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Repair;
 
+use OCA\Humaniq\Service\RegisterImporter;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
 
 /**
- * Imports the humaniq register via SettingsService on install/upgrade.
+ * Imports the humaniq register via RegisterImporter on install/upgrade.
  */
 class InitializeRegister implements IRepairStep {
 
 	/**
-	 * @param SettingsService $settingsService The register importer.
+	 * @param SettingsService $settingsService Tells whether OpenRegister is available.
+	 * @param RegisterImporter $registerImporter The register importer.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly SettingsService $settingsService,
+		private readonly RegisterImporter $registerImporter,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -87,7 +90,7 @@ class InitializeRegister implements IRepairStep {
 			// needed: the version passed to OR is content-addressed (`+frag.<md5 of the
 			// fragments>`), so a content change already bumps the version and re-imports;
 			// OpenRegister#426 additionally makes the gate content-aware.
-			$result = $this->settingsService->loadConfiguration();
+			$result = $this->registerImporter->loadConfiguration();
 
 			if (($result['success'] ?? false) === true) {
 				if (($result['skipped'] ?? false) === true) {

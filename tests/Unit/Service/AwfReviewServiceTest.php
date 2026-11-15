@@ -232,6 +232,23 @@ class AwfReviewServiceTest extends TestCase {
 	}//end testALongerOrOpenContractIsNotReviewed()
 
 	/**
+	 * The whole outcome: an empty run, and a January run in which a payslip
+	 * is a target of both reviews and is settled only once.
+	 *
+	 * @return void
+	 */
+	public function testTheOutcomeOfAnEmptyAndADoubleTargetRun(): void {
+		self::assertSame(['earlyEnd' => 0, 'extraHours' => 0, 'skipped' => []], $this->service->review(period: '2027-01', runId: 'run-empty'));
+
+		$this->seedEmployee('emp-1', ['startDate' => '2026-01-01', 'endDate' => '2026-02-11', 'hoursPerWeek' => 24.0], ['2026-01' => 3000.0, '2026-02' => 1500.0], 147.33);
+
+		$outcome = $this->service->review(period: '2027-01', runId: 'run-2027-01');
+
+		self::assertSame(['earlyEnd' => 2, 'extraHours' => 0, 'skipped' => []], $outcome);
+		self::assertCount(2, $this->rowsOf('PayrollAdjustment'));
+	}//end testTheOutcomeOfAnEmptyAndADoubleTargetRun()
+
+	/**
 	 * Handboek 7.2.3: 24 contracted hours a week (104,00 a month, 13/3),
 	 * paid 34 a week (147,33 a month) over 2026: 41% above, so the first
 	 * run of 2027 reviews all twelve months at the high rate (EUR 2.000 a
@@ -320,6 +337,43 @@ class AwfReviewServiceTest extends TestCase {
 		self::assertSame([['payslipId' => 'ps-emp-1-2026-01', 'reason' => 'no-engine-snapshot']], $outcome['skipped']);
 		self::assertSame([], $this->rowsOf('PayrollAdjustment'));
 	}//end testAPayslipWithoutASnapshotIsReportedNotSettled()
+
+	/**
+	 * The adjustment is written with every field in its stored order and a
+	 * reference naming the kind and the payslip.
+	 *
+	 * @return void
+	 */
+	public function testTheAdjustmentKeepsItsFieldsAndReference(): void {
+		$this->seedEmployee('emp-1', ['startDate' => '2026-01-01', 'endDate' => '2026-02-11', 'hoursPerWeek' => 36.0], ['2026-01' => 3000.0], null);
+
+		$this->service->review(period: '2026-03', runId: 'run-2026-03');
+
+		$adjustment = $this->rowsOf('PayrollAdjustment')[0];
+		unset($adjustment['id'], $adjustment['@self']);
+		self::assertSame(
+			['employeeId', 'originalPayrollRunId', 'originalPayslipId', 'originalPeriod', 'correctionType', 'correctionRef', 'deltaGross', 'deltaLoonheffing', 'deltaNet', 'deltaWerknemersverzekeringen', 'deltaZvw', 'deltaVolksverzekeringen', 'deltaVakantiegeldReserved', 'engineVersion', 'settlementPeriod', 'settlementPayrollRunId', 'status', 'calculatedAt'],
+			array_keys($adjustment)
+		);
+		self::assertSame(['emp-1', 'run-2026-01', 'ps-emp-1-2026-01', '2026-01', 'awf-herziening-early-end-ps-emp-1-2026-01', 'nl-2026', 0.0], [$adjustment['employeeId'], $adjustment['originalPayrollRunId'], $adjustment['originalPayslipId'], $adjustment['originalPeriod'], $adjustment['correctionRef'], $adjustment['engineVersion'], $adjustment['deltaVakantiegeldReserved']]);
+	}//end testTheAdjustmentKeepsItsFieldsAndReference()
+
+	/**
+	 * A payslip whose jurisdiction has no tables cannot be recomputed: it is
+	 * named in the outcome, not settled.
+	 *
+	 * @return void
+	 */
+	public function testAPayslipWithoutTablesIsReportedNotSettled(): void {
+		$this->seedEmployee('emp-1', ['startDate' => '2026-01-01', 'endDate' => '2026-02-11', 'hoursPerWeek' => 36.0], ['2026-01' => 3000.0], null);
+		$this->store->seed('Payslip', 'ps-emp-1-2026-01', ['employeeId' => 'emp-1', 'payrollRunId' => 'run-2026-01', 'period' => '2026-01', 'werknemersverzekeringen' => 300.0, 'awfTariff' => 'low', 'awfTariffBasis' => 'contract', 'engineInputSnapshot' => json_encode(['jurisdiction' => 'ZZ'] + $this->input(3000.0, '2026-01')->toArray())]);
+
+		$outcome = $this->service->review(period: '2026-03', runId: 'run-2026-03');
+
+		self::assertSame(0, $outcome['earlyEnd']);
+		self::assertSame([['payslipId' => 'ps-emp-1-2026-01', 'reason' => 'tables-missing']], $outcome['skipped']);
+		self::assertSame([], $this->rowsOf('PayrollAdjustment'));
+	}//end testAPayslipWithoutTablesIsReportedNotSettled()
 
 	/**
 	 * Twelve months of 2026 at one gross wage.

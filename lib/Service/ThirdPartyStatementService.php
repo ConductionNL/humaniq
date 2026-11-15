@@ -81,7 +81,28 @@ class ThirdPartyStatementService {
 
 		$administrationId = (string)($payee['administrationId'] ?? '');
 		$administration = ($this->gateway->findFiltered('hrAdministration', ['administrationId' => $administrationId])[0] ?? []);
+		$paid = $this->paymentsIn(payeeId: $payeeId, year: $year);
 
+		return [
+			'documentType' => self::DOCUMENT_TYPE,
+			'year' => $year,
+			'payee' => self::payeeBlock($payee),
+			'administration' => ['administrationId' => $administrationId] + self::administrationBlock($administration),
+			'payments' => $paid['payments'],
+			'totalPaid' => round($paid['cents'] / 100, 2),
+			'totalReported' => intdiv($paid['cents'], 100),
+		];
+	}//end variables()
+
+	/**
+	 * The payee's payments in the year, in date order, and their total in cents.
+	 *
+	 * @param string $payeeId The ThirdPartyPayee id.
+	 * @param int    $year    The calendar year.
+	 *
+	 * @return array{payments: array<int, array<string, mixed>>, cents: int}
+	 */
+	private function paymentsIn(string $payeeId, int $year): array {
 		$payments = [];
 		$cents = 0;
 		foreach ($this->gateway->findFiltered('ThirdPartyPayment', ['payeeId' => $payeeId]) as $payment) {
@@ -90,39 +111,72 @@ class ThirdPartyStatementService {
 				continue;
 			}
 
-			$amount = (int)round((float)($payment['amount'] ?? 0) * 100);
-			$expense = (int)round((float)($payment['expenseAllowance'] ?? 0) * 100);
-			$cents += ($amount + $expense);
-			$payments[] = ['paidOn' => $paidOn, 'description' => (string)($payment['description'] ?? ''), 'amount' => round($amount / 100, 2), 'expenseAllowance' => round($expense / 100, 2), 'total' => round(($amount + $expense) / 100, 2)];
+			$line = self::paymentLine($payment);
+			$cents += $line['cents'];
+			$payments[] = $line['line'];
 		}
 
 		usort($payments, static fn (array $a, array $b): int => $a['paidOn'] <=> $b['paidOn']);
 
+		return ['payments' => $payments, 'cents' => $cents];
+
+	}//end paymentsIn()
+
+	/**
+	 * One payment's statement line and its total in cents.
+	 *
+	 * @param array<string, mixed> $payment The ThirdPartyPayment.
+	 *
+	 * @return array{line: array<string, mixed>, cents: int}
+	 */
+	private static function paymentLine(array $payment): array {
+		$amount = (int)round((float)($payment['amount'] ?? 0) * 100);
+		$expense = (int)round((float)($payment['expenseAllowance'] ?? 0) * 100);
+
 		return [
-			'documentType' => self::DOCUMENT_TYPE,
-			'year' => $year,
-			'payee' => [
-				'name' => trim(implode(' ', array_filter([(string)($payee['initials'] ?? ''), (string)($payee['prefix'] ?? ''), (string)($payee['lastName'] ?? '')], static fn (string $part): bool => trim($part) !== ''))),
-				'addressLines' => [
-					trim((string)($payee['street'] ?? '') . ' ' . (string)($payee['houseNumber'] ?? '') . (string)($payee['houseNumberAddition'] ?? '')),
-					trim((string)($payee['postcode'] ?? '') . ' ' . (string)($payee['city'] ?? '')),
-				],
-				'lastName' => (string)($payee['lastName'] ?? ''),
-				'bsn' => (string)($payee['bsn'] ?? ''),
-				'dateOfBirth' => (string)($payee['dateOfBirth'] ?? ''),
-				'activity' => (string)($payee['activity'] ?? ''),
-			],
-			'administration' => [
-				'administrationId' => $administrationId,
-				'name' => (string)($administration['name'] ?? ''),
-				'loonheffingennummer' => (string)($administration['loonheffingennummer'] ?? ''),
-				'postalAddress' => (string)($administration['postalAddress'] ?? ''),
-			],
-			'payments' => $payments,
-			'totalPaid' => round($cents / 100, 2),
-			'totalReported' => intdiv($cents, 100),
+			'line' => ['paidOn' => (string)($payment['paidOn'] ?? ''), 'description' => (string)($payment['description'] ?? ''), 'amount' => round($amount / 100, 2), 'expenseAllowance' => round($expense / 100, 2), 'total' => round(($amount + $expense) / 100, 2)],
+			'cents' => ($amount + $expense),
 		];
-	}//end variables()
+
+	}//end paymentLine()
+
+	/**
+	 * The payee as the statement names and addresses them.
+	 *
+	 * @param array<string, mixed> $payee The ThirdPartyPayee.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function payeeBlock(array $payee): array {
+		return [
+			'name' => trim(implode(' ', array_filter([(string)($payee['initials'] ?? ''), (string)($payee['prefix'] ?? ''), (string)($payee['lastName'] ?? '')], static fn (string $part): bool => trim($part) !== ''))),
+			'addressLines' => [
+				trim((string)($payee['street'] ?? '') . ' ' . (string)($payee['houseNumber'] ?? '') . (string)($payee['houseNumberAddition'] ?? '')),
+				trim((string)($payee['postcode'] ?? '') . ' ' . (string)($payee['city'] ?? '')),
+			],
+			'lastName' => (string)($payee['lastName'] ?? ''),
+			'bsn' => (string)($payee['bsn'] ?? ''),
+			'dateOfBirth' => (string)($payee['dateOfBirth'] ?? ''),
+			'activity' => (string)($payee['activity'] ?? ''),
+		];
+
+	}//end payeeBlock()
+
+	/**
+	 * The administration as the statement names it.
+	 *
+	 * @param array<string, mixed> $administration The hrAdministration row, or none.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function administrationBlock(array $administration): array {
+		return [
+			'name' => (string)($administration['name'] ?? ''),
+			'loonheffingennummer' => (string)($administration['loonheffingennummer'] ?? ''),
+			'postalAddress' => (string)($administration['postalAddress'] ?? ''),
+		];
+
+	}//end administrationBlock()
 
 	/**
 	 * Generate the statement through filinq and store it on the payee.

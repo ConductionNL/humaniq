@@ -56,34 +56,42 @@ class HireMatchService {
 	 * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-002
 	 */
 	public function matches(array $person): array {
-		$wanted = [
+		$run = new HireMatchRun();
+		$run->wanted = [
 			'bsn' => self::bsn($person['bsn'] ?? null),
 			'name-and-birth-date' => self::nameAndBirthDate($person['lastName'] ?? null, $person['dateOfBirth'] ?? null),
 			'private-email' => self::email($person['privateEmail'] ?? null),
 		];
-		if (array_filter($wanted) === []) {
+		if (array_filter($run->wanted) === []) {
 			return [];
 		}
 
-		$employees = $this->gateway->loadAll('Employee');
-		$found = [];
-		foreach ($wanted as $key => $value) {
-			if ($value === '') {
-				continue;
-			}
-
-			foreach ($employees as $employee) {
-				$employeeId = (string)($employee['id'] ?? ($employee['@self']['id'] ?? ''));
-				if ($employeeId === '' || isset($found[$employeeId]) === true || self::keyOf(key: $key, employee: $employee) !== $value) {
-					continue;
-				}
-
-				$found[$employeeId] = self::row(employeeId: $employeeId, employee: $employee, matchedOn: $key);
+		$run->employees = $this->gateway->loadAll('Employee');
+		foreach ($run->wanted as $key => $value) {
+			if ($value !== '') {
+				$this->collect(run: $run, key: (string)$key);
 			}
 		}
 
-		return array_values($found);
+		return array_values($run->found);
 	}//end matches()
+
+	/**
+	 * Add every employee matching on one key who is not already found.
+	 *
+	 * @param HireMatchRun $run The look being made.
+	 * @param string $key The match key.
+	 *
+	 * @return void
+	 */
+	private function collect(HireMatchRun $run, string $key): void {
+		foreach ($run->employees as $employee) {
+			$employeeId = (string)($employee['id'] ?? ($employee['@self']['id'] ?? ''));
+			if ($employeeId !== '' && isset($run->found[$employeeId]) === false && self::keyOf(key: $key, employee: $employee) === $run->wanted[$key]) {
+				$run->found[$employeeId] = self::row(employeeId: $employeeId, employee: $employee, matchedOn: $key);
+			}
+		}
+	}//end collect()
 
 	/**
 	 * One key's value for an employee.

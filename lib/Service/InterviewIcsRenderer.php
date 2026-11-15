@@ -50,11 +50,12 @@ class InterviewIcsRenderer {
 	 * per RFC 5545 §3.3.11.
 	 *
 	 * @param string $uid The deterministic VEVENT UID.
-	 * @param array{dtstart: string, dtend: string, summary: string, location: string, interviewers: string} $event Compact UTC DATE-TIMEs (YYYYMMDDTHHMMSSZ), the AVG-safe SUMMARY, and the LOCATION and DESCRIPTION (interviewers) texts, all unescaped ('' means none).
+	 * @param array{dtstart: string, dtend: string, summary: string, location: string, interviewers: string, organizer?: string, attendees?: array<int, array{name: string, email: string}>} $event Compact UTC DATE-TIMEs (YYYYMMDDTHHMMSSZ), the AVG-safe SUMMARY, and the LOCATION and DESCRIPTION (interviewers) texts, all unescaped ('' means none).
 	 *
 	 * @return string
 	 *
 	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-005
+	 * @spec openspec/changes/interview-in-the-interviewers-calendars/specs/interview-scheduling/spec.md
 	 */
 	public function render(string $uid, array $event): string {
 		$dtstamp = gmdate('Ymd\THis\Z');
@@ -69,15 +70,25 @@ class InterviewIcsRenderer {
 			'DTSTAMP:' . $dtstamp,
 			'DTSTART:' . $event['dtstart'],
 			'DTEND:' . $event['dtend'],
-			'SUMMARY:' . $this->escapeText($event['summary']),
+			'SUMMARY:' . IcsText::escape($event['summary']),
 		];
 
 		if ($event['location'] !== '') {
-			$lines[] = 'LOCATION:' . $this->escapeText($event['location']);
+			$lines[] = 'LOCATION:' . IcsText::escape($event['location']);
 		}
 
 		if ($event['interviewers'] !== '') {
-			$lines[] = 'DESCRIPTION:' . $this->escapeText($event['interviewers']);
+			$lines[] = 'DESCRIPTION:' . IcsText::escape($event['interviewers']);
+		}
+
+		// REQ-INTV-010: the calendar's owner organises, each interviewer attends.
+		// Only Nextcloud users reach these lines; the candidate never does.
+		if (($event['organizer'] ?? '') !== '') {
+			$lines[] = 'ORGANIZER:' . $event['organizer'];
+		}
+
+		foreach (($event['attendees'] ?? []) as $attendee) {
+			$lines[] = 'ATTENDEE;CN=' . self::paramValue(value: $attendee['name']) . ';CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:' . $attendee['email'];
 		}
 
 		$lines[] = 'TRANSP:OPAQUE';
@@ -97,7 +108,7 @@ class InterviewIcsRenderer {
 	 * scope.
 	 *
 	 * @param string $ics The stored calendar object's raw ICS text.
-	 * @param array{dtstart: string, dtend: string, summary: string, location: string} $event Desired compact UTC DATE-TIMEs (YYYYMMDDTHHMMSSZ), SUMMARY and LOCATION texts (unescaped, '' means no location).
+	 * @param array{dtstart: string, dtend: string, summary: string, location: string, attendees?: array<int, array{name: string, email: string}>} $event Desired compact UTC DATE-TIMEs (YYYYMMDDTHHMMSSZ), SUMMARY and LOCATION texts (unescaped, '' means no location).
 	 *
 	 * @return bool
 	 *
@@ -113,12 +124,59 @@ class InterviewIcsRenderer {
 			return false;
 		}
 
-		$normalisedExistingLocation = ($existingLocation === null) ? '' : $this->unescapeText($existingLocation);
-		$summaryMatches = ($this->unescapeText($existingSummary) === $event['summary']);
+		$normalisedExistingLocation = ($existingLocation === null) ? '' : IcsText::unescape($existingLocation);
+		$summaryMatches = (IcsText::unescape($existingSummary) === $event['summary']);
 		$datesMatch = ($existingDtstart === $event['dtstart'] && $existingDtend === $event['dtend']);
 
-		return $datesMatch === true && $summaryMatches === true && $normalisedExistingLocation === $event['location'];
+		return $datesMatch === true && $summaryMatches === true && $normalisedExistingLocation === $event['location']
+			&& $this->sameAttendees(ics: $ics, event: $event) === true;
 	}//end unchanged()
+
+	/**
+	 * Whether the stored event names the same attendees, when the event says who attends.
+	 *
+	 * An event rendered without attendee information compares as before, so a
+	 * caller that does not know the attendees never forces an update.
+	 *
+	 * @param string               $ics   The stored ICS.
+	 * @param array<string, mixed> $event The wanted event.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/interview-in-the-interviewers-calendars/specs/interview-scheduling/spec.md#requirement-an-interview-shall-be-a-calendar-event-with-the-interviewers-as-attendees-req-intv-010
+	 */
+	private function sameAttendees(string $ics, array $event): bool {
+		if (array_key_exists('attendees', $event) === false) {
+			return true;
+		}
+
+		$wanted = array_map(static fn (array $attendee): string => strtolower($attendee['email']), $event['attendees']);
+		$stored = [];
+		if (preg_match_all('/^ATTENDEE[^\r\n]*:mailto:([^\r\n]+)\r?$/mi', $ics, $matches) > 0) {
+			$stored = array_map('strtolower', $matches[1]);
+		}
+
+		sort($wanted);
+		sort($stored);
+
+		return $wanted === $stored;
+	}//end sameAttendees()
+
+	/**
+	 * A property parameter value, quoted when it holds a character that would end it.
+	 *
+	 * @param string $value The value.
+	 *
+	 * @return string
+	 */
+	private static function paramValue(string $value): string {
+		$value = str_replace(['"', "\r", "\n"], '', $value);
+		if (preg_match('/[;:,]/', $value) === 1) {
+			return '"' . $value . '"';
+		}
+
+		return $value;
+	}//end paramValue()
 
 	/**
 	 * An ISO-8601 date-time, compacted to the RFC 5545 UTC DATE-TIME form
@@ -160,32 +218,4 @@ class InterviewIcsRenderer {
 		return $parsedStart >= $parsedBound;
 	}//end scheduledStartOnOrAfter()
 
-	/**
-	 * Escape a TEXT property value per RFC 5545 §3.3.11 (backslash,
-	 * semicolon, comma, newline) — candidate/vacancy/location/interviewer
-	 * text is data, not trusted literal text.
-	 *
-	 * @param string $value The raw text.
-	 *
-	 * @return string
-	 */
-	private function escapeText(string $value): string {
-		$value = str_replace('\\', '\\\\', $value);
-		$value = str_replace([';', ',', "\n"], ['\\;', '\\,', '\\n'], $value);
-		return $value;
-	}//end escapeText()
-
-	/**
-	 * Reverse `escapeText()`, for comparing a stored SUMMARY/LOCATION back
-	 * to the desired unescaped value in `unchanged()`.
-	 *
-	 * @param string $value The escaped text.
-	 *
-	 * @return string
-	 */
-	private function unescapeText(string $value): string {
-		$value = str_replace(['\\n', '\\,', '\\;'], ["\n", ',', ';'], $value);
-		$value = str_replace('\\\\', '\\', $value);
-		return $value;
-	}//end unescapeText()
 }//end class

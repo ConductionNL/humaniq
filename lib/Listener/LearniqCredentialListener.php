@@ -99,60 +99,135 @@ class LearniqCredentialListener implements IEventListener {
 			return;
 		}
 
+		$this->takeOver(entity: $entity);
+	}//end handle()
+
+	/**
+	 * Take over one credential of learniq's register; a failure is logged and
+	 * never reaches the write that raised the event.
+	 *
+	 * @param object $entity The credential's ObjectEntity.
+	 *
+	 * @return void
+	 */
+	private function takeOver(object $entity): void {
 		try {
 			$register = $this->learniqRegisterOf((string)$entity->getRegister());
 			if ($register === null) {
 				return;
 			}
 
-			$this->record(credentialId: (string)$entity->getUuid(), credential: ($entity->getObject() ?? []), register: $register);
+			$this->record(credential: $this->issued(entity: $entity, register: $register));
 		} catch (\Throwable $e) {
 			$this->logger->warning('humaniq: LearniqCredentialListener could not take over a learniq credential', ['exception' => $e->getMessage()]);
 		}
-	}//end handle()
+	}//end takeOver()
+
+	/**
+	 * The issued credential of an entity in learniq's register.
+	 *
+	 * @param object $entity   The credential's ObjectEntity.
+	 * @param string $register learniq's register slug.
+	 *
+	 * @return IssuedCredential
+	 */
+	private function issued(object $entity, string $register): IssuedCredential {
+		$credential = new IssuedCredential();
+		$credential->id = (string)$entity->getUuid();
+		$credential->data = ($entity->getObject() ?? []);
+		$credential->register = $register;
+
+		return $credential;
+	}//end issued()
 
 	/**
 	 * Write the record for one credential, unless it exists or the learner is no employee.
 	 *
-	 * @param string               $credentialId The credential id.
-	 * @param array<string, mixed> $credential   The credential as learniq saved it.
-	 * @param string               $register     learniq's register slug.
+	 * @param IssuedCredential $credential The credential.
 	 *
 	 * @return void
 	 */
-	private function record(string $credentialId, array $credential, string $register): void {
-		$learner = $this->learniqObject(id: (string)($credential['learnerId'] ?? ''), schema: 'learner-profile', register: $register);
-		$account = trim((string)($learner['ncUserId'] ?? ''));
-		$employee = $this->gateway->findEmployeeByUserId($account);
-		if ($employee === null) {
-			$this->logger->info('humaniq: learniq credential ' . $credentialId . ' skipped, account "' . $account . '" belongs to no employee');
+	private function record(IssuedCredential $credential): void {
+		$employee = $this->employeeOf(credential: $credential);
+		if ($employee === null || $this->isRecorded(credential: $credential) === true) {
 			return;
 		}
 
-		foreach ($this->gateway->findFiltered('TrainingRecord', ['sourceRef' => $credentialId]) as $existing) {
+		$this->gateway->save($this->trainingRecord(credential: $credential, employee: $employee), 'TrainingRecord');
+	}//end record()
+
+	/**
+	 * The employee the credential's learner account belongs to, or null
+	 * (logged) when it belongs to none.
+	 *
+	 * @param IssuedCredential $credential The credential.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function employeeOf(IssuedCredential $credential): ?array {
+		$learner = $this->learniqObject(id: (string)($credential->data['learnerId'] ?? ''), schema: 'learner-profile', register: $credential->register);
+		$account = trim((string)($learner['ncUserId'] ?? ''));
+		$employee = $this->gateway->findEmployeeByUserId($account);
+		if ($employee === null) {
+			$this->logger->info('humaniq: learniq credential ' . $credential->id . ' skipped, account "' . $account . '" belongs to no employee');
+		}
+
+		return $employee;
+	}//end employeeOf()
+
+	/**
+	 * Whether learniq's record of the credential is already on the personnel file.
+	 *
+	 * @param IssuedCredential $credential The credential.
+	 *
+	 * @return bool
+	 */
+	private function isRecorded(IssuedCredential $credential): bool {
+		foreach ($this->gateway->findFiltered('TrainingRecord', ['sourceRef' => $credential->id]) as $existing) {
 			if (($existing['source'] ?? null) === 'learniq') {
-				return;
+				return true;
 			}
 		}
 
-		$course = $this->learniqObject(id: (string)($credential['courseId'] ?? ''), schema: 'course', register: $register);
+		return false;
+	}//end isRecorded()
+
+	/**
+	 * The TrainingRecord of the credential for the employee.
+	 *
+	 * @param IssuedCredential     $credential The credential.
+	 * @param array<string, mixed> $employee   The employee.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function trainingRecord(IssuedCredential $credential, array $employee): array {
+		return [
+			'employeeId' => (string)$employee['id'],
+			'title' => $this->courseTitle(credential: $credential),
+			'provider' => 'learniq',
+			'status' => 'gevolgd',
+			'completedOn' => $this->day($credential->data['issuedAt'] ?? null),
+			'validUntil' => $this->day($credential->data['expiresAt'] ?? null),
+			'studiekostenbeding' => false,
+			'source' => 'learniq',
+			'sourceRef' => $credential->id,
+			'administrationId' => isset($employee['administrationId']) === true ? (string)$employee['administrationId'] : null,
+		];
+	}//end trainingRecord()
+
+	/**
+	 * The name of the credential's course, or the fallback title.
+	 *
+	 * @param IssuedCredential $credential The credential.
+	 *
+	 * @return string
+	 */
+	private function courseTitle(IssuedCredential $credential): string {
+		$course = $this->learniqObject(id: (string)($credential->data['courseId'] ?? ''), schema: 'course', register: $credential->register);
 		$title = trim((string)($course['name'] ?? ''));
-		$this->gateway->save(
-			[
-				'employeeId' => (string)$employee['id'],
-				'title' => $title !== '' ? $title : 'Certificaat uit learniq',
-				'provider' => 'learniq',
-				'status' => 'gevolgd',
-				'completedOn' => $this->day($credential['issuedAt'] ?? null),
-				'validUntil' => $this->day($credential['expiresAt'] ?? null),
-				'studiekostenbeding' => false,
-				'source' => 'learniq',
-				'sourceRef' => $credentialId,
-				'administrationId' => isset($employee['administrationId']) === true ? (string)$employee['administrationId'] : null,
-			],
-			'TrainingRecord'
-		);
-	}//end record()
+
+		return $title !== '' ? $title : 'Certificaat uit learniq';
+	}//end courseTitle()
 
 	/**
 	 * The learniq register slug a register id belongs to, or null when it is

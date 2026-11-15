@@ -23,7 +23,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Command;
 
 use OCA\Humaniq\Command\ReferencesAuditCommand;
-use OCA\OpenRegister\Service\Object\ObjectPatch;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;

@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "EmployeeRelationsCase": {
+                "configuration": {"exportable": true},
                 "slug": "EmployeeRelationsCase",
                 "icon": "ScaleBalance",
                 "version": "0.1.0",

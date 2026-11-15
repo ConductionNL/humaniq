@@ -89,6 +89,37 @@ class HireService {
 	 */
 	public function hire(string $applicationId, array $input): array {
 		$application = $this->gateway->findObjectData($applicationId, self::APPLICATION_SCHEMA);
+		$refusal = self::applicationRefusal(application: $application);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$run = new HireRun();
+		$run->applicationId = $applicationId;
+		$run->application = (array)$application;
+		$run->person = self::personFrom(application: $run->application, input: $input);
+		$problem = self::problemWith(person: $run->person);
+		if ($problem !== null) {
+			return ['outcome' => 'invalid', 'message' => $problem];
+		}
+
+		$attachTo = self::text($input['attachToEmployeeId'] ?? null);
+		if ($attachTo !== '') {
+			return $this->attach(run: $run, employeeId: $attachTo);
+		}
+
+		return $this->createEmployee(run: $run, createNew: (($input['createNew'] ?? false) === true));
+	}//end hire()
+
+	/**
+	 * Why the application cannot become an employee: it does not exist, is
+	 * already linked, or is not hired; null when it can.
+	 *
+	 * @param array<string, mixed>|null $application The stored application, or null.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function applicationRefusal(?array $application): ?array {
 		if ($application === null) {
 			return ['outcome' => 'not-found', 'message' => 'Application not found.'];
 		}
@@ -102,41 +133,41 @@ class HireService {
 			return ['outcome' => 'not-hired', 'message' => 'Only a hired application can become an employee.'];
 		}
 
-		$person = self::personFrom(application: $application, input: $input);
-		$problem = self::problemWith(person: $person);
-		if ($problem !== null) {
-			return ['outcome' => 'invalid', 'message' => $problem];
-		}
+		return null;
+	}//end applicationRefusal()
 
-		$attachTo = self::text($input['attachToEmployeeId'] ?? null);
-		if ($attachTo !== '') {
-			return $this->attach(applicationId: $applicationId, application: $application, employeeId: $attachTo, person: $person);
-		}
-
-		if (($input['createNew'] ?? false) !== true) {
-			$matches = $this->matcher->matches($person);
+	/**
+	 * Create the employee, unless HR has not yet chosen to and people who may
+	 * be the same person exist.
+	 *
+	 * @param HireRun $run       The hire.
+	 * @param bool    $createNew Whether HR chose to create a new employee.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function createEmployee(HireRun $run, bool $createNew): array {
+		if ($createNew === false) {
+			$matches = $this->matcher->matches($run->person);
 			if ($matches !== []) {
 				return ['outcome' => 'matches', 'matches' => $matches];
 			}
 		}
 
-		$employeeId = (string)$this->gateway->save(self::withoutEmpty($person), self::EMPLOYEE_SCHEMA)->getUuid();
+		$run->employeeId = (string)$this->gateway->save(self::withoutEmpty($run->person), self::EMPLOYEE_SCHEMA)->getUuid();
 
-		return $this->startCase(applicationId: $applicationId, application: $application, employeeId: $employeeId, startDate: $person['startDate'], outcome: 'created');
-	}//end hire()
+		return $this->startCase(run: $run, outcome: 'created');
+	}//end createEmployee()
 
 	/**
 	 * Attach the hire to an existing employee. A former employee gets the new
 	 * start date and no end date; an active one changes no dates.
 	 *
-	 * @param string               $applicationId The application.
-	 * @param array<string, mixed> $application   The stored application.
-	 * @param string               $employeeId    The chosen employee.
-	 * @param array<string, mixed> $person        The confirmed hire.
+	 * @param HireRun $run        The hire.
+	 * @param string  $employeeId The chosen employee.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function attach(string $applicationId, array $application, string $employeeId, array $person): array {
+	private function attach(HireRun $run, string $employeeId): array {
 		$employee = $this->gateway->findObjectData($employeeId, self::EMPLOYEE_SCHEMA);
 		if ($employee === null) {
 			return ['outcome' => 'invalid', 'message' => 'The chosen employee does not exist.'];
@@ -145,40 +176,40 @@ class HireService {
 		if (self::text($employee['endDate'] ?? null) !== '') {
 			unset($employee['id'], $employee['@self']);
 			$employee['endDate'] = null;
-			$employee['startDate'] = $person['startDate'];
+			$employee['startDate'] = $run->person['startDate'];
 			$this->gateway->save($employee, self::EMPLOYEE_SCHEMA, $employeeId);
 		}
 
-		return $this->startCase(applicationId: $applicationId, application: $application, employeeId: $employeeId, startDate: $person['startDate'], outcome: 'attached');
+		$run->employeeId = $employeeId;
+
+		return $this->startCase(run: $run, outcome: 'attached');
 	}//end attach()
 
 	/**
 	 * Start the onboarding case and link the application, status unchanged.
 	 *
-	 * @param string               $applicationId The application.
-	 * @param array<string, mixed> $application   The stored application.
-	 * @param string               $employeeId    The employee.
-	 * @param string               $startDate     The first working day.
-	 * @param string               $outcome       created or attached.
+	 * @param HireRun $run     The hire, with its employee.
+	 * @param string  $outcome created or attached.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function startCase(string $applicationId, array $application, string $employeeId, string $startDate, string $outcome): array {
+	private function startCase(HireRun $run, string $outcome): array {
 		$case = self::withoutEmpty(
 			[
-				'employeeId' => $employeeId,
-				'startDate' => $startDate,
+				'employeeId' => $run->employeeId,
+				'startDate' => $run->person['startDate'],
 				'status' => self::HIRED,
-				'administrationId' => self::text($application['administrationId'] ?? null),
+				'administrationId' => self::text($run->application['administrationId'] ?? null),
 			]
 		);
 		$onboardingId = (string)$this->gateway->save($case, self::ONBOARDING_SCHEMA)->getUuid();
 
+		$application = $run->application;
 		unset($application['id'], $application['@self']);
-		$application['employeeId'] = $employeeId;
-		$this->gateway->save($application, self::APPLICATION_SCHEMA, $applicationId);
+		$application['employeeId'] = $run->employeeId;
+		$this->gateway->save($application, self::APPLICATION_SCHEMA, $run->applicationId);
 
-		return ['outcome' => $outcome, 'employeeId' => $employeeId, 'onboardingId' => $onboardingId];
+		return ['outcome' => $outcome, 'employeeId' => $run->employeeId, 'onboardingId' => $onboardingId];
 	}//end startCase()
 
 	/**

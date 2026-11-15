@@ -107,23 +107,7 @@ final class UbdMessage {
 	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-001
 	 */
 	public static function errors(string $xml): array {
-		$previous = libxml_use_internal_errors(true);
-		libxml_clear_errors();
-		$doc = new DOMDocument();
-		$valid = ($xml !== '' && $doc->loadXML($xml) === true && (new XsdFile())->validates(doc: $doc, xsd: self::XSD) === true);
-		$errors = [];
-		foreach (libxml_get_errors() as $error) {
-			$errors[] = trim($error->message) . ' (regel ' . $error->line . ')';
-		}
-
-		libxml_clear_errors();
-		libxml_use_internal_errors($previous);
-
-		if ($valid === false && $errors === []) {
-			$errors[] = 'Het bericht is geen geldige XML.';
-		}
-
-		return $errors;
+		return (new XsdFile())->errors(xml: $xml, xsd: self::XSD);
 	}//end errors()
 
 	/**

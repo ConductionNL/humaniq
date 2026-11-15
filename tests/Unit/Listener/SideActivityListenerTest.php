@@ -165,6 +165,54 @@ class SideActivityListenerTest extends TestCase {
 	}//end testTheEmployeeCannotDecideAndARefusalNeedsAReason()
 
 	/**
+	 * The whole outcome of every kind of event, allowed and refused: what is
+	 * stamped, refused or corrected, whether the save is stopped, and the
+	 * attestation on the employee afterwards.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeOutcomeOfEveryEvent(): void {
+		$employee = $this->store->state->objects['Employee'][self::INGRID];
+		$payslip = new ObjectEntity();
+		$payslip->setUuid('ps-1');
+		$payslip->setSchema('Payslip');
+		$payslip->setObject(['employeeId' => self::INGRID]);
+		$cases = [
+			'own-report' => ['ingrid', fn (): object => new ObjectCreatingEvent($this->entity(['description' => 'Bestuurslid']))],
+			'empty-report' => ['ingrid', fn (): object => new ObjectCreatingEvent($this->entity(['paid' => false]))],
+			'someone-else' => ['colleague', fn (): object => new ObjectCreatingEvent($this->entity(['employeeId' => self::INGRID, 'description' => 'Iets']))],
+			'hr-for-her' => ['hr.user', fn (): object => new ObjectCreatingEvent($this->entity(['employeeId' => self::INGRID, 'description' => 'Iets']))],
+			'ticked-by-hand' => ['ingrid', fn (): object => new ObjectUpdatingEvent($this->employee(array_merge($employee, ['nevenwerkzaamhedenGemeld' => true])), $this->employee($employee))],
+			'employee-other-field' => ['ingrid', fn (): object => new ObjectUpdatingEvent($this->employee(array_merge($employee, ['lastName' => 'Boer'])), $this->employee($employee))],
+			'employee-created' => ['ingrid', fn (): object => new ObjectCreatingEvent($this->employee($employee))],
+			'activity-updating' => ['ingrid', fn (): object => new ObjectUpdatingEvent($this->entity(['employeeId' => self::INGRID, 'status' => 'akkoord']), $this->entity(['employeeId' => self::INGRID, 'status' => 'gemeld']))],
+			'activity-created' => ['ingrid', function (): object {
+				$this->store->seed('SideActivity', 'act-1', ['employeeId' => self::INGRID, 'description' => 'Iets', 'status' => 'gemeld']);
+				return new ObjectCreatedEvent($this->entity(['employeeId' => self::INGRID]));
+			}],
+			'activity-deleted' => ['ingrid', function (): object {
+				$this->store->state->objects['SideActivity'] = [];
+				return new ObjectDeletedEvent($this->entity(['employeeId' => self::INGRID]));
+			}],
+			'other-schema' => ['ingrid', fn (): object => new ObjectCreatingEvent($payslip)],
+		];
+		$got = [];
+		foreach ($cases as $name => [$uid, $make]) {
+			$this->uid = $uid;
+			$event = $make();
+			$this->listener()->handle($event);
+			$got[$name] = [
+				'errors' => method_exists($event, 'getErrors') === true ? $event->getErrors() : null,
+				'modified' => method_exists($event, 'getModifiedData') === true ? $event->getModifiedData() : null,
+				'stopped' => $event->isPropagationStopped(),
+				'attested' => $this->store->state->objects['Employee'][self::INGRID]['nevenwerkzaamhedenGemeld'],
+			];
+		}
+
+		self::assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/side-activity-events.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+	}//end testTheWholeOutcomeOfEveryEvent()
+
+	/**
 	 * Run the pre-save listener on a new report.
 	 *
 	 * @param array<string, mixed> $report The payload.

@@ -3,6 +3,9 @@
 /**
  * Humaniq LeaveBalanceProjectionService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Projects approved LeaveRequests onto `LeaveBalance.usedHours`, the field that
  * had no writer at all before this service existed: `LeaveAccrualJob` seeds it
  * to `0.0` when it creates a balance and never touches it again, and
@@ -30,9 +33,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-001
@@ -44,6 +44,7 @@ namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\Humaniq\Support\NormalisesRows;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -56,6 +57,7 @@ use RuntimeException;
 class LeaveBalanceProjectionService {
 
 	use ConvertsRowsToArrays;
+	use NormalisesRows;
 
 	/**
 	 * Max objects loaded per type when scanning for the requests behind a balance.
@@ -430,12 +432,7 @@ class LeaveBalanceProjectionService {
 			return [];
 		}
 
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
+		return $this->normaliseRows($rows);
 
 	}//end loadAll()
 

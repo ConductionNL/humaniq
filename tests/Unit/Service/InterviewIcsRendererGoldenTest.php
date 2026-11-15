@@ -39,6 +39,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @covers \OCA\Humaniq\Service\InterviewIcsRenderer
  * @uses   \OCA\Humaniq\Support\ReadsIcsValues
+ * @uses \OCA\Humaniq\Service\IcsText
  */
 class InterviewIcsRendererGoldenTest extends TestCase {
 

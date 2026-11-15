@@ -393,4 +393,63 @@ class EmployerCostRateControllerTest extends TestCase {
 
 		$this->controller(['id' => 'emp-1'], $rates)->show(employeeId: 'emp-1', additions: $sent);
 	}
+
+	/**
+	 * Any other failure is a 500 with a fixed message, never the exception's.
+	 *
+	 * @return void
+	 */
+	public function testAnUnexpectedFailureIsAServerErrorWithAFixedMessage(): void {
+		$rates = $this->createMock(EmployeeCostRateService::class);
+		$rates->method('resolve')->willThrowException(new \RuntimeException('database gone'));
+
+		$res = $this->controller(['id' => 'emp-1'], $rates)->show(employeeId: 'emp-1', period: '2026-05');
+
+		self::assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $res->getStatus());
+		self::assertSame(['error' => 'Could not resolve the cost rate.'], $res->getData());
+	}
+
+	/**
+	 * An indefensible addition on the project-manager path is a bad request too.
+	 *
+	 * @return void
+	 */
+	public function testAnIndefensibleAdditionOnTheProjectManagerPathIsABadRequest(): void {
+		$rates = $this->createMock(EmployeeCostRateService::class);
+		$rates->method('resolve')->willReturnCallback(static function (array $employee): ?array {
+			if (($employee['id'] ?? '') === 'managed') {
+				throw new \InvalidArgumentException('addition "overhead" has no basis');
+			}
+
+			return null;
+		});
+
+		$res = $this->controller(null, $rates, [], ['id' => 'managed'])->show(employeeId: 'emp-1', period: '2026-05');
+
+		self::assertSame(Http::STATUS_BAD_REQUEST, $res->getStatus());
+		self::assertSame(['error' => 'addition "overhead" has no basis'], $res->getData());
+	}
+
+	/**
+	 * The full answers: 404 and 409 bodies, and the found rate on top of the
+	 * employee, period and currency.
+	 *
+	 * @return void
+	 */
+	public function testTheAnswerBodiesAreKept(): void {
+		$rates = $this->createMock(EmployeeCostRateService::class);
+		$rates->method('resolve')->willReturn(null);
+		$missing = $this->controller(null, $rates)->show(employeeId: 'emp-1', period: '2026-05');
+		self::assertSame([Http::STATUS_NOT_FOUND, ['error' => 'Employee not found.']], [$missing->getStatus(), $missing->getData()]);
+
+		$conflict = $this->controller(['id' => 'emp-1'], $rates)->show(employeeId: 'emp-1', period: '2026-05');
+		self::assertSame(Http::STATUS_CONFLICT, $conflict->getStatus());
+		self::assertSame(['error' => 'No wage base: the employee has neither a reasoned override nor a contract this period can be costed from.', 'employeeId' => 'emp-1'], $conflict->getData());
+
+		$found = $this->createMock(EmployeeCostRateService::class);
+		$found->method('resolve')->willReturn(self::RATE);
+		$res = $this->controller(['id' => 'emp-1'], $found)->show(employeeId: 'emp-1', period: '2026-05');
+		self::assertSame(Http::STATUS_OK, $res->getStatus());
+		self::assertSame(['employeeId' => 'emp-1', 'period' => '2026-05', 'currency' => 'EUR'] + self::RATE, $res->getData());
+	}
 }

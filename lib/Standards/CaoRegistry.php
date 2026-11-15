@@ -221,36 +221,44 @@ final class CaoRegistry {
 	 * @return array<string, float>|null Category to surcharge percentage, or null when unresolvable.
 	 */
 	public static function overtimeToeslagPercentages(string $caoId): ?array {
-		$cao = self::get($caoId);
-		if ($cao === null) {
+		$percentages = self::declaredToeslagPercentages(caoId: $caoId);
+		if ($percentages === null) {
 			return null;
 		}
 
-		$leaf = ($cao['overtime'] ?? null);
+		$out = self::numericPercentages(percentages: $percentages);
+
+		return ($out === []) ? null : $out;
+	}//end overtimeToeslagPercentages()
+
+	/**
+	 * The surcharge list a CAO's usable overtime leaf declares, or null when there is none or it is empty.
+	 *
+	 * @param string $caoId The CAO id.
+	 *
+	 * @return array<int|string, mixed>|null
+	 */
+	private static function declaredToeslagPercentages(string $caoId): array|null {
+		$leaf = (self::get($caoId)['overtime'] ?? null);
 		if (self::isUsableLeaf($leaf) === false) {
 			return null;
 		}
 
 		$percentages = ((array)$leaf['value'])['toeslagPercentages'] ?? null;
-		if (is_array($percentages) === false || $percentages === []) {
-			return null;
-		}
 
-		$out = [];
-		foreach ($percentages as $category => $percentage) {
-			if (is_numeric($percentage) === false) {
-				continue;
-			}
+		return (is_array($percentages) === true && $percentages !== []) ? $percentages : null;
+	}//end declaredToeslagPercentages()
 
-			$out[(string)$category] = (float)$percentage;
-		}
-
-		if ($out === []) {
-			return null;
-		}
-
-		return $out;
-	}//end overtimeToeslagPercentages()
+	/**
+	 * The numeric surcharges, by category.
+	 *
+	 * @param array<int|string, mixed> $percentages The declared surcharges.
+	 *
+	 * @return array<array-key, float>
+	 */
+	private static function numericPercentages(array $percentages): array {
+		return array_map('floatval', array_filter($percentages, 'is_numeric'));
+	}//end numericPercentages()
 
 	/**
 	 * The CAO's default settlement of overtime, `tijd-voor-tijd` or another
@@ -272,6 +280,51 @@ final class CaoRegistry {
 		$preference = trim((string)(((array)$leaf['value'])['compensationPreference'] ?? ''));
 		return ($preference === '' ? null : $preference);
 	}//end overtimeCompensationPreference()
+
+	/**
+	 * The CAO's annual norm of working hours for a full-time contract (the
+	 * normjaartaak in CAO PO), or `null` when the CAO is unknown, its
+	 * `workingTime` leaf is `verified: false` / `placeholder: true`, or the
+	 * leaf names no annual norm (design.md D5: an unverified figure is never
+	 * used as if it were verified).
+	 *
+	 * @param string $caoId The CAO id.
+	 *
+	 * @return float|null Hours per year for a full-time contract.
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-each-teacher-shall-have-a-yearly-deployment-plan-against-the-norm-for-their-contract-req-edu-001
+	 */
+	public static function annualNormHours(string $caoId): ?float {
+		$cao = self::get($caoId);
+		if ($cao === null) {
+			return null;
+		}
+
+		return self::annualNormHoursOf(leaf: ($cao['workingTime'] ?? null));
+	}//end annualNormHours()
+
+	/**
+	 * The annual norm a `workingTime` leaf declares, or `null` when the leaf is
+	 * not usable or holds no positive `normjaartaakUrenPerJaar`.
+	 *
+	 * @param mixed $leaf A `workingTime` leaf.
+	 *
+	 * @return float|null
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-each-teacher-shall-have-a-yearly-deployment-plan-against-the-norm-for-their-contract-req-edu-001
+	 */
+	public static function annualNormHoursOf(mixed $leaf): ?float {
+		if (self::isUsableLeaf($leaf) === false || is_array($leaf['value']) === false) {
+			return null;
+		}
+
+		$norm = ($leaf['value']['normjaartaakUrenPerJaar'] ?? null);
+		if (is_numeric($norm) === false || (float)$norm <= 0.0) {
+			return null;
+		}
+
+		return (float)$norm;
+	}//end annualNormHoursOf()
 
 	/**
 	 * Reset the memoised cache (test hook).

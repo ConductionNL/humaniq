@@ -33,6 +33,7 @@ namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Payroll\Loonaangifte\IncomeRelationshipLine;
+use OCA\Humaniq\Payroll\Loonaangifte\LineFacts;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessage;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessageBuilder;
 use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteYear;
@@ -101,46 +102,115 @@ class LoonaangifteMessageService {
 			return ['status' => $refusal[0], 'filingId' => $filingId, 'message' => $refusal[1]];
 		}
 
-		$period = (string)$filing['period'];
-		$dates = (array)LoonaangifteYear::periodDates($period, (string)($filing['tijdvak'] ?? 'maand'));
-		// The refusal above has checked that the year and the period are known.
-		$year = (LoonaangifteYear::forYear((int)substr($period, 0, 4)) ?? ['version' => '', 'namespace' => '', 'xsd' => '']);
-		$current = $this->periodLines((string)($filing['administrationId'] ?? ''), $period, [$dates[0], $dates[1]]);
-		$run = $current['run'];
-
-		$stored = ['messageRenderedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'messageRenderedBy' => $userId, 'messageVersion' => $year['version']];
-		if ($run === null) {
-			$findings = [['kind' => 'run-not-approved', 'severity' => 'blocking', 'employeeId' => '', 'element' => 'TijdvakAangifte', 'problem' => 'Er is voor ' . $period . ' geen goedgekeurde loonrun; de aangifte wordt alleen gemaakt uit een goedgekeurde, geboekte of betaalde loonrun.']];
-			return $this->store($filing, $stored, $findings, null);
+		$render = $this->renderOf(filing: $filing, userId: $userId);
+		if ($render->current['run'] === null) {
+			$findings = [['kind' => 'run-not-approved', 'severity' => 'blocking', 'employeeId' => '', 'element' => 'TijdvakAangifte', 'problem' => 'Er is voor ' . $render->period . ' geen goedgekeurde loonrun; de aangifte wordt alleen gemaakt uit een goedgekeurde, geboekte of betaalde loonrun.']];
+			return $this->store(render: $render, validated: [null, $findings]);
 		}
 
-		$corrections = $this->carried->forReturn($filing);
-		$parts = array_map(static fn (array $correction): array => ['tree' => (array)$correction['correctionTree'], 'saldo' => (int)($correction['correctionSaldo'] ?? 0)], $corrections);
-		$built = LoonaangifteMessageBuilder::build($current['administration'], $this->header('LA' . $period), ['period' => [$dates[0], $dates[1]], 'lines' => $current['lines'], 'corrections' => $parts]);
+		return $this->renderedFromRun(render: $render);
+	}//end render()
 
-		$stored = array_merge($stored, [
-			'messageRunId' => (string)$run['id'],
-			'messageRunCalculatedAt' => (string)($run['calculatedAt'] ?? ''),
-			'messageRunTotalLoonheffing' => (float)($run['totalLoonheffing'] ?? 0),
-			'collectiveTotals' => $built['collective'],
-			'carriedCorrectionIds' => array_map(static fn (array $correction): string => (string)$correction['id'], $corrections),
-		]);
-		$findings = $built['findings'];
-		$message = null;
-		if ($this->blocking($findings) === 0) {
-			$fileName = 'LH_' . (string)($current['administration']['loonheffingennummer'] ?? '') . '_' . $period . '_' . gmdate('YmdHis') . '.xml';
-			[$message, $findings] = $this->validated($built['tree'], $year, $fileName, $findings);
-		}
+	/**
+	 * The filing's period, year and run lines, and the render facts.
+	 *
+	 * @param array<string, mixed> $filing The LoonaangifteFiling, with its id.
+	 * @param string               $userId The acting account.
+	 *
+	 * @return LoonaangifteRender
+	 */
+	private function renderOf(array $filing, string $userId): LoonaangifteRender {
+		$render = new LoonaangifteRender();
+		$render->filing = $filing;
+		$render->period = (string)$filing['period'];
+		$dates = (array)LoonaangifteYear::periodDates($render->period, (string)($filing['tijdvak'] ?? 'maand'));
+		$render->dates = [$dates[0], $dates[1]];
+		// The refusal has checked that the year and the period are known.
+		$render->year = (LoonaangifteYear::forYear((int)substr($render->period, 0, 4)) ?? ['version' => '', 'namespace' => '', 'xsd' => '']);
+		$render->current = $this->periodLines((string)($filing['administrationId'] ?? ''), $render->period, $render->dates);
+		$render->stored = ['messageRenderedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'messageRenderedBy' => $userId, 'messageVersion' => $render->year['version']];
 
-		$outcome = $this->store($filing, $stored, $findings, $message);
-		if ($message !== null) {
-			foreach ($corrections as $correction) {
-				$this->carried->stamp($correction, $filingId);
+		return $render;
+	}//end renderOf()
+
+	/**
+	 * Build the message from the approved run and the carried corrections,
+	 * validate it when nothing blocks, store the filing, and stamp the
+	 * corrections it carried.
+	 *
+	 * @param LoonaangifteRender $render The filing being rendered.
+	 *
+	 * @return array{status: string, filingId: string, blockingFindings: int, warningFindings: int, messageFileName?: string}
+	 */
+	private function renderedFromRun(LoonaangifteRender $render): array {
+		$render->corrections = $this->carried->forReturn($render->filing);
+		$built = $this->builtMessage(render: $render);
+		$render->stored = array_merge($render->stored, self::runFacts(render: $render, collective: $built['collective']));
+		$validated = $this->validatedUnlessBlocked(render: $render, built: $built);
+
+		$outcome = $this->store(render: $render, validated: $validated);
+		if ($validated[0] !== null) {
+			foreach ($render->corrections as $correction) {
+				$this->carried->stamp($correction, (string)($render->filing['id'] ?? ''));
 			}
 		}
 
 		return $outcome;
-	}//end render()
+	}//end renderedFromRun()
+
+	/**
+	 * The message tree, collective totals and findings of the period's lines
+	 * and the carried corrections.
+	 *
+	 * @param LoonaangifteRender $render The filing being rendered.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function builtMessage(LoonaangifteRender $render): array {
+		$parts = array_map(static fn (array $correction): array => ['tree' => (array)$correction['correctionTree'], 'saldo' => (int)($correction['correctionSaldo'] ?? 0)], $render->corrections);
+
+		return LoonaangifteMessageBuilder::build($render->current['administration'], $this->header('LA' . $render->period), ['period' => $render->dates, 'lines' => $render->current['lines'], 'corrections' => $parts]);
+	}//end builtMessage()
+
+	/**
+	 * The run the message was made from, its totals and the corrections it carries.
+	 *
+	 * @param LoonaangifteRender   $render     The filing being rendered.
+	 * @param array<string, mixed> $collective The collective totals.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function runFacts(LoonaangifteRender $render, array $collective): array {
+		$run = $render->current['run'];
+
+		return [
+			'messageRunId' => (string)$run['id'],
+			'messageRunCalculatedAt' => (string)($run['calculatedAt'] ?? ''),
+			'messageRunTotalLoonheffing' => (float)($run['totalLoonheffing'] ?? 0),
+			'collectiveTotals' => $collective,
+			'carriedCorrectionIds' => array_map(static fn (array $correction): string => (string)$correction['id'], $render->corrections),
+		];
+	}//end runFacts()
+
+	/**
+	 * The validated message and the findings; no message when a finding
+	 * blocks it.
+	 *
+	 * @param LoonaangifteRender   $render The filing being rendered.
+	 * @param array<string, mixed> $built  The built message.
+	 *
+	 * @return array{0: array{xml: string, fileName: string}|null, 1: list<array<string, string>>}
+	 */
+	private function validatedUnlessBlocked(LoonaangifteRender $render, array $built): array {
+		$findings = $built['findings'];
+		if ($this->blocking($findings) !== 0) {
+			return [null, $findings];
+		}
+
+		$fileName = 'LH_' . (string)($render->current['administration']['loonheffingennummer'] ?? '') . '_' . $render->period . '_' . gmdate('YmdHis') . '.xml';
+
+		return $this->validated($built['tree'], $render->year, $fileName, $findings);
+	}//end validatedUnlessBlocked()
 
 	/**
 	 * The approved run of a period and one income relationship per payslip,
@@ -265,7 +335,7 @@ class LoonaangifteMessageService {
 			$employeeId = (string)($slip['employeeId'] ?? '');
 			$employee = ($this->gateway->findObjectData($employeeId, 'Employee') ?? ['id' => $employeeId]);
 			$employee['id'] = $employeeId;
-			$lines[] = IncomeRelationshipLine::make($employee, $this->contractOf($employeeId, $period), $slip, $this->recalculator->recalculate($slip), $period);
+			$lines[] = IncomeRelationshipLine::make(new LineFacts($employee, $this->contractOf($employeeId, $period), $slip, $this->recalculator->recalculate($slip), $period));
 		}
 
 		return $lines;
@@ -294,19 +364,18 @@ class LoonaangifteMessageService {
 	}//end contractOf()
 
 	/**
-	 * Store the outcome on the filing.
+	 * Store the render facts, the findings and the message on the filing.
 	 *
-	 * @param array<string, mixed>                $filing   The filing.
-	 * @param array<string, mixed>                $stored   The render facts.
-	 * @param list<array<string, string>>         $findings The findings.
-	 * @param array{xml: string, fileName: string}|null $message The validated message, or null.
+	 * @param LoonaangifteRender                                                      $render    The filing being rendered.
+	 * @param array{0: array{xml: string, fileName: string}|null, 1: list<array<string, string>>} $validated The validated message, or null, and the findings.
 	 *
 	 * @return array{status: string, filingId: string, blockingFindings: int, warningFindings: int, messageFileName?: string}
 	 */
-	private function store(array $filing, array $stored, array $findings, ?array $message): array {
-		$filingId = (string)($filing['id'] ?? '');
+	private function store(LoonaangifteRender $render, array $validated): array {
+		[$message, $findings] = $validated;
+		$filingId = (string)($render->filing['id'] ?? '');
 		$blocking = $this->blocking($findings);
-		$payload = array_merge($filing, $stored, [
+		$payload = array_merge($render->filing, $render->stored, [
 			'messageFindings' => $findings,
 			'blockingFindings' => $blocking,
 			'warningFindings' => (count($findings) - $blocking),

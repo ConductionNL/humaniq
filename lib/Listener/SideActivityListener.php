@@ -75,21 +75,41 @@ class SideActivityListener implements IEventListener {
 		}
 
 		$entity = $this->entityOf(event: $event);
-		if ($entity === null) {
-			return;
+		if ($entity !== null) {
+			$this->route(event: $event, entity: $entity);
 		}
+	}//end handle()
 
+	/**
+	 * Send an employee update to the attestation guard and a side activity event to its step.
+	 *
+	 * @param Event $event The event.
+	 * @param object $entity The object it is about.
+	 *
+	 * @return void
+	 */
+	private function route(Event $event, object $entity): void {
 		$slug = $this->register->slugOf((string)$entity->getSchema());
 		$data = ($entity->getObject() ?? []);
 		if ($slug === SideActivityRegister::EMPLOYEE_SLUG && $event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) {
-			$this->guardAttestation(event: $event, data: $data, uuid: (string)$entity->getUuid());
+			$this->guardAttestation(event: $event, employee: $entity);
 			return;
 		}
 
-		if ($slug !== SideActivityRegister::ACTIVITY_SLUG) {
-			return;
+		if ($slug === SideActivityRegister::ACTIVITY_SLUG) {
+			$this->onActivity(event: $event, data: $data);
 		}
+	}//end route()
 
+	/**
+	 * A new report is placed; a stored or withdrawn one updates the attestation.
+	 *
+	 * @param Event $event The event.
+	 * @param array<string, mixed> $data The report.
+	 *
+	 * @return void
+	 */
+	private function onActivity(Event $event, array $data): void {
 		if ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent) {
 			$this->place(event: $event, data: $data);
 			return;
@@ -104,7 +124,7 @@ class SideActivityListener implements IEventListener {
 		} catch (\Throwable $e) {
 			$this->logger->warning('humaniq: the side activity attestation could not be updated', ['exception' => $e->getMessage()]);
 		}
-	}//end handle()
+	}//end onActivity()
 
 	/**
 	 * Stamp a new report on its employee, or refuse it.
@@ -130,14 +150,13 @@ class SideActivityListener implements IEventListener {
 	 * Put back the register's value when the attestation is changed by hand.
 	 *
 	 * @param \OCA\OpenRegister\Event\ObjectUpdatingEvent $event The pre-save event.
-	 * @param array<string, mixed> $data The employee as it will be saved.
-	 * @param string $uuid The employee id.
+	 * @param object $employee The employee as it will be saved.
 	 *
 	 * @return void
 	 */
-	private function guardAttestation(object $event, array $data, string $uuid): void {
+	private function guardAttestation(object $event, object $employee): void {
 		$old = ($event->getOldObject()?->getObject() ?? []);
-		$value = $this->register->correction(new: $data, old: $old, employeeId: $uuid);
+		$value = $this->register->correction(new: ($employee->getObject() ?? []), old: $old, employeeId: (string)$employee->getUuid());
 		if ($value !== null) {
 			$event->setModifiedData([SideActivityRegister::FLAG => $value]);
 		}

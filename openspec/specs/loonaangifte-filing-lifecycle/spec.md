@@ -24,7 +24,9 @@ Digipoort wire transport is explicitly out of scope.
 
 ## Requirements
 
-### REQ-LFL-001: `LoonaangifteFiling` SHALL carry a declarative lifecycle `concept → klaargezet → bevestigd → verzonden`
+### Requirement: `LoonaangifteFiling` SHALL carry a declarative lifecycle `concept → klaargezet → bevestigd → verzonden` (REQ-LFL-001)
+
+`LoonaangifteFiling` SHALL carry a declarative lifecycle `concept → klaargezet → bevestigd → verzonden`.
 
 `lib/Settings/register.d/hr-objects.json` declares `x-openregister-lifecycle` on `LoonaangifteFiling` with `field: status`, `initial: concept`, and transitions `klaarzetten` (concept→klaargezet), `bevestigen` (klaargezet→bevestigd), `verzenden` (bevestigd→verzonden), `heropenen` (klaargezet|bevestigd→concept), `corrigeren` (verzonden→concept). The `verzenden` description documents that `submittedDate` and `verzondenDoor` are stamped on the carrying write (Timesheet `approvedAt`/`approvedBy` pattern). No guard classes are referenced in this change.
 
@@ -43,7 +45,9 @@ Digipoort wire transport is explicitly out of scope.
 - **WHEN** `corrigeren` is executed
 - **THEN** status returns to `concept`; **AND** `heropenen` from `verzonden` is not a declared edge
 
-### REQ-LFL-002: The schema SHALL model tijdvakcode, aangiftenummer, betalingskenmerk and response fields
+### Requirement: The schema SHALL model tijdvakcode, aangiftenummer, betalingskenmerk and response fields (REQ-LFL-002)
+
+The schema SHALL model tijdvakcode, aangiftenummer, betalingskenmerk and response fields.
 
 New properties on `LoonaangifteFiling`: `status` (enum `concept|klaargezet|bevestigd|verzonden`, default `concept`), `tijdvakcode` (string, pattern `^[67][0-9]{3}$`, nullable), `aangiftenummer` (string, nullable), `betalingskenmerk` (string, nullable), `responseStatus` (enum `geen|ontvangen-ok|afgekeurd`, default `geen`), `responseMessage` (string, nullable), `verzondenDoor` (string, nullable). Schema `version` bumped to `0.2.0`. Existing properties and `required` list unchanged.
 
@@ -56,7 +60,9 @@ New properties on `LoonaangifteFiling`: `status` (enum `concept|klaargezet|beves
 - **WHEN** an object is written with `tijdvakcode: "ABC1"`
 - **THEN** OpenRegister schema validation rejects it (pattern mismatch)
 
-### REQ-LFL-003: The rule corpus SHALL gain three machine-checkable NL filing rules with the tijdvakcode table as rule data
+### Requirement: The rule corpus SHALL gain three machine-checkable NL filing rules with the tijdvakcode table as rule data (REQ-LFL-003)
+
+The rule corpus SHALL gain three machine-checkable NL filing rules with the tijdvakcode table as rule data.
 
 `lib/Standards/rules/payroll.json` gains `nl-loonaangifte-tijdvakcode`, `nl-loonaangifte-deadline-derivation`, `nl-loonaangifte-deadline-alert` (all `domain: reporting`, `jurisdiction: NL`, `framework: nl-loonheffingen`, `machineCheckable: true`, `severity: mandatory`, sourced to Belastingdienst LH 210 2026 / AWR art. 19 with sourceUrl). `nl-loonaangifte-tijdvakcode` carries a `parameters` object with the 2026 code tables (`maand` prefix rule 60MM, the thirteen `vierweken` codes, `jaar: 6400`) so the annual re-issue is a data-only change.
 
@@ -64,7 +70,9 @@ New properties on `LoonaangifteFiling`: `status` (enum `concept|klaargezet|beves
 - **WHEN** `occ humaniq:rules:audit` runs after the corpus edit
 - **THEN** the RuleCatalogue loads without error and reports the three new rules as enforced (each has a CheckProvider method)
 
-### REQ-LFL-004: `NlWageTaxFilingChecks` SHALL enforce tijdvakcode consistency, deadline derivation, and deadline alerting
+### Requirement: `NlWageTaxFilingChecks` SHALL enforce tijdvakcode consistency, deadline derivation, and deadline alerting (REQ-LFL-004)
+
+`NlWageTaxFilingChecks` SHALL enforce tijdvakcode consistency, deadline derivation, and deadline alerting.
 
 Three new check methods, each auto-discovered by the RuleEngine and jurisdiction-guarded to `NL` filings of `filingType: loonaangifte`:
 1. **Tijdvakcode consistency** — `tijdvakcode` must match `period` + `tijdvak` per the rule's `parameters` table (e.g. `2026-01`+`maand` → `6010`); missing tijdvakcode on a non-`concept` filing is a violation.
@@ -88,7 +96,9 @@ Three new check methods, each auto-discovered by the RuleEngine and jurisdiction
 - **WHEN** the audit runs on any date after 2026-04-30
 - **THEN** a `nl-loonaangifte-deadline-alert` violation with mandatory severity is reported
 
-### REQ-LFL-005: The filing pages SHALL surface lifecycle actions and deadline KPIs
+### Requirement: The filing pages SHALL surface lifecycle actions and deadline KPIs (REQ-LFL-005)
+
+The filing pages SHALL surface lifecycle actions and deadline KPIs.
 
 `src/manifest.json`: the `LoonaangifteFilings` index page lists `period`, `tijdvakcode`, `status`, `deadline`, `submittedDate`, `responseStatus` sorted by `deadline` ascending; the `LoonaangifteFilingDetail` page gains (a) a prominent widget surfacing at least Status and Deadline (implemented as a top-of-page `data` widget rather than a `stats-block`, since the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports `count`/`sum` numeric aggregation and cannot echo a non-numeric enum/date field value — documented in the page's `_note`) and (b) a `lifecycleActions` widget exposing Klaarzetten / Bevestigen / Verzenden / Heropenen / Corrigeren, structured identically to `TimesheetDetail`'s lifecycleActions (real labels, no placeholder text). The manifest validates against app-manifest-v2 (`npm run check:manifest`).
 
@@ -102,7 +112,9 @@ Three new check methods, each auto-discovered by the RuleEngine and jurisdiction
 - **WHEN** the user executes Klaarzetten
 - **THEN** the page reflects status `klaargezet` and offers Bevestigen
 
-### REQ-LFL-006: Seed data SHALL exercise every lifecycle state and both alert branches
+### Requirement: Seed data SHALL exercise every lifecycle state and both alert branches (REQ-LFL-006)
+
+Seed data SHALL exercise every lifecycle state and both alert branches.
 
 `lib/Settings/register.d/hr-seed.json` gains the four filings from design.md (verzonden+ok, verzonden+geen response, bevestigd approaching, concept overdue), using placeholder identifiers only (loonheffingennummer `000000000L01`).
 

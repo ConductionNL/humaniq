@@ -365,4 +365,40 @@ class TimeEntryControllerTest extends TestCase {
 		$this->assertArrayNotHasKey('hours', $response->getData());
 	}//end testSummaryFailsClosed()
 
+	/**
+	 * A failed read is logged with the exception class only, and an entry
+	 * without numeric hours is neither summed nor counted.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 */
+	public function testSummaryLogsAFailedReadAndSkipsEntriesWithoutHours(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')
+			->with('TimeEntryController: the hours of a day could not be read.', ['exceptionClass' => \RuntimeException::class]);
+		$calls = 0;
+		$this->gateway->method('findFiltered')->willReturnCallback(
+			static function () use (&$calls): array {
+				$calls++;
+				if ($calls === 1) {
+					throw new \RuntimeException('register down');
+				}
+
+				return [
+					['userId' => 'alice', 'hours' => 'n/a'],
+					['userId' => 'alice', 'hours' => null],
+					['userId' => 'alice', 'hours' => '1.25'],
+					['userId' => 'alice', 'hours' => 2],
+				];
+			}
+		);
+
+		$failed = $this->controller('alice', $logger)->summary('2026-10-07');
+		$this->assertSame(['error' => 'Je uren konden niet worden gelezen.'], $failed->getData());
+
+		$response = $this->controller('alice')->summary(' 2026-10-07 ');
+		$this->assertSame(['date' => '2026-10-07', 'hours' => 3.25, 'entries' => 2], $response->getData());
+	}//end testSummaryLogsAFailedReadAndSkipsEntriesWithoutHours()
+
 }//end class

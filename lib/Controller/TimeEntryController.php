@@ -249,15 +249,8 @@ class TimeEntryController extends Controller {
 			return new JSONResponse(['error' => 'Log in om je uren te bekijken.'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$day = trim((string)$date);
-		if ($day === '') {
-			$day = (new DateTimeImmutable('now'))->format('Y-m-d');
-		}
-
-		$parts = [];
-		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $day, $parts) !== 1
-			|| checkdate((int)$parts[2], (int)$parts[3], (int)$parts[1]) === false
-		) {
+		$day = self::dayOrToday(date: $date);
+		if (self::isDay(day: $day) === false) {
 			return new JSONResponse(['error' => 'Geef de dag als JJJJ-MM-DD.'], Http::STATUS_BAD_REQUEST);
 		}
 
@@ -269,6 +262,48 @@ class TimeEntryController extends Controller {
 			return new JSONResponse(['error' => 'Je uren konden niet worden gelezen.'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
+		return new JSONResponse(['date' => $day] + self::totalsOf(rows: $rows, uid: $uid));
+	}//end summary()
+
+	/**
+	 * The trimmed day asked for, or today when none was given.
+	 *
+	 * @param string|null $date The day from the request.
+	 *
+	 * @return string
+	 */
+	private static function dayOrToday(?string $date): string {
+		$day = trim((string)$date);
+		if ($day === '') {
+			return (new DateTimeImmutable('now'))->format('Y-m-d');
+		}
+
+		return $day;
+	}//end dayOrToday()
+
+	/**
+	 * Whether the text is a calendar day written as YYYY-MM-DD.
+	 *
+	 * @param string $day The day to judge.
+	 *
+	 * @return bool
+	 */
+	private static function isDay(string $day): bool {
+		$parts = [];
+
+		return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $day, $parts) === 1
+			&& checkdate((int)$parts[2], (int)$parts[3], (int)$parts[1]) === true;
+	}//end isDay()
+
+	/**
+	 * The summed hours and the entry count of the caller's own rows with numeric hours.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The rows the store returned.
+	 * @param string                           $uid  The caller.
+	 *
+	 * @return array{hours: float, entries: int}
+	 */
+	private static function totalsOf(array $rows, string $uid): array {
 		$hours   = 0.0;
 		$entries = 0;
 		foreach ($rows as $row) {
@@ -280,8 +315,8 @@ class TimeEntryController extends Controller {
 			$entries++;
 		}
 
-		return new JSONResponse(['date' => $day, 'hours' => round($hours, 2), 'entries' => $entries]);
-	}//end summary()
+		return ['hours' => round($hours, 2), 'entries' => $entries];
+	}//end totalsOf()
 
 	/**
 	 * The calling user's id, or '' when there is no session.

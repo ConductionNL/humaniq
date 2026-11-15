@@ -34,9 +34,13 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\CalendarSettings;
 use OCA\Humaniq\Service\InterviewCalendarService;
+use OCA\Humaniq\Service\InterviewRepository;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -57,6 +61,9 @@ use RuntimeException;
  * @uses   \OCA\Humaniq\Support\ResolvesObjectService
  * @uses   \OCA\Humaniq\Support\NormalisesRows
  * @uses   \OCA\Humaniq\Support\ReadsIcsValues
+ * @uses \OCA\Humaniq\Service\CalDavBackendResolver
+ * @uses \OCA\Humaniq\Service\IcsText
+ * @uses   \OCA\Humaniq\Service\CalendarSettings
  *
  * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-003
  */
@@ -132,10 +139,9 @@ class InterviewSyncGoldenTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getInterviewCalendarPrincipal')->willReturn('principals/users/hr');
-		$settings->method('getInterviewCalendarUri')->willReturn('sollicitaties');
+		$calendars = new CalendarSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), ['interview_calendar_principal' => 'principals/users/hr', 'interview_calendar_uri' => 'sollicitaties']));
 
-		$service = new InterviewCalendarService($container, $settings, new NullLogger());
+		$service = new InterviewCalendarService($container, $calendars, new InterviewRepository($container, $settings, new NullLogger()), new NullLogger());
 		$results = [];
 		foreach ($s['calls'] as $call) {
 			$results[] = ($call[0] === 'one') ? $service->syncOne($call[1]) : $service->sync($call[1] ?? null);
