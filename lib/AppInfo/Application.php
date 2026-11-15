@@ -38,6 +38,7 @@ use OCA\Humaniq\Lifecycle\HandoffReleaseGuard;
 use OCA\Humaniq\Lifecycle\HrReopenGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Humaniq\Lifecycle\LoonaangifteMessageGuard;
+use OCA\Humaniq\Lifecycle\LeaveApprovalStepGuard;
 use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
@@ -88,6 +89,7 @@ use OCA\Humaniq\Listener\TimeEstimateListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
 use OCA\Humaniq\Listener\TimesheetApprovalListener;
 use OCA\Humaniq\Listener\TimesheetProcessStampListener;
+use OCA\Humaniq\Listener\LeaveRequestProcessStampListener;
 use OCA\Humaniq\Listener\TrainingRecordListener;
 use OCA\Humaniq\Listener\TravelAmountListener;
 use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
@@ -218,14 +220,12 @@ class Application extends App implements IBootstrap {
 		// condition. It loads the administered LeaveTypes, so it takes the shared
 		// register gateway; keyed by its FQCN so OpenRegister's
 		// LifecycleGuardRegistry resolves the `requires` tag on that transition.
-		$context->registerService(
-			LeaveTypeConditionGuard::class,
-			static function ($c): LeaveTypeConditionGuard {
-				return new LeaveTypeConditionGuard(
-					gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class)
-				);
-			}
-		);
+		$context->registerService(LeaveTypeConditionGuard::class, static fn ($c): LeaveTypeConditionGuard => new LeaveTypeConditionGuard(gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class)));
+
+		// leave-approval-steps-and-history D2: the guard on approve-manager,
+		// approve and reject of a LeaveRequest; keyed by its FQCN for the
+		// LifecycleGuardRegistry, like the guard above.
+		$context->registerService(LeaveApprovalStepGuard::class, static fn ($c): LeaveApprovalStepGuard => new LeaveApprovalStepGuard(gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class), groupManager: $c->get(\OCP\IGroupManager::class)));
 
 		// hours-process-redesign: the request-scoped internal-writer marker MUST
 		// be shared — the aggregation service / repair step set it and the
@@ -570,6 +570,12 @@ class Application extends App implements IBootstrap {
 				registers: null,
 				schemas: [TimesheetProcessStampListener::TIMESHEET_SLUG]
 			);
+		}
+
+		// leave-approval-steps-and-history D1: pre-save stamping of who decided
+		// a leave request and when, with each step kept in `decisions`.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: LeaveRequestProcessStampListener::class, registers: null, schemas: [LeaveRequestProcessStampListener::LEAVE_REQUEST_SLUG]);
 		}
 
 		// hours-process-redesign Decision 3: post-save aggregate recompute of
