@@ -43,7 +43,7 @@ use OCA\Humaniq\Service\SettingsService;
 use Closure;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
-use OCA\OpenRegister\Service\Flow\IFlowNode;
+use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\WorkflowEngine\IManager;
@@ -62,7 +62,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
  */
-abstract class PayrollFlowNodeBase implements IFlowNode {
+abstract class PayrollFlowNodeBase implements ICallFlowNode {
 
 	use ConvertsRowsToArrays {
 		toArray as protected;

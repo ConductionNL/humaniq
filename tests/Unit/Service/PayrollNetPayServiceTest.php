@@ -42,6 +42,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Tests\Unit\Service\Support\InMemoryLocks;
 use OCP\Lock\ILockingProvider;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for PayrollNetPayService.
@@ -159,12 +160,13 @@ class PayrollNetPayServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 				if ($targetSchema === 'PaymentRun' && $this->shillinqThrows === true) {
 					throw new \RuntimeException('shillinq register unavailable');

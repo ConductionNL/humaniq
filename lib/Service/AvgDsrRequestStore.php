@@ -34,6 +34,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -73,8 +76,10 @@ final class AvgDsrRequestStore {
 		try {
 			$entity = $this->objectService()->find(
 				id: $dsrRequestId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'DsrRequest'
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: 'DsrRequest'
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->info('AvgDsrRequestStore: DsrRequest ' . $dsrRequestId . ' kon niet worden opgehaald: ' . $e->getMessage());
@@ -238,9 +243,13 @@ final class AvgDsrRequestStore {
 
 		$saved = $this->objectService()->saveObject(
 			object: $object,
-			register: $this->settingsService->getRegisterSlug(),
-			schema: 'DsrRequest',
-			uuid: ($id === '' ? null : $id)
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+						register: $this->settingsService->getRegisterSlug(),
+						schema: 'DsrRequest'
+					),
+				uuid: $id === '' ? null : $id
+			)
 		);
 
 		return $this->toArray($saved);

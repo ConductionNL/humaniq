@@ -32,6 +32,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * The settle endpoint refuses what it may not settle and reports the settlement.
@@ -76,7 +77,9 @@ class LeaveControllerTest extends TestCase {
 				$this->finds = &$finds;
 			}
 
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->finds[] = compact('id', 'register', 'schema');
 				if ($this->found instanceof \Throwable) {
 					throw $this->found;
