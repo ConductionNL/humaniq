@@ -45,8 +45,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 
 /**
  * Proves (or disproves) that pre-save event payload mutation persists.

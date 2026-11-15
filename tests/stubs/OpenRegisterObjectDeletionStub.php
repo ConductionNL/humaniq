@@ -16,7 +16,7 @@
  * composer.json's autoload map.
  *
  * @category Test
- * @package  OCA\OpenRegister\Service\Object
+ * @package  OCA\OpenRegister\Kernel\Contracts\Value
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -30,9 +30,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
-if (class_exists('OCA\OpenRegister\Service\Object\ObjectFindTarget') === false) {
+if (class_exists('OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget') === false) {
 	/**
 	 * The register and schema an object is looked up in.
 	 */

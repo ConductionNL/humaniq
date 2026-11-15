@@ -191,8 +191,8 @@ use OCA\Humaniq\Support\LoadsAllRows;
 use OCA\Humaniq\Support\ChecksPeriodCoverage;
 use OCA\Humaniq\Support\ReadsEmployeeKeys;
 use OCA\Humaniq\Support\FindsCoveringContract;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 
 /**
  * Generates draft payroll runs + engine payslips from the pure calculator.

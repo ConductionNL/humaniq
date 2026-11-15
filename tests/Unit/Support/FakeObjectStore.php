@@ -34,7 +34,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Support;
 
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 
 /**
  * In-memory ObjectService double with clone-surviving shared state.

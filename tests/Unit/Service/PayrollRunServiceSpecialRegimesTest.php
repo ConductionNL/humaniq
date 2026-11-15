@@ -43,6 +43,7 @@ use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\PackFixtures;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -218,21 +219,21 @@ class PayrollRunServiceSpecialRegimesTest extends TestCase {
 			/**
 			 * Delete a row.
 			 *
-			 * @param string $uuid The id.
-			 * @param string|null $register The register.
-			 * @param string|null $schema The schema.
-			 * @param bool $_rbac Unused.
-			 * @param bool $_multitenancy Unused.
+			 * @param ObjectDeletion $deletion        The object and the register and schema it is in.
+			 * @param bool           $_rbac           Unused.
+			 * @param bool           $_multitenancy   Unused.
+			 * @param bool           $_retentionSweep Unused.
 			 *
 			 * @return bool
 			 */
 			public function deleteObject(
-				string $uuid,
-				?string $register = null,
-				?string $schema = null,
+				ObjectDeletion $deletion,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
+				bool $_retentionSweep = false,
 			): bool {
+				$uuid = $deletion->uuid;
+				$schema = $deletion->target->schema;
 				$this->deleted[] = $uuid;
 
 				$targetSchema = ($schema ?? $this->schema);

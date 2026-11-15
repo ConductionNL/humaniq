@@ -245,7 +245,7 @@ if (class_exists('OCA\\OpenRegister\\Db\\RegisterMapper') === false) {
 // ObjectService::deleteObject() takes an ObjectDeletion with its
 // ObjectFindTarget. The stub declares both so humaniq's delete calls, and
 // the doubles that receive them, load in the standalone suite.
-if (class_exists('OCA\\OpenRegister\\Service\\Object\\ObjectDeletion') === false) {
+if (class_exists('OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectDeletion') === false) {
 	require __DIR__ . '/stubs/OpenRegisterObjectDeletionStub.php';
 }
 

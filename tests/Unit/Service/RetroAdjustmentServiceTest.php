@@ -45,7 +45,7 @@ use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Service\RetroAdjustmentService;
 use OCA\Humaniq\Service\RetroCorrection;
 use OCA\Humaniq\Service\SettingsService;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
