@@ -3,6 +3,9 @@
 /**
  * Unit tests for AvgDsrService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * hrmq#99 (consume-not-rebuild correction): pins the avg-dsr contract as it
  * now consumes OpenRegister's guarded, RBAC/tenant-scoped
  * `Gdpr\DataSubjectRequestService` directly -- retention enforcement is the
@@ -30,9 +33,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-002
@@ -54,6 +54,8 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for AvgDsrService.
@@ -444,7 +446,9 @@ class AvgDsrServiceTest extends TestCase {
 			 *
 			 * @return object|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): ?object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return $this->entitiesById[$id] ?? null;
 			}//end find()
 
@@ -460,12 +464,13 @@ class AvgDsrServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$id = ($uuid ?? ('generated-' . (count($this->saved) + 1)));
 				$saved = array_merge($object, ['id' => $id]);
 				$this->saved[] = $saved;

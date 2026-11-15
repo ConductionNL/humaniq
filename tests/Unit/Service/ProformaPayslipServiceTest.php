@@ -35,8 +35,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Service\EmployerPremiumSettings;
 use OCA\Humaniq\Service\ProformaPayslipService;
 use OCA\Humaniq\Service\SettingsService;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -262,18 +264,66 @@ class ProformaPayslipServiceTest extends TestCase {
 	}//end testConstructorDeclaresNoObjectServiceDependency()
 
 	/**
-	 * Build a `ProformaPayslipService` with a mocked `SettingsService`
+	 * Without a loonheffingskorting parameter the korting applies, as with
+	 * an explicit true; an explicit false reaches the calculator.
+	 *
+	 * @return void
+	 */
+	public function testAMissingKortingParameterAppliesTheKortingAndFalseReachesTheCalculator(): void {
+		$service = $this->buildService();
+		$params = ['gross' => 3800, 'table' => 'wit', 'dateOfBirth' => '1990-04-12', 'period' => '2026-02', 'aof' => 'laag', 'whk' => 1.52];
+
+		$missing = $service->simulate($params);
+		$without = $service->simulate($params + ['loonheffingskorting' => false]);
+
+		$this->assertTrue($missing['input']['loonheffingskorting']);
+		$this->assertSame(3081.17, $missing['nettoPay']);
+		$this->assertSame(473.75, $missing['arbeidskorting']);
+		$this->assertFalse($without['input']['loonheffingskorting']);
+		$this->assertSame(0.0, (float)$without['arbeidskorting']);
+		$this->assertLessThan(3081.17, $without['nettoPay']);
+
+	}//end testAMissingKortingParameterAppliesTheKortingAndFalseReachesTheCalculator()
+
+	/**
+	 * Build a `ProformaPayslipService` with the default employer premiums
 	 * (the real `nl-2026` `TaxTables` load is exercised for real — no fake
 	 * of the engine under test).
 	 *
 	 * @return ProformaPayslipService
 	 */
 	private function buildService(): ProformaPayslipService {
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getPayrollAofTariff')->willReturn('laag');
-		$settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
-
-		return new ProformaPayslipService(new PayrollCalculator(), $settings);
+		return new ProformaPayslipService(new PayrollCalculator(), new EmployerPremiumSettings($this->createMock(IAppConfig::class)));
 	}//end buildService()
+
+	/**
+	 * Golden: the full breakdown, key for key and in order, for two inputs (explicit and defaulted levies).
+	 *
+	 * @return void
+	 */
+	public function testTheFullBreakdownMatchesTheGolden(): void {
+		$golden  = json_decode((string)file_get_contents(__DIR__.'/../../fixtures/golden/proforma-payslip.json'), true, 512, JSON_THROW_ON_ERROR);
+		$service = $this->buildService();
+
+		$actual = [
+			'explicit' => $service->simulate(['gross' => '4200.50', 'table' => 'groen', 'loonheffingskorting' => 'false', 'dateOfBirth' => '1958-01-01', 'period' => '2026-03', 'parttime' => '0.8', 'bijzonder' => '250', 'aof' => 'hoog', 'whk' => '2.1']),
+			'defaulted' => $service->simulate(['gross' => 2500, 'period' => '2026-07']),
+		];
+
+		$this->assertSame(json_encode($golden), json_encode($actual));
+
+	}//end testTheFullBreakdownMatchesTheGolden()
+
+	/**
+	 * A period without a tax table is refused, naming the period.
+	 *
+	 * @return void
+	 */
+	public function testAPeriodWithoutTablesIsRefused(): void {
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessageMatches('/^Belastingtabel voor periode 1999-01 is niet beschikbaar: /');
+		$this->buildService()->simulate(['gross' => 3800, 'period' => '1999-01']);
+
+	}//end testAPeriodWithoutTablesIsRefused()
 
 }//end class

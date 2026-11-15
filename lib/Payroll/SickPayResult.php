@@ -35,27 +35,79 @@ namespace OCA\Humaniq\Payroll;
 final class SickPayResult {
 
 	/**
-	 * @param int $doorbetaaldLoonCents `L` — the floored doorbetaald loon (before the wachtdag deduction).
-	 * @param int $wachtdagDeductionCents `wd` — the wachtdag deduction (`0` when no wachtdag applies).
-	 * @param int $payableGrossCents `L - wd` — fed to `PayrollCalculator` as `grossMonthlySalaryCents`.
-	 * @param int $minimumWageFloorCents `M` — the WML monthly floor (part-time scaled), for stamping + the independent floor recomputation.
-	 * @param bool $floorApplied Whether the statutory/WML floor raised `doorbetaaldLoon` above the pre-floor `L0`.
-	 * @param float $appliedPercentage `p` — the applied loondoorbetaling percentage.
-	 * @param bool $yearOne Whether the year-1 WML floor was in scope for this computation.
-	 * @param int $referenceWageCents `W` — the reference wage this computation was run against, echoed for stamping.
+	 * `L` — the floored doorbetaald loon (before the wachtdag deduction).
+	 *
+	 * @var integer
+	 */
+	public readonly int $doorbetaaldLoonCents;
+
+	/**
+	 * `wd` — the wachtdag deduction (`0` when no wachtdag applies).
+	 *
+	 * @var integer
+	 */
+	public readonly int $wachtdagDeductionCents;
+
+	/**
+	 * `L - wd` — fed to `PayrollCalculator` as `grossMonthlySalaryCents`.
+	 *
+	 * @var integer
+	 */
+	public readonly int $payableGrossCents;
+
+	/**
+	 * `M` — the WML monthly floor (part-time scaled), for stamping + the independent floor recomputation.
+	 *
+	 * @var integer
+	 */
+	public readonly int $minimumWageFloorCents;
+
+	/**
+	 * Whether the statutory/WML floor raised `doorbetaaldLoon` above the pre-floor `L0`.
+	 *
+	 * @var boolean
+	 */
+	public readonly bool $floorApplied;
+
+	/**
+	 * `p` — the applied loondoorbetaling percentage.
+	 *
+	 * @var float
+	 */
+	public readonly float $appliedPercentage;
+
+	/**
+	 * Whether the year-1 WML floor was in scope for this computation.
+	 *
+	 * @var boolean
+	 */
+	public readonly bool $yearOne;
+
+	/**
+	 * `W` — the reference wage this computation was run against, echoed for stamping.
+	 *
+	 * @var integer
+	 */
+	public readonly int $referenceWageCents;
+
+	/**
+	 * The fields stay flat and in this order: readers and the serialised
+	 * Payslip fields address them directly.
+	 *
+	 * @param SickPayAmounts $amounts The doorbetaald loon, wachtdag deduction, payable gross and WML floor.
+	 * @param SickPayBasis $basis Whether the floor applied, the percentage, the year-one scope and the reference wage.
 	 *
 	 * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-001
 	 */
-	public function __construct(
-		public readonly int $doorbetaaldLoonCents,
-		public readonly int $wachtdagDeductionCents,
-		public readonly int $payableGrossCents,
-		public readonly int $minimumWageFloorCents,
-		public readonly bool $floorApplied,
-		public readonly float $appliedPercentage,
-		public readonly bool $yearOne,
-		public readonly int $referenceWageCents,
-	) {
+	public function __construct(SickPayAmounts $amounts, SickPayBasis $basis) {
+		$this->doorbetaaldLoonCents = $amounts->doorbetaaldLoonCents;
+		$this->wachtdagDeductionCents = $amounts->wachtdagDeductionCents;
+		$this->payableGrossCents = $amounts->payableGrossCents;
+		$this->minimumWageFloorCents = $amounts->minimumWageFloorCents;
+		$this->floorApplied = $basis->floorApplied;
+		$this->appliedPercentage = $basis->appliedPercentage;
+		$this->yearOne = $basis->yearOne;
+		$this->referenceWageCents = $basis->referenceWageCents;
 
 	}//end __construct()
 

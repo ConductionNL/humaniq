@@ -33,7 +33,9 @@ namespace OCA\Humaniq\Tests\Unit\Standards;
 
 use OCA\Humaniq\Standards\RuleCatalogue;
 use OCA\Humaniq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\TableCheckEvaluator;
 use OCA\Humaniq\Standards\Violation;
+use OCA\Humaniq\Tests\Unit\Standards\Fixtures\ThrowingDecisionTableEvaluator;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -51,6 +53,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @uses \OCA\Humaniq\Standards\Checks\CompChecks
  * @uses \OCA\Humaniq\Standards\Checks\EuUsPayrollChecks
+ * @uses \OCA\Humaniq\Standards\Checks\FilingDates
  * @uses \OCA\Humaniq\Standards\Checks\NlAbpChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlAbsenceChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlAdministratieChecks
@@ -64,6 +67,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Humaniq\Standards\Checks\NlDossierRetentionChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlEngineChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlFleetChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlFlexContractChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlGlPostChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlHr21Checks
  * @uses \OCA\Humaniq\Standards\Checks\NlLeaveChecks
@@ -79,15 +83,24 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Humaniq\Standards\Checks\NlSignalChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlSinglePersonChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlStagiairChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlThirdPartyChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlTravelExpenseChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlUitzendChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlWageGarnishmentChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlWageTaxFilingChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlWkrChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlWntChecks
+ * @uses \OCA\Humaniq\Standards\Checks\SickCaseClock
+ * @uses \OCA\Humaniq\Standards\Checks\WorkingTimeRules
+ * @uses \OCA\Humaniq\Standards\Checks\PayrollSampleFields
+ * @uses \OCA\Humaniq\Standards\Checks\RetroRecompute
  * @uses \OCA\Humaniq\Standards\RuleCatalogue
+ * @uses \OCA\Humaniq\Standards\TableCheckEvaluator
  * @uses \OCA\Humaniq\Standards\TableCheckRegistry
  * @uses \OCA\Humaniq\Standards\Violation
+ * @uses   \OCA\Humaniq\Standards\Checks\WorkingTimeRules
+ * @uses   \OCA\Humaniq\Support\RoundsToCents
+ * @uses   \OCA\Humaniq\Support\ChecksFilingDeadlines
  */
 final class RuleEngineTest extends TestCase {
 
@@ -127,6 +140,44 @@ final class RuleEngineTest extends TestCase {
 	private function ruleIds(array $violations): array {
 		return array_map(static fn (Violation $violation): string => $violation->ruleId, $violations);
 	}//end ruleIds()
+
+	/**
+	 * A check whose predicate throws is reported as VIOLATED, not skipped and
+	 * not allowed to escape: a refused decision table (an unimplemented hit
+	 * policy, a malformed expression) must not let an object through
+	 * unflagged, and must not take the whole audit down either.
+	 *
+	 * The stand-in evaluator is the only way to reach this: every shipped
+	 * table is accepted by the real evaluator.
+	 *
+	 * @return void
+	 */
+	public function testACheckWhosePredicateThrowsIsReportedAsViolated(): void {
+		$balance = [
+			'employeeId' => 'employee-jansen',
+			'year' => 2026,
+			'leaveType' => 'holiday',
+			'entitledHours' => 160,
+			'bovenwettelijkHours' => 40,
+			'usedHours' => 56,
+			'contractHoursPerWeek' => 40,
+			'expiryDate' => '2027-07-01',
+		];
+
+		$clean = $this->ruleIds(RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']));
+		$this->assertSame([], $clean, 'the fixture is compliant while the real evaluator answers');
+
+		try {
+			TableCheckEvaluator::overrideEvaluatorClass(ThrowingDecisionTableEvaluator::class);
+			$refused = $this->ruleIds(RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']));
+		} finally {
+			TableCheckEvaluator::reset();
+		}
+
+		$this->assertNotSame([], $refused, 'a refused table flags its rule rather than passing the object');
+		$this->assertContains('nl-verlof-wettelijk-minimum', $refused);
+
+	}//end testACheckWhosePredicateThrowsIsReportedAsViolated()
 
 	/**
 	 * The NL-only `nl-loonaangifte-termijn` rule fires under an NL audit and not
@@ -256,4 +307,30 @@ final class RuleEngineTest extends TestCase {
 			$this->assertContains($expected, $types, $expected . ' must be a supported object type.');
 		}
 	}//end testSupportedTypesCoverKnownObjectTypes()
+
+	/**
+	 * Every check class the engine discovers is named in this class's `@uses`.
+	 *
+	 * A new check class that is missing here only shows up in CI, as a risky
+	 * test under coverage (see the class docblock). This test makes the same
+	 * omission fail locally, without a coverage driver.
+	 *
+	 * @return void
+	 */
+	public function testEveryCheckClassIsListedUnderUses(): void {
+		$docblock = (string)(new \ReflectionClass(self::class))->getDocComment();
+		$missing = [];
+		foreach (glob(dirname(__DIR__, 3) . '/lib/Standards/Checks/*.php') ?: [] as $file) {
+			$class = 'OCA\\Humaniq\\Standards\\Checks\\' . basename($file, '.php');
+			if (class_exists($class) === false || (new \ReflectionClass($class))->isAbstract() === true) {
+				continue;
+			}
+
+			if (str_contains($docblock, '@uses \\' . $class . "\n") === false) {
+				$missing[] = $class;
+			}
+		}
+
+		$this->assertSame([], $missing, 'Add these to the @uses list of RuleEngineTest.');
+	}//end testEveryCheckClassIsListedUnderUses()
 }//end class

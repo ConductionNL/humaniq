@@ -3,6 +3,9 @@
 /**
  * Every call site's behaviour when this instance carries no humaniq register.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The fix for ConductionNL/openregister#3579 gave six call sites a resolved
  * register slug and, with it, a `null` to handle. `null` is an answer, not an
  * error, and the DIRECTION each site takes on it is the whole point of the
@@ -27,9 +30,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @version GIT: <git-id>
  *

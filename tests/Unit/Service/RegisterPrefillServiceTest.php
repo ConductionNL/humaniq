@@ -32,12 +32,14 @@ use OCA\Humaniq\Service\BrpPersonMapper;
 use OCA\Humaniq\Service\RdwVehicleMapper;
 use OCA\Humaniq\Service\RegisterLookupGateway;
 use OCA\Humaniq\Service\RegisterPrefillService;
+use OCA\Humaniq\Service\RegisterPrefillSettings;
 use OCA\Humaniq\Service\RegisterPrefillUnavailableException;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -116,8 +118,12 @@ class RegisterPrefillServiceTest extends TestCase {
 	private function service(bool $installed, array $sources, array $answers=[]): RegisterPrefillService {
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('isInstalled')->willReturnCallback(static fn (string $app): bool => $installed === true && $app === 'integriq');
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterPrefillSource')->willReturnCallback(static fn (string $register): string => ($sources[$register] ?? ''));
+		$stored = [];
+		foreach ($sources as $register => $source) {
+			$stored['prefill_' . $register . '_source'] = $source;
+		}
+
+		$settings = new RegisterPrefillSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), $stored));
 
 		$environment = new class {
 
@@ -234,6 +240,39 @@ class RegisterPrefillServiceTest extends TestCase {
 		// The payload the controller saves lands in the real Asset schema.
 		self::assertSame([], RegisterSchemaValidator::errors('Asset', array_merge($asset, $result['filled'])));
 	}//end testANewLeaseCarIsFilledFromItsPlate()
+
+	/**
+	 * Every call to the registers, exactly as integriq receives it, plus every
+	 * refusal: the RDW lookups write a CallLog, the BRP lookup does not, and
+	 * without integriq or a source nothing is called.
+	 *
+	 * @return void
+	 */
+	public function testEveryRegisterCallAndRefusal(): void {
+		$asset = ['category' => 'vehicle', 'licencePlate' => 'gz-s78-z'];
+		$employee = ['bsn' => '999993653', 'lastName' => 'Dijk'];
+		$this->service(true, ['rdw' => 'src-rdw'], $this->rdwAnswers())->vehicle($asset);
+		$this->service(true, ['brp' => 'src-brp'], [RegisterPrefillService::BRP_ENDPOINT => self::BRP_ANSWER])->employee($employee);
+		$got = ['calls' => $this->calls, 'refusals' => []];
+		$refusals = [
+			'no-integriq' => [false, ['rdw' => 'src-rdw', 'brp' => 'src-brp']],
+			'no-source' => [true, []],
+		];
+		foreach ($refusals as $name => [$installed, $sources]) {
+			foreach (['vehicle' => $asset, 'employee' => $employee] as $kind => $subject) {
+				try {
+					$this->service($installed, $sources, [])->$kind($subject);
+				} catch (RegisterPrefillUnavailableException $e) {
+					$got['refusals'][$name . ':' . $kind] = [$e->getReason(), $e->getMessage()];
+				}
+			}
+		}
+
+		$got['callsAfterRefusals'] = count($this->calls);
+		$golden = json_decode((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/register-lookup-calls.json'), true);
+		self::assertSame($golden, $got);
+
+	}//end testEveryRegisterCallAndRefusal()
 
 	/**
 	 * Scenario: a stored catalogue value is not overwritten.

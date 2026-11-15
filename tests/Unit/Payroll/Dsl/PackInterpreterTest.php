@@ -173,6 +173,75 @@ class PackInterpreterTest extends TestCase {
 	}//end testPiecewiseAccrueRoundsEachTermBeforeCappingIt()
 
 	/**
+	 * REQ-JP-002 scenario: `piecewiseAccrue` above the tail boundary descends
+	 * from the accrued chain, a value above `zeroAbove` yields nothing, and a
+	 * non-positive value yields nothing.
+	 *
+	 * @return void
+	 */
+	public function testPiecewiseAccrueTailZeroAboveAndNonPositiveValue(): void {
+		$step = static function (string $id, int $value): array {
+			return [
+				'id' => $id,
+				'op' => 'piecewiseAccrue',
+				'incidence' => 'informative',
+				'value' => $value,
+				'roundTerm' => 3,
+				'segments' => [
+					[
+						'upTo' => 1000,
+						'rate' => 0.5,
+						'cap' => 400,
+					],
+					[
+						'upTo' => 2000,
+						'rate' => 0.25,
+						'cap' => 600,
+					],
+				],
+				'tail' => [
+					'from' => 3000,
+					'rate' => 0.1,
+				],
+				'zeroAbove' => 8000,
+				'round' => [
+					'mode' => 'ceil',
+					'unit' => 'euro',
+				],
+			];
+		};
+
+		$result = $this->execute(
+			[
+				$step('inside', 1500),
+				$step('flat', 2500),
+				$step('tail', 4000),
+				$step('floor', 7999),
+				$step('above', 8001),
+				$step('none', 0),
+			]
+		);
+
+		$got = [];
+		foreach (['inside', 'flat', 'tail', 'floor', 'above', 'none'] as $id) {
+			$got[$id] = $result->cents($id);
+		}
+
+		$this->assertSame(
+			[
+				'inside' => 600,
+				'flat'   => 600,
+				'tail'   => 500,
+				'floor'  => 200,
+				'above'  => 0,
+				'none'   => 0,
+			],
+			$got
+		);
+
+	}//end testPiecewiseAccrueTailZeroAboveAndNonPositiveValue()
+
+	/**
 	 * A step gated off by `when` yields 0 WITHOUT resolving its params — which
 	 * is what lets NL's OUK reference an AOW-only table column safely.
 	 *
@@ -256,6 +325,128 @@ class PackInterpreterTest extends TestCase {
 	}//end testAMissingRequiredInputIsRejected()
 
 	/**
+	 * Supplied inputs are coerced to their declared type; an absent input
+	 * takes its default, or null when optional; a binding holds a boolean or
+	 * string as-is and is rounded only when it declares `round`.
+	 *
+	 * @return void
+	 */
+	public function testInputsAreCoercedDefaultedAndBoundAsDeclared(): void {
+		$inputs = [
+			'gross' => ['type' => 'cents', 'required' => true],
+			'hours' => ['type' => 'int'],
+			'part' => ['type' => 'percent'],
+			'flag' => ['type' => 'boolean'],
+			'dob' => ['type' => 'date'],
+			'label' => [],
+			'kind' => ['type' => 'enum', 'values' => ['a', 'b']],
+			'nul' => ['type' => 'cents', 'nullable' => true],
+			'dflt' => ['type' => 'int', 'default' => 7],
+			'opt' => ['type' => 'int'],
+		];
+		$eq = static function (string $id, string $ref, mixed $right): array {
+			return ['id' => $id, 'using' => ['op' => 'eq', 'left' => $ref, 'right' => $right]];
+		};
+		$bindings = [
+			$eq('flag', '@input.flag', true),
+			$eq('dob', '@input.dob', '1990-01-01'),
+			$eq('label', '@input.label', '12'),
+			$eq('kind', '@input.kind', 'b'),
+			$eq('nul', '@input.nul', null),
+			$eq('opt', '@input.opt', null),
+			['id' => 'third', 'using' => ['op' => 'expr', 'expression' => '@input.gross / 3'], 'round' => ['mode' => 'floor', 'unit' => 'cent']],
+		];
+		$steps = [
+			$this->step('hours', 'informative', '@input.hours + @input.dflt'),
+			$this->step('part', 'informative', '@input.part * 100'),
+		];
+		$supplied = [
+			'gross' => '100000',
+			'hours' => '38',
+			'part' => '0.5',
+			'flag' => 1,
+			'dob' => '1990-01-01',
+			'label' => 12,
+			'kind' => 'b',
+			'nul' => null,
+		];
+
+		$result = (new PackInterpreter())->run($supplied, $this->pack($steps, $inputs, $bindings), TaxTables::load('nl-2026'), '2026-02');
+
+		$this->assertSame(100000, $result->gross(), 'cents input coerced from a string');
+		$this->assertSame(45, $result->cents('hours'), '38 supplied + default 7');
+		$this->assertSame(50, $result->cents('part'));
+		foreach (['flag', 'dob', 'label', 'kind', 'nul', 'opt'] as $id) {
+			$this->assertTrue($result->binding($id), 'binding ' . $id);
+		}
+
+		$this->assertSame(33333, $result->binding('third'), 'a binding with `round` is rounded');
+
+	}//end testInputsAreCoercedDefaultedAndBoundAsDeclared()
+
+	/**
+	 * Each malformed run is refused with its exact message.
+	 *
+	 * @param array<string, mixed>              $supplied The supplied inputs.
+	 * @param array<string, array<string, mixed>> $inputs   The declared inputs.
+	 * @param array<int, array<string, mixed>>   $bindings The bindings.
+	 * @param array<int, array<string, mixed>>   $steps    The steps.
+	 * @param string                             $message  The expected message (regex).
+	 *
+	 * @return void
+	 *
+	 * @dataProvider malformedRuns
+	 */
+	public function testAMalformedRunIsRejected(array $supplied, array $inputs, array $bindings, array $steps, string $message): void {
+		$this->expectException(DslException::class);
+		$this->expectExceptionMessageMatches($message);
+
+		(new PackInterpreter())->run($supplied, $this->pack($steps, $inputs, $bindings), TaxTables::load('nl-2026'), '2026-02');
+
+	}//end testAMalformedRunIsRejected()
+
+	/**
+	 * Malformed runs and their refusals.
+	 *
+	 * @return array<string, array{0: array<string, mixed>, 1: array<string, mixed>, 2: array<int, mixed>, 3: array<int, mixed>, 4: string}>
+	 */
+	public static function malformedRuns(): array {
+		$gross = ['gross' => ['type' => 'cents', 'required' => true]];
+		$kind = ['kind' => ['type' => 'enum', 'values' => ['a', 'b']]];
+		$informative = static function (array $spec): array {
+			return array_merge(['id' => 's', 'incidence' => 'informative'], $spec);
+		};
+
+		return [
+			'null input' => [['gross' => null], $gross, [], [], '/^Pack: invoer "gross" mag niet null zijn\.$/'],
+			'enum outside its values' => [['kind' => 'c'], $kind, [], [], '/^Pack: invoer "kind" moet één van \[a, b\] zijn, kreeg "c"\.$/'],
+			'binding without using' => [[], [], [['id' => 'b1']], [], '/^Pack: binding "b1" mist het veld "using"\.$/'],
+			'rounded boolean binding' => [
+				[],
+				[],
+				[['id' => 'aow', 'using' => ['op' => 'eq', 'left' => 1, 'right' => 1], 'round' => ['mode' => 'floor', 'unit' => 'cent']]],
+				[],
+				'/^Pack: stap "binding aow" levert een boolean op; een stap moet een bedrag opleveren \(gebruik een binding\)\.$/',
+			],
+			'string step' => [
+				['kind' => 'b'],
+				$kind,
+				[],
+				[$informative(['op' => 'match', 'on' => '@input.kind', 'cases' => ['b' => 'basis']])],
+				'/^Pack: stap "s" levert geen getal op\.$/',
+			],
+			'unknown op' => [
+				[],
+				[],
+				[],
+				[$informative(['op' => 'teleport'])],
+				'/^Pack: onbekende op "teleport" \(stap-ops: rate, .*, phpStep; predicaten: eq, ne, .*, yearOf\)\.$/',
+			],
+		];
+
+	}//end malformedRuns()
+
+	/**
 	 * An `expr` step declaring one arithmetic expression.
 	 *
 	 * @param string $id The step id.
@@ -281,11 +472,13 @@ class PackInterpreterTest extends TestCase {
 	/**
 	 * A minimal, deliberately non-Dutch pack.
 	 *
-	 * @param array<int, array<string, mixed>> $steps The steps.
+	 * @param array<int, array<string, mixed>>   $steps    The steps.
+	 * @param array<string, array<string, mixed>> $inputs   The declared inputs (default: a required `gross`).
+	 * @param array<int, array<string, mixed>>   $bindings The bindings.
 	 *
 	 * @return JurisdictionPack
 	 */
-	private function pack(array $steps): JurisdictionPack {
+	private function pack(array $steps, ?array $inputs = null, array $bindings = []): JurisdictionPack {
 		return new JurisdictionPack(
 			[
 				'id' => 'zz-2026',
@@ -296,8 +489,8 @@ class PackInterpreterTest extends TestCase {
 				'tables' => 'nl-2026',
 				'currency' => 'EUR',
 				'grossRef' => '@input.gross',
-				'inputs' => ['gross' => ['type' => 'cents', 'required' => true]],
-				'bindings' => [],
+				'inputs' => ($inputs ?? ['gross' => ['type' => 'cents', 'required' => true]]),
+				'bindings' => $bindings,
 				'steps' => $steps,
 				'selfTest' => ['vectors' => []],
 			]

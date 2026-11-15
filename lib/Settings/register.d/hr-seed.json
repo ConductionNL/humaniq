@@ -315,12 +315,38 @@
                 "currency": "EUR",
                 "category": "travel",
                 "expenseDate": "2026-05-20",
-                "status": "approved",
+                "status": "reimbursed",
                 "submittedAt": "2026-05-20T18:00:00Z",
                 "approvedBy": "manager-pietersen",
                 "approvedAt": "2026-05-21T09:15:00Z",
                 "administrationId": "ADM-001",
-                "reimbursementRoute": "payroll"
+                "reimbursementRoute": "direct",
+                "reimbursedAt": "2026-05-26T10:00:00Z"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "CostAllocation",
+                    "slug": "costallocation-devries-split"
+                },
+                "employeeId": "@ref:employee-devries",
+                "basis": "fixed",
+                "splits": [
+                    {
+                        "costCenter": "CC-100",
+                        "projectId": null,
+                        "percentage": 60
+                    },
+                    {
+                        "costCenter": "CC-200",
+                        "projectId": null,
+                        "percentage": 40
+                    }
+                ],
+                "startDate": "2026-01-01",
+                "endDate": null,
+                "note": "Part of the office manager's week supports the consultancy team.",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -573,6 +599,60 @@
             {
                 "@self": {
                     "register": "humaniq",
+                    "schema": "Payslip",
+                    "slug": "payslip-jansen-2026-02"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "period": "2026-02",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 3800.00,
+                "hoursWorked": 152,
+                "loonheffing": 1102.00,
+                "nettoPay": 2698.00,
+                "statementProvided": true,
+                "userId": "admin",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Payslip",
+                    "slug": "payslip-jansen-2026-03"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "period": "2026-03",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 3800.00,
+                "hoursWorked": 152,
+                "loonheffing": 1102.00,
+                "nettoPay": 2698.00,
+                "statementProvided": true,
+                "userId": "admin",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Payslip",
+                    "slug": "payslip-jansen-2026-04"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "period": "2026-04",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 3800.00,
+                "hoursWorked": 152,
+                "loonheffing": 1102.00,
+                "nettoPay": 2698.00,
+                "statementProvided": true,
+                "userId": "admin",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
                     "schema": "PensionFiling",
                     "slug": "pensionfiling-2026-05-abp"
                 },
@@ -614,6 +694,100 @@
                 "deadline": "2026-06-30",
                 "status": "bevestigd",
                 "responseStatus": "geen",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "PensionScheme",
+                    "slug": "pensionscheme-adm-001-pfab-2026"
+                },
+                "administrationId": "ADM-001",
+                "fund": "pfab",
+                "schemeCode": "PFAB-OP-2026",
+                "messageFormat": "upa",
+                "franchise": 18475,
+                "maxPensionableSalary": 137800,
+                "employerPercentage": 14.0,
+                "employeePercentage": 7.0,
+                "validFrom": "2026-01-01",
+                "validUntil": "2026-12-31",
+                "source": "filings-pension-upa-message seed: an example figure, not checked against the fund's published rates.",
+                "verified": false
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "PensionScheme",
+                    "slug": "pensionscheme-adm-001-abp-2026"
+                },
+                "administrationId": "ADM-001",
+                "fund": "abp",
+                "schemeCode": "ABP-OP-NP-2026",
+                "messageFormat": "apg",
+                "franchise": 19700,
+                "maxPensionableSalary": 137800,
+                "employerPercentage": 18.2,
+                "employeePercentage": 7.8,
+                "validFrom": "2026-01-01",
+                "validUntil": "2026-12-31",
+                "source": "filings-pension-upa-message seed: an example figure, not checked against the fund's published rates.",
+                "verified": false
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveRequest",
+                    "slug": "leave-devries-onbetaald"
+                },
+                "employeeId": "@ref:employee-devries",
+                "leaveType": "unpaid",
+                "startDate": "2026-12-07",
+                "endDate": "2026-12-11",
+                "hours": 40,
+                "reason": "Mantelzorg voor een familielid.",
+                "status": "manager-approved",
+                "submittedAt": "2026-11-02T09:00:00Z",
+                "decisions": [
+                    {
+                        "step": "manager",
+                        "decision": "approved",
+                        "by": "manager-pietersen",
+                        "at": "2026-11-03T10:00:00Z",
+                        "remark": "Akkoord, HR beslist over onbetaald verlof."
+                    }
+                ],
+                "userId": "admin",
+                "managerUserId": "manager-pietersen",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveRequest",
+                    "slug": "leave-bakker-kerst"
+                },
+                "employeeId": "@ref:employee-bakker",
+                "leaveType": "holiday",
+                "startDate": "2026-12-28",
+                "endDate": "2026-12-31",
+                "hours": 32,
+                "reason": "Kerstvakantie.",
+                "status": "approved",
+                "submittedAt": "2026-11-01T09:00:00Z",
+                "approvedBy": "manager-pietersen",
+                "approvedAt": "2026-11-02T09:30:00Z",
+                "decisions": [
+                    {
+                        "step": "manager",
+                        "decision": "approved",
+                        "by": "manager-pietersen",
+                        "at": "2026-11-02T09:30:00Z",
+                        "remark": null
+                    }
+                ],
+                "userId": "admin",
+                "managerUserId": "manager-pietersen",
                 "administrationId": "ADM-001"
             },
             {
@@ -1875,7 +2049,8 @@
                 "writtenContract": true,
                 "hoursPerWeek": 0,
                 "hourlyWage": 15.0,
-                "cao": null,
+                "cao": "cao-voorbeeld",
+                "caoComponents": ["ploegentoeslag", "nachttoeslag"],
                 "normfunctieId": null,
                 "awfTariff": "high",
                 "workingTimeDocumented": true,
@@ -1892,8 +2067,8 @@
                 },
                 "employeeId": "@ref:employee-elidrissi",
                 "period": "2026-08",
-                "hours": 72,
-                "entryCount": 4,
+                "hours": 88,
+                "entryCount": 6,
                 "description": "Oproepuren augustus 2026.",
                 "billable": false,
                 "status": "approved",
@@ -1962,6 +2137,42 @@
                 "breakMinutes": 0,
                 "hours": 18.0,
                 "description": "Oproepdienst.",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-elidrissi-2026-08-04-nacht"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "timesheetId": "@ref:timesheet-elidrissi-2026-08",
+                "date": "2026-08-04",
+                "startedAt": "2026-08-04T20:00:00Z",
+                "endedAt": "2026-08-05T04:00:00Z",
+                "breakMinutes": 0,
+                "hours": 8.0,
+                "description": "Nachtdienst 22:00 tot 06:00.",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-elidrissi-2026-08-11-nacht"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "timesheetId": "@ref:timesheet-elidrissi-2026-08",
+                "date": "2026-08-11",
+                "startedAt": "2026-08-11T20:00:00Z",
+                "endedAt": "2026-08-12T04:00:00Z",
+                "breakMinutes": 0,
+                "hours": 8.0,
+                "description": "Nachtdienst 22:00 tot 06:00.",
                 "billable": false,
                 "administrationId": "ADM-001",
                 "origin": "manual"
@@ -2067,7 +2278,7 @@
                 "hourlyWage": 16.00,
                 "cao": null,
                 "normfunctieId": null,
-                "awfTariff": "high",
+                "awfTariff": "low",
                 "aanzegdOn": null,
                 "workingTimeDocumented": true,
                 "overtimeMultiplier": 1.5,
@@ -2447,6 +2658,10 @@
                 "name": "Example: Conduction Demo B.V.",
                 "kvkNumber": "12345678",
                 "loonheffingennummer": "000000000L01",
+                "brinNummer": "00XX",
+                "postalAddress": "Voorbeeldstraat 1, 1234 AB Amsterdam",
+                "aangifteContactName": "Example: Payroll desk",
+                "aangifteContactPhone": "020 123 4567",
                 "active": true,
                 "frequentAbsenceThreshold": 3,
                 "frequentAbsenceWindowMonths": 12,
@@ -3145,6 +3360,319 @@
                 "status": "in-behandeling",
                 "administrationId": "ADM-001",
                 "_note": "people-employee-relations-cases (2026-09-29): an open grievance. The employee does not see it in My warnings and measures; only closed warnings and measures are shown to the subject."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "hrAdministration",
+                    "slug": "example-adm-006"
+                },
+                "administrationId": "ADM-006",
+                "name": "Stichting Buitenbureau",
+                "kvkNumber": "55667788",
+                "loonheffingennummer": "000000000L06",
+                "active": true,
+                "abpAansluitingsplichtig": false,
+                "payrollProcessing": "external-bureau",
+                "payrollBureauName": "Loonbureau Noord",
+                "_note": "payroll-external-bureau-handoff (design.md Seed data): an administration whose payroll an outside bureau runs. The engine refuses to calculate it (refused-external-bureau); compiling a handoff for a period sends its one employee as a start."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-buitenbureau-smit"
+                },
+                "gender": "woman",
+                "employeeNumber": "EMP-6001",
+                "firstName": "Anna",
+                "lastName": "Smit",
+                "dateOfBirth": "1988-02-14",
+                "startDate": "2025-01-01",
+                "grossMonthlySalary": 3800.0,
+                "iban": "NL91ABNA0417164300",
+                "taxTableColor": "wit",
+                "loonheffingskortingToegepast": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-006",
+                "_note": "payroll-external-bureau-handoff: the one employee of ADM-006, so a compile on a dev instance produces a first handoff with one start mutation."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayee",
+                    "slug": "thirdpartypayee-gastdocent-dijk"
+                },
+                "initials": "J.P.",
+                "prefix": "van",
+                "lastName": "Dijk",
+                "bsn": "111222333",
+                "dateOfBirth": "1971-05-14",
+                "street": "Kerkstraat",
+                "houseNumber": "12",
+                "postcode": "3511AB",
+                "city": "Utrecht",
+                "country": "NL",
+                "activity": "Gastlessen arbeidsrecht",
+                "administrationId": "ADM-001",
+                "_note": "filings-ib47 (design.md Seed data): a guest lecturer paid twice in 2026."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayee",
+                    "slug": "thirdpartypayee-commissielid-bos"
+                },
+                "initials": "A.",
+                "lastName": "Bos",
+                "bsn": "123456782",
+                "dateOfBirth": "1960-01-30",
+                "street": "Dorpsweg",
+                "houseNumber": "3",
+                "houseNumberAddition": "A",
+                "postcode": "1234AB",
+                "city": "Ede",
+                "country": "NL",
+                "activity": "Lid bezwaarcommissie",
+                "administrationId": "ADM-001",
+                "_note": "filings-ib47 (design.md Seed data): a committee member paid once in 2026 and once in 2025. No 2025 report is sent, so occ humaniq:rules:audit reports nl-ubd-deadline on the 2025 payment (deliberate, like the other seeded violations)."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayment",
+                    "slug": "thirdpartypayment-dijk-2026-03"
+                },
+                "payeeId": "@ref:thirdpartypayee-gastdocent-dijk",
+                "paidOn": "2026-03-10",
+                "amount": 450.0,
+                "expenseAllowance": 32.4,
+                "description": "Gastles maart, met reiskosten",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayment",
+                    "slug": "thirdpartypayment-dijk-2026-06"
+                },
+                "payeeId": "@ref:thirdpartypayee-gastdocent-dijk",
+                "paidOn": "2026-06-02",
+                "amount": 450.0,
+                "description": "Gastles juni",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayment",
+                    "slug": "thirdpartypayment-bos-2026-04"
+                },
+                "payeeId": "@ref:thirdpartypayee-commissielid-bos",
+                "paidOn": "2026-04-15",
+                "amount": 275.75,
+                "expenseAllowance": 18.9,
+                "description": "Vacatiegeld zitting april",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyPayment",
+                    "slug": "thirdpartypayment-bos-2025-11"
+                },
+                "payeeId": "@ref:thirdpartypayee-commissielid-bos",
+                "paidOn": "2025-11-20",
+                "amount": 100.0,
+                "description": "Vacatiegeld zitting november",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ThirdPartyReport",
+                    "slug": "thirdpartyreport-adm-001-2026"
+                },
+                "administrationId": "ADM-001",
+                "year": 2026,
+                "status": "concept",
+                "deadline": "2027-01-31",
+                "_note": "filings-ib47 (design.md Seed data): the 2026 report in concept. Assemble on its page: two lines (J.P. van Dijk 932, A. Bos 294), total 1226."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-ilse-de-boer"
+                },
+                "gender": "woman",
+                "_note": "filings-premium-differentiation: the BBL contract above (contract-visser-bbl) is charged the low Awf premium. Ilse de Boer is 19 on a temporary 10-hour weekend contract: the contract itself is high, but each month she is paid 52 hours or less, so her payslip is charged low (young-part-time). Femke Bakker works 24 contracted hours and is paid about 34 a week: her June payslip carries the year-to-date figures and raises nl-awf-herziening-uren-signaal; the first run of 2027 reviews her 2026 low premium.",
+                "employeeNumber": "EMP-0190",
+                "firstName": "Ilse",
+                "lastName": "de Boer",
+                "dateOfBirth": "2007-05-20",
+                "startDate": "2026-03-01",
+                "grossMonthlySalary": 650.0,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-de-boer-weekend"
+                },
+                "employeeId": "@ref:employee-ilse-de-boer",
+                "type": "temporary",
+                "writtenContract": true,
+                "startDate": "2026-03-01",
+                "endDate": "2027-02-28",
+                "hoursPerWeek": 10,
+                "hourlyWage": 15.0,
+                "cao": null,
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Payslip",
+                    "slug": "payslip-de-boer-2026-05"
+                },
+                "employeeId": "@ref:employee-ilse-de-boer",
+                "period": "2026-05",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 650.0,
+                "hoursWorked": 43.33,
+                "loonheffing": 0.0,
+                "nettoPay": 650.0,
+                "awfTariff": "low",
+                "awfTariffBasis": "young-part-time",
+                "statementProvided": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-femke-bakker"
+                },
+                "gender": "woman",
+                "employeeNumber": "EMP-0191",
+                "firstName": "Femke",
+                "lastName": "Bakker",
+                "dateOfBirth": "1985-09-02",
+                "startDate": "2025-06-01",
+                "grossMonthlySalary": 2400.0,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-femke-bakker-24"
+                },
+                "employeeId": "@ref:employee-femke-bakker",
+                "type": "permanent",
+                "writtenContract": true,
+                "startDate": "2025-06-01",
+                "endDate": null,
+                "hoursPerWeek": 24,
+                "hourlyWage": 23.08,
+                "cao": null,
+                "normfunctieId": null,
+                "awfTariff": "low",
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Payslip",
+                    "slug": "payslip-femke-bakker-2026-06"
+                },
+                "employeeId": "@ref:employee-femke-bakker",
+                "period": "2026-06",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 2400.0,
+                "hoursWorked": 147.33,
+                "loonheffing": 310.0,
+                "nettoPay": 2090.0,
+                "awfTariff": "low",
+                "awfTariffBasis": "contract",
+                "awfPaidHoursYearToDate": 883.98,
+                "awfContractHoursYearToDate": 624.0,
+                "awfAverageContractHoursPerWeek": 25,
+                "awfOverrunPercentYearToDate": 41,
+                "statementProvided": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-wethouder"
+                },
+                "gender": "man",
+                "employeeNumber": "EMP-0040",
+                "firstName": "Pieter",
+                "lastName": "Hoekstra",
+                "dateOfBirth": "1971-08-19",
+                "startDate": "2026-04-15",
+                "grossMonthlySalary": 8250.0,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001",
+                "_note": "payroll-special-regimes: an alderman (wethouder), an office holder rather than an employee. His contract is of type political-office, so the run pays him under the politiek-ambt regime: no unemployment, disability or sickness insurance premiums. While the regime's table leaves are unverified the run lists him as regime-unverified and pays nothing."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-wethouder-ambt"
+                },
+                "employeeId": "@ref:employee-wethouder",
+                "type": "political-office",
+                "officeRole": "wethouder",
+                "termStart": "2026-04-15",
+                "termEnd": "2030-03-31",
+                "writtenContract": true,
+                "startDate": "2026-04-15",
+                "endDate": "2030-03-31",
+                "hoursPerWeek": 36,
+                "awfTariff": "low",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "BenefitEntitlement",
+                    "slug": "benefit-degroot-rvu"
+                },
+                "employeeId": "@ref:employee-degroot",
+                "kind": "rvu",
+                "decisionReference": "RVU-2026-0006",
+                "startDate": "2026-07-01",
+                "paymentMode": "periodic",
+                "monthlyAmount": 2000.0,
+                "status": "active",
+                "administrationId": "ADM-001"
             }
         ]
     }

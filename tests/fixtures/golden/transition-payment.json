@@ -1,0 +1,98 @@
+{
+    "salaried, no contracts": {
+        "amountEur": 11227.07,
+        "serviceStart": "2018-03-15",
+        "serviceYears": 7,
+        "serviceRemainderMonths": 9,
+        "serviceRemainderDays": 17,
+        "monthlyWage": 4320.0,
+        "monthlyWageParts": {
+            "base": 4000.0,
+            "holidayAllowance": 320.0,
+            "variableAverage": 0.0,
+            "variableMonthsRead": 0
+        },
+        "capEur": 102000.0,
+        "capApplied": false,
+        "endDate": "2025-12-31",
+        "ruleId": "nl-offboarding-transitievergoeding"
+    },
+    "chained contracts": {
+        "amountEur": 14285.7,
+        "serviceStart": "2016-01-01",
+        "serviceYears": 9,
+        "serviceRemainderMonths": 3,
+        "serviceRemainderDays": 0,
+        "monthlyWage": 4633.2,
+        "monthlyWageParts": {
+            "base": 4000.0,
+            "holidayAllowance": 333.2,
+            "variableAverage": 300.0,
+            "variableMonthsRead": 3
+        },
+        "capEur": 102000.0,
+        "capApplied": false,
+        "endDate": "2025-06-30",
+        "ruleId": "nl-offboarding-transitievergoeding"
+    },
+    "broken chain": {
+        "amountEur": 17520.0,
+        "serviceStart": "2012-01-01",
+        "serviceYears": 12,
+        "serviceRemainderMonths": 2,
+        "serviceRemainderDays": 0,
+        "monthlyWage": 4320.0,
+        "monthlyWageParts": {
+            "base": 4000.0,
+            "holidayAllowance": 320.0,
+            "variableAverage": 0.0,
+            "variableMonthsRead": 0
+        },
+        "capEur": 102000.0,
+        "capApplied": false,
+        "endDate": "2024-02-29",
+        "ruleId": "nl-offboarding-transitievergoeding"
+    },
+    "capped": {
+        "amountEur": 194400.0,
+        "serviceStart": "1985-01-01",
+        "serviceYears": 41,
+        "serviceRemainderMonths": 0,
+        "serviceRemainderDays": 0,
+        "monthlyWage": 16200.0,
+        "monthlyWageParts": {
+            "base": 15000.0,
+            "holidayAllowance": 1200.0,
+            "variableAverage": 0.0,
+            "variableMonthsRead": 0
+        },
+        "capEur": 194400.0,
+        "capApplied": true,
+        "endDate": "2025-12-31",
+        "ruleId": "nl-offboarding-transitievergoeding"
+    },
+    "fractional cap binds": {
+        "amountEur": 60000.5,
+        "serviceStart": "1960-01-01",
+        "serviceYears": 66,
+        "serviceRemainderMonths": 0,
+        "serviceRemainderDays": 0,
+        "monthlyWage": 4320.0,
+        "monthlyWageParts": {
+            "base": 4000.0,
+            "holidayAllowance": 320.0,
+            "variableAverage": 0.0,
+            "variableMonthsRead": 0
+        },
+        "capEur": 60000.5,
+        "capApplied": true,
+        "endDate": "2025-12-31",
+        "ruleId": "nl-offboarding-transitievergoeding"
+    },
+    "not initiated": {
+        "amountEur": 0.0,
+        "reason": "The departure was not initiated by the employer, so no transition payment is due.",
+        "departureReason": "opzegging-werknemer",
+        "ruleId": "nl-offboarding-transitievergoeding"
+    }
+}

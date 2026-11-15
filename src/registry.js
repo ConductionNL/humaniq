@@ -1,6 +1,9 @@
 /**
  * Humaniq v2 component registry (ADR-036).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Kind-tagged map passed as the `registry` prop to CnAppRoot. Humaniq ships
  * almost exclusively declarative `type: "index"` / `type: "detail"` pages,
  * which the library renders generically from each page's register+schema
@@ -95,9 +98,6 @@
  * straight at the library's `CnChartWidget`) once a future
  * `@conduction/nextcloud-vue` release gives the catalog's chart widget its
  * own chrome the way `CnWidgetObjectTable` already has.
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
  */
 
 import { CnActionButtons, CnDeltaWidget, CnStatWidget } from '@conduction/nextcloud-vue'
@@ -108,22 +108,26 @@ import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
 import ApplicationAnswersWidget from './widgets/ApplicationAnswersWidget.vue'
 import ApprovalsInboxWidget from './widgets/ApprovalsInboxWidget.vue'
+import DevicePushWidget from './widgets/DevicePushWidget.vue'
 import EmployeeHistoryWidget from './widgets/EmployeeHistoryWidget.vue'
 import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 import OnCallAverages from './widgets/OnCallAverages.vue'
 import OrgChartWidget from './widgets/OrgChartWidget.vue'
 import PayrollPacksWidget from './widgets/PayrollPacksWidget.vue'
+import SurveyAnswerWidget from './widgets/SurveyAnswerWidget.vue'
+import SurveyQuestionsWidget from './widgets/SurveyQuestionsWidget.vue'
 import TrendChartWidget from './widgets/TrendChartWidget.vue'
 import VacancyQuestionsWidget from './widgets/VacancyQuestionsWidget.vue'
 import YearTransitionWidget from './widgets/YearTransitionWidget.vue'
 import { proposeRaiseForSelection } from './dialogs/proposeRaiseForSelection.js'
 import { registerTrainingAttended, registerTrainingNotAttended } from './dialogs/registerTrainingAttendance.js'
+import { openIntegriqConnections } from './services/connectionRegistry.js'
 import EndpointTableWidget from './widgets/EndpointTableWidget.js'
 
 export default {
 	// --- Flows (ADR-110 Decision 4). Only the SIDEBAR is an app component;
-	//     the list and the canvas are the shared `flows` / `flow-detail`
-	//     manifest page types. CnFlowSidebar has to mount in the NC app
+	//     the list is an index over the `flows` source, the canvas the shared
+	//     `flow` page type. CnFlowSidebar has to mount in the NC app
 	//     sidebar for the canvas to keep full width. ---
 	FlowDetailSidebar: { kind: 'page', component: FlowDetailSidebar },
 
@@ -159,6 +163,12 @@ export default {
 		kind: 'handler',
 		handler: registerTrainingNotAttended,
 	},
+	// platform-integrations-catalogue: the Integrations page's Add integration
+	// header action leaves for integriq's Connections overview.
+	openIntegriqConnections: {
+		kind: 'handler',
+		handler: openIntegriqConnections,
+	},
 
 	ProformaPayslip: {
 		kind: 'page',
@@ -189,6 +199,17 @@ export default {
 		allowedSlots: ['body', 'sidebar'],
 		propsSchema: null,
 		_note: 'Explicit override for the library\'s CnDeltaWidget, for exactly the reason `stat` needs one — see the module docblock above. CnDeltaWidget self-registers its key through the same bare side-effect import that gets tree-shaken out of Humaniq\'s bundle, so without this entry every `type:"delta"` placement resolves to nothing and renders blank. Manifest widgets already pass the { title, icon, content } shape it expects, so no wrapper is needed.',
+	},
+	// @custom-widget-ratchet exclude no built-in widget asks the browser for a push subscription on a tap and hands it to openregister's web-push endpoint
+	'device-push': {
+		kind: 'widget',
+		component: DevicePushWidget,
+		defaultSize: { w: 12, h: 2 },
+		minSize: { w: 4, h: 2 },
+		maxSize: { w: 12, h: 4 },
+		allowedSlots: ['body', 'sidebar'],
+		propsSchema: null,
+		_note: 'self-service-mobile design.md D5, REQ-MOB-004: the opt-in for notifications on this device. Loading reads the state only; the permission prompt comes from the switch. openregister owns the subscription and the delivery.',
 	},
 	// @custom-widget-ratchet exclude no built-in widget renders endpoint rows on a dashboard with a per-row decision: object-table resolves to CnObjectListWidget, which reads register/schema and ignores endpointSource in nextcloud-vue 2.57.1, rowRoute is one static route while inbox rows open four different detail pages, and api-call row actions carry no row token for the transition
 	'approvals-inbox': {
@@ -255,6 +276,28 @@ export default {
 		allowedSlots: ['body'],
 		propsSchema: null,
 		_note: 'hiring-portal-audiences D3 (REQ-PAU-002): HR edits Vacancy.questions with CnFormBuilder on VacancyDetail and saves them with a PATCH on the vacancy; portaliq shows them on the public apply form.',
+	},
+	// @custom-widget-ratchet exclude the library's CnFormBuilder has no widget key, and the questions it edits are written back onto the survey
+	'survey-questions': {
+		kind: 'widget',
+		component: SurveyQuestionsWidget,
+		defaultSize: { w: 12, h: 8 },
+		minSize: { w: 6, h: 4 },
+		maxSize: { w: 12, h: 14 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'talent-engagement-surveys D1 (REQ-SRV-001): HR edits Survey.questions with CnFormBuilder on SurveyDetail while the survey is a draft, and saves them with a PATCH on the survey.',
+	},
+	// @custom-widget-ratchet exclude answering posts to a humaniq endpoint that stores the answers without the employee; no built-in widget renders another object's questions as a form
+	'survey-answer': {
+		kind: 'widget',
+		component: SurveyAnswerWidget,
+		defaultSize: { w: 12, h: 10 },
+		minSize: { w: 6, h: 4 },
+		maxSize: { w: 12, h: 16 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'talent-engagement-surveys D1 (REQ-SRV-002): the employee answers the survey their invitation names; POST /api/surveys/{id}/responses marks the invitation answered and stores the answers without anything that names them.',
 	},
 	// @custom-widget-ratchet exclude the data widget renders an answers map as raw JSON, and each answer needs the question label from another object (the vacancy)
 	'application-answers': {

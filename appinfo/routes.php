@@ -10,13 +10,19 @@ declare(strict_types=1);
  * routes here — only the SPA shell + the bundled-manifest endpoint (ADR-024 §4).
  */
 
-return [
+// Every unversioned API route is also served under /api/v1/; see ApiPathAliases.
+return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
     'routes' => [
+        // The OpenAPI document of humaniq's own API, public, served under /api/v1/ too.
+        ['name' => 'openApi#show', 'url' => '/api/openapi.json', 'verb' => 'GET'],
         // SPA shell — boots the Vue manifest renderer.
         // First-time setup wizard (ADR-042) - the standard CnSetupWizard contract.
         ['name' => 'setup#status',    'url' => '/api/setup/status',            'verb' => 'GET'],
         ['name' => 'setup#saveConfig', 'url' => '/api/setup/config',            'verb' => 'POST'],
         ['name' => 'setup#runAction', 'url' => '/api/setup/action/{actionId}', 'verb' => 'POST', 'requirements' => ['actionId' => '[a-z0-9\\-]+']],
+        // allowed-expense-categories: which categories employees may claim (read: signed-in users, save: admin).
+        ['name' => 'expenseCategory#index', 'url' => '/api/expense-categories', 'verb' => 'GET'],
+        ['name' => 'expenseCategory#update', 'url' => '/api/expense-categories', 'verb' => 'PUT'],
         ['name' => 'page#index',    'url' => '/',             'verb' => 'GET'],
         // ADR-024 §4 — manifest endpoint (bundled blob).
         ['name' => 'page#manifest', 'url' => '/api/manifest', 'verb' => 'GET'],
@@ -33,6 +39,13 @@ return [
         // payroll-core-engine — guarded trigger for the PayrollRunDetail
         // "(Her)berekenen" manifest api-call action (design.md D6).
         ['name' => 'payroll#calculate', 'url' => '/api/payroll/calculate', 'verb' => 'POST'],
+        ['name' => 'payrollCheck#check', 'url' => '/api/payroll/check', 'verb' => 'POST'],
+        ['name' => 'payrollHandoff#compile', 'url' => '/api/payroll/handoffs/compile', 'verb' => 'POST'],
+        ['name' => 'payrollHandoff#checkIntake', 'url' => '/api/payroll/handoffs/check-intake', 'verb' => 'POST'],
+        ['name' => 'thirdPartyReport#assemble', 'url' => '/api/third-party/reports/assemble', 'verb' => 'POST'],
+        ['name' => 'thirdPartyReport#statements', 'url' => '/api/third-party/reports/{reportId}/statements', 'verb' => 'POST'],
+        ['name' => 'loonaangifteMessage#render', 'url' => '/api/loonaangifte/filings/{filingId}/message', 'verb' => 'POST'],
+        ['name' => 'loonaangifteMessage#correction', 'url' => '/api/loonaangifte/filings/{filingId}/correction', 'verb' => 'POST'],
         // payroll-mutation-reports — guarded, admin/HR-only trigger for the
         // PayrollRunDetail "Mutatieoverzicht" manifest api-call action
         // (design.md D6).
@@ -84,6 +97,9 @@ return [
         // people-flex-contract-rules: the fixed-term chain of a contract, and the on-call average hours (HR).
         ['name' => 'flexContract#onCallAverages', 'url' => '/api/contracts/on-call-averages', 'verb' => 'GET'],
         ['name' => 'flexContract#chain', 'url' => '/api/contracts/{id}/chain', 'verb' => 'GET'],
+        // education-staff-deployment-and-count D3: every teacher's deployment plan for one school and school year.
+        ['name' => 'deployment#orgUnit', 'url' => '/api/deployment/org-units/{id}', 'verb' => 'GET'],
+        ['name' => 'deployment#iptoExport', 'url' => '/api/deployment/ipto-export', 'verb' => 'POST'],
         // people-org-chart-view: the organisation chart of the caller's administration on a date.
         ['name' => 'orgChart#chart', 'url' => '/api/org/chart', 'verb' => 'GET'],
         ['name' => 'dossier#incomplete', 'url' => '/api/dossier/incomplete', 'verb' => 'GET'],
@@ -202,10 +218,23 @@ return [
         // derived figures behind the KPI tile. A read, and the remainder it
         // answers is computed here rather than stored anywhere.
         ['name' => 'timeEntry#estimate',   'url' => '/api/time-entries/estimate',    'verb' => 'GET'],
+        // time-entries-summary: the caller's own hours of one day, for a host
+        // app's day overview (dossiq's Close out your day). Caller-scoped, no user parameter.
+        ['name' => 'timeEntry#summary',    'url' => '/api/time-entries/summary',     'verb' => 'GET'],
+        // hours-per-person-week: the week's hours on one object, per person, as far as the caller may see them.
+        ['name' => 'objectHours#week',     'url' => '/api/time-entries/week',        'verb' => 'GET'],
         ['name' => 'timeEntry#timer',      'url' => '/api/time-entries/timer',       'verb' => 'GET'],
         ['name' => 'timeEntry#startTimer', 'url' => '/api/time-entries/timer/start', 'verb' => 'POST'],
         ['name' => 'timeEntry#stopTimer',  'url' => '/api/time-entries/timer/stop',  'verb' => 'POST'],
+        // talent-engagement-surveys: open (HR), answer (the invited employee), results (HR), design D1-D3.
+        ['name' => 'survey#open', 'url' => '/api/surveys/{id}/open', 'verb' => 'POST'],
+        ['name' => 'survey#respond', 'url' => '/api/surveys/{id}/responses', 'verb' => 'POST'],
+        ['name' => 'survey#results', 'url' => '/api/surveys/results', 'verb' => 'GET'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
+        // self-service-mobile (design.md D1): the web manifest and service worker of the
+        // installable Mijn HR. Public static assets, declared before the catch-all.
+        ['name' => 'pwa#manifest',      'url' => '/manifest.webmanifest', 'verb' => 'GET'],
+        ['name' => 'pwa#serviceWorker', 'url' => '/service-worker.js',    'verb' => 'GET'],
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],
-];
+]);

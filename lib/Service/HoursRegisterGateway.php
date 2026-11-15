@@ -3,6 +3,9 @@
 /**
  * Humaniq HoursRegisterGateway
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The hours-process listeners' one door to OpenRegister: object reads,
  * filtered queries, schema-slug resolution and the org-chain index building
  * the stamping listeners share (hours-process-redesign Decisions 3-5).
@@ -27,9 +30,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
@@ -39,6 +39,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -47,15 +52,33 @@ use RuntimeException;
  *
  * @spec openspec/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
  */
-class HoursRegisterGateway {
+class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
+
+	use ConvertsRowsToArrays;
 
 	/**
-	 * Upper bound for lookup queries (dev-stage volumes; the
+	 * Rows per page of a lookup query (the
 	 * AdministrationService findAll-then-filter precedent).
 	 *
 	 * @var int
 	 */
 	private const LOOKUP_LIMIT = 500;
+
+	/**
+	 * The most pages a read follows (100,000 rows), so a store that ignores
+	 * `offset` cannot keep the loop going.
+	 *
+	 * @var int
+	 */
+	private const MAX_PAGES = 200;
+
+	/**
+	 * The most rows one read returns. A read that returns this many may
+	 * have stopped before the end.
+	 *
+	 * @var int
+	 */
+	public const MAX_ROWS = (self::LOOKUP_LIMIT * self::MAX_PAGES);
 
 	/**
 	 * Constructor.
@@ -87,8 +110,7 @@ class HoursRegisterGateway {
 		try {
 			$entity = $this->objects()->find(
 				id: $uuid,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: $schema,
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: $schema),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -114,8 +136,8 @@ class HoursRegisterGateway {
 	}//end findObjectData()
 
 	/**
-	 * Every row of a schema, as arrays (the AssetDialectMigrationService
-	 * loadAll precedent).
+	 * Every row of a schema, as arrays, page by page up to MAX_ROWS (the
+	 * AssetDialectMigrationService loadAll precedent).
 	 *
 	 * @param string $schema The schema slug.
 	 *
@@ -131,16 +153,22 @@ class HoursRegisterGateway {
 	 * Rows of a schema matching top-level equality filters. Pushed-down AND
 	 * re-checked in PHP — belt and braces against filter-grammar drift.
 	 *
+	 * With `$asCaller` OpenRegister applies the signed-in caller's access rules
+	 * and tenancy to the read, so only rows the caller may see come back;
+	 * without it the whole register is read.
+	 *
 	 * @param string $schema The schema slug.
 	 * @param array<string, mixed> $filters Top-level equality filters.
+	 * @param bool $asCaller Whether the read is limited to what the caller may see.
 	 *
 	 * @return array<int, array<string, mixed>> The matching rows.
 	 *
 	 * @spec openspec/specs/time-entry-capture/spec.md#Requirement:-humaniq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
+	 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 	 */
-	public function findFiltered(string $schema, array $filters): array {
+	public function findFiltered(string $schema, array $filters, bool $asCaller = false): array {
 		$matches = [];
-		foreach ($this->query($schema, $filters) as $row) {
+		foreach ($this->query($schema, $filters, $asCaller) as $row) {
 			if ($this->matchesFilters($row, $filters) === true) {
 				$matches[] = $row;
 			}
@@ -163,13 +191,35 @@ class HoursRegisterGateway {
 	public function save(array $payload, string $schema, ?string $uuid = null): object {
 		return $this->objects()->saveObject(
 			object: $payload,
-			register: $this->settingsService->getRegisterSlug(),
-			schema: $schema,
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: $schema),
+				uuid: $uuid
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
 	}//end save()
+
+	/**
+	 * Delete one object.
+	 *
+	 * @param string $uuid   The object.
+	 * @param string $schema The schema slug.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
+	 */
+	public function delete(string $uuid, string $schema): void {
+		$this->objects()->deleteObject(
+			new ObjectDeletion(
+				uuid: $uuid,
+				target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: $schema)
+			),
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end delete()
 
 	/**
 	 * The employee's UNIQUE resolved manager Nextcloud user id on a date, or
@@ -309,27 +359,35 @@ class HoursRegisterGateway {
 	 *
 	 * @param string $schema The schema slug.
 	 * @param array<string, mixed> $filters Optional pushed-down filters.
+	 * @param bool $asCaller Whether OpenRegister applies the caller's access and tenancy (false reads the whole register).
 	 *
 	 * @return array<int, array<string, mixed>> The rows, as arrays.
 	 */
-	private function query(string $schema, array $filters): array {
+	private function query(string $schema, array $filters, bool $asCaller = false): array {
 		$config = ['limit' => self::LOOKUP_LIMIT];
 		if ($filters !== []) {
 			$config['filters'] = $filters;
 		}
 
-		$rows = $this->objects()
-			->setRegister($this->settingsService->getRegisterSlug())
-			->setSchema($schema)
-			->findAll($config, false, false);
-
 		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$data = $this->toArray($row);
-			if ($data !== []) {
-				$out[] = $data;
+		$offset = 0;
+		do {
+			$config['offset'] = $offset;
+			$rows = $this->objects()
+				->setRegister($this->settingsService->getRegisterSlug())
+				->setSchema($schema)
+				->findAll($config, $asCaller, $asCaller);
+			$rows = (is_array($rows) === true ? $rows : []);
+			$pageSize = count($rows);
+			foreach ($rows as $row) {
+				$data = $this->toArray($row);
+				if ($data !== []) {
+					$out[] = $data;
+				}
 			}
-		}
+
+			$offset += self::LOOKUP_LIMIT;
+		} while ($pageSize === self::LOOKUP_LIMIT && $offset < self::MAX_ROWS);
 
 		return $out;
 	}//end query()
@@ -371,24 +429,5 @@ class HoursRegisterGateway {
 
 		return clone $service;
 	}//end objects()
-
-	/**
-	 * Normalise a findAll row to an array.
-	 *
-	 * @param mixed $row The row (array or ObjectEntity).
-	 *
-	 * @return array<string, mixed> The payload array.
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
 
 }//end class

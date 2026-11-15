@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards;
 
 use OCA\Humaniq\Standards\TableCheckEvaluator;
+use OCA\Humaniq\Tests\Unit\Standards\Fixtures\MalformedDecisionTableEvaluator;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -104,6 +105,27 @@ class TableCheckEvaluatorTest extends TestCase {
 		$this->assertFalse(TableCheckEvaluator::satisfied($table, ['value' => 5]));
 
 	}//end testTableWithoutSatisfiedOutputNeverPasses()
+
+	/**
+	 * A result the delegate cannot read is unsatisfied, not an error and not a
+	 * pass: a non-array result, a result without an `outputs` map, and an
+	 * `outputs` that is not a map all fail closed. No real evaluator returns
+	 * these shapes, so the stand-in is the only way to reach the branch.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableEvaluatorResultFailsClosed(): void {
+		foreach ([null, true, 'satisfied', ['no outputs here' => 1], ['outputs' => 'satisfied'], ['outputs' => null]] as $result) {
+			MalformedDecisionTableEvaluator::$result = $result;
+			TableCheckEvaluator::overrideEvaluatorClass(MalformedDecisionTableEvaluator::class);
+
+			$this->assertFalse(
+				TableCheckEvaluator::satisfied($this->gate(), ['value' => 12.5]),
+				'an unreadable result never passes'
+			);
+		}
+
+	}//end testAnUnreadableEvaluatorResultFailsClosed()
 
 	/**
 	 * The shared evaluator's typed refusal propagates unchanged (RuleEngine's

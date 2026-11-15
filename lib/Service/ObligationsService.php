@@ -3,6 +3,9 @@
 /**
  * Obligations Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Backs the Dashboard's full-width Obligations `object-table` widget
  * (humaniq-dashboard-steering-indicators REQ-DSI-008/009): merges every
  * due-and-not-done WVP milestone (`SickLeaveCase`), expiring temporary
@@ -32,9 +35,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-008
@@ -48,12 +48,16 @@ namespace OCA\Humaniq\Service;
 use DateTimeImmutable;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\KeepsReadableRows;
+use OCA\Humaniq\Support\ResolvesObjectServiceWithReload;
 
 /**
  * Cross-schema obligations merge + best-effort rule badge.
  */
 class ObligationsService {
+
+	use KeepsReadableRows;
+	use ResolvesObjectServiceWithReload;
 
 	/**
 	 * The WVP milestone Due -> Done field pairs a `SickLeaveCase`
@@ -205,7 +209,7 @@ class ObligationsService {
 				continue;
 			}
 
-			$endDate = $this->parseDate($contract['endDate'] ?? null);
+			$endDate = DateValues::parse($contract['endDate'] ?? null);
 			if ($endDate === null || $endDate < $today || $endDate > $windowEnd) {
 				continue;
 			}
@@ -237,7 +241,7 @@ class ObligationsService {
 		$rows = [];
 		[$today, $windowEnd] = $this->expiryWindow(self::BHV_EXPIRY_WINDOW_DAYS);
 		foreach ($this->loadFiltered('BhvCertificering', $administrationId) as $certificate) {
-			$validUntil = $this->parseDate($certificate['certificaatGeldigTot'] ?? null);
+			$validUntil = DateValues::parse($certificate['certificaatGeldigTot'] ?? null);
 			if ($validUntil === null || $validUntil < $today || $validUntil > $windowEnd) {
 				continue;
 			}
@@ -283,27 +287,6 @@ class ObligationsService {
 	}//end expiryWindow()
 
 	/**
-	 * Parse a stored date value.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
-	 *
-	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
-	 */
-	private function parseDate(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception) {
-			return null;
-		}
-	}//end parseDate()
-
-	/**
 	 * Load all objects of a schema, filtered to those denormalized-scoped
 	 * to `$administrationId` — a row with a null/blank/mismatched
 	 * `administrationId` is excluded, the same implicit page-scoping rule
@@ -317,14 +300,7 @@ class ObligationsService {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadFiltered(string $schema, string $administrationId): array {
-		$rows = [];
-		foreach ($this->loadAll($schema) as $row) {
-			if ((string)($row['administrationId'] ?? '') === $administrationId) {
-				$rows[] = $row;
-			}
-		}
-
-		return $rows;
+		return AdministrationRows::scopedTo($this->loadAll($schema), $administrationId);
 	}//end loadFiltered()
 
 	/**
@@ -350,51 +326,4 @@ class ObligationsService {
 
 		return $this->normaliseRows($rows);
 	}//end loadAll()
-
-	/**
-	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-	 *
-	 * @param mixed $rows Raw rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 *
-	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
-	 */
-	private function normaliseRows(mixed $rows): array {
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$out[] = (array)$row->jsonSerialize();
-			}
-		}
-
-		return $out;
-	}//end normaliseRows()
-
-	/**
-	 * The OpenRegister ObjectService, once availability has been
-	 * established (ADR-083 — the AdministrationService precedent).
-	 *
-	 * @return mixed The OpenRegister ObjectService.
-	 *
-	 * @throws \RuntimeException When OpenRegister is not installed.
-	 *
-	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
-	 */
-	private function objectService(): mixed {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance. '
-				. 'Install and enable it, then reload.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
 }//end class

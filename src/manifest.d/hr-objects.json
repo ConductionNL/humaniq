@@ -8,7 +8,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "Employee",
-				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001). people-dossier-completeness (2026-09-29): a Dossier status table over GET /api/employees/{id}/dossier-status names each required document as present, missing, expired, expiring or too old at start (REQ-DCP-002), and a Personnel documents object-list (PersonnelDocument.employeeId = @objectId) holds the supplied documents. people-secondment-and-side-activities (2026-09-29): Secondments (Secondment.employeeId = @objectId, REQ-SEC-001) and Side activities (SideActivity.employeeId = @objectId, REQ-SEC-003) object-lists side by side.",
+				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001). people-dossier-completeness (2026-09-29): a Dossier status table over GET /api/employees/{id}/dossier-status names each required document as present, missing, expired, expiring or too old at start (REQ-DCP-002), and a Personnel documents object-list (PersonnelDocument.employeeId = @objectId) holds the supplied documents. people-secondment-and-side-activities (2026-09-29): Secondments (Secondment.employeeId = @objectId, REQ-SEC-001) and Side activities (SideActivity.employeeId = @objectId, REQ-SEC-003) object-lists side by side. employee-custom-fields-through-the-register (2026-11-13): 'Own fields' (full-width, below Employment & compliance) renders every Employee property the app does NOT ship (exclude = the shipped properties of hr-objects.json and hr-cost-rate.json, pinned by EmployeeCustomFieldsManifestTest), so a field an administrator adds in OpenRegister appears and edits there; 'Employment & compliance' now names its shipped fields with include instead of excluding the person fields, so an added field does not show twice. 'Manage fields' (adminOnly header action) opens OpenRegister's schema list.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -132,14 +132,130 @@
 						"icon": "ShieldCheckOutline",
 						"content": {
 							"columns": 3,
+							"include": [
+								"hourlyCostRateOverrideCents",
+								"hourlyCostRateOverrideReason",
+								"hourlyCostRateOverrideBy",
+								"hourlyCostRateOverrideAt",
+								"hourlyCostAdditions",
+								"managerUserId",
+								"deputyUserIds",
+								"shareBirthday",
+								"startDate",
+								"endDate",
+								"incomeRelationshipNumber",
+								"endReason",
+								"grossMonthlySalary",
+								"taxTableColor",
+								"identityDocumentVerified",
+								"identityDocumentRetainedUntil",
+								"loonheffingenVerklaringRetainedUntil",
+								"loonheffingenVerklaringOnFile",
+								"elstamRetrieved",
+								"steuerklasse",
+								"w4OnFile",
+								"i9VerifiedWithinThreeDays",
+								"newHireReportedDate",
+								"a1CertificateNumber",
+								"a1ValidUntil",
+								"postedWorker",
+								"thirtyPercentRulingGranted",
+								"thirtyPercentRulingRate",
+								"thirtyPercentCappedAtWntNorm",
+								"thirtyPercentRulingStartDate",
+								"thirtyPercentRulingEndDate",
+								"thirtyPercentRulingReducedNormApplies",
+								"nextcloudUserId",
+								"iban",
+								"tenaamstelling",
+								"loonheffingskortingToegepast",
+								"administrationId",
+								"isDga",
+								"gebruikelijkloonJustification",
+								"publicSectorRegime",
+								"ambtseedAfgelegdOp",
+								"nevenwerkzaamhedenGemeld",
+								"wntTopfunctionaris",
+								"wntUitzonderingReden",
+								"gender",
+								"straat",
+								"huisnummer",
+								"postcode",
+								"woonplaats",
+								"land",
+								"privateEmail",
+								"phone"
+							],
+							"title": "Employment & compliance"
+						}
+					},
+					{
+						"id": "own-fields",
+						"type": "data",
+						"title": "Own fields",
+						"icon": "FormTextbox",
+						"content": {
+							"columns": 3,
 							"exclude": [
+								"hourlyCostRateOverrideCents",
+								"hourlyCostRateOverrideReason",
+								"hourlyCostRateOverrideBy",
+								"hourlyCostRateOverrideAt",
+								"hourlyCostAdditions",
+								"managerUserId",
+								"deputyUserIds",
 								"employeeNumber",
+								"bsn",
 								"firstName",
 								"lastName",
 								"dateOfBirth",
-								"bsn"
+								"shareBirthday",
+								"startDate",
+								"endDate",
+								"incomeRelationshipNumber",
+								"endReason",
+								"grossMonthlySalary",
+								"taxTableColor",
+								"identityDocumentVerified",
+								"identityDocumentRetainedUntil",
+								"loonheffingenVerklaringRetainedUntil",
+								"loonheffingenVerklaringOnFile",
+								"elstamRetrieved",
+								"steuerklasse",
+								"w4OnFile",
+								"i9VerifiedWithinThreeDays",
+								"newHireReportedDate",
+								"a1CertificateNumber",
+								"a1ValidUntil",
+								"postedWorker",
+								"thirtyPercentRulingGranted",
+								"thirtyPercentRulingRate",
+								"thirtyPercentCappedAtWntNorm",
+								"thirtyPercentRulingStartDate",
+								"thirtyPercentRulingEndDate",
+								"thirtyPercentRulingReducedNormApplies",
+								"nextcloudUserId",
+								"iban",
+								"tenaamstelling",
+								"loonheffingskortingToegepast",
+								"administrationId",
+								"isDga",
+								"gebruikelijkloonJustification",
+								"publicSectorRegime",
+								"ambtseedAfgelegdOp",
+								"nevenwerkzaamhedenGemeld",
+								"wntTopfunctionaris",
+								"wntUitzonderingReden",
+								"gender",
+								"straat",
+								"huisnummer",
+								"postcode",
+								"woonplaats",
+								"land",
+								"privateEmail",
+								"phone"
 							],
-							"title": "Employment & compliance"
+							"title": "Own fields"
 						}
 					},
 					{
@@ -842,6 +958,44 @@
 							},
 							"emptyText": "No relations cases"
 						}
+					},
+					{
+						"id": "cost-allocations",
+						"type": "object-list",
+						"title": "Cost allocation",
+						"icon": "ScaleBalance",
+						"content": {
+							"register": "humaniq",
+							"schema": "CostAllocation",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "startDate",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "basis",
+									"label": "Basis"
+								},
+								{
+									"key": "startDate",
+									"label": "Start date"
+								},
+								{
+									"key": "endDate",
+									"label": "End date"
+								}
+							],
+							"limit": 10,
+							"rowRoute": "CostAllocationDetail",
+							"viewAllRoute": "CostAllocations",
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"emptyText": "No split: the wage costs go to the cost centre of the department"
+						}
 					}
 				],
 				"layout": [
@@ -894,10 +1048,18 @@
 						"gridHeight": 7
 					},
 					{
+						"id": 28,
+						"widgetId": "own-fields",
+						"gridX": 0,
+						"gridY": 15,
+						"gridWidth": 12,
+						"gridHeight": 3
+					},
+					{
 						"id": 7,
 						"widgetId": "object-list",
 						"gridX": 0,
-						"gridY": 15,
+						"gridY": 18,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -905,7 +1067,7 @@
 						"id": 8,
 						"widgetId": "object-list-2",
 						"gridX": 6,
-						"gridY": 15,
+						"gridY": 18,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -913,7 +1075,7 @@
 						"id": 9,
 						"widgetId": "object-list-3",
 						"gridX": 0,
-						"gridY": 19,
+						"gridY": 22,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -921,7 +1083,7 @@
 						"id": 10,
 						"widgetId": "object-list-4",
 						"gridX": 6,
-						"gridY": 19,
+						"gridY": 22,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -929,7 +1091,7 @@
 						"id": 11,
 						"widgetId": "object-list-5",
 						"gridX": 0,
-						"gridY": 23,
+						"gridY": 26,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -937,7 +1099,7 @@
 						"id": 12,
 						"widgetId": "object-list-6",
 						"gridX": 0,
-						"gridY": 27,
+						"gridY": 30,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -945,7 +1107,7 @@
 						"id": 13,
 						"widgetId": "object-list-7",
 						"gridX": 0,
-						"gridY": 31,
+						"gridY": 34,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -953,7 +1115,7 @@
 						"id": 14,
 						"widgetId": "object-list-8",
 						"gridX": 0,
-						"gridY": 35,
+						"gridY": 38,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -961,7 +1123,7 @@
 						"id": 15,
 						"widgetId": "object-list-9",
 						"gridX": 0,
-						"gridY": 39,
+						"gridY": 42,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -969,7 +1131,7 @@
 						"id": 17,
 						"widgetId": "object-list-10",
 						"gridX": 0,
-						"gridY": 43,
+						"gridY": 46,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -977,7 +1139,7 @@
 						"id": 16,
 						"widgetId": "files",
 						"gridX": 0,
-						"gridY": 47,
+						"gridY": 50,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -985,7 +1147,7 @@
 						"id": 18,
 						"widgetId": "employments",
 						"gridX": 0,
-						"gridY": 51,
+						"gridY": 54,
 						"gridWidth": 12,
 						"gridHeight": 5
 					},
@@ -993,7 +1155,7 @@
 						"id": 19,
 						"widgetId": "history",
 						"gridX": 0,
-						"gridY": 56,
+						"gridY": 59,
 						"gridWidth": 12,
 						"gridHeight": 6
 					},
@@ -1001,7 +1163,7 @@
 						"id": 20,
 						"widgetId": "object-list-11",
 						"gridX": 0,
-						"gridY": 62,
+						"gridY": 65,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -1009,7 +1171,7 @@
 						"id": 21,
 						"widgetId": "object-list-12",
 						"gridX": 0,
-						"gridY": 66,
+						"gridY": 69,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -1017,7 +1179,7 @@
 						"id": 22,
 						"widgetId": "dossier-status",
 						"gridX": 0,
-						"gridY": 70,
+						"gridY": 73,
 						"gridWidth": 12,
 						"gridHeight": 5
 					},
@@ -1025,7 +1187,7 @@
 						"id": 23,
 						"widgetId": "object-list-13",
 						"gridX": 0,
-						"gridY": 75,
+						"gridY": 78,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -1033,7 +1195,7 @@
 						"id": 24,
 						"widgetId": "object-list-14",
 						"gridX": 0,
-						"gridY": 79,
+						"gridY": 82,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -1041,7 +1203,7 @@
 						"id": 25,
 						"widgetId": "object-list-15",
 						"gridX": 6,
-						"gridY": 79,
+						"gridY": 82,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -1049,7 +1211,15 @@
 						"id": 26,
 						"widgetId": "object-list-16",
 						"gridX": 0,
-						"gridY": 83,
+						"gridY": 86,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 27,
+						"widgetId": "cost-allocations",
+						"gridX": 6,
+						"gridY": 86,
 						"gridWidth": 6,
 						"gridHeight": 4
 					}
@@ -1070,6 +1240,14 @@
 						},
 						"confirm": false,
 						"successMessage": "Filled the empty fields from the population register. Fields you had already filled were kept."
+					},
+					{
+						"id": "manage-fields",
+						"label": "Manage fields",
+						"type": "navigate",
+						"target": "/apps/openregister/schemas",
+						"icon": "FormTextbox",
+						"adminOnly": true
 					}
 				]
 			}
@@ -1082,7 +1260,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "Payslip",
-				"_note": "Financial-document archetype (x-schema-org: schema:Invoice), same family as Expense's amount-first design: three headline tiles (gross pay, net pay, Related-to-Employee) lead the page since that is what an employee or approver checks first, followed by the dense data widget carrying the full gross-to-net withholding breakdown (NL loonheffing/zvw/wkr, DE Lohnsteuer/Soli/Kirchensteuer, FR cotisations/PAS, US FICA/Medicare -- the schema is genuinely multi-jurisdiction: only one jurisdiction's fields populate per real record, but which one varies per payslip so a static manifest cannot cherry-pick per-instance; all fields surface via one widget, sized to its true field count and set to 4 columns full-width rather than clipped at 2). ADR-062 round-2: data widget now excludes employeeId (resolved via Related instead of raw uuid) and the height budget was corrected from the round-1 h7 (which clipped ~54 fields behind a scrollbar) to match content. Stat format uses 'number' not 'currency' because Payslip.currency varies per record (EUR/USD) and a widget's format is static. No files/calendar/comms leaves: nothing in the schema models an attachable payslip document or appointment, and Payslip carries no x-openregister-lifecycle so there are no lifecycleActions. Audit history is a sidebar tab. payslip-pdf-docudesk (2026-07-14): page-level action \"Genereer PDF\" mirrors EmploymentContractDetail's \"Genereer arbeidsovereenkomst\" shape -- POST /api/documents/generate with {payslipId: @objectId, documentType: loonstrook}, guarded server-side by DocumentController::authorizePayslip().",
+				"_note": "Financial-document archetype (x-schema-org: schema:Invoice), same family as Expense's amount-first design: three headline tiles (gross pay, net pay, Related-to-Employee) lead the page since that is what an employee or approver checks first, followed by the dense data widget carrying the full gross-to-net withholding breakdown (NL loonheffing/zvw/wkr, DE Lohnsteuer/Soli/Kirchensteuer, FR cotisations/PAS, US FICA/Medicare -- the schema is genuinely multi-jurisdiction: only one jurisdiction's fields populate per real record, but which one varies per payslip so a static manifest cannot cherry-pick per-instance; all fields surface via one widget, sized to its true field count and set to 4 columns full-width rather than clipped at 2). ADR-062 round-2: data widget now excludes employeeId (resolved via Related instead of raw uuid) and the height budget was corrected from the round-1 h7 (which clipped ~54 fields behind a scrollbar) to match content. Stat format uses 'number' not 'currency' because Payslip.currency varies per record (EUR/USD) and a widget's format is static. No files/calendar/comms leaves: nothing in the schema models an attachable payslip document or appointment, and Payslip carries no x-openregister-lifecycle so there are no lifecycleActions. Audit history is a sidebar tab. payslip-pdf-docudesk (2026-07-14): page-level action \"Genereer PDF\" mirrors EmploymentContractDetail's \"Genereer arbeidsovereenkomst\" shape -- POST /api/documents/generate with {payslipId: @objectId, documentType: loonstrook}, guarded server-side by DocumentController::authorizePayslip(). payroll-cost-allocation (2026-09-30): Wage costs per cost centre lists the payslip's WageCostAllocation lines, which the run writes after every calculation.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -1160,6 +1338,57 @@
 							],
 							"title": "Payslip breakdown"
 						}
+					},
+					{
+						"id": "wage-costs",
+						"type": "object-list",
+						"title": "Wage costs per cost centre",
+						"icon": "ChartBar",
+						"content": {
+							"register": "humaniq",
+							"schema": "WageCostAllocation",
+							"filter": {
+								"payslipId": "@objectId"
+							},
+							"sort": {
+								"field": "totalCost",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "costCenter",
+									"label": "Cost centre"
+								},
+								{
+									"key": "projectId",
+									"label": "Project"
+								},
+								{
+									"key": "percentage",
+									"label": "Percentage"
+								},
+								{
+									"key": "gross",
+									"label": "Gross"
+								},
+								{
+									"key": "employerCharges",
+									"label": "Employer charges"
+								},
+								{
+									"key": "totalCost",
+									"label": "Total cost"
+								},
+								{
+									"key": "allocationSource",
+									"label": "Source"
+								}
+							],
+							"limit": 20,
+							"rowRoute": "WageCostAllocationDetail",
+							"emptyText": "No wage cost lines yet. They are written when the run is calculated.",
+							"allowCreate": false
+						}
 					}
 				],
 				"layout": [
@@ -1194,6 +1423,14 @@
 						"gridY": 3,
 						"gridWidth": 12,
 						"gridHeight": 14
+					},
+					{
+						"id": 5,
+						"widgetId": "wage-costs",
+						"gridX": 0,
+						"gridY": 17,
+						"gridWidth": 12,
+						"gridHeight": 4
 					}
 				],
 				"headerActions": [
@@ -1223,7 +1460,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "PayrollRun",
-				"_note": "Batch/reconciliation archetype: a PayrollRun is a per-period aggregate of an administration's payslips, so its page leads with the GL-reconciliation totals (totalGross/totalNet/withholdingLiabilityBalance -- exactly the numbers xc-payroll-gl-reconciliation and xc-withholding-liability-clearing check) as stat KPIs, then the full record (period/administrationId/jurisdiction/status/glLiabilityPosted/glExpensePosted/withholdingsClearedToZero plus the engine stamps engineVersion/calculatedAt) in the data widget below. payroll-core-engine (2026-07-14): Payslip NOW carries a real payrollRunId $ref back to PayrollRun (added by payroll-core-schema), so the page gains the FK-scoped Payslips child list (allowCreate:false -- generation via the engine is the only create path, design.md D5) and the page-level api-call action \"(Her)berekenen\" (POST /api/payroll/calculate with {runId: @objectId}, guarded server-side by PayrollController::authorizeRun(), draft-only -- non-draft runs get a 400). Still NO lifecycleActions: `status` is a plain enum (draft/approved/posted/paid) with no `x-openregister-lifecycle` transition map on this schema -- driving lifecycleActions here would invent transition names the backend does not guard; the recalculate action is a page action, not a transition. Audit history is a sidebar tab.",
+				"_note": "Batch/reconciliation archetype: a PayrollRun is a per-period aggregate of an administration's payslips, so its page leads with the GL-reconciliation totals (totalGross/totalNet/withholdingLiabilityBalance -- exactly the numbers xc-payroll-gl-reconciliation and xc-withholding-liability-clearing check) as stat KPIs, then the full record (period/administrationId/jurisdiction/status/glLiabilityPosted/glExpensePosted/withholdingsClearedToZero plus the engine stamps engineVersion/calculatedAt) in the data widget below. payroll-core-engine (2026-07-14): Payslip NOW carries a real payrollRunId $ref back to PayrollRun (added by payroll-core-schema), so the page gains the FK-scoped Payslips child list (allowCreate:false -- generation via the engine is the only create path, design.md D5) and the page-level api-call action \"(Her)berekenen\" (POST /api/payroll/calculate with {runId: @objectId}, guarded server-side by PayrollController::authorizeRun(), draft-only -- non-draft runs get a 400). Still NO lifecycleActions: `status` is a plain enum (draft/approved/posted/paid) with no `x-openregister-lifecycle` transition map on this schema -- driving lifecycleActions here would invent transition names the backend does not guard; the recalculate action is a page action, not a transition. Audit history is a sidebar tab. payroll-run-checks (2026-09-30): every calculation runs the run check (PayrollRunCheckService) and \"Check run\" runs it on demand (POST /api/payroll/check, run resolved under the caller's RBAC, admin or hr role). The two extra tiles read the counts the check stores on the run (blockingFindings, warningFindings); the findings list shows the PayrollRunFinding objects of this run, each acknowledged on its own page. payroll-cost-allocation (2026-09-30): Wage costs per cost centre sums the run's WageCostAllocation lines (gross plus employer charges) per cost centre; a bar opens Wage costs filtered on that cost centre. Together the bars equal the run's gross plus employer charges, and the journal books the same split.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -1305,6 +1542,56 @@
 						}
 					},
 					{
+						"id": "stat-blocking",
+						"type": "stat",
+						"title": "Blocking findings",
+						"icon": "AlertCircleOutline",
+						"content": {
+							"label": "Blocking findings",
+							"caption": "someone not paid or a mandatory rule broken",
+							"icon": "AlertCircleOutline",
+							"valueColor": "#e9322d",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "humaniq",
+								"schema": "PayrollRun",
+								"metric": "sum",
+								"field": "blockingFindings",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-warning",
+						"type": "stat",
+						"title": "Warning findings",
+						"icon": "AlertOutline",
+						"content": {
+							"label": "Warning findings",
+							"caption": "to look at before approval",
+							"icon": "AlertOutline",
+							"valueColor": "#eca700",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "humaniq",
+								"schema": "PayrollRun",
+								"metric": "sum",
+								"field": "warningFindings",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
 						"id": "data",
 						"type": "data",
 						"title": "Payroll run",
@@ -1356,6 +1643,80 @@
 							"emptyText": "No payslips yet. Run (Re)calculate to create them.",
 							"allowCreate": false
 						}
+					},
+					{
+						"id": "findings",
+						"type": "object-list",
+						"title": "Run check findings",
+						"icon": "AlertCircleOutline",
+						"content": {
+							"register": "humaniq",
+							"schema": "PayrollRunFinding",
+							"filter": {
+								"payrollRunId": "@objectId"
+							},
+							"sort": {
+								"field": "severity",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "severity",
+									"label": "Severity"
+								},
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "component",
+									"label": "Component"
+								},
+								{
+									"key": "message",
+									"label": "Message"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 50,
+							"rowRoute": "PayrollRunFindingDetail",
+							"emptyText": "No findings. Run Check run after a calculation to check the run again.",
+							"allowCreate": false
+						}
+					},
+					{
+						"id": "wage-costs-chart",
+						"type": "chart",
+						"title": "Wage costs per cost centre",
+						"icon": "ChartBar",
+						"content": {
+							"chartKind": "bar",
+							"emptyLabel": "No wage cost lines yet. Calculate the run first.",
+							"valueFormat": "currency",
+							"dataSource": {
+								"register": "humaniq",
+								"schema": "WageCostAllocation",
+								"filter": {
+									"payrollRunId": "@objectId"
+								},
+								"aggregate": {
+									"groupBy": "costCenter",
+									"metric": "sum",
+									"sumField": "totalCost"
+								},
+								"drilldown": {
+									"route": "WageCosts",
+									"filterParam": "costCenter"
+								}
+							}
+						}
 					}
 				],
 				"layout": [
@@ -1384,18 +1745,50 @@
 						"gridHeight": 3
 					},
 					{
+						"id": 6,
+						"widgetId": "stat-blocking",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 6,
+						"gridHeight": 3
+					},
+					{
+						"id": 7,
+						"widgetId": "stat-warning",
+						"gridX": 6,
+						"gridY": 3,
+						"gridWidth": 6,
+						"gridHeight": 3
+					},
+					{
 						"id": 4,
 						"widgetId": "data",
 						"gridX": 0,
-						"gridY": 3,
+						"gridY": 6,
 						"gridWidth": 12,
 						"gridHeight": 7
+					},
+					{
+						"id": 8,
+						"widgetId": "findings",
+						"gridX": 0,
+						"gridY": 13,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": 9,
+						"widgetId": "wage-costs-chart",
+						"gridX": 0,
+						"gridY": 18,
+						"gridWidth": 12,
+						"gridHeight": 5
 					},
 					{
 						"id": 5,
 						"widgetId": "object-list",
 						"gridX": 0,
-						"gridY": 10,
+						"gridY": 23,
 						"gridWidth": 12,
 						"gridHeight": 5
 					}
@@ -1414,6 +1807,19 @@
 						"confirm": true,
 						"successMessage": "Payroll run (re)calculated — payslips and totals have been updated.",
 						"errorMessage": "(Re)calculating the payroll run failed."
+					},
+					{
+						"id": "check-run",
+						"label": "Check run",
+						"type": "api-call",
+						"icon": "ClipboardCheckOutline",
+						"url": "/api/payroll/check",
+						"method": "POST",
+						"params": {
+							"runId": "@objectId"
+						},
+						"successMessage": "Run checked. The findings and their counts are updated.",
+						"errorMessage": "Checking the payroll run failed."
 					},
 					{
 						"id": "mutations",
@@ -1451,7 +1857,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "LoonaangifteFiling",
-				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained'. loonaangifte-filing-lifecycle (2026-07-12) gave NL filings a real create->review->confirm->send workflow, so the page now leads with a compact status/tijdvakcode/deadline/response widget (fi-status) before the full filing data widget, and exposes the klaarzetten/bevestigen/verzenden/heropenen/corrigeren transitions via lifecycleActions (Timesheet pattern). No stats-block KPI tile is used for Status/Deadline: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation, which cannot echo a non-numeric field (enum/date) of the current object, so fi-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. Audit history is a sidebar tab.",
+				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained'. loonaangifte-filing-lifecycle (2026-07-12) gave NL filings a real create->review->confirm->send workflow, so the page now leads with a compact status/tijdvakcode/deadline/response widget (fi-status) before the full filing data widget, and exposes the klaarzetten/bevestigen/verzenden/heropenen transitions via lifecycleActions (Timesheet pattern). No stats-block KPI tile is used for Status/Deadline: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation, which cannot echo a non-numeric field (enum/date) of the current object, so fi-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. Audit history is a sidebar tab. filings-wage-tax-message (2026-10-02): Make message posts to /api/loonaangifte/filings/{id}/message (HR, payroll or an administrator; the filing read under the caller's RBAC first): the wage tax return made from the approved payroll run of the period, validated against the Belastingdienst's 2026 XSD and stored as messageXml; what stops it is listed per employee and element in messageFindings. Set ready (klaarzetten) is refused for a Dutch loonaangifte while findings block or no message exists (LoonaangifteMessageGuard). filings-correction-message (2026-10-02): Correct posts to /api/loonaangifte/filings/{id}/correction and opens a linked correction filing (filingType correctie, corrects = this filing) for a sent return; the sent filing is never reopened, so the corrigeren transition is gone. Make message on a correction compares the period's approved payslips with the last stand sent and stores the changed employees (correctionLines), the new stand and the saldo; inside the tax year it travels with the next return, for a closed year it is its own correction message.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -1481,13 +1887,183 @@
 						}
 					},
 					{
+						"id": "stat-blocking",
+						"type": "stat",
+						"title": "Blocking findings",
+						"icon": "AlertCircleOutline",
+						"content": {
+							"label": "Blocking findings",
+							"caption": "fix these before setting it ready",
+							"icon": "AlertCircleOutline",
+							"valueColor": "#e9322d",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "humaniq",
+								"schema": "LoonaangifteFiling",
+								"metric": "sum",
+								"field": "blockingFindings",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "message",
+						"type": "data",
+						"title": "Wage tax return message",
+						"icon": "FileSendOutline",
+						"content": {
+							"columns": 2,
+							"title": "Wage tax return message",
+							"include": [
+								"messageFileName",
+								"messageVersion",
+								"messageRenderedAt",
+								"messageRenderedBy",
+								"blockingFindings",
+								"warningFindings",
+								"messageFindings",
+								"collectiveTotals",
+								"messageXml",
+								"corrects",
+								"correctionRoute",
+								"correctionSaldo",
+								"correctionLines",
+								"carriedBy",
+								"carriedCorrectionIds"
+							],
+							"overrides": {
+								"messageXml": {
+									"editable": false
+								},
+								"messageFileName": {
+									"editable": false
+								},
+								"messageVersion": {
+									"editable": false
+								},
+								"collectiveTotals": {
+									"editable": false
+								},
+								"messageFindings": {
+									"editable": false
+								},
+								"blockingFindings": {
+									"editable": false
+								},
+								"warningFindings": {
+									"editable": false
+								},
+								"messageRenderedAt": {
+									"editable": false
+								},
+								"messageRenderedBy": {
+									"editable": false
+								},
+								"messageRunId": {
+									"editable": false
+								},
+								"messageRunCalculatedAt": {
+									"editable": false
+								},
+								"messageRunTotalLoonheffing": {
+									"editable": false
+								},
+								"corrects": {
+									"editable": false
+								},
+								"correctionRoute": {
+									"editable": false
+								},
+								"correctionLines": {
+									"editable": false
+								},
+								"correctionTree": {
+									"editable": false
+								},
+								"correctionSaldo": {
+									"editable": false
+								},
+								"carriedBy": {
+									"editable": false
+								},
+								"carriedCorrectionIds": {
+									"editable": false
+								}
+							}
+						}
+					},
+					{
 						"id": "data-2",
 						"type": "data",
 						"title": "Filing",
 						"icon": "FileDocument",
 						"content": {
 							"columns": 2,
-							"title": "Filing"
+							"title": "Filing",
+							"overrides": {
+								"messageXml": {
+									"editable": false
+								},
+								"messageFileName": {
+									"editable": false
+								},
+								"messageVersion": {
+									"editable": false
+								},
+								"collectiveTotals": {
+									"editable": false
+								},
+								"messageFindings": {
+									"editable": false
+								},
+								"blockingFindings": {
+									"editable": false
+								},
+								"warningFindings": {
+									"editable": false
+								},
+								"messageRenderedAt": {
+									"editable": false
+								},
+								"messageRenderedBy": {
+									"editable": false
+								},
+								"messageRunId": {
+									"editable": false
+								},
+								"messageRunCalculatedAt": {
+									"editable": false
+								},
+								"messageRunTotalLoonheffing": {
+									"editable": false
+								},
+								"corrects": {
+									"editable": false
+								},
+								"correctionRoute": {
+									"editable": false
+								},
+								"correctionLines": {
+									"editable": false
+								},
+								"correctionTree": {
+									"editable": false
+								},
+								"correctionSaldo": {
+									"editable": false
+								},
+								"carriedBy": {
+									"editable": false
+								},
+								"carriedCorrectionIds": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -1503,22 +2079,38 @@
 						"widgetId": "data",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 12,
+						"gridWidth": 9,
 						"gridHeight": 3
 					},
 					{
 						"id": 2,
-						"widgetId": "data-2",
+						"widgetId": "stat-blocking",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "message",
 						"gridX": 0,
 						"gridY": 3,
+						"gridWidth": 12,
+						"gridHeight": 6
+					},
+					{
+						"id": 4,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 9,
 						"gridWidth": 12,
 						"gridHeight": 9
 					},
 					{
-						"id": 3,
+						"id": 5,
 						"widgetId": "files",
 						"gridX": 0,
-						"gridY": 12,
+						"gridY": 18,
 						"gridWidth": 12,
 						"gridHeight": 4
 					}
@@ -1558,17 +2150,35 @@
 							],
 							"to": "concept",
 							"label": "Reopen"
-						},
-						{
-							"action": "corrigeren",
-							"from": [
-								"verzonden"
-							],
-							"to": "concept",
-							"label": "Correct"
 						}
 					]
-				}
+				},
+				"headerActions": [
+					{
+						"id": "make-message",
+						"label": "Make message",
+						"type": "api-call",
+						"icon": "FileSendOutline",
+						"url": "/api/loonaangifte/filings/@objectId/message",
+						"method": "POST",
+						"params": {},
+						"confirm": true,
+						"successMessage": "Message made. Check the warnings, then set the filing ready.",
+						"errorMessage": "The message could not be made. The filing lists what stops it, per employee."
+					},
+					{
+						"id": "correct-filing",
+						"label": "Correct",
+						"type": "api-call",
+						"icon": "PencilOutline",
+						"url": "/api/loonaangifte/filings/@objectId/correction",
+						"method": "POST",
+						"params": {},
+						"confirm": true,
+						"successMessage": "Correction opened. Find it in the wage tax filings for the same period.",
+						"errorMessage": "Only a sent return can be corrected."
+					}
+				]
 			}
 		},
 		{
@@ -2003,6 +2613,14 @@
 						"gridY": 7,
 						"gridWidth": 12,
 						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "benefits",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 12,
+						"gridHeight": 4
 					}
 				],
 				"register": "humaniq",
@@ -2069,6 +2687,48 @@
 								}
 							],
 							"emptyText": "Not part of a fixed-term chain"
+						}
+					},
+					{
+						"id": "benefits",
+						"type": "object-list",
+						"title": "Benefit entitlements",
+						"icon": "CashClock",
+						"content": {
+							"register": "humaniq",
+							"schema": "BenefitEntitlement",
+							"filter": {
+								"employeeId": "@object.employeeId"
+							},
+							"sort": {
+								"field": "startDate",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "startDate",
+									"label": "Start"
+								},
+								{
+									"key": "endDate",
+									"label": "End"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 10,
+							"rowRoute": "BenefitEntitlementDetail",
+							"viewAllRoute": "BenefitEntitlements",
+							"viewAllQuery": {
+								"employeeId": "@object.employeeId"
+							},
+							"emptyText": "No benefit entitlements"
 						}
 					}
 				]
@@ -2394,6 +3054,75 @@
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
 				"description": "Work-related costs scheme assessments calculated per administration/year: taxable wage bill, free margin, used, and the 80% final levy on any excess (wkr-administration). Generated through occ humaniq:wkr:assess or the Assess action."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "PayrollRunFinding",
+			"params": {
+				"id": "PayrollRunFindingDetail",
+				"route": "/payroll-run-findings/:id",
+				"title": "Payroll run finding",
+				"dataTitle": "Finding",
+				"dataIcon": "AlertCircleOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"note": "payroll-run-checks (2026-09-30): one finding of a run check. The check writes it and replaces it after every calculation; an acknowledged finding that recurs keeps its acknowledgement and takes the new values. Only the note is editable; acknowledge moves it from open to acknowledged and PayrollRunFindingStampListener stamps the reviewer as acknowledgedBy.",
+				"overrides": {
+					"payrollRunId": {
+						"editable": false
+					},
+					"employeeId": {
+						"editable": false
+					},
+					"kind": {
+						"editable": false
+					},
+					"severity": {
+						"editable": false
+					},
+					"message": {
+						"editable": false
+					},
+					"ruleId": {
+						"editable": false
+					},
+					"component": {
+						"editable": false
+					},
+					"currentValue": {
+						"editable": false
+					},
+					"baselineValue": {
+						"editable": false
+					},
+					"explanation": {
+						"editable": false
+					},
+					"status": {
+						"editable": false
+					},
+					"acknowledgedBy": {
+						"editable": false
+					},
+					"checkedAt": {
+						"editable": false
+					}
+				},
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "acknowledge",
+							"from": [
+								"open"
+							],
+							"to": "acknowledged",
+							"label": "Acknowledge"
+						}
+					]
+				}
 			}
 		}
 	]

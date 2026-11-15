@@ -17,6 +17,7 @@
                     "startDate"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "aangemeld",

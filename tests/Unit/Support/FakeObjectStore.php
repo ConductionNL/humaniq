@@ -34,6 +34,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Support;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * In-memory ObjectService double with clone-surviving shared state.
@@ -120,7 +123,7 @@ class FakeObjectStore {
 
 	/**
 	 * Mirror of ObjectService::findAll() — rows of the context schema,
-	 * honouring `filters` on top-level equality.
+	 * honouring `filters` on top-level equality and `limit` / `offset`.
 	 *
 	 * @param array<string, mixed> $config The query config.
 	 * @param bool $_rbac RBAC flag (ignored).
@@ -131,24 +134,27 @@ class FakeObjectStore {
 	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 		$rows = array_values($this->state->objects[$this->contextSchema] ?? []);
 		$filters = ($config['filters'] ?? []);
-		if (is_array($filters) === false || $filters === []) {
-			return $rows;
+		if (is_array($filters) === true && $filters !== []) {
+			$rows = array_values(
+				array_filter(
+					$rows,
+					static function (array $row) use ($filters): bool {
+						foreach ($filters as $key => $value) {
+							if (($row[$key] ?? null) !== $value) {
+								return false;
+							}
+						}
+
+						return true;
+					}
+				)
+			);
 		}
 
-		return array_values(
-			array_filter(
-				$rows,
-				static function (array $row) use ($filters): bool {
-					foreach ($filters as $key => $value) {
-						if (($row[$key] ?? null) !== $value) {
-							return false;
-						}
-					}
+		// One page, as OpenRegister answers: `offset` rows skipped, at most `limit`.
+		$limit = (isset($config['limit']) === true) ? (int)$config['limit'] : null;
 
-					return true;
-				}
-			)
-		);
+		return array_slice($rows, (int)($config['offset'] ?? 0), $limit);
 	}//end findAll()
 
 	/**
@@ -167,13 +173,14 @@ class FakeObjectStore {
 	 */
 	public function find(
 		int|string $id,
-		?array $_extend = [],
-		bool $files = false,
-		mixed $register = null,
-		mixed $schema = null,
+		?ObjectFindOptions $options = null,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
+		bool $_multitenancy = true
 	): ?ObjectEntity {
+		$_extend = $options?->extend ?? [];
+		$files = $options?->files ?? false;
+		$register = $options?->register;
+		$schema = $options?->schema;
 		$schemaKey = (string)($schema ?? $this->contextSchema);
 		$payload = ($this->state->objects[$schemaKey][(string)$id] ?? null);
 		if ($payload === null) {
@@ -182,6 +189,39 @@ class FakeObjectStore {
 
 		return $this->entityFor((string)$id, $schemaKey, $payload);
 	}//end find()
+
+	/**
+	 * Mirror of ObjectService::deleteObject() with the real signature
+	 * (openregister lib/Service/ObjectService.php): removes the object and
+	 * reports whether it was there.
+	 *
+	 * @param string    $uuid           The object.
+	 * @param mixed     $register       The register (ignored).
+	 * @param mixed     $schema         The schema slug.
+	 * @param bool      $_rbac          Ignored.
+	 * @param bool      $_multitenancy  Ignored.
+	 * @param bool      $_retentionSweep Ignored.
+	 * @param mixed     $currentUser    Ignored.
+	 * @param bool      $permanent      Ignored.
+	 *
+	 * @return bool
+	 */
+	public function deleteObject(
+		ObjectDeletion $deletion,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_retentionSweep = false
+	): bool {
+		$uuid = $deletion->uuid;
+		$register = $deletion->target->register;
+		$schema = $deletion->target->schema;
+		$currentUser = $deletion->currentUser;
+		$permanent = $deletion->permanent ?? false;
+		$schemaKey = (string)($schema ?? $this->contextSchema);
+		$found = isset($this->state->objects[$schemaKey][$uuid]);
+		unset($this->state->objects[$schemaKey][$uuid]);
+		return $found;
+	}//end deleteObject()
 
 	/**
 	 * Mirror of ObjectService::saveObject() — upserts into the store and
@@ -199,13 +239,14 @@ class FakeObjectStore {
 	 */
 	public function saveObject(
 		array|object $object,
-		?array $extend = [],
-		mixed $register = null,
-		mixed $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
+		bool $_multitenancy = true
 	): ObjectEntity {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$payload = (is_array($object) === true ? $object : (array)$object);
 		$schemaKey = (string)($schema ?? $this->contextSchema);
 		if ($uuid === null || $uuid === '') {

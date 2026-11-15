@@ -83,3 +83,7 @@ machinery on top of this; it is re-scoped by this change to build on the shared 
 - `openspec/changes/humaniq-rule-compliance-enforcement/` — design/tasks amended (re-aim only,
   its features are not implemented here).
 - No routes, no schemas, no frontend.
+
+## Matrix rows
+
+Rows: `cmp-rule-engine` (humaniq `openspec/parity/capabilities.json`).

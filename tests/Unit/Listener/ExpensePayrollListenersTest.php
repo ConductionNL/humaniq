@@ -28,6 +28,7 @@ namespace OCA\Humaniq\Tests\Unit\Listener;
 
 use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\RecurringAllowanceStampListener;
+use OCA\Humaniq\Service\ExpenseSettings;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OrgResolutionService;
@@ -39,6 +40,7 @@ use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCP\AppFramework\Services\IAppConfig;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -60,10 +62,10 @@ class ExpensePayrollListenersTest extends TestCase {
 	 * @return ExpenseRouteListener
 	 */
 	private function routeListener(string $default = 'payroll', ?InternalWriteMarker $marker = null): ExpenseRouteListener {
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getExpenseReimbursementRoute')->willReturn($default);
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getAppValueString')->willReturn($default);
 
-		return new ExpenseRouteListener(settings: $settings, marker: ($marker ?? new InternalWriteMarker()));
+		return new ExpenseRouteListener(settings: new ExpenseSettings($config), marker: ($marker ?? new InternalWriteMarker()));
 	}//end routeListener()
 
 	/**

@@ -1,0 +1,741 @@
+{
+	"x-source": "ConductionNL/shillinq lib/Settings/shillinq_register.json deep-merged with every lib/Settings/register.d/*.json fragment (SettingsService::deepMergeConfig: objects merge by key, lists concatenate) at e079c43d086b0e96f04fda280adad42e192dba7b (development, 5 Oct 2026). Only APTransaction is kept. Refresh when shillinq changes APTransaction.",
+	"APTransaction": {
+		"slug": "APTransaction",
+		"icon": "ReceiptTextOutline",
+		"version": "0.3.0",
+		"title": "AP Transaction",
+		"description": "Accounts payable sub-ledger invoice recording vendor billing and payment obligation. Posting (issued transition) materialises one balanced GLTransaction per T1 (credit AP payable, debit expense per lines). Lifecycle: draft → received → issued → paid with partially-paid / overdue / disputed / written-off / voided branches. The issued → overdue transition fires via OR ScheduledWorkflow (ADR-031 path 2: no PHP cron job). Aged-payables aggregations (detail / summary / timeline) declared inline. Sub-ledger linkage: every GLLine emitted from issue or write-off carries subLedgerType=ap + subLedgerRef=<APTransaction UUID> (scenario).",
+		"x-openregister-audit-trail": {
+			"enabled": true,
+			"description": "Bookkeeping sub-ledger register; every lifecycle transition (receive / issue / match / dispute / overdue / write-off / void) and every header/line edit is recorded on the OR audit-trail-immutable channel + ADR-022. Audit trail is the canonical evidence chain for the AP write-off scenario."
+		},
+		"x-schema-org": "schema:Invoice",
+		"x-spec": "openspec/changes/bookkeeping-accounts-payable-core/specs/bookkeeping-accounts-payable-core/spec.md",
+		"type": "object",
+		"required": [
+			"invoiceNumber",
+			"vendorId",
+			"invoiceDate",
+			"dueDate",
+			"currency",
+			"totalAmount",
+			"lines",
+			"state",
+			"administrationId"
+		],
+		"properties": {
+			"invoiceNumber": {
+				"type": "string",
+				"description": "Number of the received supplier invoice held by the taxable person (art. 178 deduction condition).",
+				"example": "ENECO-2026-04-0001",
+				"title": "Invoice Number",
+				"nullable": true
+			},
+			"vendorId": {
+				"type": "string",
+				"description": "FK to Payee UUID (or slug). Resolves to the vendor record carrying paymentTermDays and dunningPolicyRef.",
+				"example": "payee-eneco",
+				"title": "Vendor ID"
+			},
+			"invoiceDate": {
+				"type": "string",
+				"format": "date",
+				"description": "Date the vendor issued the invoice.",
+				"example": "2026-04-15",
+				"title": "Invoice Date"
+			},
+			"dueDate": {
+				"type": "string",
+				"format": "date",
+				"description": "Auto-calculated from invoiceDate + Payee.paymentTermDays on receipt; operator overrideable.",
+				"example": "2026-05-15",
+				"title": "Due Date"
+			},
+			"currency": {
+				"type": "string",
+				"minLength": 3,
+				"maxLength": 3,
+				"description": "ISO 4217 currency code. T2: base currency only (EUR); T5 adds multi-currency.",
+				"default": "EUR",
+				"example": "EUR",
+				"title": "Currency"
+			},
+			"totalAmount": {
+				"type": "number",
+				"minimum": 0,
+				"description": "Total amount including tax in administration base currency. Integer-cent precision applied per ADR-031 money rules. Credit memos are separate journal types, not negative totals.",
+				"example": 1250.0,
+				"title": "Total Amount"
+			},
+			"taxAmount": {
+				"type": "number",
+				"minimum": 0,
+				"description": "Input (purchase) VAT amount on the transaction, the base for the pro-rata deductible amount (art. 173).",
+				"nullable": true,
+				"example": 217.98,
+				"title": "Tax Amount"
+			},
+			"lines": {
+				"type": "array",
+				"minItems": 1,
+				"description": "Invoice line breakdown. Each line maps to one GL expense account.",
+				"items": {
+					"type": "object",
+					"required": [
+						"description",
+						"accountNumber",
+						"amount"
+					],
+					"properties": {
+						"description": {
+							"type": "string",
+							"description": "Line description.",
+							"title": "Description"
+						},
+						"accountNumber": {
+							"type": "string",
+							"description": "FK to Account.accountNumber (expense account).",
+							"title": "Account Number"
+						},
+						"amount": {
+							"type": "number",
+							"minimum": 0,
+							"description": "Line amount net of VAT in administration base currency.",
+							"title": "Amount"
+						},
+						"taxCode": {
+							"type": "string",
+							"description": "Tax code for this line (e.g. BTW21, BTW9, BTW0, VERLEGD).",
+							"nullable": true,
+							"title": "Tax Code"
+						},
+						"quantity": {
+							"type": "number",
+							"description": "Quantity received/billed.",
+							"nullable": true,
+							"title": "Quantity"
+						},
+						"unitPrice": {
+							"type": "number",
+							"description": "Unit price net of VAT.",
+							"nullable": true,
+							"title": "Unit Price"
+						}
+					}
+				},
+				"title": "Lines"
+			},
+			"sourceDocumentUri": {
+				"type": "string",
+				"description": "docudesk FK URI per bookkeeping-document-attachment-integration. Points to the uploaded vendor invoice PDF.",
+				"nullable": true,
+				"example": "docudesk://files/shillinq/ap/eneco-2026-04-0001.pdf",
+				"title": "Source Document URI"
+			},
+			"state": {
+				"type": "string",
+				"enum": [
+					"draft",
+					"received",
+					"issued",
+					"partially-paid",
+					"paid",
+					"overdue",
+					"disputed",
+					"written-off",
+					"voided"
+				],
+				"description": "AP invoice lifecycle state.",
+				"default": "draft",
+				"example": "received",
+				"title": "State"
+			},
+			"glTransactionId": {
+				"type": "string",
+				"description": "Back-reference to the materialised GLTransaction once the invoice is issued (sub-ledger linkage).",
+				"nullable": true,
+				"example": "gl-txn-2026-ap-0001",
+				"title": "GL Transaction ID"
+			},
+			"paymentBlocked": {
+				"type": "boolean",
+				"default": false,
+				"description": "Payment block on this invoice (banking-payment-run REQ-BPR-003). A blocked invoice is left out of a proposed payment run and refuses the export of a run that pays it. It does not change the lifecycle state.",
+				"title": "Payment blocked"
+			},
+			"paymentBlockReason": {
+				"type": "string",
+				"nullable": true,
+				"description": "Why payment is blocked; asked when the block is set and shown wherever the block refuses a payment.",
+				"title": "Payment block reason"
+			},
+			"writeOffReason": {
+				"type": "string",
+				"description": "Operator-authored audit-trailed reason for write-off. Required on the writeOff lifecycle transition.",
+				"nullable": true,
+				"example": "Vendor administratie afgewikkeld; restant oninbaar per leveranciersbericht 2026-06-01.",
+				"title": "Write Off Reason"
+			},
+			"writeOffGlTransactionId": {
+				"type": "string",
+				"description": "Back-reference to the compensating GLTransaction emitted on write-off (debit AP payable, credit bad-debt recovery/write-off expense). Per.",
+				"nullable": true,
+				"title": "Write Off GL Transaction ID"
+			},
+			"periodId": {
+				"type": "string",
+				"description": "FK to the FiscalPeriod for GL posting (resolved on issue transition guard 2).",
+				"nullable": true,
+				"title": "Period ID"
+			},
+			"administrationId": {
+				"type": "string",
+				"description": "FK to the administration owning this AP invoice.",
+				"example": "adm-1",
+				"title": "Administration ID"
+			},
+			"intraCommunityAcquisition": {
+				"type": "boolean",
+				"nullable": true,
+				"description": "Whether this purchase is an intra-Community acquisition of goods (arts. 40/41/68); enables the ICA place / safety-net / tax-point checks.",
+				"title": "Intra Community Acquisition"
+			},
+			"acquisitionPlaceCountry": {
+				"type": "string",
+				"nullable": true,
+				"description": "Member State the directive deems the place of the intra-Community acquisition (ISO 3166-1 alpha-2); must equal the arrival country (art. 40).",
+				"title": "Acquisition Place Country"
+			},
+			"arrivalCountry": {
+				"type": "string",
+				"nullable": true,
+				"description": "Country where dispatch/transport of the acquired goods ends (ISO 3166-1 alpha-2); the place of the intra-Community acquisition (art. 40).",
+				"title": "Arrival Country"
+			},
+			"acquirerVatIdUsed": {
+				"type": "string",
+				"nullable": true,
+				"description": "The VAT identification number under which the acquirer made the acquisition (art. 41 safety-net Member State).",
+				"title": "Acquirer VAT ID Used"
+			},
+			"taxedAtArrivalProven": {
+				"type": "boolean",
+				"nullable": true,
+				"description": "Whether the acquirer proves the acquisition was taxed at the place of arrival, disapplying the art. 41 safety-net.",
+				"title": "Taxed At Arrival Proven"
+			},
+			"supplyDate": {
+				"type": "string",
+				"nullable": true,
+				"format": "date",
+				"description": "Date of the chargeable event for the acquisition (art. 68); anchors the 15th-of-following-month tax-point backstop.",
+				"title": "Supply Date"
+			},
+			"invoiceReference": {
+				"type": "string",
+				"nullable": true,
+				"description": "Alternative reference to the received invoice held by the taxable person (art. 178 deduction condition).",
+				"title": "Invoice Reference"
+			},
+			"deductible": {
+				"type": "boolean",
+				"nullable": true,
+				"description": "Whether the input VAT on this purchase is deductible; enables the arts. 167/178 deduction-right checks.",
+				"title": "Deductible"
+			},
+			"mixedUse": {
+				"type": "boolean",
+				"nullable": true,
+				"description": "Whether the purchase is used for both deductible and non-deductible transactions, triggering pro-rata deduction (art. 173).",
+				"title": "Mixed Use"
+			},
+			"proRataPercent": {
+				"type": "number",
+				"nullable": true,
+				"description": "Deductible proportion (0.100) of the input VAT under the pro-rata rule (art. 173).",
+				"title": "Pro Rata Percent"
+			},
+			"deductibleVatAmount": {
+				"type": "number",
+				"nullable": true,
+				"description": "The deductible portion of the input VAT = taxAmount x proRataPercent / 100 (art. 173).",
+				"title": "Deductible VAT Amount"
+			},
+			"deductionAdjusted": {
+				"type": "boolean",
+				"nullable": true,
+				"description": "Whether the initial deduction has been adjusted because it was higher or lower than the entitlement (art. 184).",
+				"title": "Deduction Adjusted"
+			},
+			"adjustmentAmount": {
+				"type": "number",
+				"nullable": true,
+				"description": "The amount by which the initial deduction is adjusted (art. 184); positive increases, negative decreases the deduction.",
+				"title": "Adjustment Amount"
+			},
+			"capitalGood": {
+				"type": "boolean",
+				"nullable": true,
+				"description": "Whether the purchase is a capital good subject to the multi-year deduction-adjustment (revision) period (art. 184).",
+				"title": "Capital Good"
+			},
+			"adjustmentPeriodYears": {
+				"type": "number",
+				"nullable": true,
+				"description": "The capital-goods revision period in whole years over which the deduction is adjusted (art. 184; NL 5y movables, 10y immovable property).",
+				"title": "Adjustment Period Years"
+			}
+		},
+		"x-openregister-lifecycle": {
+			"field": "state",
+			"initialState": "draft",
+			"retention": {
+				"rule": "selectielijst:5.1.2",
+				"period": "P7Y",
+				"description": "AP invoices retained 7 years per AWR art. 52 + Selectielijst Gemeenten 2020."
+			},
+			"states": {
+				"draft": {
+					"label": "Draft",
+					"description": "Under construction. Lines and header fields may be edited."
+				},
+				"received": {
+					"label": "Received",
+					"description": "Vendor invoice physically received and recorded; awaiting approval/posting. Vendor invoice-number uniqueness already enforced."
+				},
+				"issued": {
+					"label": "Issued",
+					"description": "Header immutable. Balanced GLTransaction materialised; awaiting payment match."
+				},
+				"partially-paid": {
+					"label": "Partially paid",
+					"description": "One or more bank-reconciliation matches applied; cumulative matched amount is less than totalAmount."
+				},
+				"paid": {
+					"label": "Paid",
+					"description": "Full payment matched via bank-reconciliation engine. Terminal state for the happy path."
+				},
+				"overdue": {
+					"label": "Overdue",
+					"description": "today > dueDate and no full payment match yet. OR dunning-workflow drives reminder cadence from this state."
+				},
+				"disputed": {
+					"label": "Disputed",
+					"description": "Operator placed payment-match pursuit on hold pending vendor-raised dispute investigation."
+				},
+				"written-off": {
+					"label": "Written off",
+					"description": "Vendor restant uncollectible / waived; compensating GL posting emitted. Terminal state."
+				},
+				"voided": {
+					"label": "Voided",
+					"description": "Issued invoice voided. The materialised issue GLTransaction MUST already be reversed per T1."
+				}
+			},
+			"transitions": {
+				"receive": {
+					"from": "draft",
+					"to": "received",
+					"label": "Receive invoice",
+					"description": "Operator records vendor invoice receipt. Guard: vendor invoice number unique per (administrationId, vendorId) scenario 2.",
+					"requires": "OCA\\Shillinq\\Lifecycle\\APGuard::isInvoiceNumberUnique",
+					"x-adr-031-exception": "Single-method guard pending OR's unique-key extension stabilisation. Documented per ADR-031 §'PHP guards remain a legitimate seam' and the spec's REQ-AP-005 fallback clause."
+				},
+				"issue": {
+					"from": "received",
+					"to": "issued",
+					"label": "Issue / post invoice",
+					"description": "Operator approves and posts the AP invoice. Guards: (1) balanced materialisation per T1; (2) FiscalPeriod open; (3) Payee.lifecycleState=active. Actions: (a) materialise one balanced GLTransaction (debit expense per line, credit AP payable account); (b) set glTransactionId back-reference; (c) set periodId from invoiceDate.",
+					"requires": "OCA\\Shillinq\\Lifecycle\\BalanceGuard::isInvoiceBalanced",
+					"actions": [
+						{
+							"trigger": "x-openregister-lifecycle-action",
+							"action": "OCA\\Shillinq\\Lifecycle\\Action\\MaterialiseGlTransactionAction",
+							"description": "Book the issued supplier invoice: debit each line's expense account and input VAT, credit the creditors control account, in one balanced GLTransaction, and write glTransactionId (purchasing-supplier-invoice-intake REQ-PSII-002).",
+							"actionParameters": {
+								"sourceSchema": "APTransaction",
+								"register": "shillinq",
+								"keepBalanced": true
+							}
+						}
+					]
+				},
+				"matchFull": {
+					"from": [
+						"issued",
+						"overdue",
+						"partially-paid"
+					],
+					"to": "paid",
+					"label": "Match full payment",
+					"description": "Operator confirms a bank-reconciliation ReconciliationMatch. Guard: cumulative matched amount = totalAmount."
+				},
+				"matchPartial": {
+					"from": [
+						"issued",
+						"overdue"
+					],
+					"to": "partially-paid",
+					"label": "Match partial payment",
+					"description": "Operator confirms a bank-reconciliation ReconciliationMatch where matched amount < totalAmount."
+				},
+				"markOverdue": {
+					"from": [
+						"issued",
+						"partially-paid"
+					],
+					"to": "overdue",
+					"label": "Mark overdue",
+					"description": "Scheduled lifecycle action fires when today > dueDate and no full payment match yet. Triggered by OR ScheduledWorkflow + ADR-031 path 2: NOT a shillinq *Job PHP class.",
+					"x-scheduled-workflow": {
+						"primitive": "OR.ScheduledWorkflow",
+						"cron": "0 1 * * *",
+						"description": "Daily 01:00 sweep evaluates open AP invoices and transitions issued|partially-paid → overdue when today > dueDate. Per ADR-031 §'Background jobs that walk an object queue' path 2."
+					}
+				},
+				"dispute": {
+					"from": "issued",
+					"to": "disputed",
+					"label": "Dispute invoice",
+					"description": "Operator marks invoice as disputed. Payment-match pursuit pauses pending resolution."
+				},
+				"resolveDispute": {
+					"from": "disputed",
+					"to": "issued",
+					"label": "Resolve dispute",
+					"description": "Vendor-raised dispute resolved; payment-match pursuit resumes."
+				},
+				"writeOff": {
+					"from": "overdue",
+					"to": "written-off",
+					"label": "Write off",
+					"description": "Operator in role controller writes off the residual balance. Action: materialise a compensating balanced GLTransaction (debit AP payable account, credit bad-debt recovery / write-off account). Audit-trailed reason required. Sets writeOffGlTransactionId back-reference.",
+					"requires": "OCA\\Shillinq\\Lifecycle\\APGuard::requireWriteOffReason",
+					"x-rbac-role": "controller"
+				},
+				"void": {
+					"from": "issued",
+					"to": "voided",
+					"label": "Void invoice",
+					"description": "Operator voids the issued invoice. Guard: materialised GLTransaction MUST already be reversed per T1."
+				}
+			},
+			"requires": {
+				"dunning": {
+					"source": "openregister-dunning-workflow",
+					"description": "Per the dunning cadence (reminder-1 / reminder-2 / formal-notice / collection) is owned by OR's dunning-workflow extension. The policy referenced via Payee.dunningPolicyRef drives DunningNotice creation from the overdue state. If OR's extension is not yet stable at implementation time, ADR-031's exception path applies: OCA\\Shillinq\\Lifecycle\\APGuard ships a single-method fallback documented in the spec."
+				}
+			}
+		},
+		"x-openregister-aggregations": {
+			"agedPayablesDetail": {
+				"description": "Aged Payables Detail report: per-invoice breakdown grouped by vendor and due-date bucket. Excludes paid / written-off / voided. BLOCKED (cross-tab): OpenRegister's aggregation engine honours only a single-field groupBy ({field: <name>}) today. This multi-field groupBy [vendorId, dueDateBucket] plus the buckets/return projection are INERT engine-side and must not be read as a working capability. Tracked by openregister#432 (honour multi-field groupBy); the shillinq spend-analytics feature ships single-dimension views against the honoured path meanwhile.",
+				"source": "APTransaction",
+				"where": {
+					"state": {
+						"in": [
+							"issued",
+							"partially-paid",
+							"overdue",
+							"disputed"
+						]
+					}
+				},
+				"groupBy": [
+					"vendorId",
+					"dueDateBucket"
+				],
+				"orderBy": [
+					{
+						"field": "vendorName",
+						"direction": "asc"
+					},
+					{
+						"field": "dueDate",
+						"direction": "asc"
+					}
+				],
+				"buckets": {
+					"field": "dueDate",
+					"source": "IAppConfig",
+					"configKey": "ap.aging.buckets",
+					"defaults": [
+						30,
+						60,
+						90
+					],
+					"labels": [
+						"current",
+						"30days",
+						"60days",
+						"90days"
+					],
+					"reference": "today"
+				},
+				"return": [
+					"vendorName",
+					"vendorNumber",
+					"invoiceNumber",
+					"invoiceDate",
+					"dueDate",
+					{
+						"field": "totalAmount",
+						"alias": "amount"
+					},
+					"paidAmount",
+					"dueDateBucket",
+					{
+						"computed": "daysOverdue",
+						"expression": "today - dueDate"
+					}
+				]
+			},
+			"agedPayablesSummary": {
+				"description": "Aged Payables Summary report: vendor totals grouped by aging bucket. Excludes paid / written-off / voided. BLOCKED (cross-tab): the multi-field groupBy [vendorId, agingBucket] and the aggregate/buckets/return projection maps are INERT. OpenRegister honours only a single-field groupBy ({field: <name>}) today. Tracked by openregister#432.",
+				"source": "APTransaction",
+				"where": {
+					"state": {
+						"in": [
+							"issued",
+							"partially-paid",
+							"overdue",
+							"disputed"
+						]
+					}
+				},
+				"groupBy": [
+					"vendorId",
+					"agingBucket"
+				],
+				"orderBy": [
+					{
+						"field": "agingBucket",
+						"direction": "desc"
+					},
+					{
+						"field": "totalAmount",
+						"direction": "desc"
+					}
+				],
+				"aggregate": {
+					"count": "count(invoiceNumber)",
+					"totalAmount": "sum(totalAmount)",
+					"percentageOfTotal": "100 * sum(totalAmount) / window.sum(totalAmount)"
+				},
+				"buckets": {
+					"field": "dueDate",
+					"source": "IAppConfig",
+					"configKey": "ap.aging.buckets",
+					"defaults": [
+						30,
+						60,
+						90
+					],
+					"labels": [
+						"current",
+						"30days",
+						"60days",
+						"90days"
+					],
+					"reference": "today"
+				},
+				"return": [
+					"vendorName",
+					"vendorNumber",
+					"agingBucket",
+					"count",
+					"totalAmount",
+					"percentageOfTotal"
+				]
+			},
+			"agedPayablesTimeline": {
+				"description": "Aged Payables Timeline report: payment due dates with amounts and vendor summary. Excludes paid / written-off / voided.",
+				"source": "APTransaction",
+				"where": {
+					"state": {
+						"in": [
+							"issued",
+							"partially-paid",
+							"overdue",
+							"disputed"
+						]
+					}
+				},
+				"groupBy": [
+					"dueDate"
+				],
+				"orderBy": [
+					{
+						"field": "dueDate",
+						"direction": "asc"
+					}
+				],
+				"aggregate": {
+					"count": "count(invoiceNumber)",
+					"totalAmount": "sum(totalAmount)",
+					"vendors": "list({vendorName, totalAmount})"
+				},
+				"return": [
+					"dueDate",
+					{
+						"computed": "daysUntilDue",
+						"expression": "dueDate - today"
+					},
+					"count",
+					"totalAmount",
+					"vendors"
+				]
+			},
+			"vendorOpenApBalance": {
+				"description": "Per-vendor open AP balance used by Vendor detail view and pre-payment-run checks. Aggregates open (state in issued/partially-paid/overdue/disputed) APTransaction totals by vendorId.",
+				"source": "APTransaction",
+				"where": {
+					"state": {
+						"in": [
+							"issued",
+							"partially-paid",
+							"overdue",
+							"disputed"
+						]
+					}
+				},
+				"groupBy": [
+					"vendorId"
+				],
+				"aggregate": {
+					"openBalance": "sum(totalAmount)",
+					"openCount": "count(invoiceNumber)"
+				}
+			}
+		},
+		"x-openregister-notifications": {
+			"approvalNeeded": {
+				"trigger": {
+					"type": "updated",
+					"condition": {
+						"field": "state",
+						"operator": "equals",
+						"value": "received"
+					}
+				},
+				"enabled": true,
+				"originApp": "shillinq",
+				"channels": [
+					"nc-notification",
+					"web-push"
+				],
+				"recipients": [
+					{
+						"kind": "groups",
+						"groups": [
+							"shillinq-finance"
+						]
+					}
+				],
+				"subject": {
+					"nl": "Goedkeuring nodig: {{invoiceNumber}}",
+					"en": "Approval needed: {{invoiceNumber}}"
+				},
+				"message": {
+					"nl": "Deze inkoopfactuur staat in Shillinq. Openen?",
+					"en": "This supplier invoice is in Shillinq. Open it?"
+				},
+				"actions": [
+					{
+						"label": {
+							"nl": "Factuur openen",
+							"en": "Open invoice"
+						},
+						"primary": true,
+						"target": {
+							"kind": "object-detail"
+						}
+					}
+				]
+			},
+			"overdue": {
+				"trigger": {
+					"type": "scheduled",
+					"intervalSec": 86400,
+					"filter": {
+						"all": [
+							{
+								"field": "state",
+								"operator": "notIn",
+								"values": [
+									"paid",
+									"written-off",
+									"voided"
+								]
+							},
+							{
+								"field": "dueDate",
+								"operator": "before",
+								"value": "now"
+							}
+						]
+					}
+				},
+				"enabled": true,
+				"originApp": "shillinq",
+				"channels": [
+					"nc-notification",
+					"web-push"
+				],
+				"recipients": [
+					{
+						"kind": "groups",
+						"groups": [
+							"shillinq-finance"
+						]
+					}
+				],
+				"subject": {
+					"nl": "Factuur over de vervaldatum: {{invoiceNumber}}",
+					"en": "Invoice overdue: {{invoiceNumber}}"
+				},
+				"message": {
+					"nl": "Deze factuur is vervallen in Shillinq. Openen?",
+					"en": "This invoice is overdue in Shillinq. Open it?"
+				},
+				"actions": [
+					{
+						"label": {
+							"nl": "Factuur openen",
+							"en": "Open invoice"
+						},
+						"primary": true,
+						"target": {
+							"kind": "object-detail"
+						}
+					}
+				]
+			}
+		},
+		"x-openregister-rbac": {
+			"roles": {
+				"bookkeeper": {
+					"permissions": [
+						"create",
+						"read",
+						"update"
+					]
+				},
+				"controller": {
+					"permissions": [
+						"create",
+						"read",
+						"update",
+						"delete"
+					]
+				},
+				"auditor": {
+					"permissions": [
+						"read"
+					]
+				}
+			}
+		}
+	}
+}

@@ -303,6 +303,25 @@ class NlSignalChecksTest extends TestCase {
 	}//end testAanzegtermijnViolatedWhenDeadlineMissedAndNotRecorded()
 
 	/**
+	 * Unreadable contract dates are out of scope; an unreadable aanzegdOn past the deadline is a violation.
+	 *
+	 * @return void
+	 */
+	public function testAanzegtermijnWithUnreadableDates(): void {
+		$check = $this->checks['nl-aanzegtermijn-bewaking'];
+		$missed = [
+			'startDate' => date('Y-m-d', strtotime('-11 months -13 days')),
+			'endDate' => date('Y-m-d', strtotime('+17 days')),
+		];
+
+		$this->assertTrue($check($this->contract(['startDate' => 'ooit'] + $missed)));
+		$this->assertTrue($check($this->contract(['endDate' => 'nooit'] + $missed)));
+		$this->assertFalse($check($this->contract(['aanzegdOn' => 'gisteren-ish'] + $missed)));
+		$this->assertFalse($check($this->contract(['aanzegdOn' => '   '] + $missed)));
+
+	}//end testAanzegtermijnWithUnreadableDates()
+
+	/**
 	 * @return void
 	 */
 	public function testAanzegtermijnSatisfiedWhenAanzegdOnIsTimely(): void {

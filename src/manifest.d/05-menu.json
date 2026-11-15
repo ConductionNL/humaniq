@@ -103,6 +103,15 @@
 					"route": "MijnDoelen"
 				},
 				{
+					"id": "MijnEnquetes",
+					"label": "My surveys",
+					"icon": "ClipboardTextOutline",
+					"route": "SurveyInvitations",
+					"query": {
+						"userId": "@me"
+					}
+				},
+				{
 					"id": "MijnVerlofKopenVerkopen",
 					"label": "Buy/sell leave",
 					"icon": "CalendarWeekendOutline",
@@ -320,6 +329,12 @@
 					"route": "ReviewCycles"
 				},
 				{
+					"id": "Surveys",
+					"label": "Surveys",
+					"icon": "ClipboardTextOutline",
+					"route": "Surveys"
+				},
+				{
 					"id": "Onboardings",
 					"label": "Onboardings",
 					"icon": "AccountPlusOutline",
@@ -470,6 +485,21 @@
 						"_order": "[{\"key\":\"submittedAt\",\"order\":\"asc\"}]",
 						"managerUserId": "@me",
 						"status": "submitted"
+					}
+				},
+				{
+					"id": "HrVerlofgoedkeuring",
+					"label": "HR leave approval",
+					"icon": "CheckDecagramOutline",
+					"route": "LeaveRequests",
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					},
+					"query": {
+						"_order": "[{\"key\":\"submittedAt\",\"order\":\"asc\"}]",
+						"status": "manager-approved"
 					}
 				},
 				{
@@ -639,6 +669,42 @@
 					"route": "PayrollRuns"
 				},
 				{
+					"id": "WageCosts",
+					"label": "Wage costs",
+					"icon": "ChartBar",
+					"route": "WageCosts"
+				},
+				{
+					"id": "CostAllocations",
+					"label": "Cost allocations",
+					"icon": "ScaleBalance",
+					"route": "CostAllocations"
+				},
+				{
+					"id": "PayrollHandoffs",
+					"label": "Bureau handoffs",
+					"icon": "SwapHorizontal",
+					"route": "PayrollHandoffs"
+				},
+				{
+					"id": "ThirdPartyPayees",
+					"label": "Third-party payees",
+					"icon": "AccountArrowRightOutline",
+					"route": "ThirdPartyPayees"
+				},
+				{
+					"id": "ThirdPartyPayments",
+					"label": "Third-party payments",
+					"icon": "CashMultiple",
+					"route": "ThirdPartyPayments"
+				},
+				{
+					"id": "ThirdPartyReports",
+					"label": "Third-party reports",
+					"icon": "FileSendOutline",
+					"route": "ThirdPartyReports"
+				},
+				{
 					"id": "LoonaangifteFilings",
 					"label": "Wage tax filings",
 					"icon": "FileSendOutline",
@@ -649,6 +715,12 @@
 					"label": "Pension filings",
 					"icon": "PiggyBankOutline",
 					"route": "PensionFilings"
+				},
+				{
+					"id": "PensionSchemes",
+					"label": "Pension schemes",
+					"icon": "PiggyBank",
+					"route": "PensionSchemes"
 				},
 				{
 					"id": "WntDisclosures",
@@ -679,6 +751,12 @@
 					"label": "Payment batches",
 					"icon": "CreditCardOutline",
 					"route": "PayrollPaymentBatches"
+				},
+				{
+					"id": "WageTaxRemittances",
+					"label": "Wage tax payments",
+					"icon": "BankTransfer",
+					"route": "WageTaxRemittances"
 				},
 				{
 					"id": "WkrDeclarations",
@@ -777,7 +855,7 @@
 				},
 				{
 					"id": "Integraties",
-					"label": "Integrations",
+					"label": "Access grants",
 					"icon": "PowerPlugOutline",
 					"route": "IntegrationAccounts"
 				},

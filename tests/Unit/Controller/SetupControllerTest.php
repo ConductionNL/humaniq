@@ -1,9 +1,15 @@
 <?php
 
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
 namespace Unit\Controller;
 
 use OCA\Humaniq\Controller\SetupController;
 use OCA\Humaniq\Service\DemoDataService;
+use OCA\Humaniq\Service\Setup\SetupHealthCheck;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
@@ -34,7 +40,10 @@ class SetupControllerTest extends TestCase {
 			$this->createMock(IRequest::class),
 			$this->appConfig,
 			$this->logger,
-			$this->demoData
+			$this->demoData,
+			$this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class),
+			$this->createMock(\OCP\IUserSession::class),
+			$this->createMock(SetupHealthCheck::class)
 		);
 	}
 
@@ -50,6 +59,31 @@ class SetupControllerTest extends TestCase {
 		// This app declares no REQUIRED step, so setup must never gate the app.
 		$this->assertTrue($data['completed']);
 		$this->assertSame(1, $data['version']);
+	}
+
+	/**
+	 * The Klaar step reads its health check from the status, failure included.
+	 */
+	public function testStatusCarriesTheHealthCheckAsReported(): void {
+		$this->appConfig->method('getValueString')->willReturn('');
+		$health = $this->createMock(SetupHealthCheck::class);
+		$failed = SetupHealthCheck::report(schemas: 0, backgroundJobs: true, payrollTablesYear: 2026);
+		$health->expects($this->once())->method('check')->willReturn($failed);
+		$controller = new SetupController(
+			$this->createMock(IRequest::class),
+			$this->appConfig,
+			$this->logger,
+			$this->demoData,
+			$this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class),
+			$this->createMock(\OCP\IUserSession::class),
+			$health
+		);
+
+		$data = $controller->status()->getData();
+
+		$this->assertSame($failed, $data['health']);
+		$this->assertFalse($data['health']['passed']);
+		$this->assertTrue($data['completed']);
 	}
 
 	public function testStatusReportsTheStepDoneOnceDecided(): void {
@@ -107,8 +141,27 @@ class SetupControllerTest extends TestCase {
 
 		$steps = $this->controller->status()->getData()['steps'];
 
-		foreach (['welcome', 'demo-data', 'load-demo-data', 'done'] as $id) {
-			$this->assertArrayHasKey($id, $steps, $id . ' is declared in the manifest and must be reported');
+		// Read from the manifest the wizard renders, not listed here by hand.
+		$manifest = json_decode((string)file_get_contents(__DIR__ . '/../../../src/manifest.json'), true);
+		$declared = array_column($manifest['setup']['steps'], 'id');
+		$reported = array_keys($steps);
+		sort($declared);
+		sort($reported);
+		$this->assertSame($declared, $reported);
+	}
+
+	/**
+	 * One cards step with `loadAction` replaces the choice step plus the
+	 * run-action step that loaded the pick (wizard-dataset-card-load). The
+	 * served effective manifest carries the same setup block.
+	 */
+	public function testTheDatasetStepLoadsFromItsCards(): void {
+		foreach (['manifest.json', 'manifest.effective.json'] as $file) {
+			$manifest = json_decode((string)file_get_contents(__DIR__ . '/../../../src/' . $file), true);
+			$steps = array_column($manifest['setup']['steps'], null, 'id');
+
+			$this->assertSame('load-demo-data', $steps['demo-data']['loadAction'] ?? null, $file);
+			$this->assertArrayNotHasKey('load-demo-data', $steps, $file);
 		}
 	}
 
@@ -117,7 +170,7 @@ class SetupControllerTest extends TestCase {
 	 * close. If it stayed outstanding the wizard would reopen forever on an
 	 * instance that declined.
 	 */
-	public function testChoosingNoneClosesTheLoadStepWithoutImporting(): void {
+	public function testChoosingNoneClosesTheStepWithoutImporting(): void {
 		$this->appConfig->method('getValueString')
 			->willReturnCallback(static fn (string $app, string $key): string => ($key === 'demo_dataset' ? 'none' : ''));
 		$this->demoData->method('listChoices')->willReturn([]);
@@ -126,7 +179,7 @@ class SetupControllerTest extends TestCase {
 		$steps = $this->controller->status()->getData()['steps'];
 
 		$this->assertTrue($steps['demo-data']['done']);
-		$this->assertTrue($steps['load-demo-data']['done']);
+		$this->assertArrayNotHasKey('load-demo-data', $steps);
 	}
 
 	/**
@@ -166,7 +219,7 @@ class SetupControllerTest extends TestCase {
 		$request->method('getParam')->willReturn('no-such-set');
 		$this->demoData->method('listChoices')->willReturn([['id' => 'none'], ['id' => 'humaniq-demo']]);
 
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData);
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class));
 		$this->appConfig->expects($this->never())->method('setValueString');
 
 		$res = $controller->saveConfig();
@@ -181,8 +234,9 @@ class SetupControllerTest extends TestCase {
 	 */
 	public function testAKnownDatasetIsStoredAndTheRouteParamIsNot(): void {
 		$request = $this->createMock(IRequest::class);
-		$request->method('getParam')->willReturn('humaniq-demo');
-		$request->method('getParams')->willReturn(['demo_dataset' => 'humaniq-demo', '_route' => 'humaniq.setup.saveConfig']);
+		$params = ['demo_dataset' => 'humaniq-demo', '_route' => 'humaniq.setup.saveConfig'];
+		$request->method('getParam')->willReturnCallback(static fn (string $key, mixed $default = null): mixed => ($params[$key] ?? $default));
+		$request->method('getParams')->willReturn($params);
 		$this->demoData->method('listChoices')->willReturn([['id' => 'none'], ['id' => 'humaniq-demo']]);
 
 		$written = [];
@@ -192,7 +246,7 @@ class SetupControllerTest extends TestCase {
                 return true;
             });
 
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData);
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class));
 		$res = $controller->saveConfig();
 
 		$this->assertTrue($res->getData()['success']);
@@ -209,7 +263,7 @@ class SetupControllerTest extends TestCase {
 		$request->method('getParams')->willReturn(['some_other_key' => 'value']);
 		$this->demoData->expects($this->never())->method('listChoices');
 
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData);
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class));
 
 		$this->assertTrue($controller->saveConfig()->getData()['success']);
 	}
@@ -245,11 +299,18 @@ class SetupControllerTest extends TestCase {
 		$this->demoData->method('install')
 			->willReturn(['objects' => 30, 'registers' => 1, 'schemas' => 4]);
 
-		$this->appConfig->expects($this->once())
-			->method('setValueString')
-			->with('humaniq', 'demo_data_decided', 'installed');
+		$written = [];
+		$this->appConfig->method('setValueString')
+			->willReturnCallback(static function (string $app, string $key, string $value) use (&$written): bool {
+				$written[$key] = $value;
+
+				return true;
+			});
 
 		$data = $this->controller->runAction('install-demo-data')->getData();
+
+		// The legacy id names the shipped set, so that set is recorded as the pick.
+		$this->assertSame(['demo_dataset' => 'humaniq-demo', 'demo_data_decided' => 'installed'], $written);
 
 		$this->assertTrue($data['success']);
 		// A success message that names no count cannot be told apart from an
@@ -273,5 +334,173 @@ class SetupControllerTest extends TestCase {
 		$this->assertSame(500, $response->getStatus());
 		$this->assertFalse($response->getData()['success']);
 		$this->assertStringContainsString('OpenRegister is not installed.', $response->getData()['message']);
+	}
+
+	/**
+	 * Build a controller whose request carries the given body params.
+	 *
+	 * @param array<string, mixed> $params The posted body.
+	 *
+	 * @return SetupController
+	 */
+	private function controllerPosting(array $params): SetupController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')
+			->willReturnCallback(static fn (string $key) => ($params[$key] ?? null));
+
+		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class));
+	}
+
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function choices(): array {
+		return [
+			['id' => 'none', 'label' => 'None', 'description' => '', 'objectCount' => 0, 'icon' => ''],
+			['id' => 'humaniq-demo', 'label' => 'Example data', 'description' => '', 'objectCount' => 12, 'icon' => ''],
+		];
+	}
+
+	public function testTheCardPostsItsDatasetAndTheLoadRecordsTheChoice(): void {
+		// The card's Load button posts `{ dataset }` to the step's
+		// `loadAction`. Nothing was stored before: the card IS the choice.
+		$this->appConfig->method('getValueString')->willReturn('');
+		$this->demoData->method('listChoices')->willReturn($this->choices());
+		$this->demoData->expects($this->once())->method('install')
+			->willReturn(['objects' => 12, 'registers' => 1, 'schemas' => 3]);
+
+		$written = [];
+		$this->appConfig->method('setValueString')
+			->willReturnCallback(static function (string $app, string $key, string $value) use (&$written): bool {
+				$written[$key] = $value;
+
+				return true;
+			});
+
+		$data = $this->controllerPosting(['dataset' => 'humaniq-demo'])->runAction('load-demo-data')->getData();
+
+		$this->assertTrue($data['success']);
+		$this->assertStringContainsString('12', $data['message']);
+		$this->assertSame(['demo_dataset' => 'humaniq-demo', 'demo_data_decided' => 'installed'], $written);
+	}
+
+	public function testAnUnknownPostedDatasetIsRefusedAndNothingLoads(): void {
+		$this->appConfig->method('getValueString')->willReturn('humaniq-demo');
+		$this->demoData->method('listChoices')->willReturn($this->choices());
+		$this->demoData->expects($this->never())->method('install');
+		$this->appConfig->expects($this->never())->method('setValueString');
+
+		$response = $this->controllerPosting(['dataset' => 'atlantis'])->runAction('load-demo-data');
+
+		$this->assertSame(400, $response->getStatus());
+		$this->assertStringContainsString('atlantis', $response->getData()['message']);
+	}
+
+	public function testAFailedCardLoadStoresNothing(): void {
+		$this->appConfig->method('getValueString')->willReturn('');
+		$this->demoData->method('listChoices')->willReturn($this->choices());
+		$this->demoData->method('install')->willThrowException(new RuntimeException('OpenRegister is not installed.'));
+		$this->appConfig->expects($this->never())->method('setValueString');
+
+		$response = $this->controllerPosting(['dataset' => 'humaniq-demo'])->runAction('load-demo-data');
+
+		$this->assertSame(500, $response->getStatus());
+	}
+
+	/**
+	 * A controller over this request's parameters and a SetupAdministrations double.
+	 *
+	 * @param array<string,mixed> $params The posted parameters.
+	 * @param \OCA\Humaniq\Service\Setup\SetupAdministrations $setup The double.
+	 * @param string|null $uid The signed-in administrator.
+	 *
+	 * @return SetupController
+	 */
+	private function wizard(array $params, \OCA\Humaniq\Service\Setup\SetupAdministrations $setup, ?string $uid = 'admin'): SetupController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(static fn (string $key, mixed $default = null): mixed => ($params[$key] ?? $default));
+		$request->method('getParams')->willReturn($params);
+		$session = $this->createMock(\OCP\IUserSession::class);
+		if ($uid !== null) {
+			$user = $this->createMock(\OCP\IUser::class);
+			$user->method('getUID')->willReturn($uid);
+			$session->method('getUser')->willReturn($user);
+		}
+
+		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $setup, $session, $this->createMock(SetupHealthCheck::class));
+	}
+
+	public function testCreateAdministrationsCreatesForTheSignedInAdministrator(): void {
+		$entries = [['name' => 'Gemeente Zuiddrecht', 'loonheffingennummer' => '123456789L01']];
+		$setup = $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class);
+		$setup->expects($this->once())->method('create')->with($entries, 'admin')->willReturn(['ADM-123456789L01']);
+
+		$res = $this->wizard(['administrations' => $entries], $setup)->runAction('create-administrations');
+
+		$this->assertTrue($res->getData()['success']);
+		$this->assertSame(['ADM-123456789L01'], $res->getData()['administrations']);
+	}
+
+	public function testARefusedAdministrationListCreatesNothing(): void {
+		$setup = $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class);
+		$setup->expects($this->never())->method('create');
+
+		$res = $this->wizard(['administrations' => [['name' => 'Gemeente Zuiddrecht']]], $setup)->runAction('create-administrations');
+
+		$this->assertSame(400, $res->getStatus());
+		$this->assertFalse($res->getData()['success']);
+		$this->assertSame('Administration 1 has no loonheffingennummer.', $res->getData()['message']);
+	}
+
+	public function testCreatingWithoutASignedInAdministratorIsRefused(): void {
+		$setup = $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class);
+		$setup->expects($this->never())->method('create');
+
+		$res = $this->wizard(['administrations' => [['name' => 'A', 'loonheffingennummer' => '1']]], $setup, null)->runAction('create-administrations');
+
+		$this->assertSame(401, $res->getStatus());
+	}
+
+	public function testSkippingAdministrationsIsAnAnswer(): void {
+		$setup = $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class);
+		$setup->expects($this->once())->method('skip');
+
+		$this->assertTrue($this->wizard([], $setup)->runAction('skip-administrations')->getData()['success']);
+	}
+
+	public function testAnUnknownModeIsNotStoredAndChangesNoAdministration(): void {
+		$setup = $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class);
+		$setup->expects($this->never())->method('applyMode');
+		$this->appConfig->expects($this->never())->method('setValueString');
+
+		$res = $this->wizard(['working_mode' => 'franchise'], $setup)->saveConfig();
+
+		$this->assertSame(400, $res->getStatus());
+		$this->assertFalse($res->getData()['success']);
+	}
+
+	public function testAnUnknownLanguageIsNotStored(): void {
+		$setup = $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class);
+		$this->appConfig->expects($this->never())->method('setValueString');
+
+		$this->assertSame(400, $this->wizard(['default_language' => 'de'], $setup)->saveConfig()->getStatus());
+		$this->assertSame(400, $this->wizard(['default_language' => ['nl']], $setup)->saveConfig()->getStatus());
+	}
+
+	public function testAKnownModeIsStoredAndWrittenOnTheAdministrations(): void {
+		$setup = $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class);
+		$setup->expects($this->once())->method('applyMode')->with('dga_single_person')->willReturn(1);
+		$written = [];
+		$this->appConfig->method('setValueString')->willReturnCallback(
+			static function (string $app, string $key, string $value) use (&$written): bool {
+				$written[$key] = $value;
+				return true;
+			}
+		);
+
+		$res = $this->wizard(['working_mode' => 'dga_single_person', 'default_language' => 'en'], $setup)->saveConfig();
+
+		$this->assertTrue($res->getData()['success']);
+		$this->assertSame(['working_mode' => 'dga_single_person', 'default_language' => 'en'], $written);
 	}
 }

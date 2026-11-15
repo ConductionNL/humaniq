@@ -1,0 +1,138 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "CostAllocation",
+			"params": {
+				"id": "CostAllocations",
+				"route": "/cost-allocations",
+				"title": "Cost allocations",
+				"columns": [
+					"employeeId",
+					"basis",
+					"startDate",
+					"endDate",
+					"note"
+				],
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				},
+				"filters": [
+					"basis"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"allowCreate": true,
+				"description": "How each employee's wage costs are split over cost centres and projects. Without a split, the costs go to the cost centre of the employee's department."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "CostAllocation",
+			"params": {
+				"id": "CostAllocationDetail",
+				"route": "/cost-allocations/:id",
+				"title": "Cost allocation",
+				"dataTitle": "Split",
+				"dataIcon": "ScaleBalance",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"note": "payroll-cost-allocation (2026-09-30): one employee's split of wage costs over cost centres and projects, fixed in percentages or by the approved hours booked. CostAllocationGuardListener refuses a fixed split that does not add up to 100 percent and a split that overlaps another of the same employee. Every payroll calculation reads it (CostAllocationService) and writes the payslip's WageCostAllocation lines.",
+				"exclude": [
+					"employeeId"
+				]
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "WageCostAllocation",
+			"params": {
+				"id": "WageCosts",
+				"route": "/wage-costs",
+				"title": "Wage costs",
+				"columns": [
+					"period",
+					"costCenter",
+					"projectId",
+					"employeeId",
+					"gross",
+					"employerCharges",
+					"totalCost",
+					"allocationSource"
+				],
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				},
+				"filters": [
+					"period",
+					"costCenter",
+					"allocationSource"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"allowCreate": false,
+				"description": "The wage costs of every payslip per cost centre and project, as the payroll journal books them. Filter on a period to see one month; the payroll run page shows the total per cost centre."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "WageCostAllocation",
+			"params": {
+				"id": "WageCostAllocationDetail",
+				"route": "/wage-costs/:id",
+				"title": "Wage cost line",
+				"dataTitle": "Wage costs",
+				"dataIcon": "ChartBar",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"note": "payroll-cost-allocation (2026-09-30): one line of a payslip's wage costs on one cost centre and project. The payroll run writes and replaces these after every calculation (CostAllocationService), so every field is read-only here; the payroll journal books its debit lines per cost centre from them.",
+				"overrides": {
+					"payslipId": {
+						"editable": false
+					},
+					"payrollRunId": {
+						"editable": false
+					},
+					"period": {
+						"editable": false
+					},
+					"employeeId": {
+						"editable": false
+					},
+					"costCenter": {
+						"editable": false
+					},
+					"projectId": {
+						"editable": false
+					},
+					"percentage": {
+						"editable": false
+					},
+					"gross": {
+						"editable": false
+					},
+					"employerCharges": {
+						"editable": false
+					},
+					"totalCost": {
+						"editable": false
+					},
+					"allocationSource": {
+						"editable": false
+					},
+					"administrationId": {
+						"editable": false
+					}
+				}
+			}
+		}
+	]
+}

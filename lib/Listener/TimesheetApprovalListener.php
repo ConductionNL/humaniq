@@ -36,6 +36,7 @@ use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Support\ResolvesSchemaSlug;
 
 /**
  * Listener that emits the approved-time-entry CloudEvent on Timesheet approval.
@@ -45,6 +46,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/time-entry-capture/spec.md#REQ-TEC-002
  */
 class TimesheetApprovalListener implements IEventListener {
+
+	use ResolvesSchemaSlug;
 
 	/**
 	 * Constructor.
@@ -104,30 +107,4 @@ class TimesheetApprovalListener implements IEventListener {
 		}//end try
 
 	}//end handle()
-
-	/**
-	 * Resolve a schema id to its slug via OpenRegister's SchemaMapper.
-	 *
-	 * Returns an empty string when OpenRegister is absent or the schema cannot
-	 * be resolved, so the listener no-ops safely.
-	 *
-	 * @param string $schemaId The OpenRegister schema id/uuid carried by the object.
-	 *
-	 * @return string The lower-caseable schema slug, or '' when unresolvable.
-	 */
-	private function resolveSchemaSlug(string $schemaId): string {
-		if ($schemaId === '') {
-			return '';
-		}
-
-		try {
-			$schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
-			$schema = $schemaMapper->find($schemaId);
-			return (string)$schema->getSlug();
-		} catch (\Throwable $e) {
-			return '';
-		}
-
-	}//end resolveSchemaSlug()
-
 }//end class

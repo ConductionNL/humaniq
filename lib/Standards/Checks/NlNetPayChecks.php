@@ -3,6 +3,9 @@
 /**
  * NL Net-Pay IBAN-Presence Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable check for the payroll-to-bank IBAN-presence rule
  * (`nl-netpay-iban-present`, lib/Standards/rules/payroll.json,
  * payroll-sepa-netpay-shillinq), mapped onto the `Payslip` object type.
@@ -29,9 +32,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

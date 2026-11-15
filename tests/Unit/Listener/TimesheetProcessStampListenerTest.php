@@ -88,6 +88,7 @@ class TimesheetProcessStampListenerTest extends TestCase {
 		]);
 		$this->store->seed('Employee', 'employee-manager', [
 			'nextcloudUserId' => 'manager1',
+			'administrationId' => 'ADM-001',
 		]);
 		$this->store->seed('OrgAssignment', 'assignment-jansen', [
 			'employeeId' => 'employee-jansen',
@@ -377,6 +378,28 @@ class TimesheetProcessStampListenerTest extends TestCase {
 
 		$this->assertTrue($event->isPropagationStopped());
 	}//end testUpdateWithoutResolvableStoredStateIsRefused()
+
+	/**
+	 * Without the old object on the event the stored state is read from the
+	 * register by uuid, and the update is judged against it rather than refused.
+	 *
+	 * @return void
+	 */
+	public function testUpdateWithoutTheOldObjectReadsTheStoredState(): void {
+		$this->store->seed('Timesheet', 'ts-stored', ['employeeId' => 'employee-jansen', 'period' => '2026-05', 'status' => 'submitted', 'submittedAt' => '2026-06-01T10:00:00+00:00']);
+		$event = new ObjectUpdatingEvent(
+			$this->timesheetEntity(['employeeId' => 'employee-jansen', 'period' => '2026-05', 'status' => 'submitted', 'submittedAt' => '1999-01-01T00:00:00+00:00'], 'ts-stored'),
+			null
+		);
+
+		$this->listener->handle($event);
+
+		$this->assertFalse($event->isPropagationStopped());
+		$modified = $event->getModifiedData();
+		$this->assertSame('2026-06-01T10:00:00+00:00', $modified['submittedAt'], 'The stored submission time wins over the client value.');
+		$this->assertSame(['admin', 'manager1', 'ADM-001'], [$modified['userId'], $modified['managerUserId'], $modified['administrationId']]);
+		$this->assertNull($modified['approvedBy']);
+	}//end testUpdateWithoutTheOldObjectReadsTheStoredState()
 
 	/**
 	 * A non-Timesheet schema is ignored entirely.

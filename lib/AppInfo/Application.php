@@ -33,22 +33,33 @@ use OCA\Humaniq\Command\RulesSeedTestDataCommand;
 use OCA\Humaniq\Lifecycle\ChangeApproverRoleGuard;
 use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
+use OCA\Humaniq\Lifecycle\HandoffCloseGuard;
+use OCA\Humaniq\Lifecycle\HandoffReleaseGuard;
+use OCA\Humaniq\Lifecycle\HrReopenGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
+use OCA\Humaniq\Lifecycle\LoonaangifteMessageGuard;
+use OCA\Humaniq\Lifecycle\LeaveApprovalStepGuard;
 use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Lifecycle\RightToWorkGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
+use OCA\Humaniq\Lifecycle\SurveyOpenGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Humaniq\Lifecycle\UbdReportReadyGuard;
+use OCA\Humaniq\Listener\AdministrationAccessWriteGuard;
 use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
 use OCA\Humaniq\Listener\ChangeRequestListener;
 use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 use OCA\Humaniq\Listener\FieldAccessListener;
 use OCA\Humaniq\Listener\FrequentAbsenceListener;
+use OCA\Humaniq\Listener\HandoffIntakeListener;
 use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
+use OCA\Humaniq\Listener\OfferHrAssistantListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
+use OCA\Humaniq\Listener\FilteredObjectSubscriptions;
 use OCA\Humaniq\Listener\ManagerDeputyListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
@@ -58,11 +69,19 @@ use OCA\Humaniq\Listener\ScenarioMutationListener;
 use OCA\Humaniq\Listener\ExitInterviewListener;
 use OCA\Humaniq\Listener\CandidateEvaluationStampListener;
 use OCA\Humaniq\Listener\ReferralListener;
+use OCA\Humaniq\Listener\ExpenseCategoryGuardListener;
+use OCA\Humaniq\Listener\ExpenseManagerStampListener;
+use OCA\Humaniq\Listener\ExpensePayoutFieldsListener;
+use OCA\Humaniq\Listener\DeploymentPlanTotalsListener;
 use OCA\Humaniq\Listener\ExpenseRouteListener;
 use OCA\Humaniq\Listener\PayrollRunApprovedListener;
+use OCA\Humaniq\Listener\CaoComponentOverrideListener;
+use OCA\Humaniq\Listener\CostAllocationGuardListener;
+use OCA\Humaniq\Listener\PayrollRunFindingStampListener;
 use OCA\Humaniq\Listener\RecurringAllowanceStampListener;
 use OCA\Humaniq\Listener\RelationsCaseListener;
 use OCA\Humaniq\Listener\AnnouncementConfirmationListener;
+use OCA\Humaniq\Middleware\ApiContractMiddleware;
 use OCA\Humaniq\Service\AnnouncementService;
 use OCA\Humaniq\Listener\SideActivityListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
@@ -70,6 +89,7 @@ use OCA\Humaniq\Listener\TimeEstimateListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
 use OCA\Humaniq\Listener\TimesheetApprovalListener;
 use OCA\Humaniq\Listener\TimesheetProcessStampListener;
+use OCA\Humaniq\Listener\LeaveRequestProcessStampListener;
 use OCA\Humaniq\Listener\TrainingRecordListener;
 use OCA\Humaniq\Listener\TravelAmountListener;
 use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
@@ -135,31 +155,35 @@ class Application extends App implements IBootstrap {
 	 * @spec exclude composition root — registers services owned by many capabilities (rule engine, lifecycle guards, jurisdiction packs, hours process); each registration cites its own change in the adjacent comment
 	 */
 	public function register(IRegistrationContext $context): void {
-		$context->registerService(
-			RulesAuditCommand::class,
-			static function ($c): RulesAuditCommand {
-				return new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class));
-			}
+		// The API contract (version header, deprecation of unversioned paths,
+		// problem details). Registered first: Nextcloud runs afterController in
+		// reverse order, so it sees the final response of every other middleware.
+		$context->registerMiddleware(class: ApiContractMiddleware::class);
+
+		// self-service-mobile (design.md D1): link the web manifest from the
+		// head of humaniq's own pages, so a phone browser offers to install Mijn HR.
+		$context->registerEventListener(
+			\OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent::class,
+			\OCA\Humaniq\Listener\PwaHeadListener::class
 		);
 
-		$context->registerService(
-			RulesSeedTestDataCommand::class,
-			static function ($c): RulesSeedTestDataCommand {
-				return new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class));
-			}
-		);
+		// self-service-policy-assistant D2: offer Hermiq the HR-vraagbaak template.
+		// The event is named by string, so humaniq installs without Hermiq.
+		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);
+		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class)));
+		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
+		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
+		$context->registerServiceAlias(\OCA\Humaniq\Service\OrgLookupInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 
 		// OpenRegister lifecycle guard for the Timesheet/Expense approve+reject
 		// transitions (separation of duties — no self-approval). Registered keyed
 		// by its FQCN so OpenRegister's LifecycleGuardRegistry resolves the
 		// `requires` tag declared on the transitions. The guard has no app
 		// dependencies, so a plain construction closure suffices.
-		$context->registerService(
-			NoSelfApprovalGuard::class,
-			static function ($c): NoSelfApprovalGuard {
-				return new NoSelfApprovalGuard();
-			}
-		);
+		$context->registerService(NoSelfApprovalGuard::class, static fn ($c): NoSelfApprovalGuard => new NoSelfApprovalGuard());
+
+		// hr-reopens-an-approved-claim: only HR outside the claim reopens an approved Expense.
+		$context->registerService(HrReopenGuard::class, static fn ($c): HrReopenGuard => new HrReopenGuard($c->get(\OCA\Humaniq\Service\HumaniqRoles::class), $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
 
 		// OpenRegister lifecycle guard for the PensionFiling `controleren` transition
 		// (pension-filing-upa-mvp) — denies review unless the referenced PayrollRun is
@@ -195,12 +219,7 @@ class Application extends App implements IBootstrap {
 		// to check()), constructed exactly like NoSelfApprovalGuard, keyed by
 		// its FQCN so OpenRegister's LifecycleGuardRegistry resolves the
 		// `requires` tag declared on the `submit` transition.
-		$context->registerService(
-			TimesheetNotEmptyGuard::class,
-			static function ($c): TimesheetNotEmptyGuard {
-				return new TimesheetNotEmptyGuard();
-			}
-		);
+		$context->registerService(TimesheetNotEmptyGuard::class, static fn ($c): TimesheetNotEmptyGuard => new TimesheetNotEmptyGuard());
 
 		// OpenRegister lifecycle guard for the LeaveRequest `submit` transition
 		// (leave-against-a-department-schedule REQ-LVM-T02): a type that needs a
@@ -208,14 +227,12 @@ class Application extends App implements IBootstrap {
 		// condition. It loads the administered LeaveTypes, so it takes the shared
 		// register gateway; keyed by its FQCN so OpenRegister's
 		// LifecycleGuardRegistry resolves the `requires` tag on that transition.
-		$context->registerService(
-			LeaveTypeConditionGuard::class,
-			static function ($c): LeaveTypeConditionGuard {
-				return new LeaveTypeConditionGuard(
-					gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class)
-				);
-			}
-		);
+		$context->registerService(LeaveTypeConditionGuard::class, static fn ($c): LeaveTypeConditionGuard => new LeaveTypeConditionGuard(gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class)));
+
+		// leave-approval-steps-and-history D2: the guard on approve-manager,
+		// approve and reject of a LeaveRequest; keyed by its FQCN for the
+		// LifecycleGuardRegistry, like the guard above.
+		$context->registerService(LeaveApprovalStepGuard::class, static fn ($c): LeaveApprovalStepGuard => new LeaveApprovalStepGuard(gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class), groupManager: $c->get(\OCP\IGroupManager::class)));
 
 		// hours-process-redesign: the request-scoped internal-writer marker MUST
 		// be shared — the aggregation service / repair step set it and the
@@ -310,6 +327,13 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+
+		// payroll-external-bureau-handoff D3, D4 (four eyes, no afsluiten over blocking findings); filings-ib47 D2 (UBD report ready only when valid).
+		$context->registerService(HandoffReleaseGuard::class, static fn ($c): HandoffReleaseGuard => new HandoffReleaseGuard());
+		$context->registerService(HandoffCloseGuard::class, static fn ($c): HandoffCloseGuard => new HandoffCloseGuard());
+		$context->registerService(UbdReportReadyGuard::class, static fn ($c): UbdReportReadyGuard => new UbdReportReadyGuard());
+		$context->registerService(LoonaangifteMessageGuard::class, static fn ($c): LoonaangifteMessageGuard => new LoonaangifteMessageGuard());
+		$context->registerService(SurveyOpenGuard::class, static fn ($c): SurveyOpenGuard => new SurveyOpenGuard($c->get(InternalWriteMarker::class)));
 
 		// jurisdiction-packs (design.md D7): the pack resolver spans two homes —
 		// bundled packs in lib/Standards/packs/ (universal facts live in code)
@@ -501,9 +525,11 @@ class Application extends App implements IBootstrap {
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 		$this->registerApprovalsInboxListeners($dispatcher);
+		(new FilteredObjectSubscriptions())->register(fn (array $on) => $this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $on['event'], listener: $on['listener'], registers: null, schemas: $on['schemas']));
 		$this->registerOvertimeCreditListener($dispatcher);
 		$this->registerExpensePayrollListeners($dispatcher);
 		$this->registerHrLifecycleEventListener($dispatcher);
+		$this->registerAdministrationAccessGuard($dispatcher);
 
 	}//end boot()
 
@@ -526,8 +552,10 @@ class Application extends App implements IBootstrap {
 		// guard for TimeEntry writes (employeeId/userId/administrationId/
 		// costCenter stamps, hours derivation, timesheet find-or-create, and
 		// the refusal of writes whose parent timesheet is not draft/rejected —
-		// the delete guard included).
-		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class, ObjectDeletingEvent::class] as $event) {
+		// the delete guard included). A move out of the schema is asked like a
+		// delete; the event is named as a string, so an OpenRegister without
+		// moves never dispatches it.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class, ObjectDeletingEvent::class, 'OCA\\OpenRegister\\Event\\ObjectLeavingEvent'] as $event) {
 			$this->registerFilteredObjectListener(
 				dispatcher: $dispatcher,
 				event: $event,
@@ -549,6 +577,12 @@ class Application extends App implements IBootstrap {
 				registers: null,
 				schemas: [TimesheetProcessStampListener::TIMESHEET_SLUG]
 			);
+		}
+
+		// leave-approval-steps-and-history D1: pre-save stamping of who decided
+		// a leave request and when, with each step kept in `decisions`.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: LeaveRequestProcessStampListener::class, registers: null, schemas: [LeaveRequestProcessStampListener::LEAVE_REQUEST_SLUG]);
 		}
 
 		// hours-process-redesign Decision 3: post-save aggregate recompute of
@@ -945,7 +979,13 @@ class Application extends App implements IBootstrap {
 	}//end registerOvertimeCreditListener()
 
 	/**
-	 * payroll-expenses-and-allowances D1, D3: the claim route and the allowance drafter, before save.
+	 * payroll-expenses-and-allowances D1, D3: the claim route and the allowance drafter, before save;
+	 * payroll-run-checks D5: the reviewer who acknowledges a finding; payroll-cao-components D2: a
+	 * contract's CAO component overrides; payroll-cost-allocation D1: a cost allocation's splits
+	 * and overlap; payroll-external-bureau-handoff D4: the intake check when a handoff is received.
+	 * allowed-expense-categories: a claim in a switched-off category is refused. The expense
+	 * approver stamp and then the payout fields come last of every Expense pre-save listener,
+	 * so the modified data they merge into is complete and a decided claim's amounts win.
 	 *
 	 * @param IEventDispatcher $dispatcher The live event dispatcher.
 	 *
@@ -953,10 +993,11 @@ class Application extends App implements IBootstrap {
 	 */
 	private function registerExpensePayrollListeners(IEventDispatcher $dispatcher): void {
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
-			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG] as $listener => $slug) {
+			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG, PayrollRunFindingStampListener::class => PayrollRunFindingStampListener::SLUG, CaoComponentOverrideListener::class => CaoComponentOverrideListener::SLUG, CostAllocationGuardListener::class => CostAllocationGuardListener::COSTALLOCATION_SLUG, ExpenseCategoryGuardListener::class => ExpenseCategoryGuardListener::SLUG, ExpenseManagerStampListener::class => ExpenseManagerStampListener::SLUG, ExpensePayoutFieldsListener::class => ExpensePayoutFieldsListener::SLUG, DeploymentPlanTotalsListener::class => DeploymentPlanTotalsListener::SLUG] as $listener => $slug) {
 				$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: $listener, registers: null, schemas: [$slug]);
 			}
 		}
+		$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: ObjectUpdatedEvent::class, listener: HandoffIntakeListener::class, registers: null, schemas: [HandoffIntakeListener::SLUG]);
 	}//end registerExpensePayrollListeners()
 
 	/**
@@ -992,6 +1033,29 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerApprovalsInboxListeners()
+
+	/**
+	 * multi-administratie REQ-MULTI-003: an access row is written or removed
+	 * only by an administrator or HR of its administration.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-003
+	 */
+	private function registerAdministrationAccessGuard(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class, ObjectDeletingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: AdministrationAccessWriteGuard::class,
+				registers: null,
+				schemas: [AdministrationAccessWriteGuard::SLUG]
+			);
+		}
+
+	}//end registerAdministrationAccessGuard()
 
 	/**
 	 * platform-hr-lifecycle-events D1: after a contract, onboarding or

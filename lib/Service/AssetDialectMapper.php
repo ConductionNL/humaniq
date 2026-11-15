@@ -3,6 +3,9 @@
 /**
  * Asset Dialect Mapper
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The pure mapping half of {@see AssetDialectMigrationService}, split out so
  * each class holds one job: this one turns a stored row from the retired Dutch
  * dialect into the renamed one; the service reads rows, writes them back, and
@@ -29,9 +32,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *
@@ -127,25 +127,7 @@ class AssetDialectMapper {
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function mapAssetRow(array $row): array {
-		$withoutStatusChange = $row;
-		$nonStatusChanged = false;
-		$hardSkipReasons = [];
-
-		// category.
-		$categoryResult = $this->mapEnumValue(
-			value: ($row['category'] ?? null),
-			map: self::ASSET_CATEGORY_MAP,
-			current: self::ASSET_CATEGORY_CURRENT,
-			label: 'category'
-		);
-		if ($categoryResult['skipReason'] !== null) {
-			$hardSkipReasons[] = $categoryResult['skipReason'];
-		}
-
-		if ($categoryResult['changed'] === true) {
-			$withoutStatusChange['category'] = $categoryResult['value'];
-			$nonStatusChanged = true;
-		}
+		$state = $this->withCategory(state: ['row' => $row, 'changed' => false, 'skips' => []]);
 
 		// status (translated into $final only -- left untouched in
 		// $withoutStatusChange, see class docblock).
@@ -156,39 +138,73 @@ class AssetDialectMapper {
 			label: 'status'
 		);
 		if ($statusResult['skipReason'] !== null) {
-			$hardSkipReasons[] = $statusResult['skipReason'];
+			$state['skips'][] = $statusResult['skipReason'];
 		}
 
-		$statusChanged = $statusResult['changed'];
-		$newStatus = $statusResult['value'];
-
-		// Field renames (kenteken/serienummer/aanschafdatum/aanschafwaarde).
-		$fieldResult = $this->applyFieldRenames($withoutStatusChange, self::ASSET_FIELD_MAP);
-		if ($fieldResult['hardSkipReason'] !== null) {
-			$hardSkipReasons[] = $fieldResult['hardSkipReason'];
-		}
-
-		if ($fieldResult['changed'] === true) {
-			$withoutStatusChange = $fieldResult['row'];
-			$nonStatusChanged = true;
-		}
-
-		$withoutStatusChange = $this->normaliseAssetTypes(row: $withoutStatusChange);
+		$state = $this->withFieldRenames(state: $state);
+		$withoutStatusChange = $this->normaliseAssetTypes(row: $state['row']);
 
 		$final = $withoutStatusChange;
-		if ($statusChanged === true) {
-			$final['status'] = $newStatus;
+		if ($statusResult['changed'] === true) {
+			$final['status'] = $statusResult['value'];
 		}
 
 		return [
-			'hardSkipReason' => ($hardSkipReasons === [] ? null : implode('; ', $hardSkipReasons)),
-			'nonStatusChanged' => $nonStatusChanged,
-			'statusChanged' => $statusChanged,
+			'hardSkipReason' => ($state['skips'] === [] ? null : implode('; ', $state['skips'])),
+			'nonStatusChanged' => $state['changed'],
+			'statusChanged' => $statusResult['changed'],
 			'withoutStatusChange' => $withoutStatusChange,
 			'final' => $final,
 		];
 
 	}//end mapAssetRow()
+
+	/**
+	 * Translate the row's category, recording a skip reason for an unknown value.
+	 *
+	 * @param array{row: array<string, mixed>, changed: bool, skips: array<int, string>} $state The row so far.
+	 *
+	 * @return array{row: array<string, mixed>, changed: bool, skips: array<int, string>}
+	 */
+	private function withCategory(array $state): array {
+		$result = $this->mapEnumValue(
+			value: ($state['row']['category'] ?? null),
+			map: self::ASSET_CATEGORY_MAP,
+			current: self::ASSET_CATEGORY_CURRENT,
+			label: 'category'
+		);
+		if ($result['skipReason'] !== null) {
+			$state['skips'][] = $result['skipReason'];
+		}
+
+		if ($result['changed'] === true) {
+			$state['row']['category'] = $result['value'];
+			$state['changed'] = true;
+		}
+
+		return $state;
+	}//end withCategory()
+
+	/**
+	 * Apply the field renames (kenteken/serienummer/aanschafdatum/aanschafwaarde).
+	 *
+	 * @param array{row: array<string, mixed>, changed: bool, skips: array<int, string>} $state The row so far.
+	 *
+	 * @return array{row: array<string, mixed>, changed: bool, skips: array<int, string>}
+	 */
+	private function withFieldRenames(array $state): array {
+		$result = $this->applyFieldRenames($state['row'], self::ASSET_FIELD_MAP);
+		if ($result['hardSkipReason'] !== null) {
+			$state['skips'][] = $result['hardSkipReason'];
+		}
+
+		if ($result['changed'] === true) {
+			$state['row'] = $result['row'];
+			$state['changed'] = true;
+		}
+
+		return $state;
+	}//end withFieldRenames()
 
 	/**
 	 * Map one enum value from the old dialect to the new one.
@@ -294,59 +310,20 @@ class AssetDialectMapper {
 		$conflicts = [];
 
 		foreach ($fieldMap as $old => $new) {
-			if (array_key_exists($old, $row) === false || $row[$old] === null) {
-				// A null old-name key is an ABSENT value, not a value to
-				// migrate -- OpenRegister objects can carry a null-valued
-				// key left over from an earlier schema version that once
-				// declared it (measured: `kenteken`/`aanschafdatum`/
-				// `aanschafwaarde`/`uitgifteDatum` all appear as explicit
-				// nulls on rows that never held Dutch-dialect data in the
-				// first place). Treating a null as "present" would report a
-				// false conflict against a populated new-name field and
-				// block an already-current row from ever reaching
-				// alreadyCurrent.
-				continue;
-			}
-
-			$oldValue = $row[$old];
-			$newPresent = array_key_exists($new, $row) === true && $row[$new] !== null;
-
-			if ($newPresent === true) {
-				$newValue = $row[$new];
-				if ($this->valuesEquivalent($oldValue, $newValue) === true) {
-					// Both names hold the same value -- this field's job is
-					// done, and there is nothing left to WRITE: OpenRegister
-					// never generates a SET clause for a property the
-					// CURRENT schema no longer declares, so neither omitting
-					// the retired key NOR sending it as an explicit null
-					// clears it (both measured against the live instance --
-					// orchestrator review, 2026-08-19, Defect C's first
-					// "fix" assumed an explicit null would be written
-					// through; it is not even looked at). The retired key's
-					// stale value is permanent, harmless debris no schema or
-					// consumer reads any more -- treating its mere presence
-					// as still-unfinished work would make this field retry
-					// forever, which is what actually broke idempotency.
-					continue;
-				}
-
+			$step = $this->renameStep(row: $row, names: [$old, $new]);
+			if ($step === 'rename') {
+				$updated[$new] = $row[$old];
+				$changed = true;
+			} else if ($step === 'conflict') {
 				$conflicts[] = sprintf(
 					"both '%s' (%s) and '%s' (%s) present with different values, refusing to guess",
 					$old,
-					json_encode($oldValue),
+					json_encode($row[$old]),
 					$new,
-					json_encode($newValue)
+					json_encode($row[$new])
 				);
-				continue;
-			}//end if
-
-			// Plain rename: the new name is not populated yet, so writing it
-			// is real, achievable progress -- the retired key is left
-			// exactly as-is in the payload (see the branch above for why
-			// touching it at all would be a wasted write).
-			$updated[$new] = $oldValue;
-			$changed = true;
-		}//end foreach
+			}
+		}
 
 		return [
 			'row' => $updated,
@@ -355,6 +332,61 @@ class AssetDialectMapper {
 		];
 
 	}//end applyFieldRenames()
+
+	/**
+	 * What one old/new field pair asks of the row: nothing ('absent' or
+	 * 'done'), a write of the new name ('rename'), or a refusal ('conflict').
+	 *
+	 * @param array<string, mixed>  $row   The row.
+	 * @param array{string, string} $names The old field name and the new one.
+	 *
+	 * @return 'absent'|'done'|'rename'|'conflict'
+	 *
+	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
+	 */
+	private function renameStep(array $row, array $names): string {
+		[$old, $new] = $names;
+		if (array_key_exists($old, $row) === false || $row[$old] === null) {
+			// A null old-name key is an ABSENT value, not a value to
+			// migrate -- OpenRegister objects can carry a null-valued
+			// key left over from an earlier schema version that once
+			// declared it (measured: `kenteken`/`aanschafdatum`/
+			// `aanschafwaarde`/`uitgifteDatum` all appear as explicit
+			// nulls on rows that never held Dutch-dialect data in the
+			// first place). Treating a null as "present" would report a
+			// false conflict against a populated new-name field and
+			// block an already-current row from ever reaching
+			// alreadyCurrent.
+			return 'absent';
+		}
+
+		if (array_key_exists($new, $row) === false || $row[$new] === null) {
+			// Plain rename: the new name is not populated yet, so writing it
+			// is real, achievable progress -- the retired key is left
+			// exactly as-is in the payload (see the next branch for why
+			// touching it at all would be a wasted write).
+			return 'rename';
+		}
+
+		if ($this->valuesEquivalent($row[$old], $row[$new]) === true) {
+			// Both names hold the same value -- this field's job is
+			// done, and there is nothing left to WRITE: OpenRegister
+			// never generates a SET clause for a property the
+			// CURRENT schema no longer declares, so neither omitting
+			// the retired key NOR sending it as an explicit null
+			// clears it (both measured against the live instance --
+			// orchestrator review, 2026-08-19, Defect C's first
+			// "fix" assumed an explicit null would be written
+			// through; it is not even looked at). The retired key's
+			// stale value is permanent, harmless debris no schema or
+			// consumer reads any more -- treating its mere presence
+			// as still-unfinished work would make this field retry
+			// forever, which is what actually broke idempotency.
+			return 'done';
+		}
+
+		return 'conflict';
+	}//end renameStep()
 
 	/**
 	 * Loose-but-safe equivalence for a duplicate old/new field pair (a

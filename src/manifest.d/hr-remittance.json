@@ -1,0 +1,66 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "WageTaxRemittance",
+			"params": {
+				"id": "WageTaxRemittances",
+				"route": "/wage-tax-remittances",
+				"title": "Wage tax payments",
+				"columns": [
+					"period",
+					"status",
+					"amount",
+					"dueDate",
+					"createdAt"
+				],
+				"sort": {
+					"field": "createdAt",
+					"order": "desc"
+				},
+				"filters": [
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Each confirmed wage tax return, handed to bookkeeping as a draft payment to the Belastingdienst."
+			}
+		},
+		{
+			"templateRef": "dualDataScaffold",
+			"register": "humaniq",
+			"schema": "WageTaxRemittance",
+			"params": {
+				"id": "WageTaxRemittanceDetail",
+				"route": "/wage-tax-remittances/:id",
+				"title": "Wage tax payment",
+				"statusTitle": "Status",
+				"statusIcon": "CheckCircleOutline",
+				"statusInclude": [
+					"status",
+					"createdAt",
+					"errorMessage"
+				],
+				"statusOverrides": {
+					"status": {
+						"editable": false
+					},
+					"createdAt": {
+						"editable": false
+					}
+				},
+				"dataTitle": "Wage tax payment",
+				"dataIcon": "BankTransfer",
+				"dataExclude": [
+					"payrollRunId",
+					"filingId"
+				],
+				"dataHeight": 8,
+				"relatedHeight": 11,
+				"note": "payroll-wage-tax-remittance-shillinq: a WageTaxRemittance is humaniq's log of one hand-off of a confirmed return into shillinq's APTransaction register, never the payable itself. Same shape as PayrollPaymentBatchDetail. Copy says ready in bookkeeping, never paid: money moves only after shillinq issues and pays it. No lifecycle actions: WageTaxRemittanceService writes every status."
+			}
+		}
+	]
+}

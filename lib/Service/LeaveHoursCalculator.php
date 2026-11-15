@@ -166,22 +166,53 @@ final class LeaveHoursCalculator {
 	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-002
 	 */
 	public static function requestHours(array $request, ?float $contractHoursPerWeek, int $year, ?array $workingTime = null): array {
-		$explicit = (float)($request['hours'] ?? 0);
-		if ($explicit > 0) {
-			$startYear = (int)substr((string)($request['startDate'] ?? ''), 0, 4);
-			return [
-				'hours' => ($startYear === $year ? $explicit : 0.0),
-				'derivable' => true,
-				'basis' => 'explicit',
-				'days' => [],
-			];
+		if ((float)($request['hours'] ?? 0) > 0) {
+			return self::explicitHours(request: $request, year: $year);
 		}
 
 		if ($workingTime !== null) {
 			return (new LeaveDayCosts())->cost(request: $request, contractHoursPerWeek: $contractHoursPerWeek, year: $year, workingTime: $workingTime);
 		}
 
-		if ($contractHoursPerWeek === null || $contractHoursPerWeek <= 0) {
+		return self::contractAverageHours(request: $request, balance: ['hoursPerWeek' => $contractHoursPerWeek, 'year' => $year]);
+
+	}//end requestHours()
+
+	/**
+	 * An explicit hours value, wholly in the calendar year of the start date.
+	 *
+	 * @param array<string, mixed> $request The LeaveRequest row, with hours above zero.
+	 * @param int                  $year    The calendar year of the balance.
+	 *
+	 * @return array{hours: float, derivable: bool, basis: string, days: list<array{date: string, hours: float, reason: string}>}
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-002
+	 */
+	private static function explicitHours(array $request, int $year): array {
+		$startYear = (int)substr((string)($request['startDate'] ?? ''), 0, 4);
+
+		return [
+			'hours' => ($startYear === $year ? (float)$request['hours'] : 0.0),
+			'derivable' => true,
+			'basis' => 'explicit',
+			'days' => [],
+		];
+	}//end explicitHours()
+
+	/**
+	 * The contract hours divided by five for every weekday of the request
+	 * inside the year; not derivable without contract hours.
+	 *
+	 * @param array<string, mixed>                     $request The LeaveRequest row.
+	 * @param array{hoursPerWeek: float|null, year: int} $balance The balance's contract hours snapshot and year.
+	 *
+	 * @return array{hours: float, derivable: bool, basis: string, days: list<array{date: string, hours: float, reason: string}>}
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-002
+	 */
+	private static function contractAverageHours(array $request, array $balance): array {
+		$hoursPerWeek = $balance['hoursPerWeek'];
+		if ($hoursPerWeek === null || $hoursPerWeek <= 0) {
 			return [
 				'hours' => 0.0,
 				'derivable' => false,
@@ -193,83 +224,83 @@ final class LeaveHoursCalculator {
 		$workingDays = self::workingDaysBetween(
 			(string)($request['startDate'] ?? ''),
 			(string)($request['endDate'] ?? ''),
-			$year
+			$balance['year']
 		);
 
 		return [
-			'hours' => ($workingDays * ($contractHoursPerWeek / 5)),
+			'hours' => ($workingDays * ($hoursPerWeek / 5)),
 			'derivable' => true,
 			'basis' => 'contract-average',
 			'days' => [],
 		];
-
-	}//end requestHours()
+	}//end contractAverageHours()
 
 
 	/**
 	 * Sum the approved requests belonging to one balance.
 	 *
 	 * @param array<int, array<string, mixed>> $requests Every LeaveRequest in scope.
-	 * @param string $employeeId The balance's employee.
-	 * @param int $year The balance's year.
-	 * @param string $leaveType The balance's leave type.
-	 * @param float|null $contractHoursPerWeek The balance's contract hours snapshot.
+	 * @param LeaveUsedHoursScope              $balance  The balance: its employee, year, leave type and contract hours snapshot.
 	 *
 	 * @return array{usedHours: float, underivable: array<int, string>} The total, and the ids that could not be derived.
 	 *
 	 * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-001
 	 */
-	public static function usedHoursFor(
-		array $requests,
-		string $employeeId,
-		int $year,
-		string $leaveType,
-		?float $contractHoursPerWeek
-	): array {
-		$total = 0.0;
-		$underivable = [];
-
-		foreach ($requests as $request) {
-			if (self::belongsToBalance($request, $employeeId, $year, $leaveType) === false) {
-				continue;
-			}
-
-			$resolved = self::requestHours($request, $contractHoursPerWeek, $year);
+	public static function usedHoursFor(array $requests, LeaveUsedHoursScope $balance): array {
+		$tally = ['usedHours' => 0.0, 'underivable' => []];
+		foreach (self::countedRequests(requests: $requests, balance: $balance) as $request) {
+			$resolved = self::requestHours($request, $balance->contractHoursPerWeek, $balance->year);
 			if ($resolved['derivable'] === false) {
-				$underivable[] = (string)($request['id'] ?? ($request['@self']['id'] ?? 'unknown'));
+				$tally['underivable'][] = (string)($request['id'] ?? ($request['@self']['id'] ?? 'unknown'));
 				continue;
 			}
 
-			$total += $resolved['hours'];
+			$tally['usedHours'] += $resolved['hours'];
 		}
 
-		return [
-			'usedHours' => round($total, 2),
-			'underivable' => $underivable,
-		];
+		return self::rounded(tally: $tally);
 
 	}//end usedHoursFor()
+
+	/**
+	 * The requests that count against the balance, in their order.
+	 *
+	 * @param array<int, array<string, mixed>> $requests Every LeaveRequest in scope.
+	 * @param LeaveUsedHoursScope              $balance  The balance.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private static function countedRequests(array $requests, LeaveUsedHoursScope $balance): array {
+		return array_values(array_filter($requests, static fn (array $request): bool => self::belongsToBalance($request, $balance) === true));
+	}//end countedRequests()
+
+	/**
+	 * The used hours rounded to two decimals, with the underivable ids.
+	 *
+	 * @param array{usedHours: float, underivable: array<int, string>} $tally The total and the ids that could not be derived.
+	 *
+	 * @return array{usedHours: float, underivable: array<int, string>}
+	 */
+	private static function rounded(array $tally): array {
+		return [
+			'usedHours' => round($tally['usedHours'], 2),
+			'underivable' => $tally['underivable'],
+		];
+	}//end rounded()
 
 	/**
 	 * Whether one request counts against one balance at all.
 	 *
 	 * @param array<string, mixed> $request The LeaveRequest row.
-	 * @param string $employeeId The balance's employee.
-	 * @param int $year The balance's year.
-	 * @param string $leaveType The balance's leave type.
+	 * @param LeaveUsedHoursScope  $balance The balance.
 	 *
 	 * @return bool True when the request is approved and matches the balance.
 	 */
-	private static function belongsToBalance(
-		array $request,
-		string $employeeId,
-		int $year,
-		string $leaveType
-	): bool {
+	private static function belongsToBalance(array $request, LeaveUsedHoursScope $balance): bool {
 		return ((string)($request['status'] ?? '') === self::COUNTED_STATUS
-			&& (string)($request['employeeId'] ?? '') === $employeeId
-			&& (string)($request['leaveType'] ?? '') === $leaveType
-			&& self::touchesYear($request, $year) === true);
+			&& (string)($request['employeeId'] ?? '') === $balance->employeeId
+			&& (string)($request['leaveType'] ?? '') === $balance->leaveType
+			&& self::touchesYear($request, $balance->year) === true);
 
 	}//end belongsToBalance()
 

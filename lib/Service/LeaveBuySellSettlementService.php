@@ -3,6 +3,9 @@
 /**
  * Leave Buy/Sell Settlement Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The imperative balance-mutating write for leave-buy-sell (design.md D4):
  * lifecycle guards are read-only per OpenRegister's contract, so
  * `LeaveSettlementPeriodGuard` alone cannot adjust the employee's leave
@@ -48,9 +51,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-002
@@ -61,9 +61,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\Humaniq\Support\LoadsAllRows;
 
 /**
  * Idempotently settles an approved LeaveTransaction: re-checked sufficiency
@@ -71,6 +76,10 @@ use RuntimeException;
  * bovenwettelijkHours-only balance write, and the transition-carrying stamp.
  */
 class LeaveBuySellSettlementService {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
+	use LoadsAllRows;
 
 	/**
 	 * Max objects loaded per type when scanning for a balance/run match.
@@ -170,9 +179,10 @@ class LeaveBuySellSettlementService {
 
 			$this->objectService()->saveObject(
 				object: $balanceUpdate,
-				register: $this->register(),
-				schema: 'LeaveBalance',
-				uuid: $this->idOf($balance),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'LeaveBalance'),
+					uuid: $this->idOf($balance)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -191,9 +201,10 @@ class LeaveBuySellSettlementService {
 
 			$this->objectService()->saveObject(
 				object: $transactionUpdate,
-				register: $this->register(),
-				schema: 'LeaveTransaction',
-				uuid: $transactionId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'LeaveTransaction'),
+					uuid: $transactionId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -268,7 +279,7 @@ class LeaveBuySellSettlementService {
 	 */
 	private function findById(string $schema, string $id): ?array {
 		try {
-			$row = $this->objectService()->find(id: $id, register: $this->register(), schema: $schema);
+			$row = $this->objectService()->find(id: $id, options: new ObjectFindOptions(register: $this->register(), schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->info('LeaveBuySellSettlementService: kon ' . $schema . ' ' . $id . ' niet laden: ' . $e->getMessage());
 			return null;
@@ -280,30 +291,6 @@ class LeaveBuySellSettlementService {
 
 		return $this->toArray($row);
 	}//end findById()
-
-	/**
-	 * Load all objects of a schema (capped), as plain arrays. Degrades to an
-	 * empty list when the schema does not exist yet in the register.
-	 *
-	 * @param string $schema The schema name.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function loadAll(string $schema): array {
-		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema($schema)->findAll(['limit' => self::LIMIT]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('LeaveBuySellSettlementService: kon ' . $schema . ' niet laden: ' . $e->getMessage());
-			return [];
-		}
-
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$out[] = $this->toArray($row);
-		}
-
-		return $out;
-	}//end loadAll()
 
 	/**
 	 * Build the base outcome array.
@@ -324,25 +311,6 @@ class LeaveBuySellSettlementService {
 	}//end outcome()
 
 	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * The object id of a row, falling back to `@self.id`.
 	 *
 	 * @param array<string, mixed> $row The row.
@@ -354,28 +322,9 @@ class LeaveBuySellSettlementService {
 	}//end idOf()
 
 	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
 	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();
 	}//end register()
-
 }//end class

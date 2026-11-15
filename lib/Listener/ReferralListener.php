@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\ReferralService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
@@ -62,7 +62,7 @@ class ReferralListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param ReferralService      $referrals   The referral rules.
-	 * @param HoursRegisterGateway $gateway     Resolves the schema slug.
+	 * @param OrgLookupInterface   $gateway     Resolves the schema slug.
 	 * @param IUserSession         $userSession The signed-in user.
 	 * @param InternalWriteMarker  $marker      Marks humaniq's own writes.
 	 * @param LoggerInterface      $logger      The logger.
@@ -71,7 +71,7 @@ class ReferralListener implements IEventListener {
 	 */
 	public function __construct(
 		private readonly ReferralService $referrals,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly OrgLookupInterface $gateway,
 		private readonly IUserSession $userSession,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,
@@ -98,19 +98,30 @@ class ReferralListener implements IEventListener {
 		}
 
 		try {
-			if ($event instanceof ObjectCreatedEvent && $this->slugOf(entity: $event->getObject()) === self::SLUG) {
-				$entity = $event->getObject();
-				$this->marker->runInternal(fn () => $this->referrals->createApplication(referral: ($entity->getObject() ?? []), referralId: (string)$entity->getUuid()));
-				return;
-			}
-
-			if ($event instanceof ObjectUpdatedEvent && $this->slugOf(entity: $event->getNewObject()) === self::APPLICATION_SLUG) {
-				$this->follow(entity: $event->getNewObject());
-			}
+			$this->afterSave(event: $event);
 		} catch (\Throwable $e) {
 			$this->logger->warning('humaniq: a referral could not create or follow its application', ['exception' => $e->getMessage()]);
 		}
 	}//end handle()
+
+	/**
+	 * A stored referral creates its application; an updated application a referral led to is followed.
+	 *
+	 * @param Event $event The post-save event.
+	 *
+	 * @return void
+	 */
+	private function afterSave(Event $event): void {
+		if ($event instanceof ObjectCreatedEvent && $this->slugOf(entity: $event->getObject()) === self::SLUG) {
+			$entity = $event->getObject();
+			$this->marker->runInternal(fn () => $this->referrals->createApplication(referral: ($entity->getObject() ?? []), referralId: (string)$entity->getUuid()));
+			return;
+		}
+
+		if ($event instanceof ObjectUpdatedEvent && $this->slugOf(entity: $event->getNewObject()) === self::APPLICATION_SLUG) {
+			$this->follow(entity: $event->getNewObject());
+		}
+	}//end afterSave()
 
 	/**
 	 * Refuse or stamp a new referral.

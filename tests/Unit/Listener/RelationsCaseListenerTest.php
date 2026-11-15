@@ -63,7 +63,7 @@ class RelationsCaseListenerTest extends TestCase {
 		parent::setUp();
 		$this->store = new FakeObjectStore();
 		$this->store->seed('Employee', '6b1f7c2e-3d4a-4e5b-8c6d-7e8f9a0b1c2d', ['firstName' => 'Noa', 'lastName' => 'Visser', 'nextcloudUserId' => 'noa', 'administrationId' => 'ADM-001']);
-		$this->store->seed('Employee', 'emp-lead', ['firstName' => 'Kees', 'lastName' => 'de Leider', 'nextcloudUserId' => 'kees']);
+		$this->store->seed('Employee', 'emp-lead', ['firstName' => 'Kees', 'lastName' => 'de Leider', 'nextcloudUserId' => 'kees', 'administrationId' => 'ADM-001']);
 		$this->store->seed('OrgAssignment', 'as-1', ['employeeId' => '6b1f7c2e-3d4a-4e5b-8c6d-7e8f9a0b1c2d', 'orgUnitId' => 'unit-1', 'endDate' => '']);
 		$this->store->seed('OrgUnit', 'unit-1', ['managerId' => 'emp-lead']);
 	}//end setUp()

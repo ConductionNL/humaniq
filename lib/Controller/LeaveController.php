@@ -41,6 +41,8 @@ namespace OCA\Humaniq\Controller;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\LeaveBuySellSettlementService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,12 +50,15 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectService;
 
 /**
  * Guarded endpoint that settles one approved LeaveTransaction.
  */
 class LeaveController extends Controller {
+
+	use ConvertsRowsToArrays;
+	use ResolvesObjectService;
 
 	/**
 	 * @param IRequest $request The request object.
@@ -138,11 +143,13 @@ class LeaveController extends Controller {
 		try {
 			$transaction = $this->objectService()->find(
 				id: $transactionId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'LeaveTransaction'
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: 'LeaveTransaction'
+				)
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('LeaveController: transactie ' . $transactionId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->logger->warning('LeaveController: a leave transaction lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			return null;
 		}
 
@@ -152,42 +159,4 @@ class LeaveController extends Controller {
 
 		return $this->toArray($transaction);
 	}//end authorizeTransaction()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row (entity or array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return [];
-	}//end toArray()
-
 }//end class
