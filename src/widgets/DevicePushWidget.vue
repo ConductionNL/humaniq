@@ -92,6 +92,13 @@ export default {
 		},
 	},
 
+	/**
+	 * Read whether this device is subscribed. Asks the employee nothing.
+	 *
+	 * @return {Promise<void>}
+	 *
+	 * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
+	 */
 	async mounted() {
 		try {
 			this.state = await currentState(browserEnv())
