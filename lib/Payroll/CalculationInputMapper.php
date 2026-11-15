@@ -3,6 +3,9 @@
 /**
  * Calculation Input Mapper
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The boundary between humaniq's `CalculationInput` DTO and a pack's own declared
  * input vocabulary (jurisdiction-packs design.md D6/D10).
  *
@@ -32,9 +35,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-007
@@ -58,6 +58,7 @@ final class CalculationInputMapper {
 	 *
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-007
 	 * @spec openspec/specs/30-procent-regeling/spec.md#REQ-30P-003
+	 * @spec openspec/changes/payroll-special-regimes
 	 */
 	public function toPackInputs(CalculationInput $input): array {
 		return [
@@ -70,6 +71,9 @@ final class CalculationInputMapper {
 			'whkPercentage' => $input->whkPercentage,
 			'verzekeringsplichtig' => $input->verzekeringsplichtig,
 			'thirtyPercentRulingRate' => $input->thirtyPercentRulingRate,
+			'zvwMode' => $input->zvwMode,
+			'rvuThreshold' => $input->rvuThresholdCents,
+			'rvuFinalLevyRate' => $input->rvuFinalLevyRate,
 		];
 
 	}//end toPackInputs()

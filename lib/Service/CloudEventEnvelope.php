@@ -36,29 +36,25 @@ class CloudEventEnvelope {
 	/**
 	 * One CloudEvent.
 	 *
-	 * @param string $type The event type, `nl.conduction.hrmq.*`.
-	 * @param string $source The source path.
-	 * @param string $eventId The event id.
-	 * @param string $time The ISO 8601 UTC time.
-	 * @param array<string, mixed> $data The event data.
-	 * @param string|null $subject The subject, left out when null.
+	 * @param CloudEventHeader     $header The type, source, id, time and subject.
+	 * @param array<string, mixed> $data   The event data.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/hr-lifecycle-events/spec.md#REQ-HLE-001
 	 */
-	public function build(string $type, string $source, string $eventId, string $time, array $data, ?string $subject = null): array {
+	public function build(CloudEventHeader $header, array $data): array {
 		$envelope = [
 			'specversion' => '1.0',
-			'type' => $type,
-			'source' => $source,
-			'id' => $eventId,
+			'type' => $header->type,
+			'source' => $header->source,
+			'id' => $header->eventId,
 		];
-		if ($subject !== null) {
-			$envelope['subject'] = $subject;
+		if ($header->subject !== null) {
+			$envelope['subject'] = $header->subject;
 		}
 
-		$envelope['time'] = $time;
+		$envelope['time'] = $header->time;
 		$envelope['datacontenttype'] = 'application/json';
 		$envelope['data'] = $data;
 

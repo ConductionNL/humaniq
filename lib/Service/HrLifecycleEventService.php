@@ -78,14 +78,14 @@ class HrLifecycleEventService {
 	 * Constructor.
 	 *
 	 * @param HrLifecycleMoments $moments Detects the moments.
-	 * @param HoursRegisterGateway $gateway Reads the employee.
+	 * @param RecordStoreInterface $gateway Reads the employee.
 	 * @param ContainerInterface $container Resolves OpenRegister's WebhookService lazily.
 	 * @param IEventDispatcher $eventDispatcher Dispatches the typed events.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly HrLifecycleMoments $moments,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly ContainerInterface $container,
 		private readonly IEventDispatcher $eventDispatcher,
 		private readonly LoggerInterface $logger,
@@ -139,14 +139,14 @@ class HrLifecycleEventService {
 			$moment['data']
 		);
 
-		return (new CloudEventEnvelope())->build(
-			type: self::TYPE_PREFIX . $moment['type'],
-			source: self::SOURCE,
-			eventId: $this->eventId(moment: $moment),
-			time: gmdate('Y-m-d\TH:i:s\Z'),
-			data: $data,
-			subject: $moment['employeeId']
-		);
+		$header = new CloudEventHeader();
+		$header->type = self::TYPE_PREFIX . $moment['type'];
+		$header->source = self::SOURCE;
+		$header->eventId = $this->eventId(moment: $moment);
+		$header->time = gmdate('Y-m-d\TH:i:s\Z');
+		$header->subject = $moment['employeeId'];
+
+		return (new CloudEventEnvelope())->build(header: $header, data: $data);
 	}//end envelope()
 
 	/**

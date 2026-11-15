@@ -84,6 +84,53 @@ class UwvNotificationData {
 	 * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-002
 	 */
 	public function build(array $case, array $employee, ?array $contract, array $administration): array {
+		return [
+			'employer' => self::employerFields(administration: $administration),
+			'employee' => self::employeeFields(employee: $employee),
+			'case' => self::caseFields(case: $case),
+			'contract' => self::contractFields(contract: $contract),
+		];
+	}//end build()
+
+	/**
+	 * The employer's name, payroll tax number and KvK number.
+	 *
+	 * @param array<string, mixed> $administration The hrAdministration.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function employerFields(array $administration): array {
+		return [
+			'name' => ($administration['name'] ?? null),
+			'loonheffingennummer' => ($administration['loonheffingennummer'] ?? null),
+			'kvkNumber' => ($administration['kvkNumber'] ?? null),
+		];
+	}//end employerFields()
+
+	/**
+	 * The employee's name, BSN and date of birth.
+	 *
+	 * @param array<string, mixed> $employee The Employee.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function employeeFields(array $employee): array {
+		return [
+			'name' => trim((string)($employee['firstName'] ?? '') . ' ' . (string)($employee['lastName'] ?? '')),
+			'bsn' => ($employee['bsn'] ?? null),
+			'dateOfBirth' => ($employee['dateOfBirth'] ?? null),
+		];
+	}//end employeeFields()
+
+	/**
+	 * The first sick day, the current percentage and each resumption step's
+	 * date and percentage.
+	 *
+	 * @param array<string, mixed> $case The SickLeaveCase.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function caseFields(array $case): array {
 		$resumption = [];
 		foreach ((is_array($case['absenceProgression'] ?? null) === true ? $case['absenceProgression'] : []) as $step) {
 			$resumption[] = [
@@ -93,28 +140,26 @@ class UwvNotificationData {
 		}
 
 		return [
-			'employer' => [
-				'name' => ($administration['name'] ?? null),
-				'loonheffingennummer' => ($administration['loonheffingennummer'] ?? null),
-				'kvkNumber' => ($administration['kvkNumber'] ?? null),
-			],
-			'employee' => [
-				'name' => trim((string)($employee['firstName'] ?? '') . ' ' . (string)($employee['lastName'] ?? '')),
-				'bsn' => ($employee['bsn'] ?? null),
-				'dateOfBirth' => ($employee['dateOfBirth'] ?? null),
-			],
-			'case' => [
-				'firstSickDay' => ($case['firstSickDay'] ?? null),
-				'currentAbsencePercentage' => ($case['currentAbsencePercentage'] ?? null),
-				'resumption' => $resumption,
-			],
-			'contract' => [
-				'hoursPerWeek' => ($contract['hoursPerWeek'] ?? null),
-				'type' => ($contract['type'] ?? null),
-				'endDate' => ($contract['endDate'] ?? null),
-			],
+			'firstSickDay' => ($case['firstSickDay'] ?? null),
+			'currentAbsencePercentage' => ($case['currentAbsencePercentage'] ?? null),
+			'resumption' => $resumption,
 		];
-	}//end build()
+	}//end caseFields()
+
+	/**
+	 * The contract's hours, type and end date.
+	 *
+	 * @param array<string, mixed>|null $contract The contract covering the first sick day, or null.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function contractFields(?array $contract): array {
+		return [
+			'hoursPerWeek' => ($contract['hoursPerWeek'] ?? null),
+			'type' => ($contract['type'] ?? null),
+			'endDate' => ($contract['endDate'] ?? null),
+		];
+	}//end contractFields()
 
 	/**
 	 * The contract that runs on a date: started on or before it, not ended

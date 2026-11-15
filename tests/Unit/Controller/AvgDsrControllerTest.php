@@ -44,6 +44,10 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use OCA\Humaniq\Service\CallerContext;
+use OCA\Humaniq\Service\HumaniqRoles;
+use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for AvgDsrController.
@@ -276,7 +280,9 @@ class AvgDsrControllerTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->findCalled = true;
 				return $this->row;
 			}//end find()
@@ -301,9 +307,11 @@ class AvgDsrControllerTest extends TestCase {
 		$userSession->method('getUser')->willReturn($user);
 
 		$groupManager = $this->createMock(IGroupManager::class);
-		$groupManager->method('isAdmin')->willReturn($isAdmin);
+		// Only the session user can be the administrator, so a check for any
+		// other user (a request value, a fixed name) answers false.
+		$groupManager->method('isAdmin')->willReturnCallback(static fn (string $uid): bool => $isAdmin === true && $uid === 'hr-admin');
 
-		$controller = new AvgDsrController($request, $container, $avgDsrService, $settings, $userSession, $groupManager);
+		$controller = new AvgDsrController($request, $avgDsrService, $settings, new CallerContext($userSession, new HumaniqRoles($groupManager), $container, $this->createMock(LoggerInterface::class)));
 
 		return [$controller, $fake, $avgDsrService];
 	}//end buildController()

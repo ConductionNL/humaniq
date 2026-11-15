@@ -88,6 +88,43 @@ class CostAdditionPolicyResolverTest extends TestCase {
 	}//end byKey()
 
 	/**
+	 * The whole resolution of one policy list for several contracts and
+	 * dates: scope, window, precedence, first-wins on a tie, and the one
+	 * cost form passed through.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeResolutionOfEveryPolicyShape(): void {
+		$policies = [
+			'not-a-policy',
+			['key' => 'overhead', 'scope' => 'organisation', 'centsPerHour' => '1500', 'percentageOfWage' => 10, 'source' => ' '],
+			['key' => 'overhead', 'scope' => 'organisation', 'centsPerHour' => 999],
+			['key' => 'overhead', 'scope' => 'cla', 'claId' => ' cao-ick ', 'centsPerHour' => 2500, 'source' => 'cao'],
+			['key' => 'overhead', 'scope' => 'contract', 'contractId' => 'contract-1', 'percentageOfWage' => '12.5', 'effectiveFrom' => '2026-07-01T00:00:00Z', 'effectiveTo' => '2026-07-31'],
+			['key' => 'training', 'scope' => 'cla', 'claId' => '', 'centsPerHour' => 100],
+			['key' => 'training', 'scope' => 'contract', 'contractId' => '', 'centsPerHour' => 100],
+			['key' => 'training', 'scope' => 'team', 'centsPerHour' => 100],
+			['key' => ' ', 'scope' => 'organisation', 'centsPerHour' => 100],
+			['key' => 'insurance', 'scope' => 'organisation', 'centsPerHour' => '', 'percentageOfWage' => 'x', 'basis' => 'gross'],
+			['key' => 'insurance', 'scope' => 'organisation', 'effectiveTo' => '2026-06-30', 'percentageOfWage' => 3],
+			['key' => 'leasing', 'scope' => 'contract', 'contractId' => 'contract-2', 'percentageOfWage' => 4, 'effectiveFrom' => '2026-08-01'],
+		];
+		$got = [];
+		foreach ([
+			'ick-1-july' => [['cao' => 'cao-ick'], 'contract-1', '2026-07-15'],
+			'ick-1-august' => [['cao' => ' cao-ick'], 'contract-1', '2026-08-01'],
+			'none-2-august' => [[], 'contract-2', '2026-08-01'],
+			'other-2-june' => [['cao' => 'cao-x'], 'contract-2', '2026-06-30'],
+			'no-date' => [['cao' => 'cao-ick'], 'contract-1', ''],
+			'no-contract' => [['cao' => ''], '', '2026-07-15'],
+		] as $name => [$contract, $contractId, $onDate]) {
+			$got[$name] = $this->resolver->resolveFor(policies: $policies, contract: $contract, contractId: $contractId, onDate: $onDate);
+		}
+
+		$this->assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/cost-addition-policies.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION)) . "\n");
+	}//end testTheWholeResolutionOfEveryPolicyShape()
+
+	/**
 	 * The ICK example: everyone under that CLA carries EUR 25/h for rent and
 	 * management fees.
 	 *

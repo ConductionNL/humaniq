@@ -56,8 +56,7 @@ class OnCallAverageServiceTest extends TestCase {
 			contracts: $contracts,
 			entries: $entries,
 			approvedTimesheetIds: ['ts-ok'],
-			from: '2025-09-01',
-			to: '2026-08-30'
+			window: ['2025-09-01', '2026-08-30']
 		);
 
 		self::assertCount(1, $rows);
@@ -84,7 +83,7 @@ class OnCallAverageServiceTest extends TestCase {
 			['employeeId' => 'emp-a', 'timesheetId' => 'ts', 'date' => '2025-12-01', 'hours' => 99],
 		];
 
-		$rows = (new OnCallAverageService())->averages(contracts: $contracts, entries: $entries, approvedTimesheetIds: ['ts'], from: '2025-12-01', to: '2026-01-18');
+		$rows = (new OnCallAverageService())->averages(contracts: $contracts, entries: $entries, approvedTimesheetIds: ['ts'], window: ['2025-12-01', '2026-01-18']);
 
 		self::assertCount(1, $rows);
 		self::assertSame(20.0, $rows[0]['hours']);

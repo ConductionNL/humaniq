@@ -105,6 +105,13 @@
     "docsUrl": "openspec/specs/document-dossier-avg/spec.md"
   },
   {
+    "slug": "employee-and-contract-records",
+    "title": "Employee And Contract Records",
+    "summary": "Every HR and payroll feature in humaniq hangs off two records: the employee and the employment contract.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/employee-and-contract-records/spec.md"
+  },
+  {
     "slug": "employee-history",
     "title": "Employee History",
     "summary": "One employee's career in one place: the dated events of contracts, placements, applied pay changes, approved leave, sickness and finalised reviews, composed on read and filtered by the caller's own access, and the contracts that run side by side today with their summed hours, FTE and the person's leave balance.",
@@ -117,6 +124,13 @@
     "summary": "Travel claims whose amount humaniq calculates from the distance at the employer's rate, split into a tax-free and a taxable part; commuting arrangements with a fixed monthly allowance under the 214-day rule and a distance from a route planner through integriq; and the yearly business and commuting kilometres per transport mode and fuel for the werkgebonden personenmobiliteit (WPM) CO2 reporting duty.",
     "status": "stable",
     "docsUrl": "openspec/specs/expenses-travel-calculation/spec.md"
+  },
+  {
+    "slug": "first-time-setup",
+    "title": "First Time Setup",
+    "summary": "An administrator who installs humaniq gets a short guided first run: a welcome, a choice to load example data or start empty, and a closing step.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/first-time-setup/spec.md"
   },
   {
     "slug": "fleet-bijtelling",

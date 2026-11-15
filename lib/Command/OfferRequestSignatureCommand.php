@@ -3,6 +3,9 @@
 /**
  * Offer Request Signature Command
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `occ humaniq:offer:request-signature --application <id>` -- the occ write
  * trigger for offer-esign (design.md D8), scriptability parity with the
  * sibling docudesk leaves. `--application` is REQUIRED -- unlike the letter
@@ -26,9 +29,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

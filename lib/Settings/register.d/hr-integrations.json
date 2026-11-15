@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "IntegrationAccount": {
+                "configuration": {"exportable": true},
                 "slug": "IntegrationAccount",
                 "icon": "PowerPlugOutline",
                 "version": "0.1.0",

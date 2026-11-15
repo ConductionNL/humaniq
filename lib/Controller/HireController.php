@@ -102,15 +102,7 @@ class HireController extends Controller {
 		}
 
 		$proposal = $this->hires->proposedName((string)($application['candidateName'] ?? ''));
-		$lastName = trim((string)$this->request->getParam('lastName', ''));
-		$matches = $this->matcher->matches(
-			[
-				'privateEmail' => (string)($application['email'] ?? ''),
-				'lastName' => ($lastName !== '' ? $lastName : $proposal['lastName']),
-				'bsn' => trim((string)$this->request->getParam('bsn', '')),
-				'dateOfBirth' => trim((string)$this->request->getParam('dateOfBirth', '')),
-			]
-		);
+		$matches = $this->matcher->matches($this->matchQuery(application: $application, proposal: $proposal));
 		$linked = trim((string)($application['employeeId'] ?? ''));
 
 		return new JSONResponse(
@@ -123,6 +115,29 @@ class HireController extends Controller {
 			]
 		);
 	}//end matches()
+
+	/**
+	 * What the matcher compares: the applicant's e-mail, the last name HR
+	 * typed (or the one proposed from the candidate's name), and the BSN and
+	 * date of birth HR typed.
+	 *
+	 * @param array<string, mixed>                       $application The application.
+	 * @param array{firstName: string, lastName: string} $proposal    The name proposed from the candidate's name.
+	 *
+	 * @return array<string, string>
+	 *
+	 * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-002
+	 */
+	private function matchQuery(array $application, array $proposal): array {
+		$lastName = trim((string)$this->request->getParam('lastName', ''));
+
+		return [
+			'privateEmail' => (string)($application['email'] ?? ''),
+			'lastName' => ($lastName !== '' ? $lastName : $proposal['lastName']),
+			'bsn' => trim((string)$this->request->getParam('bsn', '')),
+			'dateOfBirth' => trim((string)$this->request->getParam('dateOfBirth', '')),
+		];
+	}//end matchQuery()
 
 	/**
 	 * Hire: create the employee or attach to the one HR chose. 409 with the

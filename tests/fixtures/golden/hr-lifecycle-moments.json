@@ -1,0 +1,206 @@
+{
+    "no-employee": [],
+    "unknown-slug": [],
+    "onboarding-done": [
+        {
+            "type": "employee.joined",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-07-01",
+            "subjectId": "",
+            "data": {
+                "startDate": "2026-07-01",
+                "orgUnitId": "unit-bo"
+            }
+        }
+    ],
+    "onboarding-no-date": [
+        {
+            "type": "employee.joined",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-06-15",
+            "subjectId": "",
+            "data": {
+                "startDate": "2026-06-15",
+                "orgUnitId": "unit-bo"
+            }
+        }
+    ],
+    "onboarding-again": [],
+    "offboarding-done": [
+        {
+            "type": "employee.left",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-07-31",
+            "subjectId": "",
+            "data": {
+                "lastWorkingDay": "2026-07-31"
+            }
+        }
+    ],
+    "offboarding-open": [],
+    "contract-first": [
+        {
+            "type": "employee.joined",
+            "employeeId": "emp-new",
+            "occurredOn": "2026-09-01",
+            "subjectId": "",
+            "data": {
+                "startDate": "2026-09-01",
+                "orgUnitId": null
+            }
+        }
+    ],
+    "contract-second": [],
+    "contract-function": [
+        {
+            "type": "employee.jobchanged",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-06-15",
+            "subjectId": "ct-sam",
+            "data": {
+                "from": {
+                    "orgUnitId": "unit-bo",
+                    "normfunctieId": "nf-a"
+                },
+                "to": {
+                    "orgUnitId": "unit-bo",
+                    "normfunctieId": "nf-b"
+                }
+            }
+        }
+    ],
+    "contract-same-function": [],
+    "contract-ended-last": [
+        {
+            "type": "employee.left",
+            "employeeId": "emp-noor",
+            "occurredOn": "2026-05-31",
+            "subjectId": "",
+            "data": {
+                "lastWorkingDay": "2026-05-31"
+            }
+        }
+    ],
+    "contract-ended-future": [],
+    "contract-ended-same": [],
+    "contract-ended-only": [
+        {
+            "type": "employee.left",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-05-31",
+            "subjectId": "",
+            "data": {
+                "lastWorkingDay": "2026-05-31"
+            }
+        }
+    ],
+    "placement-second": [
+        {
+            "type": "employee.jobchanged",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-07-01",
+            "subjectId": "as-new",
+            "data": {
+                "from": {
+                    "orgUnitId": "unit-bo",
+                    "normfunctieId": null
+                },
+                "to": {
+                    "orgUnitId": "unit-ops",
+                    "normfunctieId": null
+                }
+            }
+        }
+    ],
+    "placement-first": [],
+    "placement-update": [],
+    "leave-approved": [
+        {
+            "type": "leave.approved",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-06-15",
+            "subjectId": "lv-1",
+            "data": {
+                "startDate": "2026-08-03",
+                "endDate": "2026-08-07",
+                "hours": 16
+            }
+        }
+    ],
+    "leave-approved-on-create": [
+        {
+            "type": "leave.approved",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-06-15",
+            "subjectId": "lv-2",
+            "data": {
+                "startDate": null,
+                "endDate": null,
+                "hours": null
+            }
+        }
+    ],
+    "leave-withdrawn": [
+        {
+            "type": "leave.withdrawn",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-06-15",
+            "subjectId": "lv-1",
+            "data": {
+                "startDate": "2026-08-03",
+                "endDate": "2026-08-07",
+                "hours": 16
+            }
+        }
+    ],
+    "leave-unchanged": [],
+    "sick-reported": [
+        {
+            "type": "sickness.reported",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-06-01",
+            "subjectId": "sk-1",
+            "data": {
+                "from": "2026-06-01",
+                "to": null
+            }
+        }
+    ],
+    "sick-reported-no-date": [
+        {
+            "type": "sickness.reported",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-06-15",
+            "subjectId": "sk-2",
+            "data": {
+                "from": null,
+                "to": null
+            }
+        }
+    ],
+    "sick-recovered": [
+        {
+            "type": "sickness.recovered",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-06-10",
+            "subjectId": "sk-1",
+            "data": {
+                "from": "2026-06-01",
+                "to": "2026-06-10"
+            }
+        }
+    ],
+    "sick-recovered-no-date": [
+        {
+            "type": "sickness.recovered",
+            "employeeId": "emp-sam",
+            "occurredOn": "2026-06-15",
+            "subjectId": "sk-1",
+            "data": {
+                "from": "2026-06-01",
+                "to": null
+            }
+        }
+    ],
+    "sick-update": []
+}

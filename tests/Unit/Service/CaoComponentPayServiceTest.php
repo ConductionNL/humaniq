@@ -66,7 +66,7 @@ class CaoComponentPayServiceTest extends TestCase {
 			['timesheetId' => 'ts-5', 'startedAt' => '2026-05-12T22:00:00+02:00', 'endedAt' => '2026-05-13T06:00:00+02:00', 'breakMinutes' => 0, 'hours' => 8],
 			['timesheetId' => 'ts-other', 'startedAt' => '2026-05-14T00:00:00+02:00', 'endedAt' => '2026-05-14T06:00:00+02:00', 'hours' => 6],
 		];
-		$fold = $this->service()->foldFor(contract: $contract, regularWageCents: 300000, hoursPay: ['timesheetIds' => ['ts-5'], 'hourlyRate' => 20.0], entries: $entries, nonWorkingDates: null, period: '2026-05');
+		$fold = $this->service()->foldFor(contract: $contract, basis: ['regularWageCents' => 300000, 'hoursPay' => ['timesheetIds' => ['ts-5'], 'hourlyRate' => 20.0], 'entries' => $entries, 'nonWorkingDates' => null, 'period' => '2026-05']);
 
 		$this->assertSame(30000 + 4800, $fold['totalCents']);
 		$this->assertSame(['ort'], $fold['unresolved']);
@@ -87,13 +87,13 @@ class CaoComponentPayServiceTest extends TestCase {
 	 */
 	public function testNothingNamedAPartMonthAndARefusedOverride(): void {
 		$service = $this->service();
-		$this->assertNull($service->foldFor(contract: ['cao' => 'cao-voorbeeld'], regularWageCents: 300000, hoursPay: null, entries: [], nonWorkingDates: null, period: '2026-05'));
+		$this->assertNull($service->foldFor(contract: ['cao' => 'cao-voorbeeld'], basis: ['regularWageCents' => 300000, 'hoursPay' => null, 'entries' => [], 'nonWorkingDates' => null, 'period' => '2026-05']));
 		$this->assertSame([], $service->payslipFields(fold: null));
 
-		$half = $service->foldFor(contract: ['cao' => 'cao-voorbeeld', 'caoComponents' => ['ploegentoeslag'], 'startDate' => '2026-05-17'], regularWageCents: 300000, hoursPay: null, entries: [], nonWorkingDates: null, period: '2026-05');
+		$half = $service->foldFor(contract: ['cao' => 'cao-voorbeeld', 'caoComponents' => ['ploegentoeslag'], 'startDate' => '2026-05-17'], basis: ['regularWageCents' => 300000, 'hoursPay' => null, 'entries' => [], 'nonWorkingDates' => null, 'period' => '2026-05']);
 		$this->assertSame(30000, $half['totalCents'], 'A percentage of the period wage is not pro rated again.');
 
-		$refused = $service->foldFor(contract: ['cao' => 'cao-voorbeeld', 'caoComponents' => ['ploegentoeslag'], 'caoComponentOverrides' => ['ploegentoeslag' => ['pct' => 12]]], regularWageCents: 300000, hoursPay: null, entries: [], nonWorkingDates: null, period: '2026-05');
+		$refused = $service->foldFor(contract: ['cao' => 'cao-voorbeeld', 'caoComponents' => ['ploegentoeslag'], 'caoComponentOverrides' => ['ploegentoeslag' => ['pct' => 12]]], basis: ['regularWageCents' => 300000, 'hoursPay' => null, 'entries' => [], 'nonWorkingDates' => null, 'period' => '2026-05']);
 		$this->assertSame(0, $refused['totalCents']);
 		$this->assertSame(['ploegentoeslag'], $refused['unresolved']);
 	}//end testNothingNamedAPartMonthAndARefusedOverride()
@@ -106,7 +106,7 @@ class CaoComponentPayServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnconfirmedAgreementIsListedNotPaid(): void {
-		$fold = $this->service()->foldFor(contract: ['cao' => 'cao-zorg-vvt', 'caoComponents' => ['ort']], regularWageCents: 300000, hoursPay: ['timesheetIds' => ['ts-5'], 'hourlyRate' => 20.0], entries: [['timesheetId' => 'ts-5', 'startedAt' => '2026-05-12T22:00:00+02:00', 'endedAt' => '2026-05-13T06:00:00+02:00', 'hours' => 8]], nonWorkingDates: null, period: '2026-05');
+		$fold = $this->service()->foldFor(contract: ['cao' => 'cao-zorg-vvt', 'caoComponents' => ['ort']], basis: ['regularWageCents' => 300000, 'hoursPay' => ['timesheetIds' => ['ts-5'], 'hourlyRate' => 20.0], 'entries' => [['timesheetId' => 'ts-5', 'startedAt' => '2026-05-12T22:00:00+02:00', 'endedAt' => '2026-05-13T06:00:00+02:00', 'hours' => 8]], 'nonWorkingDates' => null, 'period' => '2026-05']);
 
 		$this->assertSame(0, $fold['totalCents']);
 		$fields = $this->service()->payslipFields(fold: $fold);

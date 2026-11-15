@@ -33,6 +33,7 @@ use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\SurveyAnswers;
 use OCA\Humaniq\Service\SurveyResults;
+use OCA\Humaniq\Service\SurveyRules;
 use OCA\Humaniq\Service\SurveyService;
 use OCA\Humaniq\Service\UnitMembership;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
@@ -40,6 +41,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
@@ -107,6 +109,23 @@ class SurveyServiceTest extends TestCase {
 		self::assertSame(['open', 9, 1], [$survey['status'], $survey['invitedCount'], $survey['withoutAccountCount']]);
 		self::assertSame(['surveyId' => self::SURVEY_ID, 'invited' => 9, 'answered' => 0, 'rate' => 0.0], array_intersect_key($this->service()->results(self::SURVEY_ID), array_flip(['surveyId', 'invited', 'answered', 'rate'])));
 	}//end testASurveyGoesToTwoTeams()
+
+	/**
+	 * A placement that ended does not put an employee in a team: someone who
+	 * moved from Finance to Legal is not invited to a Finance survey.
+	 *
+	 * @return void
+	 */
+	public function testAnEndedPlacementDoesNotInvite(): void {
+		$this->store->seed('Employee', 'emp-moved', ['firstName' => 'Ver', 'lastName' => 'Huisd', 'nextcloudUserId' => 'moved', 'administrationId' => 'ADM-001', 'startDate' => '2020-01-01']);
+		$this->store->seed('OrgAssignment', 'asg-moved-old', ['employeeId' => 'emp-moved', 'orgUnitId' => 'unit-fin', 'startDate' => '2020-01-01', 'endDate' => '2025-12-31']);
+		$this->store->seed('OrgAssignment', 'asg-moved-new', ['employeeId' => 'emp-moved', 'orgUnitId' => 'unit-legal', 'startDate' => '2026-01-01']);
+
+		$outcome = $this->service()->open(self::SURVEY_ID, self::TODAY);
+
+		self::assertSame(9, $outcome['invited']);
+		self::assertNotContains('moved', array_column($this->rows('SurveyInvitation'), 'userId'));
+	}//end testAnEndedPlacementDoesNotInvite()
 
 	/**
 	 * A survey opens once, needs a question, and can go to everyone or to
@@ -184,6 +203,34 @@ class SurveyServiceTest extends TestCase {
 		self::assertSame(409, $this->service()->respond(self::SURVEY_ID, 'h2', $answers, '2026-10-21')['status'], 'After closesOn no answers are taken.');
 		self::assertCount(1, $this->rows('SurveyResponse'));
 	}//end testOneAnswerPerPerson()
+
+	/**
+	 * Every refusal keeps its message, and the stored invitation and survey
+	 * keep their fields.
+	 *
+	 * @return void
+	 */
+	public function testTheRefusalsAndStoredRowsKeepTheirShape(): void {
+		$none = ['invited' => 0, 'withoutAccount' => 0];
+		self::assertSame(['status' => 404, 'message' => 'Survey not found.'] + $none, $this->service()->open('srv-x', self::TODAY));
+		$this->store->seed('Survey', 'srv-empty', $this->survey(['questions' => ['not a question']]));
+		self::assertSame(['status' => 409, 'message' => 'Add at least one question before you open the survey.'] + $none, $this->service()->open('srv-empty', self::TODAY));
+
+		$this->service()->open(self::SURVEY_ID, self::TODAY);
+		self::assertSame(['status' => 409, 'message' => 'Only a draft survey can be opened.'] + $none, $this->service()->open(self::SURVEY_ID, self::TODAY));
+		$invitation = array_values(array_filter($this->rows('SurveyInvitation'), static fn (array $row): bool => $row['userId'] === 'h5'))[0];
+		unset($invitation['id']);
+		self::assertSame(['surveyId' => self::SURVEY_ID, 'employeeId' => 'emp-h5', 'userId' => 'h5', 'status' => 'open', 'closesOn' => '2026-10-20', 'administrationId' => 'ADM-001'], array_intersect_key($invitation, array_flip(['surveyId', 'employeeId', 'userId', 'status', 'closesOn', 'administrationId'])));
+		self::assertSame(['surveyId', 'employeeId', 'userId', 'status', 'closesOn', 'administrationId'], array_values(array_diff(array_keys($invitation), ['@self'])));
+
+		$answers = ['werkplezier' => 3, 'aanbevelen' => 7, 'werkdruk' => 'goed'];
+		self::assertSame(['status' => 404, 'message' => 'You have no invitation for this survey.'], $this->service()->respond(self::SURVEY_ID, 'l1', $answers, self::TODAY));
+		self::assertSame(['status' => 409, 'message' => 'This survey does not take answers now.'], $this->service()->respond(self::SURVEY_ID, 'h1', $answers, '2026-10-21'));
+		self::assertSame(['status' => 400, 'message' => 'Answer every required question: aanbevelen.'], $this->service()->respond(self::SURVEY_ID, 'h1', ['werkplezier' => 3, 'werkdruk' => 'goed'], self::TODAY));
+		self::assertSame(['status' => 201, 'message' => null], $this->service()->respond(self::SURVEY_ID, 'h1', $answers, self::TODAY));
+		self::assertSame(['status' => 409, 'message' => 'You already answered this survey.'], $this->service()->respond(self::SURVEY_ID, 'h1', $answers, self::TODAY));
+		self::assertSame([self::SURVEY_ID, 'unit-hr', 'permanent', 'ADM-001'], array_values(array_intersect_key($this->rows('SurveyResponse')[0], array_flip(['surveyId', 'orgUnitId', 'contractType', 'administrationId']))));
+	}//end testTheRefusalsAndStoredRowsKeepTheirShape()
 
 	/**
 	 * Scenario: a small team stays anonymous. With minimum 5, Finance (7)
@@ -332,10 +379,8 @@ class SurveyServiceTest extends TestCase {
 		return new SurveyService(
 			gateway: $gateway,
 			membership: new UnitMembership(),
-			orgResolution: new OrgResolutionService(),
 			marker: new InternalWriteMarker(),
-			results: new SurveyResults(new SurveyAnswers()),
-			answers: new SurveyAnswers()
+			rules: new SurveyRules(orgResolution: new OrgResolutionService(), results: new SurveyResults(new SurveyAnswers()), answers: new SurveyAnswers())
 		);
 	}//end service()
 
@@ -359,7 +404,7 @@ class SurveyServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function row(string $schema, string $uuid): array {
-		return $this->store->find($uuid, schema: $schema)->getObject();
+		return $this->store->find($uuid, new ObjectFindOptions(schema: $schema))->getObject();
 	}//end row()
 
 	/**

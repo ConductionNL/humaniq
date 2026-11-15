@@ -3,6 +3,9 @@
 /**
  * Asset Dialect Migration Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * humaniq-asset-fleet-merge (tasks.md section 13, blocking defect): rewrites
  * pre-existing `Asset`/`AssetAssignment` objects from the retired Dutch
  * dialect to the renamed one. OpenRegister's register-config seed import is
@@ -69,9 +72,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
@@ -82,10 +82,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\RegisterSlugLookup;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
+use OCA\Humaniq\Support\KeepsReadableRows;
 
 /**
  * Rewrites existing Asset/AssetAssignment objects from the old Dutch dialect
@@ -94,6 +98,9 @@ use RuntimeException;
  * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
  */
 class AssetDialectMigrationService {
+
+	use ResolvesObjectServiceByClass;
+	use KeepsReadableRows;
 
 	/**
 	 * Max objects loaded per schema for the migration (RuleAuditService::LIMIT precedent).
@@ -178,7 +185,7 @@ class AssetDialectMigrationService {
 				continue;
 			}
 
-			$this->writeAssetRow(id: $id, row: $row, mapped: $mapped, report: $report, register: $register);
+			$this->writeAssetRow(candidate: ['id' => $id, 'row' => $row, 'mapped' => $mapped, 'register' => $register], report: $report);
 		}//end foreach
 
 		return $report;
@@ -206,16 +213,15 @@ class AssetDialectMigrationService {
 	 * writer of Asset while it was off, and which a fatal between toggle and
 	 * restore would have left off permanently and silently.
 	 *
-	 * @param string $id The object uuid.
-	 * @param array<string, mixed> $row The row as read.
-	 * @param array<string, mixed> $mapped The mapper's result for that row.
+	 * @param array{id: string, row: array<string, mixed>, mapped: array<string, mixed>, register: string} $candidate The object uuid, the row as read, the mapper's result for it and the register slug.
 	 * @param array<string, mixed> $report The report, mutated in place.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
 	 */
-	private function writeAssetRow(string $id, array $row, array $mapped, array &$report, string $register): void {
+	private function writeAssetRow(array $candidate, array &$report): void {
+		['id' => $id, 'row' => $row, 'mapped' => $mapped, 'register' => $register] = $candidate;
 		if ($mapped['nonStatusChanged'] === false && $mapped['statusChanged'] === false) {
 			$report['alreadyCurrent']++;
 			return;
@@ -224,9 +230,10 @@ class AssetDialectMigrationService {
 		try {
 			$this->objectService()->saveObject(
 				object: $this->stripSelf($mapped['final']),
-				register: $register,
-				schema: 'Asset',
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: 'Asset'),
+					uuid: $id
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -282,9 +289,10 @@ class AssetDialectMigrationService {
 			try {
 				$this->objectService()->saveObject(
 					object: $this->stripSelf($mapped['row']),
-					register: $register,
-					schema: 'AssetAssignment',
-					uuid: $id,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: 'AssetAssignment'),
+						uuid: $id
+					),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -361,40 +369,8 @@ class AssetDialectMigrationService {
 			return [];
 		}
 
-		$out = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$out[] = (array)$row->jsonSerialize();
-			}
-		}
-
-		return $out;
+		return $this->normaliseRows($rows);
 	}//end loadAll()
-
-	/**
-	 * @return mixed The OpenRegister ObjectService.
-	 *
-	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. class_exists() rather
-		// than SettingsService::isOpenRegisterAvailable(), because this class
-		// does not inject SettingsService and adding a constructor dependency
-		// purely to ask a yes/no question is the wrong trade. It answers the
-		// same question the container would otherwise have answered fatally.
-		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
 
 	/**
 	 * The slug this instance's humaniq register answers to.
@@ -430,5 +406,4 @@ class AssetDialectMigrationService {
 
 		return $slug;
 	}//end register()
-
 }//end class

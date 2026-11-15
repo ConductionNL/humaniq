@@ -434,4 +434,23 @@ final class MigrateRegisterSlugTest extends TestCase {
 		))->getName());
 
 	}//end testShippedMapIsWellFormed()
+	/**
+	 * The planned renames run in order and only the ones that took count.
+	 *
+	 * @return void
+	 */
+	public function testOnlyRenamesThatTookAreCounted(): void {
+		$seen = [];
+		$count = (new \OCA\Humaniq\Repair\MigrateRegisterSlugDecisions())->countRenamed(
+			renames: ['a' => 'x', 'b' => 'y', 'c' => 'z'],
+			rename: static function (string $old, string $new) use (&$seen): bool {
+				$seen[] = $old . '>' . $new;
+				return $old !== 'b';
+			}
+		);
+
+		self::assertSame(2, $count);
+		self::assertSame(['a>x', 'b>y', 'c>z'], $seen);
+	}//end testOnlyRenamesThatTookAreCounted()
+
 }//end class

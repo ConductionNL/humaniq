@@ -3,9 +3,11 @@
     "components": {
         "schemas": {
             "Employee": {
+                "configuration": {"exportable": true},
                 "slug": "Employee",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}, {"group": "authenticated", "match": {"deputyUserIds": {"$contains": "$userId"}}}], "create": ["humaniq-hr"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr"]},
                 "icon": "AccountTieOutline",
-                "version": "0.14.0",
+                "version": "0.15.0",
                 "title": "Employee",
                 "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",
                 "type": "object",
@@ -15,6 +17,8 @@
                     "startDate"
                 ],
                 "properties": {
+                    "managerUserId": {"type": "string", "nullable": true, "title": "Manager", "description": "The account of the employee's manager, who may read this record.", "x-notes": "Stamped by humaniq on every save and refreshed by the manager access pass (ManagerAccessStamps): the nextcloudUserId of the manager the org resolution gives today for the record's employee. Never taken from the request. Read by the managerUserId authorization rule."},
+                    "deputyUserIds": {"type": "array", "items": {"type": "string"}, "nullable": true, "title": "Deputies", "description": "The accounts standing in for the manager today, who may read this record too.", "x-notes": "Stamped with managerUserId: the deputies of ManagerDeputy records active today for that manager. Refreshed by the manager access pass when a deputy period starts or ends. Read by the deputyUserIds $contains authorization rule."},
                     "employeeNumber": {"title": "Employee number", "type": "string", "description": "Internal employee number."},
                     "bsn": {"title": "BSN", "type": "string", "description": "Dutch citizen service number. Without it, payroll has to apply the anonymous rate.", "x-notes": "Burgerservicenummer (NL tax identification). Presence drives the anoniementarief check (nl-anoniementarief).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}], "update": ["humaniq-hr"]}},
                     "firstName": {"title": "First name", "type": "string", "description": "Given name."},
@@ -68,7 +72,9 @@
                 }
             },
             "EmploymentContract": {
+                "configuration": {"exportable": true},
                 "slug": "EmploymentContract",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr"]},
                 "icon": "FileSign",
                 "version": "0.13.0",
                 "title": "Employment Contract",
@@ -83,7 +89,7 @@
                 "properties": {
                     "employeeId": {"title": "Employee ID", "type": "string", "format": "uuid", "$ref": "Employee", "description": "Whose contract this is.", "x-notes": "Reference to the Employee this contract belongs to."},
                     "userId": {"title": "User ID", "type": "string", "nullable": true, "description": "The employee's own Nextcloud account. Filled in automatically from the employee, so they can see their own hourly wage.", "x-notes": "Denormalized Nextcloud user id of the employee this contract belongs to, stamped from Employee.nextcloudUserId by FieldAccessListener on every save (compliance-roles-and-field-access D3). The property authorization on hourlyWage matches on it; never a $ref."},
-                    "type": {"type": "string", "enum": ["permanent", "temporary", "agency", "minijob", "bbl", "oproep"], "x-enum-labels": {"permanent": "Permanent", "temporary": "Fixed-term", "agency": "Agency", "minijob": "Mini-job", "bbl": "BBL apprenticeship", "oproep": "On-call"}, "title": "Contract type", "description": "The kind of contract. This drives the unemployment-fund rate, and for an apprenticeship how the pay is processed.", "x-notes": "Contract type. 'permanent' (written, indefinite) takes the Awf low tariff; flexible/temporary/agency/minijob take the high tariff (nl-awf-laag-hoog-tarief). 'bbl' (MBO-BBL leerarbeidsovereenkomst, stagiair-bbl-admin): a BBL-leerling has a real arbeidsovereenkomst and is loonheffingplichtig as an ordinary werknemer (loon, loonheffing, premies, CAO-toepassing all apply), per the Belastingdienst Handboek Loonheffingen (hoofdstuk 17, 'Stagiairs') -- so a bbl contract flows through PayrollCalculator and the NL jurisdiction pack exactly like a permanent/temporary contract, with NO type-specific branch (design.md D1/D2). A signed praktijkovereenkomst without an uitzendbeding takes the Awf LOW tariff (Handboek Loonheffingen 2026 par. 7.2; AwfTariffResolver, filings-premium-differentiation). A person on a stageovereenkomst zonder dienstverband (HBO/WO/MBO-BOL) is NOT a bbl contract -- it is a separate Stagiair schema, structurally outside payroll."},
+                    "type": {"type": "string", "enum": ["permanent", "temporary", "agency", "minijob", "bbl", "oproep", "political-office"], "x-enum-labels": {"permanent": "Permanent", "temporary": "Fixed-term", "agency": "Agency", "minijob": "Mini-job", "bbl": "BBL apprenticeship", "oproep": "On-call", "political-office": "Political office"}, "title": "Contract type", "description": "The kind of contract. This drives the unemployment-fund rate, and for an apprenticeship how the pay is processed.", "x-notes": "Contract type. 'permanent' (written, indefinite) takes the Awf low tariff; flexible/temporary/agency/minijob take the high tariff (nl-awf-laag-hoog-tarief). 'bbl' (MBO-BBL leerarbeidsovereenkomst, stagiair-bbl-admin): a BBL-leerling has a real arbeidsovereenkomst and is loonheffingplichtig as an ordinary werknemer (loon, loonheffing, premies, CAO-toepassing all apply), per the Belastingdienst Handboek Loonheffingen (hoofdstuk 17, 'Stagiairs') -- so a bbl contract flows through PayrollCalculator and the NL jurisdiction pack exactly like a permanent/temporary contract, with NO type-specific branch (design.md D1/D2). A signed praktijkovereenkomst without an uitzendbeding takes the Awf LOW tariff (Handboek Loonheffingen 2026 par. 7.2; AwfTariffResolver, filings-premium-differentiation). A person on a stageovereenkomst zonder dienstverband (HBO/WO/MBO-BOL) is NOT a bbl contract -- it is a separate Stagiair schema, structurally outside payroll."},
                     "writtenContract": {"title": "Written contract", "type": "boolean", "description": "There is a signed written contract. Required for the low unemployment-fund rate.", "x-notes": "Whether the contract is in writing — a precondition for the Awf low tariff (nl-awf-laag-hoog-tarief)."},
                     "startDate": {"title": "Start date", "type": "string", "format": "date", "description": "When this contract starts.", "x-notes": "Contract start date (ISO 8601)."},
                     "endDate": {"title": "End date", "type": "string", "format": "date", "nullable": true, "description": "When this contract ends. Leave empty for an indefinite contract.", "x-notes": "Contract end date, or null for indefinite."},
@@ -117,9 +123,11 @@
             },
             "Payslip": {
                 "slug": "Payslip",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "ReceiptTextOutline",
                 "version": "0.18.0",
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-notifications": {
                         "payslip-ready": {
                             "trigger": {
@@ -259,9 +267,11 @@
             },
             "PayrollRun": {
                 "slug": "PayrollRun",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "CogPlayOutline",
                 "version": "0.5.0",
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-flows": [
                         {
                             "name": "Loonrun",
@@ -345,6 +355,7 @@
             },
             "PayrollRunFinding": {
                 "slug": "PayrollRunFinding",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "AlertCircleOutline",
                 "version": "0.1.0",
                 "title": "Payroll run finding",
@@ -359,6 +370,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "open",
@@ -491,7 +503,9 @@
                 }
             },
             "PayrollMutationReport": {
+                "configuration": {"exportable": true},
                 "slug": "PayrollMutationReport",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "SwapHorizontal",
                 "version": "0.1.0",
                 "title": "Payroll Mutation Report",
@@ -552,6 +566,7 @@
             },
             "LoonaangifteFiling": {
                 "slug": "LoonaangifteFiling",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "FileSendOutline",
                 "version": "0.5.0",
                 "title": "Wage Tax Filing",
@@ -562,6 +577,7 @@
                     "deadline"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "concept",
@@ -689,7 +705,9 @@
                 }
             },
             "WkrDeclaration": {
+                "configuration": {"exportable": true},
                 "slug": "WkrDeclaration",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "GiftOutline",
                 "version": "0.1.0",
                 "title": "WKR Declaration",
@@ -719,7 +737,9 @@
                 }
             },
             "WkrAssessment": {
+                "configuration": {"exportable": true},
                 "slug": "WkrAssessment",
+                "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "CalculatorVariantOutline",
                 "version": "0.1.0",
                 "title": "WKR Assessment",

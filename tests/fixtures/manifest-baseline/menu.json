@@ -466,6 +466,21 @@
 				}
 			},
 			{
+				"id": "HrVerlofgoedkeuring",
+				"label": "HR leave approval",
+				"icon": "CheckDecagramOutline",
+				"route": "LeaveRequests",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				},
+				"query": {
+					"_order": "[{\"key\":\"submittedAt\",\"order\":\"asc\"}]",
+					"status": "manager-approved"
+				}
+			},
+			{
 				"id": "LeaveBalances",
 				"label": "Leave balances",
 				"icon": "CalendarWeekendOutline",
@@ -693,6 +708,12 @@
 				"route": "PensionFilings"
 			},
 			{
+				"id": "PensionSchemes",
+				"label": "Pension schemes",
+				"icon": "PiggyBank",
+				"route": "PensionSchemes"
+			},
+			{
 				"id": "WntDisclosures",
 				"label": "WNT disclosures",
 				"icon": "ScaleBalance",
@@ -764,6 +785,12 @@
 						]
 					}
 				}
+			},
+			{
+				"id": "BenefitEntitlements",
+				"label": "Benefit entitlements",
+				"icon": "CashClock",
+				"route": "BenefitEntitlements"
 			}
 		]
 	},
@@ -821,6 +848,18 @@
 				"order": 100
 			},
 			{
+				"id": "Taakbeleid",
+				"label": "Task policy",
+				"icon": "SchoolOutline",
+				"route": "TaakbeleidScholen"
+			},
+			{
+				"id": "DeploymentPlans",
+				"label": "Deployment plans",
+				"icon": "CalendarClock",
+				"route": "DeploymentPlans"
+			},
+			{
 				"id": "TeamUrengoedkeuring",
 				"label": "Team timesheet approval",
 				"icon": "CheckDecagramOutline",
@@ -875,7 +914,7 @@
 			},
 			{
 				"id": "Integraties",
-				"label": "Integrations",
+				"label": "Access grants",
 				"icon": "PowerPlugOutline",
 				"route": "IntegrationAccounts"
 			},
@@ -884,6 +923,16 @@
 				"label": "Payroll packs",
 				"icon": "PackageVariantClosed",
 				"route": "PayrollPacks"
+			},
+			{
+				"id": "Koppelingen",
+				"label": "Integrations",
+				"icon": "PowerPlugOutline",
+				"route": "Integrations",
+				"permission": "admin",
+				"visibleIf": {
+					"appInstalled": "integriq"
+				}
 			}
 		]
 	},
@@ -905,7 +954,7 @@
 	},
 	{
 		"id": "StoreMenu",
-		"label": "Store",
+		"label": "Marketplace",
 		"icon": "StoreOutline",
 		"route": "Store",
 		"section": "footer",

@@ -85,35 +85,24 @@ final class LoonaangifteMessageBuilder {
 	/**
 	 * Build the message tree.
 	 *
-	 * @param array<string, mixed>        $administration The hrAdministration.
-	 * @param array<string, string>       $header         idBer, createdAt, relNr, software.
-	 * @param array{0: string, 1: string} $period         The declaration period's first and last day.
-	 * @param list<array<string, mixed>> $lines The income relationships (IncomeRelationshipLine::make): tree, cents, findings.
-	 * @param list<array{tree: array<string, mixed>, saldo: int}> $corrections Corrections of earlier periods of the year that travel with this return (GS 2.4.1).
+	 * @param array<string, mixed>                                                                                                                            $administration The hrAdministration.
+	 * @param array<string, string>                                                                                                                           $header         idBer, createdAt, relNr, software.
+	 * @param array{period: array{0: string, 1: string}, lines: list<array<string, mixed>>, corrections?: list<array{tree: array<string, mixed>, saldo: int}>} $return         The declaration period's first and last day; the income relationships (IncomeRelationshipLine::make: tree, cents, findings); and the corrections of earlier periods of the year that travel with this return (GS 2.4.1).
 	 *
 	 * @return array{tree: array<string, mixed>, collective: array<string, int>, findings: list<array<string, string>>}
 	 *
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
-	public static function build(array $administration, array $header, array $period, array $lines, array $corrections=[]): array {
-		$collective = self::collective($lines);
+	public static function build(array $administration, array $header, array $return): array {
+		['period' => $period, 'lines' => $lines] = $return;
+		$corrections = ($return['corrections'] ?? []);
 		$findings = self::headerFindings($administration, $header);
 		foreach ($lines as $line) {
 			$findings = array_merge($findings, array_values((array)($line['findings'] ?? [])));
 		}
 
-		// GS p56: one saldo per corrected period; GS p55 (0011): TotGen is TotTeBet plus the saldi.
-		$saldi = [];
-		foreach ($corrections as $correction) {
-			$saldi[] = ['DatAanvTv' => (string)$correction['tree']['DatAanvTv'], 'DatEindTv' => (string)$correction['tree']['DatEindTv'], 'Saldo' => (string)$correction['saldo']];
-			$collective['TotGen'] += (int)$correction['saldo'];
-		}
-
-		$collectivePart = array_map(static fn (int $euros): string => (string)$euros, $collective);
-		unset($collectivePart['TotGen']);
-		$collectivePart['SaldoCorrectiesVoorgaandTijdvak'] = $saldi;
-		$collectivePart['TotGen'] = (string)$collective['TotGen'];
+		[$collective, $collectivePart] = self::withCorrections(collective: self::collective($lines), corrections: $corrections);
 
 		$tree = [
 			'Bericht' => self::bericht($administration, $header),
@@ -134,6 +123,30 @@ final class LoonaangifteMessageBuilder {
 
 		return ['tree' => $tree, 'collective' => $collective, 'findings' => $findings];
 	}//end build()
+
+	/**
+	 * Add the corrections' saldi to the collective totals: one saldo per
+	 * corrected period (GS p56), and TotGen is TotTeBet plus the saldi (GS p55, 0011).
+	 *
+	 * @param array<string, int>                                       $collective  The collective totals in euro.
+	 * @param list<array{tree: array<string, mixed>, saldo: int}> $corrections The corrections of earlier periods.
+	 *
+	 * @return array{0: array<string, int>, 1: array<string, mixed>} The totals with TotGen corrected, and the collective part of the message.
+	 */
+	private static function withCorrections(array $collective, array $corrections): array {
+		$saldi = [];
+		foreach ($corrections as $correction) {
+			$saldi[] = ['DatAanvTv' => (string)$correction['tree']['DatAanvTv'], 'DatEindTv' => (string)$correction['tree']['DatEindTv'], 'Saldo' => (string)$correction['saldo']];
+			$collective['TotGen'] += (int)$correction['saldo'];
+		}
+
+		$part = array_map(static fn (int $euros): string => (string)$euros, $collective);
+		unset($part['TotGen']);
+		$part['SaldoCorrectiesVoorgaandTijdvak'] = $saldi;
+		$part['TotGen'] = (string)$collective['TotGen'];
+
+		return [$collective, $part];
+	}//end withCorrections()
 
 	/**
 	 * A correction message on its own (losse correctie, GS 2.4.2-2.4.3): the

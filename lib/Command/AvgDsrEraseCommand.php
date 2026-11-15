@@ -84,14 +84,12 @@ class AvgDsrEraseCommand extends Command {
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$employeeId = trim((string)$input->getOption('employee'));
-		if ($employeeId === '') {
-			$output->writeln('<error>--employee is verplicht.</error>');
+		$employeeId = DsrOptions::requiredEmployeeId(input: $input, output: $output);
+		if ($employeeId === null) {
 			return 1;
 		}
 
-		$dsrRequestIdOption = $input->getOption('dsr-request-id');
-		$dsrRequestId = (is_string($dsrRequestIdOption) === true && trim($dsrRequestIdOption) !== '') ? trim($dsrRequestIdOption) : null;
+		$dsrRequestId = DsrOptions::dsrRequestId(input: $input);
 		$confirm = (bool)$input->getOption('confirm');
 
 		if ($confirm === true && $dsrRequestId === null) {
@@ -102,9 +100,7 @@ class AvgDsrEraseCommand extends Command {
 		// Privileged-session establishment BEFORE any AvgDsrService/DsarService
 		// call (REQ-DSR-004, design.md D3): an unknown/non-admin --as-user is
 		// refused here, with DsarService never invoked.
-		$sessionError = $this->sessionResolver->establish((string)$input->getOption('as-user'));
-		if ($sessionError !== null) {
-			$output->writeln('<error>' . $sessionError . '</error>');
+		if ($this->sessionResolver->refuses(input: $input, output: $output) === true) {
 			return 1;
 		}
 

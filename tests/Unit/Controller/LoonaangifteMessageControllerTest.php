@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
+use OCA\Humaniq\Service\PayrollTaxFilingServices;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Controller\LoonaangifteMessageController;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\LoonaangifteCorrectionService;
@@ -33,6 +35,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * The make-the-message endpoint, resolving the filing under the caller's RBAC first.
@@ -49,7 +52,7 @@ class LoonaangifteMessageControllerTest extends TestCase {
 	 *
 	 * @return LoonaangifteMessageController
 	 */
-	private function controller(bool $payroll, array $readable, ?LoonaangifteMessageService $service = null, ?LoonaangifteCorrectionService $corrections = null): LoonaangifteMessageController {
+	private function controller(bool $payroll, array $readable, ?LoonaangifteMessageService $service = null, ?LoonaangifteCorrectionService $corrections = null, bool $hrOnly = false): LoonaangifteMessageController {
 		$objects = new class($readable) {
 
 			/**
@@ -69,7 +72,9 @@ class LoonaangifteMessageControllerTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
 				if ($id === 'forbidden') {
 					throw new \RuntimeException('Forbidden');
 				}
@@ -94,18 +99,14 @@ class LoonaangifteMessageControllerTest extends TestCase {
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 		$roles = $this->createMock(HumaniqRoles::class);
-		$roles->method('isHr')->willReturn(false);
-		$roles->method('isPayroll')->willReturn($payroll);
+		$roles->method('isHr')->willReturn($hrOnly);
+		$roles->method('isPayroll')->willReturn($payroll && $hrOnly === false);
 
 		return new LoonaangifteMessageController(
 			$this->createMock(IRequest::class),
-			$container,
 			$settings,
-			($service ?? $this->createMock(LoonaangifteMessageService::class)),
-			($corrections ?? $this->createMock(LoonaangifteCorrectionService::class)),
-			$session,
-			$roles,
-			new NullLogger()
+			new PayrollTaxFilingServices(($service ?? $this->createMock(LoonaangifteMessageService::class)), ($corrections ?? $this->createMock(LoonaangifteCorrectionService::class))),
+			new CallerContext($session, $roles, $container, new NullLogger())
 		);
 	}//end controller()
 
@@ -155,6 +156,23 @@ class LoonaangifteMessageControllerTest extends TestCase {
 		$this->assertSame('rendered', $response->getData()['status']);
 		$this->assertSame(409, $controller->render('f-1')->getStatus());
 	}//end testPayrollRendersAFiling()
+
+	/**
+	 * HR, outside the payroll group, renders a filing and opens a correction too.
+	 *
+	 * @return void
+	 */
+	public function testHrRendersAFilingAndOpensACorrection(): void {
+		$filing = ['id' => 'f-1', 'period' => '2026-06', 'status' => 'verzonden'];
+		$service = $this->createMock(LoonaangifteMessageService::class);
+		$service->expects($this->once())->method('render')->willReturn(['status' => 'rendered', 'filingId' => 'f-1']);
+		$corrections = $this->createMock(LoonaangifteCorrectionService::class);
+		$corrections->expects($this->once())->method('open')->willReturn(['status' => 'opened', 'filingId' => 'f-2']);
+		$controller = $this->controller(true, ['LoonaangifteFiling' => [$filing]], $service, $corrections, true);
+
+		$this->assertNotSame(403, $controller->render('f-1')->getStatus());
+		$this->assertNotSame(403, $controller->correction('f-1')->getStatus());
+	}//end testHrRendersAFilingAndOpensACorrection()
 
 	/**
 	 * Correct opens a correction (201), returns the open one (200), refuses a

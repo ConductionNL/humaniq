@@ -31,7 +31,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Service\AbsencePeriod;
 use OCA\Humaniq\Service\AbsenceRateService;
+use OCA\Humaniq\Service\WorkingTimeSources;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -107,8 +109,7 @@ class AbsenceRateServiceTest extends TestCase {
 				],
 			],
 			contracts: [$this->contract('emp-1')],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		$this->assertSame(31.0, $result['absentDayEquivalents']);
@@ -145,8 +146,7 @@ class AbsenceRateServiceTest extends TestCase {
 				],
 			],
 			contracts: [$this->contract('emp-1')],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		$this->assertSame(21.4, $result['absentDayEquivalents']);
@@ -177,8 +177,7 @@ class AbsenceRateServiceTest extends TestCase {
 				],
 			],
 			contracts: [$this->contract('emp-1')],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		// Jan 1-20 at 100% = 20, Jan 21-31 at 50% = 5.5.
@@ -211,8 +210,7 @@ class AbsenceRateServiceTest extends TestCase {
 				$this->contract('emp-full', 40.0),
 				$this->contract('emp-part', 20.0),
 			],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		$this->assertSame(15.5, $result['absentDayEquivalents']);
@@ -238,8 +236,7 @@ class AbsenceRateServiceTest extends TestCase {
 				],
 			],
 			contracts: [$this->contract('emp-1')],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		// Jan 5 through Jan 14 inclusive = 10 days.
@@ -266,8 +263,7 @@ class AbsenceRateServiceTest extends TestCase {
 				],
 			],
 			contracts: [$this->contract('emp-1')],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		$this->assertSame(31.0, $result['absentDayEquivalents']);
@@ -291,8 +287,7 @@ class AbsenceRateServiceTest extends TestCase {
 				],
 			],
 			contracts: [$this->contract('emp-1')],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		$this->assertSame(0.0, $result['absentDayEquivalents']);
@@ -320,8 +315,7 @@ class AbsenceRateServiceTest extends TestCase {
 				],
 			],
 			contracts: [$this->contract('emp-1')],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		$this->assertSame(0.0, $result['absentDayEquivalents']);
@@ -345,8 +339,7 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [],
 			contracts: [],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		$this->assertNull($result['percentage']);
@@ -371,8 +364,7 @@ class AbsenceRateServiceTest extends TestCase {
 					'endDate' => null,
 				],
 			],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		// Jan 17 through Jan 31 inclusive = 15 days.
@@ -397,9 +389,7 @@ class AbsenceRateServiceTest extends TestCase {
 				],
 			],
 			contracts: [$this->contract('emp-1', 36.0)],
-			periodStart: $start,
-			periodEnd: $end,
-			fullTimeHoursWeek: 36.0
+			period: new AbsencePeriod($start, $end, 36.0)
 		);
 
 		$this->assertSame(31.0, $result['absentDayEquivalents']);
@@ -432,8 +422,7 @@ class AbsenceRateServiceTest extends TestCase {
 				],
 			],
 			contracts: [$this->contract('emp-1')],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		$this->assertSame(31.0, $result['absentDayEquivalents']);
@@ -461,8 +450,7 @@ class AbsenceRateServiceTest extends TestCase {
 				],
 			],
 			contracts: [$this->contract('emp-1')],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		// Jan 1-10 at 100% = 10, Jan 11-20 at 50% = 5, Jan 21-31 at 25% = 2.75.
@@ -492,8 +480,7 @@ class AbsenceRateServiceTest extends TestCase {
 				],
 			],
 			contracts: [$this->contract('emp-1')],
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		$this->assertSame(10.0, $result['absentDayEquivalents']);
@@ -518,8 +505,7 @@ class AbsenceRateServiceTest extends TestCase {
 		$onFte = $this->service->absenceRate(
 			cases: [],
 			contracts: $contracts,
-			periodStart: $start,
-			periodEnd: $end
+			period: new AbsencePeriod($start, $end)
 		);
 
 		// Three eight-hour days a week, which is the same 24-hour contract
@@ -536,12 +522,8 @@ class AbsenceRateServiceTest extends TestCase {
 		$onPattern = $this->service->absenceRate(
 			cases: [],
 			contracts: $contracts,
-			periodStart: $start,
-			periodEnd: $end,
-			fullTimeHoursWeek: 40.0,
-			workingPatterns: [$pattern],
-			nonWorkingTimes: [],
-			nonWorkingDates: ['2026-01-01']
+			period: new AbsencePeriod($start, $end, 40.0),
+			workingTime: new WorkingTimeSources(workingPatterns: [$pattern], nonWorkingTimes: [], nonWorkingDates: ['2026-01-01'])
 		);
 
 		$this->assertSame(0, $onFte['employeesMeasuredOnPattern'], 'The control runs on the contract alone');
@@ -567,19 +549,77 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [],
 			contracts: [$this->contract('emp-1', 24.0)],
-			periodStart: $start,
-			periodEnd: $end,
-			fullTimeHoursWeek: 40.0,
-			workingPatterns: [
+			period: new AbsencePeriod($start, $end, 40.0),
+			workingTime: new WorkingTimeSources(workingPatterns: [
 				[
 					'employeeId' => 'emp-somebody-else',
 					'validFrom' => '2025-01-01',
 					'hoursMonday' => 8,
 				],
-			]
+			])
 		);
 
 		$this->assertSame(0, $result['employeesMeasuredOnPattern']);
 		$this->assertSame(18.6, $result['availableDayEquivalents']);
 	}//end testAnEmployeeWithoutAPatternKeepsTheContractDenominator()
+
+	/**
+	 * A patterned employee sick for the whole period is 100% absent, never
+	 * more, even when non-working time and a calendar day off shrink the
+	 * contracted hours: absence and availability count the same pattern hours.
+	 *
+	 * @return void
+	 */
+	public function testAPatternedEmployeeSickAllPeriodIsExactlyOneHundredPercent(): void {
+		[$start, $end] = $this->january();
+
+		$result = $this->service->absenceRate(
+			cases: [['employeeId' => 'emp-1', 'firstSickDay' => '2025-12-01', 'status' => 'gemeld']],
+			contracts: [$this->contract('emp-1', 24.0)],
+			period: new AbsencePeriod($start, $end, 38.0),
+			workingTime: new WorkingTimeSources(
+				workingPatterns: [$this->mondayToWednesday()],
+				nonWorkingTimes: [['employeeId' => 'emp-1', 'startDate' => '2026-01-19', 'endDate' => '2026-01-21', 'hoursNotWorked' => 8]],
+				nonWorkingDates: ['2026-01-05']
+			)
+		);
+
+		$this->assertSame(1, $result['employeesMeasuredOnPattern']);
+		$this->assertSame($result['availableDayEquivalents'], $result['absentDayEquivalents']);
+		$this->assertSame(100.0, $result['percentage']);
+	}//end testAPatternedEmployeeSickAllPeriodIsExactlyOneHundredPercent()
+
+	/**
+	 * A patterned employee's absence counts the pattern hours it covers: sick
+	 * on the Monday only of a Monday-to-Wednesday week is 8 of 24 hours, and
+	 * the weekend days of the sickness count on neither side.
+	 *
+	 * @return void
+	 */
+	public function testAPatternedAbsenceCountsTheContractedHoursItCovers(): void {
+		$result = $this->service->absenceRate(
+			cases: [['employeeId' => 'emp-1', 'firstSickDay' => '2026-01-10', 'recoveredDate' => '2026-01-12', 'status' => 'hersteld']],
+			contracts: [$this->contract('emp-1', 24.0)],
+			period: new AbsencePeriod(new DateTimeImmutable('2026-01-10'), new DateTimeImmutable('2026-01-16')),
+			workingTime: new WorkingTimeSources(workingPatterns: [$this->mondayToWednesday()], nonWorkingDates: [])
+		);
+
+		$this->assertSame(33.33, $result['percentage']);
+	}//end testAPatternedAbsenceCountsTheContractedHoursItCovers()
+
+	/**
+	 * A working pattern of eight hours on Monday to Wednesday.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function mondayToWednesday(): array {
+		return [
+			'employeeId' => 'emp-1',
+			'validFrom' => '2025-01-01',
+			'validUntil' => null,
+			'hoursMonday' => 8,
+			'hoursTuesday' => 8,
+			'hoursWednesday' => 8,
+		];
+	}//end mondayToWednesday()
 }//end class
