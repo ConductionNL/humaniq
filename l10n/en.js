@@ -3864,7 +3864,14 @@ OC.L10N.register(
         "No benefit entitlements": "No benefit entitlements",
         "Record benefit entitlement": "Record benefit entitlement",
         "Request leave": "Request leave",
-        "Submit an expense": "Submit an expense"
+        "Submit an expense": "Submit an expense",
+        "Notifications on this device": "Notifications on this device",
+        "Your browser blocks notifications for this site. Allow them in the browser settings first.": "Your browser blocks notifications for this site. Allow them in the browser settings first.",
+        "On an iPhone or iPad, add My HR to the home screen first, then turn notifications on from there.": "On an iPhone or iPad, add My HR to the home screen first, then turn notifications on from there.",
+        "This browser cannot receive notifications.": "This browser cannot receive notifications.",
+        "Notifications to devices are not set up on this server.": "Notifications to devices are not set up on this server.",
+        "Decisions on your requests reach this device, also when the app is closed.": "Decisions on your requests reach this device, also when the app is closed.",
+        "The notification setting could not be changed.": "The notification setting could not be changed."
     },
     "nplurals=2; plural=(n != 1);"
 )

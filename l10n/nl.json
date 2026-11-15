@@ -3863,7 +3863,14 @@
         "No benefit entitlements": "Geen uitkeringsrechten",
         "Record benefit entitlement": "Uitkeringsrecht vastleggen",
         "Request leave": "Verlof aanvragen",
-        "Submit an expense": "Declaratie indienen"
+        "Submit an expense": "Declaratie indienen",
+        "Notifications on this device": "Meldingen op dit apparaat",
+        "Your browser blocks notifications for this site. Allow them in the browser settings first.": "Je browser blokkeert meldingen voor deze site. Sta ze eerst toe in de instellingen van je browser.",
+        "On an iPhone or iPad, add My HR to the home screen first, then turn notifications on from there.": "Zet Mijn HR op een iPhone of iPad eerst op het beginscherm en zet daar de meldingen aan.",
+        "This browser cannot receive notifications.": "Deze browser kan geen meldingen ontvangen.",
+        "Notifications to devices are not set up on this server.": "Meldingen naar apparaten zijn op deze server niet ingesteld.",
+        "Decisions on your requests reach this device, also when the app is closed.": "Besluiten over je aanvragen komen op dit apparaat binnen, ook als de app gesloten is.",
+        "The notification setting could not be changed.": "De meldingsinstelling kon niet worden gewijzigd."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

@@ -80,6 +80,8 @@ class PwaHeadListener implements IEventListener {
 	 * @param array<string, string> $attributes The tag's attributes.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-mijn-hr-shall-be-installable-on-a-phones-home-screen-req-mob-001
 	 */
 	protected function addHeader(string $tag, array $attributes): void {
 		Util::addHeader($tag, $attributes);
