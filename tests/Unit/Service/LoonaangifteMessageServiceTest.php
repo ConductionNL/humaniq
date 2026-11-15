@@ -28,10 +28,16 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DOMDocument;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationLevies;
+use OCA\Humaniq\Payroll\CalculationWage;
+use OCA\Humaniq\Payroll\InsuranceTariffs;
+use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Payroll\Loonaangifte\PayslipRecalculator;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Payroll\Loonaangifte\LoonaangifteMessageBuilder;
+use OCA\Humaniq\Service\CarriedCorrections;
 use OCA\Humaniq\Service\LoonaangifteMessageService;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
@@ -42,15 +48,32 @@ use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 class LoonaangifteMessageServiceTest extends TestCase {
 
 	private const NS = 'http://xml.belastingdienst.nl/schemas/Loonaangifte/2026/01';
 
+	/**
+	 * The register the service reads and writes.
+	 *
+	 * @var FakeObjectStore
+	 */
 	private FakeObjectStore $store;
 
+	/**
+	 * The service under test.
+	 *
+	 * @var LoonaangifteMessageService
+	 */
 	private LoonaangifteMessageService $service;
 
+	/**
+	 * Seed an administration, two employees with contracts, an approved run
+	 * with its payslips and a concept filing for June 2026.
+	 *
+	 * @return void
+	 */
 	protected function setUp(): void {
 		parent::setUp();
 		$this->store = new FakeObjectStore();
@@ -102,6 +125,41 @@ class LoonaangifteMessageServiceTest extends TestCase {
 		unset($filing['id']);
 		self::assertSame([], RegisterSchemaValidator::errors('LoonaangifteFiling', $filing));
 	}//end testAnApprovedRunRendersAValidMessage()
+
+	/**
+	 * A correction the return carries lands in the message: its saldo is
+	 * added to TotGen and listed per corrected period, and its tree goes out
+	 * as a TijdvakCorrectie.
+	 *
+	 * @return void
+	 */
+	public function testACarriedCorrectionTravelsInTheMessage(): void {
+		$stand = LoonaangifteMessageBuilder::collective([]);
+		unset($stand['TotGen']);
+		$tree = [
+			'DatAanvTv' => '2026-05-01',
+			'DatEindTv' => '2026-05-31',
+			'CollectieveAangifte' => array_map(static fn (int $euros): string => (string)$euros, $stand),
+			'InkomstenverhoudingInitieel' => [],
+			'InkomstenverhoudingIntrekking' => [],
+		];
+		$carried = $this->createMock(CarriedCorrections::class);
+		$carried->method('forReturn')->willReturn([['id' => 'corr-05', 'period' => '2026-05', 'correctionTree' => $tree, 'correctionSaldo' => 250]]);
+
+		$outcome = $this->serviceWithRelNr('SWO12345', $carried)->render($this->filing(), 'payroll-1');
+
+		self::assertSame('rendered', $outcome['status']);
+		$filing = $this->filingRow();
+		$totals = $filing['collectiveTotals'];
+		self::assertSame(($totals['TotTeBet'] + 250), $totals['TotGen']);
+		self::assertSame(['corr-05'], $filing['carriedCorrectionIds']);
+
+		$xml = new DOMDocument();
+		$xml->loadXML($filing['messageXml']);
+		self::assertSame(1, $xml->getElementsByTagNameNS(self::NS, 'TijdvakCorrectie')->length);
+		self::assertSame('250', $this->text($xml, 'Saldo'));
+		self::assertSame((string)$totals['TotGen'], $this->text($xml, 'TotGen'));
+	}//end testACarriedCorrectionTravelsInTheMessage()
 
 	/**
 	 * The anchor employee's line carries the engine's own components
@@ -168,7 +226,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testADraftRunIsNotFiled(): void {
-		$run = $this->store->find('run-06', schema: 'PayrollRun')->getObject();
+		$run = $this->store->find('run-06', new ObjectFindOptions(schema: 'PayrollRun'))->getObject();
 		$this->store->seed('PayrollRun', 'run-06', array_merge($run, ['status' => 'draft']));
 
 		$outcome = $this->service->render($this->filing(), 'payroll-1');
@@ -181,13 +239,33 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	}//end testADraftRunIsNotFiled()
 
 	/**
+	 * The stored filing keeps its render fields in order, rendered and
+	 * blocked, and the outcome its fields.
+	 *
+	 * @return void
+	 */
+	public function testTheStoredRenderFieldsKeepTheirOrder(): void {
+		$before = array_keys($this->filing());
+		$outcome = $this->service->render($this->filing(), 'payroll-1');
+		self::assertSame(['status', 'filingId', 'blockingFindings', 'warningFindings', 'messageFileName'], array_keys($outcome));
+		$added = array_values(array_diff(array_keys($this->filingRow()), $before, ['id', '@self']));
+		self::assertSame(['messageRenderedAt', 'messageRenderedBy', 'messageVersion', 'messageRunId', 'messageRunCalculatedAt', 'messageRunTotalLoonheffing', 'collectiveTotals', 'carriedCorrectionIds', 'messageFindings', 'blockingFindings', 'warningFindings', 'messageXml', 'messageFileName'], $added);
+
+		$run = $this->store->find('run-06', new ObjectFindOptions(schema: 'PayrollRun'))->getObject();
+		$this->store->seed('PayrollRun', 'run-06', array_merge($run, ['status' => 'draft']));
+		$blocked = $this->service->render($this->filing(), 'payroll-2');
+		self::assertSame(['status', 'filingId', 'blockingFindings', 'warningFindings'], array_keys($blocked));
+		self::assertSame(['kind' => 'run-not-approved', 'severity' => 'blocking', 'employeeId' => '', 'element' => 'TijdvakAangifte', 'problem' => 'Er is voor 2026-06 geen goedgekeurde loonrun; de aangifte wordt alleen gemaakt uit een goedgekeurde, geboekte of betaalde loonrun.'], $this->filingRow()['messageFindings'][0]);
+	}//end testTheStoredRenderFieldsKeepTheirOrder()
+
+	/**
 	 * An employee without a BSN: the filing stays without a message and lists
 	 * that employee with the missing citizen service number.
 	 *
 	 * @return void
 	 */
 	public function testAnEmployeeWithoutABsnIsANamedFinding(): void {
-		$employee = $this->store->find('emp-bakker', schema: 'Employee')->getObject();
+		$employee = $this->store->find('emp-bakker', new ObjectFindOptions(schema: 'Employee'))->getObject();
 		unset($employee['bsn']);
 		$this->store->seed('Employee', 'emp-bakker', $employee);
 
@@ -211,10 +289,10 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheAnonymousRateIsReportedOnTable940(): void {
-		$employee = $this->store->find('emp-bakker', schema: 'Employee')->getObject();
+		$employee = $this->store->find('emp-bakker', new ObjectFindOptions(schema: 'Employee'))->getObject();
 		unset($employee['bsn']);
 		$this->store->seed('Employee', 'emp-bakker', $employee);
-		$slip = $this->store->find('slip-bakker', schema: 'Payslip')->getObject();
+		$slip = $this->store->find('slip-bakker', new ObjectFindOptions(schema: 'Payslip'))->getObject();
 		$this->store->seed('Payslip', 'slip-bakker', array_merge($slip, ['anoniementariefApplied' => true]));
 
 		$outcome = $this->service->render($this->filing(), 'payroll-1');
@@ -248,9 +326,9 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPayslipThatDoesNotReproduceAndACompanyCarBlock(): void {
-		$slip = $this->store->find('slip-jansen', schema: 'Payslip')->getObject();
+		$slip = $this->store->find('slip-jansen', new ObjectFindOptions(schema: 'Payslip'))->getObject();
 		$this->store->seed('Payslip', 'slip-jansen', array_merge($slip, ['loonheffing' => 700.00]));
-		$slip = $this->store->find('slip-bakker', schema: 'Payslip')->getObject();
+		$slip = $this->store->find('slip-bakker', new ObjectFindOptions(schema: 'Payslip'))->getObject();
 		$this->store->seed('Payslip', 'slip-bakker', array_merge($slip, ['bijtelling' => 250.00]));
 
 		$this->service->render($this->filing(), 'payroll-1');
@@ -266,7 +344,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnEndedEmploymentNeedsItsReason(): void {
-		$employee = $this->store->find('emp-jansen', schema: 'Employee')->getObject();
+		$employee = $this->store->find('emp-jansen', new ObjectFindOptions(schema: 'Employee'))->getObject();
 		$this->store->seed('Employee', 'emp-jansen', array_merge($employee, ['endDate' => '2026-06-30']));
 
 		$this->service->render($this->filing(), 'payroll-1');
@@ -296,7 +374,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testARenderAfterAFixReplacesTheFindings(): void {
-		$employee = $this->store->find('emp-bakker', schema: 'Employee')->getObject();
+		$employee = $this->store->find('emp-bakker', new ObjectFindOptions(schema: 'Employee'))->getObject();
 		unset($employee['bsn']);
 		$this->store->seed('Employee', 'emp-bakker', $employee);
 		$this->service->render($this->filing(), 'payroll-1');
@@ -321,14 +399,22 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 */
 	private function snapshot(float $gross, bool $korting, string $awf): array {
 		return (new CalculationInput(
-			grossMonthlySalaryCents: (int)round($gross * 100),
-			taxTableColor: 'wit',
-			loonheffingskortingToegepast: $korting,
-			dateOfBirth: ($gross === 3800.00 ? '1990-04-12' : '1985-09-30'),
-			period: '2026-06',
-			awfTariff: $awf,
-			aofTariff: 'laag',
-			whkPercentage: 1.52
+			wage: new CalculationWage(
+				grossMonthlySalaryCents: (int)round($gross * 100),
+				dateOfBirth: ($gross === 3800.00 ? '1990-04-12' : '1985-09-30'),
+				period: '2026-06'
+			),
+			levies: new CalculationLevies(
+				wageTax: new WageTaxElection(
+					taxTableColor: 'wit',
+					loonheffingskortingToegepast: $korting
+				),
+				insurance: new InsuranceTariffs(
+					awfTariff: $awf,
+					aofTariff: 'laag',
+					whkPercentage: 1.52
+				)
+			)
 		))->toArray();
 	}//end snapshot()
 
@@ -367,11 +453,12 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	/**
 	 * The service with a given software relation number.
 	 *
-	 * @param string $relNr The relation number.
+	 * @param string                  $relNr   The relation number.
+	 * @param CarriedCorrections|null $carried The corrections the return carries, or null for the ones over the gateway.
 	 *
 	 * @return LoonaangifteMessageService
 	 */
-	private function serviceWithRelNr(string $relNr): LoonaangifteMessageService {
+	private function serviceWithRelNr(string $relNr, ?CarriedCorrections $carried = null): LoonaangifteMessageService {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$gateway = new HoursRegisterGateway(
@@ -385,7 +472,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn($relNr);
 
-		return new LoonaangifteMessageService(gateway: $gateway, recalculator: new PayslipRecalculator(new PayrollCalculator(), new NullLogger()), appConfig: $appConfig);
+		return new LoonaangifteMessageService(gateway: $gateway, recalculator: new PayslipRecalculator(new PayrollCalculator(), new NullLogger()), appConfig: $appConfig, carried: $carried);
 	}//end serviceWithRelNr()
 
 	/**
@@ -394,7 +481,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function filing(): array {
-		return array_merge($this->store->find('filing-06', schema: 'LoonaangifteFiling')->getObject(), ['id' => 'filing-06']);
+		return array_merge($this->store->find('filing-06', new ObjectFindOptions(schema: 'LoonaangifteFiling'))->getObject(), ['id' => 'filing-06']);
 	}//end filing()
 
 	/**
@@ -403,7 +490,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function filingRow(): array {
-		return array_merge($this->store->find('filing-06', schema: 'LoonaangifteFiling')->getObject(), ['id' => 'filing-06']);
+		return array_merge($this->store->find('filing-06', new ObjectFindOptions(schema: 'LoonaangifteFiling'))->getObject(), ['id' => 'filing-06']);
 	}//end filingRow()
 
 	/**
@@ -414,7 +501,7 @@ class LoonaangifteMessageServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function slipRow(string $uuid): array {
-		return $this->store->find($uuid, schema: 'Payslip')->getObject();
+		return $this->store->find($uuid, new ObjectFindOptions(schema: 'Payslip'))->getObject();
 	}//end slipRow()
 
 	/**

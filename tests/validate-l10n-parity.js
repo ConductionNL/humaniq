@@ -334,70 +334,67 @@ function collectSchemaStrings(node, file, sink) {
 		collectSchemaStrings(value, file, sink);
 }
 
-function main() {
-	const failures = [];
-
-	// --- 1. catalogues exist and have core's shape -------------------------
-	const catalogues = {};
-	for (const locale of ["en", "nl"]) {
-		const file = path.join(L10N_DIR, `${locale}.json`);
-		if (fs.existsSync(file) === false) {
-			failures.push(
-				`l10n/${locale}.json is missing — ADR-007 requires both en and nl in every app with a UI.`,
-			);
-			continue;
-		}
-		let doc;
-		try {
-			doc = loadJson(file);
-		} catch (error) {
-			failures.push(
-				`l10n/${locale}.json does not parse as JSON: ${error.message}`,
-			);
-			continue;
-		}
-		if (
-			doc.translations === null ||
-			typeof doc.translations !== "object" ||
-			Array.isArray(doc.translations)
-		) {
-			failures.push(
-				`l10n/${locale}.json has no "translations" object — @nextcloud/l10n cannot read it.`,
-			);
-			continue;
-		}
-		if (typeof doc.pluralForm !== "string" || doc.pluralForm.length === 0) {
-			failures.push(
-				`l10n/${locale}.json has no "pluralForm" string (Nextcloud core catalogue shape).`,
-			);
-		}
-		catalogues[locale] = doc.translations;
-		checkJsCatalogue(locale, doc.translations, failures);
+/**
+ * Load one catalogue and check it has core's shape, recording what is wrong.
+ *
+ * @param {string} locale - the locale to load
+ * @param {string[]} failures - collected failure messages
+ * @return {object|null} the translations, or null when the catalogue is unusable
+ */
+function loadCatalogue(locale, failures) {
+	const file = path.join(L10N_DIR, `${locale}.json`);
+	if (fs.existsSync(file) === false) {
+		failures.push(
+			`l10n/${locale}.json is missing — ADR-007 requires both en and nl in every app with a UI.`,
+		);
+		return null;
 	}
-
-	if (failures.length > 0) {
-		report(failures, 0, 0, 0);
-		return;
+	let doc;
+	try {
+		doc = loadJson(file);
+	} catch (error) {
+		failures.push(
+			`l10n/${locale}.json does not parse as JSON: ${error.message}`,
+		);
+		return null;
 	}
+	if (
+		doc.translations === null ||
+		typeof doc.translations !== "object" ||
+		Array.isArray(doc.translations)
+	) {
+		failures.push(
+			`l10n/${locale}.json has no "translations" object — @nextcloud/l10n cannot read it.`,
+		);
+		return null;
+	}
+	if (typeof doc.pluralForm !== "string" || doc.pluralForm.length === 0) {
+		failures.push(
+			`l10n/${locale}.json has no "pluralForm" string (Nextcloud core catalogue shape).`,
+		);
+	}
+	checkJsCatalogue(locale, doc.translations, failures);
+	return doc.translations;
+}
 
-	const en = catalogues.en;
-	const nl = catalogues.nl;
+/**
+ * Identical key sets, an identity-mapped en.json and no empty nl value.
+ *
+ * @param {object} en - the en translations
+ * @param {object} nl - the nl translations
+ * @param {string[]} failures - collected failure messages
+ */
+function checkCataloguePair(en, nl, failures) {
 	const enKeys = Object.keys(en);
 	const nlKeys = Object.keys(nl);
-
-	// --- 2. identical key sets, zero gaps ----------------------------------
-	const missingInNl = enKeys.filter((k) => Object.hasOwn(nl, k) === false);
-	const missingInEn = nlKeys.filter((k) => Object.hasOwn(en, k) === false);
-	for (const key of missingInNl)
+	for (const key of enKeys.filter((k) => Object.hasOwn(nl, k) === false))
 		failures.push(
 			`key present in en.json but MISSING from nl.json: ${JSON.stringify(key)}`,
 		);
-	for (const key of missingInEn)
+	for (const key of nlKeys.filter((k) => Object.hasOwn(en, k) === false))
 		failures.push(
 			`key present in nl.json but MISSING from en.json: ${JSON.stringify(key)}`,
 		);
-
-	// --- 3. en.json is identity-mapped -------------------------------------
 	for (const key of enKeys) {
 		if (en[key] !== key) {
 			failures.push(
@@ -405,8 +402,6 @@ function main() {
 			);
 		}
 	}
-
-	// --- 4. every nl value is a non-empty string ---------------------------
 	for (const key of nlKeys) {
 		if (typeof nl[key] !== "string" || nl[key].trim() === "") {
 			failures.push(
@@ -414,47 +409,95 @@ function main() {
 			);
 		}
 	}
+}
+
+/**
+ * Record each string that en.json or nl.json lacks, and, when `dutchNote` is
+ * given, each one that is still a Dutch literal.
+ *
+ * @param {Map<string, string[]>} strings - string to where it is used
+ * @param {object} catalogues - `{en, nl}`
+ * @param {Function} missing - `(value, locale, where) => message`
+ * @param {string|null} dutchNote - the explanation for a Dutch literal, or null
+ * @param {string[]} failures - collected failure messages
+ */
+function checkStringsAreKeys(strings, catalogues, missing, dutchNote, failures) {
+	for (const [value, where] of strings) {
+		for (const locale of ["en", "nl"]) {
+			if (Object.hasOwn(catalogues[locale], value) === false) {
+				failures.push(missing(JSON.stringify(value), locale, where.join(", ")));
+			}
+		}
+		if (dutchNote !== null && DUTCH_RE.test(value)) {
+			failures.push(dutchLiteral(value, where, dutchNote));
+		}
+	}
+}
+
+/**
+ * The failure message for a Dutch literal used as a source key.
+ *
+ * @param {string} value - the literal
+ * @param {string[]} where - where it is used
+ * @param {string} note - why that is wrong here
+ * @return {string} the message
+ */
+function dutchLiteral(value, where, note) {
+	return (
+		`Dutch literal still used as a source key: ${JSON.stringify(value)} (${where.join(", ")})` +
+		note
+	);
+}
+
+function main() {
+	const failures = [];
+
+	// --- 1. catalogues exist and have core's shape -------------------------
+	const catalogues = {};
+	for (const locale of ["en", "nl"]) {
+		const translations = loadCatalogue(locale, failures);
+		if (translations !== null) {
+			catalogues[locale] = translations;
+		}
+	}
+
+	if (failures.length > 0) {
+		report(failures, 0, 0, 0);
+		return;
+	}
+
+	// --- 2-4. identical key sets, en identity-mapped, no empty nl value -----
+	checkCataloguePair(catalogues.en, catalogues.nl, failures);
 
 	// --- 5. every manifest display string is a key -------------------------
 	const manifestStrings = new Map();
 	for (const file of manifestFiles()) {
 		collectDisplayStrings(loadJson(file), file, manifestStrings);
 	}
-	for (const [value, where] of manifestStrings) {
-		if (Object.hasOwn(en, value) === false) {
-			failures.push(
-				`manifest string has no en.json key: ${JSON.stringify(value)} (${where.join(", ")})`,
-			);
-		}
-		if (Object.hasOwn(nl, value) === false) {
-			failures.push(
-				`manifest string has no nl.json key: ${JSON.stringify(value)} (${where.join(", ")})`,
-			);
-		}
-	}
+	checkStringsAreKeys(
+		manifestStrings,
+		catalogues,
+		(value, locale, where) => `manifest string has no ${locale}.json key: ${value} (${where})`,
+		null,
+		failures,
+	);
 
 	// --- 6. every t('hrmq', …) key is a key --------------------------------
 	const translateKeys = new Map();
 	collectTranslateKeys(SRC_DIR, translateKeys);
-	for (const [key, where] of translateKeys) {
-		if (Object.hasOwn(en, key) === false) {
-			failures.push(
-				`t('${APP_ID}', …) key has no en.json entry: ${JSON.stringify(key)} (${where.join(", ")})`,
-			);
-		}
-		if (Object.hasOwn(nl, key) === false) {
-			failures.push(
-				`t('${APP_ID}', …) key has no nl.json entry: ${JSON.stringify(key)} (${where.join(", ")})`,
-			);
-		}
-	}
+	checkStringsAreKeys(
+		translateKeys,
+		catalogues,
+		(value, locale, where) => `t('${APP_ID}', …) key has no ${locale}.json entry: ${value} (${where})`,
+		null,
+		failures,
+	);
 
 	// --- 7. no Dutch literals left in the manifest surface -----------------
 	for (const [value, where] of manifestStrings) {
 		if (DUTCH_RE.test(value)) {
 			failures.push(
-				`Dutch literal still used as a source key: ${JSON.stringify(value)} (${where.join(", ")})` +
-					" — the manifest string IS the translation key; write it in English and put the Dutch in l10n/nl.json.",
+				dutchLiteral(value, where, " — the manifest string IS the translation key; write it in English and put the Dutch in l10n/nl.json."),
 			);
 		}
 	}
@@ -464,28 +507,17 @@ function main() {
 	for (const file of schemaFiles()) {
 		collectSchemaStrings(loadJson(file), file, schemaStrings);
 	}
-	for (const [value, where] of schemaStrings) {
-		if (Object.hasOwn(en, value) === false) {
-			failures.push(
-				`schema string has no en.json key: ${JSON.stringify(value)} (${where.join(", ")})`,
-			);
-		}
-		if (Object.hasOwn(nl, value) === false) {
-			failures.push(
-				`schema string has no nl.json key: ${JSON.stringify(value)} (${where.join(", ")})`,
-			);
-		}
-		if (DUTCH_RE.test(value)) {
-			failures.push(
-				`Dutch literal still used as a source key: ${JSON.stringify(value)} (${where.join(", ")})` +
-					" — a schema title IS the translation key; write it in English and put the Dutch in l10n/nl.json.",
-			);
-		}
-	}
+	checkStringsAreKeys(
+		schemaStrings,
+		catalogues,
+		(value, locale, where) => `schema string has no ${locale}.json key: ${value} (${where})`,
+		" — a schema title IS the translation key; write it in English and put the Dutch in l10n/nl.json.",
+		failures,
+	);
 
 	report(
 		failures,
-		enKeys.length,
+		Object.keys(catalogues.en).length,
 		manifestStrings.size + schemaStrings.size,
 		translateKeys.size,
 	);

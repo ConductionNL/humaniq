@@ -1,0 +1,162 @@
+{
+    "rested": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "rested-exactly": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "short-rest": {
+        "rest": false,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "previous-open": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": false,
+        "pauze": false,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "previous-odd": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "no-previous": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": false,
+        "pauze": false,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "no-employee": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "no-date": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "bad-date": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "bad-clock-in": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "open-clock": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "blank-clock-out": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "bad-clock-out": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "padded-clock-out": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": false,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "long-shift": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": false,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "twelve-hours": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "negative-break": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "no-break": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": false,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "ten-hours": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": true,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    },
+    "just-over-ten": {
+        "rest": true,
+        "restNoIndex": true,
+        "shift": true,
+        "pauze": false,
+        "pauzeNoTiers": true,
+        "pauzeEmptyTiers": true
+    }
+}

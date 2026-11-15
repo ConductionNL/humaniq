@@ -3,6 +3,9 @@
 /**
  * Payroll Retention Guard Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * hrmq#99 (consume-not-rebuild correction): the SINGLE place that turns an
  * already-known retention ceiling into a real OpenRegister legal hold, so
  * OpenRegister's own guarded erase (`Gdpr\DataSubjectRequestService::erase()`,
@@ -91,9 +94,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
@@ -140,6 +140,13 @@ class PayrollRetentionGuardService {
 	 * @var string
 	 */
 	private const RETENTION_SERVICE_FQCN = 'OCA\OpenRegister\Service\RetentionService';
+
+	/**
+	 * OpenRegister's hold order, by name: the reason and matter one placeHold() call records.
+	 *
+	 * @var string
+	 */
+	private const HOLD_ORDER_FQCN = 'OCA\OpenRegister\Service\HoldOrder';
 
 	/**
 	 * The legal-hold reason recorded when this service places one.
@@ -227,7 +234,7 @@ class PayrollRetentionGuardService {
 		}
 
 		$reason = self::HOLD_REASON_PREFIX . $ceiling->format('Y-m-d') . ' (' . $source . ')';
-		$held = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
+		$held = $this->placeHold(object: $object, reason: $reason);
 
 		if ($this->persist(held: $held, schema: $schema) === false) {
 			return ['held' => false, 'ceiling' => $ceiling->format('Y-m-d'), 'source' => $source];
@@ -258,6 +265,25 @@ class PayrollRetentionGuardService {
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
 	 */
 	public function placeStatutoryFloorHold(mixed $object, string $schema, string $periodField, int $years, string $lawReference): array {
+		return $this->placeFloorHold(
+			object: $object,
+			floor: new StatutoryFloorHold(schema: $schema, periodField: $periodField, years: $years, lawReference: $lawReference)
+		);
+	}//end placeStatutoryFloorHold()
+
+	/**
+	 * Place the statutory-floor legal hold described by `$floor` (see
+	 * `placeStatutoryFloorHold()`): nothing for a non-object, an active hold
+	 * kept as is, otherwise derived from the period field.
+	 *
+	 * @param mixed              $object The OpenRegister ObjectEntity to place the hold on.
+	 * @param StatutoryFloorHold $floor  The period field, the years and the citation.
+	 *
+	 * @return array{held: bool, ceiling: string|null} Whether a hold is (now) active and its derived ceiling date.
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 */
+	public function placeFloorHold(mixed $object, StatutoryFloorHold $floor): array {
 		if (is_object($object) === false) {
 			return ['held' => false, 'ceiling' => null];
 		}
@@ -266,28 +292,55 @@ class PayrollRetentionGuardService {
 			return ['held' => true, 'ceiling' => null];
 		}
 
-		[$periodYear, $periodValue] = $this->extractPeriodYear($object, $periodField);
+		return $this->holdFromPeriod(object: $object, floor: $floor);
+	}//end placeFloorHold()
+
+	/**
+	 * Derive "31 December of (period year + years)" from the period field and
+	 * place and persist the hold; no hold when the period carries no year.
+	 *
+	 * @param object             $object The ObjectEntity without an active hold.
+	 * @param StatutoryFloorHold $floor  The period field, the years and the citation.
+	 *
+	 * @return array{held: bool, ceiling: string|null}
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 */
+	private function holdFromPeriod(object $object, StatutoryFloorHold $floor): array {
+		[$periodYear, $periodValue] = $this->extractPeriodYear($object, $floor->periodField);
 		if ($periodYear === null) {
 			return ['held' => false, 'ceiling' => null];
 		}
 
-		$ceiling = sprintf('%04d-12-31', ($periodYear + $years));
-		$reason = sprintf(
-			'Statutaire bewaarplicht (hrmq#99): %s, tot %s (periode %s + %d jaar).',
-			$lawReference,
-			$ceiling,
-			$periodValue,
-			$years
-		);
+		$ceiling = sprintf('%04d-12-31', ($periodYear + $floor->years));
+		$held = $this->placeHold(object: $object, reason: $this->floorReason(floor: $floor, period: [$ceiling, $periodValue]));
 
-		$held = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
-
-		if ($this->persist(held: $held, schema: $schema) === false) {
+		if ($this->persist(held: $held, schema: $floor->schema) === false) {
 			return ['held' => false, 'ceiling' => $ceiling];
 		}
 
 		return ['held' => true, 'ceiling' => $ceiling];
-	}//end placeStatutoryFloorHold()
+	}//end holdFromPeriod()
+
+	/**
+	 * The reason recorded on a statutory-floor hold.
+	 *
+	 * @param StatutoryFloorHold      $floor  The citation and the years.
+	 * @param array{0: string, 1: string} $period The ceiling date and the raw period value.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 */
+	private function floorReason(StatutoryFloorHold $floor, array $period): string {
+		return sprintf(
+			'Statutaire bewaarplicht (hrmq#99): %s, tot %s (periode %s + %d jaar).',
+			$floor->lawReference,
+			$period[0],
+			$period[1],
+			$floor->years
+		);
+	}//end floorReason()
 
 	/**
 	 * Extract a 4-digit year from a period-shaped field
@@ -374,7 +427,7 @@ class PayrollRetentionGuardService {
 		}
 
 		$reason = 'Geërfd van retentie-/legal-hold-status van ' . $sourceDescription . ' (hrmq#99).';
-		$held = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
+		$held = $this->placeHold(object: $object, reason: $reason);
 
 		return $this->persist(held: $held, schema: $schema);
 	}//end inheritLegalHold()
@@ -448,6 +501,28 @@ class PayrollRetentionGuardService {
 
 		return true;
 	}//end persist()
+
+	/**
+	 * Place a legal hold through OpenRegister: `placeHold(object, HoldOrder)` where
+	 * OpenRegister offers it, else the release's `placeLegalHold(object, reason)`.
+	 *
+	 * @param object $object The OpenRegister ObjectEntity to hold.
+	 * @param string $reason Why it is held.
+	 *
+	 * @return mixed The held entity.
+	 *
+	 * @psalm-suppress UndefinedClass HoldOrder exists only when OpenRegister is installed; it is checked with class_exists() first.
+	 */
+	private function placeHold(object $object, string $reason): mixed {
+		$service = $this->retentionService();
+		if (method_exists($service, 'placeHold') === true && class_exists(self::HOLD_ORDER_FQCN) === true) {
+			$order = self::HOLD_ORDER_FQCN;
+
+			return $service->placeHold(object: $object, order: new $order(reason: $reason));
+		}
+
+		return $service->placeLegalHold(object: $object, reason: $reason);
+	}//end placeHold()
 
 	/**
 	 * @return mixed OpenRegister's RetentionService.

@@ -64,6 +64,20 @@ class HumaniqRoles {
 	}//end __construct()
 
 	/**
+	 * Whether the user is a Nextcloud administrator.
+	 *
+	 * @param string|null $uid The user.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
+	 */
+	public function isAdmin(?string $uid): bool {
+		return $this->groupManager->isAdmin($uid);
+
+	}//end isAdmin()
+
+	/**
 	 * Whether the user may take HR actions.
 	 *
 	 * @param string|null $uid The user.

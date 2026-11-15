@@ -3,6 +3,9 @@
 /**
  * Humaniq RosterCompetenceGuard
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * OpenRegister lifecycle guard for the Roster `publiceren` transition
  * (REQ-ROST-C02, humaniq#512). A roster that puts someone on a shift they are
  * not qualified for on that date does not publish. The competence cross-check
@@ -27,9 +30,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

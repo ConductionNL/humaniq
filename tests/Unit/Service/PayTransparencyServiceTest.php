@@ -166,4 +166,34 @@ class PayTransparencyServiceTest extends TestCase {
 		$this->assertSame(10.0, $report['overall']['meanGap']);
 	}//end testOtherAndUnknownCountInTotalsOnly()
 
+	/**
+	 * The latest contract running in the year names the category and the
+	 * weekly hours; an employee without hours or without an id is not
+	 * counted.
+	 *
+	 * @return void
+	 */
+	public function testTheLatestContractInTheYearAndWhoIsNotCounted(): void {
+		$rows = $this->rows();
+		$rows['employees'][] = ['id' => 'w1', 'gender' => 'woman', 'grossMonthlySalary' => 2000.0];
+		$rows['contracts'][] = ['employeeId' => 'w1', 'normfunctieId' => 'nf-adv', 'hoursPerWeek' => 20, 'startDate' => '2024-01-01', 'endDate' => '2025-12-31'];
+		$rows['contracts'][] = ['employeeId' => 'w1', 'normfunctieId' => 'nf-uit', 'hoursPerWeek' => 24, 'startDate' => '2026-02-01'];
+		$rows['contracts'][] = ['employeeId' => 'w1', 'normfunctieId' => 'nf-adv', 'hoursPerWeek' => 40, 'startDate' => '2027-01-01'];
+		$rows['payslips'][] = ['employeeId' => 'w1', 'period' => '2026-03', 'grossPay' => 2080.0];
+		$rows['payslips'][] = ['employeeId' => 'w1', 'period' => '2026-04', 'grossPay' => 2600.0, 'hoursWorked' => 104];
+		$rows['employees'][] = ['id' => 'm1', 'gender' => 'man', 'grossMonthlySalary' => 2500.0];
+		$rows['payslips'][] = ['employeeId' => 'm1', 'period' => '2026-03', 'grossPay' => 2500.0];
+		$rows['employees'][] = ['gender' => 'man', 'grossMonthlySalary' => 2500.0];
+		$this->person($rows, 'm2', 'man', 25.0);
+
+		$report = (new PayTransparencyService(new Percentile()))->report(rows: $rows, year: 2026, threshold: 1);
+
+		$this->assertSame([2, 1, 1], [$report['counted'], $report['women'], $report['men']]);
+		$this->assertSame(['Uitvoerend'], array_column($report['categories'], 'category'));
+		$this->assertSame($report['overall'], array_diff_key($report['categories'][0], ['category' => true]));
+		$this->assertSame(10.0, $report['overall']['meanGap'], 'w1 earns 4680 over 104 contract hours and 104 worked: 22.50 against 25.00.');
+		$this->assertSame(100.0, $report['overall']['womenReceivingVariable']);
+		$this->assertSame(0.0, $report['overall']['menReceivingVariable']);
+	}//end testTheLatestContractInTheYearAndWhoIsNotCounted()
+
 }//end class

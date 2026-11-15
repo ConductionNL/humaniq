@@ -48,15 +48,15 @@ class CompCycleApprover {
 	private const TRANSITION_ENGINE = 'OCA\OpenRegister\Service\Lifecycle\TransitionEngine';
 
 	/**
-	 * @param HoursRegisterGateway $gateway Reads the cycle's adjustments.
+	 * @param RecordStoreInterface $gateway Reads the cycle's adjustments.
 	 * @param ContainerInterface $container Resolves OpenRegister's TransitionEngine.
-	 * @param SettingsService $settingsService OpenRegister availability.
+	 * @param OpenRegisterAvailability $openRegister OpenRegister availability.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly OpenRegisterAvailability $openRegister,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -74,47 +74,98 @@ class CompCycleApprover {
 	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-002
 	 */
 	public function approveCycle(string $cycleId, string $callerUid, ?string $decisionReason = null): array {
-		$outcome = ['status' => 'ok', 'cycleId' => $cycleId, 'approved' => 0, 'refusedSelfApproval' => 0, 'failed' => 0, 'rows' => []];
+		$approval = new CycleApproval();
+		$approval->callerUid = $callerUid;
+		$approval->data = self::approvalData(callerUid: $callerUid, decisionReason: $decisionReason);
+		$approval->outcome = ['status' => 'ok', 'cycleId' => $cycleId, 'approved' => 0, 'refusedSelfApproval' => 0, 'failed' => 0, 'rows' => []];
+		foreach ($this->gateway->findFiltered('CompAdjustment', ['cycleId' => $cycleId]) as $adjustment) {
+			if ((string)($adjustment['status'] ?? '') === 'proposed') {
+				$this->approveOne(approval: $approval, adjustment: $adjustment);
+			}
+		}
+
+		return $approval->outcome;
+	}//end approveCycle()
+
+	/**
+	 * What every approve transition carries: the approver and, when given,
+	 * the trimmed decision reason.
+	 *
+	 * @param string      $callerUid      Who approves.
+	 * @param string|null $decisionReason An optional reason.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function approvalData(string $callerUid, ?string $decisionReason): array {
 		$data = ['approvedBy' => $callerUid];
 		if ($decisionReason !== null && trim($decisionReason) !== '') {
 			$data['decisionReason'] = trim($decisionReason);
 		}
 
-		foreach ($this->gateway->findFiltered('CompAdjustment', ['cycleId' => $cycleId]) as $adjustment) {
-			if ((string)($adjustment['status'] ?? '') !== 'proposed') {
-				continue;
-			}
+		return $data;
+	}//end approvalData()
 
-			$adjustmentId = (string)($adjustment['id'] ?? '');
-			$ownProposal = trim((string)($adjustment['proposedBy'] ?? '')) === $callerUid;
-			$ownRaise = trim((string)($adjustment['employeeUserId'] ?? '')) === $callerUid;
-			if ($ownProposal === true || $ownRaise === true) {
-				$outcome['refusedSelfApproval']++;
-				$outcome['rows'][] = ['adjustmentId' => $adjustmentId, 'employeeId' => $adjustment['employeeId'] ?? null, 'status' => 'refused-self-approval'];
-				continue;
-			}
+	/**
+	 * Approve one proposed adjustment, unless the caller proposed it or it
+	 * is their own raise; a refused transition is counted and reported.
+	 *
+	 * @param CycleApproval        $approval   The cycle being approved.
+	 * @param array<string, mixed> $adjustment The proposed CompAdjustment.
+	 *
+	 * @return void
+	 */
+	private function approveOne(CycleApproval $approval, array $adjustment): void {
+		if (self::isOwn(adjustment: $adjustment, callerUid: $approval->callerUid) === true) {
+			$approval->outcome['refusedSelfApproval']++;
+			$approval->outcome['rows'][] = self::row(adjustment: $adjustment, status: 'refused-self-approval');
+			return;
+		}
 
-			try {
-				$this->transitionEngine()->transition(objectId: $adjustmentId, action: 'approve', data: $data);
-			} catch (\Throwable $e) {
-				$this->logger->warning('CompCycleApprover: goedkeuren van ' . $adjustmentId . ' geweigerd: ' . $e->getMessage());
-				$outcome['failed']++;
-				$outcome['rows'][] = ['adjustmentId' => $adjustmentId, 'employeeId' => $adjustment['employeeId'] ?? null, 'status' => 'failed', 'message' => $e->getMessage()];
-				continue;
-			}
+		try {
+			$this->transitionEngine()->transition(objectId: (string)($adjustment['id'] ?? ''), action: 'approve', data: $approval->data);
+		} catch (\Throwable $e) {
+			$this->logger->warning('CompCycleApprover: goedkeuren van ' . (string)($adjustment['id'] ?? '') . ' geweigerd: ' . $e->getMessage());
+			$approval->outcome['failed']++;
+			$approval->outcome['rows'][] = self::row(adjustment: $adjustment, status: 'failed') + ['message' => $e->getMessage()];
+			return;
+		}
 
-			$outcome['approved']++;
-			$outcome['rows'][] = ['adjustmentId' => $adjustmentId, 'employeeId' => $adjustment['employeeId'] ?? null, 'status' => 'approved'];
-		}//end foreach
+		$approval->outcome['approved']++;
+		$approval->outcome['rows'][] = self::row(adjustment: $adjustment, status: 'approved');
+	}//end approveOne()
 
-		return $outcome;
-	}//end approveCycle()
+	/**
+	 * Whether the caller proposed the adjustment or receives it.
+	 *
+	 * @param array<string, mixed> $adjustment The CompAdjustment.
+	 * @param string               $callerUid  Who approves.
+	 *
+	 * @return bool
+	 */
+	private static function isOwn(array $adjustment, string $callerUid): bool {
+		$ownProposal = trim((string)($adjustment['proposedBy'] ?? '')) === $callerUid;
+		$ownRaise = trim((string)($adjustment['employeeUserId'] ?? '')) === $callerUid;
+
+		return $ownProposal === true || $ownRaise === true;
+	}//end isOwn()
+
+	/**
+	 * One outcome row.
+	 *
+	 * @param array<string, mixed> $adjustment The CompAdjustment.
+	 * @param string               $status     What happened to it.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function row(array $adjustment, string $status): array {
+		return ['adjustmentId' => (string)($adjustment['id'] ?? ''), 'employeeId' => $adjustment['employeeId'] ?? null, 'status' => $status];
+	}//end row()
 
 	/**
 	 * @return mixed OpenRegister's TransitionEngine.
 	 */
 	private function transitionEngine(): mixed {
-		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+		if ($this->openRegister->isAvailable() === false) {
 			throw new RuntimeException('humaniq requires the OpenRegister app, which is not installed on this instance.');
 		}
 

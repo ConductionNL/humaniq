@@ -30,12 +30,17 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\AbsenceRateService;
+use OCA\Humaniq\Service\AnalyticsCalculators;
 use OCA\Humaniq\Service\AnalyticsService;
+use OCA\Humaniq\Service\DepartmentFigureCalculators;
 use OCA\Humaniq\Service\DepartmentFigures;
 use OCA\Humaniq\Service\DepartmentFiguresService;
 use OCA\Humaniq\Service\Percentile;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Service\UnitMembership;
+use OCA\Humaniq\Service\WorkforceReportSettings;
+use OCA\Humaniq\Tests\Unit\Support\AppConfigValues;
+use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -111,6 +116,56 @@ class DepartmentFiguresServiceTest extends TestCase {
 		$this->assertSame(400000.0, $children['total']['wageCost']);
 		$this->assertSame(400000.0, (array_sum($byName) + $children['notPlaced']['wageCost']));
 	}//end testTheUnitsWageCostsAddUpToTheAdministrationTotal()
+
+	/**
+	 * The whole comparison when one person is split over two units, a month
+	 * has no payroll run and a unit has no cost: one month, and the trailing
+	 * quarter.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeComparisonWithASplitPlacementAndAMissingMonth(): void {
+		$admin = ['administrationId' => 'ADM-001'];
+		$thisMonth = new \DateTimeImmutable('first day of this month');
+		$runs = [(['id' => 'run-june', 'period' => '2026-06', 'status' => 'posted', 'totalGross' => 300000.0, 'totalEmployerCharges' => 60000.0] + $admin)];
+		$payslips = [
+			(['employeeId' => 'a', 'payrollRunId' => 'run-june', 'grossPay' => 100000.0] + $admin),
+			(['employeeId' => 'c', 'payrollRunId' => 'run-june', 'grossPay' => 50000.0] + $admin),
+		];
+		foreach ([0, 2] as $back) {
+			$month = $thisMonth->modify('-' . $back . ' months')->format('Y-m');
+			$runs[] = (['id' => 'run-' . $month, 'period' => $month, 'status' => 'posted', 'totalGross' => 9000.0, 'totalEmployerCharges' => 1000.0] + $admin);
+			$payslips[] = (['employeeId' => 'a', 'payrollRunId' => 'run-' . $month, 'grossPay' => 3000.0] + $admin);
+			$payslips[] = (['employeeId' => 'b', 'payrollRunId' => 'run-' . $month, 'grossPay' => 2000.0] + $admin);
+		}
+
+		$rows = $this->organisation();
+		$rows['OrgAssignment'][] = (['employeeId' => 'a', 'orgUnitId' => 'belastingen', 'startDate' => '2025-01-01'] + $admin);
+		$rows['OrgUnit'][] = (['id' => 'leeg', 'name' => 'Leeg', 'parentUnitId' => 'gemeente', 'managerId' => null] + $admin);
+		$rows += ['PayrollRun' => $runs, 'Payslip' => $payslips];
+		$service = $this->buildService($rows, 1);
+		$got = [];
+		foreach ([['2026-06', null], ['2026-06', 'gemeente'], ['2026-06', 'burgerzaken'], ['2026-05', 'gemeente'], ['quarter', 'gemeente']] as [$period, $parent]) {
+			$result = $service->compare('ADM-001', $period, $parent);
+			unset($result['from'], $result['to']);
+			$got[$period . ':' . (string)$parent] = $result;
+		}
+
+		$this->assertSame((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/golden/department-figures-compare.json'), json_encode($got, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)) . "\n");
+	}//end testTheWholeComparisonWithASplitPlacementAndAMissingMonth()
+
+	/**
+	 * A named period is the trailing months ending in the current one.
+	 *
+	 * @return void
+	 */
+	public function testAQuarterIsTheTrailingThreeMonths(): void {
+		$result = $this->buildService($this->organisation())->compare('ADM-001', 'quarter', null);
+
+		$thisMonth = new \DateTimeImmutable('first day of this month');
+		$this->assertSame($thisMonth->modify('-2 months')->format('Y-m-d'), $result['from']);
+		$this->assertSame($thisMonth->modify('last day of this month')->format('Y-m-d'), $result['to']);
+	}//end testAQuarterIsTheTrailingThreeMonths()
 
 	/**
 	 * "HR compares two teams": each unit carries its own absence rate and
@@ -266,11 +321,10 @@ class DepartmentFiguresServiceTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getDepartmentFiguresMinimumMembers')->willReturn($minimum);
 
-		$analytics = new AnalyticsService($container, $settings, new AbsenceRateService(), new Percentile(), $this->createMock(LoggerInterface::class));
+		$analytics = new AnalyticsService($container, $settings, $this->createMock(LoggerInterface::class), new AnalyticsCalculators(new AbsenceRateService(), new Percentile()));
 
-		return new DepartmentFiguresService($analytics, new UnitMembership(), new DepartmentFigures(), new AbsenceRateService(), $settings);
+		return new DepartmentFiguresService($analytics, new UnitMembership(), new WorkforceReportSettings(AppConfigValues::answer($this->createMock(IAppConfig::class), ['department_figures_minimum_members' => $minimum])), new DepartmentFigureCalculators(new DepartmentFigures(), new AbsenceRateService()));
 	}//end buildService()
 
 }//end class

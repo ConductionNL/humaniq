@@ -3,6 +3,9 @@
 /**
  * Unit tests for OfferEsignService.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pins the offer-esign contract: the aanbod-stage guard (REQ-OFFR-002), the
  * duck-typed skip when docudesk is absent and its stability across repeated
  * calls (REQ-OFFR-004), the dataRefs/adHocData assembly with no Employee ref
@@ -29,9 +32,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/offer-esign/spec.md
@@ -41,6 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
+use OCA\Humaniq\Service\DocudeskTemplates;
 use OCA\Humaniq\Service\OfferApplicationRepository;
 use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\OfferLetterService;
@@ -52,6 +53,8 @@ use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for OfferEsignService.
@@ -106,7 +109,9 @@ class OfferEsignServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				foreach (($this->rowsBySchema[$schema] ?? []) as $row) {
 					if ((string)($row['id'] ?? '') === $id) {
 						return $row;
@@ -156,12 +161,13 @@ class OfferEsignServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
 				$saved = array_merge($object, ['id' => $id]);
@@ -571,7 +577,7 @@ class OfferEsignServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$letterService = new OfferLetterService($container, $settings);
+		$letterService = new OfferLetterService($container, $settings, new DocudeskTemplates($container, $settings));
 		$applications = new OfferApplicationRepository($container, $settings, $logger);
 		$signingRecovery = new OfferSigningRecoveryService($userMgr, $logger);
 
@@ -836,6 +842,66 @@ class OfferEsignServiceTest extends TestCase {
 		$this->assertSame('failed', $final['offerSigningStatus']);
 
 	}//end testNoNextcloudUserForCandidateFailsCleanlyWithoutCallingDocudesk()
+
+	/**
+	 * The whole signing request handed to docudesk, key for key and in order,
+	 * with the deadline the configured number of days ahead.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeSigningRequest(): void {
+		$signingService = $this->fakeSigningService();
+		[$service] = $this->service(['job-application' => [$this->application()]], signingService: $signingService, fileService: $this->fakeFileService(fileId: 42));
+
+		$before = new \DateTimeImmutable('+14 days -1 minute');
+		$result = $service->requestSignature('app-1');
+		$after  = new \DateTimeImmutable('+14 days +1 minute');
+
+		$data = $signingService->createCalls[0];
+		$this->assertSame(
+			['documentFileId', 'documentName', 'signatureLevel', 'signingMode', 'deadline', 'signers', 'sourceApp', 'subjectRegister', 'subjectSchema', 'subjectId', 'subjectLabel', 'externalReference', 'correlationId'],
+			array_keys($data)
+		);
+		$this->assertSame('42', $data['documentFileId']);
+		$this->assertIsString($data['documentName']);
+		$this->assertSame(['SES', 'sequential'], [$data['signatureLevel'], $data['signingMode']]);
+		$deadline = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $data['deadline']);
+		$this->assertNotFalse($deadline);
+		$this->assertTrue($deadline >= $before && $deadline <= $after, '14 days ahead');
+		$this->assertSame(['Sanne Voorbeeld', 'app-1', 'app-1'], [$data['subjectLabel'], $data['externalReference'], $data['correlationId']]);
+		$this->assertSame(['requested', 'Aanbiedingsbrief gegenereerd en e-handtekeningaanvraag aangemaakt.'], [$result['status'], $result['message']]);
+
+	}//end testTheWholeSigningRequest()
+
+	/**
+	 * The exact failure messages: no Nextcloud user, an orphan recovered, an orphan not guessed.
+	 *
+	 * @return void
+	 */
+	public function testTheExactFailureMessages(): void {
+		[$noUser] = $this->service(['job-application' => [$this->application()]], signingService: $this->fakeSigningService(), userManager: $this->fakeUserManager([]));
+		$this->assertSame(
+			'no-nextcloud-user-for-candidate — docudesk kan niet ondertekenen voor externe (niet-Nextcloud-)ondertekenaars '
+			.'(zie docudesk SigningService::sign, dat autoriseert op signer.userId): geen Nextcloud-gebruiker gevonden voor "sanne.voorbeeld@example.org".',
+			$noUser->requestSignature('app-1')['message']
+		);
+
+		$recovering = $this->fakeSigningService(createThrows: true, listRequestsResult: [['id' => 'req-orphan', 'correlationId' => 'app-1', 'documentFileId' => '42', 'status' => 'PENDING']]);
+		[$recovered] = $this->service(['job-application' => [$this->application()]], signingService: $recovering, fileService: $this->fakeFileService(fileId: 42));
+		$this->assertStringEndsWith(
+			' Een gedeeltelijk aangemaakte signing-request (req-orphan) is teruggevonden en blijft bereikbaar via syncSignatureStatus/cancelRequest.',
+			$recovered->requestSignature('app-1')['message']
+		);
+
+		[$lost] = $this->service(['job-application' => [$this->application()]], signingService: $this->fakeSigningService(createThrows: true, listRequestsResult: []), fileService: $this->fakeFileService(fileId: 42));
+		$message = $lost->requestSignature('app-1')['message'];
+		$this->assertStringStartsWith('Aanvragen van de e-handtekening via docudesk is mislukt: ', $message);
+		$this->assertStringEndsWith(
+			' Kon een eventueel gedeeltelijk aangemaakte signing-request niet eenduidig terugvinden -- zoek zo nodig handmatig in het signingRequest-register op correlationId="app-1".',
+			$message
+		);
+
+	}//end testTheExactFailureMessages()
 
 	/**
 	 * Defect-3 fix: when createRequest() throws AFTER docudesk already

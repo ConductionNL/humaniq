@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
+use OCA\Humaniq\Service\PayrollRunServices;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Controller\PayrollController;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\PayrollMutationService;
@@ -210,18 +212,7 @@ class PayrollControllerContractTest extends TestCase {
 		$groupManager->method('isAdmin')->willReturn($isPrivileged);
 		$groupManager->method('isInGroup')->willReturnCallback(fn (string $uid, string $gid): bool => in_array($gid, $groups, true));
 
-		return new PayrollController(
-			$request,
-			$container,
-			$this->createMock(PayrollRunService::class),
-			$this->createMock(PayrollMutationService::class),
-			$this->createMock(ProformaPayslipService::class),
-			$this->createMock(RetroAdjustmentService::class),
-			$this->createMock(WkrService::class),
-			$settings,
-			$userSession,
-			new HumaniqRoles($groupManager),
-			$this->createMock(LoggerInterface::class)
+		return new PayrollController($request, new PayrollRunServices($this->createMock(PayrollRunService::class), $this->createMock(PayrollMutationService::class), $this->createMock(ProformaPayslipService::class), $this->createMock(RetroAdjustmentService::class)), $this->createMock(WkrService::class), $settings, new CallerContext($userSession, new HumaniqRoles($groupManager), $container, $this->createMock(LoggerInterface::class))
 		);
 
 	}//end buildController()

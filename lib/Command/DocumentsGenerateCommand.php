@@ -106,24 +106,19 @@ class DocumentsGenerateCommand extends Command {
 	 * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-003
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$typeOption = $input->getOption('type');
-		$type = (is_string($typeOption) === true && trim($typeOption) !== '') ? trim($typeOption) : null;
+		$type = CommandOptions::trimmed($input, 'type');
 
 		if ($type !== null && in_array($type, self::DOCUMENT_TYPES, true) === false) {
 			$output->writeln('<error>Onbekend documenttype "' . $type . '".</error>');
 			return 1;
 		}
 
-		$employeeOption = $input->getOption('employee');
-		$employeeId = (is_string($employeeOption) === true && trim($employeeOption) !== '') ? trim($employeeOption) : null;
-
-		$periodOption = $input->getOption('period');
-		$period = (is_string($periodOption) === true && trim($periodOption) !== '') ? trim($periodOption) : null;
-
-		$yearOption = $input->getOption('year');
-		$year = (is_string($yearOption) === true && trim($yearOption) !== '') ? trim($yearOption) : null;
-
-		$results = $this->service->generateBacklog($type, $employeeId, $period, $year);
+		$results = $this->service->generateBacklog(
+			$type,
+			CommandOptions::trimmed($input, 'employee'),
+			CommandOptions::trimmed($input, 'period'),
+			CommandOptions::trimmed($input, 'year')
+		);
 
 		$output->writeln('<info>Humaniq documentgeneratie</info>');
 
@@ -132,31 +127,29 @@ class DocumentsGenerateCommand extends Command {
 			return 0;
 		}
 
-		$failed = 0;
-		foreach ($results as $result) {
-			$status = (string)$result['status'];
-			$contractBit = $result['contractId'] !== null ? (' / contract ' . $result['contractId']) : '';
-			$line = sprintf(
-				'  employee %s%s (%s): %s — %s',
-				(string)$result['employeeId'],
-				$contractBit,
-				(string)$result['documentType'],
-				$status,
-				(string)$result['message']
-			);
-
-			if (in_array($status, self::FAILURE_STATUSES, true) === true) {
-				$failed++;
-				$output->writeln('<error>' . $line . '</error>');
-				continue;
-			}
-
-			$output->writeln($line);
-		}
-
-		$output->writeln(sprintf('  %d poging(en) verwerkt, %d mislukt.', count($results), $failed));
-
-		return $failed > 0 ? 1 : 0;
+		return (new BacklogReport($output, self::FAILURE_STATUSES))->exitCode($results, self::describeAttempt(...));
 	}//end execute()
+
+	/**
+	 * The report line for one generation attempt.
+	 *
+	 * @param array<string, mixed> $result The attempt.
+	 * @param string               $status The attempt's status.
+	 *
+	 * @return string
+	 */
+	private static function describeAttempt(array $result, string $status): string {
+		$contractBit = $result['contractId'] !== null ? (' / contract ' . $result['contractId']) : '';
+
+		return sprintf(
+			'  employee %s%s (%s): %s — %s',
+			(string)$result['employeeId'],
+			$contractBit,
+			(string)$result['documentType'],
+			$status,
+			(string)$result['message']
+		);
+
+	}//end describeAttempt()
 
 }//end class

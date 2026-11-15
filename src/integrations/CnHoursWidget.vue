@@ -4,7 +4,27 @@
 -->
 
 <template>
-	<div class="hq-hours" :data-surface="surface" data-testid="hq-hours-widget">
+	<div class="hq-hours"
+		:class="{ 'hq-hours--compact': compactHeader }"
+		:data-surface="surface"
+		data-testid="hq-hours-widget">
+		<!-- ON A HOST'S ROW the leaf is one "Hours" field beside the host's note
+		     (dossiq "Close out your day"), not the card: a row has no room for a
+		     header, figures and menus. What is typed is booked when the host
+		     records that row's note, so one press records both. -->
+		<label v-if="isRow" class="hq-hours__row" data-testid="hq-hours-row">
+			<span class="hq-hours__row-label">{{ t('humaniq', 'Hours') }}</span>
+			<input
+				v-model="rowHours"
+				class="hq-hours__row-input"
+				type="text"
+				inputmode="decimal"
+				:disabled="saving"
+				:aria-invalid="String(rowHours !== '' && rowHoursValue === null)"
+				data-testid="hq-hours-row-input">
+			<span v-if="error" class="hq-hours__row-error" role="alert">{{ error }}</span>
+		</label>
+		<template v-else>
 		<!-- CHROME. A host places a mount-mode leaf into a bare element and hands
 		     it no card, so the leaf draws its own or it reads as loose text
 		     sitting on the page between the cards that do have one. -->
@@ -16,7 +36,7 @@
 		     header has no rule. -->
 		<div class="hq-hours__header">
 			<div class="hq-hours__header-left">
-				<span class="hq-hours__icon" aria-hidden="true">
+				<span v-if="!compactHeader" class="hq-hours__icon" aria-hidden="true">
 					<svg width="24" height="24" viewBox="0 0 24 24" focusable="false">
 						<path
 							d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16m0-18a10 10 0 1 1 0 20 10 10 0 0 1 0-20m.5 5v5.25l4.5 2.67-.75 1.23L11 13V7z"
@@ -27,16 +47,24 @@
 				     title either, and a KPI that is only a number does not say what
 				     was counted. -->
 				<h3 class="hq-hours__caption" data-testid="hq-hours-caption">
-					{{ t('humaniq', 'Hours booked') }}
+					{{ caption }}
 				</h3>
 			</div>
 
-			<div class="hq-hours__controls">
+			<!-- No controls without a host object: there is nothing to time,
+			     book or open (REQ-HLD-003). -->
+			<div v-if="hostResolvable" class="hq-hours__controls">
+				<span v-if="weekLine !== ''" class="hq-hours__week" data-testid="hq-hours-week"><component
+					:is="part.strong ? 'strong' : 'span'"
+					v-for="(part, index) in weekParts"
+					:key="index"
+					:class="{ 'hq-hours__week-hours': part.strong }">{{ part.text }}</component></span>
 				<!-- The stopwatch is its own control, left of the actions, because
 				     it is the one-press shortcut for work happening right now.
 				     Putting it inside the menu would cost two presses for the
 				     thing that has to be instant. -->
 				<button
+					v-if="!compactHeader"
 					type="button"
 					class="hq-hours__timer"
 					:class="{ 'hq-hours__timer--running': runningHere }"
@@ -112,6 +140,16 @@
 						:style="menuStyle"
 						role="menu">
 						<button
+							v-if="compactHeader"
+							type="button"
+							class="hq-hours__menu-item"
+							role="menuitem"
+							:disabled="busy || !canUseTimer"
+							data-testid="hq-hours-menu-timer"
+							@click="closeMenu(); toggleTimer()">
+							{{ timerTitle }}
+						</button>
+						<button
 							type="button"
 							class="hq-hours__menu-item"
 							role="menuitem"
@@ -136,52 +174,141 @@
 		     Only this object. A timer running elsewhere leaves the figures alone,
 		     because putting another object's elapsed time where this object's
 		     total goes reads as this object's time. -->
-		<div v-if="runningHere" class="hq-hours__figures" data-testid="hq-hours-running">
+		<!-- A host that passed no register, schema or uuid named no object. Say
+		     so, and draw no total: "0 hours" and "no host" look the same to a
+		     caseworker and only one of them is a fact (REQ-HLD-003). -->
+		<p v-if="!hostResolvable" class="hq-hours__sub" role="status" data-testid="hq-hours-no-host">
+			{{ t('humaniq', 'This card cannot show hours: the page did not say which item it is on.') }}
+		</p>
+		<div v-else-if="runningHere" class="hq-hours__figures" data-testid="hq-hours-running">
 			<div class="hq-hours__headline">
 				<span class="hq-hours__value hq-hours__value--running">{{ elapsed }}</span>
 			</div>
 			<p class="hq-hours__sub">
 				{{ t('humaniq', 'Timer running on this item') }}
 			</p>
+			<button
+				v-if="compactHeader"
+				type="button"
+				class="hq-hours__timer-start"
+				:disabled="busy"
+				data-testid="hq-hours-stop-timer"
+				@click="toggleTimer">
+				{{ t('humaniq', 'Stop the timer') }}
+			</button>
 		</div>
 
-		<!-- Idle: the object's total, over the caller's own share.
-		     The bookings behind the total are NOT listed here. A KPI answers one
-		     question, and the administration is one press away in the actions for
-		     the reader who wants the rows. -->
-		<div v-else class="hq-hours__figures">
-			<div class="hq-hours__headline">
-				<span class="hq-hours__value" data-testid="hq-hours-total">{{ displayTotal }}</span>
-				<span class="hq-hours__unit">{{ t('humaniq', 'hours') }}</span>
+		<!-- Idle: the week on this object, one row per person with a bar
+		     against the week's largest share, beside a form that books hours
+		     without opening a dialog (board DqZaakMeer, "Uren registreren"). -->
+		<div v-else class="hq-hours__week-body">
+			<div class="hq-hours__people-column">
+				<p v-if="weekUnread" class="hq-hours__sub" data-testid="hq-hours-week-unread">
+					{{ t('humaniq', 'The hours of this week are not known yet') }}
+				</p>
+				<ul v-else-if="people.length > 0" class="hq-hours__people" data-testid="hq-hours-people">
+					<li v-for="person in people" :key="person.userId" class="hq-hours__person" data-testid="hq-hours-person">
+						<span class="hq-hours__person-line">
+							<span class="hq-hours__person-name">
+								<strong>{{ person.displayName }}</strong>
+								<span v-if="person.team" class="hq-hours__team">{{ person.team }}</span>
+							</span>
+							<strong class="hq-hours__person-hours">{{ hoursLabel(person.hours) }}</strong>
+						</span>
+						<span class="hq-hours__bar" aria-hidden="true">
+							<span class="hq-hours__bar-fill" :style="{ width: barWidth(person.hours) }" />
+						</span>
+					</li>
+				</ul>
+				<p v-else class="hq-hours__sub" data-testid="hq-hours-week-empty">
+					{{ t('humaniq', 'No hours recorded on this item this week') }}
+				</p>
+				<!-- Estimated and remaining stand beside the week, never instead of
+				     it (REQ-HL-EST-003); an overrun is a negative remainder. -->
+				<p v-if="hasEstimate" class="hq-hours__sub" data-testid="hq-hours-estimate">
+					{{ estimateLine }}
+				</p>
+				<p v-if="running" class="hq-hours__sub" data-testid="hq-hours-running-elsewhere">
+					{{ t('humaniq', 'Timer running on another item') }}
+				</p>
 			</div>
-			<p class="hq-hours__sub" data-testid="hq-hours-own">
-				{{ ownLine }}
-			</p>
-			<!-- Estimated and remaining stand BESIDE spent, never instead of it
-			     (REQ-HL-EST-003). An overrun renders as a negative remainder,
-			     because a remainder clipped at zero makes "exactly used up" and
-			     "ten hours over" the same picture. -->
-			<p v-if="hasEstimate" class="hq-hours__sub" data-testid="hq-hours-estimate">
-				{{ estimateLine }}
-			</p>
-			<!-- No estimate is SAID. A remaining of zero means the estimate is
-			     used up, and an object nobody estimated has not used anything
-			     up, so no remaining figure is rendered at all. -->
-			<p v-else class="hq-hours__sub" data-testid="hq-hours-no-estimate">
-				{{ t('humaniq', 'No estimate is set for this item.') }}
-			</p>
-			<p v-if="running" class="hq-hours__sub" data-testid="hq-hours-running-elsewhere">
-				{{ t('humaniq', 'Timer running on another item') }}
-			</p>
+			<form class="hq-hours__form" data-testid="hq-hours-form" @submit.prevent="recordHours">
+				<div class="hq-hours__form-row">
+					<label class="hq-hours__field">
+						<span>{{ t('humaniq', 'Date') }}</span>
+						<input v-model="form.date"
+							type="date"
+							:required="!compactHeader"
+							aria-required="true"
+							data-testid="hq-hours-form-date">
+					</label>
+					<label class="hq-hours__field">
+						<span>{{ t('humaniq', 'Hours') }}</span>
+						<input
+							v-model="form.hours"
+							type="number"
+							min="0.25"
+							max="24"
+							step="0.25"
+							:required="!compactHeader"
+							aria-required="true"
+							data-testid="hq-hours-form-hours">
+					</label>
+				</div>
+				<label class="hq-hours__field">
+					<span>{{ t('humaniq', 'Description') }}</span>
+					<input v-model="form.description" type="text" data-testid="hq-hours-form-description">
+				</label>
+				<button
+					type="submit"
+					class="hq-hours__submit"
+					:disabled="saving || !formComplete"
+					data-testid="hq-hours-form-submit">
+					{{ t('humaniq', 'Record hours') }}
+				</button>
+				<!-- With the header's stopwatch in the menu, the timer is also a
+				     button of its own under the form (board DqZaakMeer). -->
+				<button
+					v-if="compactHeader"
+					type="button"
+					class="hq-hours__timer-start"
+					:disabled="busy || !canUseTimer"
+					:title="canUseTimer ? '' : timerTitle"
+					data-testid="hq-hours-form-timer"
+					@click="toggleTimer">
+					<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+						<path
+							d="M9 2h6M12 7a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM12 4.5V7M18.5 6l1.5-1.5M12 10.5V14h2.5"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-linecap="round"
+							stroke-linejoin="round" />
+					</svg>
+					{{ t('humaniq', 'Start timer') }}
+				</button>
+			</form>
 		</div>
 
 		<p v-if="error" class="hq-hours__error" role="alert">
 			{{ error }}
 		</p>
+		<p v-if="sourceNote" class="hq-hours__source-note" data-testid="hq-hours-source-note">
+			<svg class="hq-hours__source-note-icon"
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				aria-hidden="true"
+				focusable="false">
+				<path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z" fill="currentColor" />
+			</svg>
+			<span>{{ t('humaniq', 'Hours are recorded through humaniq. Without humaniq this card is left out.') }}</span>
+		</p>
 		</div>
+		</template>
 
 		<HoursBookingDialog
-			v-if="showBooking"
+			v-if="showBooking && hostResolvable"
 			:domainObjectType="domainObjectType"
 			:domainObjectRef="objectId"
 			@close="showBooking = false"
@@ -190,6 +317,17 @@
 </template>
 
 <script>
+import { getLanguage, translate as t } from '@nextcloud/l10n'
+import HoursBookingDialog from '../dialogs/HoursBookingDialog.vue'
+import {
+	administrationUrl,
+	bookHours,
+	fetchEstimate,
+	fetchRunningTimer,
+	fetchWeek,
+	startTimer,
+	stopTimer,
+} from './hoursApi.js'
 /**
  * CnHoursWidget — hours booked against ANY object, and the three ways to act.
  *
@@ -218,16 +356,9 @@
  * object's uuid. Both are written by integrations rather than typed by an
  * employee, which is why neither appears in any `includeFields` allowlist.
  */
-import { translate as t } from '@nextcloud/l10n'
-import HoursBookingDialog from '../dialogs/HoursBookingDialog.vue'
-import {
-	administrationUrl,
-	fetchEntries,
-	fetchEstimate,
-	fetchRunningTimer,
-	startTimer,
-	stopTimer,
-} from './hoursApi.js'
+import { isResolvableHost } from './hoursHost.mjs'
+import { isForObject, parseHours, ROW_RECORDED_EVENT } from './rowHours.mjs'
+import { HOURS_MARK, weekLineParts } from './weekLineParts.mjs'
 
 /** How often the running figure is redrawn, in milliseconds. */
 const TICK_MS = 1000
@@ -268,18 +399,55 @@ export default {
 			default: 'detail-page',
 		},
 
+		/**
+		 * The card's title as the host names it ("Record hours" on a dossiq
+		 * case), translated by the host. "Hours booked" without one.
+		 */
+		title: {
+			type: String,
+			default: '',
+		},
+
+		/**
+		 * What the host calls the object, in English, for the week line:
+		 * "this case" reads "11.5 h on this case". humaniq translates the
+		 * nouns it knows; another is shown as written. "this item" without one.
+		 */
+		objectNoun: {
+			type: String,
+			default: '',
+		},
+
+		/**
+		 * A header with only the title, the week and the Actions menu: the
+		 * stopwatch moves into the menu and under the form as "Start timer",
+		 * the clock icon is left out (board DqZaakMeer, "Uren registreren").
+		 */
+		compactHeader: {
+			type: Boolean,
+			default: false,
+		},
+
+		/** A note band saying the hours come from humaniq and the card goes without it. */
+		sourceNote: {
+			type: Boolean,
+			default: false,
+		},
+
 	},
 
 	data() {
 		return {
-			entries: [],
+			/** The week on this object (`GET /api/time-entries/week`), or null while unread. */
+			week: null,
+			/** The inline booking form. */
+			form: { date: new Date().toISOString().slice(0, 10), hours: '', description: '' },
+			saving: false,
 			loading: false,
 			busy: false,
 			error: '',
 			/** The caller's running entry, from the server, or null. */
 			running: null,
-			/** The current user's Nextcloud id, for the caller's own share. */
-			uid: '',
 			now: Date.now(),
 			tick: null,
 			showBooking: false,
@@ -290,26 +458,113 @@ export default {
 			menuStyle: null,
 			/** Whether the document listeners behind the open menu are bound. */
 			menuListenersBound: false,
+			/** The hours typed in the row field (`surface: "row"`). */
+			rowHours: '',
 		}
 	},
 
 	computed: {
 		/**
-		 * The summed hours over every booking on this object, or a dash.
+		 * Whether the leaf sits on a host's row: one "Hours" field, no card.
 		 *
-		 * A dash rather than 0 on failure, deliberately: a zero that means "could
-		 * not read" is the defect this whole leaf exists to remove.
+		 * @return {boolean}
 		 *
-		 * @return {string} The total, or the dash.
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+		 */
+		isRow() {
+			return this.surface === 'row'
+		},
+
+		/**
+		 * The row field's hours as a number, or null.
+		 *
+		 * @return {number|null}
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+		 */
+		rowHoursValue() {
+			return parseHours(this.rowHours)
+		},
+
+		/**
+		 * The card's title: the host's, else "Hours booked".
+		 *
+		 * @return {string} The title.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-takes-its-hosts-title
+		 */
+		caption() {
+			return this.title !== '' ? this.title : t('humaniq', 'Hours booked')
+		},
+
+		/**
+		 * Whether the week could not be read (yet). The rows and the header's
+		 * total then say nothing rather than a 0 that reads as no hours.
+		 *
+		 * @return {boolean} True while the week is unknown.
 		 *
 		 * @spec openspec/specs/hours-leaf/spec.md#requirement-an-unreadable-total-is-not-rendered-as-a-number
 		 */
-		displayTotal() {
-			if (this.error !== '' || (this.loading === true && this.entries.length === 0)) {
-				return '–'
-			}
+		weekUnread() {
+			return this.week === null || this.error !== ''
+		},
 
-			return this.formatHours(this.sumOf(this.entries))
+		/**
+		 * The week's people, most hours first, as the server sends them.
+		 *
+		 * @return {Array<object>} `{ userId, displayName, team, hours }` rows.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		people() {
+			return Array.isArray(this.week?.people) ? this.week.people : []
+		},
+
+		/**
+		 * "Week 41 · 5 Oct to 11 Oct · {hours} on this item" with HOURS_MARK for
+		 * the hours (drawn by `weekParts`), or '' while unread.
+		 *
+		 * @return {string} The line.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		weekLine() {
+			if (this.weekUnread === true) {
+				return ''
+			}
+			const values = {
+				week: String(this.week.week),
+				from: this.dayLabel(this.week.weekStart),
+				to: this.dayLabel(this.week.weekEnd),
+				hours: HOURS_MARK,
+			}
+			if (this.objectNoun === '') {
+				return t('humaniq', 'Week {week} · {from} to {to} · {hours} on this item', values)
+			}
+			return t('humaniq', 'Week {week} · {from} to {to} · {hours} on {object}', { ...values, object: t('humaniq', this.objectNoun) })
+		},
+
+		/**
+		 * The week line in parts, the hours on the object strong (board DqZaak
+		 * "Uren registreren": "... · **11,5 uur** op deze zaak").
+		 *
+		 * @return {Array<{text: string, strong: boolean}>} The parts.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-week-line-names-the-objects-hours-in-bold
+		 */
+		weekParts() {
+			return weekLineParts(this.weekLine, this.weekUnread === true ? '' : this.hoursLabel(this.week.total))
+		},
+
+		/**
+		 * Whether the form holds a day and a positive number of hours.
+		 *
+		 * @return {boolean} True when it can be sent.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		formComplete() {
+			return this.form.date !== '' && Number(this.form.hours) > 0
 		},
 
 		/**
@@ -342,34 +597,6 @@ export default {
 			const remaining = this.formatHours(Number(this.estimate.remainingHours || 0))
 
 			return t('humaniq', '{estimated} estimated, {remaining} remaining', { estimated, remaining })
-		},
-
-		/**
-		 * The caller's own share of the object's hours, as a full line.
-		 *
-		 * Rendered even at zero. An absent sub-line and a zero one are not the
-		 * same claim: the first says nothing, the second says the reader has
-		 * booked nothing here.
-		 *
-		 * @return {string} The line.
-		 *
-		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-reads-as-a-kpi-tile
-		 */
-		ownLine() {
-			if (this.error !== '' || (this.loading === true && this.entries.length === 0)) {
-				return t('humaniq', 'Your share is not known yet')
-			}
-
-			if (this.uid === '') {
-				// No resolvable caller. Matching on '' would count every entry
-				// that carries no userId as the reader's own, which is a claim
-				// about them that nothing supports.
-				return t('humaniq', 'Your share is not known yet')
-			}
-
-			const mine = this.entries.filter((e) => String(e.userId || '') === this.uid)
-
-			return t('humaniq', '{hours} booked by you', { hours: this.formatHours(this.sumOf(mine)) })
 		},
 
 		/**
@@ -459,6 +686,18 @@ export default {
 		},
 
 		/**
+		 * Whether the host passed the register, schema and uuid of an object
+		 * (REQ-HLD-003). Without them the card names the gap and draws no total.
+		 *
+		 * @return {boolean} True when the host named an object.
+		 *
+		 * @spec openspec/changes/hours-leaf-loads-on-a-consuming-page/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
+		 */
+		hostResolvable() {
+			return isResolvableHost({ register: this.register, schema: this.schema, objectId: this.objectId })
+		},
+
+		/**
 		 * The link into humaniq's hour administration for this object.
 		 *
 		 * @return {string} The url.
@@ -482,7 +721,11 @@ export default {
 	 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-reads-as-a-kpi-tile
 	 */
 	mounted() {
-		this.uid = String(window?.OC?.getCurrentUser?.()?.uid || '')
+		if (this.isRow) {
+			// A row reads nothing up front: it only books, when its row is recorded.
+			document.addEventListener(ROW_RECORDED_EVENT, this.onRowRecorded)
+			return
+		}
 		this.load()
 		this.loadRunning()
 		this.loadEstimate()
@@ -503,6 +746,7 @@ export default {
 	 * @spec openspec/specs/hours-leaf/spec.md#requirement-a-running-timer-survives-leaving-the-page
 	 */
 	beforeUnmount() {
+		document.removeEventListener(ROW_RECORDED_EVENT, this.onRowRecorded)
 		if (this.tick !== null) {
 			window.clearInterval(this.tick)
 			this.tick = null
@@ -512,6 +756,57 @@ export default {
 
 	methods: {
 		t,
+
+		/**
+		 * Book the row field's hours on this object today, with the row's note
+		 * as the description, when the host has recorded that row's note.
+		 *
+		 * @param {CustomEvent} event The host's recorded-note event.
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-leaf-on-a-row-is-one-hours-field-booked-with-the-rows-note
+		 */
+		async onRowRecorded(event) {
+			const hours = this.rowHoursValue
+			if (isForObject(event?.detail, this.objectId) === false || hours === null || this.saving === true) {
+				return
+			}
+			await this.bookOnObject({
+				date: new Date().toISOString().slice(0, 10),
+				hours,
+				description: String(event.detail.note ?? ''),
+			}, async () => {
+				this.rowHours = ''
+			})
+		},
+
+		/**
+		 * Book hours on this object and run what follows the booking, with
+		 * the form saving meanwhile; a failure of either shows the server's
+		 * message.
+		 *
+		 * @param {{date: string, hours: number, description: string}} entry The booking.
+		 * @param {() => Promise<void>} afterBooked Runs once the booking is stored.
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+		 */
+		async bookOnObject(entry, afterBooked) {
+			this.saving = true
+			this.error = ''
+			try {
+				await bookHours({
+					domainObjectType: this.domainObjectType,
+					domainObjectRef: this.objectId,
+					...entry,
+				})
+				await afterBooked()
+			} catch (e) {
+				this.error = e?.response?.data?.message || e?.response?.data?.error || t('humaniq', 'The hours could not be recorded.')
+			} finally {
+				this.saving = false
+			}
+		},
 
 		/**
 		 * Read this object's time entries from OpenRegister.
@@ -528,7 +823,7 @@ export default {
 			this.loading = true
 			this.error = ''
 			try {
-				this.entries = await fetchEntries(this.domainObjectType, this.objectId)
+				this.week = await fetchWeek(this.domainObjectType, this.objectId)
 			} catch {
 				// Say so rather than render 0. See the component docblock.
 				this.error = t('humaniq', 'The hours for this item could not be read.')
@@ -793,19 +1088,68 @@ export default {
 		},
 
 		/**
-		 * The sum of an entry list's hours.
+		 * Book the form's hours on this object, then re-read the week and the
+		 * estimate the booking moved.
 		 *
-		 * Used for both figures, so the headline and the caller's share can never
-		 * be computed two different ways.
+		 * @return {Promise<void>}
 		 *
-		 * @param {object[]} entries The entries.
-		 *
-		 * @return {number} The total.
-		 *
-		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-reads-as-a-kpi-tile
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
 		 */
-		sumOf(entries) {
-			return entries.reduce((sum, e) => sum + (Number(e.hours) || 0), 0)
+		async recordHours() {
+			if (this.formComplete === false || this.saving === true) {
+				return
+			}
+			await this.bookOnObject({
+				date: this.form.date,
+				hours: Number(this.form.hours),
+				description: this.form.description,
+			}, async () => {
+				this.form = { ...this.form, hours: '', description: '' }
+				await this.load()
+				await this.loadEstimate()
+			})
+		},
+
+		/**
+		 * Hours as "6.5 h" in the user's language.
+		 *
+		 * @param {number} value The hours.
+		 *
+		 * @return {string} The label.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		hoursLabel(value) {
+			const hours = (Math.round((Number(value) || 0) * 100) / 100).toLocaleString(getLanguage())
+			return t('humaniq', '{hours} h', { hours })
+		},
+
+		/**
+		 * A day as "5 Oct" in the user's language.
+		 *
+		 * @param {string} day The day, `YYYY-MM-DD`.
+		 *
+		 * @return {string} The label.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		dayLabel(day) {
+			const date = new Date(`${day}T12:00:00`)
+			return Number.isNaN(date.getTime()) ? String(day || '') : date.toLocaleDateString(getLanguage(), { day: 'numeric', month: 'short' })
+		},
+
+		/**
+		 * A person's bar, as a share of the week's largest.
+		 *
+		 * @param {number} hours The person's hours.
+		 *
+		 * @return {string} The CSS width.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
+		 */
+		barWidth(hours) {
+			const most = Math.max(0, ...this.people.map((person) => Number(person.hours) || 0))
+			return most > 0 ? `${Math.round(((Number(hours) || 0) / most) * 100)}%` : '0%'
 		},
 
 		/**
@@ -826,6 +1170,56 @@ export default {
 </script>
 
 <style scoped>
+/* On a host's row: the label over a narrow field, as the host's own note
+   field beside it (dossiq DqDagAfsluiten "Uren"). The card chrome below is
+   for the leaf on its own; on a row only the field has an edge. */
+.hq-hours[data-surface='row'] {
+	display: block;
+	width: 104px;
+	height: auto;
+	overflow: visible;
+	border: 0;
+	border-radius: 0;
+	background-color: transparent;
+}
+
+.hq-hours__row {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.hq-hours__row-label {
+	color: var(--color-main-text);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+/* Nextcloud's own input rule (seven :not() parts) outweighs a class, and
+   would cap the field at its 34px clickable area; the host's fields beside
+   it are 40px. */
+.hq-hours__row-input {
+	box-sizing: border-box;
+	width: 100%;
+	height: 40px !important;
+	margin: 0;
+	padding: 0 12px;
+	border: 1px solid var(--color-border-maxcontrast);
+	border-radius: var(--border-radius-element, 8px);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font-size: 15px;
+}
+
+.hq-hours__row-input[aria-invalid='true'] {
+	border-color: var(--color-error);
+}
+
+.hq-hours__row-error {
+	color: var(--color-error-text, var(--color-error));
+	font-size: 13px;
+}
+
 /* The card the host does not draw. A mount-mode leaf is handed a bare element,
    so without this the tile is loose text between neighbours that have chrome. */
 .hq-hours {
@@ -869,6 +1263,19 @@ export default {
 	flex-shrink: 0;
 	height: 24px;
 	width: 24px;
+}
+
+/* The compact header reads as the host's card header: no rule, the host's
+   title size and inset. The form's empty required fields are not drawn red
+   before anything was typed; Record hours stays disabled until they are filled. */
+.hq-hours--compact .hq-hours__header {
+	border-bottom: none;
+	padding: 20px 22px 0;
+}
+
+.hq-hours--compact .hq-hours__caption {
+	font-size: 17px;
+	font-weight: 700;
 }
 
 .hq-hours__caption {
@@ -985,9 +1392,302 @@ export default {
 	margin: 0;
 }
 
-/* The same shape as the named Actions trigger on every other card: a
-   clickable-area-high pill, no border, icon then label, filled on hover. */
-.hq-hours__action {
+/* The week (board DqZaakMeer, "Uren registreren"): the people with their bars
+   beside the booking form, the form under them where the card is narrow. */
+.hq-hours__week {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+	white-space: nowrap;
+}
+
+.hq-hours__week-hours {
+	color: var(--color-main-text);
+}
+
+.hq-hours__week-body {
+	display: grid;
+	gap: 16px 24px;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.hq-hours__people {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.hq-hours__person {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.hq-hours__person-line {
+	align-items: baseline;
+	display: flex;
+	gap: 8px;
+	justify-content: space-between;
+}
+
+.hq-hours__team {
+	color: var(--color-text-maxcontrast);
+	margin-inline-start: 6px;
+}
+
+.hq-hours__person-hours {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.hq-hours__bar {
+	background: var(--color-background-dark);
+	border-radius: 2px;
+	display: block;
+	height: 4px;
+	overflow: hidden;
+}
+
+.hq-hours__bar-fill {
+	background: var(--color-primary-element);
+	display: block;
+	height: 100%;
+}
+
+.hq-hours__form {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.hq-hours__form-row {
+	display: grid;
+	gap: 10px;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.hq-hours__field {
+	display: flex;
+	flex-direction: column;
+	font-weight: 600;
+	gap: 4px;
+}
+
+.hq-hours__field input {
+	box-sizing: border-box;
+	margin: 0;
+	width: 100%;
+}
+
+.hq-hours__submit {
+	align-self: flex-start;
+	background: var(--color-primary-element);
+	border: none;
+	border-radius: var(--border-radius-element, 8px);
+	color: var(--color-primary-element-text);
+	cursor: pointer;
+	font: inherit;
+	font-weight: 600;
+	min-height: var(--default-clickable-area, 34px);
+	padding: 0 16px;
+}
+
+.hq-hours__timer-start {
+	align-items: center;
+	align-self: flex-start;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
+	border-radius: var(--border-radius-element, 8px);
+	color: var(--color-main-text);
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	font-weight: 600;
+	gap: 6px;
+	min-height: var(--default-clickable-area, 34px);
+	padding: 0 16px;
+}
+
+.hq-hours__timer-start:disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+
+.hq-hours__source-note {
+	align-items: center;
+	background: var(--color-primary-element-light, var(--color-background-hover));
+	border-radius: var(--border-radius-element, 8px);
+	color: var(--color-primary-element-light-text, var(--color-main-text));
+	display: flex;
+	font-size: 13px;
+	gap: 10px;
+	margin: 16px 0 0;
+	padding: 10px 14px;
+}
+
+.hq-hours__source-note-icon {
+	flex: none;
+}
+
+.hq-hours__submit:disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+
+/* On a host's board look (dossiq DqZaak and DqZaakMeer "Uren registreren")
+   the fields and the two buttons are the board's 40px controls: fields with a
+   1px edge on an 8px radius, the buttons 14px. Elsewhere they keep the
+   Nextcloud clickable area. The whole selector sits in :global(): a scoped
+   `:global(.x) .y` compiles to `.x` alone, which styled the host's page. */
+/* The booking form and the week line as board DqZaak "Uren registreren"
+   draws them (r39: the form's first row 13.5 under the title against 16, the
+   labels 15px at 700 on a 22.5 line): labels 14px at 600 on the normal line,
+   6px above their field, the fields 12px apart, the week line 14px. */
+:global(.cn-look-board .hq-hours--compact .hq-hours__field) {
+	font-size: 14px;
+	gap: 6px;
+	line-height: normal;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__field > span) {
+	font-weight: 600;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__form) {
+	gap: 12px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__form-row) {
+	gap: 12px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__week) {
+	font-size: 14px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__field input) {
+	border: 1px solid var(--color-border-maxcontrast);
+	border-radius: 8px;
+	font-size: 15px;
+	height: 40px;
+	min-height: 40px;
+	padding: 0 12px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__submit),
+:global(.cn-look-board .hq-hours--compact .hq-hours__timer-start) {
+	font-size: 14px;
+	height: 40px;
+	min-height: 40px;
+}
+
+/* The board's frame and buttons on a host's board look (DqZaak "Uren
+   registreren", r34): the title on the normal line (20.4 against 25.5), the
+   content 22px in and 20px above the foot (16 and 12), "Record hours" primary also while it
+   waits for the form (a disabled button's grey ground arrives with
+   `!important`, so the primary ground carries it too), 18px in, and "Start
+   timer" 14px in. */
+:global(.cn-look-board .hq-hours--compact .hq-hours__caption) {
+	line-height: normal;
+}
+
+/* The board's header row: title, week line and a 34px Actions button on one
+   baseline (the button's icon foot), the body 14px under it, so the form's
+   first row stands 16px under the title. */
+:global(.cn-look-board .hq-hours--compact .hq-hours__header) {
+	align-items: baseline;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__controls) {
+	align-items: baseline;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__body) {
+	padding: 14px 22px 20px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__submit),
+:global(.cn-look-board .hq-hours--compact .hq-hours__submit:disabled) {
+	background: var(--color-primary-element) !important;
+	border: 0;
+	color: var(--color-primary-element-text) !important;
+	padding: 0 18px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__timer-start) {
+	padding: 0 14px;
+}
+
+/* On the board look the week's people are the board's ruled rows (DqZaak
+   "Uren registreren": "Pieter Jansen Woo en informatie 6,5 u"): 14px, the
+   name and hours at 600, 9px above and below with a hairline over each, the
+   bar 6px on a 3px radius; the Actions trigger at 600 like every other card's
+   (r33: rows 58 against 47, 500 against 600; Acties 700 against 600). */
+:global(.cn-look-board .hq-hours--compact .hq-hours__person) {
+	border-top: 1px solid var(--cn-board-hairline, var(--color-border));
+	gap: 5px;
+	padding: 9px 0;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__person-line) {
+	font-size: 14px;
+	line-height: normal;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__person-line strong) {
+	font-weight: 600;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__bar) {
+	border-radius: 3px;
+	height: 6px;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__action) {
+	font-size: 14px;
+	font-weight: 600;
+	height: 34px;
+	min-height: 34px;
+}
+
+/* Nextcloud's global button margin (3px) put the header row 3px and the form
+   6px lower than board DqZaak "Uren registreren" draws them; the week rows
+   touch, one hairline between them; the source note stands 14px under the
+   last row (the body's 8px gap and 6px). */
+:global(.cn-look-board .hq-hours--compact .hq-hours__action),
+:global(.cn-look-board .hq-hours--compact .hq-hours__submit),
+:global(.cn-look-board .hq-hours--compact .hq-hours__timer-start) {
+	margin: 0;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__people) {
+	gap: 0;
+}
+
+:global(.cn-look-board .hq-hours--compact .hq-hours__source-note) {
+	margin-top: 6px;
+}
+
+/* The label has its own bold rule, which the trigger's 600 does not reach. */
+:global(.cn-look-board .hq-hours--compact .hq-hours__action-label) {
+	font-weight: 600;
+}
+
+@container hq-hours (max-width: 560px) {
+	.hq-hours__week-body {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.hq-hours__week {
+		white-space: normal;
+	}
+}
+
+/* The light-filled pill the Actions trigger and the timer button share. */
+.hq-hours__action,
+.hq-hours__timer {
 	align-items: center;
 	background: var(--color-primary-element-light, var(--color-background-dark));
 	border: none;
@@ -995,6 +1695,11 @@ export default {
 	color: var(--color-primary-element-light-text, var(--color-main-text));
 	cursor: pointer;
 	display: flex;
+}
+
+/* The same shape as the named Actions trigger on every other card: a
+   clickable-area-high pill, no border, icon then label, filled on hover. */
+.hq-hours__action {
 	font: inherit;
 	gap: 4px;
 	height: var(--default-clickable-area, 34px);
@@ -1011,13 +1716,6 @@ export default {
 /* The same pill as the Actions trigger beside it, icon only. It was the one
    round, outlined button in a header row of light-filled pills. */
 .hq-hours__timer {
-	align-items: center;
-	background: var(--color-primary-element-light, var(--color-background-dark));
-	border: none;
-	border-radius: var(--border-radius-element, var(--border-radius-pill, 17px));
-	color: var(--color-primary-element-light-text, var(--color-main-text));
-	cursor: pointer;
-	display: flex;
 	flex: 0 0 auto;
 	height: var(--default-clickable-area, 34px);
 	justify-content: center;

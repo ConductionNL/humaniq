@@ -59,3 +59,7 @@ is what a silent no-op looks like. The test asserts all of them together:
 
 The page ids (`GeneratedDocuments`, `GeneratedDocumentDetail`) and route names
 are UI identifiers rather than slugs, and are left alone.
+
+## Matrix rows
+
+Rows: `ppl-generate-documents` (humaniq `openspec/parity/capabilities.json`).

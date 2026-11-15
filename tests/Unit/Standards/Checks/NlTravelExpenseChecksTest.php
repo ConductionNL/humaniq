@@ -68,6 +68,58 @@ class NlTravelExpenseChecksTest extends TestCase {
 	}//end tearDown()
 
 	/**
+	 * The check's verdict for every shape of expense, around the rate.
+	 *
+	 * @return void
+	 */
+	public function testTheVerdictForEveryShapeOfExpense(): void {
+		$check = NlTravelExpenseChecks::checks()['Expense'][self::RULE_ID];
+		$trip = ['category' => 'travel', 'travelType' => 'business', 'distanceKm' => 100, 'amount' => 23];
+		$cases = [
+			'at-rate' => $trip,
+			'over-rate' => array_merge($trip, ['amount' => 23.5]),
+			'commute-over' => array_merge($trip, ['travelType' => 'commute', 'amount' => '40']),
+			'other-category' => array_merge($trip, ['category' => 'meal', 'amount' => 999]),
+			'private-trip' => array_merge($trip, ['travelType' => 'private', 'amount' => 999]),
+			'no-type' => array_merge($trip, ['travelType' => null, 'amount' => 999]),
+			'zero-distance' => array_merge($trip, ['distanceKm' => 0, 'amount' => 999]),
+			'text-distance' => array_merge($trip, ['distanceKm' => 'ver', 'amount' => 999]),
+			'no-amount' => array_merge($trip, ['amount' => null]),
+			'taxable-part' => array_merge($trip, ['amount' => 40, 'taxableAmount' => 17]),
+			'taxable-short' => array_merge($trip, ['amount' => 40, 'taxableAmount' => '16.5']),
+			'taxable-zero' => array_merge($trip, ['amount' => 40, 'taxableAmount' => 0]),
+			'taxable-text' => array_merge($trip, ['amount' => 40, 'taxableAmount' => 'x']),
+			'taxable-negative' => array_merge($trip, ['amount' => 20, 'taxableAmount' => -5]),
+			'empty' => [],
+		];
+		$got = [];
+		foreach ($cases as $name => $expense) {
+			$got[$name] = $check($expense);
+		}
+
+		$this->assertSame(
+			[
+				'at-rate' => true,
+				'over-rate' => false,
+				'commute-over' => false,
+				'other-category' => true,
+				'private-trip' => true,
+				'no-type' => true,
+				'zero-distance' => true,
+				'text-distance' => true,
+				'no-amount' => true,
+				'taxable-part' => true,
+				'taxable-short' => false,
+				'taxable-zero' => false,
+				'taxable-text' => false,
+				'taxable-negative' => true,
+				'empty' => true,
+			],
+			$got
+		);
+	}//end testTheVerdictForEveryShapeOfExpense()
+
+	/**
 	 * Whether the evaluated violations contain a given rule id.
 	 *
 	 * @param array<int, \OCA\Humaniq\Standards\Violation> $violations The violations.
@@ -357,5 +409,62 @@ class NlTravelExpenseChecksTest extends TestCase {
 		$this->assertFalse($checks($expense, []), 'EUR 0,30/km still violates when $context is empty -- the predicate does not depend on context.');
 
 	}//end testPredicateContractToleratesMissingContext()
+	/**
+	 * The rate is read from the corpus on every call: taxFreeRatePerKm()
+	 * returns it, and a corpus that raises it to EUR 0,30/km clears a claim
+	 * the shipped EUR 0,23/km flags.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
+	 */
+	public function testTheRateIsReadFromTheCorpusOnEveryCall(): void {
+		$check = NlTravelExpenseChecks::checks()['Expense'][self::RULE_ID];
+		$claim = ['category' => 'travel', 'travelType' => 'business', 'distanceKm' => 100, 'amount' => 30];
+
+		$this->assertSame(0.23, NlTravelExpenseChecks::taxFreeRatePerKm());
+		$this->assertFalse($check($claim));
+
+		CatalogueOverride::rewrite(
+			self::RULE_ID,
+			static function (array $rule): array {
+				$rule['parameters']['rateEurPerKm'] = '0.30';
+				return $rule;
+			}
+		);
+		$this->assertSame(0.30, NlTravelExpenseChecks::taxFreeRatePerKm());
+		$this->assertTrue($check($claim));
+		$this->assertFalse($check(array_merge($claim, ['amount' => 31])));
+
+	}//end testTheRateIsReadFromTheCorpusOnEveryCall()
+
+	/**
+	 * Without a readable corpus rate (rule missing, parameters not an object,
+	 * or a non-numeric rate) there is no rate to hold a claim to: the rate is
+	 * null and even a far over-rate claim passes vacuously.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableCorpusRateMakesTheCheckVacuous(): void {
+		$check = NlTravelExpenseChecks::checks()['Expense'][self::RULE_ID];
+		$overRate = ['category' => 'travel', 'travelType' => 'commute', 'distanceKm' => 10, 'amount' => 50];
+		$shapes = [
+			'missing' => null,
+			'no-parameters' => static fn (array $rule): array => array_merge($rule, ['parameters' => null]),
+			'text-rate' => static fn (array $rule): array => array_merge($rule, ['parameters' => ['rateEurPerKm' => 'zie besluit']]),
+		];
+
+		foreach ($shapes as $shape => $rewrite) {
+			if ($rewrite === null) {
+				CatalogueOverride::without(self::RULE_ID);
+			} else {
+				CatalogueOverride::rewrite(self::RULE_ID, $rewrite);
+			}
+
+			$this->assertNull(NlTravelExpenseChecks::taxFreeRatePerKm(), $shape);
+			$this->assertTrue($check($overRate), $shape);
+		}
+
+	}//end testAnUnreadableCorpusRateMakesTheCheckVacuous()
 
 }//end class

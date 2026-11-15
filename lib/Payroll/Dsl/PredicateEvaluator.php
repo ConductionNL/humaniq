@@ -3,6 +3,9 @@
 /**
  * Predicate Evaluator
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The DSL's predicate vocabulary (jurisdiction-packs design.md D3), used by a
  * step's `when` gate and by boolean `derive` bindings: `eq ne lt lte gt gte`,
  * `and or not`, `ageReached(dob, years, asOf, granularity)` and `yearOf(date)`.
@@ -27,9 +30,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @link https://conduction.nl
  *

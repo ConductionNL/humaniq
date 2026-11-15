@@ -1,0 +1,60 @@
+{
+    "claimCents": 0,
+    "claimIds": [],
+    "taxedCents": 2000,
+    "untaxedCents": 6960,
+    "lines": [
+        {
+            "allowanceId": "alw-home",
+            "kind": "thuiswerk",
+            "status": "paid",
+            "taxed": 0,
+            "untaxed": 19.6,
+            "wkrCategory": "gericht-vrijgesteld"
+        },
+        {
+            "allowanceId": "alw-phone",
+            "kind": "telefoon",
+            "status": "paid",
+            "taxed": 20,
+            "untaxed": 0,
+            "wkrCategory": null
+        },
+        {
+            "allowanceId": "alw-free",
+            "kind": "other",
+            "status": "paid",
+            "taxed": 0,
+            "untaxed": 50,
+            "wkrCategory": "vrije-ruimte"
+        },
+        {
+            "allowanceId": "alw-travel",
+            "kind": "reiskosten",
+            "status": "arrangement-missing",
+            "taxed": 0,
+            "untaxed": 0,
+            "wkrCategory": null
+        }
+    ],
+    "wkr": [
+        {
+            "sourceReference": "allowance:alw-home:2026-05",
+            "amount": 19.6,
+            "wkrCategory": "gericht-vrijgesteld",
+            "employeeId": "emp-1",
+            "date": "2026-05-31",
+            "year": 2026,
+            "description": "Thuiswerkvergoeding 2026-05"
+        },
+        {
+            "sourceReference": "allowance:alw-free:2026-05",
+            "amount": 50,
+            "wkrCategory": "vrije-ruimte",
+            "employeeId": "emp-1",
+            "date": "2026-05-31",
+            "year": 2026,
+            "description": "Vaste vergoeding 2026-05"
+        }
+    ]
+}

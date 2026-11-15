@@ -66,6 +66,9 @@ namespace OCA\OpenRegister\Event {
 namespace OCA\Humaniq\Tests\Unit\AppInfo {
 
 	use OCA\Humaniq\AppInfo\Application;
+	use OCA\Humaniq\Listener\ExpenseCategoryGuardListener;
+	use OCA\Humaniq\Listener\ExpenseManagerStampListener;
+	use OCA\Humaniq\Listener\ExpensePayoutFieldsListener;
 	use OCA\Humaniq\Listener\TravelAmountListener;
 	use OCA\OpenRegister\Event\ObjectEventSubscription;
 	use OCP\EventDispatcher\IEventDispatcher;
@@ -100,6 +103,43 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 
 			self::assertSame(['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\OpenRegister\Event\ObjectUpdatingEvent'], $events);
 		}//end testTheTravelListenerIsSubscribedForClaimsAndArrangements()
+
+		/**
+		 * The expense approver stamp is subscribed for both pre-save events,
+		 * and boot() subscribes it after every other Expense listener, so the
+		 * modified data it merges into is complete.
+		 *
+		 * @return void
+		 */
+		public function testTheExpenseApproverStampIsSubscribedLast(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			foreach (['registerTravelListeners', 'registerApprovalsInboxListeners', 'registerExpensePayrollListeners'] as $method) {
+				(new \ReflectionMethod(Application::class, $method))->invoke($app, $this->createMock(IEventDispatcher::class));
+			}
+
+			$expense = [];
+			foreach (ObjectEventSubscription::$recorded as $entry) {
+				if (in_array('expense', (array)$entry['schemas'], true) === true) {
+					$expense[$entry['event']][] = $entry['listener'];
+				}
+			}
+
+			foreach (['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\OpenRegister\Event\ObjectUpdatingEvent'] as $event) {
+				self::assertSame([ExpenseManagerStampListener::class, ExpensePayoutFieldsListener::class], array_slice($expense[$event], -2), $event);
+				self::assertSame(1, count(array_keys($expense[$event], ExpenseManagerStampListener::class, true)), $event);
+				self::assertContains(ExpenseCategoryGuardListener::class, $expense[$event], $event);
+			}
+
+			$boot = new \ReflectionMethod(Application::class, 'boot');
+			$lines = array_slice(file((string)$boot->getFileName()), $boot->getStartLine(), ($boot->getEndLine() - $boot->getStartLine()));
+			$order = array_values(preg_grep('/\$this->register(Travel|ApprovalsInbox|ExpensePayroll|FieldAccess)Listeners?\(/', $lines));
+			self::assertStringContainsString('registerExpensePayrollListeners', (string)end($order));
+		}//end testTheExpenseApproverStampIsSubscribedLast()
 
 	}//end class
 }

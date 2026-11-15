@@ -59,24 +59,22 @@ class UnitTrends {
 	/**
 	 * A metric for one unit, period by period.
 	 *
-	 * @param array{id: string, minimumMembers: int, metric: string} $unit       The unit, its threshold and the metric.
-	 * @param array<int, string>                                   $periodKeys `YYYY-MM` buckets.
-	 * @param array<string, array<int, array<string, mixed>>>      $rows       The metric's rows for the administration.
-	 * @param callable(string): array<int, array<string, mixed>>   $load       Loads a schema's rows for the administration.
-	 * @param callable(array<int, string>, array<string, array<int, array<string, mixed>>>, array<string, float>): array<int, array<string, mixed>> $seriesFor The metric over restricted rows.
+	 * @param array{id: string, minimumMembers: int, metric: string} $unit    The unit, its threshold and the metric.
+	 * @param UnitTrendSources                                      $sources The buckets, the administration's rows and the load and series callbacks.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
 	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
 	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-002
 	 */
-	public function series(array $unit, array $periodKeys, array $rows, callable $load, callable $seriesFor): array {
+	public function series(array $unit, UnitTrendSources $sources): array {
+		$load = $sources->load;
 		$subtree = $this->membership->subtree($unit['id'], $load('OrgUnit'));
 		$assignments = $load('OrgAssignment');
 		$payslips = ($unit['metric'] === 'payroll-cost') ? $load('Payslip') : [];
 
 		$series = [];
-		foreach ($periodKeys as $period) {
+		foreach ($sources->periodKeys as $period) {
 			[$start, $end] = $this->periods->bounds($period);
 			$shares = $this->membership->sharesInWindow($subtree, $assignments, $start, $end);
 			if (count($shares) < $unit['minimumMembers']) {
@@ -85,11 +83,11 @@ class UnitTrends {
 			}
 
 			if ($unit['metric'] === 'payroll-cost') {
-				$series[] = ['date' => $period, 'value' => $this->figures->wageCost($rows['PayrollRun'], $payslips, $shares, $period)];
+				$series[] = ['date' => $period, 'value' => $this->figures->wageCost($sources->rows['PayrollRun'], $payslips, $shares, $period)];
 				continue;
 			}
 
-			$series[] = $seriesFor([$period], $this->membership->restrict($rows, $shares), $shares)[0];
+			$series[] = ($sources->seriesFor)([$period], $this->membership->restrict($sources->rows, $shares), $shares)[0];
 		}
 
 		return $series;

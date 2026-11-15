@@ -75,8 +75,7 @@ class GlPostRunCommand extends Command {
 	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-006
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$periodOption = $input->getOption('period');
-		$period = (is_string($periodOption) === true && trim($periodOption) !== '') ? trim($periodOption) : null;
+		$period = CommandOptions::trimmed($input, 'period');
 
 		$results = $this->service->postApprovedRuns($period);
 
@@ -87,23 +86,20 @@ class GlPostRunCommand extends Command {
 			return 0;
 		}
 
-		$failed = 0;
-		foreach ($results as $result) {
-			$status = (string)$result['status'];
-			$line = sprintf('  run %s: %s — %s', (string)$result['runId'], $status, (string)$result['message']);
-
-			if ($status === 'failed') {
-				$failed++;
-				$output->writeln('<error>' . $line . '</error>');
-				continue;
-			}
-
-			$output->writeln($line);
-		}
-
-		$output->writeln(sprintf('  %d run(s) verwerkt, %d mislukt.', count($results), $failed));
-
-		return $failed > 0 ? 1 : 0;
+		return (new OutcomeReport($output, '  %d run(s) verwerkt, %d mislukt.'))->exitCode($results, self::describeOutcome(...));
 	}//end execute()
+
+	/**
+	 * The report line for one run's outcome.
+	 *
+	 * @param array<string, mixed> $result The outcome.
+	 * @param string               $status The outcome's status.
+	 *
+	 * @return string
+	 */
+	private static function describeOutcome(array $result, string $status): string {
+		return sprintf('  run %s: %s — %s', (string)$result['runId'], $status, (string)$result['message']);
+
+	}//end describeOutcome()
 
 }//end class

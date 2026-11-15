@@ -1,0 +1,24 @@
+[
+    {
+        "kind": "employee",
+        "id": "emp-1",
+        "name": "Petra Jansen",
+        "total": 30,
+        "educationPoints": 0.0,
+        "experiencePoints": 0.0,
+        "requiredPoints": 20.0,
+        "preferredPoints": 10.0,
+        "missing": "education unknown, experience unknown, excel-gevorderd"
+    },
+    {
+        "kind": "employee",
+        "id": "emp-2",
+        "name": "Ali",
+        "total": 20,
+        "educationPoints": 0.0,
+        "experiencePoints": 0.0,
+        "requiredPoints": 20.0,
+        "preferredPoints": 0.0,
+        "missing": "education unknown, experience unknown, loonheffing, afas"
+    }
+]

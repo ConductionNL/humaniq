@@ -42,6 +42,24 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ProformaPayslipCommand extends Command {
 
 	/**
+	 * The breakdown figures, in print order, with their line format.
+	 *
+	 * @var array<string, string>
+	 */
+	private const FIGURE_LINES = [
+		'grossPay' => '  bruto                   : %.2f',
+		'loonheffing' => '  loonheffing             : %.2f',
+		'arbeidskorting' => '  arbeidskorting          : %.2f',
+		'volksverzekeringen' => '  volksverzekeringen      : %.2f',
+		'zvw' => '  zvw                     : %.2f',
+		'werknemersverzekeringen' => '  werknemersverzekeringen : %.2f',
+		'employerCharges' => '  werkgeverslasten        : %.2f',
+		'vakantiegeldReserved' => '  vakantiegeldreservering : %.2f',
+		'nettoPay' => '  netto                   : %.2f',
+		'appliedTaxRate' => '  toegepast tarief        : %.2f%%',
+	];
+
+	/**
 	 * @param ProformaPayslipService $service The stateless pro-forma simulation service.
 	 */
 	public function __construct(
@@ -80,37 +98,13 @@ class ProformaPayslipCommand extends Command {
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		try {
-			$breakdown = $this->service->simulate(
-				[
-					'gross' => $input->getOption('gross'),
-					'table' => $input->getOption('table'),
-					'loonheffingskorting' => true,
-					'dateOfBirth' => $input->getOption('date-of-birth'),
-					'period' => $input->getOption('period'),
-					'parttime' => $input->getOption('parttime'),
-					'bijzonder' => $input->getOption('bijzonder'),
-					'aof' => $input->getOption('aof'),
-					'whk' => $input->getOption('whk'),
-				]
-			);
+			$breakdown = $this->service->simulate(self::simulationParams($input));
 		} catch (\InvalidArgumentException $e) {
 			$output->writeln('<error>' . $e->getMessage() . '</error>');
 			return 1;
 		}
 
-		$output->writeln('<info>Humaniq pro-forma loonstrook (niets opgeslagen)</info>');
-		$output->writeln(sprintf('  periode                 : %s', (string)$breakdown['input']['period']));
-		$output->writeln(sprintf('  tabel                   : %s', (string)$breakdown['input']['table']));
-		$output->writeln(sprintf('  bruto                   : %.2f', (float)$breakdown['grossPay']));
-		$output->writeln(sprintf('  loonheffing             : %.2f', (float)$breakdown['loonheffing']));
-		$output->writeln(sprintf('  arbeidskorting          : %.2f', (float)$breakdown['arbeidskorting']));
-		$output->writeln(sprintf('  volksverzekeringen      : %.2f', (float)$breakdown['volksverzekeringen']));
-		$output->writeln(sprintf('  zvw                     : %.2f', (float)$breakdown['zvw']));
-		$output->writeln(sprintf('  werknemersverzekeringen : %.2f', (float)$breakdown['werknemersverzekeringen']));
-		$output->writeln(sprintf('  werkgeverslasten        : %.2f', (float)$breakdown['employerCharges']));
-		$output->writeln(sprintf('  vakantiegeldreservering : %.2f', (float)$breakdown['vakantiegeldReserved']));
-		$output->writeln(sprintf('  netto                   : %.2f', (float)$breakdown['nettoPay']));
-		$output->writeln(sprintf('  toegepast tarief        : %.2f%%', (float)$breakdown['appliedTaxRate']));
+		self::writeBreakdown($output, $breakdown);
 
 		if ((float)$breakdown['input']['bijzonder'] > 0.0) {
 			$output->writeln('  <comment>let op: bijzondere beloning is een combinedLoon-schatting, geen wettelijk bijzonder tarief.</comment>');
@@ -118,5 +112,45 @@ class ProformaPayslipCommand extends Command {
 
 		return 0;
 	}//end execute()
+
+	/**
+	 * The simulation parameters the options give.
+	 *
+	 * @param InputInterface $input Console input.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function simulationParams(InputInterface $input): array {
+		return [
+			'gross' => $input->getOption('gross'),
+			'table' => $input->getOption('table'),
+			'loonheffingskorting' => true,
+			'dateOfBirth' => $input->getOption('date-of-birth'),
+			'period' => $input->getOption('period'),
+			'parttime' => $input->getOption('parttime'),
+			'bijzonder' => $input->getOption('bijzonder'),
+			'aof' => $input->getOption('aof'),
+			'whk' => $input->getOption('whk'),
+		];
+
+	}//end simulationParams()
+
+	/**
+	 * Write the pro-forma breakdown.
+	 *
+	 * @param OutputInterface      $output    Console output.
+	 * @param array<string, mixed> $breakdown The simulate() breakdown.
+	 *
+	 * @return void
+	 */
+	private static function writeBreakdown(OutputInterface $output, array $breakdown): void {
+		$output->writeln('<info>Humaniq pro-forma loonstrook (niets opgeslagen)</info>');
+		$output->writeln(sprintf('  periode                 : %s', (string)$breakdown['input']['period']));
+		$output->writeln(sprintf('  tabel                   : %s', (string)$breakdown['input']['table']));
+		foreach (self::FIGURE_LINES as $field => $format) {
+			$output->writeln(sprintf($format, (float)$breakdown[$field]));
+		}
+
+	}//end writeBreakdown()
 
 }//end class

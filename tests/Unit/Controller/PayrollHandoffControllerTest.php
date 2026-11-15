@@ -24,15 +24,18 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\PayrollHandoffController;
+use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\SalaryBureauExchangeService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\PayrollDeskAccess;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Design D5: two guarded endpoints, resolving under the caller's RBAC first.
@@ -46,10 +49,11 @@ class PayrollHandoffControllerTest extends TestCase {
 	 * @param bool                                              $hr       Whether the caller is HR.
 	 * @param array<string, list<array<string, mixed>>>         $readable Readable rows per schema.
 	 * @param SalaryBureauExchangeService|null                        $service  The handoff service.
+	 * @param bool                                              $payroll  Whether the caller is in the payroll group.
 	 *
 	 * @return PayrollHandoffController
 	 */
-	private function controller(bool $hr, array $readable, ?SalaryBureauExchangeService $service = null): PayrollHandoffController {
+	private function controller(bool $hr, array $readable, ?SalaryBureauExchangeService $service = null, bool $payroll = false): PayrollHandoffController {
 		$objects = new class($readable) {
 
 			/**
@@ -107,7 +111,9 @@ class PayrollHandoffControllerTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
 				if ($id === 'forbidden') {
 					throw new \RuntimeException('Forbidden');
 				}
@@ -133,16 +139,16 @@ class PayrollHandoffControllerTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 		$roles = $this->createMock(HumaniqRoles::class);
 		$roles->method('isHr')->willReturn($hr);
-		$roles->method('isPayroll')->willReturn(false);
+		$roles->method('isPayroll')->willReturn($payroll);
+
+		$caller = new CallerContext($session, $roles, $container, new NullLogger());
 
 		return new PayrollHandoffController(
 			$this->createMock(IRequest::class),
-			$container,
 			$settings,
 			($service ?? $this->createMock(SalaryBureauExchangeService::class)),
-			$session,
-			$roles,
-			new NullLogger()
+			$caller,
+			new PayrollDeskAccess($caller, $settings)
 		);
 	}//end controller()
 
@@ -189,6 +195,20 @@ class PayrollHandoffControllerTest extends TestCase {
 		$this->assertSame(200, $response->getStatus());
 		$this->assertSame(3, $response->getData()['mutationCount']);
 	}//end testHrCompilesAPeriod()
+
+	/**
+	 * A payroll clerk who is not HR compiles a period too.
+	 *
+	 * @return void
+	 */
+	public function testPayrollCompilesAPeriod(): void {
+		$service = $this->createMock(SalaryBureauExchangeService::class);
+		$service->expects($this->once())->method('compile')->with('ADM-006', '2026-05', 'hr-1')->willReturn(['status' => 'compiled', 'handoffId' => 'ho-1', 'mutationCount' => 1]);
+
+		$response = $this->controller(false, ['hrAdministration' => [['administrationId' => 'ADM-006']]], $service, true)->compile('ADM-006', '2026-05');
+
+		$this->assertSame(200, $response->getStatus());
+	}//end testPayrollCompilesAPeriod()
 
 	/**
 	 * A refusal of the service (an engine administration, a handoff that

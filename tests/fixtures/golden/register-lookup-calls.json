@@ -1,0 +1,57 @@
+{
+    "calls": [
+        {
+            "source": "src-rdw",
+            "endpoint": "/resource/m9d7-ebf2.json",
+            "method": "GET",
+            "config": {
+                "query": {
+                    "kenteken": "GZS78Z"
+                }
+            },
+            "persistLog": true
+        },
+        {
+            "source": "src-rdw",
+            "endpoint": "/resource/8ys7-d773.json",
+            "method": "GET",
+            "config": {
+                "query": {
+                    "kenteken": "GZS78Z"
+                }
+            },
+            "persistLog": true
+        },
+        {
+            "source": "src-brp",
+            "endpoint": "/personen",
+            "method": "POST",
+            "config": {
+                "body": "{\"type\":\"RaadpleegMetBurgerservicenummer\",\"burgerservicenummer\":[\"999993653\"],\"fields\":[\"naam\",\"geboorte.datum\",\"verblijfplaats\"]}",
+                "headers": {
+                    "Content-Type": "application/json"
+                }
+            },
+            "persistLog": false
+        }
+    ],
+    "refusals": {
+        "no-integriq:vehicle": [
+            "skipped-no-integriq",
+            "Integriq is niet geïnstalleerd, dus het register kan niet worden geraadpleegd."
+        ],
+        "no-integriq:employee": [
+            "skipped-no-integriq",
+            "Integriq is niet geïnstalleerd, dus het register kan niet worden geraadpleegd."
+        ],
+        "no-source:vehicle": [
+            "no-source",
+            "Er is geen koppeling met dit register ingesteld. Vraag de beheerder de bron in integriq te koppelen."
+        ],
+        "no-source:employee": [
+            "no-source",
+            "Er is geen koppeling met dit register ingesteld. Vraag de beheerder de bron in integriq te koppelen."
+        ]
+    },
+    "callsAfterRefusals": 3
+}
