@@ -169,10 +169,7 @@ class DepartmentFiguresController extends Controller {
 		} catch (InvalidArgumentException $e) {
 			return new JSONResponse(['message' => 'Invalid period'], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[DepartmentFiguresController] unit figures failed',
-				context: ['error' => $e->getMessage()]
-			);
+			$this->logger->error('DepartmentFiguresController: the unit figures could not be computed.', ['exceptionClass' => $e::class]);
 			return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 	}//end figuresResponse()

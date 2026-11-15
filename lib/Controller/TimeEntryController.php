@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Controller;
 
+use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Listener\HoursWriteRefusedException;
 use OCA\Humaniq\Service\HoursRegisterGateway;
@@ -118,10 +119,7 @@ class TimeEntryController extends Controller {
 				domainObjectRef: $domainObjectRef
 			);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'TimeEntryController: the estimate for ' . $domainObjectType . ' ' . $domainObjectRef
-				. ' could not be read: ' . $e->getMessage()
-			);
+			$this->logger->error('TimeEntryController: the estimate of an object could not be read.', ['exceptionClass' => $e::class]);
 
 			return new JSONResponse(
 				['error' => 'De schatting kon niet worden gelezen.'],
@@ -231,6 +229,96 @@ class TimeEntryController extends Controller {
 	}//end stopTimer()
 
 	/**
+	 * `GET /api/time-entries/summary` — the caller's own hours of one day.
+	 *
+	 * Resolves from the CALLER only: there is no user parameter, and a row the
+	 * store hands back for anyone else is dropped before it is counted. An
+	 * entry without hours (a timer still running) adds nothing. A failed read
+	 * answers 500, never a zero that would read as "no hours today".
+	 *
+	 * @param string|null $date The day, `YYYY-MM-DD`; today when left out.
+	 *
+	 * @return JSONResponse `{date, hours, entries}`, 400 on a date that is not a day, 401 without a session.
+	 *
+	 * @spec openspec/specs/time-entries-summary/spec.md#requirement-a-user-reads-their-own-hours-of-a-day
+	 */
+	#[NoAdminRequired]
+	public function summary(?string $date = null): JSONResponse {
+		$uid = $this->callerUid();
+		if ($uid === '') {
+			return new JSONResponse(['error' => 'Log in om je uren te bekijken.'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$day = self::dayOrToday(date: $date);
+		if (self::isDay(day: $day) === false) {
+			return new JSONResponse(['error' => 'Geef de dag als JJJJ-MM-DD.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		try {
+			$rows = $this->gateway->findFiltered('TimeEntry', ['userId' => $uid, 'date' => $day]);
+		} catch (\Throwable $e) {
+			$this->logger->error('TimeEntryController: the hours of a day could not be read.', ['exceptionClass' => $e::class]);
+
+			return new JSONResponse(['error' => 'Je uren konden niet worden gelezen.'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		return new JSONResponse(['date' => $day] + self::totalsOf(rows: $rows, uid: $uid));
+	}//end summary()
+
+	/**
+	 * The trimmed day asked for, or today when none was given.
+	 *
+	 * @param string|null $date The day from the request.
+	 *
+	 * @return string
+	 */
+	private static function dayOrToday(?string $date): string {
+		$day = trim((string)$date);
+		if ($day === '') {
+			return (new DateTimeImmutable('now'))->format('Y-m-d');
+		}
+
+		return $day;
+	}//end dayOrToday()
+
+	/**
+	 * Whether the text is a calendar day written as YYYY-MM-DD.
+	 *
+	 * @param string $day The day to judge.
+	 *
+	 * @return bool
+	 */
+	private static function isDay(string $day): bool {
+		$parts = [];
+
+		return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $day, $parts) === 1
+			&& checkdate((int)$parts[2], (int)$parts[3], (int)$parts[1]) === true;
+	}//end isDay()
+
+	/**
+	 * The summed hours and the entry count of the caller's own rows with numeric hours.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The rows the store returned.
+	 * @param string                           $uid  The caller.
+	 *
+	 * @return array{hours: float, entries: int}
+	 */
+	private static function totalsOf(array $rows, string $uid): array {
+		$hours   = 0.0;
+		$entries = 0;
+		foreach ($rows as $row) {
+			if (($row['userId'] ?? null) !== $uid || is_numeric($row['hours'] ?? null) === false) {
+				continue;
+			}
+
+			$hours += (float)$row['hours'];
+			$entries++;
+		}
+
+		return ['hours' => round($hours, 2), 'entries' => $entries];
+	}//end totalsOf()
+
+	/**
 	 * The calling user's id, or '' when there is no session.
 	 *
 	 * @return string The Nextcloud user id.
@@ -253,7 +341,7 @@ class TimeEntryController extends Controller {
 	 * @return JSONResponse The refusal, as 400.
 	 */
 	private function refused(HoursWriteRefusedException $e): JSONResponse {
-		$this->logger->info('TimeEntryController weigerde een timerverzoek: ' . $e->getMessage());
+		$this->logger->info('TimeEntryController: a timer request was refused.', ['exceptionClass' => $e::class]);
 
 		return new JSONResponse(
 			['status' => RunningTimerService::STATUS_INVALID, 'error' => $e->getMessage()],

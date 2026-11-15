@@ -53,11 +53,11 @@ class FrequentAbsenceService {
 	public const DEFAULT_WINDOW_MONTHS = 12;
 
 	/**
-	 * @param HoursRegisterGateway $gateway Reads cases and administrations, writes the stamp.
+	 * @param RecordStoreInterface $gateway Reads cases and administrations, writes the stamp.
 	 * @param InternalWriteMarker $marker Marks the stamp as humaniq's own write.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly InternalWriteMarker $marker,
 	) {
 

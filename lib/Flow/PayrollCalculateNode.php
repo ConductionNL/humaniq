@@ -36,11 +36,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\Humaniq\Service\PayrollRunService;
-use OCA\Humaniq\Service\SettingsService;
-use OCP\IL10N;
-use OCP\IURLGenerator;
-use Psr\Container\ContainerInterface;
+use OCA\Humaniq\Payroll\PayPeriod;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use UnexpectedValueException;
@@ -66,24 +64,18 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	public const OUTCOME_KEY = 'payroll';
 
 	/**
-	 * @param IL10N $l10n Localisation.
-	 * @param IURLGenerator $urls URL generator.
-	 * @param ContainerInterface $container DI container.
-	 * @param SettingsService $settingsService Settings bridge.
+	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
 	 * @param LoggerInterface $logger Logger.
 	 * @param PayrollRunService $payrollRunService The existing draft-run generator, reused as-is.
 	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	public function __construct(
-		IL10N $l10n,
-		IURLGenerator $urls,
-		ContainerInterface $container,
-		SettingsService $settingsService,
+		PayrollFlowNodeServices $services,
 		LoggerInterface $logger,
 		private readonly PayrollRunService $payrollRunService,
 	) {
-		parent::__construct($l10n, $urls, $container, $settingsService, $logger);
+		parent::__construct($services, $logger);
 
 	}//end __construct()
 
@@ -139,9 +131,11 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 			return;
 		}
 
-		if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period) !== 1) {
+		try {
+			PayPeriod::parse(id: $period);
+		} catch (\InvalidArgumentException) {
 			throw new UnexpectedValueException(
-				$this->l10n->t('The wage period must look like 2026-01 (YYYY-MM).')
+				$this->l10n->t('The wage period must look like 2026-01, 2026-P05 or 2026-W05.')
 			);
 		}
 
@@ -150,22 +144,17 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	/**
 	 * Run the existing service once per item and let the outcome travel.
 	 *
-	 * @param array $items The input items.
-	 * @param array $config The step configuration.
-	 * @param array $context Run-level metadata.
+	 * @param FlowNodeCall $call The input items, the step configuration and the run-level metadata.
 	 *
 	 * @return array The items, each carrying the outcome under `payroll`.
 	 *
 	 * @throws RuntimeException When the service reports `failed` or `refused-not-draft`.
 	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $context is part of the
-	 *     IFlowNode::execute() contract; this adapter reads no run-level
-	 *     metadata (the acting identity is applied by the dispatcher).
-	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
-	public function execute(array $items, array $config, array $context): array {
-		if ($items === []) {
+	public function execute(FlowNodeCall $call): array {
+		$config = $call->config;
+		if ($call->items === []) {
 			return [];
 		}
 
@@ -173,36 +162,43 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 		// reaches execute() unvalidated (the DossiqFlowNodeBase guard).
 		$this->validateConfig(config: $config);
 
-		$out = [];
-		foreach ($items as $item) {
-			$json = (array)(((array)$item)['json'] ?? []);
-
-			$period = $this->render((string)($config['period'] ?? ''), $json);
-			if ($period === '') {
-				$period = gmdate('Y-m');
-			}
-
-			$administrationId = $this->render((string)($config['administrationId'] ?? ''), $json);
-			$recalculate = (($config['recalculate'] ?? true) !== false);
-
-			$outcome = $this->payrollRunService->runFor(
-				$period,
-				($administrationId === '' ? null : $administrationId),
-				$recalculate
-			);
-
-			$status = (string)($outcome['status'] ?? '');
-			if (in_array($status, ['calculated', 'exists'], true) === false) {
-				throw new RuntimeException(
-					'Loonrun berekenen voor ' . $period . ' is geweigerd (' . $status . '): '
-					. (string)($outcome['message'] ?? '')
-				);
-			}
-
-			$out[] = $this->withOutcome((array)$item, self::OUTCOME_KEY, $outcome);
-		}//end foreach
-
-		return $out;
+		return $this->stampEachItem(
+			$call,
+			fn (array $json): array => $this->calculateFor(json: $json, config: $config)
+		);
 	}//end execute()
+
+	/**
+	 * Calculate the run of the item's period and administration.
+	 *
+	 * @param array<string, mixed> $json   The item's record, for the placeholders.
+	 * @param array<string, mixed> $config The step configuration.
+	 *
+	 * @return array<string, mixed> The service outcome.
+	 *
+	 * @throws RuntimeException When the service reports `failed` or `refused-not-draft`.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 */
+	private function calculateFor(array $json, array $config): array {
+		$period = $this->render((string)($config['period'] ?? ''), $json);
+		if ($period === '') {
+			$period = gmdate('Y-m');
+		}
+
+		$administrationId = $this->render((string)($config['administrationId'] ?? ''), $json);
+		$recalculate = (($config['recalculate'] ?? true) !== false);
+
+		$outcome = $this->payrollRunService->runFor(
+			$period,
+			($administrationId === '' ? null : $administrationId),
+			$recalculate
+		);
+
+		return $this->requireStatus(
+			$outcome,
+			new ExpectedStatus(['calculated', 'exists'], 'Loonrun berekenen voor ' . $period . ' is geweigerd')
+		);
+	}//end calculateFor()
 
 }//end class

@@ -3,6 +3,9 @@
 /**
  * NL Pension Filing (UPA) Check Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Executable checks for the Dutch sector-pension filing rules of the payroll
  * corpus (lib/Standards/rules/payroll.json, framework nl-pensioenaangifte),
  * mapped onto the PensionFiling / PayrollRun object types (pension-filing-upa-mvp):
@@ -29,9 +32,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @link https://conduction.nl
  *
  * @spec openspec/specs/pension-filing-upa-mvp/spec.md
@@ -42,11 +42,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Standards\Checks;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Support\ChecksFilingDeadlines;
 
 /**
  * Dutch sector-pension (UPA) filing executable checks.
  */
 final class NlPensionFilingChecks implements CheckProvider {
+
+	use ChecksFilingDeadlines;
 
 	/**
 	 * PayrollRun statuses that count as "approved or later" for both the
@@ -156,32 +159,6 @@ final class NlPensionFilingChecks implements CheckProvider {
 	}//end monthlyCompletenessSatisfied()
 
 	/**
-	 * True when the filing is already sent, or its deadline is more than 14
-	 * days away — false (a violation) once it is within the alert window or
-	 * already overdue, evaluated against the current date (the audit run
-	 * date).
-	 *
-	 * @param array<string, mixed> $o The filing.
-	 *
-	 * @return bool
-	 */
-	private static function deadlineNotAlerting(array $o): bool {
-		if ((string)($o['status'] ?? 'concept') === 'verzonden') {
-			return true;
-		}
-
-		$deadline = strtotime((string)($o['deadline'] ?? ''));
-		if ($deadline === false) {
-			return true;
-		}
-
-		$today = (new DateTimeImmutable('today'))->getTimestamp();
-		$daysRemaining = (int)floor((($deadline - $today)) / 86400);
-
-		return $daysRemaining > self::ALERT_WINDOW_DAYS;
-	}//end deadlineNotAlerting()
-
-	/**
 	 * The `related.PayrollRun.byId` index from the context, or an empty
 	 * array when the pre-pass has not populated it.
 	 *
@@ -193,5 +170,4 @@ final class NlPensionFilingChecks implements CheckProvider {
 		$byId = ($c['related']['PayrollRun']['byId'] ?? []);
 		return is_array($byId) === true ? $byId : [];
 	}//end relatedPayrollRunsById()
-
 }//end class

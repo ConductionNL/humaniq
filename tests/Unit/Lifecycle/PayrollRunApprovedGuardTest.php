@@ -32,6 +32,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for PayrollRunApprovedGuard.
@@ -68,7 +69,9 @@ class PayrollRunApprovedGuardTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return $this->runResult;
 			}//end find()
 
@@ -102,7 +105,9 @@ class PayrollRunApprovedGuardTest extends TestCase {
 			 *
 			 * @throws \RuntimeException Always.
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				throw new \RuntimeException('register unavailable');
 			}//end find()
 
@@ -269,7 +274,9 @@ class PayrollRunApprovedGuardTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->seen->register = $register;
 				return ['status' => 'approved'];
 			}//end find()
@@ -296,5 +303,34 @@ class PayrollRunApprovedGuardTest extends TestCase {
 		$this->assertSame('hrmq', $seen->register, 'The read must use the slug this instance actually carries.');
 		$this->assertTrue($result->isAllowed());
 	}//end testReadsTheHrmqRegisterOnAnUnmigratedInstance()
+
+	/**
+	 * A run the platform answers as an entity is read through its JSON; a run
+	 * in a shape the guard cannot read has no status, and is refused.
+	 *
+	 * @return void
+	 */
+	public function testAnEntityIsReadAndAnUnreadableShapeIsRefused(): void {
+		$entity = new class implements \JsonSerializable {
+			/**
+			 * The stored run.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function jsonSerialize(): array {
+				return ['id' => 'run-1', 'status' => 'approved'];
+			}//end jsonSerialize()
+		};
+		$this->assertTrue($this->guardWithRun($entity)->check(['payrollRunId' => 'run-1'], 'controleren', 'alice')->isAllowed());
+
+		$unreadable = $this->guardWithRun('run-1')->check(['payrollRunId' => 'run-1'], 'controleren', 'alice');
+		$this->assertFalse($unreadable->isAllowed());
+		$this->assertSame(
+			'De loonrun heeft status "onbekend"; controleren kan pas nadat de loonrun is goedgekeurd, geboekt of uitbetaald.',
+			$unreadable->getMessage()
+		);
+
+		$this->assertFalse($this->guardWithRun(new \stdClass())->check(['payrollRunId' => 'run-1'], 'controleren', 'alice')->isAllowed());
+	}//end testAnEntityIsReadAndAnUnreadableShapeIsRefused()
 
 }//end class

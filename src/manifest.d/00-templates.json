@@ -92,7 +92,8 @@
 					"sort": "{{sort}}",
 					"allowCreate": "{{allowCreate}}",
 					"actionToggles": "{{actionToggles}}",
-					"bulkActions": "{{bulkActions}}"
+					"bulkActions": "{{bulkActions}}",
+					"allowExport": true
 				}
 			}
 		},

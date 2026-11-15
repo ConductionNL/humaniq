@@ -353,7 +353,7 @@
 		},
 		{
 		  "id": "StoreMenu",
-		  "label": "Store",
+		  "label": "Marketplace",
 		  "icon": "StoreOutline",
 		  "route": "Store",
 		  "section": "footer",
@@ -381,10 +381,10 @@
 		  "id": "Store",
 		  "route": "/store",
 		  "type": "store",
-		  "title": "Store",
+		  "title": "Marketplace",
 		  "config": {
 		    "app": "humaniq",
-		    "title": "Store",
+		    "title": "Marketplace",
 		    "description": "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding."
 		  },
 		  "_note": "ADR-114 Decision 4 / ADR-080. Declarative: openregister hosts the store plane, so this app writes NO store controller. With no registry configured the page renders the app's built-in items and makes NO network call."
@@ -825,17 +825,19 @@
 		{
 			"id": "Flows",
 			"route": "/flows",
-			"type": "flows",
+			"type": "index",
 			"title": "Flows",
 			"config": {
-				"app": "humaniq"
+				"entitySource": "flows",
+				"app": "humaniq",
+				"rowRoute": "FlowDetail"
 			},
-			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. Rendered by the shared CnFlowsPage page type over OpenRegister's one native flow store (ADR-065), scoped to this app."
+			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app. rowRoute names the FlowDetail page (a route name, not a path): a named-source page has no register and schema, so without it a row click opens nothing and Edit falls back to the source's own /flows path."
 		},
 		{
 			"id": "FlowDetail",
 			"route": "/flows/:id",
-			"type": "flow-detail",
+			"type": "flow",
 			"title": "Flow",
 			"config": {
 				"app": "humaniq"

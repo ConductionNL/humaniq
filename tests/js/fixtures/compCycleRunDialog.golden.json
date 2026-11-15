@@ -1,0 +1,267 @@
+{
+	"doneText/approve/none": "Approved: <approved=0>. Left for a colleague: <own=0>. Refused: <failed=0>.",
+	"doneText/approve/empty": "Approved: <approved=0>. Left for a colleague: <own=0>. Refused: <failed=0>.",
+	"doneText/approve/full": "Approved: <approved=4>. Left for a colleague: <own=1>. Refused: <failed=2>.",
+	"doneText/approve/partial": "Approved: <approved=1>. Left for a colleague: <own=0>. Refused: <failed=0>.",
+	"doneText/effectuate/none": "Salaries written: <count=0>",
+	"doneText/effectuate/empty": "Salaries written: <count=0>",
+	"doneText/effectuate/full": "Salaries written: <count=7>",
+	"doneText/effectuate/partial": "Salaries written: <count=0>",
+	"doneText/propose/none": "Proposals created: <count=0>",
+	"doneText/propose/empty": "Proposals created: <count=0>",
+	"doneText/propose/full": "Proposals created: <count=9>",
+	"doneText/propose/partial": "Proposals created: <count=0>",
+	"doneText/other/none": "Proposals created: <count=0>",
+	"doneText/other/empty": "Proposals created: <count=0>",
+	"doneText/other/full": "Proposals created: <count=9>",
+	"doneText/other/partial": "Proposals created: <count=0>",
+	"runPreview/approve/cyc-1/answered": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/approve/cyc-1/message": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/approve/cyc-1/error": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/approve/cyc-1/bare": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/approve/no cycle/answered": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/approve/no cycle/message": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/approve/no cycle/error": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/approve/no cycle/bare": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/effectuate/cyc-1/answered": {
+		"calls": [
+			[
+				"post",
+				"/index.php/apps/humaniq/api/comp/cycles/effectuate",
+				{
+					"cycleId": "cyc-1",
+					"dryRun": true
+				}
+			]
+		],
+		"preview": {
+			"wouldCreate": 3,
+			"counts": {
+				"would-apply": 2
+			}
+		},
+		"error": "",
+		"loading": false
+	},
+	"runPreview/effectuate/cyc-1/message": {
+		"calls": [
+			[
+				"post",
+				"/index.php/apps/humaniq/api/comp/cycles/effectuate",
+				{
+					"cycleId": "cyc-1",
+					"dryRun": true
+				}
+			]
+		],
+		"preview": null,
+		"error": "Cycle closed.",
+		"loading": false
+	},
+	"runPreview/effectuate/cyc-1/error": {
+		"calls": [
+			[
+				"post",
+				"/index.php/apps/humaniq/api/comp/cycles/effectuate",
+				{
+					"cycleId": "cyc-1",
+					"dryRun": true
+				}
+			]
+		],
+		"preview": null,
+		"error": "No scope.",
+		"loading": false
+	},
+	"runPreview/effectuate/cyc-1/bare": {
+		"calls": [
+			[
+				"post",
+				"/index.php/apps/humaniq/api/comp/cycles/effectuate",
+				{
+					"cycleId": "cyc-1",
+					"dryRun": true
+				}
+			]
+		],
+		"preview": null,
+		"error": "Could not work out what this would do. Try again.",
+		"loading": false
+	},
+	"runPreview/effectuate/no cycle/answered": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/effectuate/no cycle/message": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/effectuate/no cycle/error": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/effectuate/no cycle/bare": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/propose/cyc-1/answered": {
+		"calls": [
+			[
+				"post",
+				"/index.php/apps/humaniq/api/comp/cycles/propose",
+				{
+					"cycleId": "cyc-1",
+					"dryRun": true
+				}
+			]
+		],
+		"preview": {
+			"wouldCreate": 3,
+			"counts": {
+				"would-apply": 2
+			}
+		},
+		"error": "",
+		"loading": false
+	},
+	"runPreview/propose/cyc-1/message": {
+		"calls": [
+			[
+				"post",
+				"/index.php/apps/humaniq/api/comp/cycles/propose",
+				{
+					"cycleId": "cyc-1",
+					"dryRun": true
+				}
+			]
+		],
+		"preview": null,
+		"error": "Cycle closed.",
+		"loading": false
+	},
+	"runPreview/propose/cyc-1/error": {
+		"calls": [
+			[
+				"post",
+				"/index.php/apps/humaniq/api/comp/cycles/propose",
+				{
+					"cycleId": "cyc-1",
+					"dryRun": true
+				}
+			]
+		],
+		"preview": null,
+		"error": "No scope.",
+		"loading": false
+	},
+	"runPreview/propose/cyc-1/bare": {
+		"calls": [
+			[
+				"post",
+				"/index.php/apps/humaniq/api/comp/cycles/propose",
+				{
+					"cycleId": "cyc-1",
+					"dryRun": true
+				}
+			]
+		],
+		"preview": null,
+		"error": "Could not work out what this would do. Try again.",
+		"loading": false
+	},
+	"runPreview/propose/no cycle/answered": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/propose/no cycle/message": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/propose/no cycle/error": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/propose/no cycle/bare": {
+		"calls": [],
+		"preview": null,
+		"error": "",
+		"loading": false
+	},
+	"runPreview/propose/selection": {
+		"calls": [
+			[
+				"post",
+				"/index.php/apps/humaniq/api/comp/cycles/propose",
+				{
+					"cycleId": "cyc-9",
+					"dryRun": true,
+					"employeeIds": [
+						"e1",
+						"e2"
+					]
+				}
+			]
+		],
+		"preview": {
+			"wouldCreate": 3,
+			"counts": {
+				"would-apply": 2
+			}
+		},
+		"error": ""
+	}
+}

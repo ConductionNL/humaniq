@@ -128,6 +128,25 @@ class DossierControllerTest extends TestCase {
 	}//end testIncompleteListsOnlyReadableEmployeesWithAGap()
 
 	/**
+	 * Rows sort by gap count, most first, then by name; an employee without an
+	 * id is never listed.
+	 *
+	 * @return void
+	 */
+	public function testIncompleteOrdersByGapCountThenName(): void {
+		$this->rows['Employee'][] = ['firstName' => 'Zonder', 'lastName' => 'Id'];
+		$this->rows['DossierRequirement'][] = ['id' => 'r-id', 'code' => 'id', 'label' => 'Identity document', 'scope' => 'all', 'evidenceKind' => 'personnel-document', 'expires' => false, 'active' => true];
+
+		$data = $this->controller(readable: ['emp-1', 'emp-2', 'emp-3'])->incomplete('2026-09-29')->getData();
+
+		$this->assertSame('2026-09-29', $data['date']);
+		$this->assertSame(['emp-2', 'emp-1', 'emp-3'], array_column($data['employees'], 'id'));
+		$this->assertSame([2, 2, 1], array_column($data['employees'], 'gapCount'));
+		$this->assertSame(['EMP-0009', 'EMP-0002', 'EMP-0001'], array_column($data['employees'], 'employeeNumber'));
+		$this->assertSame(['id', 'name', 'employeeNumber', 'gapCount', 'gaps'], array_keys($data['employees'][0]));
+	}//end testIncompleteOrdersByGapCountThenName()
+
+	/**
 	 * A date that is not a date is refused.
 	 *
 	 * @return void

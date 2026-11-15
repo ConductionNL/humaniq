@@ -315,12 +315,13 @@
                 "currency": "EUR",
                 "category": "travel",
                 "expenseDate": "2026-05-20",
-                "status": "approved",
+                "status": "reimbursed",
                 "submittedAt": "2026-05-20T18:00:00Z",
                 "approvedBy": "manager-pietersen",
                 "approvedAt": "2026-05-21T09:15:00Z",
                 "administrationId": "ADM-001",
-                "reimbursementRoute": "payroll"
+                "reimbursementRoute": "direct",
+                "reimbursedAt": "2026-05-26T10:00:00Z"
             },
             {
                 "@self": {
@@ -693,6 +694,100 @@
                 "deadline": "2026-06-30",
                 "status": "bevestigd",
                 "responseStatus": "geen",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "PensionScheme",
+                    "slug": "pensionscheme-adm-001-pfab-2026"
+                },
+                "administrationId": "ADM-001",
+                "fund": "pfab",
+                "schemeCode": "PFAB-OP-2026",
+                "messageFormat": "upa",
+                "franchise": 18475,
+                "maxPensionableSalary": 137800,
+                "employerPercentage": 14.0,
+                "employeePercentage": 7.0,
+                "validFrom": "2026-01-01",
+                "validUntil": "2026-12-31",
+                "source": "filings-pension-upa-message seed: an example figure, not checked against the fund's published rates.",
+                "verified": false
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "PensionScheme",
+                    "slug": "pensionscheme-adm-001-abp-2026"
+                },
+                "administrationId": "ADM-001",
+                "fund": "abp",
+                "schemeCode": "ABP-OP-NP-2026",
+                "messageFormat": "apg",
+                "franchise": 19700,
+                "maxPensionableSalary": 137800,
+                "employerPercentage": 18.2,
+                "employeePercentage": 7.8,
+                "validFrom": "2026-01-01",
+                "validUntil": "2026-12-31",
+                "source": "filings-pension-upa-message seed: an example figure, not checked against the fund's published rates.",
+                "verified": false
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveRequest",
+                    "slug": "leave-devries-onbetaald"
+                },
+                "employeeId": "@ref:employee-devries",
+                "leaveType": "unpaid",
+                "startDate": "2026-12-07",
+                "endDate": "2026-12-11",
+                "hours": 40,
+                "reason": "Mantelzorg voor een familielid.",
+                "status": "manager-approved",
+                "submittedAt": "2026-11-02T09:00:00Z",
+                "decisions": [
+                    {
+                        "step": "manager",
+                        "decision": "approved",
+                        "by": "manager-pietersen",
+                        "at": "2026-11-03T10:00:00Z",
+                        "remark": "Akkoord, HR beslist over onbetaald verlof."
+                    }
+                ],
+                "userId": "admin",
+                "managerUserId": "manager-pietersen",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveRequest",
+                    "slug": "leave-bakker-kerst"
+                },
+                "employeeId": "@ref:employee-bakker",
+                "leaveType": "holiday",
+                "startDate": "2026-12-28",
+                "endDate": "2026-12-31",
+                "hours": 32,
+                "reason": "Kerstvakantie.",
+                "status": "approved",
+                "submittedAt": "2026-11-01T09:00:00Z",
+                "approvedBy": "manager-pietersen",
+                "approvedAt": "2026-11-02T09:30:00Z",
+                "decisions": [
+                    {
+                        "step": "manager",
+                        "decision": "approved",
+                        "by": "manager-pietersen",
+                        "at": "2026-11-02T09:30:00Z",
+                        "remark": null
+                    }
+                ],
+                "userId": "admin",
+                "managerUserId": "manager-pietersen",
                 "administrationId": "ADM-001"
             },
             {
@@ -2563,6 +2658,7 @@
                 "name": "Example: Conduction Demo B.V.",
                 "kvkNumber": "12345678",
                 "loonheffingennummer": "000000000L01",
+                "brinNummer": "00XX",
                 "postalAddress": "Voorbeeldstraat 1, 1234 AB Amsterdam",
                 "aangifteContactName": "Example: Payroll desk",
                 "aangifteContactPhone": "020 123 4567",
@@ -3524,6 +3620,58 @@
                 "awfAverageContractHoursPerWeek": 25,
                 "awfOverrunPercentYearToDate": 41,
                 "statementProvided": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-wethouder"
+                },
+                "gender": "man",
+                "employeeNumber": "EMP-0040",
+                "firstName": "Pieter",
+                "lastName": "Hoekstra",
+                "dateOfBirth": "1971-08-19",
+                "startDate": "2026-04-15",
+                "grossMonthlySalary": 8250.0,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001",
+                "_note": "payroll-special-regimes: an alderman (wethouder), an office holder rather than an employee. His contract is of type political-office, so the run pays him under the politiek-ambt regime: no unemployment, disability or sickness insurance premiums. While the regime's table leaves are unverified the run lists him as regime-unverified and pays nothing."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-wethouder-ambt"
+                },
+                "employeeId": "@ref:employee-wethouder",
+                "type": "political-office",
+                "officeRole": "wethouder",
+                "termStart": "2026-04-15",
+                "termEnd": "2030-03-31",
+                "writtenContract": true,
+                "startDate": "2026-04-15",
+                "endDate": "2030-03-31",
+                "hoursPerWeek": 36,
+                "awfTariff": "low",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "BenefitEntitlement",
+                    "slug": "benefit-degroot-rvu"
+                },
+                "employeeId": "@ref:employee-degroot",
+                "kind": "rvu",
+                "decisionReference": "RVU-2026-0006",
+                "startDate": "2026-07-01",
+                "paymentMode": "periodic",
+                "monthlyAmount": 2000.0,
+                "status": "active",
                 "administrationId": "ADM-001"
             }
         ]

@@ -1,0 +1,110 @@
+{
+    "ok": {
+        "status": 200,
+        "data": {
+            "week": 41
+        },
+        "reads": [
+            [
+                "dossiq:case",
+                "case-1",
+                "2026-10-08"
+            ]
+        ]
+    },
+    "today": {
+        "status": 200,
+        "data": {
+            "week": 41
+        },
+        "reads": [
+            [
+                "dossiq:case",
+                "case-1",
+                "today"
+            ]
+        ]
+    },
+    "blank-day": {
+        "status": 200,
+        "data": {
+            "week": 41
+        },
+        "reads": [
+            [
+                "dossiq:case",
+                "case-1",
+                "today"
+            ]
+        ]
+    },
+    "no-session-and-no-type": {
+        "status": 401,
+        "data": {
+            "error": "Log in om de uren te bekijken."
+        },
+        "reads": []
+    },
+    "no-type-and-no-access": {
+        "status": 400,
+        "data": {
+            "error": "domainObjectType en domainObjectRef zijn verplicht."
+        },
+        "reads": []
+    },
+    "no-ref": {
+        "status": 400,
+        "data": {
+            "error": "domainObjectType en domainObjectRef zijn verplicht."
+        },
+        "reads": []
+    },
+    "no-access-and-bad-day": {
+        "status": 404,
+        "data": {
+            "error": "Dit item bestaat niet of u mag het niet zien."
+        },
+        "reads": []
+    },
+    "other-object": {
+        "status": 404,
+        "data": {
+            "error": "Dit item bestaat niet of u mag het niet zien."
+        },
+        "reads": []
+    },
+    "bad-day": {
+        "status": 400,
+        "data": {
+            "error": "Geef de dag als JJJJ-MM-DD."
+        },
+        "reads": []
+    },
+    "bad-format": {
+        "status": 400,
+        "data": {
+            "error": "Geef de dag als JJJJ-MM-DD."
+        },
+        "reads": []
+    },
+    "read-fails-and-bad-day": {
+        "status": 400,
+        "data": {
+            "error": "Geef de dag als JJJJ-MM-DD."
+        },
+        "reads": []
+    },
+    "read-fails": {
+        "status": 500,
+        "data": {
+            "error": "De uren konden niet worden gelezen."
+        },
+        "reads": [
+            [
+                "dossiq:case",
+                "case-1",
+                "2026-10-08"
+            ]
+        ]
+    }
+}

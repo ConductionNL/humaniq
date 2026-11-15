@@ -163,4 +163,23 @@ class LearningPeopleFeedTest extends TestCase {
 		self::assertSame(['f.financien'], $all['emp-stayer']['managerUserIds']);
 	}//end testALeaverDropsOut()
 
+	/**
+	 * Hanna manages HR and is placed in it; HR sits under Directie, managed
+	 * by Pieter. Her row names Pieter, not her own account.
+	 *
+	 * @return void
+	 */
+	public function testAUnitManagerRowNamesTheManagerAboveThem(): void {
+		$old = ['@self' => ['updated' => '2026-01-10T09:00:00+00:00']];
+		$this->store->seed('Employee', 'emp-director', array_merge($old, ['firstName' => 'Pieter', 'lastName' => 'Directeur', 'nextcloudUserId' => 'pieter', 'startDate' => '2019-01-01']));
+		$this->store->seed('OrgUnit', 'unit-directie', array_merge($old, ['name' => 'Directie', 'managerId' => 'emp-director']));
+		$this->store->seed('OrgUnit', 'unit-hr', array_merge($old, ['name' => 'HR', 'managerId' => 'emp-hr-mgr', 'parentUnitId' => 'unit-directie']));
+		$this->store->seed('OrgAssignment', 'as-hr-mgr', array_merge($old, ['employeeId' => 'emp-hr-mgr', 'orgUnitId' => 'unit-hr', 'role' => 'Hoofd HR', 'startDate' => '2020-01-01']));
+
+		$all = $this->byId();
+
+		self::assertSame(['pieter'], $all['emp-hr-mgr']['managerUserIds']);
+		self::assertSame(['h.personeel'], $all['emp-mover']['managerUserIds']);
+	}//end testAUnitManagerRowNamesTheManagerAboveThem()
+
 }//end class

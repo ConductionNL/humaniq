@@ -1,0 +1,268 @@
+{
+    ":claim-distance": {
+        "modified": {
+            "amount": 34.5,
+            "taxFreeAmount": 34.5,
+            "taxableAmount": 0.0,
+            "ratePerKm": 0.23,
+            "amountSource": "calculated"
+        },
+        "errors": [],
+        "stopped": false
+    },
+    ":claim-distance-update": {
+        "modified": {
+            "amount": 34.5,
+            "taxFreeAmount": 34.5,
+            "taxableAmount": 0.0,
+            "ratePerKm": 0.23,
+            "amountSource": "calculated"
+        },
+        "errors": [],
+        "stopped": false
+    },
+    ":claim-zero-distance": {
+        "modified": {
+            "amountSource": "entered"
+        },
+        "errors": [],
+        "stopped": false
+    },
+    ":claim-other-category": {
+        "modified": {
+            "amountSource": "entered"
+        },
+        "errors": [],
+        "stopped": false
+    },
+    ":claim-nothing": {
+        "modified": [],
+        "errors": {
+            "message": "Vul een bedrag in, of voor een reisdeclaratie het aantal kilometers."
+        },
+        "stopped": true
+    },
+    ":claim-nothing-update": {
+        "modified": [],
+        "errors": {
+            "message": "Vul een bedrag in, of voor een reisdeclaratie het aantal kilometers."
+        },
+        "stopped": true
+    },
+    ":claim-approved": {
+        "modified": [],
+        "errors": [],
+        "stopped": false
+    },
+    ":arrangement": {
+        "modified": {
+            "userId": "pjansen",
+            "administrationId": "ADM-001",
+            "managerUserId": null,
+            "distanceSource": "manual",
+            "monthlyAllowance": 118.13,
+            "taxFreeMonthly": 118.13,
+            "taxableMonthly": 0.0,
+            "ratePerKm": 0.23
+        },
+        "errors": [],
+        "stopped": false
+    },
+    ":arrangement-routeplanner": {
+        "modified": {
+            "userId": "pjansen",
+            "administrationId": "ADM-001",
+            "managerUserId": null,
+            "monthlyAllowance": 118.13,
+            "taxFreeMonthly": 118.13,
+            "taxableMonthly": 0.0,
+            "ratePerKm": 0.23
+        },
+        "errors": [],
+        "stopped": false
+    },
+    ":arrangement-odd-source": {
+        "modified": {
+            "userId": "pjansen",
+            "administrationId": "ADM-001",
+            "managerUserId": null,
+            "distanceSource": "manual",
+            "monthlyAllowance": 118.13,
+            "taxFreeMonthly": 118.13,
+            "taxableMonthly": 0.0,
+            "ratePerKm": 0.23
+        },
+        "errors": [],
+        "stopped": false
+    },
+    ":arrangement-no-days": {
+        "modified": {
+            "userId": "pjansen",
+            "administrationId": "ADM-001",
+            "managerUserId": null,
+            "distanceSource": "manual"
+        },
+        "errors": [],
+        "stopped": false
+    },
+    ":arrangement-no-employee": {
+        "modified": {
+            "managerUserId": null,
+            "distanceSource": "manual",
+            "monthlyAllowance": 118.13,
+            "taxFreeMonthly": 118.13,
+            "taxableMonthly": 0.0,
+            "ratePerKm": 0.23
+        },
+        "errors": [],
+        "stopped": false
+    },
+    ":arrangement-ended": {
+        "modified": [],
+        "errors": [],
+        "stopped": false
+    },
+    ":other-schema": {
+        "modified": [],
+        "errors": [],
+        "stopped": false
+    },
+    ":deleted": {
+        "modified": null,
+        "errors": null,
+        "stopped": false
+    },
+    "0.3:claim-distance": {
+        "modified": {
+            "amount": 45.0,
+            "taxFreeAmount": 34.5,
+            "taxableAmount": 10.5,
+            "ratePerKm": 0.3,
+            "amountSource": "calculated"
+        },
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:claim-distance-update": {
+        "modified": {
+            "amount": 45.0,
+            "taxFreeAmount": 34.5,
+            "taxableAmount": 10.5,
+            "ratePerKm": 0.3,
+            "amountSource": "calculated"
+        },
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:claim-zero-distance": {
+        "modified": {
+            "amountSource": "entered"
+        },
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:claim-other-category": {
+        "modified": {
+            "amountSource": "entered"
+        },
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:claim-nothing": {
+        "modified": [],
+        "errors": {
+            "message": "Vul een bedrag in, of voor een reisdeclaratie het aantal kilometers."
+        },
+        "stopped": true
+    },
+    "0.3:claim-nothing-update": {
+        "modified": [],
+        "errors": {
+            "message": "Vul een bedrag in, of voor een reisdeclaratie het aantal kilometers."
+        },
+        "stopped": true
+    },
+    "0.3:claim-approved": {
+        "modified": [],
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:arrangement": {
+        "modified": {
+            "userId": "pjansen",
+            "administrationId": "ADM-001",
+            "managerUserId": null,
+            "distanceSource": "manual",
+            "monthlyAllowance": 154.08,
+            "taxFreeMonthly": 118.13,
+            "taxableMonthly": 35.95,
+            "ratePerKm": 0.3
+        },
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:arrangement-routeplanner": {
+        "modified": {
+            "userId": "pjansen",
+            "administrationId": "ADM-001",
+            "managerUserId": null,
+            "monthlyAllowance": 154.08,
+            "taxFreeMonthly": 118.13,
+            "taxableMonthly": 35.95,
+            "ratePerKm": 0.3
+        },
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:arrangement-odd-source": {
+        "modified": {
+            "userId": "pjansen",
+            "administrationId": "ADM-001",
+            "managerUserId": null,
+            "distanceSource": "manual",
+            "monthlyAllowance": 154.08,
+            "taxFreeMonthly": 118.13,
+            "taxableMonthly": 35.95,
+            "ratePerKm": 0.3
+        },
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:arrangement-no-days": {
+        "modified": {
+            "userId": "pjansen",
+            "administrationId": "ADM-001",
+            "managerUserId": null,
+            "distanceSource": "manual"
+        },
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:arrangement-no-employee": {
+        "modified": {
+            "managerUserId": null,
+            "distanceSource": "manual",
+            "monthlyAllowance": 154.08,
+            "taxFreeMonthly": 118.13,
+            "taxableMonthly": 35.95,
+            "ratePerKm": 0.3
+        },
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:arrangement-ended": {
+        "modified": [],
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:other-schema": {
+        "modified": [],
+        "errors": [],
+        "stopped": false
+    },
+    "0.3:deleted": {
+        "modified": null,
+        "errors": null,
+        "stopped": false
+    }
+}

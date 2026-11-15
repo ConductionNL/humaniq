@@ -35,6 +35,7 @@ use OCA\Humaniq\Service\UnitMembership;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use RuntimeException;
 
 /**
@@ -110,14 +111,14 @@ class TeamDigestNodeTest extends FlowNodeTestCase {
 	 * @return void
 	 */
 	public function testAQuietDayPostsNothing(): void {
-		$items = $this->node()->execute([], ['orgUnitId' => 'unit-fin', 'includeChildren' => true], []);
+		$items = $this->node()->execute(new FlowNodeCall(items: [], config: ['orgUnitId' => 'unit-fin', 'includeChildren' => true], context: []));
 		self::assertCount(1, $items, 'Eva shares her birthday today.');
 
-		$quiet = $this->node('2026-10-05')->execute([], ['orgUnitId' => 'unit-balie', 'includeChildren' => true], []);
+		$quiet = $this->node('2026-10-05')->execute(new FlowNodeCall(items: [], config: ['orgUnitId' => 'unit-balie', 'includeChildren' => true], context: []));
 		self::assertSame([], $quiet, 'Nothing to say: no item, so the Talk step posts nothing.');
 
 		$this->expectException(RuntimeException::class);
-		$this->node()->execute([], ['orgUnitId' => 'unit-missing'], []);
+		$this->node()->execute(new FlowNodeCall(items: [], config: ['orgUnitId' => 'unit-missing'], context: []));
 	}//end testAQuietDayPostsNothing()
 
 	/**
@@ -126,7 +127,7 @@ class TeamDigestNodeTest extends FlowNodeTestCase {
 	 * @return void
 	 */
 	public function testTheNodeHandsTheMessageToTheTalkStep(): void {
-		$items = $this->node()->execute([['json' => []]], ['orgUnitId' => 'unit-bz', 'includeChildren' => true], []);
+		$items = $this->node()->execute(new FlowNodeCall(items: [['json' => []]], config: ['orgUnitId' => 'unit-bz', 'includeChildren' => true], context: []));
 
 		self::assertCount(1, $items);
 		self::assertSame('humaniq.team-digest', $this->node()->getId());

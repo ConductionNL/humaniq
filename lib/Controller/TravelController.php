@@ -36,7 +36,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\AdministrationService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCA\Humaniq\Service\RouteDistanceService;
 use OCA\Humaniq\Service\RouteDistanceUnavailableException;
@@ -62,7 +62,7 @@ class TravelController extends Controller {
 	 * @param IRequest              $request               The request.
 	 * @param RouteDistanceService  $routes                Asks integriq for a distance.
 	 * @param WpmReportService      $reports               Compiles the mobility figures.
-	 * @param HoursRegisterGateway  $gateway               Saves the arrangement.
+	 * @param RecordStoreInterface  $gateway               Saves the arrangement.
 	 * @param RbacObjectReader      $rbac                  Reads under the caller's own RBAC.
 	 * @param AdministrationService $administrationService The caller's administration and role.
 	 * @param IGroupManager         $groupManager          The admin check.
@@ -72,7 +72,7 @@ class TravelController extends Controller {
 		IRequest $request,
 		private readonly RouteDistanceService $routes,
 		private readonly WpmReportService $reports,
-		private readonly HoursRegisterGateway $gateway,
+		private readonly RecordStoreInterface $gateway,
 		private readonly RbacObjectReader $rbac,
 		private readonly AdministrationService $administrationService,
 		private readonly IGroupManager $groupManager,
