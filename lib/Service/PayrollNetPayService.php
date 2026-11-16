@@ -50,6 +50,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
+use OCA\Humaniq\Kernel\Contracts\PayrollNetPayServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -67,7 +68,7 @@ use OCA\Humaniq\Support\ChecksShillinqAvailability;
  *
  * @spec openspec/specs/payroll-sepa-netpay-shillinq/spec.md
  */
-class PayrollNetPayService {
+class PayrollNetPayService implements PayrollNetPayServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;

@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\SalaryBureauExchangeServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -38,7 +39,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-002
  */
-class SalaryBureauExchangeService {
+class SalaryBureauExchangeService implements SalaryBureauExchangeServiceInterface {
 
 	/**
 	 * The period items (D2).

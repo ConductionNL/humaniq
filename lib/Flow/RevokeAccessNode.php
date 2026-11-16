@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
-use OCA\Humaniq\Service\AccessRevocationService;
+use OCA\Humaniq\Kernel\Contracts\AccessRevocationServiceInterface;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCP\IL10N;
@@ -44,7 +44,7 @@ class RevokeAccessNode extends AdminSweepNode implements ICallFlowNode {
 	 *
 	 * @param IL10N          $l10n  Translations.
 	 * @param IURLGenerator  $urls  The icon.
-	 * @param AccessRevocationService $revocation The work.
+	 * @param AccessRevocationServiceInterface $revocation The work.
 	 * @param string|null    $today The day to run on; null is today.
 	 *
 	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
@@ -52,7 +52,7 @@ class RevokeAccessNode extends AdminSweepNode implements ICallFlowNode {
 	public function __construct(
 		private readonly IL10N $l10n,
 		private readonly IURLGenerator $urls,
-		private readonly AccessRevocationService $revocation,
+		private readonly AccessRevocationServiceInterface $revocation,
 		private readonly ?string $today=null,
 	) {
 

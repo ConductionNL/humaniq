@@ -32,8 +32,8 @@ namespace OCA\Humaniq\Controller;
 
 use InvalidArgumentException;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\DepartmentFiguresServiceInterface;
 use OCA\Humaniq\Service\AnalyticsAccess;
-use OCA\Humaniq\Service\DepartmentFiguresService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -50,16 +50,16 @@ use Psr\Log\LoggerInterface;
 class DepartmentFiguresController extends Controller {
 
 	/**
-	 * @param IRequest                 $request           The request.
-	 * @param AnalyticsAccess          $access            Who may read which figures.
-	 * @param DepartmentFiguresService $departmentFigures The unit figures.
-	 * @param IUserSession             $userSession       The acting user.
-	 * @param LoggerInterface          $logger            Logger.
+	 * @param IRequest                          $request           The request.
+	 * @param AnalyticsAccess                   $access            Who may read which figures.
+	 * @param DepartmentFiguresServiceInterface $departmentFigures The unit figures.
+	 * @param IUserSession                      $userSession       The acting user.
+	 * @param LoggerInterface                   $logger            Logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly AnalyticsAccess $access,
-		private readonly DepartmentFiguresService $departmentFigures,
+		private readonly DepartmentFiguresServiceInterface $departmentFigures,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {

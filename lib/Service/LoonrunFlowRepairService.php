@@ -55,6 +55,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\LoonrunFlowRepairServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -65,7 +66,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
  */
-class LoonrunFlowRepairService {
+class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 
 	/**
 	 * The shipped flow's import identity (SchemaFlowImportListener's key).

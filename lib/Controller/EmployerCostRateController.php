@@ -27,8 +27,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\CostRateAccess;
-use OCA\Humaniq\Service\EmployeeCostRateService;
+use OCA\Humaniq\Kernel\Contracts\CostRateAccessInterface;
+use OCA\Humaniq\Kernel\Contracts\EmployeeCostRateServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -60,8 +60,8 @@ class EmployerCostRateController extends Controller {
 	 * Wire collaborators.
 	 *
 	 * @param IRequest $request The request.
-	 * @param EmployeeCostRateService $costRates The cost-rate resolver.
-	 * @param CostRateAccess $access The employee and contract a rate is computed from, under the caller's access or as their project manager.
+	 * @param EmployeeCostRateServiceInterface $costRates The cost-rate resolver.
+	 * @param CostRateAccessInterface $access The employee and contract a rate is computed from, under the caller's access or as their project manager.
 	 * @param LoggerInterface $logger PSR logger.
 	 *
 	 * @return void
@@ -70,8 +70,8 @@ class EmployerCostRateController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly EmployeeCostRateService $costRates,
-		private readonly CostRateAccess $access,
+		private readonly EmployeeCostRateServiceInterface $costRates,
+		private readonly CostRateAccessInterface $access,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);

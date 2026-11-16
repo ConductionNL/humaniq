@@ -30,12 +30,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\SurveyServiceInterface;
+
 /**
  * Open, answer and read the results of a survey.
  *
  * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
  */
-class SurveyService {
+class SurveyService implements SurveyServiceInterface {
 
 	/**
 	 * The survey schema.

@@ -55,6 +55,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\WorkingCalendarReaderInterface;
 use OCA\OpenRegister\Exception\FlowTimerValidationException;
 use OCA\OpenRegister\Service\Flow\Timer\WorkingCalendarInterface;
 use OCA\OpenRegister\Service\Flow\Timer\WorkingCalendarService;
@@ -67,7 +68,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-004
  */
-class WorkingCalendarReader {
+class WorkingCalendarReader implements WorkingCalendarReaderInterface {
 
 	/**
 	 * Constructor.

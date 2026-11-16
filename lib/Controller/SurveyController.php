@@ -24,8 +24,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\SurveyServiceInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
-use OCA\Humaniq\Service\SurveyService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -45,14 +45,14 @@ class SurveyController extends Controller {
 	/**
 	 * The controller.
 	 *
-	 * @param IRequest      $request     The request.
-	 * @param SurveyService $surveys     The survey service.
-	 * @param HumaniqRoles  $roles       Whether the caller is HR.
-	 * @param IUserSession  $userSession The caller.
+	 * @param IRequest               $request     The request.
+	 * @param SurveyServiceInterface $surveys     The survey service.
+	 * @param HumaniqRoles           $roles       Whether the caller is HR.
+	 * @param IUserSession           $userSession The caller.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SurveyService $surveys,
+		private readonly SurveyServiceInterface $surveys,
 		private readonly HumaniqRoles $roles,
 		private readonly IUserSession $userSession,
 	) {

@@ -44,6 +44,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\CalendarSubscriptionPollerInterface;
 use OCP\Http\Client\IClientService;
 use Psr\Log\LoggerInterface;
 
@@ -52,7 +53,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-005
  */
-class CalendarSubscriptionPoller {
+class CalendarSubscriptionPoller implements CalendarSubscriptionPollerInterface {
 
 	/**
 	 * How long one feed may take before the poll gives up on it, in seconds.

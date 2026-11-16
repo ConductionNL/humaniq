@@ -64,6 +64,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\AvgDsrServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\Gdpr\ErasureRequest;
@@ -78,7 +79,7 @@ use OCA\Humaniq\Support\ResolvesObjectService;
  * guarded, RBAC/tenant-scoped `Gdpr\DataSubjectRequestService` -- retention
  * enforcement on erasure is OpenRegister's, not a bespoke humaniq classifier.
  */
-class AvgDsrService {
+class AvgDsrService implements AvgDsrServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;

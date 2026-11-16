@@ -47,8 +47,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Kernel\Contracts\LeaveCoverageWarningInterface;
 use OCA\Humaniq\Service\HoursRegisterGateway;
-use OCA\Humaniq\Service\LeaveCoverageWarning;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IUserSession;
@@ -86,16 +86,16 @@ class LeaveRequestProcessStampListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway     Resolves schema slugs and reads the stored request.
-	 * @param IUserSession         $userSession The deciding user.
-	 * @param LoggerInterface      $logger      PSR logger.
-	 * @param LeaveCoverageWarning $coverage    The coverage warning an approval accepts (REQ-LVM-S02).
+	 * @param HoursRegisterGateway          $gateway     Resolves schema slugs and reads the stored request.
+	 * @param IUserSession                  $userSession The deciding user.
+	 * @param LoggerInterface               $logger      PSR logger.
+	 * @param LeaveCoverageWarningInterface $coverage    The coverage warning an approval accepts (REQ-LVM-S02).
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
-		private readonly LeaveCoverageWarning $coverage,
+		private readonly LeaveCoverageWarningInterface $coverage,
 	) {
 	}//end __construct()
 

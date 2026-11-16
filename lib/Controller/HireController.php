@@ -29,8 +29,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\HireMatchService;
-use OCA\Humaniq\Service\HireService;
+use OCA\Humaniq\Kernel\Contracts\HireMatchServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\HireServiceInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
@@ -60,12 +60,12 @@ class HireController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest         $request     The request.
-	 * @param RbacObjectReader $rbac        Reads as the caller.
-	 * @param HumaniqRoles     $roles       HR membership.
-	 * @param HireService      $hires       Creates or attaches the employee.
-	 * @param HireMatchService $matcher     The duplicate check.
-	 * @param IUserSession     $userSession The caller.
+	 * @param IRequest                  $request     The request.
+	 * @param RbacObjectReader          $rbac        Reads as the caller.
+	 * @param HumaniqRoles              $roles       HR membership.
+	 * @param HireServiceInterface      $hires       Creates or attaches the employee.
+	 * @param HireMatchServiceInterface $matcher     The duplicate check.
+	 * @param IUserSession              $userSession The caller.
 	 *
 	 * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-001
 	 */
@@ -73,8 +73,8 @@ class HireController extends Controller {
 		IRequest $request,
 		private readonly RbacObjectReader $rbac,
 		private readonly HumaniqRoles $roles,
-		private readonly HireService $hires,
-		private readonly HireMatchService $matcher,
+		private readonly HireServiceInterface $hires,
+		private readonly HireMatchServiceInterface $matcher,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);

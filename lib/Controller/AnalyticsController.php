@@ -42,9 +42,9 @@ namespace OCA\Humaniq\Controller;
 
 use InvalidArgumentException;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\ObligationsServiceInterface;
 use OCA\Humaniq\Service\AnalyticsAccess;
 use OCA\Humaniq\Service\AnalyticsService;
-use OCA\Humaniq\Service\ObligationsService;
 use OCA\Humaniq\Service\SeriesLatest;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -65,7 +65,7 @@ class AnalyticsController extends Controller {
 	/**
 	 * @param IRequest $request The request object.
 	 * @param AnalyticsService $analyticsService The trends aggregation service.
-	 * @param ObligationsService $obligationsService The cross-schema obligations merge service.
+	 * @param ObligationsServiceInterface $obligationsService The cross-schema obligations merge service.
 	 * @param AnalyticsAccess $access Resolves the caller's active administration, role and managed units.
 	 * @param IUserSession $userSession The current user session (acting userId).
 	 * @param LoggerInterface $logger Logger.
@@ -75,7 +75,7 @@ class AnalyticsController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private readonly AnalyticsService $analyticsService,
-		private readonly ObligationsService $obligationsService,
+		private readonly ObligationsServiceInterface $obligationsService,
 		private readonly AnalyticsAccess $access,
 		private readonly SeriesLatest $seriesLatest,
 		private readonly IUserSession $userSession,

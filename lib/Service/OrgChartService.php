@@ -31,12 +31,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\OrgChartServiceInterface;
+
 /**
  * Composes and lays out the organisation chart.
  *
  * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-001
  */
-final class OrgChartService {
+final class OrgChartService implements OrgChartServiceInterface {
 
 	/**
 	 * Constructor.

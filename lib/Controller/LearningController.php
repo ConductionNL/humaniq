@@ -29,7 +29,7 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\LearningPeopleFeed;
+use OCA\Humaniq\Kernel\Contracts\LearningPeopleFeedInterface;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -48,14 +48,14 @@ class LearningController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest           $request The request.
-	 * @param LearningPeopleFeed $feed    Composes the feed.
-	 * @param RbacObjectReader   $rbac    Reads under the caller's own RBAC.
-	 * @param ITimeFactory       $time    Today.
+	 * @param IRequest                    $request The request.
+	 * @param LearningPeopleFeedInterface $feed    Composes the feed.
+	 * @param RbacObjectReader            $rbac    Reads under the caller's own RBAC.
+	 * @param ITimeFactory                $time    Today.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly LearningPeopleFeed $feed,
+		private readonly LearningPeopleFeedInterface $feed,
 		private readonly RbacObjectReader $rbac,
 		private readonly ITimeFactory $time,
 	) {

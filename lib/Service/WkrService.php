@@ -46,6 +46,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\WkrServiceInterface;
 use OCA\Humaniq\Standards\Checks\NlWkrChecks;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
@@ -60,7 +61,7 @@ use OCA\Humaniq\Support\RoundsToCents;
  * Cross-object loonsom -> vrije-ruimte roll-up, upserted as an idempotent
  * WkrAssessment per (administrationId, year).
  */
-class WkrService {
+class WkrService implements WkrServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;

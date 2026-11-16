@@ -170,8 +170,9 @@ class Application extends App implements IBootstrap {
 		// self-service-policy-assistant D2: offer Hermiq the HR-vraagbaak template.
 		// The event is named by string, so humaniq installs without Hermiq.
 		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);
-		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class)));
-		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
+		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Kernel\Contracts\RuleAuditServiceInterface::class)));
+		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Kernel\Contracts\RuleTestDataSeederInterface::class)));
+		(new \OCA\Humaniq\Service\ContractBindings())->register(context: $context);
 		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 		$context->registerServiceAlias(\OCA\Humaniq\Service\OrgLookupInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 

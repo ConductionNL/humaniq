@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\HrDocumentSigningService;
+use OCA\Humaniq\Kernel\Contracts\HrDocumentSigningServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -44,10 +44,10 @@ class DocumentsSyncSignaturesCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param HrDocumentSigningService $service Reads and writes the statuses.
+	 * @param HrDocumentSigningServiceInterface $service Reads and writes the statuses.
 	 */
 	public function __construct(
-		private readonly HrDocumentSigningService $service,
+		private readonly HrDocumentSigningServiceInterface $service,
 	) {
 		parent::__construct();
 	}//end __construct()

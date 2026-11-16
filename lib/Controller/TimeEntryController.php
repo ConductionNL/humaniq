@@ -40,10 +40,10 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\TimeEstimateServiceInterface;
 use OCA\Humaniq\Listener\HoursWriteRefusedException;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\RunningTimerService;
-use OCA\Humaniq\Service\TimeEstimateService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -67,7 +67,7 @@ class TimeEntryController extends Controller {
 	 * @param RunningTimerService $timers       Start, stop and resolve the running timer.
 	 * @param LoggerInterface     $logger       Logger.
 	 * @param HoursRegisterGateway $gateway     The shared register plumbing (the estimate read).
-	 * @param TimeEstimateService $estimates    Derives estimated, spent and remaining.
+	 * @param TimeEstimateServiceInterface $estimates    Derives estimated, spent and remaining.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -75,7 +75,7 @@ class TimeEntryController extends Controller {
 		private readonly RunningTimerService $timers,
 		private readonly LoggerInterface $logger,
 		private readonly HoursRegisterGateway $gateway,
-		private readonly TimeEstimateService $estimates,
+		private readonly TimeEstimateServiceInterface $estimates,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 

@@ -47,9 +47,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Kernel\Contracts\WorkingHoursServiceInterface;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\OverlappingWorkingPatternException;
-use OCA\Humaniq\Service\WorkingHoursService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -75,12 +75,12 @@ class WorkingPatternOverlapListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param HoursRegisterGateway $gateway The shared register plumbing.
-	 * @param WorkingHoursService $workingHours The overlap rule itself.
+	 * @param WorkingHoursServiceInterface $workingHours The overlap rule itself.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
-		private readonly WorkingHoursService $workingHours,
+		private readonly WorkingHoursServiceInterface $workingHours,
 		private readonly LoggerInterface $logger,
 	) {
 

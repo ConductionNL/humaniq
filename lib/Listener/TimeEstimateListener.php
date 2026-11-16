@@ -45,8 +45,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Kernel\Contracts\TimeEstimateServiceInterface;
 use OCA\Humaniq\Service\HoursRegisterGateway;
-use OCA\Humaniq\Service\TimeEstimateService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -78,12 +78,12 @@ class TimeEstimateListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param HoursRegisterGateway $gateway The shared register plumbing.
-	 * @param TimeEstimateService $estimates The rules themselves.
+	 * @param TimeEstimateServiceInterface $estimates The rules themselves.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
-		private readonly TimeEstimateService $estimates,
+		private readonly TimeEstimateServiceInterface $estimates,
 		private readonly LoggerInterface $logger,
 	) {
 

@@ -43,6 +43,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
+use OCA\Humaniq\Kernel\Contracts\PayrollGLPostServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -59,7 +60,7 @@ use OCA\Humaniq\Support\ChecksShillinqAvailability;
  *
  * @spec openspec/specs/payroll-glpost-shillinq/spec.md
  */
-class PayrollGLPostService {
+class PayrollGLPostService implements PayrollGLPostServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;

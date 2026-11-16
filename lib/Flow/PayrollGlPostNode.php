@@ -31,8 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\Humaniq\Kernel\Contracts\PayrollGLPostServiceInterface;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
-use OCA\Humaniq\Service\PayrollGLPostService;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -59,14 +59,14 @@ class PayrollGlPostNode extends PayrollFlowNodeBase {
 	/**
 	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
 	 * @param LoggerInterface $logger Logger.
-	 * @param PayrollGLPostService $glPostService The existing GL handoff service, reused as-is.
+	 * @param PayrollGLPostServiceInterface $glPostService The existing GL handoff service, reused as-is.
 	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	public function __construct(
 		PayrollFlowNodeServices $services,
 		LoggerInterface $logger,
-		private readonly PayrollGLPostService $glPostService,
+		private readonly PayrollGLPostServiceInterface $glPostService,
 	) {
 		parent::__construct($services, $logger);
 

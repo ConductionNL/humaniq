@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Repair;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\ManagerStampRepair;
+use OCA\Humaniq\Kernel\Contracts\ManagerStampRepairInterface;
 use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -53,7 +53,7 @@ class RestampOpenManagerRecords implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param ManagerStampRepair $repair The restamp pass.
+	 * @param ManagerStampRepairInterface $repair The restamp pass.
 	 * @param OpenRegisterAvailability $openRegister Availability check.
 	 * @param LoggerInterface $logger The logger.
 	 * @param IAppConfig $appConfig Holds the done marker.
@@ -61,7 +61,7 @@ class RestampOpenManagerRecords implements IRepairStep {
 	 * @spec openspec/changes/restamp-open-manager-records/specs/mss-team-scope/spec.md#Requirement:-Open-records-SHALL-be-restamped-with-the-manager-the-shared-resolution-gives-today-(REQ-MSS-007)
 	 */
 	public function __construct(
-		private readonly ManagerStampRepair $repair,
+		private readonly ManagerStampRepairInterface $repair,
 		private readonly OpenRegisterAvailability $openRegister,
 		private readonly LoggerInterface $logger,
 		private readonly IAppConfig $appConfig,

@@ -73,13 +73,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
+use OCA\Humaniq\Kernel\Contracts\EmployeeCostRateServiceInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
  * Resolves an employee's employer cost per hour, in integer cents.
  */
-class EmployeeCostRateService {
+class EmployeeCostRateService implements EmployeeCostRateServiceInterface {
 
 	/**
 	 * Weeks in a year, for turning contracted hours-per-week into the hours

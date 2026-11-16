@@ -45,13 +45,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\DepartmentLeaveScheduleServiceInterface;
 
 /**
  * Composes one org unit's leave schedule from the requests themselves.
  *
  * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
  */
-class DepartmentLeaveScheduleService {
+class DepartmentLeaveScheduleService implements DepartmentLeaveScheduleServiceInterface {
 
 	/**
 	 * The statuses that stand on a schedule.

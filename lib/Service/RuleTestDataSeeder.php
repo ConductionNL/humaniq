@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\RuleTestDataSeederInterface;
 use OCA\Humaniq\Standards\RuleEngine;
 use OCA\Humaniq\Support\RegisterSlugLookup;
 use OCP\IAppConfig;
@@ -48,7 +49,7 @@ use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
 /**
  * Makes the local test data compliant with the enforced rules (idempotent).
  */
-class RuleTestDataSeeder {
+class RuleTestDataSeeder implements RuleTestDataSeederInterface {
 
 	use ResolvesObjectServiceByClass;
 	/**

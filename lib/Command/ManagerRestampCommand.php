@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\ManagerStampRepair;
+use OCA\Humaniq\Kernel\Contracts\ManagerStampRepairInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -43,12 +43,12 @@ class ManagerRestampCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param ManagerStampRepair $repair The restamp pass.
+	 * @param ManagerStampRepairInterface $repair The restamp pass.
 	 *
 	 * @spec openspec/changes/restamp-open-manager-records/specs/mss-team-scope/spec.md#Requirement:-Open-records-SHALL-be-restamped-with-the-manager-the-shared-resolution-gives-today-(REQ-MSS-007)
 	 */
 	public function __construct(
-		private readonly ManagerStampRepair $repair,
+		private readonly ManagerStampRepairInterface $repair,
 	) {
 		parent::__construct();
 

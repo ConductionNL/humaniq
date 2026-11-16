@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\TeamDigestComposerInterface;
 use OCP\IL10N;
 use RuntimeException;
 
@@ -36,7 +37,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
  */
-class TeamDigestComposer {
+class TeamDigestComposer implements TeamDigestComposerInterface {
 
 	/**
 	 * Constructor.

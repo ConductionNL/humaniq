@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
-use OCA\Humaniq\Service\ExitInterviewService;
+use OCA\Humaniq\Kernel\Contracts\ExitInterviewServiceInterface;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCP\IL10N;
@@ -44,7 +44,7 @@ class AnonymiseExitInterviewsNode extends AdminSweepNode implements ICallFlowNod
 	 *
 	 * @param IL10N          $l10n  Translations.
 	 * @param IURLGenerator  $urls  The icon.
-	 * @param ExitInterviewService $interviews The work.
+	 * @param ExitInterviewServiceInterface $interviews The work.
 	 * @param string|null    $today The day to run on; null is today.
 	 *
 	 * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-002
@@ -52,7 +52,7 @@ class AnonymiseExitInterviewsNode extends AdminSweepNode implements ICallFlowNod
 	public function __construct(
 		private readonly IL10N $l10n,
 		private readonly IURLGenerator $urls,
-		private readonly ExitInterviewService $interviews,
+		private readonly ExitInterviewServiceInterface $interviews,
 		private readonly ?string $today=null,
 	) {
 

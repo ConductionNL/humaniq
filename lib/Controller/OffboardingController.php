@@ -26,8 +26,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\AccessRevocationService;
-use OCA\Humaniq\Service\ExitInterviewService;
+use OCA\Humaniq\Kernel\Contracts\AccessRevocationServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\ExitInterviewServiceInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCA\Humaniq\Service\TransitionPaymentService;
@@ -48,21 +48,21 @@ class OffboardingController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                 $request     The request.
-	 * @param RbacObjectReader         $rbac        Reads the case under the caller's rights.
-	 * @param HumaniqRoles             $roles       Who is HR or payroll.
-	 * @param AccessRevocationService  $revocation  Disables the account.
-	 * @param TransitionPaymentService $payments    Calculates the payment.
-	 * @param ExitInterviewService     $interviews  Counts the reasons.
-	 * @param IUserSession             $userSession The caller.
+	 * @param IRequest                         $request     The request.
+	 * @param RbacObjectReader                 $rbac        Reads the case under the caller's rights.
+	 * @param HumaniqRoles                     $roles       Who is HR or payroll.
+	 * @param AccessRevocationServiceInterface $revocation  Disables the account.
+	 * @param TransitionPaymentService         $payments    Calculates the payment.
+	 * @param ExitInterviewServiceInterface    $interviews  Counts the reasons.
+	 * @param IUserSession                     $userSession The caller.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly RbacObjectReader $rbac,
 		private readonly HumaniqRoles $roles,
-		private readonly AccessRevocationService $revocation,
+		private readonly AccessRevocationServiceInterface $revocation,
 		private readonly TransitionPaymentService $payments,
-		private readonly ExitInterviewService $interviews,
+		private readonly ExitInterviewServiceInterface $interviews,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);

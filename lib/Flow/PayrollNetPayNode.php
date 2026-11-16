@@ -30,8 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\Humaniq\Kernel\Contracts\PayrollNetPayServiceInterface;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
-use OCA\Humaniq\Service\PayrollNetPayService;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -58,14 +58,14 @@ class PayrollNetPayNode extends PayrollFlowNodeBase {
 	/**
 	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
 	 * @param LoggerInterface $logger Logger.
-	 * @param PayrollNetPayService $netPayService The existing SEPA handoff service, reused as-is.
+	 * @param PayrollNetPayServiceInterface $netPayService The existing SEPA handoff service, reused as-is.
 	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	public function __construct(
 		PayrollFlowNodeServices $services,
 		LoggerInterface $logger,
-		private readonly PayrollNetPayService $netPayService,
+		private readonly PayrollNetPayServiceInterface $netPayService,
 	) {
 		parent::__construct($services, $logger);
 
