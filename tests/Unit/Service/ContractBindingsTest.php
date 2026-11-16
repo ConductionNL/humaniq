@@ -54,7 +54,7 @@ final class ContractBindingsTest extends TestCase {
 		$aliases = $this->recordAliases();
 		$names = array_column($aliases, 0);
 
-		self::assertCount(71, $aliases);
+		self::assertCount(69, $aliases);
 		self::assertSame($names, array_values(array_unique($names)));
 	}
 

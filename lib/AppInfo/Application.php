@@ -96,6 +96,7 @@ use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Service\ContractBindings;
 use OCA\Humaniq\Service\TaxTableSetService;
 use OCA\Humaniq\Service\HrLifecycleEventService;
 use OCA\Humaniq\Service\InternalWriteMarker;
@@ -172,7 +173,7 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);
 		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Kernel\Contracts\RuleAuditServiceInterface::class)));
 		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Kernel\Contracts\RuleTestDataSeederInterface::class)));
-		(new \OCA\Humaniq\Service\ContractBindings())->register(context: $context);
+		(new ContractBindings())->register(context: $context);
 		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 		$context->registerServiceAlias(\OCA\Humaniq\Service\OrgLookupInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 

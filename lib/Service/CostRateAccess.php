@@ -22,7 +22,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
-use OCA\Humaniq\Kernel\Contracts\CostRateAccessInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\IUserSession;
@@ -44,7 +43,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/employer-hourly-cost-rate/spec.md#Requirement:-A-project-manager-gets-the-derived-rate-of-the-people-on-the-project,-never-their-salary-(REQ-ECR-PM)
  */
-class CostRateAccess implements CostRateAccessInterface {
+class CostRateAccess {
 
 	/**
 	 * The app, register and schema that own projects.
