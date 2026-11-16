@@ -44,6 +44,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Lifecycle;
 
 use OCA\Humaniq\Support\RegisterSlugLookup;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 use OCP\IAppConfig;
@@ -121,7 +122,7 @@ final class PayrollRunApprovedGuard implements LifecycleGuardInterface {
 		}
 
 		try {
-			$run = $this->objectService()->find(id: $payrollRunId, register: $register, schema: 'PayrollRun');
+			$run = $this->objectService()->find(id: $payrollRunId, options: new ObjectFindOptions(register: $register, schema: 'PayrollRun'));
 		} catch (\Throwable $e) {
 			return GuardResult::deny(
 				'De gekoppelde loonrun kon niet worden geladen; controleren is geweigerd.'

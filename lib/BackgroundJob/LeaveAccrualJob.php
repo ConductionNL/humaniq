@@ -54,6 +54,8 @@ use DateTimeImmutable;
 use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
@@ -400,8 +402,7 @@ class LeaveAccrualJob extends TimedJob {
 		return $this->toArray(
 			$this->objectService()->saveObject(
 				object: $payload,
-				register: $this->register(),
-				schema: 'LeaveBalance',
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: 'LeaveBalance')),
 				_rbac: false,
 				_multitenancy: false
 			)
@@ -454,9 +455,10 @@ class LeaveAccrualJob extends TimedJob {
 		return $this->toArray(
 			$this->objectService()->saveObject(
 				object: $payload,
-				register: $this->register(),
-				schema: 'LeaveBalance',
-				uuid: ($uuid === '' ? null : $uuid),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'LeaveBalance'),
+					uuid: $uuid === '' ? null : $uuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			)

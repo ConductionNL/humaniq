@@ -41,6 +41,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
@@ -403,7 +404,7 @@ class SurveyServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function row(string $schema, string $uuid): array {
-		return $this->store->find($uuid, schema: $schema)->getObject();
+		return $this->store->find($uuid, new ObjectFindOptions(schema: $schema))->getObject();
 	}//end row()
 
 	/**

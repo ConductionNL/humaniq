@@ -296,3 +296,16 @@ if (class_exists('OCA\\OpenRegister\\Service\\Dmn\\DecisionTableEvaluator') === 
 	require __DIR__ . '/stubs/OpenRegisterDmn/UnaryTestEvaluator.php';
 	require __DIR__ . '/stubs/OpenRegisterDmn/DecisionTableEvaluator.php';
 }
+
+// OpenRegister's object-service option objects, from main, when OpenRegister itself is absent.
+spl_autoload_register(
+	static function (string $class): void {
+		$prefix = 'OCA\\OpenRegister\\Kernel\\Contracts\\Value\\';
+		if (str_starts_with($class, $prefix) === true) {
+			$file = __DIR__ . '/stubs/OpenRegister/Kernel/Contracts/Value/' . substr($class, strlen($prefix)) . '.php';
+			if (is_file($file) === true) {
+				require_once $file;
+			}
+		}
+	}
+);
