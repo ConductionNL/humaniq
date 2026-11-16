@@ -167,4 +167,55 @@ class SetupHealthCheckTest extends TestCase {
 		$this->assertNull(SetupHealthCheck::latestYear(ids: ['custom', 'nl-12345']));
 		$this->assertNull(SetupHealthCheck::latestYear(ids: []));
 	}
+
+	/**
+	 * A register whose schemas are not a list counts as a failed import.
+	 *
+	 * @return void
+	 */
+	public function testARegisterWithoutASchemaListCountsAsAFailedImport(): void {
+		$register = new class {
+
+			/**
+			 * @return null
+			 */
+			public function getSchemas() {
+				return null;
+			}
+		};
+		$mapper = new class ($register) {
+
+			/**
+			 * @param object $register The register.
+			 */
+			public function __construct(private object $register) {
+			}
+
+			/**
+			 * @param string  $id            Register slug.
+			 * @param boolean $_rbac         RBAC flag.
+			 * @param boolean $_multitenancy Multitenancy flag.
+			 *
+			 * @return object
+			 */
+			public function find(string $id, bool $_rbac = true, bool $_multitenancy = true): object {
+				return $this->register;
+			}
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\OpenRegister\Db\RegisterMapper')->willReturn($mapper);
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueInt')->willReturn(1_800_000_000);
+		$time = $this->createMock(ITimeFactory::class);
+		$time->method('getTime')->willReturn(1_800_000_000);
+
+		$report = (new SetupHealthCheck($container, $settings, $appConfig, $time))->check();
+
+		$this->assertFalse($report['passed']);
+		$this->assertSame(0, $report['schemas']);
+		$this->assertSame(['the register was not imported'], $report['failures']);
+	}//end testARegisterWithoutASchemaListCountsAsAFailedImport()
 }
