@@ -11290,8 +11290,8 @@
     {
       "type": "library",
       "name": "ast-walker-scope",
-      "version": "0.9.0",
-      "bom-ref": "humaniq@0.1.0|ast-walker-scope@0.9.0",
+      "version": "0.10.0",
+      "bom-ref": "humaniq@0.1.0|ast-walker-scope@0.10.0",
       "licenses": [
         {
           "license": {
@@ -11299,15 +11299,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/ast-walker-scope@0.9.0",
+      "purl": "pkg:npm/ast-walker-scope@0.10.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/ast-walker-scope/-/ast-walker-scope-0.9.0.tgz",
+          "url": "https://registry.npmjs.org/ast-walker-scope/-/ast-walker-scope-0.10.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "209773a36bcb884941c4acf04b7e95b02b9effad9de887568e73c1dafde7b8f29e586ca7a7a145fc26282dae62ff78d71ffcfded90ddb17cfa69ba6033ac34ec"
+              "content": "2b3be8c437d7373d869bc2982e1e3b2b7a9c6376736b758a3ae876c68a9aecb06ee8c0ca58064ba2f26d53d0ee01dfc4afeae14070919fad7d9474b953eaa687"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -11317,6 +11317,210 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/ast-walker-scope"
+        }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "parser",
+          "group": "@babel",
+          "version": "8.0.7",
+          "bom-ref": "humaniq@0.1.0|ast-walker-scope@0.10.0|@babel/parser@8.0.7",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/%40babel/parser@8.0.7",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/@babel/parser/-/parser-8.0.7.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "5240f011b3ced69c762504ab761e2a220687d49806ec63bfa45789929c610f12044e44ff42f1a99e2817230ef95621d83ed2202884e655426a2e388ef89b968c"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/ast-walker-scope/node_modules/@babel/parser"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "types",
+          "group": "@babel",
+          "version": "8.0.6",
+          "bom-ref": "humaniq@0.1.0|ast-walker-scope@0.10.0|@babel/types@8.0.6",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/%40babel/types@8.0.6",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/@babel/types/-/types-8.0.6.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "73ec604966e8576a5dc173faec15160d54478b604ee50dcac31c8556ceed6954d8f9fb0ae3bfcbe7565742857dae8cc7243347bc9e2fe1612c23f225c55da5d8"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/ast-walker-scope/node_modules/@babel/types"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "ast-kit",
+          "version": "3.0.0",
+          "bom-ref": "humaniq@0.1.0|ast-walker-scope@0.10.0|ast-kit@3.0.0",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/ast-kit@3.0.0",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/ast-kit/-/ast-kit-3.0.0.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "f0e1bddaadd1df9aa30bfe22e812c1320f0807e7c2956bbfd4f13083667d467f81b8d6a2120273a739fea7158e7472560c2030bb624fd300834e8cc0338422ad"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/ast-walker-scope/node_modules/ast-kit"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "helper-string-parser",
+          "group": "@babel",
+          "version": "8.0.6",
+          "bom-ref": "humaniq@0.1.0|ast-walker-scope@0.10.0|@babel/helper-string-parser@8.0.6",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/%40babel/helper-string-parser@8.0.6",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-8.0.6.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "fba1d81019ec0d164726d5130047cc41dd33303a9d1474bb0bee6f02c119a8152bdef10c58e5a51c9d09cf5812f23248942bcbb2e03a8af99ea2acc7f77e9870"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/ast-walker-scope/node_modules/@babel/helper-string-parser"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "helper-validator-identifier",
+          "group": "@babel",
+          "version": "8.0.6",
+          "bom-ref": "humaniq@0.1.0|ast-walker-scope@0.10.0|@babel/helper-validator-identifier@8.0.6",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/%40babel/helper-validator-identifier@8.0.6",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-8.0.6.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "1d8c74626b9c851c514a99e3bdc35f7e73d2f0309ab8a3669ee988b871b78e740055ec1103b91f246c05d776b2129499b3bb3847fa011f87a9a6e5dc01077925"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/ast-walker-scope/node_modules/@babel/helper-validator-identifier"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "estree-walker",
+          "version": "3.0.3",
+          "bom-ref": "humaniq@0.1.0|ast-walker-scope@0.10.0|estree-walker@3.0.3",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/estree-walker@3.0.3",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/estree-walker/-/estree-walker-3.0.3.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "ed150a7d781230c933b7a66e5e6a9aa4ebab2c63cf7e08fa97db9167b9511a896f934cb6ca871cdf92dd731282e4f419767d8332a8a8010d8da1672b4ca9a6ea"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/ast-walker-scope/node_modules/estree-walker"
+            }
+          ]
         }
       ]
     },
@@ -23001,8 +23205,8 @@
     {
       "type": "library",
       "name": "nostics",
-      "version": "1.2.0",
-      "bom-ref": "humaniq@0.1.0|nostics@1.2.0",
+      "version": "1.3.0",
+      "bom-ref": "humaniq@0.1.0|nostics@1.3.0",
       "licenses": [
         {
           "license": {
@@ -23010,15 +23214,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/nostics@1.2.0",
+      "purl": "pkg:npm/nostics@1.3.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/nostics/-/nostics-1.2.0.tgz",
+          "url": "https://registry.npmjs.org/nostics/-/nostics-1.3.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "146a847e1423aefa3594bf0a1627dd4d088dc304072710b58ed604d51739e2a17f8f138d50d2fe902f604b592b5fc43ae4f82b4397c2a87fc8e0d85606f752aa"
+              "content": "c3346cac9c0d9456ea21142df1a09e2f6584f144a2a7fbaebc648e655d43d360b15fc0014cc6f0f08cb02a31fbc961c44cc5db589238381a62860f6b9b3d95ca"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -23979,8 +24183,8 @@
     {
       "type": "library",
       "name": "picomatch",
-      "version": "4.0.5",
-      "bom-ref": "humaniq@0.1.0|picomatch@4.0.5",
+      "version": "4.0.7",
+      "bom-ref": "humaniq@0.1.0|picomatch@4.0.7",
       "licenses": [
         {
           "license": {
@@ -23988,15 +24192,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/picomatch@4.0.5",
+      "purl": "pkg:npm/picomatch@4.0.7",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.5.tgz",
+          "url": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.7.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "46fc3072bb8d8c8d67713e7145a91ec92f4b7fc95c22dbf7e0a0fe6a27fe547f6476e0327d8062a46875db6ef8c6d7a720f675d7dfd1f4175305af200304a1d0"
+              "content": "a9c26ef3c436216a89b030f9dbd24a31dc069bf76f2275b81ef427470887f49b62849bf318eb1c0ed1c4df1d6904a794393cac43c91598b9c9da426eef285c18"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -29549,8 +29753,8 @@
     {
       "type": "library",
       "name": "unplugin",
-      "version": "3.3.0",
-      "bom-ref": "humaniq@0.1.0|unplugin@3.3.0",
+      "version": "3.4.0",
+      "bom-ref": "humaniq@0.1.0|unplugin@3.4.0",
       "licenses": [
         {
           "license": {
@@ -29558,15 +29762,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/unplugin@3.3.0",
+      "purl": "pkg:npm/unplugin@3.4.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/unplugin/-/unplugin-3.3.0.tgz",
+          "url": "https://registry.npmjs.org/unplugin/-/unplugin-3.4.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "a9aeba2be72b6dfc84e892b5d068ef6c9791aceb2e0bf2696e71dcb5fca9fe2e28053c563b325f459c8388e9353ed12b30546ef0986c53fc0fbce7413567b946"
+              "content": "f6c91d205942b0f74557bc147d9c4db05227956fbb9c9986bb68244eed0e521179e9a5c6b0769bf71e76fd085d278942ed90cf593c5b882e0036a565b2e696df"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -30192,8 +30396,8 @@
     {
       "type": "library",
       "name": "vue-router",
-      "version": "5.3.1",
-      "bom-ref": "humaniq@0.1.0|vue-router@5.3.1",
+      "version": "5.4.0",
+      "bom-ref": "humaniq@0.1.0|vue-router@5.4.0",
       "licenses": [
         {
           "license": {
@@ -30201,15 +30405,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/vue-router@5.3.1",
+      "purl": "pkg:npm/vue-router@5.4.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/vue-router/-/vue-router-5.3.1.tgz",
+          "url": "https://registry.npmjs.org/vue-router/-/vue-router-5.4.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "183059ce09882f103f9059e415b263419759d9041b9e09c830cba851c8e16487c7d5118c68f8cfc17e404a7577f2a6a6b80f6e84ed110e34811d30cd1b6b97c9"
+              "content": "a45bdc61cc629c31e365495fec0cc506b4fcafc5eabefe2e307a099e373e12a3dac1742f1d3905f12e2d7d29902e9ae25475067e468a948ec4b742918d331377"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -30219,6 +30423,74 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/vue-router"
+        }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "confbox",
+          "version": "0.3.1",
+          "bom-ref": "humaniq@0.1.0|vue-router@5.4.0|confbox@0.3.1",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/confbox@0.3.1",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/confbox/-/confbox-0.3.1.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "70a512a0a6bc6311596529ab6958bba2738dc776a6bbbee780ade41a9b181c31fb76b3f009191013545830f94b46b32d9dc8918f6ef85cd471707c672a60d29c"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/vue-router/node_modules/confbox"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "magic-string",
+          "version": "1.4.3",
+          "bom-ref": "humaniq@0.1.0|vue-router@5.4.0|magic-string@1.4.3",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/magic-string@1.4.3",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/magic-string/-/magic-string-1.4.3.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "cf5d8ec6668f184d05e3196919d8ee0147248a92e94254c0b809b21a13680fb383a58533bc37efb7151b8ccfe3c339f23f5efca23bbf2837728b6db4c0d27445"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/vue-router/node_modules/magic-string"
+            }
+          ]
         }
       ]
     },
