@@ -45,7 +45,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Repair;
 
 use OCA\Humaniq\Kernel\Contracts\LoonrunFlowRepairServiceInterface;
-use OCA\Humaniq\Service\ShippedFlowPublisher;
+use OCA\Humaniq\Kernel\Contracts\ShippedFlowPublisherInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -61,16 +61,16 @@ class RepublishLoonrunFlow implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param LoonrunFlowRepairServiceInterface $repairService The repair itself.
-	 * @param LoggerInterface                   $logger        The logger.
-	 * @param ShippedFlowPublisher|null         $publisher     Publishes the other shipped flows; skipped when null.
+	 * @param LoonrunFlowRepairServiceInterface  $repairService The repair itself.
+	 * @param LoggerInterface                    $logger        The logger.
+	 * @param ShippedFlowPublisherInterface|null $publisher     Publishes the other shipped flows; skipped when null.
 	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function __construct(
 		private readonly LoonrunFlowRepairServiceInterface $repairService,
 		private readonly LoggerInterface $logger,
-		private readonly ?ShippedFlowPublisher $publisher=null,
+		private readonly ?ShippedFlowPublisherInterface $publisher=null,
 	) {
 
 	}//end __construct()

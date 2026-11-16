@@ -42,10 +42,10 @@ namespace OCA\Humaniq\Controller;
 
 use InvalidArgumentException;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\AnalyticsServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\ObligationsServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\SeriesLatestInterface;
 use OCA\Humaniq\Service\AnalyticsAccess;
-use OCA\Humaniq\Service\AnalyticsService;
-use OCA\Humaniq\Service\SeriesLatest;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -64,7 +64,7 @@ class AnalyticsController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param AnalyticsService $analyticsService The trends aggregation service.
+	 * @param AnalyticsServiceInterface $analyticsService The trends aggregation service.
 	 * @param ObligationsServiceInterface $obligationsService The cross-schema obligations merge service.
 	 * @param AnalyticsAccess $access Resolves the caller's active administration, role and managed units.
 	 * @param IUserSession $userSession The current user session (acting userId).
@@ -74,10 +74,10 @@ class AnalyticsController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly AnalyticsService $analyticsService,
+		private readonly AnalyticsServiceInterface $analyticsService,
 		private readonly ObligationsServiceInterface $obligationsService,
 		private readonly AnalyticsAccess $access,
-		private readonly SeriesLatest $seriesLatest,
+		private readonly SeriesLatestInterface $seriesLatest,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
@@ -125,7 +125,7 @@ class AnalyticsController extends Controller {
 	 */
 	private function trendsWithin(array $access, string $orgUnitId): JSONResponse {
 		$metric = (string)$this->request->getParam('metric', '');
-		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
+		$period = (string)$this->request->getParam('period', AnalyticsServiceInterface::DEFAULT_PERIOD);
 
 		try {
 			$trends = $this->analyticsService->getTrends(

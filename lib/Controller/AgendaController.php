@@ -38,9 +38,9 @@ use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Kernel\Contracts\AgendaComposerInterface;
 use OCA\Humaniq\Kernel\Contracts\AgendaReadAccessInterface;
 use OCA\Humaniq\Kernel\Contracts\AvailabilityServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\ForwardCapacityServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\WorkingCalendarReaderInterface;
 use OCA\Humaniq\Service\AgendaSubject;
-use OCA\Humaniq\Service\ForwardCapacityService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -83,7 +83,7 @@ class AgendaController extends Controller {
 	 * @param HoursRegisterGateway $gateway The shared register plumbing.
 	 * @param AgendaComposerInterface $agenda Composes the agenda on read.
 	 * @param AvailabilityServiceInterface $availability Answers free hours per employee.
-	 * @param ForwardCapacityService $capacity Reads planned against contracted.
+	 * @param ForwardCapacityServiceInterface $capacity Reads planned against contracted.
 	 * @param AgendaReadAccessInterface $access Who may read which agenda, and the members of a unit.
 	 * @param WorkingCalendarReaderInterface $workingCalendar openregister's working calendar, read and never owned.
 	 */
@@ -92,7 +92,7 @@ class AgendaController extends Controller {
 		private readonly HoursRegisterGateway $gateway,
 		private readonly AgendaComposerInterface $agenda,
 		private readonly AvailabilityServiceInterface $availability,
-		private readonly ForwardCapacityService $capacity,
+		private readonly ForwardCapacityServiceInterface $capacity,
 		private readonly AgendaReadAccessInterface $access,
 		private readonly WorkingCalendarReaderInterface $workingCalendar,
 	) {

@@ -38,8 +38,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Lifecycle;
 
+use OCA\Humaniq\Kernel\Contracts\RightToWorkServiceInterface;
 use OCA\Humaniq\Service\RecordStoreInterface;
-use OCA\Humaniq\Service\RightToWorkService;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 
@@ -54,11 +54,11 @@ final class RightToWorkGuard implements LifecycleGuardInterface {
 	 * Constructor.
 	 *
 	 * @param RecordStoreInterface $gateway Register reads, past RBAC: the guard must see every check.
-	 * @param RightToWorkService $rule The stated rule, re-applied to the stored facts.
+	 * @param RightToWorkServiceInterface $rule The stated rule, re-applied to the stored facts.
 	 */
 	public function __construct(
 		private readonly RecordStoreInterface $gateway,
-		private readonly RightToWorkService $rule,
+		private readonly RightToWorkServiceInterface $rule,
 	) {
 
 	}//end __construct()
@@ -94,12 +94,12 @@ final class RightToWorkGuard implements LifecycleGuardInterface {
 			return GuardResult::deny(sprintf('De right-to-work-controle moet op of voor de startdatum (%s) zijn gedaan.', $startDate));
 		}
 
-		if (($latest['result'] ?? '') !== RightToWorkService::RESULT_PASS) {
+		if (($latest['result'] ?? '') !== RightToWorkServiceInterface::RESULT_PASS) {
 			return GuardResult::deny('De laatste right-to-work-controle is mislukt: ' . (string)($latest['reason'] ?? '') . ' Alleen een nieuwe controle met nieuw bewijs heft dit op.');
 		}
 
 		$again = $this->rule->decide(array_merge($latest, ['startDate' => $startDate, 'mrz' => null]));
-		if ($again['result'] !== RightToWorkService::RESULT_PASS) {
+		if ($again['result'] !== RightToWorkServiceInterface::RESULT_PASS) {
 			return GuardResult::deny('De right-to-work-controle staat als geslaagd, maar de gegevens voldoen niet aan de regel: ' . (string)$again['reason']);
 		}
 

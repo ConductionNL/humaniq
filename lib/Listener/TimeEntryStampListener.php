@@ -56,9 +56,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Kernel\Contracts\TimeEntryHoursDeriverInterface;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
-use OCA\Humaniq\Service\TimeEntryHoursDeriver;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IUserSession;
@@ -106,7 +106,7 @@ class TimeEntryStampListener implements IEventListener {
 	 * @param IUserSession $userSession The user session (acting uid for self-service resolution).
 	 * @param InternalWriteMarker $marker The request-scoped internal-writer marker.
 	 * @param LoggerInterface $logger The logger.
-	 * @param TimeEntryHoursDeriver $hoursDeriver Decides the booking's day and hours,
+	 * @param TimeEntryHoursDeriverInterface $hoursDeriver Decides the booking's day and hours,
 	 *  in either recorded shape.
 	 */
 	public function __construct(
@@ -114,7 +114,7 @@ class TimeEntryStampListener implements IEventListener {
 		private readonly IUserSession $userSession,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,
-		private readonly TimeEntryHoursDeriver $hoursDeriver,
+		private readonly TimeEntryHoursDeriverInterface $hoursDeriver,
 	) {
 
 	}//end __construct()
@@ -313,9 +313,9 @@ class TimeEntryStampListener implements IEventListener {
 	private function originFor(array $incoming, ?array $stored): string {
 		$origin = trim((string)($incoming['origin'] ?? ''));
 
-		if ($origin === TimeEntryHoursDeriver::ORIGIN_TIMER) {
+		if ($origin === TimeEntryHoursDeriverInterface::ORIGIN_TIMER) {
 			return $this->hoursDeriver->isRunningTimerWrite(incoming: $incoming, stored: $stored) === true
-				? TimeEntryHoursDeriver::ORIGIN_TIMER
+				? TimeEntryHoursDeriverInterface::ORIGIN_TIMER
 				: 'manual';
 		}
 

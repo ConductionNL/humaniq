@@ -40,6 +40,7 @@ use OCA\Humaniq\Controller\AgendaController;
 use OCA\Humaniq\Kernel\Contracts\AgendaComposerInterface;
 use OCA\Humaniq\Kernel\Contracts\AgendaReadAccessInterface;
 use OCA\Humaniq\Kernel\Contracts\AvailabilityServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\ForwardCapacityServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\WorkingCalendarReaderInterface;
 use OCA\Humaniq\Service\AgendaComposer;
 use OCA\Humaniq\Service\AgendaReadAccess;
@@ -241,6 +242,7 @@ class AgendaReadAccessTest extends TestCase {
 		$factories[AgendaComposerInterface::class] = $factories[AgendaComposer::class];
 		$factories[AvailabilityServiceInterface::class] = $factories[AvailabilityService::class];
 		$factories[WorkingCalendarReaderInterface::class] = $factories[WorkingCalendarReader::class];
+		$factories[ForwardCapacityServiceInterface::class] = $factories[ForwardCapacityService::class];
 		$factories[AgendaReadAccess::class] = fn (): object => $this->build(AgendaReadAccess::class, $factories);
 		$factories[AgendaReadAccessInterface::class] = $factories[AgendaReadAccess::class];
 

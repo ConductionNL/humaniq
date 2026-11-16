@@ -42,6 +42,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\ShippedFlowPublisherInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -51,7 +52,7 @@ use Throwable;
  *
  * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
  */
-class ShippedFlowPublisher {
+class ShippedFlowPublisher implements ShippedFlowPublisherInterface {
 
 	/**
 	 * The app the shipped flows belong to.

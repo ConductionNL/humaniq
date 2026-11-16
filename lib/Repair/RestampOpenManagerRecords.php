@@ -30,7 +30,7 @@ namespace OCA\Humaniq\Repair;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Kernel\Contracts\ManagerStampRepairInterface;
-use OCA\Humaniq\Service\OpenRegisterAvailability;
+use OCA\Humaniq\Kernel\Contracts\OpenRegisterAvailabilityInterface;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -54,7 +54,7 @@ class RestampOpenManagerRecords implements IRepairStep {
 	 * Constructor.
 	 *
 	 * @param ManagerStampRepairInterface $repair The restamp pass.
-	 * @param OpenRegisterAvailability $openRegister Availability check.
+	 * @param OpenRegisterAvailabilityInterface $openRegister Availability check.
 	 * @param LoggerInterface $logger The logger.
 	 * @param IAppConfig $appConfig Holds the done marker.
 	 *
@@ -62,7 +62,7 @@ class RestampOpenManagerRecords implements IRepairStep {
 	 */
 	public function __construct(
 		private readonly ManagerStampRepairInterface $repair,
-		private readonly OpenRegisterAvailability $openRegister,
+		private readonly OpenRegisterAvailabilityInterface $openRegister,
 		private readonly LoggerInterface $logger,
 		private readonly IAppConfig $appConfig,
 	) {

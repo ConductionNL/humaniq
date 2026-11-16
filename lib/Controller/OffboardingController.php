@@ -28,9 +28,9 @@ namespace OCA\Humaniq\Controller;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Kernel\Contracts\AccessRevocationServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\ExitInterviewServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\TransitionPaymentServiceInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RbacObjectReader;
-use OCA\Humaniq\Service\TransitionPaymentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,20 +48,20 @@ class OffboardingController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                         $request     The request.
-	 * @param RbacObjectReader                 $rbac        Reads the case under the caller's rights.
-	 * @param HumaniqRoles                     $roles       Who is HR or payroll.
-	 * @param AccessRevocationServiceInterface $revocation  Disables the account.
-	 * @param TransitionPaymentService         $payments    Calculates the payment.
-	 * @param ExitInterviewServiceInterface    $interviews  Counts the reasons.
-	 * @param IUserSession                     $userSession The caller.
+	 * @param IRequest                          $request     The request.
+	 * @param RbacObjectReader                  $rbac        Reads the case under the caller's rights.
+	 * @param HumaniqRoles                      $roles       Who is HR or payroll.
+	 * @param AccessRevocationServiceInterface  $revocation  Disables the account.
+	 * @param TransitionPaymentServiceInterface $payments    Calculates the payment.
+	 * @param ExitInterviewServiceInterface     $interviews  Counts the reasons.
+	 * @param IUserSession                      $userSession The caller.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly RbacObjectReader $rbac,
 		private readonly HumaniqRoles $roles,
 		private readonly AccessRevocationServiceInterface $revocation,
-		private readonly TransitionPaymentService $payments,
+		private readonly TransitionPaymentServiceInterface $payments,
 		private readonly ExitInterviewServiceInterface $interviews,
 		private readonly IUserSession $userSession,
 	) {

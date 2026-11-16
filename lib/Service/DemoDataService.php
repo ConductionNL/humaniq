@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\DemoDataServiceInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,7 +41,7 @@ use RuntimeException;
  *
  * @spec exclude Demo-data import; ADR-111 rule 1, no per-app behavioural spec.
  */
-class DemoDataService {
+class DemoDataService implements DemoDataServiceInterface {
 	/**
 	 * App-relative path to the generated mock descriptor.
 	 *
@@ -59,26 +60,6 @@ class DemoDataService {
 	 * @var string
 	 */
 	private const CONFIG_APP_ID = Application::APP_ID . '.demo';
-
-	/**
-	 * The answer that declines, and it is an ANSWER rather than an absence.
-	 *
-	 * `CnAppRoot` reopens the wizard while any step is outstanding, so an
-	 * operator with no way to say "no" is shown the wizard over every page
-	 * until they import data they did not want. Declining has to be
-	 * recordable, which means it has to be one of the offered ids.
-	 *
-	 * @var string
-	 */
-	public const NONE_DATASET = 'none';
-
-	/**
-	 * The shipped dataset's id.
-	 *
-	 * @var string
-	 */
-	public const DEMO_DATASET = 'humaniq-demo';
-
 
 	/**
 	 * Constructor.

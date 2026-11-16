@@ -33,8 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Kernel\Contracts\RightToWorkRecorderInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
-use OCA\Humaniq\Service\RightToWorkRecorder;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IUserSession;
@@ -49,18 +49,18 @@ use Psr\Log\LoggerInterface;
  */
 class RightToWorkCheckListener implements IEventListener {
 
-	public const CHECK_SLUG = RightToWorkRecorder::CHECK_SLUG;
+	public const CHECK_SLUG = RightToWorkRecorderInterface::CHECK_SLUG;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param RightToWorkRecorder $recorder The schema test, the HR check, the stamp and the follow-up.
+	 * @param RightToWorkRecorderInterface $recorder The schema test, the HR check, the stamp and the follow-up.
 	 * @param IUserSession $userSession The caller.
 	 * @param InternalWriteMarker $marker humaniq's own writes are not re-decided.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly RightToWorkRecorder $recorder,
+		private readonly RightToWorkRecorderInterface $recorder,
 		private readonly IUserSession $userSession,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,

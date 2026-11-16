@@ -35,11 +35,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\RouteDistanceServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\WpmReportServiceInterface;
 use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\RbacObjectReader;
-use OCA\Humaniq\Service\RouteDistanceService;
 use OCA\Humaniq\Service\RouteDistanceUnavailableException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -59,18 +59,18 @@ class TravelController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                  $request               The request.
-	 * @param RouteDistanceService      $routes                Asks integriq for a distance.
-	 * @param WpmReportServiceInterface $reports               Compiles the mobility figures.
-	 * @param RecordStoreInterface      $gateway               Saves the arrangement.
-	 * @param RbacObjectReader          $rbac                  Reads under the caller's own RBAC.
-	 * @param AdministrationService     $administrationService The caller's administration and role.
-	 * @param IGroupManager             $groupManager          The admin check.
-	 * @param IUserSession              $userSession           The caller.
+	 * @param IRequest                      $request               The request.
+	 * @param RouteDistanceServiceInterface $routes                Asks integriq for a distance.
+	 * @param WpmReportServiceInterface     $reports               Compiles the mobility figures.
+	 * @param RecordStoreInterface          $gateway               Saves the arrangement.
+	 * @param RbacObjectReader              $rbac                  Reads under the caller's own RBAC.
+	 * @param AdministrationService         $administrationService The caller's administration and role.
+	 * @param IGroupManager                 $groupManager          The admin check.
+	 * @param IUserSession                  $userSession           The caller.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly RouteDistanceService $routes,
+		private readonly RouteDistanceServiceInterface $routes,
 		private readonly WpmReportServiceInterface $reports,
 		private readonly RecordStoreInterface $gateway,
 		private readonly RbacObjectReader $rbac,

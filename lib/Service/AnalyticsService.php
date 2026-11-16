@@ -50,6 +50,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
+use OCA\Humaniq\Kernel\Contracts\AnalyticsServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\KeepsReadableRows;
@@ -60,7 +61,7 @@ use OCA\Humaniq\Support\ResolvesObjectServiceWithReload;
  *
  * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
  */
-class AnalyticsService {
+class AnalyticsService implements AnalyticsServiceInterface {
 
 	use KeepsReadableRows;
 	use ResolvesObjectServiceWithReload;
@@ -93,13 +94,6 @@ class AnalyticsService {
 		'billable-ratio' => ['Timesheet'],
 		'headcount' => ['Employee'],
 	];
-
-	/**
-	 * Default period window when the caller supplies none.
-	 *
-	 * @var string
-	 */
-	public const DEFAULT_PERIOD = 'year';
 
 	/**
 	 * `PayrollRun.status` values whose totals are finalised and therefore
