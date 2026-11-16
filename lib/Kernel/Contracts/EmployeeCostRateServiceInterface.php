@@ -59,6 +59,8 @@ interface EmployeeCostRateServiceInterface {
 	 * @throws \InvalidArgumentException When an override amount is set without a reason, an addition
 	 *                                  carries no basis, or an overtime addition is applied to an
 	 *                                  overtime-blended base.
+	 *
+	 * @spec exclude Structural contract, no functional requirement.
 	 */
 	public function resolve(
 		array $employee,

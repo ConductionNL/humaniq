@@ -120,6 +120,8 @@ final class ContractBindings {
 	 * @param IRegistrationContext $context The registration context.
 	 *
 	 * @return void
+	 *
+	 * @spec exclude Composition root wiring, no functional requirement.
 	 */
 	public function register(IRegistrationContext $context): void {
 		$context->registerServiceAlias(AccessRevocationServiceInterface::class, AccessRevocationService::class);
