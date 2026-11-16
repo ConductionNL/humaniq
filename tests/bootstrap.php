@@ -163,6 +163,13 @@ if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') ==
 	require __DIR__ . '/stubs/OpenRegisterLifecycleStub.php';
 }
 
+// AvgDsrService builds openregister's SubjectQuery and ErasureRequest for the
+// guarded DataSubjectRequestService (avg-dsr, REQ-DSR-003/005). The stub
+// declares those value objects so the calls load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Service\\Gdpr\\SubjectQuery') === false) {
+	require __DIR__ . '/stubs/OpenRegisterGdprRequestStub.php';
+}
+
 // The transition guard and its context (lifecycle-guards-see-the-stored-object):
 // a guard that judges the stored object. The context carries an ObjectEntity.
 if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleTransitionGuardInterface') === false) {
