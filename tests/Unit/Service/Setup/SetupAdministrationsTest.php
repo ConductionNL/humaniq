@@ -291,4 +291,65 @@ class SetupAdministrationsTest extends TestCase {
 		$this->assertSame('skipped', $this->config['administrations_decided']);
 		$this->assertSame([], $this->objects->rows['hrAdministration']);
 	}//end testSkippingIsRecordedAndCreatesNothing()
+
+	/**
+	 * Stored ids that are not a list write nothing; within a list only non-empty strings are patched.
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheStoredStringIdsAreGivenTheMode(): void {
+		$this->config['setup_administration_object_ids'] = '"obj-1-hrAdministration"';
+		$this->assertSame(0, $this->service()->applyMode('standard'));
+		$this->assertSame([], $this->objects->patches);
+
+		$this->config['setup_administration_object_ids'] = '["obj-7", "", 12, null, "obj-9"]';
+		$this->assertSame(2, $this->service()->applyMode('standard'));
+		$this->assertSame([['obj-7', ['mode' => 'standard']], ['obj-9', ['mode' => 'standard']]], $this->objects->patches);
+	}//end testOnlyTheStoredStringIdsAreGivenTheMode()
+
+
+	/**
+	 * An administration stored as an entity is read through jsonSerialize and reused; a row that is no object is skipped.
+	 *
+	 * @return void
+	 */
+	public function testAnEntityAdministrationIsReusedAndAJunkRowIsSkipped(): void {
+		$entity = new class implements \JsonSerializable {
+
+			/**
+			 * @return array<string,mixed>
+			 */
+			public function jsonSerialize(): array {
+				return ['administrationId' => 'ADM-123456789L01', 'loonheffingennummer' => '123456789L01', '@self' => ['id' => 'entity-1']];
+			}
+		};
+		$this->objects->rows['hrAdministration'] = ['junk', $entity];
+
+		$keys = $this->service()->create([self::two()[0]], 'admin');
+
+		$this->assertSame(['ADM-123456789L01'], $keys);
+		$this->assertCount(2, $this->objects->rows['hrAdministration']);
+		$this->assertSame(['entity-1'], json_decode($this->config['setup_administration_object_ids'], true));
+		$this->assertSame(['admin' => 'ADM-123456789L01'], $this->active);
+	}//end testAnEntityAdministrationIsReusedAndAJunkRowIsSkipped()
+
+
+	/**
+	 * Without OpenRegister the step refuses with the reason and records no decision.
+	 *
+	 * @return void
+	 */
+	public function testWithoutOpenRegisterTheStepRefuses(): void {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->never())->method('get');
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('isOpenRegisterAvailable')->willReturn(false);
+		$config = $this->createMock(IAppConfig::class);
+		$config->expects($this->never())->method('setValueString');
+		$service = new SetupAdministrations($container, $settings, $this->createMock(AdministrationService::class), $config);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('humaniq requires the OpenRegister app, which is not installed on this instance.');
+		$service->create(self::two(), 'admin');
+	}//end testWithoutOpenRegisterTheStepRefuses()
 }//end class
