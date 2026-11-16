@@ -6093,8 +6093,8 @@
       "type": "library",
       "name": "vue",
       "group": "@nextcloud",
-      "version": "9.11.0",
-      "bom-ref": "humaniq@0.1.0|@nextcloud/vue@9.11.0",
+      "version": "9.13.1",
+      "bom-ref": "humaniq@0.1.0|@nextcloud/vue@9.13.1",
       "licenses": [
         {
           "license": {
@@ -6102,15 +6102,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40nextcloud/vue@9.11.0",
+      "purl": "pkg:npm/%40nextcloud/vue@9.13.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@nextcloud/vue/-/vue-9.11.0.tgz",
+          "url": "https://registry.npmjs.org/@nextcloud/vue/-/vue-9.13.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "2d1b3253d331b346f6c56a9bc72829b3c3bbfe2d73e1084d403f7f4039e2f95a8563757437de6602098a266eaf7e816ec5300c5c4469f5b8ea167dd4579e3683"
+              "content": "e997879be7281c9eb0b1abee965978095977b64e5e86387ba7aa56f465350607c390eb1bc793efe14f3fb9593bc8e4e7e28028ebde574c7845375ee9c88d6979"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
