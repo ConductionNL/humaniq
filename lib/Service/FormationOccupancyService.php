@@ -35,14 +35,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
-use OCA\Humaniq\Kernel\Contracts\FormationOccupancyServiceInterface;
 
 /**
  * Computes formation occupancy from records handed in.
  *
  * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-002
  */
-class FormationOccupancyService implements FormationOccupancyServiceInterface {
+class FormationOccupancyService {
 
 	/**
 	 * @param AbsenceProgression $progression Date parsing and sickness progression steps.

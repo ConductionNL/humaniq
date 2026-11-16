@@ -48,7 +48,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
-use OCA\Humaniq\Kernel\Contracts\RetroAdjustmentServiceInterface;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\PayPeriod;
 use OCA\Humaniq\Payroll\CalculationInput;
@@ -69,7 +68,7 @@ use OCA\Humaniq\Support\ReadsEmployeeKeys;
  *
  * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-001
  */
-class RetroAdjustmentService implements RetroAdjustmentServiceInterface {
+class RetroAdjustmentService {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;

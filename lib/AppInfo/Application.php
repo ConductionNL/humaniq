@@ -33,7 +33,6 @@ use OCA\Humaniq\Command\RulesSeedTestDataCommand;
 use OCA\Humaniq\Kernel\Contracts\AnnouncementServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\HrLifecycleEventServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\ManagerDeputiesInterface;
-use OCA\Humaniq\Kernel\Contracts\SideActivityRegisterInterface;
 use OCA\Humaniq\Kernel\Contracts\TimeEntryEventServiceInterface;
 use OCA\Humaniq\Lifecycle\ChangeApproverRoleGuard;
 use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
@@ -101,6 +100,7 @@ use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\ContractBindings;
+use OCA\Humaniq\Service\SideActivityRegister;
 use OCA\Humaniq\Service\TaxTableSetService;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\JurisdictionPackService;
@@ -172,7 +172,7 @@ class Application extends App implements IBootstrap {
 		// The event is named by string, so humaniq installs without Hermiq.
 		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);
 		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Kernel\Contracts\RuleAuditServiceInterface::class)));
-		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Kernel\Contracts\RuleTestDataSeederInterface::class)));
+		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
 		(new ContractBindings())->register(context: $context);
 		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 		$context->registerServiceAlias(\OCA\Humaniq\Service\OrgLookupInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
@@ -495,7 +495,7 @@ class Application extends App implements IBootstrap {
 		// missing consumer never fails the approval write (REQ-TEC-002).
 		//
 		// That Timesheet-schema filter is now also declared at REGISTRATION
-		// time (TimeEntryEventServiceInterface::TIMESHEET_SLUG, shipped by humaniq's own
+		// time (TimeEntryEventService::TIMESHEET_SLUG, shipped by humaniq's own
 		// register fragment lib/Settings/register.d/hr-timesheet.json as slug
 		// `Timesheet`), so an unrelated app's object update no longer
 		// constructs the listener — nor performs the SchemaMapper lookup
@@ -812,7 +812,7 @@ class Application extends App implements IBootstrap {
 				event: $event,
 				listener: SideActivityListener::class,
 				registers: null,
-				schemas: [SideActivityRegisterInterface::ACTIVITY_SLUG]
+				schemas: [SideActivityRegister::ACTIVITY_SLUG]
 			);
 		}
 
@@ -821,7 +821,7 @@ class Application extends App implements IBootstrap {
 			event: ObjectUpdatingEvent::class,
 			listener: SideActivityListener::class,
 			registers: null,
-			schemas: [SideActivityRegisterInterface::EMPLOYEE_SLUG]
+			schemas: [SideActivityRegister::EMPLOYEE_SLUG]
 		);
 
 	}//end registerSideActivityListeners()

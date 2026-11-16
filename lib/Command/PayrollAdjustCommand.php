@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Kernel\Contracts\RetroAdjustmentServiceInterface;
+use OCA\Humaniq\Service\RetroAdjustmentService;
 use OCA\Humaniq\Service\RetroCorrection;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -56,10 +56,10 @@ class PayrollAdjustCommand extends Command {
 	];
 
 	/**
-	 * @param RetroAdjustmentServiceInterface $service The delta-computation + settlement service.
+	 * @param RetroAdjustmentService $service The delta-computation + settlement service.
 	 */
 	public function __construct(
-		private readonly RetroAdjustmentServiceInterface $service,
+		private readonly RetroAdjustmentService $service,
 	) {
 		parent::__construct();
 
