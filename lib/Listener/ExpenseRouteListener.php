@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\ExpenseSettings;
+use OCA\Humaniq\Kernel\Contracts\ExpenseSettingsInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
@@ -53,13 +53,13 @@ class ExpenseRouteListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ExpenseSettings     $settings The employer's default route.
-	 * @param InternalWriteMarker $marker   Marks humaniq's own writes.
+	 * @param ExpenseSettingsInterface $settings The employer's default route.
+	 * @param InternalWriteMarker      $marker   Marks humaniq's own writes.
 	 *
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
 	 */
 	public function __construct(
-		private readonly ExpenseSettings $settings,
+		private readonly ExpenseSettingsInterface $settings,
 		private readonly InternalWriteMarker $marker,
 	) {
 	}//end __construct()

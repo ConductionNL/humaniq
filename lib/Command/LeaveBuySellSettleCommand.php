@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\LeaveBuySellSettlementService;
+use OCA\Humaniq\Kernel\Contracts\LeaveBuySellSettlementServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -41,10 +41,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class LeaveBuySellSettleCommand extends Command {
 
 	/**
-	 * @param LeaveBuySellSettlementService $service The settlement service.
+	 * @param LeaveBuySellSettlementServiceInterface $service The settlement service.
 	 */
 	public function __construct(
-		private readonly LeaveBuySellSettlementService $service,
+		private readonly LeaveBuySellSettlementServiceInterface $service,
 	) {
 		parent::__construct();
 

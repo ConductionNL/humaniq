@@ -23,6 +23,9 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // allowed-expense-categories: which categories employees may claim (read: signed-in users, save: admin).
         ['name' => 'expenseCategory#index', 'url' => '/api/expense-categories', 'verb' => 'GET'],
         ['name' => 'expenseCategory#update', 'url' => '/api/expense-categories', 'verb' => 'PUT'],
+        // sign-in-and-hosting-are-the-platforms: the Inloggen admin section reads and saves Nextcloud's own sign-in settings (admin only).
+        ['name' => 'signInSettings#show', 'url' => '/api/settings/sign-in', 'verb' => 'GET'],
+        ['name' => 'signInSettings#update', 'url' => '/api/settings/sign-in', 'verb' => 'PUT'],
         ['name' => 'page#index',    'url' => '/',             'verb' => 'GET'],
         // ADR-024 §4 — manifest endpoint (bundled blob).
         ['name' => 'page#manifest', 'url' => '/api/manifest', 'verb' => 'GET'],
@@ -97,6 +100,9 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // people-flex-contract-rules: the fixed-term chain of a contract, and the on-call average hours (HR).
         ['name' => 'flexContract#onCallAverages', 'url' => '/api/contracts/on-call-averages', 'verb' => 'GET'],
         ['name' => 'flexContract#chain', 'url' => '/api/contracts/{id}/chain', 'verb' => 'GET'],
+        // education-staff-deployment-and-count D3: every teacher's deployment plan for one school and school year.
+        ['name' => 'deployment#orgUnit', 'url' => '/api/deployment/org-units/{id}', 'verb' => 'GET'],
+        ['name' => 'deployment#iptoExport', 'url' => '/api/deployment/ipto-export', 'verb' => 'POST'],
         // people-org-chart-view: the organisation chart of the caller's administration on a date.
         ['name' => 'orgChart#chart', 'url' => '/api/org/chart', 'verb' => 'GET'],
         ['name' => 'dossier#incomplete', 'url' => '/api/dossier/incomplete', 'verb' => 'GET'],
@@ -220,6 +226,8 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'timeEntry#summary',    'url' => '/api/time-entries/summary',     'verb' => 'GET'],
         // hours-per-person-week: the week's hours on one object, per person, as far as the caller may see them.
         ['name' => 'objectHours#week',     'url' => '/api/time-entries/week',        'verb' => 'GET'],
+        // time-non-project-activities D2/D3: one timesheet's week view (booked entries, leave and sickness lines, totals per kind), for a caller who may read that timesheet.
+        ['name' => 'timesheetWeek#week',   'url' => '/api/timesheets/week',          'verb' => 'GET'],
         ['name' => 'timeEntry#timer',      'url' => '/api/time-entries/timer',       'verb' => 'GET'],
         ['name' => 'timeEntry#startTimer', 'url' => '/api/time-entries/timer/start', 'verb' => 'POST'],
         ['name' => 'timeEntry#stopTimer',  'url' => '/api/time-entries/timer/stop',  'verb' => 'POST'],
@@ -228,6 +236,10 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'survey#respond', 'url' => '/api/surveys/{id}/responses', 'verb' => 'POST'],
         ['name' => 'survey#results', 'url' => '/api/surveys/results', 'verb' => 'GET'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
+        // self-service-mobile (design.md D1): the web manifest and service worker of the
+        // installable Mijn HR. Public static assets, declared before the catch-all.
+        ['name' => 'pwa#manifest',      'url' => '/manifest.webmanifest', 'verb' => 'GET'],
+        ['name' => 'pwa#serviceWorker', 'url' => '/service-worker.js',    'verb' => 'GET'],
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],
 ]);

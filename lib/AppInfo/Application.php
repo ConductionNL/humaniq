@@ -30,6 +30,10 @@ namespace OCA\Humaniq\AppInfo;
 
 use OCA\Humaniq\Command\RulesAuditCommand;
 use OCA\Humaniq\Command\RulesSeedTestDataCommand;
+use OCA\Humaniq\Kernel\Contracts\AnnouncementServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\HrLifecycleEventServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\ManagerDeputiesInterface;
+use OCA\Humaniq\Kernel\Contracts\TimeEntryEventServiceInterface;
 use OCA\Humaniq\Lifecycle\ChangeApproverRoleGuard;
 use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
@@ -38,6 +42,7 @@ use OCA\Humaniq\Lifecycle\HandoffReleaseGuard;
 use OCA\Humaniq\Lifecycle\HrReopenGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Humaniq\Lifecycle\LoonaangifteMessageGuard;
+use OCA\Humaniq\Lifecycle\LeaveApprovalStepGuard;
 use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
@@ -56,11 +61,13 @@ use OCA\Humaniq\Listener\FrequentAbsenceListener;
 use OCA\Humaniq\Listener\HandoffIntakeListener;
 use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
+use OCA\Humaniq\Listener\OfferHrAssistantListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
-use OCA\Humaniq\Listener\ManagerAccessListeners;
+use OCA\Humaniq\Listener\FilteredObjectSubscriptions;
 use OCA\Humaniq\Listener\ManagerDeputyListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
+use OCA\Humaniq\Listener\PayrollAdjustmentLineGuard;
 use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
 use OCA\Humaniq\Listener\RightToWorkCheckListener;
 use OCA\Humaniq\Listener\ScenarioMutationListener;
@@ -80,27 +87,26 @@ use OCA\Humaniq\Listener\RecurringAllowanceStampListener;
 use OCA\Humaniq\Listener\RelationsCaseListener;
 use OCA\Humaniq\Listener\AnnouncementConfirmationListener;
 use OCA\Humaniq\Middleware\ApiContractMiddleware;
-use OCA\Humaniq\Service\AnnouncementService;
 use OCA\Humaniq\Listener\SideActivityListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimeEstimateListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
 use OCA\Humaniq\Listener\TimesheetApprovalListener;
+use OCA\Humaniq\Listener\TimesheetEntryStateListener;
 use OCA\Humaniq\Listener\TimesheetProcessStampListener;
+use OCA\Humaniq\Listener\LeaveRequestProcessStampListener;
 use OCA\Humaniq\Listener\TrainingRecordListener;
 use OCA\Humaniq\Listener\TravelAmountListener;
 use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Service\ContractBindings;
+use OCA\Humaniq\Service\SideActivityRegister;
 use OCA\Humaniq\Service\TaxTableSetService;
-use OCA\Humaniq\Service\HrLifecycleEventService;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\JurisdictionPackService;
-use OCA\Humaniq\Service\ManagerDeputies;
 use OCA\Humaniq\Service\RosterCheckService;
-use OCA\Humaniq\Service\SideActivityRegister;
-use OCA\Humaniq\Service\TimeEntryEventService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -156,8 +162,20 @@ class Application extends App implements IBootstrap {
 		// problem details). Registered first: Nextcloud runs afterController in
 		// reverse order, so it sees the final response of every other middleware.
 		$context->registerMiddleware(class: ApiContractMiddleware::class);
-		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class)));
+
+		// self-service-mobile (design.md D1): link the web manifest from the
+		// head of humaniq's own pages, so a phone browser offers to install Mijn HR.
+		$context->registerEventListener(
+			\OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent::class,
+			\OCA\Humaniq\Listener\PwaHeadListener::class
+		);
+
+		// self-service-policy-assistant D2: offer Hermiq the HR-vraagbaak template.
+		// The event is named by string, so humaniq installs without Hermiq.
+		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);
+		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Kernel\Contracts\RuleAuditServiceInterface::class)));
 		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
+		(new ContractBindings())->register(context: $context);
 		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 		$context->registerServiceAlias(\OCA\Humaniq\Service\OrgLookupInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 
@@ -213,14 +231,12 @@ class Application extends App implements IBootstrap {
 		// condition. It loads the administered LeaveTypes, so it takes the shared
 		// register gateway; keyed by its FQCN so OpenRegister's
 		// LifecycleGuardRegistry resolves the `requires` tag on that transition.
-		$context->registerService(
-			LeaveTypeConditionGuard::class,
-			static function ($c): LeaveTypeConditionGuard {
-				return new LeaveTypeConditionGuard(
-					gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class)
-				);
-			}
-		);
+		$context->registerService(LeaveTypeConditionGuard::class, static fn ($c): LeaveTypeConditionGuard => new LeaveTypeConditionGuard(gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class)));
+
+		// leave-approval-steps-and-history D2: the guard on approve-manager,
+		// approve and reject of a LeaveRequest; keyed by its FQCN for the
+		// LifecycleGuardRegistry, like the guard above.
+		$context->registerService(LeaveApprovalStepGuard::class, static fn ($c): LeaveApprovalStepGuard => new LeaveApprovalStepGuard(gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class), groupManager: $c->get(\OCP\IGroupManager::class)));
 
 		// hours-process-redesign: the request-scoped internal-writer marker MUST
 		// be shared — the aggregation service / repair step set it and the
@@ -296,7 +312,7 @@ class Application extends App implements IBootstrap {
 			static function ($c): RightToWorkGuard {
 				return new RightToWorkGuard(
 					gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class),
-					rule: $c->get(\OCA\Humaniq\Service\RightToWorkService::class)
+					rule: $c->get(\OCA\Humaniq\Kernel\Contracts\RightToWorkServiceInterface::class)
 				);
 			}
 		);
@@ -494,7 +510,7 @@ class Application extends App implements IBootstrap {
 			event: ObjectUpdatedEvent::class,
 			listener: TimesheetApprovalListener::class,
 			registers: null,
-			schemas: [TimeEntryEventService::TIMESHEET_SLUG]
+			schemas: [TimeEntryEventServiceInterface::TIMESHEET_SLUG]
 		);
 
 		$this->registerHoursListeners($dispatcher);
@@ -513,7 +529,7 @@ class Application extends App implements IBootstrap {
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 		$this->registerApprovalsInboxListeners($dispatcher);
-		(new ManagerAccessListeners())->register(fn (array $on) => $this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $on['event'], listener: $on['listener'], registers: null, schemas: $on['schemas']));
+		(new FilteredObjectSubscriptions())->register(fn (array $on) => $this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $on['event'], listener: $on['listener'], registers: null, schemas: $on['schemas']));
 		$this->registerOvertimeCreditListener($dispatcher);
 		$this->registerExpensePayrollListeners($dispatcher);
 		$this->registerHrLifecycleEventListener($dispatcher);
@@ -567,6 +583,12 @@ class Application extends App implements IBootstrap {
 			);
 		}
 
+		// leave-approval-steps-and-history D1: pre-save stamping of who decided
+		// a leave request and when, with each step kept in `decisions`.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: LeaveRequestProcessStampListener::class, registers: null, schemas: [LeaveRequestProcessStampListener::LEAVE_REQUEST_SLUG]);
+		}
+
 		// hours-process-redesign Decision 3: post-save aggregate recompute of
 		// the parent Timesheet on every TimeEntry create/update/delete (both
 		// parents on a reparent). Reacts only to timeentry events and writes
@@ -580,6 +602,13 @@ class Application extends App implements IBootstrap {
 				schemas: [TimesheetAggregateListener::TIMEENTRY_SLUG]
 			);
 		}
+
+		// time-entry-approval-state D3: carry every Timesheet status edge
+		// (submit, approve, reject, reopen) down to its entries as
+		// approvalState/approvedAt. Edge-triggered and fire-and-forget; writes
+		// only TimeEntry objects under the internal-write marker, so neither
+		// the entry guard nor the aggregate recompute runs for them.
+		$this->registerFilteredObjectListener($dispatcher, ObjectUpdatedEvent::class, TimesheetEntryStateListener::class, null, [TimesheetEntryStateListener::TIMESHEET_SLUG]);
 
 		// working-hours-per-person REQ-WHP-001: refuse a WorkingPattern whose
 		// period overlaps one the same employee already has. Two patterns give
@@ -608,6 +637,18 @@ class Application extends App implements IBootstrap {
 				listener: ResourceBookingOverlapListener::class,
 				registers: null,
 				schemas: [ResourceBookingOverlapListener::RESOURCEBOOKING_SLUG]
+			);
+		}
+
+		// payroll-mutation-lineage D4: a retro correction may name the payslip
+		// line it corrects, and only a line of its own original payslip.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: PayrollAdjustmentLineGuard::class,
+				registers: null,
+				schemas: [PayrollAdjustmentLineGuard::PAYROLLADJUSTMENT_SLUG]
 			);
 		}
 
@@ -913,7 +954,7 @@ class Application extends App implements IBootstrap {
 			event: ObjectCreatingEvent::class,
 			listener: AnnouncementConfirmationListener::class,
 			registers: null,
-			schemas: [AnnouncementService::CONFIRMATION_SLUG]
+			schemas: [AnnouncementServiceInterface::CONFIRMATION_SLUG]
 		);
 
 	}//end registerAnnouncementListener()
@@ -1002,7 +1043,7 @@ class Application extends App implements IBootstrap {
 				event: $event,
 				listener: ManagerDeputyListener::class,
 				registers: null,
-				schemas: [ManagerDeputies::SLUG]
+				schemas: [ManagerDeputiesInterface::SLUG]
 			);
 		}
 
@@ -1057,7 +1098,7 @@ class Application extends App implements IBootstrap {
 				event: $event,
 				listener: HrLifecycleEventListener::class,
 				registers: null,
-				schemas: HrLifecycleEventService::SLUGS
+				schemas: HrLifecycleEventServiceInterface::SLUGS
 			);
 		}
 

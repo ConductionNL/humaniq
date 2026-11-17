@@ -48,6 +48,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use RuntimeException;
 use Stringable;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Golden cases for retro payroll corrections. No coverage annotations, like
@@ -240,7 +241,10 @@ class RetroAdjustmentGoldenTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, ?string $register = null, ?string $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->test->events[] = ['save' => [$register, $schema, $uuid, $_rbac, $_multitenancy, $object]];
 				if ($this->failSave === true) {
 					throw new RuntimeException('save refused');

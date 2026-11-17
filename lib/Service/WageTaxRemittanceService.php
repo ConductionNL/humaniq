@@ -28,6 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\WageTaxRemittanceServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -38,7 +41,7 @@ use OCA\Humaniq\Support\ResolvesObjectService;
  *
  * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
-class WageTaxRemittanceService {
+class WageTaxRemittanceService implements WageTaxRemittanceServiceInterface {
 
 	use ResolvesObjectService;
 
@@ -256,8 +259,10 @@ class WageTaxRemittanceService {
 	private function finish(string $runId, array $fields, ?string $payableId=null): array {
 		$saved = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->settingsService->getRegisterSlug(),
-			schema: self::RECORD_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: self::RECORD_SCHEMA
+				)),
 			_rbac: false,
 			_multitenancy: false
 		);

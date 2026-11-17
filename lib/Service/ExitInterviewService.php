@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\ExitInterviewServiceInterface;
 use OCP\IL10N;
 
 /**
@@ -37,7 +38,7 @@ use OCP\IL10N;
  *
  * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-001
  */
-class ExitInterviewService {
+class ExitInterviewService implements ExitInterviewServiceInterface {
 
 	public const SCHEMA = 'ExitInterview';
 

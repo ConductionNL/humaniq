@@ -55,12 +55,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
+use OCA\Humaniq\Kernel\Contracts\EmploymentTermsResolverInterface;
 use OCA\Humaniq\Standards\CaoRegistry;
 
 /**
  * Resolves CAO-inherited employment terms with contract-level overrides.
  */
-class EmploymentTermsResolver {
+class EmploymentTermsResolver implements EmploymentTermsResolverInterface {
 
 	/**
 	 * The term came from the contract itself, departing from the CAO.

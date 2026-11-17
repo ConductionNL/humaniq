@@ -29,11 +29,16 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\TimeActivityCatalog;
 use OCA\Humaniq\Service\TimesheetAggregationService;
+use OCA\Humaniq\Service\TimesheetWeekService;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Value-level assertions on the shared aggregate recompute.
@@ -135,6 +140,96 @@ class TimesheetAggregationServiceTest extends TestCase {
 	}//end testEmptyEntrySetZeroesTheAggregates()
 
 	/**
+	 * Project and non-project hours follow the entry's activity, or its
+	 * project without one, and add up with the booked hours.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 */
+	public function testHoursPerKindAddUpWithTheBookedHours(): void {
+		$aggregates = $this->service->computeAggregates(
+			[
+				['hours' => 6.5, 'projectId' => 'project-alpha'],
+				['hours' => 2, 'activityCode' => 'opleiding'],
+				['hours' => 1.5, 'activityCode' => 'intern-overleg', 'projectId' => 'project-alpha'],
+				['hours' => 3, 'activityCode' => 'project', 'projectId' => 'project-beta'],
+				['hours' => 1],
+			],
+			['opleiding' => 'non-project', 'intern-overleg' => 'non-project', 'project' => 'project']
+		);
+
+		$this->assertSame(9.5, $aggregates['projectHours']);
+		$this->assertSame(4.5, $aggregates['nonProjectHours'], 'training, an internal meeting and an entry naming nothing');
+		$this->assertSame($aggregates['hours'], round($aggregates['projectHours'] + $aggregates['nonProjectHours'], 2));
+	}//end testHoursPerKindAddUpWithTheBookedHours()
+
+	/**
+	 * The recompute stores the absence hours the week view composes, and the
+	 * activity kinds from the catalogue.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 */
+	public function testRecomputeStoresTheAbsenceHoursAndKinds(): void {
+		$this->store->seed('Timesheet', 'ts-1', ['employeeId' => 'employee-jansen', 'period' => '2026-05', 'status' => 'draft']);
+		$this->store->seed('TimeEntry', 'entry-1', ['timesheetId' => 'ts-1', 'hours' => 2.0, 'activityCode' => 'opleiding', 'projectId' => 'p']);
+
+		$records = $this->createMock(RecordStoreInterface::class);
+		$records->method('loadAll')->willReturn([['code' => 'opleiding', 'kind' => 'non-project']]);
+		$weeks = $this->createMock(TimesheetWeekService::class);
+		$weeks->expects($this->once())->method('absenceHoursFor')
+			->with($this->callback(static fn (array $timesheet): bool => $timesheet['period'] === '2026-05'), $this->countOf(1))
+			->willReturn(8.0);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
+		$service = new TimesheetAggregationService(
+			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $this->store]),
+			marker: $this->marker,
+			settingsService: $settings,
+			activities: new TimeActivityCatalog($records),
+			weekService: $weeks
+		);
+
+		$service->recomputeForTimesheet('ts-1');
+
+		$persisted = $this->store->state->objects['Timesheet']['ts-1'];
+		$this->assertSame(0.0, $persisted['projectHours'], 'the activity wins over the project');
+		$this->assertSame(2.0, $persisted['nonProjectHours']);
+		$this->assertSame(8.0, $persisted['absenceHours']);
+	}//end testRecomputeStoresTheAbsenceHoursAndKinds()
+
+	/**
+	 * When the absence records cannot be read the stored absence hours stay,
+	 * and the hours aggregates are still kept.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableAbsenceKeepsTheStoredAbsenceHours(): void {
+		$this->store->seed('Timesheet', 'ts-1', ['employeeId' => 'employee-jansen', 'period' => '2026-05', 'absenceHours' => 5.0]);
+		$this->store->seed('TimeEntry', 'entry-1', ['timesheetId' => 'ts-1', 'hours' => 3.0]);
+
+		$weeks = $this->createMock(TimesheetWeekService::class);
+		$weeks->method('absenceHoursFor')->willThrowException(new \RuntimeException('register down'));
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
+		$service = new TimesheetAggregationService(
+			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $this->store]),
+			marker: $this->marker,
+			settingsService: $settings,
+			weekService: $weeks
+		);
+
+		$aggregates = $service->recomputeForTimesheet('ts-1');
+
+		$this->assertSame(5.0, $aggregates['absenceHours']);
+		$this->assertSame(3.0, $this->store->state->objects['Timesheet']['ts-1']['hours']);
+	}//end testAnUnreadableAbsenceKeepsTheStoredAbsenceHours()
+
+	/**
 	 * recomputeForTimesheet persists the values onto the stored timesheet,
 	 * under the internal-writer marker; a second run over unchanged entries
 	 * performs ZERO additional writes (idempotency asserted, not assumed).
@@ -216,16 +311,17 @@ class TimesheetAggregationServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array|object $object,
-				?array $extend = [],
-				mixed $register = null,
-				mixed $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): \OCA\OpenRegister\Db\ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->recorder->markerStates[] = $this->marker->isInternal();
 
-				return parent::saveObject($object, $extend, $register, $schema, $uuid, $_rbac, $_multitenancy);
+				return parent::saveObject($object, $options, $_rbac, $_multitenancy);
 			}//end saveObject()
 
 		};
@@ -270,13 +366,14 @@ class TimesheetAggregationServiceTest extends TestCase {
 			 */
 			public function find(
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				mixed $register = null,
-				mixed $schema = null,
+				?ObjectFindOptions $options = null,
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): ?\OCA\OpenRegister\Db\ObjectEntity {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				throw new \RuntimeException('register down');
 			}//end find()
 

@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\ChangeApprovalRules;
+use OCA\Humaniq\Kernel\Contracts\ChangeApprovalRulesInterface;
 use OCA\Humaniq\Service\FieldReadAccess;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
@@ -57,15 +57,15 @@ class EmployeeGuardedFieldListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Resolves slugs and the stored employee.
-	 * @param ChangeApprovalRules  $rules   The rule per kind of change.
-	 * @param InternalWriteMarker  $marker  Tells humaniq's own writes apart.
-	 * @param LoggerInterface      $logger  Logger.
-	 * @param FieldReadAccess      $access  The protected values a save carries forward, which are no change.
+	 * @param HoursRegisterGateway         $gateway Resolves slugs and the stored employee.
+	 * @param ChangeApprovalRulesInterface $rules   The rule per kind of change.
+	 * @param InternalWriteMarker          $marker  Tells humaniq's own writes apart.
+	 * @param LoggerInterface              $logger  Logger.
+	 * @param FieldReadAccess              $access  The protected values a save carries forward, which are no change.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
-		private readonly ChangeApprovalRules $rules,
+		private readonly ChangeApprovalRulesInterface $rules,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,
 		private readonly FieldReadAccess $access,

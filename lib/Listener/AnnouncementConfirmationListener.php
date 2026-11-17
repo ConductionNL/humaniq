@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\AnnouncementService;
+use OCA\Humaniq\Kernel\Contracts\AnnouncementServiceInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCP\EventDispatcher\Event;
@@ -46,13 +46,13 @@ class AnnouncementConfirmationListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param AnnouncementService $announcements The confirmation rules.
-	 * @param IUserSession        $userSession   The caller.
-	 * @param InternalWriteMarker $marker        Marks humaniq's own writes.
-	 * @param LoggerInterface     $logger        The logger.
+	 * @param AnnouncementServiceInterface $announcements The confirmation rules.
+	 * @param IUserSession                 $userSession   The caller.
+	 * @param InternalWriteMarker          $marker        Marks humaniq's own writes.
+	 * @param LoggerInterface              $logger        The logger.
 	 */
 	public function __construct(
-		private readonly AnnouncementService $announcements,
+		private readonly AnnouncementServiceInterface $announcements,
 		private readonly IUserSession $userSession,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,

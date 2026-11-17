@@ -36,7 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\InterviewCalendarService;
+use OCA\Humaniq\Kernel\Contracts\InterviewCalendarServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -49,10 +49,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class InterviewCalendarSyncCommand extends Command {
 
 	/**
-	 * @param InterviewCalendarService $service The interview-calendar-sync service.
+	 * @param InterviewCalendarServiceInterface $service The interview-calendar-sync service.
 	 */
 	public function __construct(
-		private readonly InterviewCalendarService $service,
+		private readonly InterviewCalendarServiceInterface $service,
 	) {
 		parent::__construct();
 

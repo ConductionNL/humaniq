@@ -51,9 +51,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\BackgroundJob;
 
 use DateTimeImmutable;
-use OCA\Humaniq\Service\LeaveBalanceProjectionService;
+use OCA\Humaniq\Kernel\Contracts\LeaveBalanceProjectionServiceInterface;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
@@ -117,14 +119,14 @@ class LeaveAccrualJob extends TimedJob {
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param SettingsService $settingsService Register slug + `leave_accrual_enabled`/`leave_bovenwettelijk_annual_hours` config.
 	 * @param LoggerInterface $logger Logger.
-	 * @param LeaveBalanceProjectionService $projection Recomputes every balance, applying the lapses due today.
+	 * @param LeaveBalanceProjectionServiceInterface $projection Recomputes every balance, applying the lapses due today.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
-		private readonly LeaveBalanceProjectionService $projection,
+		private readonly LeaveBalanceProjectionServiceInterface $projection,
 	) {
 		parent::__construct(time: $time);
 
@@ -400,8 +402,7 @@ class LeaveAccrualJob extends TimedJob {
 		return $this->toArray(
 			$this->objectService()->saveObject(
 				object: $payload,
-				register: $this->register(),
-				schema: 'LeaveBalance',
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: 'LeaveBalance')),
 				_rbac: false,
 				_multitenancy: false
 			)
@@ -454,9 +455,10 @@ class LeaveAccrualJob extends TimedJob {
 		return $this->toArray(
 			$this->objectService()->saveObject(
 				object: $payload,
-				register: $this->register(),
-				schema: 'LeaveBalance',
-				uuid: ($uuid === '' ? null : $uuid),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'LeaveBalance'),
+					uuid: $uuid === '' ? null : $uuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			)

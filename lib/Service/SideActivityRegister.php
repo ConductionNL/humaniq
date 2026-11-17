@@ -32,18 +32,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\SideActivityRegisterInterface;
+
 /**
  * Places side activity reports and derives the attestation.
  *
  * @spec openspec/specs/secondment-and-side-activities/spec.md#REQ-SEC-003
  */
-class SideActivityRegister {
-
-	public const ACTIVITY_SLUG = 'sideactivity';
-
-	public const EMPLOYEE_SLUG = 'employee';
-
-	public const FLAG = 'nevenwerkzaamhedenGemeld';
+class SideActivityRegister implements SideActivityRegisterInterface {
 
 	/**
 	 * The states in which a report counts as on file.

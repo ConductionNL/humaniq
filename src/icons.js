@@ -49,12 +49,14 @@ import CalendarRange from "vue-material-design-icons/CalendarRange.vue";
 import CalendarRemoveOutline from "vue-material-design-icons/CalendarRemoveOutline.vue";
 import CalendarStarOutline from "vue-material-design-icons/CalendarStarOutline.vue";
 import CalendarSyncOutline from "vue-material-design-icons/CalendarSyncOutline.vue";
+import CalendarWeek from "vue-material-design-icons/CalendarWeek.vue";
 import CalendarWeekendOutline from "vue-material-design-icons/CalendarWeekendOutline.vue";
 import CarKey from "vue-material-design-icons/CarKey.vue";
 import CarOutline from "vue-material-design-icons/CarOutline.vue";
 import CarSide from "vue-material-design-icons/CarSide.vue";
 import Cash from "vue-material-design-icons/Cash.vue";
 import CashCheck from "vue-material-design-icons/CashCheck.vue";
+import CashClock from "vue-material-design-icons/CashClock.vue";
 import CashMinus from "vue-material-design-icons/CashMinus.vue";
 import CashMultiple from "vue-material-design-icons/CashMultiple.vue";
 import CashPlus from "vue-material-design-icons/CashPlus.vue";
@@ -176,12 +178,14 @@ export default {
 	CalendarRemoveOutline,
 	CalendarStarOutline,
 	CalendarSyncOutline,
+	CalendarWeek,
 	CalendarWeekendOutline,
 	CarKey,
 	CarOutline,
 	CarSide,
 	Cash,
 	CashCheck,
+	CashClock,
 	CashMinus,
 	CashMultiple,
 	CashPlus,

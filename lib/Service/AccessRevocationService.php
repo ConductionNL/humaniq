@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\AccessRevocationServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -39,7 +40,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-003
  */
-class AccessRevocationService {
+class AccessRevocationService implements AccessRevocationServiceInterface {
 
 	/**
 	 * The actor recorded when the daily flow revokes.

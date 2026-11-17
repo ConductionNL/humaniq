@@ -29,11 +29,12 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\EmployeeHistoryServiceInterface;
 
 /**
  * Maps an employee's rows onto one chronological history.
  */
-class EmployeeHistoryService {
+class EmployeeHistoryService implements EmployeeHistoryServiceInterface {
 
 	/**
 	 * The event kind and the start and end fields of each period schema.
@@ -44,20 +45,6 @@ class EmployeeHistoryService {
 		'LeaveRequest' => ['leave', 'startDate', 'endDate'],
 		'SickLeaveCase' => ['sickness', 'firstSickDay', 'recoveredDate'],
 		'PerformanceReview' => ['review', 'besprokenOp', ''],
-	];
-
-	/**
-	 * The schemas a history reads, with the detail page each event links to.
-	 *
-	 * @var array<string, string>
-	 */
-	public const SOURCES = [
-		'EmploymentContract' => 'EmploymentContractDetail',
-		'OrgAssignment' => 'OrgAssignmentDetail',
-		'CompAdjustment' => 'CompAdjustmentDetail',
-		'LeaveRequest' => 'LeaveRequestDetail',
-		'SickLeaveCase' => 'SickLeaveCaseDetail',
-		'PerformanceReview' => 'PerformanceReviewDetail',
 	];
 
 	/**

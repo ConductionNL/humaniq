@@ -40,7 +40,9 @@
 					"description",
 					"projectId",
 					"billable"
-				]
+				],
+				"allowSavedViews": true,
+				"allowExport": true
 			}
 		},
 		{

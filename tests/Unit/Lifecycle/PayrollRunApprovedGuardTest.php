@@ -32,6 +32,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for PayrollRunApprovedGuard.
@@ -68,7 +69,9 @@ class PayrollRunApprovedGuardTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return $this->runResult;
 			}//end find()
 
@@ -102,7 +105,9 @@ class PayrollRunApprovedGuardTest extends TestCase {
 			 *
 			 * @throws \RuntimeException Always.
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				throw new \RuntimeException('register unavailable');
 			}//end find()
 
@@ -269,7 +274,9 @@ class PayrollRunApprovedGuardTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->seen->register = $register;
 				return ['status' => 'approved'];
 			}//end find()

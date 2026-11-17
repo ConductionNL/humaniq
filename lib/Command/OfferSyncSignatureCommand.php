@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\OfferEsignService;
+use OCA\Humaniq\Kernel\Contracts\OfferEsignServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -50,10 +50,10 @@ class OfferSyncSignatureCommand extends Command {
 	private const FAILURE_STATUSES = ['failed', 'usage-error'];
 
 	/**
-	 * @param OfferEsignService $service The offer-letter + e-signature service.
+	 * @param OfferEsignServiceInterface $service The offer-letter + e-signature service.
 	 */
 	public function __construct(
-		private readonly OfferEsignService $service,
+		private readonly OfferEsignServiceInterface $service,
 	) {
 		parent::__construct();
 

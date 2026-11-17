@@ -31,12 +31,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\HireServiceInterface;
+
 /**
  * Create employee, attach to an existing one, or report the matches. *
  * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-001
  * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-002
  */
-class HireService {
+class HireService implements HireServiceInterface {
 
 	private const APPLICATION_SCHEMA = 'job-application';
 	private const EMPLOYEE_SCHEMA = 'Employee';

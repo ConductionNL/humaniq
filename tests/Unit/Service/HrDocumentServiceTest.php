@@ -48,6 +48,9 @@ use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for HrDocumentService.
@@ -139,7 +142,9 @@ class HrDocumentServiceTest extends TestCase {
 			 *
 			 * @return object|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				foreach (($this->rowsBySchema[$schema] ?? []) as $row) {
 					if ((string)($row['id'] ?? '') === $id) {
 						return new class($row) {
@@ -166,12 +171,13 @@ class HrDocumentServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
 				$saved = array_merge($object, ['id' => $id]);
@@ -847,6 +853,60 @@ class HrDocumentServiceTest extends TestCase {
 	}//end testGenerateIsIdempotentOnDoubleInvocation()
 
 	/**
+	 * Every employer statement is a new document: two requests for the same
+	 * contract make two, and the first stays as it was.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
+	 */
+	public function testEachEmployerStatementIsANewDocument(): void {
+		$rows = [
+			'Employee' => [$this->employee()],
+			'HrGeneratedDocument' => [
+				['id' => 'gd-last-week', 'documentType' => 'werkgeversverklaring', 'employeeId' => 'emp-1', 'contractId' => 'contract-1', 'status' => 'generated'],
+			],
+		];
+		[$service, $fake, $fileService] = $this->service($rows, configuredTemplateId: 'T1');
+
+		$first = $service->generate('emp-1', 'contract-1', 'werkgeversverklaring', null);
+		$second = $service->generate('emp-1', 'contract-1', 'werkgeversverklaring', null);
+
+		$this->assertSame('generated', $first['status']);
+		$this->assertSame('generated', $second['status']);
+		$this->assertNotSame($first['generatedDocumentId'], $second['generatedDocumentId']);
+		$this->assertCount(2, $fileService->calls);
+
+		$touched = array_filter(
+			$this->savedFor($fake, 'HrGeneratedDocument'),
+			static fn (array $save): bool => ($save['id'] ?? null) === 'gd-last-week'
+		);
+		$this->assertSame([], $touched, 'The earlier statement is left unchanged.');
+
+	}//end testEachEmployerStatementIsANewDocument()
+
+	/**
+	 * The employment contract keeps its one-per-contract rule next to the
+	 * never-deduplicated employer statement.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
+	 */
+	public function testAnEmploymentContractIsStillMadeOnceBesideAStatement(): void {
+		[$service, , $fileService] = $this->service(['Employee' => [$this->employee()]], configuredTemplateId: 'T1');
+
+		$service->generate('emp-1', 'contract-1', 'werkgeversverklaring', null);
+		$first = $service->generate('emp-1', 'contract-1', 'arbeidsovereenkomst', null);
+		$second = $service->generate('emp-1', 'contract-1', 'arbeidsovereenkomst', null);
+
+		$this->assertSame('generated', $first['status']);
+		$this->assertSame('already-generated', $second['status']);
+		$this->assertCount(2, $fileService->calls);
+
+	}//end testAnEmploymentContractIsStillMadeOnceBesideAStatement()
+
+	/**
 	 * @return void
 	 */
 	public function testGenerateSupersedesAStalePendingRecordThenSucceeds(): void {
@@ -1130,7 +1190,7 @@ class HrDocumentServiceTest extends TestCase {
 		$this->assertSame('generated', $first['status']);
 
 		// A new 2026 payslip lands after the first jaaropgaaf was generated.
-		$fake->saveObject($this->payslip(['id' => 'ps-2', 'period' => '2026-02', 'grossPay' => 4000.0]), null, 'Payslip', 'ps-2');
+		$fake->saveObject($this->payslip(['id' => 'ps-2', 'period' => '2026-02', 'grossPay' => 4000.0]), new ObjectSaveOptions(target: new ObjectFindTarget(schema: 'Payslip'), uuid: 'ps-2'));
 
 		$second = $service->generateJaaropgaaf('emp-1', 2026);
 		// The document itself no-ops (same jaaropgaafId, already generated,

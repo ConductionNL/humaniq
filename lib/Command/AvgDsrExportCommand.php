@@ -32,7 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\AvgDsrService;
+use OCA\Humaniq\Kernel\Contracts\AvgDsrServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -44,11 +44,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 class AvgDsrExportCommand extends Command {
 
 	/**
-	 * @param AvgDsrService $service The DSR orchestration service.
+	 * @param AvgDsrServiceInterface $service The DSR orchestration service.
 	 * @param PrivilegedSessionResolver $sessionResolver The shared --as-user session establishment mechanism.
 	 */
 	public function __construct(
-		private readonly AvgDsrService $service,
+		private readonly AvgDsrServiceInterface $service,
 		private readonly PrivilegedSessionResolver $sessionResolver,
 	) {
 		parent::__construct();

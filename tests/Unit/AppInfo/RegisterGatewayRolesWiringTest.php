@@ -93,7 +93,7 @@ class RegisterGatewayRolesWiringTest extends TestCase {
 		$store = $this->methodsOf(RecordStoreInterface::class);
 		$org = $this->methodsOf(OrgLookupInterface::class);
 
-		self::assertSame(['delete', 'findFiltered', 'findObjectData', 'loadAll', 'save'], $store);
+		self::assertSame(['createUnowned', 'delete', 'findFiltered', 'findObjectData', 'loadAll', 'save'], $store);
 		self::assertSame(['findEmployeeByUserId', 'resolveSchemaSlug', 'uniqueCostCenterFor', 'uniqueManagerUserIdFor'], $org);
 
 		$public = array_diff($this->methodsOf(HoursRegisterGateway::class), ['__construct']);

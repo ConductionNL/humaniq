@@ -29,6 +29,7 @@ namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\ExpenseCategoryPolicyInterface;
 use OCP\IAppConfig;
 
 /**
@@ -36,7 +37,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/changes/allowed-expense-categories/specs/humaniq-expenses/spec.md#Requirement:-The-employer-SHALL-choose-which-expense-categories-employees-may-claim
  */
-class ExpenseCategoryPolicy {
+class ExpenseCategoryPolicy implements ExpenseCategoryPolicyInterface {
 
 	/**
 	 * The expense categories, in the order the schema lists them.

@@ -29,12 +29,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\TravelAllowanceCalculatorInterface;
+
 /**
  * Claim, monthly allowance and yearly kilometre arithmetic.
  *
  * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
  */
-class TravelAllowanceCalculator {
+class TravelAllowanceCalculator implements TravelAllowanceCalculatorInterface {
 
 	/**
 	 * The fiscal number of commuting days in a year for a five-day week.

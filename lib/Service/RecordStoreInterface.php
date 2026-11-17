@@ -83,6 +83,19 @@ interface RecordStoreInterface {
 	public function save(array $payload, string $schema, ?string $uuid = null): object;
 
 	/**
+	 * Create one object owned by the system rather than by the signed-in
+	 * caller, for a write that must not name who caused it.
+	 *
+	 * @param array<string, mixed> $payload The object payload.
+	 * @param string               $schema  The schema slug.
+	 *
+	 * @return object The saved ObjectEntity.
+	 *
+	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 */
+	public function createUnowned(array $payload, string $schema): object;
+
+	/**
 	 * Delete one object.
 	 *
 	 * @param string $uuid   The object.

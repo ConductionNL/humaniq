@@ -47,6 +47,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Golden cases for the rule test-data seeder.
@@ -395,7 +396,11 @@ class SeederGoldenObjectService {
 	 *
 	 * @throws RuntimeException For a failing schema.
 	 */
-	public function saveObject(mixed $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, mixed $currentUser = null): array {
+	public function saveObject(mixed $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = $options->target->register ?? '';
+		$schema = $options->target->schema ?? '';
+		$uuid = $options->uuid;
+		$currentUser = $options->actor->currentUser;
 		$object = (array)$object;
 		$this->calls[] = [
 			'saveObject',

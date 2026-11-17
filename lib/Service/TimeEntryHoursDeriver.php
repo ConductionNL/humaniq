@@ -51,6 +51,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\TimeEntryHoursDeriverInterface;
 use OCA\Humaniq\Listener\HoursWriteRefusedException;
 
 /**
@@ -59,7 +60,7 @@ use OCA\Humaniq\Listener\HoursWriteRefusedException;
  * @spec openspec/specs/time-entry-capture/spec.md#requirement-humaniq-captures-time-entries-under-a-submit-approve-lifecycle-req-tec-001
  * @spec openspec/specs/hours-leaf/spec.md#requirement-an-entry-without-an-end-is-a-running-timer-not-a-defective-booking
  */
-class TimeEntryHoursDeriver {
+class TimeEntryHoursDeriver implements TimeEntryHoursDeriverInterface {
 
 	/**
 	 * The most hours a single day can hold.
@@ -70,18 +71,6 @@ class TimeEntryHoursDeriver {
 	 * @var float
 	 */
 	private const MAX_HOURS_PER_DAY = 24.0;
-
-	/**
-	 * The `origin` value that marks an entry as a running timer.
-	 *
-	 * Equal to `RunningTimerService::ORIGIN_TIMER` and to the enum member on
-	 * `TimeEntry` in `lib/Settings/register.d/hr-timesheet.json`. All three name
-	 * the same literal; a drift between them shows up as a timer that cannot be
-	 * written rather than as an error anyone would read.
-	 *
-	 * @var string
-	 */
-	public const ORIGIN_TIMER = 'timer';
 
 	/**
 	 * Resolve the reference timestamp and the hours for a write.

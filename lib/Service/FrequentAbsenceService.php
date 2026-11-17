@@ -31,12 +31,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\FrequentAbsenceServiceInterface;
+
 /**
  * The frequent-absence count and signal for one sickness case.
  *
  * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-003
  */
-class FrequentAbsenceService {
+class FrequentAbsenceService implements FrequentAbsenceServiceInterface {
 
 	/**
 	 * Threshold when the administration sets none.

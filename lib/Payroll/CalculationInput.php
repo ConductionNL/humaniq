@@ -130,6 +130,27 @@ final class CalculationInput {
 	public readonly float $thirtyPercentRulingRate;
 
 	/**
+	 * `werkgeversheffing` or `inhouding` (payroll-special-regimes D3). Additive and defaults to the employer's levy, so every pre-existing call site and stored snapshot is unaffected.
+	 *
+	 * @var string
+	 */
+	public readonly string $zvwMode;
+
+	/**
+	 * The early-retirement final-levy threshold for the period, in cents (payroll-special-regimes D4). `0` means the wage is not an early-retirement benefit and no final levy applies.
+	 *
+	 * @var integer
+	 */
+	public readonly int $rvuThresholdCents;
+
+	/**
+	 * The early-retirement final-levy rate on the percentage scale (payroll-special-regimes D4); only applied while `rvuThresholdCents` is positive.
+	 *
+	 * @var float
+	 */
+	public readonly float $rvuFinalLevyRate;
+
+	/**
 	 * The fields stay flat and in this order: the pack mapper, toArray() and
 	 * the stamped engineInputSnapshot read them by name.
 	 *
@@ -153,18 +174,25 @@ final class CalculationInput {
 		$this->verzekeringsplichtig = $levies->insurance->verzekeringsplichtig;
 		$this->jurisdiction = $wage->jurisdiction;
 		$this->thirtyPercentRulingRate = $levies->wageTax->thirtyPercentRulingRate;
+		$this->zvwMode = ($levies->insurance->zvwMode === 'inhouding' ? 'inhouding' : 'werkgeversheffing');
+		$this->rvuThresholdCents = max(0, $levies->rvuThresholdCents);
+		$this->rvuFinalLevyRate = $levies->rvuFinalLevyRate;
 
 	}//end __construct()
 
 	/**
-	 * All eleven public readonly properties as a plain array, keyed by name.
+	 * All eleven public readonly properties as a plain array, keyed by name,
+	 * plus `zvwMode`, `rvuThresholdCents` and `rvuFinalLevyRate` only when the
+	 * wage carries them (they differ from their
+	 * defaults, so the snapshot of every ordinary payslip stays byte-identical
+	 * (payroll-special-regimes D3 and D4).
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
 	 */
 	public function toArray(): array {
-		return [
+		$data = [
 			'grossMonthlySalaryCents' => $this->grossMonthlySalaryCents,
 			'taxTableColor' => $this->taxTableColor,
 			'loonheffingskortingToegepast' => $this->loonheffingskortingToegepast,
@@ -177,6 +205,16 @@ final class CalculationInput {
 			'jurisdiction' => $this->jurisdiction,
 			'thirtyPercentRulingRate' => $this->thirtyPercentRulingRate,
 		];
+		if ($this->zvwMode !== 'werkgeversheffing') {
+			$data['zvwMode'] = $this->zvwMode;
+		}
+
+		if ($this->rvuThresholdCents > 0) {
+			$data['rvuThresholdCents'] = $this->rvuThresholdCents;
+			$data['rvuFinalLevyRate'] = $this->rvuFinalLevyRate;
+		}
+
+		return $data;
 
 	}//end toArray()
 
@@ -261,8 +299,11 @@ final class CalculationInput {
 					awfTariff: (string)($decoded['awfTariff'] ?? ''),
 					aofTariff: (string)($decoded['aofTariff'] ?? ''),
 					whkPercentage: (float)($decoded['whkPercentage'] ?? 0.0),
-					verzekeringsplichtig: (($decoded['verzekeringsplichtig'] ?? true) === true)
-				)
+					verzekeringsplichtig: (($decoded['verzekeringsplichtig'] ?? true) === true),
+					zvwMode: (string)($decoded['zvwMode'] ?? 'werkgeversheffing')
+				),
+				rvuThresholdCents: (int)($decoded['rvuThresholdCents'] ?? 0),
+				rvuFinalLevyRate: (float)($decoded['rvuFinalLevyRate'] ?? 0.0)
 			)
 		);
 

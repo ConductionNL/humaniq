@@ -38,12 +38,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\PersonnelBudgetServiceInterface;
+
 /**
  * Computes a personnel budget and compares scenarios.
  *
  * @spec openspec/specs/personnel-budget/spec.md#REQ-PBS-001
  */
-class PersonnelBudgetService {
+class PersonnelBudgetService implements PersonnelBudgetServiceInterface {
 
 	/**
 	 * The CAO whose scale key space the HR21 reference jobs use.

@@ -46,6 +46,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\ObligationsServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\KeepsReadableRows;
@@ -54,7 +55,7 @@ use OCA\Humaniq\Support\ResolvesObjectServiceWithReload;
 /**
  * Cross-schema obligations merge + best-effort rule badge.
  */
-class ObligationsService {
+class ObligationsService implements ObligationsServiceInterface {
 
 	use KeepsReadableRows;
 	use ResolvesObjectServiceWithReload;

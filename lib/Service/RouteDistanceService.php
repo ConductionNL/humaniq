@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\RouteDistanceServiceInterface;
 use OCA\Humaniq\Support\FleetAppId;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -43,7 +44,7 @@ use Psr\Container\ContainerInterface;
  *
  * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-003
  */
-class RouteDistanceService {
+class RouteDistanceService implements RouteDistanceServiceInterface {
 
 	/**
 	 * Constructor.

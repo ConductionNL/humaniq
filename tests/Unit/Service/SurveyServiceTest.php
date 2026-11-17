@@ -41,6 +41,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
@@ -160,17 +161,21 @@ class SurveyServiceTest extends TestCase {
 		$outcome = $this->service()->respond(self::SURVEY_ID, 'f4', ['werkplezier' => 4, 'aanbevelen' => '9', 'werkdruk' => 'te hoog', 'toelichting' => '  Meer overleg.  ', 'onbekend' => 'x'], self::TODAY);
 
 		self::assertSame(['status' => 201, 'message' => null], $outcome);
-		$responses = $this->rows('SurveyResponse');
-		self::assertCount(1, $responses);
-		$response = $responses[0];
-		unset($response['id']);
-		self::assertSame(['surveyId', 'orgUnitId', 'contractType', 'answers', 'submittedOn', 'administrationId'], array_keys($response));
-		self::assertSame(['werkplezier' => 4, 'werkdruk' => 'te hoog', 'aanbevelen' => 9, 'toelichting' => 'Meer overleg.'], $response['answers']);
-		self::assertSame(['unit-fin-team', 'permanent', self::TODAY], [$response['orgUnitId'], $response['contractType'], $response['submittedOn']]);
-		self::assertSame([], RegisterSchemaValidator::errors('SurveyResponse', $response));
-		$encoded = (string)json_encode($response);
+		self::assertSame([], $this->rows('SurveyResponse'), 'An answer is held, not written as a response at the moment it is given.');
+		$holds = $this->rows('SurveyResponseHold');
+		self::assertCount(1, $holds);
+		$held = $holds[0];
+		unset($held['id']);
+		self::assertSame(['surveyId', 'orgUnitId', 'contractType', 'answers', 'administrationId'], array_keys($held));
+		self::assertSame(['werkplezier' => 4, 'werkdruk' => 'te hoog', 'aanbevelen' => 9, 'toelichting' => 'Meer overleg.'], $held['answers']);
+		self::assertSame(['unit-fin-team', 'permanent'], [$held['orgUnitId'], $held['contractType']]);
+		self::assertSame([], RegisterSchemaValidator::errors('SurveyResponseHold', $held));
+		$holdSaves = array_values(array_filter($this->store->state->saves, static fn (array $save): bool => $save['schema'] === 'SurveyResponseHold'));
+		self::assertCount(1, $holdSaves);
+		self::assertTrue($holdSaves[0]['unowned'], 'The held answer is owned by the system, not by the account that answered.');
+		$encoded = (string)json_encode($held);
 		$invitationIds = array_column($this->rows('SurveyInvitation'), 'id');
-		foreach (array_merge(['emp-f4', '"f4"', self::TODAY . 'T'], $invitationIds) as $needle) {
+		foreach (array_merge(['emp-f4', '"f4"', self::TODAY], $invitationIds) as $needle) {
 			self::assertStringNotContainsString($needle, $encoded);
 		}
 
@@ -200,7 +205,7 @@ class SurveyServiceTest extends TestCase {
 		self::assertSame(400, $missing['status']);
 		self::assertStringContainsString('werkplezier, aanbevelen', (string)$missing['message']);
 		self::assertSame(409, $this->service()->respond(self::SURVEY_ID, 'h2', $answers, '2026-10-21')['status'], 'After closesOn no answers are taken.');
-		self::assertCount(1, $this->rows('SurveyResponse'));
+		self::assertCount(1, $this->rows('SurveyResponseHold'));
 	}//end testOneAnswerPerPerson()
 
 	/**
@@ -228,7 +233,7 @@ class SurveyServiceTest extends TestCase {
 		self::assertSame(['status' => 400, 'message' => 'Answer every required question: aanbevelen.'], $this->service()->respond(self::SURVEY_ID, 'h1', ['werkplezier' => 3, 'werkdruk' => 'goed'], self::TODAY));
 		self::assertSame(['status' => 201, 'message' => null], $this->service()->respond(self::SURVEY_ID, 'h1', $answers, self::TODAY));
 		self::assertSame(['status' => 409, 'message' => 'You already answered this survey.'], $this->service()->respond(self::SURVEY_ID, 'h1', $answers, self::TODAY));
-		self::assertSame([self::SURVEY_ID, 'unit-hr', 'permanent', 'ADM-001'], array_values(array_intersect_key($this->rows('SurveyResponse')[0], array_flip(['surveyId', 'orgUnitId', 'contractType', 'administrationId']))));
+		self::assertSame([self::SURVEY_ID, 'unit-hr', 'permanent', 'ADM-001'], array_values(array_intersect_key($this->rows('SurveyResponseHold')[0], array_flip(['surveyId', 'orgUnitId', 'contractType', 'administrationId']))));
 	}//end testTheRefusalsAndStoredRowsKeepTheirShape()
 
 	/**
@@ -403,7 +408,7 @@ class SurveyServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function row(string $schema, string $uuid): array {
-		return $this->store->find($uuid, schema: $schema)->getObject();
+		return $this->store->find($uuid, new ObjectFindOptions(schema: $schema))->getObject();
 	}//end row()
 
 	/**

@@ -37,6 +37,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Tester\CommandTester;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 
 /**
  * Golden cases for the reference audit.
@@ -336,13 +337,14 @@ class AuditGoldenObjectService {
 	 * @throws RuntimeException For a failing id.
 	 */
 	public function patchObject(
-		string $objectId,
-		array $data,
-		?string $register = null,
-		?string $schema = null,
+		ObjectPatch $patch,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
+		bool $_multitenancy = true
 	): array {
+		$objectId = $patch->objectId;
+		$data = $patch->data;
+		$register = $patch->target->register;
+		$schema = $patch->target->schema;
 		$this->calls[] = ['patchObject', ['objectId' => $objectId, 'data' => $data, 'register' => $register, 'schema' => $schema, '_rbac' => $_rbac, '_multitenancy' => $_multitenancy]];
 		if (in_array('patch:' . $objectId, $this->failing, true) === true) {
 			throw new RuntimeException('patch refused');

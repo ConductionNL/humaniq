@@ -35,11 +35,12 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\ReceiptExtractionServiceInterface;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
-use OCA\Humaniq\Service\ReceiptExtractionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -55,13 +56,13 @@ class ExpenseController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ReceiptExtractionService $receiptExtractionService The receipt-extraction service.
+	 * @param ReceiptExtractionServiceInterface $receiptExtractionService The receipt-extraction service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ReceiptExtractionService $receiptExtractionService,
+		private readonly ReceiptExtractionServiceInterface $receiptExtractionService,
 		private readonly SettingsService $settingsService,
 		private readonly CallerContext $caller,
 	) {
@@ -138,8 +139,7 @@ class ExpenseController extends Controller {
 		try {
 			$expense = $this->objectService()->find(
 				id: $expenseId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Expense'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Expense')
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('ExpenseController: an expense lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);

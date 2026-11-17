@@ -49,6 +49,8 @@ use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for PayrollMutationService.
@@ -143,6 +145,7 @@ class PayrollMutationServiceTest extends TestCase {
 			 * @return null
 			 */
 			public function find(mixed ...$args): mixed {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				$this->found[] = $args;
 				return null;
 			}//end find()
@@ -159,12 +162,13 @@ class PayrollMutationServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
@@ -276,6 +280,51 @@ class PayrollMutationServiceTest extends TestCase {
 		$this->assertSame('ok', $outcome['status']);
 		$this->assertSame([], $fake->found);
 	}//end testADiffMakesNoSingleObjectReadsThatWouldBeAudited()
+
+	/**
+	 * payroll-mutation-lineage REQ-PML-003 "The mutation report names the
+	 * cause": an employee whose only difference is an applied raise lists the
+	 * salary line with the raise as its cause; an employee whose payslips
+	 * have no lines gets `causes: null`; an unchanged employee gets none.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.5
+	 */
+	public function testAChangedEmployeeListsTheRaiseAsItsCause(): void {
+		[$service] = $this->service(
+			[
+				'PayrollRun' => [
+					['id' => 'run-jun', 'period' => '2026-06', 'administrationId' => 'ADM-001'],
+					['id' => 'run-jul', 'period' => '2026-07', 'administrationId' => 'ADM-001'],
+				],
+				'Payslip' => [
+					$this->payslip('run-jun', 'emp-a', 3800.00, 3081.17, 718.83, 419.14, 231.80),
+					$this->payslip('run-jul', 'emp-a', 3876.00, 3132.40, 743.60, 427.53, 236.44),
+					$this->payslip('run-jun', 'emp-b', 2500.00, 2100.00, 300.00, 250.00, 150.00),
+					$this->payslip('run-jul', 'emp-b', 2600.00, 2180.00, 320.00, 260.00, 156.00),
+				],
+				'PayslipLine' => [
+					['id' => 'l1', 'payslipId' => 'ps-run-jun-emp-a', 'component' => 'salary', 'amount' => 3800.00, 'sourceSchema' => 'Employee', 'sourceId' => 'emp-a', 'sourceKind' => 'record-edit'],
+					['id' => 'l2', 'payslipId' => 'ps-run-jul-emp-a', 'component' => 'salary', 'amount' => 3876.00, 'sourceSchema' => 'CompAdjustment', 'sourceId' => 'raise-1', 'sourceKind' => 'raise'],
+				],
+			]
+		);
+
+		$lines = $service->diff('run-jul', 'run-jun')['report']['lines'];
+		$byEmployee = array_column($lines, null, 'employeeId');
+
+		$this->assertSame(
+			[
+				['change' => 'new', 'component' => 'salary', 'sourceSchema' => 'CompAdjustment', 'sourceId' => 'raise-1', 'sourceKind' => 'raise', 'amountBefore' => null, 'amountAfter' => 3876.0],
+				['change' => 'gone', 'component' => 'salary', 'sourceSchema' => 'Employee', 'sourceId' => 'emp-a', 'sourceKind' => 'record-edit', 'amountBefore' => 3800.0, 'amountAfter' => null],
+			],
+			$byEmployee['emp-a']['causes']
+		);
+		$this->assertArrayHasKey('causes', $byEmployee['emp-b']);
+		$this->assertNull($byEmployee['emp-b']['causes'], 'Payslips without lines: the causes are unknown, not empty.');
+
+	}//end testAChangedEmployeeListsTheRaiseAsItsCause()
 
 	/**
 	 * The design.md worked example, scaled to euros (each cents figure / 100
@@ -574,6 +623,8 @@ class PayrollMutationServiceTest extends TestCase {
 						'nettoPayBefore' => 250.0, 'nettoPayAfter' => 255.0, 'nettoPayDelta' => 5.0,
 						'loonheffingBefore' => 50.0, 'loonheffingAfter' => 55.0, 'loonheffingDelta' => 5.0,
 						'employerCostBefore' => 30.0, 'employerCostAfter' => 31.0, 'employerCostDelta' => 1.0,
+						// payroll-mutation-lineage D5: payslips without lines leave the causes unknown.
+						'causes' => null,
 					],
 					[
 						'employeeId' => 'emp-b',

@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\WorkforceReportSettingsInterface;
 use OCP\AppFramework\Services\IAppConfig;
 
 /**
@@ -32,7 +33,7 @@ use OCP\AppFramework\Services\IAppConfig;
  * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-003
  * @spec openspec/specs/department-figures/spec.md#REQ-DPF-002
  */
-final class WorkforceReportSettings {
+final class WorkforceReportSettings implements WorkforceReportSettingsInterface {
 
 	/**
 	 * @param IAppConfig $appConfig humaniq's app config.

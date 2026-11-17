@@ -61,7 +61,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\LeaveBuySellSettlementServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -72,7 +76,7 @@ use OCA\Humaniq\Support\LoadsAllRows;
  * for a sell, the cents-exact settledAmount computation, the
  * bovenwettelijkHours-only balance write, and the transition-carrying stamp.
  */
-class LeaveBuySellSettlementService {
+class LeaveBuySellSettlementService implements LeaveBuySellSettlementServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;
@@ -176,9 +180,10 @@ class LeaveBuySellSettlementService {
 
 			$this->objectService()->saveObject(
 				object: $balanceUpdate,
-				register: $this->register(),
-				schema: 'LeaveBalance',
-				uuid: $this->idOf($balance),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'LeaveBalance'),
+					uuid: $this->idOf($balance)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -197,9 +202,10 @@ class LeaveBuySellSettlementService {
 
 			$this->objectService()->saveObject(
 				object: $transactionUpdate,
-				register: $this->register(),
-				schema: 'LeaveTransaction',
-				uuid: $transactionId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'LeaveTransaction'),
+					uuid: $transactionId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -274,7 +280,7 @@ class LeaveBuySellSettlementService {
 	 */
 	private function findById(string $schema, string $id): ?array {
 		try {
-			$row = $this->objectService()->find(id: $id, register: $this->register(), schema: $schema);
+			$row = $this->objectService()->find(id: $id, options: new ObjectFindOptions(register: $this->register(), schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->info('LeaveBuySellSettlementService: kon ' . $schema . ' ' . $id . ' niet laden: ' . $e->getMessage());
 			return null;

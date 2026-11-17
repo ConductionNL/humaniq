@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\HrDocumentSigningService;
+use OCA\Humaniq\Kernel\Contracts\HrDocumentSigningServiceInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
@@ -62,15 +62,15 @@ class DocumentSigningController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                 $request     The request.
-	 * @param HrDocumentSigningService $signing     Raises the request.
-	 * @param RbacObjectReader         $rbac        Reads under the caller's own rights.
-	 * @param HumaniqRoles             $roles       The HR check.
-	 * @param IUserSession             $userSession The caller.
+	 * @param IRequest                          $request     The request.
+	 * @param HrDocumentSigningServiceInterface $signing     Raises the request.
+	 * @param RbacObjectReader                  $rbac        Reads under the caller's own rights.
+	 * @param HumaniqRoles                      $roles       The HR check.
+	 * @param IUserSession                      $userSession The caller.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly HrDocumentSigningService $signing,
+		private readonly HrDocumentSigningServiceInterface $signing,
 		private readonly RbacObjectReader $rbac,
 		private readonly HumaniqRoles $roles,
 		private readonly IUserSession $userSession,

@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\TransitionPaymentServiceInterface;
 use OCA\Humaniq\Standards\RuleCatalogue;
 
 /**
@@ -37,7 +38,7 @@ use OCA\Humaniq\Standards\RuleCatalogue;
  *
  * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-004
  */
-class TransitionPaymentService {
+class TransitionPaymentService implements TransitionPaymentServiceInterface {
 
 	private const SCHEMA = 'Offboarding';
 

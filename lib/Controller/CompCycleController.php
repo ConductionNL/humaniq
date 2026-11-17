@@ -30,10 +30,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\CompAdjustmentServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\CompCollectiveServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\CompCycleApproverInterface;
 use OCA\Humaniq\Service\AdministrationService;
-use OCA\Humaniq\Service\CompAdjustmentService;
-use OCA\Humaniq\Service\CompCollectiveService;
-use OCA\Humaniq\Service\CompCycleApprover;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -52,9 +52,9 @@ class CompCycleController extends Controller {
 
 	/**
 	 * @param IRequest $request The request.
-	 * @param CompCollectiveService $compCollectiveService Bulk proposal.
-	 * @param CompCycleApprover $compCycleApprover Bulk approval.
-	 * @param CompAdjustmentService $compAdjustmentService The cycle-wide effectuation batch.
+	 * @param CompCollectiveServiceInterface $compCollectiveService Bulk proposal.
+	 * @param CompCycleApproverInterface $compCycleApprover Bulk approval.
+	 * @param CompAdjustmentServiceInterface $compAdjustmentService The cycle-wide effectuation batch.
 	 * @param RbacObjectReader $rbac Reads the cycle under the caller's own RBAC.
 	 * @param AdministrationService $administrationService The caller's role in the active administration.
 	 * @param IGroupManager $groupManager The admin check.
@@ -62,9 +62,9 @@ class CompCycleController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly CompCollectiveService $compCollectiveService,
-		private readonly CompCycleApprover $compCycleApprover,
-		private readonly CompAdjustmentService $compAdjustmentService,
+		private readonly CompCollectiveServiceInterface $compCollectiveService,
+		private readonly CompCycleApproverInterface $compCycleApprover,
+		private readonly CompAdjustmentServiceInterface $compAdjustmentService,
 		private readonly RbacObjectReader $rbac,
 		private readonly AdministrationService $administrationService,
 		private readonly IGroupManager $groupManager,

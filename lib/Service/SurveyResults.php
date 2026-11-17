@@ -55,6 +55,20 @@ class SurveyResults {
 	}//end __construct()
 
 	/**
+	 * The smallest group the survey shows or releases on its own: the
+	 * survey's minimum group size, never below 3.
+	 *
+	 * @param array<string, mixed> $survey The survey.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
+	 */
+	public static function minimumOf(array $survey): int {
+		return max(3, (int)($survey['minGroupSize'] ?? self::DEFAULT_MIN));
+	}//end minimumOf()
+
+	/**
 	 * The overall and per-department results.
 	 *
 	 * @param array<string, mixed>       $survey    The survey.
@@ -67,7 +81,7 @@ class SurveyResults {
 	 */
 	public function compute(array $survey, array $responses, array $unitNames): array {
 		$run = new SurveyResultsRun();
-		$run->min = max(3, (int)($survey['minGroupSize'] ?? self::DEFAULT_MIN));
+		$run->min = self::minimumOf(survey: $survey);
 		$run->questions = array_values(array_filter((array)($survey['questions'] ?? []), static fn (mixed $question): bool => is_array($question) === true && trim((string)($question['key'] ?? '')) !== ''));
 		$run->unitNames = $unitNames;
 		[$units, $notes] = $this->breakdown(run: $run, responses: $responses);

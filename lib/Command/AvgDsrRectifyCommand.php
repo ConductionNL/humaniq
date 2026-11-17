@@ -33,8 +33,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\AvgDsrService;
+use OCA\Humaniq\Kernel\Contracts\AvgDsrServiceInterface;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
@@ -51,13 +52,13 @@ class AvgDsrRectifyCommand extends Command {
 	use ResolvesObjectService;
 
 	/**
-	 * @param AvgDsrService $service The DSR orchestration service.
+	 * @param AvgDsrServiceInterface $service The DSR orchestration service.
 	 * @param PrivilegedSessionResolver $sessionResolver The shared --as-user session establishment mechanism.
 	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param SettingsService $settingsService The register-slug source.
 	 */
 	public function __construct(
-		private readonly AvgDsrService $service,
+		private readonly AvgDsrServiceInterface $service,
 		private readonly PrivilegedSessionResolver $sessionResolver,
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
@@ -177,8 +178,7 @@ class AvgDsrRectifyCommand extends Command {
 		try {
 			$entity = $this->objectService()->find(
 				id: $employeeId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Employee'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Employee')
 			);
 		} catch (\Throwable $e) {
 			return null;

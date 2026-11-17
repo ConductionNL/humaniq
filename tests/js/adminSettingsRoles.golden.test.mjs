@@ -27,7 +27,9 @@ export const loadState = (_app, _key, fallback) => fallback
 export const defineComponent = (component) => component
 export const CnAdminSettingsShell = {}
 export const CnSettingsSection = {}
+export const NcButton = {}
 export const NcCheckboxRadioSwitch = {}
+export const NcTextField = {}
 export const auditLinks = () => null
 export const auditSentence = () => ''
 export const auditUrls = () => ({})
@@ -35,6 +37,10 @@ export const loadAuditEntries = async () => ({ registerId: 0, entries: [] })
 export const allowedAfterToggle = () => []
 export const loadCategories = async () => []
 export const saveCategories = async () => []
+export const emptySignIn = () => ({ signInMethods: [], passwordPolicy: { available: false, values: null } })
+export const loadSignIn = async () => emptySignIn()
+export const saveRefusal = () => 'failed'
+export const saveSignIn = async () => emptySignIn()
 export default {}
 `)
 

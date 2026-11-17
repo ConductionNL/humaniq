@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\PayrollNetPayService;
+use OCA\Humaniq\Kernel\Contracts\PayrollNetPayServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -44,10 +44,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NetPayRunCommand extends Command {
 
 	/**
-	 * @param PayrollNetPayService $service The net-pay service.
+	 * @param PayrollNetPayServiceInterface $service The net-pay service.
 	 */
 	public function __construct(
-		private readonly PayrollNetPayService $service,
+		private readonly PayrollNetPayServiceInterface $service,
 	) {
 		parent::__construct();
 

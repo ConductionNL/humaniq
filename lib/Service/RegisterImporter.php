@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\RegisterImporterInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -37,7 +38,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/hrm-rule-engine/spec.md
  */
-final class RegisterImporter {
+final class RegisterImporter implements RegisterImporterInterface {
 
 	/**
 	 * The answer when OpenRegister skipped the import because the version did not change.
