@@ -13,11 +13,15 @@ humaniq SHALL document the calls an integrator needs for the employee and the co
 Rows: `plt-public-api` (humaniq matrix).
 
 #### Scenario: A payroll bureau reads an employee
+
+@e2e exclude Needs a service account in humaniq-payroll with an app password; covered by tests/Integration/IntegratorObjectsApiTest, run with phpunit-integration.xml against a live instance.
 - **GIVEN** a service account in the payroll group with an app password
 - **WHEN** the bureau calls `GET /api/objects/humaniq/Employee/{id}` with that app password
 - **THEN** the response holds the employee with the fields the payroll role may read
 
 #### Scenario: An identity manager updates a work e-mail address
+
+@e2e exclude Needs a service account in humaniq-hr with an app password; covered by tests/Integration/IntegratorObjectsApiTest (PATCH and the audit trail naming the account).
 - **GIVEN** a service account in the HR group with an app password
 - **WHEN** it calls `PATCH /api/objects/humaniq/Employee/{id}` with a new work e-mail address
 - **THEN** the employee carries the new address and the audit trail names the service account

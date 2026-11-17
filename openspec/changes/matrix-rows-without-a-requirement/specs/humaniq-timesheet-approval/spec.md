@@ -10,6 +10,8 @@ refusal SHALL say that the timesheet has no hours.
 Rows: `tim-timesheet-not-empty` (humaniq matrix).
 
 #### Scenario: An employee submits a timesheet with no bookings
+
+@e2e exclude Guard with no journey of its own beyond the hours-process suite; verified by TimesheetNotEmptyGuardTest.
 - **GIVEN** a `Timesheet` in state `draft` with `entryCount` 0
 - **WHEN** the employee applies the `submit` transition
 - **THEN** the transition is refused, the state stays `draft` and the refusal names the missing hours
@@ -23,11 +25,15 @@ timesheet.
 Rows: `tim-reopen` (humaniq matrix).
 
 #### Scenario: HR reopens an approved timesheet for a correction
+
+@e2e exclude Lifecycle guard; verified by TimesheetReopenGuardTest (reopen allowed before payroll used the hours).
 - **GIVEN** an approved timesheet that no payroll run has used
 - **WHEN** HR applies `reopen`
 - **THEN** the timesheet is `draft`, its entries are editable and `approvedBy` and `approvedAt` are empty
 
 #### Scenario: Payroll already paid the hours
+
+@e2e exclude Needs a payroll run that paid the timesheet; verified by TimesheetReopenGuardTest (reopen refused once paid).
 - **GIVEN** an approved timesheet whose hours an approved payroll run has paid
 - **WHEN** HR applies `reopen`
 - **THEN** the transition is refused and the refusal names the payroll run
