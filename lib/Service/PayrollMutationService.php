@@ -247,7 +247,7 @@ class PayrollMutationService {
 			'administrationId' => (string)($toRun['administrationId'] ?? ''),
 		] + PayrollMutationTally::summarise($fromByEmployee, $toByEmployee);
 
-		return $this->withCauses(report: $report, fromRunId: (string)($fromRunId ?? ''), toRunId: $toRunId);
+		return $this->withCauses(report: $report, runIds: [(string)($fromRunId ?? ''), $toRunId]);
 	}//end buildReport()
 
 	/**
@@ -255,33 +255,24 @@ class PayrollMutationService {
 	 * between the two runs (payroll-mutation-lineage D5). An employee whose
 	 * payslips have no lines gets `causes: null`: the causes are unknown.
 	 *
-	 * @param array<string, mixed> $report    The report with its `lines`.
-	 * @param string               $fromRunId The baseline run, '' for none.
-	 * @param string               $toRunId   The reviewed run.
+	 * @param array<string, mixed> $report The report with its `lines`.
+	 * @param array<int, string>   $runIds The baseline run ('' for none), then the reviewed run.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.5
 	 */
-	private function withCauses(array $report, string $fromRunId, string $toRunId): array {
+	private function withCauses(array $report, array $runIds): array {
 		$changed = array_filter((array)($report['lines'] ?? []), static fn (array $line): bool => ($line['classification'] ?? '') === 'changed');
 		if ($changed === []) {
 			return $report;
 		}
 
-		$fromSlips = $this->payslipIdsByEmployee($fromRunId);
-		$toSlips = $this->payslipIdsByEmployee($toRunId);
-		$linesBySlip = [];
-		foreach ($this->loadAll('PayslipLine') as $line) {
-			$linesBySlip[(string)($line['payslipId'] ?? '')][] = $line;
-		}
-
-		foreach ($report['lines'] as $index => $line) {
-			if (($line['classification'] ?? '') !== 'changed') {
-				continue;
-			}
-
-			$employeeId = (string)$line['employeeId'];
+		$fromSlips   = $this->payslipIdsByEmployee($runIds[0]);
+		$toSlips     = $this->payslipIdsByEmployee($runIds[1]);
+		$linesBySlip = $this->payslipLinesBySlip();
+		foreach (array_keys($changed) as $index) {
+			$employeeId = (string)$report['lines'][$index]['employeeId'];
 			$report['lines'][$index]['causes'] = PayslipLineCauses::between(
 				fromLines: ($linesBySlip[($fromSlips[$employeeId] ?? '')] ?? []),
 				toLines: ($linesBySlip[($toSlips[$employeeId] ?? '')] ?? [])
@@ -290,6 +281,22 @@ class PayrollMutationService {
 
 		return $report;
 	}//end withCauses()
+
+	/**
+	 * Every PayslipLine of the register, grouped by payslip id.
+	 *
+	 * @return array<string, array<int, array<string, mixed>>>
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.5
+	 */
+	private function payslipLinesBySlip(): array {
+		$linesBySlip = [];
+		foreach ($this->loadAll('PayslipLine') as $line) {
+			$linesBySlip[(string)($line['payslipId'] ?? '')][] = $line;
+		}
+
+		return $linesBySlip;
+	}//end payslipLinesBySlip()
 
 	/**
 	 * This run's payslip ids, keyed by employeeId.

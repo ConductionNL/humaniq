@@ -55,27 +55,54 @@ final class PayslipLineCauses {
 		$from = self::byKey($fromLines);
 		$to   = self::byKey($toLines);
 
+		return array_merge(self::arrivals(from: $from, to: $to), self::departures(from: $from, to: $to));
+	}//end between()
+
+	/**
+	 * The later lines that are new or of another amount, in the later order.
+	 *
+	 * @param array<string, array<string, mixed>> $from The earlier lines by key.
+	 * @param array<string, array<string, mixed>> $to   The later lines by key.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 */
+	private static function arrivals(array $from, array $to): array {
 		$causes = [];
 		foreach ($to as $key => $line) {
 			$before = ($from[$key] ?? null);
 			if ($before === null) {
-				$causes[] = self::cause(change: 'new', line: $line, before: null, after: $line['amount']);
+				$causes[] = self::cause(line: $line, delta: ['change' => 'new', 'amountBefore' => null, 'amountAfter' => $line['amount']]);
 				continue;
 			}
 
 			if (self::cents($before['amount']) !== self::cents($line['amount'])) {
-				$causes[] = self::cause(change: 'changed', line: $line, before: $before['amount'], after: $line['amount']);
-			}
-		}
-
-		foreach ($from as $key => $line) {
-			if (isset($to[$key]) === false) {
-				$causes[] = self::cause(change: 'gone', line: $line, before: $line['amount'], after: null);
+				$causes[] = self::cause(line: $line, delta: ['change' => 'changed', 'amountBefore' => $before['amount'], 'amountAfter' => $line['amount']]);
 			}
 		}
 
 		return $causes;
-	}//end between()
+	}//end arrivals()
+
+	/**
+	 * The earlier lines the later payslip no longer has.
+	 *
+	 * @param array<string, array<string, mixed>> $from The earlier lines by key.
+	 * @param array<string, array<string, mixed>> $to   The later lines by key.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 */
+	private static function departures(array $from, array $to): array {
+		$causes = [];
+		foreach (array_diff_key($from, $to) as $line) {
+			$causes[] = self::cause(line: $line, delta: ['change' => 'gone', 'amountBefore' => $line['amount'], 'amountAfter' => null]);
+		}
+
+		return $causes;
+	}//end departures()
 
 	/**
 	 * Lines keyed on (component, sourceSchema, sourceId); lines with the same
@@ -105,24 +132,22 @@ final class PayslipLineCauses {
 	/**
 	 * One cause.
 	 *
-	 * @param string               $change `new`, `gone` or `changed`.
-	 * @param array<string, mixed> $line   The line it is about.
-	 * @param float|null           $before The earlier amount.
-	 * @param float|null           $after  The later amount.
+	 * @param array<string, mixed>                                                 $line  The line it is about.
+	 * @param array{change: string, amountBefore: float|null, amountAfter: float|null} $delta `new`, `gone` or `changed`, and the earlier and later amount.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/changes/payroll-mutation-lineage/design.md
 	 */
-	private static function cause(string $change, array $line, ?float $before, ?float $after): array {
+	private static function cause(array $line, array $delta): array {
 		return [
-			'change'       => $change,
+			'change'       => $delta['change'],
 			'component'    => (string)($line['component'] ?? ''),
 			'sourceSchema' => (($line['sourceSchema'] ?? null) !== null ? (string)$line['sourceSchema'] : null),
 			'sourceId'     => (($line['sourceId'] ?? null) !== null ? (string)$line['sourceId'] : null),
 			'sourceKind'   => (($line['sourceKind'] ?? null) !== null ? (string)$line['sourceKind'] : null),
-			'amountBefore' => $before,
-			'amountAfter'  => $after,
+			'amountBefore' => $delta['amountBefore'],
+			'amountAfter'  => $delta['amountAfter'],
 		];
 	}//end cause()
 

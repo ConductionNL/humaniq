@@ -56,8 +56,8 @@ final class PayslipLineSources {
 			self::hoursPay(slip: $slip, salaried: ($salarySource !== null)),
 			self::sickPay($slip),
 			self::bijtelling($slip),
-			self::each(entries: (array)($slip['retroAdjustment']['sources'] ?? []), component: 'retroAdjustment', schema: 'PayrollAdjustment', kind: 'correction'),
-			self::each(entries: (array)($slip['leaveSources'] ?? []), component: 'leaveBuySell', schema: 'LeaveTransaction', kind: 'leave-transaction'),
+			self::each(entries: (array)($slip['retroAdjustment']['sources'] ?? []), ref: ['retroAdjustment', 'PayrollAdjustment', 'correction']),
+			self::each(entries: (array)($slip['leaveSources'] ?? []), ref: ['leaveBuySell', 'LeaveTransaction', 'leave-transaction']),
 			self::loonbeslag($slip)
 		);
 
@@ -84,29 +84,45 @@ final class PayslipLineSources {
 		}
 
 		if ($credits === []) {
-			return [self::source(component: 'hourlyPay', cents: $totalCents, schema: null, id: null, kind: null)];
+			return [self::source(cents: $totalCents, ref: ['hourlyPay', null, null, null])];
 		}
 
-		$hours = array_sum(array_map(static fn (array $credit): float => (float)($credit['hours'] ?? 0.0), $credits));
-		$left  = $totalCents;
-		$out   = [];
-		foreach ($credits as $index => $credit) {
-			$cents = $left;
-			if ($index < (count($credits) - 1)) {
-				$share = 0.0;
-				if ($hours > 0.0) {
-					$share = ((float)($credit['hours'] ?? 0.0) / $hours);
-				}
-
-				$cents = (int)round($totalCents * $share);
-			}
-
-			$left -= $cents;
-			$out[] = self::source(component: 'hourlyPay', cents: $cents, schema: 'Timesheet', id: (string)($credit['timesheetId'] ?? ''), kind: 'timesheet');
+		$out = [];
+		foreach (self::shareByHours(totalCents: $totalCents, credits: $credits) as $index => $cents) {
+			$out[] = self::source(cents: $cents, ref: ['hourlyPay', 'Timesheet', (string)($credits[$index]['timesheetId'] ?? ''), 'timesheet']);
 		}
 
 		return $out;
 	}//end hoursPay()
+
+	/**
+	 * Share an amount over time credits by their hours; the last credit takes
+	 * the rounding, so the shares add up to the amount.
+	 *
+	 * @param int                              $totalCents The amount, in cents.
+	 * @param array<int, array<string, mixed>> $credits    The credits, a list.
+	 *
+	 * @return array<int, int> The cents per credit index.
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 */
+	private static function shareByHours(int $totalCents, array $credits): array {
+		$hours = array_sum(array_map(static fn (array $credit): float => (float)($credit['hours'] ?? 0.0), $credits));
+		$left  = $totalCents;
+		$last  = (count($credits) - 1);
+		$out   = [];
+		foreach ($credits as $index => $credit) {
+			$cents = $left;
+			if ($index < $last) {
+				$cents = (int)round($totalCents * ($hours > 0.0 ? ((float)($credit['hours'] ?? 0.0) / $hours) : 0.0));
+			}
+
+			$left       -= $cents;
+			$out[$index] = $cents;
+		}
+
+		return $out;
+	}//end shareByHours()
 
 	/**
 	 * The difference the open sick case makes to the regular pay.
@@ -126,7 +142,7 @@ final class PayslipLineSources {
 
 		$cents = ((int)$result->payableGrossCents - (int)($slip['regularWageCents'] ?? 0));
 
-		return [self::source(component: 'sickPay', cents: $cents, schema: 'SickLeaveCase', id: RegisterRows::idOf($case), kind: 'case')];
+		return [self::source(cents: $cents, ref: ['sickPay', 'SickLeaveCase', RegisterRows::idOf($case), 'case'])];
 	}//end sickPay()
 
 	/**
@@ -144,7 +160,7 @@ final class PayslipLineSources {
 			return [];
 		}
 
-		return [self::source(component: 'bijtelling', cents: (int)($slip['bijtellingCents'] ?? 0), schema: 'AssetAssignment', id: RegisterRows::idOf($assignment), kind: 'assignment')];
+		return [self::source(cents: (int)($slip['bijtellingCents'] ?? 0), ref: ['bijtelling', 'AssetAssignment', RegisterRows::idOf($assignment), 'assignment'])];
 	}//end bijtelling()
 
 	/**
@@ -163,29 +179,28 @@ final class PayslipLineSources {
 			return [];
 		}
 
-		return [self::source(component: 'loonbeslag', cents: (0 - $cents), schema: 'Loonbeslag', id: RegisterRows::idOf($loonbeslag), kind: 'garnishment')];
+		return [self::source(cents: (0 - $cents), ref: ['loonbeslag', 'Loonbeslag', RegisterRows::idOf($loonbeslag), 'garnishment'])];
 	}//end loonbeslag()
 
 	/**
 	 * One line per summed source of a fold.
 	 *
-	 * @param array<int, mixed> $entries   The fold's `{sourceId, cents}` entries.
-	 * @param string            $component The payslip component.
-	 * @param string            $schema    The sources' schema.
-	 * @param string            $kind      The sources' kind.
+	 * @param array<int, mixed>   $entries The fold's `{sourceId, cents}` entries.
+	 * @param array<int, string> $ref     The payslip component, the sources' schema and their kind.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
 	 * @spec openspec/changes/payroll-mutation-lineage/design.md
 	 */
-	private static function each(array $entries, string $component, string $schema, string $kind): array {
+	private static function each(array $entries, array $ref): array {
+		[$component, $schema, $kind] = $ref;
 		$out = [];
 		foreach ($entries as $entry) {
 			if (is_array($entry) === false) {
 				continue;
 			}
 
-			$out[] = self::source(component: $component, cents: (int)($entry['cents'] ?? 0), schema: $schema, id: (string)($entry['sourceId'] ?? ''), kind: $kind);
+			$out[] = self::source(cents: (int)($entry['cents'] ?? 0), ref: [$component, $schema, (string)($entry['sourceId'] ?? ''), $kind]);
 		}
 
 		return $out;
@@ -194,17 +209,16 @@ final class PayslipLineSources {
 	/**
 	 * One source.
 	 *
-	 * @param string      $component The payslip component.
-	 * @param int         $cents     The amount in cents.
-	 * @param string|null $schema    The source's schema.
-	 * @param string|null $id        The source's id.
-	 * @param string|null $kind      The source's kind.
+	 * @param int                     $cents The amount in cents.
+	 * @param array<int, string|null> $ref   The payslip component, then the source's schema, id and kind (each null when none).
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/changes/payroll-mutation-lineage/design.md
 	 */
-	private static function source(string $component, int $cents, ?string $schema, ?string $id, ?string $kind): array {
+	private static function source(int $cents, array $ref): array {
+		[$component, $schema, $id, $kind] = $ref;
+
 		return [
 			'component'    => $component,
 			'amountCents'  => $cents,

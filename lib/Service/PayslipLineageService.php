@@ -84,6 +84,14 @@ final class PayslipLineageService {
 	private ?array $raises = null;
 
 	/**
+	 * The calculation time of the current call, as a Unix timestamp; null
+	 * when it could not be read, which leaves every row in scope.
+	 *
+	 * @var integer|null
+	 */
+	private ?int $cutoff = null;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container       Resolves OpenRegister's services.
@@ -127,25 +135,19 @@ final class PayslipLineageService {
 	 * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-the-salary-line-shall-name-the-raise-or-the-edit-that-set-the-salary-req-pml-002
 	 */
 	public function salarySource(array $employee, int $salaryCents, string $calculatedAt): array {
-		$employeeId = RegisterRows::idOf($employee);
-		$raise      = $this->appliedRaise(employeeId: $employeeId, salaryCents: $salaryCents, calculatedAt: $calculatedAt);
+		$this->cutoff = $this->timestamp($calculatedAt);
+		$employeeId   = RegisterRows::idOf($employee);
+		$raise        = $this->appliedRaise(employeeId: $employeeId, salaryCents: $salaryCents);
+		$source       = ['component' => 'salary', 'amountCents' => $salaryCents];
 		if ($raise !== null) {
-			return [
-				'component'    => 'salary',
-				'amountCents'  => $salaryCents,
-				'sourceSchema' => 'CompAdjustment',
-				'sourceId'     => RegisterRows::idOf($raise),
-				'sourceKind'   => 'raise',
-			];
+			return $source + ['sourceSchema' => 'CompAdjustment', 'sourceId' => RegisterRows::idOf($raise), 'sourceKind' => 'raise'];
 		}
 
-		return [
-			'component'    => 'salary',
-			'amountCents'  => $salaryCents,
+		return $source + [
 			'sourceSchema' => 'Employee',
 			'sourceId'     => $employeeId,
 			'sourceKind'   => 'record-edit',
-			'audit'        => $this->lastChange(uuid: $employeeId, calculatedAt: $calculatedAt, field: 'grossMonthlySalary'),
+			'audit'        => $this->lastChange(uuid: $employeeId, field: 'grossMonthlySalary'),
 		];
 	}//end salarySource()
 
@@ -164,31 +166,48 @@ final class PayslipLineageService {
 	 * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-each-calculated-payslip-shall-carry-one-line-per-component-with-its-source-req-pml-001
 	 */
 	public function replaceLines(array $payslip, array $sources, string $calculatedAt): array {
-		$payslipId = RegisterRows::idOf($payslip);
-		if ($payslipId === '') {
+		$this->cutoff = $this->timestamp($calculatedAt);
+		if (RegisterRows::idOf($payslip) === '') {
 			return [];
 		}
 
-		$this->deleteLinesOf(payslipId: $payslipId);
+		$this->deleteLinesOf(payslipId: RegisterRows::idOf($payslip));
 
 		$written = [];
 		foreach ($sources as $source) {
-			$line = $this->line(payslip: $payslip, payslipId: $payslipId, source: $source, calculatedAt: $calculatedAt);
-			try {
-				$this->objectService()->saveObject(
-					object: $line,
-					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::SCHEMA)),
-					_rbac: false,
-					_multitenancy: false
-				);
+			$line = $this->line(payslip: $payslip, source: $source);
+			if ($this->saveLine(line: $line) === true) {
 				$written[] = $line;
-			} catch (\Throwable $e) {
-				$this->logger->warning('PayslipLineageService: kon regel ' . $line['component'] . ' van loonstrook ' . $payslipId . ' niet opslaan: ' . $e->getMessage());
 			}
 		}
 
 		return $written;
 	}//end replaceLines()
+
+	/**
+	 * Save one line; a failure is logged and never fails the run.
+	 *
+	 * @param array<string, mixed> $line The line.
+	 *
+	 * @return bool Whether it was saved.
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 */
+	private function saveLine(array $line): bool {
+		try {
+			$this->objectService()->saveObject(
+				object: $line,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::SCHEMA)),
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('PayslipLineageService: kon regel ' . $line['component'] . ' van loonstrook ' . $line['payslipId'] . ' niet opslaan: ' . $e->getMessage());
+			return false;
+		}
+
+		return true;
+	}//end saveLine()
 
 	/**
 	 * The lines of the given payslips, keyed by payslip id.
@@ -219,44 +238,66 @@ final class PayslipLineageService {
 	/**
 	 * One line to write.
 	 *
-	 * @param array<string, mixed> $payslip      The saved payslip.
-	 * @param string               $payslipId    Its id.
-	 * @param array<string, mixed> $source       The source.
-	 * @param string               $calculatedAt The calculation time.
+	 * @param array<string, mixed> $payslip The saved payslip.
+	 * @param array<string, mixed> $source  The source.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/changes/payroll-mutation-lineage/design.md
 	 */
-	private function line(array $payslip, string $payslipId, array $source, string $calculatedAt): array {
+	private function line(array $payslip, array $source): array {
 		$sourceId = (string)($source['sourceId'] ?? '');
-		$audit    = null;
-		if (array_key_exists('audit', $source) === true) {
-			$audit = $source['audit'];
-		} else if ($sourceId !== '') {
-			$audit = $this->lastChange(uuid: $sourceId, calculatedAt: $calculatedAt);
-		}
-
-		$changedAt = null;
-		if (($audit['at'] ?? null) !== null) {
-			$changedAt = gmdate('Y-m-d\TH:i:s\Z', (int)$audit['at']);
-		}
+		$audit    = $this->auditOf(source: $source, sourceId: $sourceId);
 
 		return [
-			'payslipId'          => $payslipId,
-			'payrollRunId'       => (($payslip['payrollRunId'] ?? null) !== null ? (string)$payslip['payrollRunId'] : null),
+			'payslipId'          => RegisterRows::idOf($payslip),
+			'payrollRunId'       => self::stringOrNull($payslip['payrollRunId'] ?? null),
 			'employeeId'         => (string)($payslip['employeeId'] ?? ''),
-			'period'             => (($payslip['period'] ?? null) !== null ? (string)$payslip['period'] : null),
+			'period'             => self::stringOrNull($payslip['period'] ?? null),
 			'component'          => (string)($source['component'] ?? ''),
 			'amount'             => round(((int)($source['amountCents'] ?? 0)) / 100, 2),
-			'sourceSchema'       => (($source['sourceSchema'] ?? null) !== null ? (string)$source['sourceSchema'] : null),
-			'sourceId'           => ($sourceId !== '' ? $sourceId : null),
-			'sourceKind'         => (($source['sourceKind'] ?? null) !== null ? (string)$source['sourceKind'] : null),
+			'sourceSchema'       => self::stringOrNull($source['sourceSchema'] ?? null),
+			'sourceId'           => self::stringOrNull($sourceId === '' ? null : $sourceId),
+			'sourceKind'         => self::stringOrNull($source['sourceKind'] ?? null),
 			'sourceAuditTrailId' => ($audit['id'] ?? null),
 			'sourceChangedBy'    => ($audit['user'] ?? null),
-			'sourceChangedAt'    => $changedAt,
+			'sourceChangedAt'    => (($audit['at'] ?? null) !== null ? gmdate('Y-m-d\TH:i:s\Z', (int)$audit['at']) : null),
 		];
 	}//end line()
+
+	/**
+	 * The audit entry of a source: the one already resolved, else the last
+	 * change of its object before the calculation.
+	 *
+	 * @param array<string, mixed> $source   The source.
+	 * @param string               $sourceId Its object id, '' when none.
+	 *
+	 * @return array{id: int|null, user: string|null, at: int|null}|null
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 */
+	private function auditOf(array $source, string $sourceId): ?array {
+		if (array_key_exists('audit', $source) === true) {
+			return $source['audit'];
+		}
+
+		if ($sourceId === '') {
+			return null;
+		}
+
+		return $this->lastChange(uuid: $sourceId);
+	}//end auditOf()
+
+	/**
+	 * A value as a string, null kept null.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return string|null
+	 */
+	private static function stringOrNull(mixed $value): ?string {
+		return ($value !== null ? (string)$value : null);
+	}//end stringOrNull()
 
 	/**
 	 * Delete a payslip's previous lines.
@@ -293,35 +334,24 @@ final class PayslipLineageService {
 	 * The latest raise of an employee, applied on or before the calculation,
 	 * whose proposed salary is the salary read.
 	 *
-	 * @param string $employeeId   The employee.
-	 * @param int    $salaryCents  The salary read, in cents.
-	 * @param string $calculatedAt The calculation time.
+	 * @param string $employeeId  The employee.
+	 * @param int    $salaryCents The salary read, in cents.
 	 *
 	 * @return array<string, mixed>|null
 	 *
 	 * @spec openspec/changes/payroll-mutation-lineage/design.md
 	 */
-	private function appliedRaise(string $employeeId, int $salaryCents, string $calculatedAt): ?array {
+	private function appliedRaise(string $employeeId, int $salaryCents): ?array {
 		if ($employeeId === '') {
 			return null;
 		}
 
 		$this->raises ??= $this->loadAll('CompAdjustment');
-		$before         = $this->timestamp($calculatedAt);
 		$best           = null;
 		$bestAt         = null;
 		foreach ($this->raises as $raise) {
-			$appliedAt = $this->timestamp($raise['appliedAt'] ?? null);
-			if ((string)($raise['employeeId'] ?? '') !== $employeeId || $appliedAt === null) {
-				continue;
-			}
-
-			if (($before !== null && $appliedAt > $before) || is_numeric($raise['proposedSalary'] ?? null) === false) {
-				continue;
-			}
-
-			// CompAdjustment.proposedSalary is stored in cents (CompAdjustmentService).
-			if ((int)round((float)$raise['proposedSalary']) !== $salaryCents) {
+			$appliedAt = $this->raiseAppliedAt(raise: $raise, employeeId: $employeeId);
+			if ($appliedAt === null || $this->proposesSalary(raise: $raise, salaryCents: $salaryCents) === false) {
 				continue;
 			}
 
@@ -329,38 +359,77 @@ final class PayslipLineageService {
 				$best   = $raise;
 				$bestAt = $appliedAt;
 			}
-		}//end foreach
+		}
 
 		return $best;
 	}//end appliedRaise()
+
+	/**
+	 * When a raise of this employee was applied, null when it is another
+	 * employee's, not applied, or applied after the calculation.
+	 *
+	 * @param array<string, mixed> $raise      The CompAdjustment.
+	 * @param string               $employeeId The employee.
+	 *
+	 * @return integer|null
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 */
+	private function raiseAppliedAt(array $raise, string $employeeId): ?int {
+		$appliedAt = $this->timestamp($raise['appliedAt'] ?? null);
+		if ((string)($raise['employeeId'] ?? '') !== $employeeId || $appliedAt === null) {
+			return null;
+		}
+
+		return ($this->isAfterCutoff(at: $appliedAt) === true ? null : $appliedAt);
+	}//end raiseAppliedAt()
+
+	/**
+	 * Whether a raise proposes exactly this salary.
+	 *
+	 * @param array<string, mixed> $raise       The CompAdjustment.
+	 * @param int                  $salaryCents The salary read, in cents.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 */
+	private function proposesSalary(array $raise, int $salaryCents): bool {
+		if (is_numeric($raise['proposedSalary'] ?? null) === false) {
+			return false;
+		}
+
+		// CompAdjustment.proposedSalary is stored in cents (CompAdjustmentService).
+		return (int)round((float)$raise['proposedSalary']) === $salaryCents;
+	}//end proposesSalary()
+
+	/**
+	 * Whether a moment lies after the calculation of the current call.
+	 *
+	 * @param int|null $at The moment, null when unknown.
+	 *
+	 * @return bool
+	 */
+	private function isAfterCutoff(?int $at): bool {
+		return $this->cutoff !== null && $at !== null && $at > $this->cutoff;
+	}//end isAfterCutoff()
 
 	/**
 	 * An object's last audit row before the calculation, optionally only rows
 	 * that changed one field. Null when there is none or the audit trail
 	 * cannot be read.
 	 *
-	 * @param string      $uuid         The object.
-	 * @param string      $calculatedAt The calculation time.
-	 * @param string|null $field        Only rows that changed this field.
+	 * @param string      $uuid  The object.
+	 * @param string|null $field Only rows that changed this field.
 	 *
 	 * @return array{id: int|null, user: string|null, at: int|null}|null
 	 *
 	 * @spec openspec/changes/payroll-mutation-lineage/design.md
 	 */
-	private function lastChange(string $uuid, string $calculatedAt, ?string $field = null): ?array {
-		$rows = $this->auditRows($uuid);
-		if ($rows === null) {
-			return null;
-		}
-
-		$before = $this->timestamp($calculatedAt);
-		$best   = null;
-		foreach ($rows as $row) {
-			if ($before !== null && $row['at'] !== null && $row['at'] > $before) {
-				continue;
-			}
-
-			if ($field !== null && array_key_exists($field, $row['changed']) === false) {
+	private function lastChange(string $uuid, ?string $field = null): ?array {
+		$best = null;
+		foreach (($this->auditRows($uuid) ?? []) as $row) {
+			if ($this->isAfterCutoff(at: $row['at']) === true || ($field !== null && array_key_exists($field, $row['changed']) === false)) {
 				continue;
 			}
 
@@ -438,26 +507,33 @@ final class PayslipLineageService {
 		}
 
 		$data = (is_array($data) === true ? $data : []);
-
-		$id = ($data['id'] ?? null);
-		if (is_object($entry) === true && method_exists($entry, 'getId') === true) {
-			$id = $entry->getId();
-		}
-
-		$created = ($data['created'] ?? null);
-		if (is_object($entry) === true && method_exists($entry, 'getCreated') === true) {
-			$created = $entry->getCreated();
-		}
-
+		$id   = self::entryValue(entry: $entry, getter: 'getId', fallback: ($data['id'] ?? null));
 		$user = ($data['userName'] ?? ($data['user'] ?? null));
 
 		return [
 			'id'      => (is_numeric($id) === true ? (int)$id : null),
 			'user'    => (is_string($user) === true && $user !== '' ? $user : null),
-			'at'      => $this->timestamp($created),
+			'at'      => $this->timestamp(self::entryValue(entry: $entry, getter: 'getCreated', fallback: ($data['created'] ?? null))),
 			'changed' => (is_array($data['changed'] ?? null) === true ? $data['changed'] : []),
 		];
 	}//end auditRow()
+
+	/**
+	 * A value from an entity getter when the entry has it, else the fallback.
+	 *
+	 * @param mixed  $entry    The entry.
+	 * @param string $getter   The getter.
+	 * @param mixed  $fallback The value of the array form.
+	 *
+	 * @return mixed
+	 */
+	private static function entryValue(mixed $entry, string $getter, mixed $fallback): mixed {
+		if (is_object($entry) === true && method_exists($entry, $getter) === true) {
+			return $entry->{$getter}();
+		}
+
+		return $fallback;
+	}//end entryValue()
 
 	/**
 	 * A time as a unix timestamp, or null when it is not one.
