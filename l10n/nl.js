@@ -4025,7 +4025,10 @@ OC.L10N.register(
         "The sign-in settings could not be saved.": "De inloginstellingen konden niet worden opgeslagen.",
         "Use whole numbers: a minimum length from 1 to 255 and a number of failed attempts from 0 to 255.": "Gebruik hele getallen: een minimale lengte van 1 tot 255 en een aantal mislukte pogingen van 0 tot 255.",
         "enabled, no provider configured yet": "ingeschakeld, nog geen provider ingesteld",
-        "not enabled": "niet ingeschakeld"
+        "not enabled": "niet ingeschakeld",
+        "Approval state": "Goedkeuringsstatus",
+        "Where the timesheet of these hours is in the approval process.": "Waar de urenstaat van deze uren in het goedkeuringsproces staat.",
+        "When the timesheet of these hours was approved.": "Wanneer de urenstaat van deze uren is goedgekeurd."
     },
     "nplurals=2; plural=(n != 1);"
 )

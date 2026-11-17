@@ -4024,7 +4024,10 @@
         "The sign-in settings could not be saved.": "The sign-in settings could not be saved.",
         "Use whole numbers: a minimum length from 1 to 255 and a number of failed attempts from 0 to 255.": "Use whole numbers: a minimum length from 1 to 255 and a number of failed attempts from 0 to 255.",
         "enabled, no provider configured yet": "enabled, no provider configured yet",
-        "not enabled": "not enabled"
+        "not enabled": "not enabled",
+        "Approval state": "Approval state",
+        "Where the timesheet of these hours is in the approval process.": "Where the timesheet of these hours is in the approval process.",
+        "When the timesheet of these hours was approved.": "When the timesheet of these hours was approved."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

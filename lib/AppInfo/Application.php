@@ -89,6 +89,7 @@ use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimeEstimateListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
 use OCA\Humaniq\Listener\TimesheetApprovalListener;
+use OCA\Humaniq\Listener\TimesheetEntryStateListener;
 use OCA\Humaniq\Listener\TimesheetProcessStampListener;
 use OCA\Humaniq\Listener\LeaveRequestProcessStampListener;
 use OCA\Humaniq\Listener\TrainingRecordListener;
@@ -599,6 +600,13 @@ class Application extends App implements IBootstrap {
 				schemas: [TimesheetAggregateListener::TIMEENTRY_SLUG]
 			);
 		}
+
+		// time-entry-approval-state D3: carry every Timesheet status edge
+		// (submit, approve, reject, reopen) down to its entries as
+		// approvalState/approvedAt. Edge-triggered and fire-and-forget; writes
+		// only TimeEntry objects under the internal-write marker, so neither
+		// the entry guard nor the aggregate recompute runs for them.
+		$this->registerFilteredObjectListener($dispatcher, ObjectUpdatedEvent::class, TimesheetEntryStateListener::class, null, [TimesheetEntryStateListener::TIMESHEET_SLUG]);
 
 		// working-hours-per-person REQ-WHP-001: refuse a WorkingPattern whose
 		// period overlaps one the same employee already has. Two patterns give
