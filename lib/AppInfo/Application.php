@@ -51,6 +51,7 @@ use OCA\Humaniq\Lifecycle\RightToWorkGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\SurveyOpenGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Humaniq\Lifecycle\TimesheetReopenGuard;
 use OCA\Humaniq\Lifecycle\UbdReportReadyGuard;
 use OCA\Humaniq\Listener\AdministrationAccessWriteGuard;
 use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
@@ -224,6 +225,7 @@ class Application extends App implements IBootstrap {
 		// its FQCN so OpenRegister's LifecycleGuardRegistry resolves the
 		// `requires` tag declared on the `submit` transition.
 		$context->registerService(TimesheetNotEmptyGuard::class, static fn ($c): TimesheetNotEmptyGuard => new TimesheetNotEmptyGuard());
+		$context->registerService(TimesheetReopenGuard::class, static fn ($c): TimesheetReopenGuard => new TimesheetReopenGuard($c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
 
 		// OpenRegister lifecycle guard for the LeaveRequest `submit` transition
 		// (leave-against-a-department-schedule REQ-LVM-T02): a type that needs a

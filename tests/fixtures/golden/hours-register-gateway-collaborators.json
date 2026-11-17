@@ -18,6 +18,7 @@
     "OCA\\Humaniq\\Lifecycle\\LeaveApprovalStepGuard::$gateway",
     "OCA\\Humaniq\\Lifecycle\\LeaveTypeConditionGuard::$gateway",
     "OCA\\Humaniq\\Lifecycle\\RightToWorkGuard::$gateway",
+    "OCA\\Humaniq\\Lifecycle\\TimesheetReopenGuard::$store",
     "OCA\\Humaniq\\Listener\\AdministrationAccessWriteGuard::$gateway",
     "OCA\\Humaniq\\Listener\\CandidateEvaluationStampListener::$gateway",
     "OCA\\Humaniq\\Listener\\ChangeRequestListener::$gateway",
