@@ -174,4 +174,72 @@ class DeploymentPlanServiceTest extends TestCase {
 
 		$this->assertSame(['lines' => [], 'plannedHours' => 0.0, 'differenceHours' => null, 'overload' => false], $this->service()->totals(['lines' => 'x']));
 	}//end testRoomAndMissingNorm()
+	/**
+	 * Placements outside the school year and teachers the caller may not read are left out; a later plan year is ignored.
+	 *
+	 * @return void
+	 */
+	public function testSchoolViewKeepsPlacedReadableTeachersOfTheYear(): void {
+		$assignments = [
+			['employeeId' => 'e-1', 'startDate' => '2020-01-01'],
+			['employeeId' => 'e-2', 'startDate' => '2020-01-01', 'endDate' => '2026-06-30'],
+			['employeeId' => 'e-3', 'startDate' => '2020-01-01'],
+			['employeeId' => 'e-4', 'startDate' => '2027-03-01'],
+		];
+		$plans = [
+			['employeeId' => 'e-1', 'schoolYear' => '2027-2028', 'normHours' => 10, 'lines' => [['hours' => 100]]],
+			['employeeId' => 'e-4', 'schoolYear' => '2026-2027', 'normHours' => 500, 'lines' => [['hours' => 400]]],
+		];
+		$readable = [
+			'e-1' => ['firstName' => 'Sam', 'lastName' => 'Jansen'],
+			'e-2' => ['firstName' => 'Kim', 'lastName' => 'de Vries'],
+			'e-4' => ['name' => 'Bo'],
+		];
+
+		$rows = $this->service()->schoolView($assignments, $plans, $readable, '2026-2027');
+
+		$this->assertSame(['e-4', 'e-1'], array_column($rows, 'employeeId'));
+		$this->assertSame(-100.0, $rows[0]['differenceHours']);
+		$this->assertSame('Bo', $rows[0]['name']);
+		$this->assertFalse($rows[1]['hasPlan']);
+		$this->assertNull($rows[1]['differenceHours']);
+	}//end testSchoolViewKeepsPlacedReadableTeachersOfTheYear()
+
+	/**
+	 * A malformed school year gives no view.
+	 *
+	 * @return void
+	 */
+	public function testSchoolViewRefusesAMalformedYear(): void {
+		$this->assertNull($this->service()->schoolView([], [], [], '2026'));
+	}//end testSchoolViewRefusesAMalformedYear()
+
+	/**
+	 * A plan without a norm sorts after plans with one.
+	 *
+	 * @return void
+	 */
+	public function testSchoolViewSortsAPlanWithoutANormAfterThoseWithOne(): void {
+		$assignments = [['employeeId' => 'a', 'startDate' => '2020-01-01'], ['employeeId' => 'b', 'startDate' => '2020-01-01']];
+		$plans = [
+			['employeeId' => 'a', 'schoolYear' => '2026-2027', 'lines' => [['hours' => 100]]],
+			['employeeId' => 'b', 'schoolYear' => '2026-2027', 'normHours' => 1000, 'lines' => [['hours' => 100]]],
+		];
+
+		$rows = $this->service()->schoolView($assignments, $plans, ['a' => ['name' => 'A'], 'b' => ['name' => 'B']], '2026-2027');
+
+		$this->assertSame(['b', 'a'], array_column($rows, 'employeeId'));
+		$this->assertSame(-900.0, $rows[0]['differenceHours']);
+		$this->assertNull($rows[1]['normHours']);
+	}//end testSchoolViewSortsAPlanWithoutANormAfterThoseWithOne()
+
+	/**
+	 * A day in July belongs to the school year that started the August before; 1 August starts the next.
+	 *
+	 * @return void
+	 */
+	public function testSchoolYearOfTurnsOnTheFirstOfAugust(): void {
+		$this->assertSame('2025-2026', DeploymentPlanService::schoolYearOf(new \DateTimeImmutable('2026-07-31')));
+		$this->assertSame('2026-2027', DeploymentPlanService::schoolYearOf(new \DateTimeImmutable('2026-08-01')));
+	}//end testSchoolYearOfTurnsOnTheFirstOfAugust()
 }//end class

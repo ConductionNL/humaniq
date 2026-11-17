@@ -575,6 +575,91 @@ final class TaxTables {
 	}//end bijtellingPrivegebruikAuto()
 
 	/**
+	 * The treatment of one special regime from the `specialRegimes` table group
+	 * (payroll-special-regimes design.md D2): the tax table colour, whether
+	 * employee insurances apply, the Zvw mode and, for the early-retirement
+	 * regime, the monthly final-levy threshold in cents and the final-levy rate
+	 * on the percentage scale (0-100). A regime without the threshold leaves
+	 * reports 0 for both, which the pack reads as "no final levy".
+	 *
+	 * `unverified` lists the dotted path of every leaf of the regime that is
+	 * unverified or a placeholder; the run refuses to pay under a regime while
+	 * that list is not empty.
+	 *
+	 * @param string $regime The regime key (`rvu`, `wachtgeld`, `politiek-ambt`).
+	 *
+	 * @return array{taxTableColor: string, werknemersverzekeringen: bool, zvwMode: string, thresholdPerMonthCents: int, finalLevyRate: float, unverified: list<string>}
+	 *
+	 * @throws \RuntimeException When the tables carry no such regime or it lacks a required leaf.
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	public function specialRegime(string $regime): array {
+		$node = $this->leaf(['specialRegimes', $regime]);
+		if (is_array($node) === false) {
+			throw new RuntimeException('TaxTables (' . $this->id . '): ontbrekende parameter "specialRegimes.' . $regime . '".');
+		}
+
+		[$threshold, $rate] = $this->finalLevyOf(node: $node, regime: $regime);
+
+		return [
+			'taxTableColor' => (string)$this->leaf(['specialRegimes', $regime, 'taxTableColor', 'value']),
+			'werknemersverzekeringen' => (bool)$this->leaf(['specialRegimes', $regime, 'werknemersverzekeringen', 'value']),
+			'zvwMode' => (string)$this->leaf(['specialRegimes', $regime, 'zvwMode', 'value']),
+			'thresholdPerMonthCents' => $threshold,
+			'finalLevyRate' => $rate,
+			'unverified' => self::unverifiedLeaves(node: $node, regime: $regime),
+		];
+
+	}//end specialRegime()
+
+	/**
+	 * The paths of a regime's value leaves that are not verified, or still a placeholder.
+	 *
+	 * @param array<string, mixed> $node   The regime's node.
+	 * @param string               $regime The regime key.
+	 *
+	 * @return list<string>
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private static function unverifiedLeaves(array $node, string $regime): array {
+		$unverified = [];
+		foreach ($node as $key => $leaf) {
+			if (is_array($leaf) === false || array_key_exists('value', $leaf) === false) {
+				continue;
+			}
+
+			if (($leaf['verified'] ?? false) !== true || ($leaf['placeholder'] ?? false) === true) {
+				$unverified[] = 'specialRegimes.' . $regime . '.' . $key;
+			}
+		}
+
+		return $unverified;
+	}//end unverifiedLeaves()
+
+	/**
+	 * A regime's final-levy threshold in cents and rate, or zero for a regime without one.
+	 *
+	 * @param array<string, mixed> $node   The regime's node.
+	 * @param string               $regime The regime key.
+	 *
+	 * @return array{0: int, 1: float}
+	 *
+	 * @spec openspec/changes/payroll-special-regimes
+	 */
+	private function finalLevyOf(array $node, string $regime): array {
+		if (array_key_exists('thresholdPerMonth', $node) === false && array_key_exists('finalLevyRate', $node) === false) {
+			return [0, 0.0];
+		}
+
+		return [
+			self::euroToCents((float)$this->leaf(['specialRegimes', $regime, 'thresholdPerMonth', 'value'])),
+			(float)$this->leaf(['specialRegimes', $regime, 'finalLevyRate', 'value']),
+		];
+	}//end finalLevyOf()
+
+	/**
 	 * Convert a euro amount to integer cents using this class's own rule
 	 * (jurisdiction-packs design.md D4: the euro-to-cents conversion stays
 	 * exactly where it is today rather than being reimplemented in the

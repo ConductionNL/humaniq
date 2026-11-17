@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\IUserSession;
 use RuntimeException;
@@ -109,8 +110,7 @@ class CostRateAccess {
 		try {
 			$employee = $this->objectService()->find(
 				id: $employeeId,
-				register: $this->settings->getRegisterSlug(),
-				schema: 'Employee'
+				options: new ObjectFindOptions(register: $this->settings->getRegisterSlug(), schema: 'Employee')
 			);
 		} catch (\Throwable $e) {
 			$this->logger->info('humaniq cost rate: employee ' . $employeeId . ' not retrievable: ' . $e->getMessage());

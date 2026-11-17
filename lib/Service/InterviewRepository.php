@@ -38,6 +38,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -98,7 +101,7 @@ class InterviewRepository {
 	 */
 	public function find(string $id): ?array {
 		try {
-			$row = $this->objectService()->find(id: $id, register: $this->register(), schema: self::INTERVIEW_SCHEMA);
+			$row = $this->objectService()->find(id: $id, options: new ObjectFindOptions(register: $this->register(), schema: self::INTERVIEW_SCHEMA));
 		} catch (Throwable $e) {
 			$this->logger->info('InterviewRepository: kon Interview ' . $id . ' niet laden: ' . $e->getMessage());
 			return null;
@@ -223,9 +226,10 @@ class InterviewRepository {
 		try {
 			$this->objectService()->saveObject(
 				object: $payload,
-				register: $this->register(),
-				schema: self::INTERVIEW_SCHEMA,
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: self::INTERVIEW_SCHEMA),
+					uuid: $id
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

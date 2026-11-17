@@ -26,8 +26,11 @@
 - [x] 3.1 `humaniq:wagetax:remit` registered in `appinfo/info.xml` (D7). Verify, from the caller:
       `WageTaxRemitCommandTest::testTheCommandHandsTheRunsReturnToShillinq` runs the command on
       the real service and finds the payable; `::testInfoXmlRegistersTheCommand`.
-- [ ] 3.2 Pages `WageTaxRemittances` and `WageTaxRemittanceDetail` under payroll; l10n en and nl.
-      Verify: `npm run check:manifest`, `npm run check:l10n` exit 0.
+- [x] 3.2 Pages `WageTaxRemittances` and `WageTaxRemittanceDetail` under payroll; l10n en and nl.
+      Verify: `npm run check:manifest`, `npm run check:l10n` exit 0. (verified: both pages in
+      `src/manifest.d/hr-remittance.json`; `check:manifest` PASS over 197 pages; `check:l10n`
+      PASS after adding the two manager/deputy schema descriptions it reported, which had no
+      en/nl key; `l10n/*.js` regenerated with `npm run l10n:build`.)
 - [x] 3.3 `@spec` tags and reason-bearing `@e2e exclude` per scenario.
 - [ ] 3.4 Live: on the dev instance with shillinq, create a Belastingdienst payee, set
       `wagetax_payee_id`, confirm a month's return, run `occ humaniq:wagetax:remit`, and see

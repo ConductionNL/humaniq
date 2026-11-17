@@ -415,7 +415,8 @@
 					"billable"
 				],
 				"_fieldOrderNote": "Field order is declared once on the TimeEntry SCHEMA (property `order`: start 10, end 20, break 30, description 40, project 50, billable 60), not per page — fieldsFromSchema sorts by overrides.order > prop.order > ALPHABETICAL, so a schema with no order renders every form as an alphabetical wall. That is exactly what happened here: the booking form showed End before Start (breakMinutes, description, endedAt, projectId, startedAt), which the e2e caught by filling the two datetime inputs positionally and getting a span the server correctly refused. Declaring order on the schema fixes every surface at once; no page-level override is needed.",
-				"_activityNote": "time-non-project-activities D1/D2: activityCode lets a booking say it was training, an internal meeting or overhead instead of naming a project. An activity of kind absence (leave, sickness) is refused by TimeEntryStampListener: those hours come from the leave request or sick report and show on the timesheet's week view."
+				"_activityNote": "time-non-project-activities D1/D2: activityCode lets a booking say it was training, an internal meeting or overhead instead of naming a project. An activity of kind absence (leave, sickness) is refused by TimeEntryStampListener: those hours come from the leave request or sick report and show on the timesheet's week view.",
+				"allowExport": true
 			}
 		}
 	],

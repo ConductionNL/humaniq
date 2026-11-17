@@ -38,6 +38,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -127,9 +130,13 @@ class TimesheetAggregationService {
 		$this->marker->runInternal(function () use ($payload, $timesheetId): void {
 			$this->objects()->saveObject(
 				object: $payload,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Timesheet',
-				uuid: $timesheetId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $this->settingsService->getRegisterSlug(),
+							schema: 'Timesheet'
+						),
+					uuid: $timesheetId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -270,8 +277,10 @@ class TimesheetAggregationService {
 		try {
 			$entity = $this->objects()->find(
 				id: $timesheetId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Timesheet',
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: 'Timesheet'
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

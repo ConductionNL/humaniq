@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCP\Calendar\ICreateFromString;
 use RuntimeException;
 use Throwable;
 
@@ -66,10 +67,14 @@ class InterviewSyncEngine {
 	/**
 	 * @param InterviewRepository $repository Interview/Application/Vacancy data access + PUT-semantic persist.
 	 * @param InterviewIcsRenderer $icsRenderer ICS render/diff/date-parse helper.
+	 * @param InterviewAttendees|null $attendees  Names the organiser and the interviewers as attendees; without it the event carries the interviewers as text only.
+	 * @param SchedulingCalendarWriter|null $scheduler Delivers an event with attendees to their own calendars (REQ-INTV-010); without it every write goes through the backend only.
 	 */
 	public function __construct(
 		private readonly InterviewRepository $repository,
 		private readonly InterviewIcsRenderer $icsRenderer,
+		private readonly ?InterviewAttendees $attendees = null,
+		private readonly ?SchedulingCalendarWriter $scheduler = null,
 	) {
 
 	}//end __construct()
@@ -189,13 +194,49 @@ class InterviewSyncEngine {
 		$applicationId = (string)($interview['applicationId'] ?? '');
 		$summary = $this->repository->resolveSummary($run->applicationsById, $run->vacanciesById, $applicationId);
 		$location = trim((string)($interview['location'] ?? ''));
-		$interviewers = trim((string)($interview['interviewers'] ?? ''));
-
 		$storedUid = trim((string)($interview['calendarEventUid'] ?? ''));
 		$uid = ($storedUid !== '') ? $storedUid : (self::URI_PREFIX . $sync->id);
-		$ics = $this->icsRenderer->render($uid, ['dtstart' => $sync->dtstart, 'dtend' => $sync->dtend, 'summary' => $summary, 'location' => $location, 'interviewers' => $interviewers]);
-		return new PreparedInterviewEvent($storedUid, $uid, $uid . '.ics', $ics, (string)$sync->dtstart, (string)$sync->dtend, $summary, $location);
+		$event = array_merge(
+			['dtstart' => $sync->dtstart, 'dtend' => $sync->dtend, 'summary' => $summary, 'location' => $location],
+			$this->peopleFields(interviewers: ($interview['interviewers'] ?? null), principal: $run->target->principal)
+		);
+		$ics = $this->icsRenderer->render($uid, $event);
+		return new PreparedInterviewEvent($storedUid, $uid, $uid . '.ics', $ics, (string)$sync->dtstart, (string)$sync->dtend, $summary, $location, ($event['attendees'] ?? null));
 	}//end prepareEvent()
+
+	/**
+	 * The event fields that name the people: the interviewers as text, and
+	 * with an attendee resolver also the organizer and the attendees.
+	 *
+	 * @param mixed  $interviewers The stored interviewers: user ids, or text stored before they were.
+	 * @param string $principal    The target calendar's owner, who organises.
+	 *
+	 * @return array<string, mixed> `interviewers`, and `organizer` and `attendees` when attendees are resolved.
+	 */
+	private function peopleFields(mixed $interviewers, string $principal): array {
+		if ($this->attendees === null) {
+			return ['interviewers' => $this->interviewersText(interviewers: ($interviewers ?? ''))];
+		}
+
+		// REQ-INTV-010: the interviewers are attendees, the calendar's owner organises.
+		$people = $this->attendees->forEvent(interviewers: $interviewers, principal: $principal);
+		return ['interviewers' => $people['description'], 'organizer' => $people['organizer'], 'attendees' => $people['attendees']];
+	}//end peopleFields()
+
+	/**
+	 * The interviewers as description text, for an engine that names no attendees.
+	 *
+	 * @param mixed $interviewers The stored value: user ids, or text stored before they were.
+	 *
+	 * @return string
+	 */
+	private function interviewersText(mixed $interviewers): string {
+		if (is_array($interviewers) === true) {
+			return implode(', ', InterviewAttendees::ids(interviewers: $interviewers));
+		}
+
+		return trim((string)$interviewers);
+	}//end interviewersText()
 
 	/**
 	 * Create or update one VEVENT, identified by the prepared UID
@@ -260,11 +301,13 @@ class InterviewSyncEngine {
 	 */
 	private function createEvent(InterviewSyncRun $run, InterviewEventSync $sync): void {
 		try {
-			if (method_exists($run->target->backend, 'createCalendarObject') === false) {
-				throw new RuntimeException('CalDavBackend::createCalendarObject is not available.');
+			$calendar = $this->schedulingCalendar(run: $run, recipients: ($sync->prepared->attendees ?? []));
+			if ($calendar !== null && $this->scheduler !== null) {
+				// REQ-INTV-010: the scheduling-aware write invites every attendee.
+				$this->scheduler->send($calendar, $sync->prepared->objectUri, $sync->prepared->ics);
+			} else {
+				$this->createInBackend(target: $run->target, prepared: $sync->prepared);
 			}
-
-			$run->target->backend->createCalendarObject($run->target->calendarId, $sync->prepared->objectUri, $sync->prepared->ics);
 		} catch (Throwable $e) {
 			$run->results[] = $this->outcome($sync->id, 'failed', 'Aanmaken kalenderafspraak mislukt: ' . $e->getMessage());
 			return;
@@ -274,6 +317,24 @@ class InterviewSyncEngine {
 		$run->results[] = $this->outcome($sync->id, 'created', 'Kalenderafspraak aangemaakt.');
 
 	}//end createEvent()
+
+	/**
+	 * Write a prepared event straight into the target calendar.
+	 *
+	 * @param InterviewCalendarTarget $target   The target calendar.
+	 * @param PreparedInterviewEvent  $prepared The event.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the backend cannot create calendar objects.
+	 */
+	private function createInBackend(InterviewCalendarTarget $target, PreparedInterviewEvent $prepared): void {
+		if (method_exists($target->backend, 'createCalendarObject') === false) {
+			throw new RuntimeException('CalDavBackend::createCalendarObject is not available.');
+		}
+
+		$target->backend->createCalendarObject($target->calendarId, $prepared->objectUri, $prepared->ics);
+	}//end createInBackend()
 
 	/**
 	 * Diff the existing stored event against the desired values and update
@@ -290,7 +351,13 @@ class InterviewSyncEngine {
 	private function updateEventIfChanged(InterviewSyncRun $run, InterviewEventSync $sync): void {
 		$prepared = $sync->prepared;
 		$existingIcs = $this->fetchCalendarData($run->target, $prepared->objectUri);
-		if ($existingIcs !== null && $this->icsRenderer->unchanged($existingIcs, ['dtstart' => $prepared->dtstart, 'dtend' => $prepared->dtend, 'summary' => $prepared->summary, 'location' => $prepared->location]) === true) {
+		$sync->storedIcs = $existingIcs;
+		$wanted = ['dtstart' => $prepared->dtstart, 'dtend' => $prepared->dtend, 'summary' => $prepared->summary, 'location' => $prepared->location];
+		if ($prepared->attendees !== null) {
+			$wanted['attendees'] = $prepared->attendees;
+		}
+
+		if ($existingIcs !== null && $this->icsRenderer->unchanged($existingIcs, $wanted) === true) {
 			$this->rememberUid(sync: $sync);
 			$run->results[] = $this->outcome($sync->id, 'unchanged', 'Geen wijziging.');
 			return;
@@ -307,20 +374,26 @@ class InterviewSyncEngine {
 
 	/**
 	 * Write the prepared event over the existing calendar object, or append
-	 * a `failed` outcome when that fails.
+	 * a `failed` outcome when that fails. An event with attendees is
+	 * rescheduled through the scheduling-aware calendar so their copies move
+	 * with it (REQ-INTV-010).
 	 *
 	 * @param InterviewSyncRun   $run  The run: its target, collecting the outcomes.
-	 * @param InterviewEventSync $sync The Interview being synced, its event prepared.
+	 * @param InterviewEventSync $sync The Interview being synced, its event prepared and its stored text read.
 	 *
 	 * @return bool Whether the object was updated.
+	 *
+	 * @spec openspec/changes/interview-in-the-interviewers-calendars/specs/interview-scheduling/spec.md
 	 */
 	private function writeUpdate(InterviewSyncRun $run, InterviewEventSync $sync): bool {
-		try {
-			if (method_exists($run->target->backend, 'updateCalendarObject') === false) {
-				throw new RuntimeException('CalDavBackend::updateCalendarObject is not available.');
-			}
+		$stored = $sync->storedIcs;
+		$calendar = ($stored === null) ? null : $this->schedulingCalendar(run: $run, recipients: [...($sync->prepared->attendees ?? []), ...SchedulingCalendarWriter::attendeeEmails(ics: $stored)]);
+		if ($calendar !== null) {
+			return $this->rescheduleForAttendees(run: $run, sync: $sync, calendar: $calendar);
+		}
 
-			$run->target->backend->updateCalendarObject($run->target->calendarId, $sync->prepared->objectUri, $sync->prepared->ics);
+		try {
+			$this->updateInBackend(target: $run->target, prepared: $sync->prepared);
 		} catch (Throwable $e) {
 			$run->results[] = $this->outcome($sync->id, 'failed', 'Bijwerken kalenderafspraak mislukt: ' . $e->getMessage());
 			return false;
@@ -328,6 +401,125 @@ class InterviewSyncEngine {
 
 		return true;
 	}//end writeUpdate()
+
+	/**
+	 * Write a prepared event over the stored object in the target calendar.
+	 *
+	 * @param InterviewCalendarTarget $target   The target calendar.
+	 * @param PreparedInterviewEvent  $prepared The event.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the backend cannot update calendar objects.
+	 */
+	private function updateInBackend(InterviewCalendarTarget $target, PreparedInterviewEvent $prepared): void {
+		if (method_exists($target->backend, 'updateCalendarObject') === false) {
+			throw new RuntimeException('CalDavBackend::updateCalendarObject is not available.');
+		}
+
+		$target->backend->updateCalendarObject($target->calendarId, $prepared->objectUri, $prepared->ics);
+	}//end updateInBackend()
+
+	/**
+	 * Replace a stored event that has (or had) attendees through the
+	 * scheduling-aware calendar (REQ-INTV-010). That calendar refuses a UID
+	 * it already holds, so the stored copy is removed through the backend
+	 * first (which sends nothing). Attendees taken off the event receive a
+	 * cancellation, everyone still on it receives the new version with a
+	 * higher SEQUENCE, which replaces the copy in their calendars. When any
+	 * step fails the stored copy is put back, so the next sync tries again.
+	 *
+	 * @param InterviewSyncRun   $run      The run: its target, collecting the outcomes.
+	 * @param InterviewEventSync $sync     The Interview being synced, its event prepared and its stored text read.
+	 * @param ICreateFromString  $calendar The scheduling-aware calendar.
+	 *
+	 * @return bool Whether the event was replaced.
+	 *
+	 * @spec openspec/changes/interview-in-the-interviewers-calendars/specs/interview-scheduling/spec.md
+	 */
+	private function rescheduleForAttendees(InterviewSyncRun $run, InterviewEventSync $sync, ICreateFromString $calendar): bool {
+		$existingIcs = (string)$sync->storedIcs;
+		$objectUri = $sync->prepared->objectUri;
+		$removed = array_values(array_diff(SchedulingCalendarWriter::attendeeEmails(ics: $existingIcs), SchedulingCalendarWriter::attendeeEmails(ics: $sync->prepared->ics)));
+		$next = SchedulingCalendarWriter::withSequence(ics: $sync->prepared->ics, sequence: (SchedulingCalendarWriter::sequence(ics: $existingIcs) + 1));
+		try {
+			$this->deleteFromBackend(target: $run->target, objectUri: $objectUri);
+			if ($removed !== []) {
+				$this->scheduler?->send($calendar, $objectUri, SchedulingCalendarWriter::cancelled(ics: $existingIcs, onlyTo: $removed));
+				$this->deleteFromBackend(target: $run->target, objectUri: $objectUri);
+				$next = SchedulingCalendarWriter::withSequence(ics: $next, sequence: (SchedulingCalendarWriter::sequence(ics: $existingIcs) + 2));
+			}
+
+			$this->scheduler?->send($calendar, $objectUri, $next);
+		} catch (Throwable $e) {
+			$this->restore(target: $run->target, objectUri: $objectUri, ics: $existingIcs);
+			$run->results[] = $this->outcome($sync->id, 'failed', 'Bijwerken kalenderafspraak mislukt: ' . $e->getMessage());
+			return false;
+		}
+
+		return true;
+	}//end rescheduleForAttendees()
+
+	/**
+	 * The scheduling-aware calendar for a write, when the event has or had
+	 * attendees and the calendar manager offers that calendar; null means
+	 * write through the backend only.
+	 *
+	 * @param InterviewSyncRun $run        The run: its target.
+	 * @param array<int, mixed> $recipients Who the event concerns: the new version's attendees and the stored version's attendee emails.
+	 *
+	 * @return ICreateFromString|null
+	 *
+	 * @spec openspec/changes/interview-in-the-interviewers-calendars/specs/interview-scheduling/spec.md
+	 */
+	private function schedulingCalendar(InterviewSyncRun $run, array $recipients): ?ICreateFromString {
+		if ($this->scheduler === null || $recipients === []) {
+			return null;
+		}
+
+		return $this->scheduler->calendar(principal: $run->target->principal, calendarUri: $run->target->calendarUri);
+	}//end schedulingCalendar()
+
+	/**
+	 * Delete one calendar object through the backend (sends nothing).
+	 *
+	 * @param InterviewCalendarTarget $target    The resolved sync target.
+	 * @param string                  $objectUri The object URI.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the backend cannot delete.
+	 */
+	private function deleteFromBackend(InterviewCalendarTarget $target, string $objectUri): void {
+		if (method_exists($target->backend, 'deleteCalendarObject') === false) {
+			throw new RuntimeException('CalDavBackend::deleteCalendarObject is not available.');
+		}
+
+		$target->backend->deleteCalendarObject($target->calendarId, $objectUri);
+	}//end deleteFromBackend()
+
+	/**
+	 * Put a stored event back after a failed replace, when it is gone. A
+	 * failure here leaves the calendar as it is; the outcome already says
+	 * the write failed.
+	 *
+	 * @param InterviewCalendarTarget $target    The resolved sync target.
+	 * @param string                  $objectUri The object URI.
+	 * @param string                  $ics       The stored event's text.
+	 *
+	 * @return void
+	 */
+	private function restore(InterviewCalendarTarget $target, string $objectUri, string $ics): void {
+		if ($this->fetchCalendarData($target, $objectUri) !== null || method_exists($target->backend, 'createCalendarObject') === false) {
+			return;
+		}
+
+		try {
+			$target->backend->createCalendarObject($target->calendarId, $objectUri, $ics);
+		} catch (Throwable $e) {
+			return;
+		}
+	}//end restore()
 
 	/**
 	 * Persist the event's UID onto the Interview when it was not stored yet.
@@ -404,13 +596,21 @@ class InterviewSyncEngine {
 	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-004
 	 */
 	private function deleteEvent(InterviewSyncRun $run, InterviewEventSync $sync): void {
+		$objectUri = trim((string)$sync->interview['calendarEventUid']) . '.ics';
+		$storedIcs = ($this->scheduler === null) ? null : $this->fetchCalendarData($run->target, $objectUri);
+		$calendar = ($storedIcs === null) ? null : $this->schedulingCalendar(run: $run, recipients: SchedulingCalendarWriter::attendeeEmails(ics: $storedIcs));
 		try {
-			if (method_exists($run->target->backend, 'deleteCalendarObject') === false) {
-				throw new RuntimeException('CalDavBackend::deleteCalendarObject is not available.');
+			$this->deleteFromBackend(target: $run->target, objectUri: $objectUri);
+			if ($calendar !== null && $storedIcs !== null) {
+				// REQ-INTV-010: a cancelled copy withdraws the event from every attendee's calendar.
+				$this->scheduler?->send($calendar, $objectUri, SchedulingCalendarWriter::cancelled(ics: $storedIcs));
+				$this->deleteFromBackend(target: $run->target, objectUri: $objectUri);
+			}
+		} catch (Throwable $e) {
+			if ($storedIcs !== null) {
+				$this->restore(target: $run->target, objectUri: $objectUri, ics: $storedIcs);
 			}
 
-			$run->target->backend->deleteCalendarObject($run->target->calendarId, trim((string)$sync->interview['calendarEventUid']) . '.ics');
-		} catch (Throwable $e) {
 			$run->results[] = $this->outcome($sync->id, 'failed', 'Verwijderen kalenderafspraak mislukt: ' . $e->getMessage());
 			return;
 		}
