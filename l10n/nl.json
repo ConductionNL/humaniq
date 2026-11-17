@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Make employer statement": "Werkgeversverklaring maken",
+        "Making the employer statement failed.": "Het maken van de werkgeversverklaring is mislukt.",
+        "The employer statement is being made.": "De werkgeversverklaring wordt gemaakt.",
         "Deployment plan": "Inzetplan",
         "Draft while the plan is made; confirmed once agreed.": "Concept zolang het plan wordt gemaakt; vastgesteld zodra het is afgesproken.",
         "From the CAO": "Uit de cao",
