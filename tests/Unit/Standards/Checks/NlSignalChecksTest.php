@@ -103,6 +103,31 @@ class NlSignalChecksTest extends TestCase {
 		return ['signals' => ['contractsByEmployeeId' => $contractsByEmployeeId]];
 	}//end context()
 
+	// -- nl-signaal-proeftijd-eindigt: window edges -------------------------
+
+	/**
+	 * REQ-SIG-007: ten days before the probation period ends the signal is
+	 * raised, also on its last day and on day 14; a day later or after it
+	 * ended it is not, and a contract without a probation period never.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals/spec.md#REQ-SIG-007
+	 */
+	public function testProeftijdEindigtIsRaisedOnlyWithinFourteenDays(): void {
+		$check = $this->checks['nl-signaal-proeftijd-eindigt'];
+		$today = new \DateTimeImmutable('today');
+		$on = static fn (string $offset): array => ['type' => 'permanent', 'proeftijdEndDate' => $today->modify($offset)->format('Y-m-d')];
+
+		$this->assertFalse($check($on('+10 days')));
+		$this->assertFalse($check($on('+0 days')));
+		$this->assertFalse($check($on('+14 days')));
+		$this->assertTrue($check($on('+15 days')));
+		$this->assertTrue($check($on('-1 day')));
+		$this->assertTrue($check(['type' => 'permanent']));
+		$this->assertTrue($check(['type' => 'permanent', 'proeftijdEndDate' => null]));
+	}//end testProeftijdEindigtIsRaisedOnlyWithinFourteenDays()
+
 	// -- nl-signaal-contract-verloopt: window edges --------------------------
 
 	/**

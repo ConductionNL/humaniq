@@ -1,6 +1,6 @@
 ## 1. Build
 
-- [ ] 1.1 Probation end signal in `lib/Standards/Checks/NlSignalChecks.php` and the corpus (REQ-SIG-007).
+- [x] 1.1 Probation end signal in `lib/Standards/Checks/NlSignalChecks.php` and the corpus (REQ-SIG-007).
 - [ ] 1.2 `budgetAmount` on `CompReviewCycle` in `lib/Settings/register.d/hr-comp.json`, with the used and left figures on `CompReviewCycleDetail` (REQ-COMP-009).
 - [ ] 1.3 Pay the open leave balance on the final payslip in `lib/Service/PayrollRunService.php` (REQ-OFC-005).
 - [x] 1.4 Tests for `TimesheetNotEmptyGuard` and a guard on the `reopen` edge in `lib/Lifecycle/` (timesheet requirements).

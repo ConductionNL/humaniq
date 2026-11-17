@@ -121,6 +121,36 @@ class ObligationsServiceTest extends TestCase {
 	}//end testRowsFromAllThreeSourcesSortTogetherByDueDate()
 
 	/**
+	 * REQ-SIG-007: a probation period ending in 10 days shows beside the
+	 * expiring contracts, dated on its end; one that ended yesterday and one
+	 * further out than 14 days do not. A permanent contract qualifies, unlike
+	 * the expiry row, which only a temporary contract gives.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals/spec.md#REQ-SIG-007
+	 */
+	public function testAProbationPeriodEndingWithinFourteenDaysIsAnObligation(): void {
+		$today = new DateTimeImmutable('today');
+		$service = $this->buildService([
+			'EmploymentContract' => [
+				['employeeId' => 'emp-soon', 'administrationId' => 'ADM-001', 'type' => 'permanent', 'proeftijdEndDate' => $today->modify('+10 days')->format('Y-m-d')],
+				['employeeId' => 'emp-ended', 'administrationId' => 'ADM-001', 'type' => 'permanent', 'proeftijdEndDate' => $today->modify('-1 day')->format('Y-m-d')],
+				['employeeId' => 'emp-later', 'administrationId' => 'ADM-001', 'type' => 'permanent', 'proeftijdEndDate' => $today->modify('+15 days')->format('Y-m-d')],
+			],
+		]);
+
+		$obligations = $service->getObligations('ADM-001');
+
+		$this->assertCount(1, $obligations);
+		$this->assertSame('EmploymentContract', $obligations[0]['type']);
+		$this->assertSame('emp-soon', $obligations[0]['employeeId']);
+		$this->assertSame('proeftijdEndDate', $obligations[0]['subject']);
+		$this->assertSame($today->modify('+10 days')->format('Y-m-d'), $obligations[0]['dueDate']);
+		$this->assertSame('EmploymentContractDetail', $obligations[0]['route']);
+	}//end testAProbationPeriodEndingWithinFourteenDaysIsAnObligation()
+
+	/**
 	 * A row from a DIFFERENT administration never contributes — the
 	 * tenant-isolation half of REQ-DSI-005, exercised at the service layer.
 	 *
