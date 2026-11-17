@@ -34,6 +34,19 @@ Everything else about the schema — its properties, their types, the enums, the
   register, and an object `{documentType: "arbeidsovereenkomst", employeeId:
   "<uuid>", status: "pending"}` validates against it.
 
+#### Scenario: Fragment merges and validates
+- **GIVEN** the hrmq register import (`occ` Repair step or forced settings reload)
+- **WHEN** the fragments under `lib/Settings/register.d/` are deep-merged and imported
+- **THEN** the `GeneratedDocument` schema exists in the hrmq register and an object `{documentType: "arbeidsovereenkomst", employeeId: "<uuid>", status: "pending"}` validates
+
+#### Scenario: Loonstrook documents now validate
+- **WHEN** a `GeneratedDocument` is written with `{documentType: "loonstrook", employeeId: "<uuid>", payslipId: "<uuid>", status: "generated"}`
+- **THEN** it validates (the pre-extension enum rejection of `loonstrook` is superseded by payslip-pdf-docudesk)
+
+#### Scenario: Unknown documentType still rejected
+- **WHEN** a `GeneratedDocument` is written with `documentType: "kerstkaart"`
+- **THEN** OpenRegister schema validation rejects it (the enum stays closed; it was extended, not opened)
+
 ## ADDED Requirements
 
 ### Requirement: The slug rename SHALL be migrated on an existing install (REQ-HDD-020)

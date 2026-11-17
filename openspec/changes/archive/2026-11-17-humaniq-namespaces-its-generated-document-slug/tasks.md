@@ -26,8 +26,14 @@
 
 ## 4. Not done
 
-- [ ] 4.1 Run the repair step against a live install with existing
+- [x] 4.1 Run the repair step against a live install with existing
       `GeneratedDocument` rows. The e2e rig has no humaniq register imported,
       and the step is unit-tested at the SQL it emits rather than against a real
       row. An operator upgrading should confirm the Documenten index still
       lists its documents afterwards.
+      Done in the live pass (2026-11-17): on a clean install holding the three seeded
+      documents, the schema row was set back to `GeneratedDocument` (as an install from before
+      the rename has it) and `occ maintenance:repair` ran. MigrateSchemaSlug reported "1 schema
+      slug(s) renamed, 0 refused", the register import updated that row instead of forking a
+      second one (one `HrGeneratedDocument`, id 68), and the Documenten index still lists all
+      three documents.
