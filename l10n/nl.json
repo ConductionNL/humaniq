@@ -4072,7 +4072,11 @@
         "The billable share of last month's approved hours per team you may read: HR and accountants see every team, a manager the teams they lead. Open a team to see the share per person.": "Het declarabele aandeel van de goedgekeurde uren van vorige maand per team dat je mag inzien: HR en accountants zien elk team, een leidinggevende de teams die die leidt. Open een team voor het aandeel per persoon.",
         "Billable share per team": "Declarabel aandeel per team",
         "No teams you may read": "Geen teams die je mag inzien",
-        "The rate these billable hours are billed at, in cents an hour. Taken from the project's rate when the booking is written; empty for hours that are not billable.": "Het tarief waartegen deze declarabele uren worden gefactureerd, in centen per uur. Overgenomen van het tarief van het project wanneer de boeking wordt vastgelegd; leeg voor uren die niet declarabel zijn."
+        "The rate these billable hours are billed at, in cents an hour. Taken from the project's rate when the booking is written; empty for hours that are not billable.": "Het tarief waartegen deze declarabele uren worden gefactureerd, in centen per uur. Overgenomen van het tarief van het project wanneer de boeking wordt vastgelegd; leeg voor uren die niet declarabel zijn.",
+        "VAT to reclaim": "Terug te vorderen btw",
+        "The VAT on the claims reimbursed last month, through payroll or directly, so the employer can reclaim it in its VAT return. The payroll journal books this VAT on the VAT account.": "De btw op de declaraties die vorige maand zijn vergoed, via de salarisverwerking of rechtstreeks, zodat de werkgever die kan terugvragen in de btw-aangifte. De loonjournaalpost boekt deze btw op de btw-rekening.",
+        "Claims with VAT": "Declaraties met btw",
+        "No reimbursed claims with VAT last month": "Geen vergoede declaraties met btw vorige maand"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

@@ -112,6 +112,10 @@
 		"route": "/expenses/:id"
 	},
 	{
+		"id": "VatToReclaim",
+		"route": "/expenses/vat"
+	},
+	{
 		"id": "OnCallAverages",
 		"route": "/contracts/on-call"
 	},

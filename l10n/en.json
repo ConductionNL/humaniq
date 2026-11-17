@@ -4072,7 +4072,11 @@
         "The billable share of last month's approved hours per team you may read: HR and accountants see every team, a manager the teams they lead. Open a team to see the share per person.": "The billable share of last month's approved hours per team you may read: HR and accountants see every team, a manager the teams they lead. Open a team to see the share per person.",
         "Billable share per team": "Billable share per team",
         "No teams you may read": "No teams you may read",
-        "The rate these billable hours are billed at, in cents an hour. Taken from the project's rate when the booking is written; empty for hours that are not billable.": "The rate these billable hours are billed at, in cents an hour. Taken from the project's rate when the booking is written; empty for hours that are not billable."
+        "The rate these billable hours are billed at, in cents an hour. Taken from the project's rate when the booking is written; empty for hours that are not billable.": "The rate these billable hours are billed at, in cents an hour. Taken from the project's rate when the booking is written; empty for hours that are not billable.",
+        "VAT to reclaim": "VAT to reclaim",
+        "The VAT on the claims reimbursed last month, through payroll or directly, so the employer can reclaim it in its VAT return. The payroll journal books this VAT on the VAT account.": "The VAT on the claims reimbursed last month, through payroll or directly, so the employer can reclaim it in its VAT return. The payroll journal books this VAT on the VAT account.",
+        "Claims with VAT": "Claims with VAT",
+        "No reimbursed claims with VAT last month": "No reimbursed claims with VAT last month"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

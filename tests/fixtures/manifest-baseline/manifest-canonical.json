@@ -822,6 +822,12 @@
 					}
 				},
 				{
+					"icon": "CurrencyEur",
+					"id": "VatToReclaim",
+					"label": "VAT to reclaim",
+					"route": "VatToReclaim"
+				},
+				{
 					"icon": "CheckDecagramOutline",
 					"id": "ExpenseApproval",
 					"label": "Expense approval",
@@ -5338,6 +5344,113 @@
 			"route": "/expenses/:id",
 			"title": "Expense",
 			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "matrix-rows-without-a-requirement REQ-RCPT-008: GET /api/expenses/vat (HR and the accountant role of the active administration; the previous month by default, period=YYYY-MM on the endpoint) lists every reimbursed claim with a VAT amount and the total. PayrollGLPostService books the same VAT on glpost_account_vat instead of the reimbursements account.",
+				"description": "The VAT on the claims reimbursed last month, through payroll or directly, so the employer can reclaim it in its VAT return. The payroll journal books this VAT on the VAT account.",
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "vat-total"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "vat-count"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 2,
+						"id": 3,
+						"widgetId": "vat-claims"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/expenses/vat"
+							},
+							"format": {
+								"currency": "EUR",
+								"decimals": 2,
+								"style": "currency"
+							},
+							"icon": "CurrencyEur",
+							"label": "VAT to reclaim",
+							"valueField": "totalVat"
+						},
+						"icon": "CurrencyEur",
+						"id": "vat-total",
+						"title": "VAT to reclaim",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/expenses/vat"
+							},
+							"icon": "ReceiptTextOutline",
+							"label": "Claims with VAT",
+							"valueField": "count"
+						},
+						"icon": "ReceiptTextOutline",
+						"id": "vat-count",
+						"title": "Claims with VAT",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "title",
+									"label": "Claim"
+								},
+								{
+									"key": "vendor",
+									"label": "Vendor"
+								},
+								{
+									"key": "expenseDate",
+									"label": "Date"
+								},
+								{
+									"key": "amount",
+									"label": "Amount"
+								},
+								{
+									"key": "vatAmount",
+									"label": "VAT amount"
+								}
+							],
+							"emptyText": "No reimbursed claims with VAT last month",
+							"endpointSource": {
+								"responsePath": "claims",
+								"url": "/apps/humaniq/api/expenses/vat"
+							},
+							"rowRoute": "ExpenseDetail"
+						},
+						"id": "vat-claims",
+						"title": "Claims with VAT",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "VatToReclaim",
+			"route": "/expenses/vat",
+			"title": "VAT to reclaim",
+			"type": "dashboard"
 		},
 		{
 			"config": {

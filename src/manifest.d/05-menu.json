@@ -616,6 +616,12 @@
 					}
 				},
 				{
+					"id": "VatToReclaim",
+					"label": "VAT to reclaim",
+					"icon": "CurrencyEur",
+					"route": "VatToReclaim"
+				},
+				{
 					"id": "ExpenseApproval",
 					"label": "Expense approval",
 					"icon": "CheckDecagramOutline",

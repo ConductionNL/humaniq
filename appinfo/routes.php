@@ -179,6 +179,8 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // RBAC (ObjectService::find under ambient RBAC) then an explicit
         // admin-or-owner ownership check.
         ['name' => 'expense#extractReceipt', 'url' => '/api/expenses/extract-receipt', 'verb' => 'POST'],
+        // matrix-rows-without-a-requirement REQ-RCPT-008: the VAT to reclaim per month.
+        ['name' => 'expenseVat#overview', 'url' => '/api/expenses/vat', 'verb' => 'GET'],
         // offer-esign — guarded, admin/HR-only trigger for the
         // ApplicationDetail "request-offer-signature" manifest api-call
         // action (design.md D8): resolve-first RBAC (ObjectService::find

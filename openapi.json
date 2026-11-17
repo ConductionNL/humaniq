@@ -246,6 +246,10 @@
         {
             "name": "compliance-check",
             "description": "The Compliance check page: the rule audit for the signed-in caller."
+        },
+        {
+            "name": "expense-vat",
+            "description": "The VAT to reclaim on reimbursed claims."
         }
     ],
     "paths": {
@@ -2463,6 +2467,54 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/expenses/vat": {
+            "get": {
+                "operationId": "expense-vat-overview",
+                "summary": "`GET /api/expenses/vat?period=YYYY-MM`: the VAT to reclaim on the claims reimbursed in a month.",
+                "description": "`GET /api/expenses/vat?period=YYYY-MM`: every claim of the caller's active administration reimbursed in the month (on that month's payslip or directly) that records a VAT amount, and their total, so the employer can reclaim it (REQ-RCPT-008). The previous month by default. HR and the accountant role only. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "expense-vat"
+                ],
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "required": false,
+                        "description": "The month, YYYY-MM; the previous month when left out.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
                     }
                 }
             }
