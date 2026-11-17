@@ -31,5 +31,15 @@
 
 - [x] 4.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec`
       tags on the new methods (gate 16).
-- [ ] 4.2 One live check: answer the open seeded survey as an employee and read the results
+- [x] 4.2 One live check: answer the open seeded survey as an employee and read the results
       page as HR with the small unit folded; record the screenshot in the PR.
+      Done in the live pass (2026-11-17, clean install): admin (employee Jansen) answered the
+      pulse survey on its invitation page (201, invitation `beantwoord`); hr-sanne read
+      "Medewerkersonderzoek najaar 2026": Overall 14, Backoffice 5, Consultancy 7, the unit
+      with two responses folded into Overall only.
+- [ ] 4.3 Decide how a response stops pointing at its writer. Found live: HR reading
+      `SurveyResponse` through the objects API sees `@self.owner` = the respondent's account,
+      and the response's `@self.created` equals the invitation's answered time to the second,
+      so REQ-SRV-002 ("no response names an employee or account") does not hold. Owner can be
+      set to the system; the shared timestamp needs a design choice (for example storing
+      responses in batches).
