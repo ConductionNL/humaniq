@@ -4576,7 +4576,7 @@
 		},
 		{
 			"config": {
-				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab. comp-collective-raise-and-step-increase (2026-09-28): a collective or step-increase cycle is run from here in three steps, each an open-modal header action on the CompCycleRunDialog host modal (src/dialogs), which shows a dry run first (propose, effectuate) and then posts to POST /api/comp/cycles/{propose,approve,effectuate}. A host modal and not api-call actions because api-call cannot show a preview of what it will write.",
+				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab. comp-collective-raise-and-step-increase (2026-09-28): a collective or step-increase cycle is run from here in three steps, each an open-modal header action on the CompCycleRunDialog host modal (src/dialogs), which shows a dry run first (propose, effectuate) and then posts to POST /api/comp/cycles/{propose,approve,effectuate}. A host modal and not api-call actions because api-call cannot show a preview of what it will write. matrix-rows-without-a-requirement REQ-COMP-009: four stat tiles read GET /api/comp/cycles/budget for the cycle's budget, the monthly raises of its proposed, approved and effective adjustments, what is left and how far over budget it is; over budget is shown, never refused.",
 				"headerActions": [
 					{
 						"icon": "PlusCircleOutline",
@@ -4629,10 +4629,42 @@
 						"widgetId": "data"
 					},
 					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 0,
+						"gridY": 6,
+						"id": 3,
+						"widgetId": "budget-total"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 3,
+						"gridY": 6,
+						"id": 4,
+						"widgetId": "budget-used"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 6,
+						"gridY": 6,
+						"id": 5,
+						"widgetId": "budget-left"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 9,
+						"gridY": 6,
+						"id": 6,
+						"widgetId": "budget-over"
+					},
+					{
 						"gridHeight": 5,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 6,
+						"gridY": 8,
 						"id": 2,
 						"widgetId": "object-list"
 					}
@@ -4666,6 +4698,94 @@
 						"id": "data",
 						"title": "Cycle",
 						"type": "data"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"cycleId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/comp/cycles/budget"
+							},
+							"format": {
+								"currency": "EUR",
+								"decimals": 2,
+								"style": "currency"
+							},
+							"icon": "CashMultiple",
+							"label": "Budget",
+							"valueField": "euro.budget"
+						},
+						"icon": "CashMultiple",
+						"id": "budget-total",
+						"title": "Budget",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"cycleId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/comp/cycles/budget"
+							},
+							"format": {
+								"currency": "EUR",
+								"decimals": 2,
+								"style": "currency"
+							},
+							"icon": "CashPlus",
+							"label": "Budget used",
+							"valueField": "euro.used"
+						},
+						"icon": "CashPlus",
+						"id": "budget-used",
+						"title": "Budget used",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"cycleId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/comp/cycles/budget"
+							},
+							"format": {
+								"currency": "EUR",
+								"decimals": 2,
+								"style": "currency"
+							},
+							"icon": "CashCheck",
+							"label": "Budget left",
+							"valueField": "euro.left"
+						},
+						"icon": "CashCheck",
+						"id": "budget-left",
+						"title": "Budget left",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"cycleId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/comp/cycles/budget"
+							},
+							"format": {
+								"currency": "EUR",
+								"decimals": 2,
+								"style": "currency"
+							},
+							"icon": "CashRemove",
+							"label": "Over budget",
+							"valueField": "euro.overBudget"
+						},
+						"icon": "CashRemove",
+						"id": "budget-over",
+						"title": "Over budget",
+						"type": "stat"
 					},
 					{
 						"content": {

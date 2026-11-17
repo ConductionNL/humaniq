@@ -4032,7 +4032,12 @@
         "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way.": "Of HR dit antwoord afzonderlijk mag lezen: alleen als het is vrijgegeven in een groep van ten minste de minimale groepsgrootte van de enquête. De uitslag telt elk antwoord hoe dan ook mee.",
         "Approval state": "Goedkeuringsstatus",
         "Where the timesheet of these hours is in the approval process.": "Waar de urenstaat van deze uren in het goedkeuringsproces staat.",
-        "When the timesheet of these hours was approved.": "Wanneer de urenstaat van deze uren is goedgekeurd."
+        "When the timesheet of these hours was approved.": "Wanneer de urenstaat van deze uren is goedgekeurd.",
+        "Budget": "Budget",
+        "Budget used": "Budget gebruikt",
+        "Budget left": "Budget over",
+        "Over budget": "Boven budget",
+        "The raise budget of this cycle in cents: what the monthly raises of its proposed, approved and effective adjustments may add up to. Going over it is flagged on the cycle page, never refused (REQ-COMP-009).": "Het verhogingsbudget van deze cyclus in centen: wat de maandelijkse verhogingen van de voorgestelde, goedgekeurde en ingegane aanpassingen samen mogen kosten. Een overschrijding wordt op de cycluspagina gemeld, nooit geweigerd (REQ-COMP-009)."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

@@ -4032,7 +4032,12 @@
         "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way.": "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way.",
         "Approval state": "Approval state",
         "Where the timesheet of these hours is in the approval process.": "Where the timesheet of these hours is in the approval process.",
-        "When the timesheet of these hours was approved.": "When the timesheet of these hours was approved."
+        "When the timesheet of these hours was approved.": "When the timesheet of these hours was approved.",
+        "Budget": "Budget",
+        "Budget used": "Budget used",
+        "Budget left": "Budget left",
+        "Over budget": "Over budget",
+        "The raise budget of this cycle in cents: what the monthly raises of its proposed, approved and effective adjustments may add up to. Going over it is flagged on the cycle page, never refused (REQ-COMP-009).": "The raise budget of this cycle in cents: what the monthly raises of its proposed, approved and effective adjustments may add up to. Going over it is flagged on the cycle page, never refused (REQ-COMP-009)."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

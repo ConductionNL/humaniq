@@ -139,6 +139,8 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'compCycle#proposeCollective', 'url' => '/api/comp/cycles/propose', 'verb' => 'POST'],
         ['name' => 'compCycle#approveCycle', 'url' => '/api/comp/cycles/approve', 'verb' => 'POST'],
         ['name' => 'compCycle#effectuateCycle', 'url' => '/api/comp/cycles/effectuate', 'verb' => 'POST'],
+        // matrix-rows-without-a-requirement REQ-COMP-009: the cycle's raises against its budget.
+        ['name' => 'compCycle#budget', 'url' => '/api/comp/cycles/budget', 'verb' => 'GET'],
         // absence-deadlines-and-signals D3: the 42-week notification to UWV, generated from the case.
         ['name' => 'uwvNotification#generate', 'url' => '/api/sick-leave/{id}/uwv-notification', 'verb' => 'POST'],
         // multi-administratie — guarded per-user active-administration

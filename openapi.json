@@ -1115,6 +1115,54 @@
                 }
             }
         },
+        "/comp/cycles/budget": {
+            "get": {
+                "operationId": "comp-cycle-budget",
+                "summary": "`GET /api/comp/cycles/budget?cycleId=`: the cycle's budget, what its proposed, approved and effective raises use, what is left and how far over budget it is, in cents.",
+                "description": "`GET /api/comp/cycles/budget?cycleId=`: the cycle's budget, what its proposed, approved and effective raises use, what is left and how far over budget it is, in cents, with the same figures in euros under `euro`. Going over budget is reported, never refused. Needs a signed-in Nextcloud user with the `hr` role or an administrator.",
+                "tags": [
+                    "comp-cycle"
+                ],
+                "parameters": [
+                    {
+                        "name": "cycleId",
+                        "in": "query",
+                        "required": true,
+                        "description": "The CompReviewCycle id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
         "/comp/cycles/propose": {
             "post": {
                 "operationId": "comp-cycle-propose-collective",
