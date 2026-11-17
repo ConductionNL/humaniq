@@ -12,7 +12,7 @@
 - [ ] 1.10 VAT overview per period on the expenses pages in `src/manifest.d/hr-expense.json`, and the VAT line in `lib/Service/PayrollGLPostService.php` (REQ-RCPT-008).
 - [ ] 1.11 `Compliance check` page in `src/manifest.d/` backed by a guarded audit endpoint over `lib/Service/RuleAuditService.php` (REQ-RULE-010).
 - [ ] 1.12 Billable share per org unit and per employee on the project hours page in `src/manifest.d/`, served by `lib/Service/AnalyticsService.php` through `AnalyticsController` (REQ-DSI-010).
-- [ ] 1.13 Unit tests in `tests/Unit/Payroll/` for the permanent-written low rate and the flex high rate in `AwfTariffResolver` (REQ-AWF-103; the resolver already does this).
+- [x] 1.13 Unit tests in `tests/Unit/Payroll/` for the permanent-written low rate and the flex high rate in `AwfTariffResolver` (REQ-AWF-103; the resolver already does this).
 
 ## 2. Hand-over
 
