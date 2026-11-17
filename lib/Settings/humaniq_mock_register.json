@@ -24879,6 +24879,72 @@
         "offerLetterFileId": 3,
         "offerSigningRequestId": "Voorbeeld Offersigningrequestid 3",
         "offerSigningStatus": "COMPLETED"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollOpeningBalance",
+          "slug": "payrollopeningbalance-payrollopeningbalance-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "administrationId": "Voorbeeld Administrationid 1",
+        "year": 2000,
+        "lastPeriodInPrevious": "0123-01",
+        "grossWage": 1.0,
+        "loonheffing": 1.0,
+        "payPeriodCount": 0,
+        "source": "Voorbeeld Source 1",
+        "zvwWithheld": 1.0,
+        "zvwBijdrageloon": 1.0,
+        "premieloon": 1.0,
+        "vakantiegeldReserved": 1.0,
+        "vakantiegeldPaid": 1.0,
+        "pensionContribution": 1.0,
+        "importedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollOpeningBalance",
+          "slug": "payrollopeningbalance-payrollopeningbalance-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "administrationId": "Voorbeeld Administrationid 2",
+        "year": 2001,
+        "lastPeriodInPrevious": "1234-02",
+        "grossWage": 2.0,
+        "loonheffing": 2.0,
+        "payPeriodCount": 1,
+        "source": "Voorbeeld Source 2",
+        "zvwWithheld": 2.0,
+        "zvwBijdrageloon": 2.0,
+        "premieloon": 2.0,
+        "vakantiegeldReserved": 2.0,
+        "vakantiegeldPaid": 2.0,
+        "pensionContribution": 2.0,
+        "importedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollOpeningBalance",
+          "slug": "payrollopeningbalance-payrollopeningbalance-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "administrationId": "Voorbeeld Administrationid 3",
+        "year": 2002,
+        "lastPeriodInPrevious": "2345-03",
+        "grossWage": 3.0,
+        "loonheffing": 3.0,
+        "payPeriodCount": 2,
+        "source": "Voorbeeld Source 3",
+        "zvwWithheld": 3.0,
+        "zvwBijdrageloon": 3.0,
+        "premieloon": 3.0,
+        "vakantiegeldReserved": 3.0,
+        "vakantiegeldPaid": 3.0,
+        "pensionContribution": 3.0,
+        "importedAt": "2026-03-03T09:00:00+00:00"
       }
     ]
   }
