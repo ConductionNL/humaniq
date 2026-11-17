@@ -5,9 +5,10 @@
  *
  * Anonymous engagement surveys. Opening a survey invites every active
  * employee in its scope who has a Nextcloud account; answering marks the
- * caller's invitation answered and stores the answers in a separate
- * response that names nobody (no employee, account, invitation or time of
- * day); the results fold every department below the survey's minimum
+ * caller's invitation answered and holds the answers, owned by the
+ * system, until they are released in a shuffled batch as responses that
+ * name nobody (no employee, account, invitation or time of day; see
+ * SurveyResponseRelease); the results fold every department below the survey's minimum
  * group size into "other", and leave "other" out when it is itself below
  * the minimum.
  *
@@ -57,6 +58,13 @@ class SurveyService {
 	 * @var string
 	 */
 	public const RESPONSE = 'SurveyResponse';
+
+	/**
+	 * The schema answers wait in until they are released as responses.
+	 *
+	 * @var string
+	 */
+	public const HOLD = 'SurveyResponseHold';
 
 	/**
 	 * Who a survey goes to, and an employee's department and contract on a day.
@@ -256,8 +264,10 @@ class SurveyService {
 	}//end replyRefusal()
 
 	/**
-	 * Mark the invitation answered and store the answers with the caller's
-	 * department and contract type, and nothing that names them.
+	 * Mark the invitation answered and hold the answers, with the caller's
+	 * department and contract type and nothing that names them, until
+	 * {@see SurveyResponseRelease} releases them in a batch. The held answer
+	 * is owned by the system, not by the caller, and carries no date.
 	 *
 	 * @param SurveyReply          $reply   The survey, the caller and their invitation.
 	 * @param array<string, mixed> $answers The checked answers.
@@ -269,17 +279,16 @@ class SurveyService {
 		$invitationId = (string)$invitation['id'];
 		unset($invitation['id']);
 		$employeeId = $this->membership->rowId((array)$reply->employee);
-		$response = [
+		$held = [
 			'surveyId' => $reply->surveyId,
 			'orgUnitId' => $this->audience->unitOf(employeeId: $employeeId, today: $reply->today),
 			'contractType' => $this->audience->contractTypeOf(employeeId: $employeeId, today: $reply->today),
 			'answers' => $answers,
-			'submittedOn' => $reply->today,
 			'administrationId' => ($reply->survey['administrationId'] ?? null),
 		];
-		$this->marker->runInternal(function () use ($invitation, $invitationId, $response): void {
+		$this->marker->runInternal(function () use ($invitation, $invitationId, $held): void {
 			$this->gateway->save(array_merge($invitation, ['status' => 'beantwoord']), self::INVITATION, $invitationId);
-			$this->gateway->save($response, self::RESPONSE);
+			$this->gateway->createUnowned($held, self::HOLD);
 		});
 	}//end storeReply()
 

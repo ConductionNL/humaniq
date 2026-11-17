@@ -37,9 +37,16 @@
       pulse survey on its invitation page (201, invitation `beantwoord`); hr-sanne read
       "Medewerkersonderzoek najaar 2026": Overall 14, Backoffice 5, Consultancy 7, the unit
       with two responses folded into Overall only.
-- [ ] 4.3 Decide how a response stops pointing at its writer. Found live: HR reading
+- [x] 4.3 Decide how a response stops pointing at its writer. Found live: HR reading
       `SurveyResponse` through the objects API sees `@self.owner` = the respondent's account,
       and the response's `@self.created` equals the invitation's answered time to the second,
       so REQ-SRV-002 ("no response names an employee or account") does not hold. Owner can be
       set to the system; the shared timestamp needs a design choice (for example storing
       responses in batches).
+  - 2026-11-17 (decided): an answer is held in `SurveyResponseHold` (admin-only, owned by the
+    system) and `ReleaseSurveyResponsesJob` (hourly, `SurveyResponseRelease`) releases a
+    survey's held answers as `SurveyResponse` rows in one shuffled batch, owned by the system
+    and dated on the release day, once the survey holds its minimum group size, and whatever is
+    left once it stops taking answers. HR reads a response one by one only when `readable`
+    (released in a batch of at least the minimum); the results count every response. Tests:
+    SurveyResponseReleaseTest, SurveyServiceTest::testAnAnswerNamesNobody.

@@ -4024,7 +4024,12 @@
         "The sign-in settings could not be saved.": "De inloginstellingen konden niet worden opgeslagen.",
         "Use whole numbers: a minimum length from 1 to 255 and a number of failed attempts from 0 to 255.": "Gebruik hele getallen: een minimale lengte van 1 tot 255 en een aantal mislukte pogingen van 0 tot 255.",
         "enabled, no provider configured yet": "ingeschakeld, nog geen provider ingesteld",
-        "not enabled": "niet ingeschakeld"
+        "not enabled": "niet ingeschakeld",
+        "Held survey answer": "Vastgehouden enquêteantwoord",
+        "Released on": "Vrijgegeven op",
+        "The day the response was released with its batch; not the day it was given, so it cannot be matched to the invitation.": "De dag waarop het antwoord met zijn groep is vrijgegeven; niet de dag waarop het is gegeven, zodat het niet aan de uitnodiging te koppelen is.",
+        "Readable one by one": "Afzonderlijk leesbaar",
+        "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way.": "Of HR dit antwoord afzonderlijk mag lezen: alleen als het is vrijgegeven in een groep van ten minste de minimale groepsgrootte van de enquête. De uitslag telt elk antwoord hoe dan ook mee."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

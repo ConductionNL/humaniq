@@ -4025,7 +4025,12 @@ OC.L10N.register(
         "The sign-in settings could not be saved.": "The sign-in settings could not be saved.",
         "Use whole numbers: a minimum length from 1 to 255 and a number of failed attempts from 0 to 255.": "Use whole numbers: a minimum length from 1 to 255 and a number of failed attempts from 0 to 255.",
         "enabled, no provider configured yet": "enabled, no provider configured yet",
-        "not enabled": "not enabled"
+        "not enabled": "not enabled",
+        "Held survey answer": "Held survey answer",
+        "Released on": "Released on",
+        "The day the response was released with its batch; not the day it was given, so it cannot be matched to the invitation.": "The day the response was released with its batch; not the day it was given, so it cannot be matched to the invitation.",
+        "Readable one by one": "Readable one by one",
+        "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way.": "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way."
     },
     "nplurals=2; plural=(n != 1);"
 )
