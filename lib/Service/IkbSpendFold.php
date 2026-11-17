@@ -39,20 +39,20 @@ final class IkbSpendFold {
 	 * Add the IKB: approved requests settling now, the December remainder
 	 * when the administration pays it, and the balance of a leaver (D8).
 	 *
-	 * @param array<string, mixed> $fold    The fold so far.
-	 * @param array<string, mixed> $inputs  From inputs().
-	 * @param array<string, mixed> $slip    The run's slip.
-	 * @param bool                 $leaving Whether the employee leaves this period.
+	 * @param array<string, mixed> $fold   The fold so far.
+	 * @param array<string, mixed> $inputs From inputs(), with the slip's `employeeId` and whether the employee is
+	 *                                     `leaving` this period.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-individual-choice-budget-shall-accrue-and-be-spent-by-approved-request-req-rsp-004
 	 */
-	public function withIkb(array $fold, array $inputs, array $slip, bool $leaving): array {
+	public function withIkb(array $fold, array $inputs): array {
 		$period = (string)$inputs['period'];
 		$year = (int)substr($period, 0, 4);
-		$employeeId = (string)$slip['employeeId'];
-		[$fold, $spentNow] = $this->requestLines(fold: $fold, inputs: $inputs, employeeId: $employeeId, period: $period);
+		$employeeId = (string)$inputs['employeeId'];
+		$leaving = (bool)$inputs['leaving'];
+		[$fold, $spentNow] = $this->requestLines(fold: $fold, inputs: $inputs);
 
 		$remainderDue = ($leaving === true || ($inputs['schedule']['ikbPayOutRemainder'] === true && substr($period, 5, 2) === '12'));
 		$budget = ($inputs['budgets'][$employeeId . '|' . $year] ?? null);
@@ -67,14 +67,14 @@ final class IkbSpendFold {
 	/**
 	 * The payout lines of the approved requests settling now; leave moves no money.
 	 *
-	 * @param array<string, mixed> $fold       The fold so far.
-	 * @param array<string, mixed> $inputs     The run's inputs.
-	 * @param string               $employeeId The employee.
-	 * @param string               $period     The period.
+	 * @param array<string, mixed> $fold   The fold so far.
+	 * @param array<string, mixed> $inputs The run's inputs, with the `employeeId` and the `period`.
 	 *
 	 * @return array{0: array<string, mixed>, 1: int} The fold and the cents spent.
 	 */
-	private function requestLines(array $fold, array $inputs, string $employeeId, string $period): array {
+	private function requestLines(array $fold, array $inputs): array {
+		$employeeId = (string)$inputs['employeeId'];
+		$period = (string)$inputs['period'];
 		$spentNow = 0;
 		foreach (($inputs['requests'][$employeeId] ?? []) as $request) {
 			$cents = (int)round(((float)($request['amount'] ?? 0)) * 100);
@@ -88,7 +88,7 @@ final class IkbSpendFold {
 			$line = ['kind' => ReservationPayoutRunService::KIND_IKB, 'reason' => 'ikb-request', 'basisFrom' => $period, 'basisTo' => $period, 'amount' => $cents, 'ikbSpendRequestId' => (string)($request['id'] ?? ($request['@self']['id'] ?? '')), 'specialRate' => ($treatment !== 'exempt')];
 			$fold['lines'][] = $line;
 			if ($treatment === 'exempt') {
-				$fold['wkr'][] = self::wkrRow(request: $request, goal: ($inputs['goals'][(string)($request['ikbGoalId'] ?? '')] ?? []), cents: $cents, period: $period);
+				$fold['wkr'][] = self::wkrRow(request: $request, spend: ['goal' => ($inputs['goals'][(string)($request['ikbGoalId'] ?? '')] ?? []), 'cents' => $cents, 'period' => $period]);
 			}
 		}
 
@@ -99,14 +99,13 @@ final class IkbSpendFold {
 	/**
 	 * The WKR row of an exempt goal spend.
 	 *
-	 * @param array<string, mixed> $request The request.
-	 * @param array<string, mixed> $goal    Its goal.
-	 * @param int                  $cents   The amount.
-	 * @param string               $period  The period.
+	 * @param array<string, mixed>                                            $request The request.
+	 * @param array{goal: array<string, mixed>, cents: int, period: string} $spend   Its goal, the amount and the period.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private static function wkrRow(array $request, array $goal, int $cents, string $period): array {
+	private static function wkrRow(array $request, array $spend): array {
+		['goal' => $goal, 'cents' => $cents, 'period' => $period] = $spend;
 		return [
 			'year' => (int)substr($period, 0, 4),
 			'date' => $period . '-01',

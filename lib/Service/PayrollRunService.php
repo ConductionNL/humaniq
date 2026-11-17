@@ -578,7 +578,7 @@ class PayrollRunService {
 		$state['vehicleAssets'] = $this->vehicleAssetsById();
 		$state['hours'] = $this->hoursInputs(period: $period);
 		$state['expenseInputs'] = $this->expenses?->inputs(norm: $this->expenses->normFrom($state['tables']));
-		$state['reservationInputs'] = $this->reservations?->inputs(period: $period, administrationId: $state['administrationId'], runId: $state['runId']);
+		$state['reservationInputs'] = $this->reservations?->inputs(run: ['period' => $period, 'administrationId' => $state['administrationId'], 'runId' => $state['runId'], 'tables' => $state['tables']]);
 
 		return array_merge($state, self::EMPTY_TALLY);
 	}//end withRunInputs()
@@ -875,7 +875,7 @@ class PayrollRunService {
 		// payroll-reservation-payouts: the reserves due this period, paid as
 		// a special payment beside the regular wage. Not wired -> null and
 		// the input carries no special part.
-		$slip['reservations'] = ($state['reservationInputs'] === null ? null : $this->reservations?->foldFor(inputs: $state['reservationInputs'], slip: $slip, tables: $state['tables']));
+		$slip['reservations'] = ($state['reservationInputs'] === null ? null : $this->reservations?->foldFor(inputs: $state['reservationInputs'], slip: $slip));
 		$slip['input'] = $this->calculationInput(state: $state, slip: $slip);
 		$slip['result'] = $this->calculator->calculate($slip['input'], $state['tables']);
 
@@ -1147,7 +1147,7 @@ class PayrollRunService {
 		}
 
 		if ($this->reservations !== null && $state['reservationInputs'] !== null) {
-			$this->reservations->write(inputs: $state['reservationInputs'], paid: $state['reservationPaid'], administrationId: $state['administrationId']);
+			$this->reservations->write(inputs: $state['reservationInputs'], paid: $state['reservationPaid']);
 		}
 	}//end stampPaidSources()
 

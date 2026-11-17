@@ -73,8 +73,9 @@ class ReservationPayoutApprovalService {
 
 		$done['paid'] = $this->markPaid(payouts: $payouts);
 		$done['offboarding'] = $this->settleOffboarding(payouts: $payouts);
-		$done['accrued'] = $this->accrue(payslips: $payslips, budgets: $budgets, runId: $runId);
-		$done['settled'] = $this->settleRequests(payouts: $payouts, payslips: $payslips, budgets: $budgets, runId: $runId);
+		$run = ['runId' => $runId, 'payouts' => $payouts, 'payslips' => $payslips, 'budgets' => $budgets];
+		$done['accrued'] = $this->accrue(run: $run);
+		$done['settled'] = $this->settleRequests(run: $run);
 
 		foreach ($budgets->changed() as $uuid => $budget) {
 			$this->save(payload: $budget, schema: 'IkbBudget', uuid: ($uuid === '' || str_starts_with($uuid, 'new:') === true ? null : $uuid));
@@ -137,13 +138,13 @@ class ReservationPayoutApprovalService {
 	 * Add each payslip's IKB accrual to its employee's budget of the year,
 	 * once per run (D8).
 	 *
-	 * @param list<array<string, mixed>> $payslips The run's payslips.
-	 * @param IkbBudgets                 $budgets  The budgets.
-	 * @param string                     $runId    The run.
+	 * @param array{runId: string, payslips: list<array<string, mixed>>, budgets: IkbBudgets} $run The run, its payslips
+	 *                                                                                             and the budgets.
 	 *
 	 * @return int The payslips accrued.
 	 */
-	private function accrue(array $payslips, IkbBudgets $budgets, string $runId): int {
+	private function accrue(array $run): int {
+		['runId' => $runId, 'payslips' => $payslips, 'budgets' => $budgets] = $run;
 		$accrued = 0;
 		foreach ($payslips as $payslip) {
 			$amount = (float)($payslip['ikbAccrued'] ?? 0);
@@ -164,14 +165,13 @@ class ReservationPayoutApprovalService {
 	 * Settle the requests this run paid, and the approved leave requests
 	 * settling in its period for employees it paid (D8).
 	 *
-	 * @param list<array<string, mixed>> $payouts  The run's payouts.
-	 * @param list<array<string, mixed>> $payslips The run's payslips.
-	 * @param IkbBudgets                 $budgets  The budgets.
-	 * @param string                     $runId    The run.
+	 * @param array{runId: string, payouts: list<array<string, mixed>>, payslips: list<array<string, mixed>>, budgets: IkbBudgets} $run The run,
+	 *                                                                                                                                  its payouts and payslips, and the budgets.
 	 *
 	 * @return int The requests settled.
 	 */
-	private function settleRequests(array $payouts, array $payslips, IkbBudgets $budgets, string $runId): int {
+	private function settleRequests(array $run): int {
+		['runId' => $runId, 'payouts' => $payouts, 'payslips' => $payslips, 'budgets' => $budgets] = $run;
 		$paidRequests = [];
 		foreach ($payouts as $payout) {
 			$requestId = (string)($payout['ikbSpendRequestId'] ?? '');

@@ -97,19 +97,22 @@ class ReservationPayoutRunService {
 	 * payouts are left out of the history, so a recalculation counts from the
 	 * same state as the first calculation did.
 	 *
-	 * @param string $period           The run's period, `YYYY-MM`.
-	 * @param string $administrationId The run's administration.
-	 * @param string $runId            The run.
+	 * @param array{period: string, administrationId: string, runId: string, tables?: TaxTables} $run The run's period
+	 *                                                                                              (`YYYY-MM`), administration, id and tables.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-holiday-allowance-shall-be-paid-out-on-the-administrations-schedule-and-on-leaving-req-rsp-002
 	 */
-	public function inputs(string $period, string $administrationId, string $runId): array {
+	public function inputs(array $run): array {
+		$period = (string)$run['period'];
+		$runId = (string)$run['runId'];
 		$inputs = [
 			'period' => $period,
 			'runId' => $runId,
-			'schedule' => ReservationPeriods::schedule(rows: $this->rows('hrAdministration'), administrationId: $administrationId, defaults: self::DEFAULT_SCHEDULE),
+			'administrationId' => (string)$run['administrationId'],
+			'tables' => ($run['tables'] ?? null),
+			'schedule' => ReservationPeriods::schedule(rows: $this->rows('hrAdministration'), administrationId: (string)$run['administrationId']),
 			'payslips' => [],
 			'payouts' => [],
 			'ownPayouts' => [],
@@ -190,16 +193,16 @@ class ReservationPayoutRunService {
 	/**
 	 * What one employee's payslip pays and accrues out of the reserves.
 	 *
-	 * @param array<string, mixed> $inputs From inputs().
+	 * @param array<string, mixed> $inputs From inputs(), with the run's `tables`.
 	 * @param array<string, mixed> $slip   The run's slip: `employee`, `employeeId`, `contract`, `taxTableColor`, `regularWageCents` and the folded `grossCents`.
-	 * @param TaxTables            $tables The run's tables.
 	 *
 	 * @return array{specialCents: int, annualWageReferenceCents: int, endOfYearRate: float, ikbAccruedCents: int, untaxedCents: int, lines: list<array<string, mixed>>, wkr: list<array<string, mixed>>, held: list<array<string, mixed>>}
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-holiday-allowance-shall-be-paid-out-on-the-administrations-schedule-and-on-leaving-req-rsp-002
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-individual-choice-budget-shall-accrue-and-be-spent-by-approved-request-req-rsp-004
 	 */
-	public function foldFor(array $inputs, array $slip, TaxTables $tables): array {
+	public function foldFor(array $inputs, array $slip): array {
+		$tables = $inputs['tables'];
 		$period = (string)$inputs['period'];
 		$employeeId = (string)$slip['employeeId'];
 		$contract = (array)($slip['contract'] ?? []);
@@ -227,30 +230,30 @@ class ReservationPayoutRunService {
 			ReservationPayoutService::KIND_END_OF_YEAR => (int)round($grossCents * $endOfYearRate / 100),
 		];
 		foreach ($reserves as $kind => $currentCents) {
-			$line = $this->reserveLine(kind: $kind, schedule: $inputs['schedule'], period: $period, leaving: $leaving, history: ['payslips' => $payslips, 'payouts' => $payouts], currentCents: $currentCents);
+			$line = $this->reserveLine(kind: $kind, due: ['schedule' => $inputs['schedule'], 'period' => $period, 'leaving' => $leaving, 'history' => ['payslips' => $payslips, 'payouts' => $payouts], 'currentCents' => $currentCents]);
 			if ($line !== null) {
 				$fold['lines'][] = $line;
 			}
 		}
 
-		$fold = $this->ikb->withIkb(fold: $fold, inputs: $inputs, slip: $slip, leaving: $leaving);
+		$fold = $this->ikb->withIkb(fold: $fold, inputs: ($inputs + ['employeeId' => $employeeId, 'leaving' => $leaving]));
 
-		return $this->settled(fold: $fold, slip: array_merge($slip, ['period' => $period]), tables: $tables, history: $payslips);
+		return $this->settled(fold: $fold, slip: array_merge($slip, ['period' => $period, 'tables' => $tables, 'history' => $payslips]));
 	}//end foldFor()
 
 	/**
 	 * Write the run's payouts and WKR rows after the payslips are saved, and
 	 * remove this run's payouts that a recalculation no longer pays.
 	 *
-	 * @param array<string, mixed>             $inputs           From inputs().
-	 * @param list<array<string, mixed>>       $paid             Per payslip: `employeeId`, `userId`, `payslipId` and the fold.
-	 * @param string                           $administrationId The run's administration.
+	 * @param array<string, mixed>       $inputs From inputs(), which carries the run's administration.
+	 * @param list<array<string, mixed>> $paid   Per payslip: `employeeId`, `userId`, `payslipId` and the fold.
 	 *
 	 * @return int The payouts written.
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-holiday-allowance-shall-be-paid-out-on-the-administrations-schedule-and-on-leaving-req-rsp-002
 	 */
-	public function write(array $inputs, array $paid, string $administrationId): int {
+	public function write(array $inputs, array $paid): int {
+		$administrationId = (string)$inputs['administrationId'];
 		$stale = $inputs['ownPayouts'];
 		$written = 0;
 		foreach ($paid as $slip) {
@@ -290,16 +293,15 @@ class ReservationPayoutRunService {
 	 * after the last payout of the kind, so an early payout on leaving is not
 	 * paid again in the payout month (D4, D5, D6).
 	 *
-	 * @param string                $kind         The reserve kind.
-	 * @param array<string, mixed>  $schedule     The administration's schedule.
-	 * @param string                $period       The period.
-	 * @param bool                  $leaving      Whether the employee leaves this period.
-	 * @param array<string, array>  $history      The employee's earlier `payslips` and `payouts`.
-	 * @param int                   $currentCents This period's own reserve.
+	 * @param string               $kind The reserve kind.
+	 * @param array<string, mixed> $due  The administration's `schedule`, the `period`, whether the employee is `leaving`
+	 *                                   this period, the employee's earlier `payslips` and `payouts` as `history`, and
+	 *                                   this period's own reserve as `currentCents`.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function reserveLine(string $kind, array $schedule, string $period, bool $leaving, array $history, int $currentCents): ?array {
+	private function reserveLine(string $kind, array $due): ?array {
+		['schedule' => $schedule, 'period' => $period, 'leaving' => $leaving, 'history' => $history, 'currentCents' => $currentCents] = $due;
 		$perPeriod = ($kind === ReservationPayoutService::KIND_HOLIDAY_ALLOWANCE && $schedule['holidayAllowancePayout'] === 'per-period');
 		$payoutMonth = ReservationPeriods::payoutMonth(kind: $kind, schedule: $schedule);
 		$inMonth = ((int)substr($period, 5, 2) === $payoutMonth);
@@ -313,7 +315,7 @@ class ReservationPayoutRunService {
 
 		$scheduled = $this->math->basisPeriod(kind: $kind, period: ($kind === ReservationPayoutService::KIND_END_OF_YEAR ? $period : ReservationPeriods::scheduledEnd(period: $period, month: $payoutMonth, leaving: $leaving)));
 		$from = ReservationPeriods::later(a: $scheduled['from'], b: ReservationPeriods::afterLastPayout(kind: $kind, payouts: $history['payouts']));
-		$open = $this->math->openBalance(kind: $kind, basis: ['from' => $from, 'to' => ReservationPeriods::previous(period: $period)], payslips: $history['payslips'], payouts: $history['payouts']);
+		$open = $this->math->openBalance(kind: $kind, basis: ['from' => $from, 'to' => ReservationPeriods::previous(period: $period), 'payslips' => $history['payslips'], 'payouts' => $history['payouts']]);
 		$amount = ($currentCents + $open);
 
 		return ($amount > 0 ? self::line(kind: $kind, reason: ($inMonth === true ? 'scheduled' : 'leaving'), basis: ['from' => $from, 'to' => $period], amount: $amount) : null);
@@ -337,14 +339,14 @@ class ReservationPayoutRunService {
 	 * Sum the money into the special payment and the untaxed net amount, or
 	 * hold the special-rate money while the table is unverified (D3).
 	 *
-	 * @param array<string, mixed>             $fold    The fold so far.
-	 * @param array<string, mixed>             $slip    The run's slip.
-	 * @param TaxTables                        $tables  The run's tables.
-	 * @param list<array<string, mixed>>       $history The employee's earlier payslips.
+	 * @param array<string, mixed> $fold The fold so far.
+	 * @param array<string, mixed> $slip The run's slip, with its `period`, the run's `tables` and the employee's earlier
+	 *                                   payslips as `history`.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function settled(array $fold, array $slip, TaxTables $tables, array $history): array {
+	private function settled(array $fold, array $slip): array {
+		$tables = $slip['tables'];
 		$special = 0;
 		foreach ($fold['lines'] as $line) {
 			$special += ($line['specialRate'] === true ? (int)$line['amount'] : 0);
@@ -364,7 +366,7 @@ class ReservationPayoutRunService {
 		$fold['specialCents'] = $special;
 		$fold['untaxedCents'] = $untaxed;
 		if ($special > 0) {
-			$fold['annualWageReferenceCents'] = $this->math->annualWageReference(payslips: $history, period: (string)$slip['period'], regularWageCents: (int)$slip['regularWageCents'], holidayRatePercent: $tables->vakantiebijslagRate());
+			$fold['annualWageReferenceCents'] = $this->math->annualWageReference(payslips: $slip['history'], wage: ['period' => (string)$slip['period'], 'regularWageCents' => (int)$slip['regularWageCents'], 'holidayRatePercent' => $tables->vakantiebijslagRate()]);
 		}
 
 		foreach ($fold['lines'] as $index => $line) {

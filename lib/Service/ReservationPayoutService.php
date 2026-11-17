@@ -72,16 +72,16 @@ class ReservationPayoutService {
 	 * calendar year when all twelve of its months have one; otherwise the
 	 * current regular wage times twelve plus the holiday allowance on it.
 	 *
-	 * @param array<int, array<string, mixed>> $payslips          The employee's payslips.
-	 * @param string                           $period            The payout period, `YYYY-MM`.
-	 * @param int                              $regularWageCents  This period's regular wage.
-	 * @param float                            $holidayRatePercent The holiday allowance rate, such as 8.0.
+	 * @param array<int, array<string, mixed>>                                          $payslips The employee's payslips.
+	 * @param array{period: string, regularWageCents: int, holidayRatePercent: float} $wage     The payout period
+	 *                                                                                          (`YYYY-MM`), this period's regular wage and the holiday allowance rate, such as 8.0.
 	 *
 	 * @return int The annual wage in cents.
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
 	 */
-	public function annualWageReference(array $payslips, string $period, int $regularWageCents, float $holidayRatePercent): int {
+	public function annualWageReference(array $payslips, array $wage): int {
+		['period' => $period, 'regularWageCents' => $regularWageCents, 'holidayRatePercent' => $holidayRatePercent] = $wage;
 		$priorYear = (string)(self::year(period: $period) - 1);
 		$months = [];
 		$sum = 0;
@@ -141,10 +141,9 @@ class ReservationPayoutService {
 	 * A payout counts against the basis when its own basis overlaps it, so a
 	 * leaver's early payout is not paid again in May. Never below zero.
 	 *
-	 * @param string                           $kind     The reserve kind.
-	 * @param array{from: string, to: string}  $basis    The basis period.
-	 * @param array<int, array<string, mixed>> $payslips The employee's payslips.
-	 * @param array<int, array<string, mixed>> $payouts  The employee's payout records.
+	 * @param string                                                                     $kind  The reserve kind.
+	 * @param array{from: string, to: string, payslips: array<int, array>, payouts: array<int, array>} $basis The basis period
+	 *                                                                                                        with the employee's payslips and payout records.
 	 *
 	 * @return int The open balance in cents.
 	 *
@@ -152,7 +151,8 @@ class ReservationPayoutService {
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-holiday-allowance-shall-be-paid-out-on-the-administrations-schedule-and-on-leaving-req-rsp-002
 	 */
-	public function openBalance(string $kind, array $basis, array $payslips, array $payouts): int {
+	public function openBalance(string $kind, array $basis): int {
+		['payslips' => $payslips, 'payouts' => $payouts] = $basis;
 		$field = (self::RESERVE_FIELDS[$kind] ?? null);
 		if ($field === null) {
 			throw new InvalidArgumentException('Unknown reserve kind: ' . $kind);

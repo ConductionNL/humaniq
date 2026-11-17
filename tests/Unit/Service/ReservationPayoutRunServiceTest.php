@@ -166,9 +166,9 @@ class ReservationPayoutRunServiceTest extends TestCase {
 	public function testTheYearlyMayPayoutPaysJuneToMay(): void {
 		$history = $this->payslips(self::periods('2025-01', '2026-04'), ['vakantiegeldReserved' => 304.0]);
 		$service = $this->service(['Payslip' => $history]);
-		$inputs = $service->inputs(period: '2026-05', administrationId: 'ADM-001', runId: 'run-may');
+		$inputs = $service->inputs(run: ['period' => '2026-05', 'administrationId' => 'ADM-001', 'runId' => 'run-may']);
 
-		$fold = $service->foldFor(inputs: $inputs, slip: $this->slip(), tables: $this->tables());
+		$fold = $service->foldFor(inputs: array_merge($inputs, ['tables' => $this->tables()]), slip: $this->slip());
 
 		self::assertSame(364800, $fold['specialCents']);
 		self::assertSame(4560000, $fold['annualWageReferenceCents'], 'twelve 2025 payslips of 3800.00');
@@ -184,7 +184,7 @@ class ReservationPayoutRunServiceTest extends TestCase {
 	public function testNothingIsPaidOutsideThePayoutMonth(): void {
 		$service = $this->service(['Payslip' => $this->payslips(self::periods('2026-01', '2026-03'), ['vakantiegeldReserved' => 304.0])]);
 
-		$fold = $service->foldFor(inputs: $service->inputs('2026-04', 'ADM-001', 'run-apr'), slip: $this->slip(), tables: $this->tables());
+		$fold = $service->foldFor(inputs: array_merge($service->inputs(run: ['period' => '2026-04', 'administrationId' => 'ADM-001', 'runId' => 'run-apr']), ['tables' => $this->tables()]), slip: $this->slip());
 
 		self::assertSame(0, $fold['specialCents']);
 		self::assertSame([], $fold['lines']);
@@ -203,7 +203,7 @@ class ReservationPayoutRunServiceTest extends TestCase {
 			'ReservationPayout' => [['id' => 'rp-may', 'employeeId' => 'emp-1', 'kind' => 'vakantiegeld', 'basisFrom' => '2025-06', 'basisTo' => '2026-05', 'amount' => 364800, 'payrollRunId' => 'run-2026-05', 'status' => 'paid']],
 		]);
 
-		$fold = $service->foldFor(inputs: $service->inputs('2026-09', 'ADM-001', 'run-sep'), slip: $this->slip(employee: ['endDate' => '2026-09-30']), tables: $this->tables());
+		$fold = $service->foldFor(inputs: array_merge($service->inputs(run: ['period' => '2026-09', 'administrationId' => 'ADM-001', 'runId' => 'run-sep']), ['tables' => $this->tables()]), slip: $this->slip(employee: ['endDate' => '2026-09-30']));
 
 		self::assertSame([['kind' => 'vakantiegeld', 'reason' => 'leaving', 'basisFrom' => '2026-06', 'basisTo' => '2026-09', 'amount' => 121600]], $fold['lines']);
 		self::assertSame(121600, $fold['specialCents']);
@@ -217,7 +217,7 @@ class ReservationPayoutRunServiceTest extends TestCase {
 	public function testAThirteenthMonthIsPaidInDecember(): void {
 		$service = $this->service(['Payslip' => $this->payslips(self::periods('2026-01', '2026-11'), ['eindejaarsuitkeringReserved' => 249.90, 'grossPay' => 3000.0])]);
 
-		$fold = $service->foldFor(inputs: $service->inputs('2026-12', 'ADM-001', 'run-dec'), slip: $this->slip(contract: ['endOfYearRate' => 8.33], gross: 300000), tables: $this->tables());
+		$fold = $service->foldFor(inputs: array_merge($service->inputs(run: ['period' => '2026-12', 'administrationId' => 'ADM-001', 'runId' => 'run-dec']), ['tables' => $this->tables()]), slip: $this->slip(contract: ['endOfYearRate' => 8.33], gross: 300000));
 
 		self::assertSame(8.33, $fold['endOfYearRate']);
 		self::assertSame([['kind' => 'eindejaarsuitkering', 'reason' => 'scheduled', 'basisFrom' => '2026-01', 'basisTo' => '2026-12', 'amount' => 299880]], $fold['lines']);
@@ -231,7 +231,7 @@ class ReservationPayoutRunServiceTest extends TestCase {
 	public function testAPlaceholderAgreementGivesNoEndOfYearRate(): void {
 		$service = $this->service([]);
 
-		$fold = $service->foldFor(inputs: $service->inputs('2026-03', 'ADM-001', 'run-mar'), slip: $this->slip(contract: ['cao' => 'cao-gemeenten']), tables: $this->tables());
+		$fold = $service->foldFor(inputs: array_merge($service->inputs(run: ['period' => '2026-03', 'administrationId' => 'ADM-001', 'runId' => 'run-mar']), ['tables' => $this->tables()]), slip: $this->slip(contract: ['cao' => 'cao-gemeenten']));
 
 		self::assertSame(0.0, $fold['endOfYearRate']);
 		self::assertSame(0, $fold['ikbAccruedCents'], 'the Gemeenten IKB figure is a placeholder too');
@@ -245,7 +245,7 @@ class ReservationPayoutRunServiceTest extends TestCase {
 	public function testThePerPeriodSchedulePaysEachPeriodsReserve(): void {
 		$service = $this->service(['hrAdministration' => [['administrationId' => 'ADM-001', 'holidayAllowancePayout' => 'per-period']]]);
 
-		$fold = $service->foldFor(inputs: $service->inputs('2026-03', 'ADM-001', 'run-mar'), slip: $this->slip(), tables: $this->tables());
+		$fold = $service->foldFor(inputs: array_merge($service->inputs(run: ['period' => '2026-03', 'administrationId' => 'ADM-001', 'runId' => 'run-mar']), ['tables' => $this->tables()]), slip: $this->slip());
 
 		self::assertSame([['kind' => 'vakantiegeld', 'reason' => 'per-period', 'basisFrom' => '2026-03', 'basisTo' => '2026-03', 'amount' => 30400]], $fold['lines']);
 	}//end testThePerPeriodSchedulePaysEachPeriodsReserve()
@@ -259,7 +259,7 @@ class ReservationPayoutRunServiceTest extends TestCase {
 	public function testAnUnverifiedTableHoldsTheSpecialPayment(): void {
 		$service = $this->service(['Payslip' => $this->payslips(self::periods('2025-06', '2026-04'), ['vakantiegeldReserved' => 304.0])]);
 
-		$fold = $service->foldFor(inputs: $service->inputs('2026-05', 'ADM-001', 'run-may'), slip: $this->slip(), tables: $this->tables(verified: false));
+		$fold = $service->foldFor(inputs: array_merge($service->inputs(run: ['period' => '2026-05', 'administrationId' => 'ADM-001', 'runId' => 'run-may']), ['tables' => $this->tables(verified: false)]), slip: $this->slip());
 
 		self::assertSame(0, $fold['specialCents']);
 		self::assertSame([], $fold['lines']);
@@ -283,7 +283,7 @@ class ReservationPayoutRunServiceTest extends TestCase {
 			'IkbGoal' => [['id' => 'goal-union', 'name' => 'Vakbondscontributie', 'taxTreatment' => 'exempt', 'wkrCategory' => 'gericht-vrijgesteld']],
 		]);
 
-		$fold = $service->foldFor(inputs: $service->inputs('2026-06', 'ADM-001', 'run-jun'), slip: $this->slip(contract: ['ikbRate' => 16.5]), tables: $this->tables());
+		$fold = $service->foldFor(inputs: array_merge($service->inputs(run: ['period' => '2026-06', 'administrationId' => 'ADM-001', 'runId' => 'run-jun']), ['tables' => $this->tables()]), slip: $this->slip(contract: ['ikbRate' => 16.5]));
 
 		self::assertSame(80000, $fold['specialCents']);
 		self::assertSame(12000, $fold['untaxedCents']);
@@ -305,7 +305,7 @@ class ReservationPayoutRunServiceTest extends TestCase {
 		];
 		$service = $this->service($rows);
 
-		$fold = $service->foldFor(inputs: $service->inputs('2026-12', 'ADM-001', 'run-dec'), slip: $this->slip(contract: ['ikbRate' => 10]), tables: $this->tables());
+		$fold = $service->foldFor(inputs: array_merge($service->inputs(run: ['period' => '2026-12', 'administrationId' => 'ADM-001', 'runId' => 'run-dec']), ['tables' => $this->tables()]), slip: $this->slip(contract: ['ikbRate' => 10]));
 
 		self::assertSame([['kind' => 'ikb', 'reason' => 'ikb-remainder', 'basisFrom' => '2026-01', 'basisTo' => '2026-12', 'amount' => 140000]], $fold['lines'], '1020.00 plus this payslip\'s 380.00');
 	}//end testTheDecemberRemainderIsPaidWhenTheAdministrationSaysSo()
@@ -327,10 +327,10 @@ class ReservationPayoutRunServiceTest extends TestCase {
 				['id' => 'rp-stale', 'employeeId' => 'emp-1', 'kind' => 'eindejaarsuitkering', 'reason' => 'scheduled', 'payrollRunId' => 'run-may'],
 			],
 		]);
-		$inputs = $service->inputs('2026-05', 'ADM-001', 'run-may');
-		$fold = $service->foldFor(inputs: $inputs, slip: $this->slip(), tables: $this->tables());
+		$inputs = $service->inputs(run: ['period' => '2026-05', 'administrationId' => 'ADM-001', 'runId' => 'run-may']);
+		$fold = $service->foldFor(inputs: array_merge($inputs, ['tables' => $this->tables()]), slip: $this->slip());
 
-		$written = $service->write(inputs: $inputs, paid: [['employeeId' => 'emp-1', 'userId' => 'jansen', 'payslipId' => 'ps-own', 'fold' => $fold]], administrationId: 'ADM-001');
+		$written = $service->write(inputs: $inputs, paid: [['employeeId' => 'emp-1', 'userId' => 'jansen', 'payslipId' => 'ps-own', 'fold' => $fold]]);
 
 		self::assertSame(364800, $fold['specialCents'], 'the run\'s own May payslip is not counted twice');
 		self::assertSame(1, $written);

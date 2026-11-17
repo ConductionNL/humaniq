@@ -143,14 +143,13 @@ final class ReservationPeriods {
 	 *
 	 * @param list<array<string, mixed>> $rows             The hrAdministration rows.
 	 * @param string                     $administrationId The administration.
-	 * @param array<string, mixed>       $defaults         The defaults.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-holiday-allowance-shall-be-paid-out-on-the-administrations-schedule-and-on-leaving-req-rsp-002
 	 */
-	public static function schedule(array $rows, string $administrationId, array $defaults): array {
-		$schedule = $defaults;
+	public static function schedule(array $rows, string $administrationId): array {
+		$schedule = ReservationPayoutRunService::DEFAULT_SCHEDULE;
 		foreach ($rows as $row) {
 			if ((string)($row['administrationId'] ?? '') !== $administrationId) {
 				continue;

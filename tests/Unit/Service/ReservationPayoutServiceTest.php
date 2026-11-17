@@ -52,7 +52,7 @@ class ReservationPayoutServiceTest extends TestCase {
 		$slips = self::payslips(from: '2025-01', to: '2026-04', gross: 3000.0);
 		$slips[3]['grossPay'] = 3500.5;
 
-		$this->assertSame(3650050, (new ReservationPayoutService())->annualWageReference($slips, '2026-05', 310000, 8.0));
+		$this->assertSame(3650050, (new ReservationPayoutService())->annualWageReference($slips, ['period' => '2026-05', 'regularWageCents' => 310000, 'holidayRatePercent' => 8.0]));
 	}//end testAFullPriorYearSumsItsPayslips()
 
 	/**
@@ -64,8 +64,8 @@ class ReservationPayoutServiceTest extends TestCase {
 		$slips = self::payslips(from: '2025-09', to: '2026-04');
 
 		// 3100.00 x 12 x 1.08 = 40176.00
-		$this->assertSame(4017600, (new ReservationPayoutService())->annualWageReference($slips, '2026-05', 310000, 8.0));
-		$this->assertSame(3720000, (new ReservationPayoutService())->annualWageReference([], '2026-05', 310000, 0.0));
+		$this->assertSame(4017600, (new ReservationPayoutService())->annualWageReference($slips, ['period' => '2026-05', 'regularWageCents' => 310000, 'holidayRatePercent' => 8.0]));
+		$this->assertSame(3720000, (new ReservationPayoutService())->annualWageReference([], ['period' => '2026-05', 'regularWageCents' => 310000, 'holidayRatePercent' => 0.0]));
 	}//end testAStarterExtrapolatesTheRegularWage()
 
 	/**
@@ -92,7 +92,7 @@ class ReservationPayoutServiceTest extends TestCase {
 		$basis = $service->basisPeriod('vakantiegeld', '2026-05');
 		$slips = self::payslips(from: '2025-01', to: '2026-05');
 
-		$this->assertSame(288000, $service->openBalance('vakantiegeld', $basis, $slips, []));
+		$this->assertSame(288000, $service->openBalance('vakantiegeld', $basis + ['payslips' => $slips, 'payouts' => []]));
 
 		$payouts = [
 			['kind' => 'vakantiegeld', 'basisFrom' => '2025-06', 'basisTo' => '2025-12', 'amount' => 100000],
@@ -100,7 +100,7 @@ class ReservationPayoutServiceTest extends TestCase {
 			['kind' => 'eindejaarsuitkering', 'basisFrom' => '2025-06', 'basisTo' => '2026-05', 'amount' => 50000],
 			['kind' => 'vakantiegeld', 'amount' => 999],
 		];
-		$this->assertSame(188000, $service->openBalance('vakantiegeld', $basis, $slips, $payouts));
+		$this->assertSame(188000, $service->openBalance('vakantiegeld', $basis + ['payslips' => $slips, 'payouts' => $payouts]));
 	}//end testAPartlyPaidReserveLeavesTheRest()
 
 	/**
@@ -114,8 +114,8 @@ class ReservationPayoutServiceTest extends TestCase {
 		$slips = self::payslips(from: '2026-01', to: '2026-12');
 		$slips[] = ['period' => '2026-07', 'eindejaarsuitkeringReserved' => 'n/a'];
 
-		$this->assertSame(300000, $service->openBalance('eindejaarsuitkering', $basis, $slips, []));
-		$this->assertSame(0, $service->openBalance('eindejaarsuitkering', $basis, $slips, [['kind' => 'eindejaarsuitkering', 'basisFrom' => '2026-01', 'basisTo' => '2026-12', 'amount' => 400000]]));
+		$this->assertSame(300000, $service->openBalance('eindejaarsuitkering', $basis + ['payslips' => $slips, 'payouts' => []]));
+		$this->assertSame(0, $service->openBalance('eindejaarsuitkering', $basis + ['payslips' => $slips, 'payouts' => [['kind' => 'eindejaarsuitkering', 'basisFrom' => '2026-01', 'basisTo' => '2026-12', 'amount' => 400000]]]));
 	}//end testTheEndOfYearReserveAndOverpayment()
 
 	/**
@@ -125,7 +125,7 @@ class ReservationPayoutServiceTest extends TestCase {
 	 */
 	public function testUnknownKindsAndPeriodsAreRefused(): void {
 		$service = new ReservationPayoutService();
-		foreach ([fn () => $service->basisPeriod('ikb', '2026-05'), fn () => $service->openBalance('ikb', ['from' => '2026-01', 'to' => '2026-12'], [], []), fn () => $service->basisPeriod('vakantiegeld', '2026-13'), fn () => $service->annualWageReference([], 'mei', 0, 8.0)] as $index => $call) {
+		foreach ([fn () => $service->basisPeriod('ikb', '2026-05'), fn () => $service->openBalance('ikb', ['from' => '2026-01', 'to' => '2026-12', 'payslips' => [], 'payouts' => []]), fn () => $service->basisPeriod('vakantiegeld', '2026-13'), fn () => $service->annualWageReference([], ['period' => 'mei', 'regularWageCents' => 0, 'holidayRatePercent' => 8.0])] as $index => $call) {
 			try {
 				$call();
 				$this->fail('call ' . $index . ' must be refused');
