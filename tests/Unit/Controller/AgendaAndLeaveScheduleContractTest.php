@@ -40,6 +40,7 @@ use OCA\Humaniq\Service\DepartmentLeaveScheduleService;
 use OCA\Humaniq\Service\ForwardCapacityService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\LeaveCoverageService;
+use OCA\Humaniq\Service\LeaveCoverageWarning;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCA\Humaniq\Service\WorkingCalendarReader;
@@ -120,8 +121,11 @@ class AgendaAndLeaveScheduleContractTest extends TestCase {
 			$this->createMock(IRequest::class),
 			$gateway,
 			$schedule,
-			$this->createMock(LeaveCoverageService::class),
-			$this->createMock(OrgResolutionService::class),
+			new LeaveCoverageWarning(
+				gateway: $gateway,
+				coverage: $this->createMock(LeaveCoverageService::class),
+				orgResolution: $this->createMock(OrgResolutionService::class)
+			),
 			$rbac,
 			$access
 		);

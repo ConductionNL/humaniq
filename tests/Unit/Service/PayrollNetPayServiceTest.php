@@ -35,12 +35,14 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\Connection\ConnectionReporter;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Tests\Unit\Service\Support\InMemoryLocks;
 use OCP\Lock\ILockingProvider;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for PayrollNetPayService.
@@ -87,6 +89,13 @@ class PayrollNetPayServiceTest extends TestCase {
 			 * @var array<int, string>
 			 */
 			public array $lookupFails = [];
+
+			/**
+			 * Schemas whose save throws, as a store that refuses the write.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $saveFails = [];
 
 			/**
 			 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
@@ -151,15 +160,20 @@ class PayrollNetPayServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 				if ($targetSchema === 'PaymentRun' && $this->shillinqThrows === true) {
 					throw new \RuntimeException('shillinq register unavailable');
+				}
+
+				if (in_array($targetSchema, $this->saveFails, true) === true) {
+					throw new \RuntimeException('shillinq refused the write');
 				}
 
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
@@ -201,7 +215,7 @@ class PayrollNetPayServiceTest extends TestCase {
 	 *
 	 * @return array{0: PayrollNetPayService, 1: object}
 	 */
-	private function service(array $rowsBySchema = [], bool $shillinqThrows = false, bool $shillinqInstalled = true, string $debtorIban = ''): array {
+	private function service(array $rowsBySchema = [], bool $shillinqThrows = false, bool $shillinqInstalled = true, string $debtorIban = '', ?ConnectionReporter $connections = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema, $shillinqThrows);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -225,7 +239,7 @@ class PayrollNetPayServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new PayrollNetPayService($container, $appManager, $settings, $logger), $fake];
+		return [new PayrollNetPayService($container, $appManager, $settings, $logger, $connections), $fake];
 	}//end service()
 
 	/**
@@ -889,4 +903,63 @@ class PayrollNetPayServiceTest extends TestCase {
 
 	}//end testProcessPayableRunsSelectsApprovedAndPostedRunsForTheGivenPeriod()
 
+
+	/**
+	 * A payment run shillinq took reports the ledger as configured (platform-integrations-catalogue D2).
+	 *
+	 * @return void
+	 */
+	public function testAPaymentRunShillinqTookReportsTheLedgerConfigured(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'configured', 'Shillinq took payment run HRMQ-NETPAY-2026-05-ADM-001.')
+			->willReturn(true);
+		[$service] = $this->service(rowsBySchema: ['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]], connections: $connections);
+
+		$this->assertSame('created', $service->processRun($this->payrollRun())['status']);
+	}//end testAPaymentRunShillinqTookReportsTheLedgerConfigured()
+
+	/**
+	 * A payment run shillinq refused reports the ledger as an error with the reason.
+	 *
+	 * @return void
+	 */
+	public function testAPaymentRunShillinqRefusedReportsTheLedgerError(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'error', 'Shillinq refused the payment run: shillinq refused the write')
+			->willReturn(true);
+		[$service, $fake] = $this->service(rowsBySchema: ['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]], connections: $connections);
+		$fake->saveFails = ['PaymentRun'];
+
+		$this->assertSame('failed', $service->processRun($this->payrollRun())['status']);
+	}//end testAPaymentRunShillinqRefusedReportsTheLedgerError()
+
+	/**
+	 * Without shillinq the ledger is reported unavailable.
+	 *
+	 * @return void
+	 */
+	public function testAMissingShillinqReportsTheLedgerUnavailableForNetPay(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->once())->method('report')
+			->with('shillinq-ledger', 'unavailable', 'Shillinq is not installed, or its payment runs cannot be reached.')
+			->willReturn(true);
+		[$service] = $this->service(shillinqInstalled: false, connections: $connections);
+
+		$this->assertSame('skipped-no-shillinq', $service->processRun($this->payrollRun())['status']);
+	}//end testAMissingShillinqReportsTheLedgerUnavailableForNetPay()
+
+	/**
+	 * A payslip without an IBAN stops the run in humaniq, before shillinq: nothing is reported.
+	 *
+	 * @return void
+	 */
+	public function testAMissingIbanReportsNothing(): void {
+		$connections = $this->createMock(ConnectionReporter::class);
+		$connections->expects($this->never())->method('report');
+		[$service] = $this->service(rowsBySchema: ['Employee' => [$this->employee(['iban' => ''])], 'Payslip' => [$this->payslip()]], connections: $connections);
+
+		$this->assertSame('failed', $service->processRun($this->payrollRun())['status']);
+	}//end testAMissingIbanReportsNothing()
 }//end class

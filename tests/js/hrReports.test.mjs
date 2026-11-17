@@ -99,22 +99,23 @@ test('REQ-HRP-001: turnover buckets starters and leavers per month within the ch
 	assert.deepEqual(buckets.map((b) => [b.field, b.interval]), [['startDate', 'month'], ['endDate', 'month']])
 })
 
-test('REQ-HRP-002: the seven lists offer saved views; all but sick leave offer export, and their schemas are exportable', () => {
+test('REQ-HRP-002: the seven lists offer saved views and export; every schema but sick leave is exportable', () => {
 	const schemas = baseSchemas()
 	for (const [id, slug] of Object.entries(LISTS)) {
 		assert.equal(pages[id].config.allowSavedViews, true, `${id} saved views`)
 		assert.equal(pages[id].config.schema, slug)
+		// Every list turns the export menu on; the schema's own
+		// configuration.exportable decides whether it shows
+		// (reporting-full-list-export, REQ-HLE-001).
+		assert.equal(pages[id].config.allowExport, true, `${id} export`)
 		if (slug === 'SickLeaveCase') {
 			// Health data is never exported in bulk (reporting-full-list-export,
-			// REQ-HLE-002): sick leave cases get saved views only.
-			assert.equal(pages[id].config.allowExport, undefined, `${id} offers no export`)
-			assert.notEqual(schemas[slug].exportable, true, `${slug} is not exportable`)
+			// REQ-HLE-002): the sick leave schema is not exportable.
+			assert.notEqual(schemas[slug].configuration?.exportable, true, `${slug} is not exportable`)
 			continue
 		}
-		assert.equal(pages[id].config.allowExport, true, `${id} export`)
-		assert.equal(schemas[slug].exportable, true, `${slug} exportable`)
+		assert.equal(schemas[slug].configuration?.exportable, true, `${slug} exportable`)
 	}
-	assert.equal(pages.LeaveBalances.config.allowExport, undefined, 'a list the change does not name stays as it was')
 })
 
 test('REQ-HRP-002: My reports lists the own and shared saved views of exactly the seven lists', () => {

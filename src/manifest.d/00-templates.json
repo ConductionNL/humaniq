@@ -100,7 +100,7 @@
 					"actionToggles": "{{actionToggles}}",
 					"bulkActions": "{{bulkActions}}",
 					"allowSavedViews": "{{allowSavedViews}}",
-					"allowExport": "{{allowExport}}"
+					"allowExport": true
 				}
 			}
 		},
