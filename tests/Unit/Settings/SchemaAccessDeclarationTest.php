@@ -73,7 +73,7 @@ class SchemaAccessDeclarationTest extends TestCase {
 	 *
 	 * @var array<int, string>
 	 */
-	private const REFERENCE = ['LeaveType'];
+	private const REFERENCE = ['LeaveType', 'TimeActivity'];
 
 	/**
 	 * The assembled register config.

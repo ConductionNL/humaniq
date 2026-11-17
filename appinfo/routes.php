@@ -23,6 +23,9 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // allowed-expense-categories: which categories employees may claim (read: signed-in users, save: admin).
         ['name' => 'expenseCategory#index', 'url' => '/api/expense-categories', 'verb' => 'GET'],
         ['name' => 'expenseCategory#update', 'url' => '/api/expense-categories', 'verb' => 'PUT'],
+        // sign-in-and-hosting-are-the-platforms: the Inloggen admin section reads and saves Nextcloud's own sign-in settings (admin only).
+        ['name' => 'signInSettings#show', 'url' => '/api/settings/sign-in', 'verb' => 'GET'],
+        ['name' => 'signInSettings#update', 'url' => '/api/settings/sign-in', 'verb' => 'PUT'],
         ['name' => 'page#index',    'url' => '/',             'verb' => 'GET'],
         // ADR-024 §4 — manifest endpoint (bundled blob).
         ['name' => 'page#manifest', 'url' => '/api/manifest', 'verb' => 'GET'],
@@ -223,6 +226,8 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'timeEntry#summary',    'url' => '/api/time-entries/summary',     'verb' => 'GET'],
         // hours-per-person-week: the week's hours on one object, per person, as far as the caller may see them.
         ['name' => 'objectHours#week',     'url' => '/api/time-entries/week',        'verb' => 'GET'],
+        // time-non-project-activities D2/D3: one timesheet's week view (booked entries, leave and sickness lines, totals per kind), for a caller who may read that timesheet.
+        ['name' => 'timesheetWeek#week',   'url' => '/api/timesheets/week',          'verb' => 'GET'],
         ['name' => 'timeEntry#timer',      'url' => '/api/time-entries/timer',       'verb' => 'GET'],
         ['name' => 'timeEntry#startTimer', 'url' => '/api/time-entries/timer/start', 'verb' => 'POST'],
         ['name' => 'timeEntry#stopTimer',  'url' => '/api/time-entries/timer/stop',  'verb' => 'POST'],
