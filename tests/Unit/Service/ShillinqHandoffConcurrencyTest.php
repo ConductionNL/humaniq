@@ -19,15 +19,18 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use Fiber;
+use OCA\Humaniq\Service\PayrollBookkeepingSettings;
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollNetPayService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Service\Support\InMemoryLocks;
+use OCP\AppFramework\Services\IAppConfig;
 use OCP\Lock\ILockingProvider;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Concurrency of the net pay and GL post hand-offs.
@@ -784,7 +787,10 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, ?string $register = null, ?string $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($this->beforeSave !== null) {
 					($this->beforeSave)((string)$schema);
 				}
@@ -838,15 +844,11 @@ class ShillinqHandoffConcurrencyTest extends TestCase {
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 		$settings->method('getNetPayExecutionDay')->willReturn(25);
 		$settings->method('getNetPayDebtorIban')->willReturn('');
-		$settings->method('getGlPostAccountGross')->willReturn('4001');
-		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
-		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
-		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
 
 		if ($kind === 'netpay') {
 			return new PayrollNetPayService($container, $apps, $settings, new NullLogger());
 		}
 
-		return new PayrollGLPostService($container, $apps, $settings, new NullLogger());
+		return new PayrollGLPostService($container, $apps, $settings, new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)), new NullLogger());
 	}//end service()
 }//end class

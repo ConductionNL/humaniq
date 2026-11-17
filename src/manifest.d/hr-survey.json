@@ -192,7 +192,8 @@
 				"schema": "SurveyInvitation",
 				"_note": "talent-engagement-surveys (2026-10-02): REQ-SRV-002, design D1. The employee opens their own invitation from My surveys (OpenRegister lets them read only invitations with their userId) and answers in the survey-answer widget, which reads the survey's questions and posts to /api/surveys/{id}/responses. The response is stored without the employee; the invitation only turns answered.",
 				"sidebar": {
-					"enabled": false
+					"enabled": true,
+					"showMetadata": true
 				},
 				"hiddenTabs": [
 					"notes",

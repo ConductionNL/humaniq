@@ -37,6 +37,14 @@ if (is_dir(__DIR__ . '/../vendor/nextcloud/ocp/OCP') === true) {
 	$autoloader->addPsr4('NCU\\', __DIR__ . '/../vendor/nextcloud/ocp/NCU/');
 }
 
+// Integriq's connection status event, for the reporter's tests. Integriq is
+// optional and absent here; the stub mirrors its constructor and loads only
+// when the real class is not already loaded. The check must not autoload:
+// Composer remembers a class it failed to find and would then skip the stub.
+if (class_exists('OCA\\Integriq\\Event\\ConnectionStatusReportedEvent', false) === false) {
+	$autoloader->addPsr4('OCA\\Integriq\\', __DIR__ . '/stubs/Integriq/');
+}
+
 // Doctrine placeholders, loaded BEFORE anything can mock an OCP DB interface.
 // IQueryBuilder evaluates constants referencing Doctrine\DBAL\ParameterType at
 // parse time, and IDBConnection::getQueryBuilder() returns IQueryBuilder — so
@@ -145,8 +153,31 @@ if (is_file($humaniqNcRoot . '/lib/base.php') === true) {
 // loaded via composer.json autoload, and skipped entirely when the real classes
 // are already resolvable (e.g. a full server checkout with OpenRegister installed
 // via the base.php include above) — the real classes always win.
+// RetentionService::placeHold()/releaseHold() take a HoldOrder (openregister,
+// since 2026-11-10). Load the test-only mirror when OpenRegister is absent.
+if (class_exists('OCA\\OpenRegister\\Service\\HoldOrder') === false) {
+	require __DIR__ . '/stubs/OpenRegisterHoldOrderStub.php';
+}
+
 if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') === false) {
 	require __DIR__ . '/stubs/OpenRegisterLifecycleStub.php';
+}
+
+// AvgDsrService builds openregister's SubjectQuery and ErasureRequest for the
+// guarded DataSubjectRequestService (avg-dsr, REQ-DSR-003/005). The stub
+// declares those value objects so the calls load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Service\\Gdpr\\SubjectQuery') === false) {
+	require __DIR__ . '/stubs/OpenRegisterGdprRequestStub.php';
+}
+
+// The transition guard and its context (lifecycle-guards-see-the-stored-object):
+// a guard that judges the stored object. The context carries an ObjectEntity.
+if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleTransitionGuardInterface') === false) {
+	if (class_exists('OCA\\OpenRegister\\Db\\ObjectEntity') === false) {
+		require_once __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
+	}
+
+	require __DIR__ . '/stubs/OpenRegisterLifecycleTransitionStub.php';
 }
 
 // The notification recipient seam (absence-deadlines-and-signals D2): the
@@ -265,3 +296,16 @@ if (class_exists('OCA\\OpenRegister\\Service\\Dmn\\DecisionTableEvaluator') === 
 	require __DIR__ . '/stubs/OpenRegisterDmn/UnaryTestEvaluator.php';
 	require __DIR__ . '/stubs/OpenRegisterDmn/DecisionTableEvaluator.php';
 }
+
+// OpenRegister's object-service option objects, from main, when OpenRegister itself is absent.
+spl_autoload_register(
+	static function (string $class): void {
+		$prefix = 'OCA\\OpenRegister\\Kernel\\Contracts\\Value\\';
+		if (str_starts_with($class, $prefix) === true) {
+			$file = __DIR__ . '/stubs/OpenRegister/Kernel/Contracts/Value/' . substr($class, strlen($prefix)) . '.php';
+			if (is_file($file) === true) {
+				require_once $file;
+			}
+		}
+	}
+);

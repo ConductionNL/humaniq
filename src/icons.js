@@ -55,6 +55,7 @@ import CarOutline from "vue-material-design-icons/CarOutline.vue";
 import CarSide from "vue-material-design-icons/CarSide.vue";
 import Cash from "vue-material-design-icons/Cash.vue";
 import CashCheck from "vue-material-design-icons/CashCheck.vue";
+import CashClock from "vue-material-design-icons/CashClock.vue";
 import CashMinus from "vue-material-design-icons/CashMinus.vue";
 import CashMultiple from "vue-material-design-icons/CashMultiple.vue";
 import CashPlus from "vue-material-design-icons/CashPlus.vue";
@@ -182,6 +183,7 @@ export default {
 	CarSide,
 	Cash,
 	CashCheck,
+	CashClock,
 	CashMinus,
 	CashMultiple,
 	CashPlus,

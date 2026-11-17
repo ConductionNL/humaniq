@@ -24,6 +24,7 @@ description:
       salarisruns, loonstroken en loonaangiftes. Een rule engine toetst die
       gegevens aan een vaste set regels uit arbeidsrecht, AVG en
       loonheffingen, en rapporteert hoeveel daarvan wordt nageleefd.
+      Conduction onderhoudt dit component binnen het Nextcloud ISV-programma.
     features:
       - Urenregistratie met goedkeuringsworkflow
       - Declaraties van indienen tot vergoeding
@@ -39,6 +40,7 @@ description:
       payslips and wage tax filings. A rule engine audits that data against a
       versioned corpus of labour law, GDPR and wage tax rules, and reports the
       compliance coverage.
+      Conduction maintains this component within the Nextcloud ISV programme.
     features:
       - Timesheets with an approval workflow
       - Expense claims from submission to reimbursement
@@ -55,7 +57,12 @@ localisation:
     - en
 
 maintenance:
-  type: internal
+  type: contract
+  contractors:
+    - name: Conduction B.V.
+      until: "2028-12-31"
+      email: info@conduction.nl
+      website: https://conduction.nl
   contacts:
     - name: Conduction Development Team
       email: info@conduction.nl
@@ -66,11 +73,6 @@ dependsOn:
     - name: OpenRegister
       versionMin: "0.1.0"
 
-# Common Ground layer (nl.vng profile). The NL country section is deprecated in
-# publiccode.yml 1.0, so the same layer is also declared as a supports entry.
+# Common Ground layer (nl.vng profile), as a standard supports entry.
 supports:
   - id: https://commonground.nl/cms/view/54476261/5-lagen-model#process
-NL:
-  vng:
-    commonground:
-      layer: process

@@ -17,6 +17,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "concept",
@@ -112,6 +113,7 @@
                     "status"
                 ],
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-notifications": {
                         "review-finalised": {
                             "trigger": {

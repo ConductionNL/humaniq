@@ -33,6 +33,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Design D2 (compile) and D4 (intake), over the real gateway.
@@ -115,7 +116,7 @@ class SalaryBureauExchangeServiceTest extends TestCase {
 	public function testARaiseBecomesOneMutation(): void {
 		$this->service->compile(administrationId: 'ADM-006', period: '2026-04', userId: 'hr-1');
 		$this->markSent('2026-04');
-		$this->store->seed('Employee', 'emp-a', array_merge($this->store->find('emp-a', schema: 'Employee')->getObject(), ['grossMonthlySalary' => 3876.00]));
+		$this->store->seed('Employee', 'emp-a', array_merge($this->store->find('emp-a', new ObjectFindOptions(schema: 'Employee'))->getObject(), ['grossMonthlySalary' => 3876.00]));
 		$this->store->seed('CompAdjustment', 'raise-1', ['employeeId' => 'emp-a', 'status' => 'applied', 'appliedAt' => '2026-05-01T08:00:00Z', 'currentSalary' => 3800.00, 'proposedSalary' => 3876.00]);
 
 		$outcome = $this->service->compile(administrationId: 'ADM-006', period: '2026-05', userId: 'hr-1');
@@ -136,7 +137,7 @@ class SalaryBureauExchangeServiceTest extends TestCase {
 	public function testARevertedEditIsNotSentAndARecompileReplaces(): void {
 		$this->service->compile(administrationId: 'ADM-006', period: '2026-04', userId: 'hr-1');
 		$this->markSent('2026-04');
-		$employee = $this->store->find('emp-b', schema: 'Employee')->getObject();
+		$employee = $this->store->find('emp-b', new ObjectFindOptions(schema: 'Employee'))->getObject();
 		$this->store->seed('Employee', 'emp-b', array_merge($employee, ['iban' => 'NL02RABO0123456789']));
 		$this->store->seed('Employee', 'emp-b', $employee);
 
@@ -165,7 +166,7 @@ class SalaryBureauExchangeServiceTest extends TestCase {
 			$this->service->compile(administrationId: 'ADM-006', period: '2026-04', userId: 'hr-2')
 		);
 
-		$employee = $this->store->find('emp-b', schema: 'Employee')->getObject();
+		$employee = $this->store->find('emp-b', new ObjectFindOptions(schema: 'Employee'))->getObject();
 		$this->store->seed('Employee', 'emp-b', array_merge($employee, ['iban' => 'NL02RABO0123456789']));
 		self::assertSame(1, $this->service->compile(administrationId: 'ADM-006', period: '2026-05', userId: 'hr-1')['mutationCount']);
 		self::assertSame(1, $this->service->compile(administrationId: 'ADM-006', period: '2026-06', userId: 'hr-1')['mutationCount'], 'May is still a concept: June compares with April.');
@@ -203,9 +204,9 @@ class SalaryBureauExchangeServiceTest extends TestCase {
 		self::assertSame(2, $findings['blocking']);
 		self::assertEqualsCanonicalizing(['missing-payslip', 'unknown-employee'], array_column($findings['findings'], 'kind'));
 		self::assertSame('emp-b', array_values(array_filter($findings['findings'], static fn (array $f): bool => $f['kind'] === 'missing-payslip'))[0]['employeeId']);
-		$slip = $this->store->find('slip-a', schema: 'Payslip')->getObject();
+		$slip = $this->store->find('slip-a', new ObjectFindOptions(schema: 'Payslip'))->getObject();
 		self::assertSame(['anna', 'external-bureau'], [$slip['userId'], $slip['externalSource']]);
-		self::assertSame(2, $this->store->find($handoff['handoffId'], schema: 'PayrollHandoff')->getObject()['blockingFindings']);
+		self::assertSame(2, $this->store->find($handoff['handoffId'], new ObjectFindOptions(schema: 'PayrollHandoff'))->getObject()['blockingFindings']);
 	}//end testTheIntakeListsMissingAndUnknownEmployees()
 
 	/**
@@ -236,7 +237,7 @@ class SalaryBureauExchangeServiceTest extends TestCase {
 			],
 			$this->service->checkIntake($handoff['handoffId'])
 		);
-		self::assertSame(3, count($this->store->find($handoff['handoffId'], schema: 'PayrollHandoff')->getObject()['intakeFindings']));
+		self::assertSame(3, count($this->store->find($handoff['handoffId'], new ObjectFindOptions(schema: 'PayrollHandoff'))->getObject()['intakeFindings']));
 	}//end testTheIntakeFindingsInOrder()
 
 	/**
