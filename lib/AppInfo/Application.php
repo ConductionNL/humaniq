@@ -605,13 +605,7 @@ class Application extends App implements IBootstrap {
 		// approvalState/approvedAt. Edge-triggered and fire-and-forget; writes
 		// only TimeEntry objects under the internal-write marker, so neither
 		// the entry guard nor the aggregate recompute runs for them.
-		$this->registerFilteredObjectListener(
-			dispatcher: $dispatcher,
-			event: ObjectUpdatedEvent::class,
-			listener: TimesheetEntryStateListener::class,
-			registers: null,
-			schemas: [TimesheetEntryStateListener::TIMESHEET_SLUG]
-		);
+		$this->registerFilteredObjectListener($dispatcher, ObjectUpdatedEvent::class, TimesheetEntryStateListener::class, null, [TimesheetEntryStateListener::TIMESHEET_SLUG]);
 
 		// working-hours-per-person REQ-WHP-001: refuse a WorkingPattern whose
 		// period overlaps one the same employee already has. Two patterns give
