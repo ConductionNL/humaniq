@@ -8,7 +8,7 @@
 - [x] 1.6 Today view on the attendance page in `src/manifest.d/hr-attendance.json` (REQ-TA-007).
 - [x] 1.7 Employee sign-off transition in `lib/Settings/register.d/hr-performance.json` (REQ-PRV-007).
 - [x] 1.8 Clock in and Clock out actions on `My attendance` in `src/manifest.d/hr-attendance.json`, with server-side stamping of employee, user and `workedHours` in a new `lib/Service/AttendanceClockService.php` (REQ-TA-008).
-- [ ] 1.9 Integrator guide for the employee and contract calls in `docs/`, and an API test with an app password in `tests/Integration/` (REQ-HRIS-006).
+- [x] 1.9 Integrator guide for the employee and contract calls in `docs/`, and an API test with an app password in `tests/Integration/` (REQ-HRIS-006).
 - [x] 1.10 VAT overview per period on the expenses pages in `src/manifest.d/hr-expense.json`, and the VAT line in `lib/Service/PayrollGLPostService.php` (REQ-RCPT-008).
 - [x] 1.11 `Compliance check` page in `src/manifest.d/` backed by a guarded audit endpoint over `lib/Service/RuleAuditService.php` (REQ-RULE-010).
 - [x] 1.12 Billable share per org unit and per employee on the project hours page in `src/manifest.d/`, served by `lib/Service/AnalyticsService.php` through `AnalyticsController` (REQ-DSI-010).
