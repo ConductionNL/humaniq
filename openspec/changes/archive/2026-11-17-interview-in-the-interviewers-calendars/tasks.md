@@ -15,4 +15,5 @@
 
 - [x] 2.1 `@spec` tags and an e2e test or a reason-bearing `@e2e exclude` per scenario.
   > `@spec` tags on the new and changed methods; each scenario carries an `@e2e exclude` naming the unit test that covers it, because delivery into another user's calendar needs live scheduling the e2e instance does not set up.
-- [ ] 2.2 When archiving, drop the no ATTENDEE or ORGANIZER rule and its scenario from REQ-INTV-005 in `openspec/specs/interview-scheduling/spec.md`; its headings are not `Requirement:` headers, so a MODIFIED delta cannot reach them.
+- [x] 2.2 When archiving, drop the no ATTENDEE or ORGANIZER rule and its scenario from REQ-INTV-005 in `openspec/specs/interview-scheduling/spec.md`; its headings are not `Requirement:` headers, so a MODIFIED delta cannot reach them.
+  > Done in the live pass (2026-11-17): the main spec's REQ-INTV-005 no longer says interviewers are plain DESCRIPTION text without ATTENDEE or ORGANIZER, and its scenario "Interviewers never become scheduling attendees" is gone; the Purpose says the same.
