@@ -4072,7 +4072,8 @@ OC.L10N.register(
         "No approved hours last month, or this is not a team you lead": "Geen goedgekeurde uren vorige maand, of dit is geen team dat je leidt",
         "The billable share of last month's approved hours per team you may read: HR and accountants see every team, a manager the teams they lead. Open a team to see the share per person.": "Het declarabele aandeel van de goedgekeurde uren van vorige maand per team dat je mag inzien: HR en accountants zien elk team, een leidinggevende de teams die die leidt. Open een team voor het aandeel per persoon.",
         "Billable share per team": "Declarabel aandeel per team",
-        "No teams you may read": "Geen teams die je mag inzien"
+        "No teams you may read": "Geen teams die je mag inzien",
+        "The rate these billable hours are billed at, in cents an hour. Taken from the project's rate when the booking is written; empty for hours that are not billable.": "Het tarief waartegen deze declarabele uren worden gefactureerd, in centen per uur. Overgenomen van het tarief van het project wanneer de boeking wordt vastgelegd; leeg voor uren die niet declarabel zijn."
     },
     "nplurals=2; plural=(n != 1);"
 )

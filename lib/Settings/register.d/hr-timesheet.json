@@ -7,7 +7,7 @@
                 "slug": "TimeEntry",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "ClockPlusOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Time entry",
                 "description": "One individual booking of worked hours (urenregistratie): when the work started and ended, what it was, and optionally which project it was for. Bookings are collected automatically into the employee's monthly timesheet, which is what gets submitted for approval.",
                 "x-notes": "hours-process-redesign Decision 1: the booking granularity split out of the former all-in-one Timesheet schema. English property names per fleet decision; NL only via l10n labels (verb surface 'uren boeken'). No status and no lifecycle here — the process lives on the parent Timesheet, and entry mutability is governed by the parent's state (Decision 3, enforced by TimeEntryStampListener). approvalState/approvedAt are a read-only copy of the parent's state for one-schema queries (time-entry-approval-state), never a lifecycle of their own. Concurrency: the aggregate listener recomputes from truth on every entry write, so a stale intermediate total is self-healed by the next write (accepted for dev-stage volumes).",
@@ -100,6 +100,15 @@
                         "default": false,
                         "title": "Billable",
                         "description": "Whether these hours are billable to a client or project."
+                    },
+                    "hourlyRate": {
+                        "type": "integer",
+                        "order": 61,
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Hourly rate",
+                        "description": "The rate these billable hours are billed at, in cents an hour. Taken from the project's rate when the booking is written; empty for hours that are not billable.",
+                        "x-notes": "REQ-TEC-009. Stamped by TimeEntryRateListener from the planninq project's hourlyRate (euros) when billable is true and no rate is given; a rate already on the entry is kept, so a correction stands; cleared when billable is false. The approved-time event carries hours times rate per project."
                     },
                     "costCenter": {
                         "type": "string",

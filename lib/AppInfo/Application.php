@@ -577,6 +577,13 @@ class Application extends App implements IBootstrap {
 			);
 		}
 
+		// matrix-rows-without-a-requirement REQ-TEC-009: a billable booking takes
+		// its project's rate. Registered after the stamp listener above, whose
+		// modified data it merges into rather than replaces.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: \OCA\Humaniq\Listener\TimeEntryRateListener::class, registers: null, schemas: [TimeEntryStampListener::TIMEENTRY_SLUG]);
+		}
+
 		// hours-process-redesign Decision 4: pre-save process-field inertness +
 		// lifecycle-edge stamping for Timesheet writes. Because the stamp lands
 		// INSIDE the carrying write, the post-save ObjectUpdatedEvent that
