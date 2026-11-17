@@ -418,6 +418,64 @@
 				"_activityNote": "time-non-project-activities D1/D2: activityCode lets a booking say it was training, an internal meeting or overhead instead of naming a project. An activity of kind absence (leave, sickness) is refused by TimeEntryStampListener: those hours come from the leave request or sick report and show on the timesheet's week view.",
 				"allowExport": true
 			}
+		},
+		{
+			"id": "BillableHours",
+			"route": "/billable-hours",
+			"type": "dashboard",
+			"title": "Billable hours per team",
+			"config": {
+				"description": "The billable share of last month's approved hours per team you may read: HR and accountants see every team, a manager the teams they lead. Open a team to see the share per person.",
+				"_note": "matrix-rows-without-a-requirement REQ-DSI-010: next to the administration-wide billable ratio of the Dashboard (REQ-DSI-002), the share per org unit from GET /api/analytics/billable-share (AnalyticsController over BillableShareService, which reads through AnalyticsService::rowsFor and guards like the unit figures). A row opens the unit, whose 'Billable share per person' table reads GET /api/analytics/billable-share/people for that unit; a unit the caller does not lead answers 403. The default month is the previous one; the endpoints take period=YYYY-MM.",
+				"widgets": [
+					{
+						"id": "billable-per-team",
+						"type": "object-table",
+						"title": "Billable share per team",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/billable-share",
+								"responsePath": "units"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Team",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "people",
+									"label": "People"
+								},
+								{
+									"key": "approvedHours",
+									"label": "Approved hours"
+								},
+								{
+									"key": "billableHours",
+									"label": "Billable hours"
+								},
+								{
+									"key": "billableShare",
+									"label": "Billable share (%)"
+								}
+							],
+							"rowRoute": "OrgUnitDetail",
+							"emptyText": "No teams you may read"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "billable-per-team",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 8
+					}
+				]
+			}
 		}
 	],
 	"pageInstances": [

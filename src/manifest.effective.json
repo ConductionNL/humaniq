@@ -648,6 +648,13 @@
 					"route": "TimeEstimates"
 				},
 				{
+					"icon": "ClockCheckOutline",
+					"id": "BillableHours",
+					"label": "Billable hours per team",
+					"order": 21,
+					"route": "BillableHours"
+				},
+				{
 					"icon": "CalendarWeekendOutline",
 					"id": "LeaveRequests",
 					"label": "Leave requests",
@@ -10207,7 +10214,7 @@
 		},
 		{
 			"config": {
-				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab. people-formation-positions (2026-09-28): four stat tiles (budgeted, filled, vacant, net FTE for the unit) and an object-table of the unit's places, all bound through endpointSource to GET /api/formation/occupancy, which computes them on read; built-in widgets only (ADR-049), the endpoint does the cross-schema, absence-weighted count.",
+				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab. people-formation-positions (2026-09-28): four stat tiles (budgeted, filled, vacant, net FTE for the unit) and an object-table of the unit's places, all bound through endpointSource to GET /api/formation/occupancy, which computes them on read; built-in widgets only (ADR-049), the endpoint does the cross-schema, absence-weighted count. matrix-rows-without-a-requirement REQ-DSI-010: 'Billable share per person' lists last month's approved and billable hours per person placed in the unit, from GET /api/analytics/billable-share/people (403 for a unit the caller does not lead, so the table stays empty).",
 				"layout": [
 					{
 						"gridHeight": 6,
@@ -10280,6 +10287,14 @@
 						"gridY": 12,
 						"id": 9,
 						"widgetId": "formation-places"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 17,
+						"id": 10,
+						"widgetId": "billable-per-person"
 					}
 				],
 				"register": "humaniq",
@@ -10521,6 +10536,46 @@
 						},
 						"id": "formation-places",
 						"title": "Formation",
+						"type": "endpoint-table"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Employee"
+								},
+								{
+									"key": "employeeNumber",
+									"label": "Employee number"
+								},
+								{
+									"key": "approvedHours",
+									"label": "Approved hours"
+								},
+								{
+									"key": "billableHours",
+									"label": "Billable hours"
+								},
+								{
+									"key": "billableShare",
+									"label": "Billable share (%)"
+								}
+							],
+							"emptyText": "No approved hours last month, or this is not a team you lead",
+							"endpointSource": {
+								"params": {
+									"orgUnitId": "@objectId"
+								},
+								"responsePath": "people",
+								"url": "/apps/humaniq/api/analytics/billable-share/people"
+							},
+							"rowRoute": "EmployeeDetail"
+						},
+						"icon": "ClockCheckOutline",
+						"id": "billable-per-person",
+						"title": "Billable share per person",
 						"type": "endpoint-table"
 					}
 				]
@@ -13084,6 +13139,64 @@
 			"route": "/mijn/uren",
 			"title": "My hours",
 			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "matrix-rows-without-a-requirement REQ-DSI-010: next to the administration-wide billable ratio of the Dashboard (REQ-DSI-002), the share per org unit from GET /api/analytics/billable-share (AnalyticsController over BillableShareService, which reads through AnalyticsService::rowsFor and guards like the unit figures). A row opens the unit, whose 'Billable share per person' table reads GET /api/analytics/billable-share/people for that unit; a unit the caller does not lead answers 403. The default month is the previous one; the endpoints take period=YYYY-MM.",
+				"description": "The billable share of last month's approved hours per team you may read: HR and accountants see every team, a manager the teams they lead. Open a team to see the share per person.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "billable-per-team"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Team"
+								},
+								{
+									"key": "people",
+									"label": "People"
+								},
+								{
+									"key": "approvedHours",
+									"label": "Approved hours"
+								},
+								{
+									"key": "billableHours",
+									"label": "Billable hours"
+								},
+								{
+									"key": "billableShare",
+									"label": "Billable share (%)"
+								}
+							],
+							"emptyText": "No teams you may read",
+							"endpointSource": {
+								"responsePath": "units",
+								"url": "/apps/humaniq/api/analytics/billable-share"
+							},
+							"rowRoute": "OrgUnitDetail"
+						},
+						"id": "billable-per-team",
+						"title": "Billable share per team",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "BillableHours",
+			"route": "/billable-hours",
+			"title": "Billable hours per team",
+			"type": "dashboard"
 		},
 		{
 			"config": {

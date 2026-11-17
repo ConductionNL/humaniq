@@ -4064,7 +4064,15 @@ OC.L10N.register(
         "What the rule says": "What the rule says",
         "No violations in the records you may read": "No violations in the records you may read",
         "Leave payout": "Leave payout",
-        "The open leave balance paid on a leaver's final payslip: the hours and the amount, as one line. Counted in the taxable gross pay.": "The open leave balance paid on a leaver's final payslip: the hours and the amount, as one line. Counted in the taxable gross pay."
+        "The open leave balance paid on a leaver's final payslip: the hours and the amount, as one line. Counted in the taxable gross pay.": "The open leave balance paid on a leaver's final payslip: the hours and the amount, as one line. Counted in the taxable gross pay.",
+        "Billable hours per team": "Billable hours per team",
+        "Billable share per person": "Billable share per person",
+        "Billable hours": "Billable hours",
+        "Billable share (%)": "Billable share (%)",
+        "No approved hours last month, or this is not a team you lead": "No approved hours last month, or this is not a team you lead",
+        "The billable share of last month's approved hours per team you may read: HR and accountants see every team, a manager the teams they lead. Open a team to see the share per person.": "The billable share of last month's approved hours per team you may read: HR and accountants see every team, a manager the teams they lead. Open a team to see the share per person.",
+        "Billable share per team": "Billable share per team",
+        "No teams you may read": "No teams you may read"
     },
     "nplurals=2; plural=(n != 1);"
 )

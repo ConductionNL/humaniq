@@ -206,6 +206,9 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // parameter is ever read. BEFORE the SPA catch-all.
         ['name' => 'analytics#trends', 'url' => '/api/analytics/trends', 'verb' => 'GET'],
         ['name' => 'analytics#obligations', 'url' => '/api/analytics/obligations', 'verb' => 'GET'],
+        // matrix-rows-without-a-requirement REQ-DSI-010: the billable share per team and per person.
+        ['name' => 'analytics#billableShare', 'url' => '/api/analytics/billable-share', 'verb' => 'GET'],
+        ['name' => 'analytics#billableSharePeople', 'url' => '/api/analytics/billable-share/people', 'verb' => 'GET'],
         // department-figures: units side by side (HR/accountant), the caller's own units, and one unit.
         ['name' => 'departmentFigures#units', 'url' => '/api/analytics/units', 'verb' => 'GET'],
         ['name' => 'departmentFigures#myUnits', 'url' => '/api/analytics/my-units', 'verb' => 'GET'],

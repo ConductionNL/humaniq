@@ -423,6 +423,13 @@
 				"order": 15
 			},
 			{
+				"id": "BillableHours",
+				"label": "Billable hours per team",
+				"icon": "ClockCheckOutline",
+				"route": "BillableHours",
+				"order": 21
+			},
+			{
 				"id": "LeaveRequests",
 				"label": "Leave requests",
 				"icon": "CalendarWeekendOutline",

@@ -4063,7 +4063,15 @@
         "What the rule says": "Wat de regel zegt",
         "No violations in the records you may read": "Geen overtredingen in de records die je mag inzien",
         "Leave payout": "Uitbetaling verlofsaldo",
-        "The open leave balance paid on a leaver's final payslip: the hours and the amount, as one line. Counted in the taxable gross pay.": "Het openstaande verlofsaldo dat op de laatste loonstrook van een vertrekkende medewerker wordt uitbetaald: de uren en het bedrag, als één regel. Telt mee in het belaste brutoloon."
+        "The open leave balance paid on a leaver's final payslip: the hours and the amount, as one line. Counted in the taxable gross pay.": "Het openstaande verlofsaldo dat op de laatste loonstrook van een vertrekkende medewerker wordt uitbetaald: de uren en het bedrag, als één regel. Telt mee in het belaste brutoloon.",
+        "Billable hours per team": "Declarabele uren per team",
+        "Billable share per person": "Declarabel aandeel per persoon",
+        "Billable hours": "Declarabele uren",
+        "Billable share (%)": "Declarabel aandeel (%)",
+        "No approved hours last month, or this is not a team you lead": "Geen goedgekeurde uren vorige maand, of dit is geen team dat je leidt",
+        "The billable share of last month's approved hours per team you may read: HR and accountants see every team, a manager the teams they lead. Open a team to see the share per person.": "Het declarabele aandeel van de goedgekeurde uren van vorige maand per team dat je mag inzien: HR en accountants zien elk team, een leidinggevende de teams die die leidt. Open een team voor het aandeel per persoon.",
+        "Billable share per team": "Declarabel aandeel per team",
+        "No teams you may read": "Geen teams die je mag inzien"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

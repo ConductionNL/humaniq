@@ -248,6 +248,10 @@
 		"route": "/mijn/uren"
 	},
 	{
+		"id": "BillableHours",
+		"route": "/billable-hours"
+	},
+	{
 		"id": "SickLeaveCaseDetail",
 		"route": "/sick-leave/:id"
 	},

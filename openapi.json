@@ -397,6 +397,111 @@
                 }
             }
         },
+        "/analytics/billable-share": {
+            "get": {
+                "operationId": "analytics-billable-share",
+                "summary": "`GET /api/analytics/billable-share?period=YYYY-MM`: the billable share of approved hours per unit the caller may read.",
+                "description": "`GET /api/analytics/billable-share?period=YYYY-MM`: the billable share of approved hours per unit the caller may read (REQ-DSI-010). HR and accountants read every unit of the administration; anyone else the units they lead. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "analytics"
+                ],
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "required": false,
+                        "description": "The month, YYYY-MM; the previous month when left out.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/analytics/billable-share/people": {
+            "get": {
+                "operationId": "analytics-billable-share-people",
+                "summary": "`GET /api/analytics/billable-share/people?orgUnitId=&period=YYYY-MM`: the billable share per person placed in one unit.",
+                "description": "`GET /api/analytics/billable-share/people?orgUnitId=&period=YYYY-MM`: the billable share per person placed in one unit (REQ-DSI-010). Refused for a unit the caller does not lead, unless they are HR or an accountant. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "analytics"
+                ],
+                "parameters": [
+                    {
+                        "name": "orgUnitId",
+                        "in": "query",
+                        "required": true,
+                        "description": "The OrgUnit id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "required": false,
+                        "description": "The month, YYYY-MM; the previous month when left out.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
         "/analytics/my-units": {
             "get": {
                 "operationId": "department-figures-my-units",
