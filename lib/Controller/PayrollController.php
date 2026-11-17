@@ -84,11 +84,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\WkrServiceInterface;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\PayrollRunServices;
 use OCA\Humaniq\Service\SettingsService;
-use OCA\Humaniq\Service\WkrService;
 use OCA\Humaniq\Standards\Checks\NlDgaChecks;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\ReadsTypedRequestParameters;
@@ -143,7 +143,7 @@ class PayrollController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param WkrService $wkrService The WKR vrije-ruimte assessment roll-up service.
+	 * @param WkrServiceInterface $wkrService The WKR vrije-ruimte assessment roll-up service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param PayrollRunServices $runs Recalculates runs, diffs and persists mutations, simulates pro-forma payslips and settles retro adjustments.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
@@ -151,7 +151,7 @@ class PayrollController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private readonly PayrollRunServices $runs,
-		private readonly WkrService $wkrService,
+		private readonly WkrServiceInterface $wkrService,
 		private readonly SettingsService $settingsService,
 		private readonly CallerContext $caller,
 	) {

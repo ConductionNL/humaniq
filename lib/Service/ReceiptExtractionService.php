@@ -86,6 +86,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\ReceiptExtractionServiceInterface;
 use OCA\Humaniq\Support\FleetAppId;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -94,7 +95,7 @@ use RuntimeException;
 /**
  * Reads an Expense's attached receipt via docudesk and prefills empty fields.
  */
-class ReceiptExtractionService {
+class ReceiptExtractionService implements ReceiptExtractionServiceInterface {
 
 	/**
 	 * The app id docudesk registers under (IAppManager::isInstalled probe).

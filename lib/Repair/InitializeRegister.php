@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Repair;
 
-use OCA\Humaniq\Service\RegisterImporter;
+use OCA\Humaniq\Kernel\Contracts\RegisterImporterInterface;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -44,12 +44,12 @@ class InitializeRegister implements IRepairStep {
 
 	/**
 	 * @param SettingsService $settingsService Tells whether OpenRegister is available.
-	 * @param RegisterImporter $registerImporter The register importer.
+	 * @param RegisterImporterInterface $registerImporter The register importer.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly SettingsService $settingsService,
-		private readonly RegisterImporter $registerImporter,
+		private readonly RegisterImporterInterface $registerImporter,
 		private readonly LoggerInterface $logger,
 	) {
 

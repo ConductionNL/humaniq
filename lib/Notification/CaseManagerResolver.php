@@ -34,7 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Notification;
 
-use OCA\Humaniq\Service\AdministrationAccessTrust;
+use OCA\Humaniq\Kernel\Contracts\AdministrationAccessTrustInterface;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -50,12 +50,12 @@ class CaseManagerResolver implements RecipientResolverInterface {
 	/**
 	 * @param RecordStoreInterface $gateway Reads access rows, placements, units and employees.
 	 * @param OrgResolutionService $orgResolution Resolves an employee's managers.
-	 * @param AdministrationAccessTrust $trust Keeps only the access rows granted with standing.
+	 * @param AdministrationAccessTrustInterface $trust Keeps only the access rows granted with standing.
 	 */
 	public function __construct(
 		private readonly RecordStoreInterface $gateway,
 		private readonly OrgResolutionService $orgResolution,
-		private readonly AdministrationAccessTrust $trust,
+		private readonly AdministrationAccessTrustInterface $trust,
 	) {
 
 	}//end __construct()

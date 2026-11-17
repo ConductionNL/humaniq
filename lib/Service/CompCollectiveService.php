@@ -43,6 +43,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\CompCollectiveServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -50,7 +51,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
  */
-class CompCollectiveService {
+class CompCollectiveService implements CompCollectiveServiceInterface {
 
 	/**
 	 * How many proposal rows a response lists; the counts always cover all.

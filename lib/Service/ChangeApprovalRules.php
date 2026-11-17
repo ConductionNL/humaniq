@@ -27,12 +27,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\ChangeApprovalRulesInterface;
+
 /**
  * The approval rule per kind of change.
  *
  * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-001
  */
-class ChangeApprovalRules {
+class ChangeApprovalRules implements ChangeApprovalRulesInterface {
 
 	/**
 	 * Approver role that means "no approval needed".

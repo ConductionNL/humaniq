@@ -55,6 +55,8 @@
       from the page's Actions menu. `LeaveRequestDetail` shows both decisions (manager approved,
       hr approved, each dated); the timeline shows no name, since a list entry takes one detail
       field.
-- [ ] 3.3 Decide who takes the HR step. `LeaveApprovalStepGuard::hrStep()` admits only
+- [x] 3.3 Decide who takes the HR step. `LeaveApprovalStepGuard::hrStep()` admits only
       Nextcloud administrators; a member of `humaniq-hr` is refused ("Alleen HR mag deze stap
       nemen."), while REQ-LAS-002 says "the HR role" and `HumaniqRoles::isHr()` exists.
+      Decided 17 Nov: members of `humaniq-hr` take the HR step and Nextcloud administrators
+      keep it; `hrStep()` asks `HumaniqRoles::isHr()`.

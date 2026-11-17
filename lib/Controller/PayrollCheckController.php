@@ -27,8 +27,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\PayrollRunCheckServiceInterface;
 use OCA\Humaniq\Service\CallerContext;
-use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
@@ -49,7 +49,7 @@ class PayrollCheckController extends Controller {
 	 *
 	 * @param IRequest               $request     The request.
 	 * @param SettingsService        $settings    The register slug.
-	 * @param PayrollRunCheckService $check       The run check.
+	 * @param PayrollRunCheckServiceInterface $check       The run check.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 *
 	 * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
@@ -57,7 +57,7 @@ class PayrollCheckController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private readonly SettingsService $settings,
-		private readonly PayrollRunCheckService $check,
+		private readonly PayrollRunCheckServiceInterface $check,
 		private readonly CallerContext $caller,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);

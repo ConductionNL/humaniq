@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Repair;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\ManagerAccessStamps;
+use OCA\Humaniq\Kernel\Contracts\ManagerAccessStampsInterface;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -54,7 +54,7 @@ class StampManagerAccess implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param ManagerAccessStamps $stamps The stamp pass.
+	 * @param ManagerAccessStampsInterface $stamps The stamp pass.
 	 * @param SettingsService $settingsService Availability check.
 	 * @param LoggerInterface $logger The logger.
 	 * @param IAppConfig $appConfig Holds the done marker.
@@ -62,7 +62,7 @@ class StampManagerAccess implements IRepairStep {
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
 	public function __construct(
-		private readonly ManagerAccessStamps $stamps,
+		private readonly ManagerAccessStampsInterface $stamps,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
 		private readonly IAppConfig $appConfig,

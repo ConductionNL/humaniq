@@ -36,8 +36,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\Humaniq\Kernel\Contracts\PayrollRunServiceInterface;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
-use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Payroll\PayPeriod;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -66,14 +66,14 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	/**
 	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
 	 * @param LoggerInterface $logger Logger.
-	 * @param PayrollRunService $payrollRunService The existing draft-run generator, reused as-is.
+	 * @param PayrollRunServiceInterface $payrollRunService The existing draft-run generator, reused as-is.
 	 *
 	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	public function __construct(
 		PayrollFlowNodeServices $services,
 		LoggerInterface $logger,
-		private readonly PayrollRunService $payrollRunService,
+		private readonly PayrollRunServiceInterface $payrollRunService,
 	) {
 		parent::__construct($services, $logger);
 

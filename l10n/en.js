@@ -4030,7 +4030,10 @@ OC.L10N.register(
         "Released on": "Released on",
         "The day the response was released with its batch; not the day it was given, so it cannot be matched to the invitation.": "The day the response was released with its batch; not the day it was given, so it cannot be matched to the invitation.",
         "Readable one by one": "Readable one by one",
-        "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way.": "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way."
+        "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way.": "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way.",
+        "Approval state": "Approval state",
+        "Where the timesheet of these hours is in the approval process.": "Where the timesheet of these hours is in the approval process.",
+        "When the timesheet of these hours was approved.": "When the timesheet of these hours was approved."
     },
     "nplurals=2; plural=(n != 1);"
 )

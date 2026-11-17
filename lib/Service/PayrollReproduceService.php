@@ -43,6 +43,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\PayrollReproduceServiceInterface;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\PackRepository;
@@ -56,7 +57,7 @@ use OCA\Humaniq\Support\ResolvesObjectService;
  * Recomputes a sealed Payslip from its own stored `engineInputSnapshot` and
  * compares the result cents-exact against the stored figures.
  */
-final class PayrollReproduceService {
+final class PayrollReproduceService implements PayrollReproduceServiceInterface {
 
 	use ResolvesObjectService;
 

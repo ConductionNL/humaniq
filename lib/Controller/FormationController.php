@@ -31,12 +31,12 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\WorkforceReportSettingsInterface;
 use OCA\Humaniq\Service\AbsencePeriod;
 use OCA\Humaniq\Service\FormationAbsenceSources;
 use OCA\Humaniq\Service\FormationOccupancyService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\RbacObjectReader;
-use OCA\Humaniq\Service\WorkforceReportSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,18 +51,18 @@ use OCP\IRequest;
 class FormationController extends Controller {
 
 	/**
-	 * @param IRequest                  $request   The request.
-	 * @param HoursRegisterGateway      $gateway   Loads the records the count needs.
-	 * @param FormationOccupancyService $occupancy The pure count.
-	 * @param RbacObjectReader          $rbac      Resolves the unit or place under the caller's RBAC.
-	 * @param WorkforceReportSettings   $settings  The net-FTE leave types and sickness threshold.
+	 * @param IRequest                         $request   The request.
+	 * @param HoursRegisterGateway             $gateway   Loads the records the count needs.
+	 * @param FormationOccupancyService        $occupancy The pure count.
+	 * @param RbacObjectReader                 $rbac      Resolves the unit or place under the caller's RBAC.
+	 * @param WorkforceReportSettingsInterface $settings  The net-FTE leave types and sickness threshold.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly HoursRegisterGateway $gateway,
 		private readonly FormationOccupancyService $occupancy,
 		private readonly RbacObjectReader $rbac,
-		private readonly WorkforceReportSettings $settings,
+		private readonly WorkforceReportSettingsInterface $settings,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()

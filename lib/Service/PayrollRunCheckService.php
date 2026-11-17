@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\PayrollRunCheckServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -42,7 +43,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/payroll-run-checks/spec.md#REQ-PRK-001
  */
-class PayrollRunCheckService {
+class PayrollRunCheckService implements PayrollRunCheckServiceInterface {
 
 	/**
 	 * Run statuses whose payslips count as paid history.

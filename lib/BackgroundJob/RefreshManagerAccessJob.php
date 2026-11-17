@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\BackgroundJob;
 
-use OCA\Humaniq\Service\ManagerAccessStamps;
+use OCA\Humaniq\Kernel\Contracts\ManagerAccessStampsInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
@@ -43,11 +43,11 @@ class RefreshManagerAccessJob extends TimedJob {
 	 * Constructor: runs every six hours, outside busy hours when possible.
 	 *
 	 * @param ITimeFactory $time The clock.
-	 * @param ManagerAccessStamps $stamps The restamp pass.
+	 * @param ManagerAccessStampsInterface $stamps The restamp pass.
 	 *
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
-	public function __construct(ITimeFactory $time, private readonly ManagerAccessStamps $stamps) {
+	public function __construct(ITimeFactory $time, private readonly ManagerAccessStampsInterface $stamps) {
 		parent::__construct(time: $time);
 		$this->setInterval(seconds: 21600);
 		$this->setTimeSensitivity(sensitivity: IJob::TIME_INSENSITIVE);

@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\AnnouncementService;
+use OCA\Humaniq\Kernel\Contracts\AnnouncementServiceInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -43,14 +43,14 @@ class AnnouncementController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest            $request       The request.
-	 * @param AnnouncementService $announcements Audience and confirmations.
-	 * @param HumaniqRoles        $roles         Who is HR.
-	 * @param IUserSession        $userSession   The caller.
+	 * @param IRequest                     $request       The request.
+	 * @param AnnouncementServiceInterface $announcements Audience and confirmations.
+	 * @param HumaniqRoles                 $roles         Who is HR.
+	 * @param IUserSession                 $userSession   The caller.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly AnnouncementService $announcements,
+		private readonly AnnouncementServiceInterface $announcements,
 		private readonly HumaniqRoles $roles,
 		private readonly IUserSession $userSession,
 	) {

@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\ManagerStampRepairInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -45,7 +46,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/restamp-open-manager-records/specs/mss-team-scope/spec.md#Requirement:-Open-records-SHALL-be-restamped-with-the-manager-the-shared-resolution-gives-today-(REQ-MSS-007)
  */
-class ManagerStampRepair {
+class ManagerStampRepair implements ManagerStampRepairInterface {
 
 	/**
 	 * Per schema: which records are open, and the field holding the date

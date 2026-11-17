@@ -40,8 +40,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Kernel\Contracts\ResourceBookingServiceInterface;
 use OCA\Humaniq\Service\HoursRegisterGateway;
-use OCA\Humaniq\Service\ResourceBookingService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -66,12 +66,12 @@ class ResourceBookingOverlapListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param HoursRegisterGateway $gateway The shared register plumbing.
-	 * @param ResourceBookingService $bookings The clash rule itself.
+	 * @param ResourceBookingServiceInterface $bookings The clash rule itself.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
-		private readonly ResourceBookingService $bookings,
+		private readonly ResourceBookingServiceInterface $bookings,
 		private readonly LoggerInterface $logger,
 	) {
 

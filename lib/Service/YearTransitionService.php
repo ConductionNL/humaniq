@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\YearTransitionServiceInterface;
 use OCA\Humaniq\Payroll\JurisdictionPack;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PackValidator;
@@ -38,7 +39,7 @@ use Throwable;
  *
  * @spec openspec/specs/payroll-pack-and-table-updates/spec.md#REQ-PKU-002
  */
-class YearTransitionService {
+class YearTransitionService implements YearTransitionServiceInterface {
 
 	/**
 	 * @param PackRepository $packs The two-home pack resolver the runs use.

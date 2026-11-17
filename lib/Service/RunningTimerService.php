@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\RunningTimerServiceInterface;
 use OCA\Humaniq\Listener\HoursWriteRefusedException;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Throwable;
@@ -44,7 +45,7 @@ use Throwable;
  *
  * @spec openspec/specs/hours-leaf/spec.md#requirement-a-user-has-at-most-one-running-timer
  */
-class RunningTimerService {
+class RunningTimerService implements RunningTimerServiceInterface {
 
 	use ConvertsRowsToArrays;
 
@@ -68,39 +69,11 @@ class RunningTimerService {
 	public const ORIGIN_TIMER = TimeEntryHoursDeriver::ORIGIN_TIMER;
 
 	/**
-	 * Outcome: a timer is now running, or was found running.
-	 *
-	 * @var string
-	 */
-	public const STATUS_RUNNING = 'running';
-
-	/**
-	 * Outcome: the caller already had a timer running, so nothing was started.
-	 *
-	 * @var string
-	 */
-	public const STATUS_ALREADY_RUNNING = 'already-running';
-
-	/**
 	 * Outcome: the timer was stopped and the entry now carries its hours.
 	 *
 	 * @var string
 	 */
 	public const STATUS_STOPPED = 'stopped';
-
-	/**
-	 * Outcome: no timer is running for this caller.
-	 *
-	 * @var string
-	 */
-	public const STATUS_NONE = 'none';
-
-	/**
-	 * Outcome: the request could not be acted on as sent.
-	 *
-	 * @var string
-	 */
-	public const STATUS_INVALID = 'invalid';
 
 	/**
 	 * Constructor.

@@ -37,15 +37,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\RightToWorkServiceInterface;
 
 /**
  * Applies the right-to-work rule to one document.
  *
  * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
-class RightToWorkService {
-
-	public const RESULT_PASS = 'geslaagd';
+class RightToWorkService implements RightToWorkServiceInterface {
 
 	public const RESULT_FAIL = 'mislukt';
 

@@ -46,12 +46,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\AgendaComposerInterface;
+
 /**
  * Composes one subject's agenda from the six sources that already hold it.
  *
  * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
  */
-class AgendaComposer {
+class AgendaComposer implements AgendaComposerInterface {
 
 	/**
 	 * The kinds an entry can carry, one per source.

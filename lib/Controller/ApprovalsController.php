@@ -31,7 +31,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\ApprovalsInboxService;
+use OCA\Humaniq\Kernel\Contracts\ApprovalsInboxServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -55,12 +55,12 @@ class ApprovalsController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ApprovalsInboxService $inbox The inbox composition.
+	 * @param ApprovalsInboxServiceInterface $inbox The inbox composition.
 	 * @param IUserSession $userSession The caller.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ApprovalsInboxService $inbox,
+		private readonly ApprovalsInboxServiceInterface $inbox,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);

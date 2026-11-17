@@ -30,6 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\SeriesLatestInterface;
+
 /**
  * Reduces a bucketed trend series to the two scalars a KPI tile needs.
  * Instantiated (never called statically) so `AnalyticsService` can hold it
@@ -38,7 +40,7 @@ namespace OCA\Humaniq\Service;
  *
  * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
  */
-final class SeriesLatest {
+final class SeriesLatest implements SeriesLatestInterface {
 
 	/**
 	 * The two most recent buckets of a series, as scalars, so the Dashboard's

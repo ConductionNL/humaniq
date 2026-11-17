@@ -59,6 +59,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\PayrollMutationServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -70,7 +71,7 @@ use OCA\Humaniq\Support\LoadsAllRows;
 /**
  * Pure run-to-run payroll diff service — reads persisted Payslips only.
  */
-class PayrollMutationService {
+class PayrollMutationService implements PayrollMutationServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;

@@ -28,8 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\OvertimeCreditService;
-use OCA\Humaniq\Service\PayrollExpenseFoldService;
+use OCA\Humaniq\Kernel\Contracts\OvertimeCreditServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\PayrollExpenseFoldServiceInterface;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -47,17 +47,17 @@ class PayrollRunApprovedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param OvertimeCreditService          $credits  The credit.
-	 * @param LoggerInterface                $logger   The logger.
-	 * @param PayrollExpenseFoldService|null $expenses Marks the run's claims reimbursed (payroll-expenses-and-allowances D2).
+	 * @param OvertimeCreditServiceInterface          $credits  The credit.
+	 * @param LoggerInterface                         $logger   The logger.
+	 * @param PayrollExpenseFoldServiceInterface|null $expenses Marks the run's claims reimbursed (payroll-expenses-and-allowances D2).
 	 *
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
 	 */
 	public function __construct(
-		private readonly OvertimeCreditService $credits,
+		private readonly OvertimeCreditServiceInterface $credits,
 		private readonly LoggerInterface $logger,
-		private readonly ?PayrollExpenseFoldService $expenses = null,
+		private readonly ?PayrollExpenseFoldServiceInterface $expenses = null,
 	) {
 	}//end __construct()
 

@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\TimeEntryEventService;
+use OCA\Humaniq\Kernel\Contracts\TimeEntryEventServiceInterface;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -52,12 +52,12 @@ class TimesheetApprovalListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param TimeEntryEventService $eventService The approved-time-entry emitter.
+	 * @param TimeEntryEventServiceInterface $eventService The approved-time-entry emitter.
 	 * @param ContainerInterface $container The DI container (lazy OpenRegister SchemaMapper lookup).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private readonly TimeEntryEventService $eventService,
+		private readonly TimeEntryEventServiceInterface $eventService,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 	) {

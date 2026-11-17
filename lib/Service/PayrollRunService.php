@@ -163,6 +163,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\PayrollRunServiceInterface;
 use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\PayPeriod;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
@@ -198,7 +199,7 @@ use OCA\Humaniq\Support\FindsCoveringContract;
 /**
  * Generates draft payroll runs + engine payslips from the pure calculator.
  */
-class PayrollRunService {
+class PayrollRunService implements PayrollRunServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;

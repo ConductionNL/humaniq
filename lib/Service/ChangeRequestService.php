@@ -36,6 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\ChangeRequestServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IUserSession;
 
@@ -44,7 +45,7 @@ use OCP\IUserSession;
  *
  * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-001
  */
-class ChangeRequestService {
+class ChangeRequestService implements ChangeRequestServiceInterface {
 
 	/**
 	 * The flat fields of the self-service form, merged into `changes`.

@@ -38,7 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\LeaveBalanceProjectionService;
+use OCA\Humaniq\Kernel\Contracts\LeaveBalanceProjectionServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
@@ -71,12 +71,12 @@ class LeaveApprovalListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param LeaveBalanceProjectionService $projection The usedHours recompute.
+	 * @param LeaveBalanceProjectionServiceInterface $projection The usedHours recompute.
 	 * @param ContainerInterface $container The DI container (lazy OpenRegister SchemaMapper lookup).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private readonly LeaveBalanceProjectionService $projection,
+		private readonly LeaveBalanceProjectionServiceInterface $projection,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 	) {

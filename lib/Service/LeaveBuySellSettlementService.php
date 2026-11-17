@@ -61,6 +61,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\LeaveBuySellSettlementServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
@@ -75,7 +76,7 @@ use OCA\Humaniq\Support\LoadsAllRows;
  * for a sell, the cents-exact settledAmount computation, the
  * bovenwettelijkHours-only balance write, and the transition-carrying stamp.
  */
-class LeaveBuySellSettlementService {
+class LeaveBuySellSettlementService implements LeaveBuySellSettlementServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;

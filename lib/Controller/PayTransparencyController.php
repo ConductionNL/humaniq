@@ -32,10 +32,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\PayTransparencyServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\PayTransparencySettingsInterface;
 use OCA\Humaniq\Service\AnalyticsAccess;
-use OCA\Humaniq\Service\PayTransparencySettings;
 use OCA\Humaniq\Service\RecordStoreInterface;
-use OCA\Humaniq\Service\PayTransparencyService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -58,9 +58,9 @@ class PayTransparencyController extends Controller {
 	 *
 	 * @param IRequest               $request  The request.
 	 * @param RecordStoreInterface   $gateway  Reads the register's rows.
-	 * @param PayTransparencyService $service  Computes the indicators.
+	 * @param PayTransparencyServiceInterface $service  Computes the indicators.
 	 * @param AnalyticsAccess        $access   HR and accountants of the active administration.
-	 * @param PayTransparencySettings $settings The group threshold.
+	 * @param PayTransparencySettingsInterface $settings The group threshold.
 	 * @param IUserSession           $session  The caller.
 	 * @param ITimeFactory           $time     The clock for the default year.
 	 * @param IL10N                  $l10n     Translations for the CSV and the row texts.
@@ -68,9 +68,9 @@ class PayTransparencyController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private readonly RecordStoreInterface $gateway,
-		private readonly PayTransparencyService $service,
+		private readonly PayTransparencyServiceInterface $service,
 		private readonly AnalyticsAccess $access,
-		private readonly PayTransparencySettings $settings,
+		private readonly PayTransparencySettingsInterface $settings,
 		private readonly IUserSession $session,
 		private readonly ITimeFactory $time,
 		private readonly IL10N $l10n,

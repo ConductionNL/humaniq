@@ -51,6 +51,7 @@ namespace OCA\Humaniq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Humaniq\Event\TimesheetApprovedEvent;
+use OCA\Humaniq\Kernel\Contracts\TimeEntryEventServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
@@ -61,7 +62,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/time-entry-capture/spec.md
  */
-class TimeEntryEventService {
+class TimeEntryEventService implements TimeEntryEventServiceInterface {
 
 	/**
 	 * CloudEvents `type` for an approved time entry (Timesheet).
@@ -83,14 +84,6 @@ class TimeEntryEventService {
 	 * @var string
 	 */
 	public const EVENT_SOURCE = '/apps/humaniq/timesheets';
-
-	/**
-	 * Slug of the schema whose approval emits the event (lower-cased for a
-	 * case-insensitive compare against the resolved schema slug).
-	 *
-	 * @var string
-	 */
-	public const TIMESHEET_SLUG = 'timesheet';
 
 	/**
 	 * The lifecycle status that represents an approved timesheet.

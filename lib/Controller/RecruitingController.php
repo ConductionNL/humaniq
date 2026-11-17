@@ -29,10 +29,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\VacancyMatchServiceInterface;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RbacObjectReader;
-use OCA\Humaniq\Service\VacancyMatchService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,12 +48,12 @@ class RecruitingController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest             $request     The request.
-	 * @param RbacObjectReader     $rbac        Reads as the caller.
-	 * @param HumaniqRoles         $roles       HR membership.
-	 * @param VacancyMatchService  $matcher     The match score.
-	 * @param RecordStoreInterface $gateway     Reads the evaluations.
-	 * @param IUserSession         $userSession The caller.
+	 * @param IRequest                     $request     The request.
+	 * @param RbacObjectReader             $rbac        Reads as the caller.
+	 * @param HumaniqRoles                 $roles       HR membership.
+	 * @param VacancyMatchServiceInterface $matcher     The match score.
+	 * @param RecordStoreInterface         $gateway     Reads the evaluations.
+	 * @param IUserSession                 $userSession The caller.
 	 *
 	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
 	 */
@@ -61,7 +61,7 @@ class RecruitingController extends Controller {
 		IRequest $request,
 		private readonly RbacObjectReader $rbac,
 		private readonly HumaniqRoles $roles,
-		private readonly VacancyMatchService $matcher,
+		private readonly VacancyMatchServiceInterface $matcher,
 		private readonly RecordStoreInterface $gateway,
 		private readonly IUserSession $userSession,
 	) {

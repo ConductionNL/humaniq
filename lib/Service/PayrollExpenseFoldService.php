@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\PayrollExpenseFoldServiceInterface;
 use OCA\Humaniq\Payroll\TaxTables;
 
 /**
@@ -40,7 +41,7 @@ use OCA\Humaniq\Payroll\TaxTables;
  *
  * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
  */
-class PayrollExpenseFoldService {
+class PayrollExpenseFoldService implements PayrollExpenseFoldServiceInterface {
 
 	/**
 	 * The WKR description per allowance kind.

@@ -34,8 +34,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\InterviewCalendarServiceInterface;
 use OCA\Humaniq\Service\CallerContext;
-use OCA\Humaniq\Service\InterviewCalendarService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
@@ -54,13 +54,13 @@ class InterviewController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param InterviewCalendarService $interviewCalendarService The interview-calendar-sync service.
+	 * @param InterviewCalendarServiceInterface $interviewCalendarService The interview-calendar-sync service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly InterviewCalendarService $interviewCalendarService,
+		private readonly InterviewCalendarServiceInterface $interviewCalendarService,
 		private readonly SettingsService $settingsService,
 		private readonly CallerContext $caller,
 	) {

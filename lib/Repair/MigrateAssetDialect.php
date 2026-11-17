@@ -44,8 +44,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Repair;
 
-use OCA\Humaniq\Service\AssetDialectMigrationService;
-use OCA\Humaniq\Service\OpenRegisterAvailability;
+use OCA\Humaniq\Kernel\Contracts\AssetDialectMigrationServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\OpenRegisterAvailabilityInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -58,15 +58,15 @@ use Psr\Log\LoggerInterface;
 class MigrateAssetDialect implements IRepairStep {
 
 	/**
-	 * @param AssetDialectMigrationService $migrationService The migration.
-	 * @param OpenRegisterAvailability $openRegister Availability check.
+	 * @param AssetDialectMigrationServiceInterface $migrationService The migration.
+	 * @param OpenRegisterAvailabilityInterface $openRegister Availability check.
 	 * @param LoggerInterface $logger The logger.
 	 *
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function __construct(
-		private readonly AssetDialectMigrationService $migrationService,
-		private readonly OpenRegisterAvailability $openRegister,
+		private readonly AssetDialectMigrationServiceInterface $migrationService,
+		private readonly OpenRegisterAvailabilityInterface $openRegister,
 		private readonly LoggerInterface $logger,
 	) {
 

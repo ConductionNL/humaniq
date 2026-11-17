@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\ExpenseCategoryPolicy;
+use OCA\Humaniq\Kernel\Contracts\ExpenseCategoryPolicyInterface;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
@@ -58,12 +58,12 @@ class ExpenseCategoryGuardListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param HoursRegisterGateway $gateway Resolves the schema slug.
-	 * @param ExpenseCategoryPolicy $policy Which categories are on.
+	 * @param ExpenseCategoryPolicyInterface $policy Which categories are on.
 	 * @param InternalWriteMarker $marker Marks humaniq's own writes.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
-		private readonly ExpenseCategoryPolicy $policy,
+		private readonly ExpenseCategoryPolicyInterface $policy,
 		private readonly InternalWriteMarker $marker,
 	) {
 

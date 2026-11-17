@@ -34,27 +34,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\DossierCompletenessServiceInterface;
 
 /**
  * Computes the completeness of one personnel file.
  *
  * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
  */
-class DossierCompletenessService {
-
-	/**
-	 * The schemas a status is composed from, besides the employee itself.
-	 */
-	public const SOURCES = [
-		'DossierRequirement',
-		'EmploymentContract',
-		'OrgAssignment',
-		'PersonnelDocument',
-		'HrGeneratedDocument',
-		'EmployeeCompetence',
-	];
-
-	public const PRESENT = 'aanwezig';
+class DossierCompletenessService implements DossierCompletenessServiceInterface {
 
 	/**
 	 * Per kind of evidence: its schema, the field matched, the requirement field it must equal, and its issue date.

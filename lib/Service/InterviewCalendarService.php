@@ -56,6 +56,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\InterviewCalendarServiceInterface;
 use OCP\Calendar\IManager;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
@@ -67,7 +68,7 @@ use Throwable;
  *
  * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-003
  */
-class InterviewCalendarService {
+class InterviewCalendarService implements InterviewCalendarServiceInterface {
 
 	/**
 	 * @var InterviewSyncEngine
