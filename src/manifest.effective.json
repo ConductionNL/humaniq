@@ -14612,6 +14612,32 @@
 			"type": "detail"
 		},
 		{
+			"actions": [
+				{
+					"confirm": false,
+					"errorMessage": "Clocking in failed. A day may already be open, or your account is not linked to an employee.",
+					"icon": "ClockPlusOutline",
+					"id": "clock-in",
+					"label": "Clock in",
+					"method": "POST",
+					"params": {},
+					"successMessage": "You are clocked in. Your day is open until you clock out.",
+					"type": "api-call",
+					"url": "/api/attendance/clock-in"
+				},
+				{
+					"confirm": true,
+					"errorMessage": "Clocking out failed. You may have no open day.",
+					"icon": "ClockCheckOutline",
+					"id": "clock-out",
+					"label": "Clock out",
+					"method": "POST",
+					"params": {},
+					"successMessage": "You are clocked out. Your worked hours are recorded.",
+					"type": "api-call",
+					"url": "/api/attendance/clock-out"
+				}
+			],
 			"config": {
 				"allowExport": true,
 				"columns": [
@@ -14622,7 +14648,7 @@
 					"workedHours",
 					"status"
 				],
-				"description": "Clock records per employee per working day, with the Working Hours Act compliance checks on rest time, maximum shift length and breaks.",
+				"description": "Clock records per employee per working day, with the Working Hours Act compliance checks on rest time, maximum shift length and breaks. Clock in and Clock out record the signed-in employee's own day: the server stamps the employee, the user and the worked hours.",
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},

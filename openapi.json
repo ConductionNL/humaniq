@@ -238,6 +238,10 @@
         {
             "name": "uwv-notification",
             "description": "Generates the 42-week notification for a sickness case."
+        },
+        {
+            "name": "attendance-clock",
+            "description": "Clock in and clock out for the signed-in employee."
         }
     ],
     "paths": {
@@ -891,6 +895,91 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/attendance/clock-in": {
+            "post": {
+                "operationId": "attendance-clock-clock-in",
+                "summary": "`POST /api/attendance/clock-in`: open a clock day for the caller now.",
+                "description": "`POST /api/attendance/clock-in`: open an AttendanceRecord for the caller now, stamped on the server with the caller's own employee and user id (REQ-TA-008). 409 when a day is already open, 404 when the account is not linked to an employee. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "attendance-clock"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    }
+                }
+            }
+        },
+        "/attendance/clock-out": {
+            "post": {
+                "operationId": "attendance-clock-clock-out",
+                "summary": "`POST /api/attendance/clock-out`: close the caller's open clock day now.",
+                "description": "`POST /api/attendance/clock-out`: close the caller's open AttendanceRecord through its `sluiten` transition with the current time as clockOut and workedHours computed on the server from the clock times and the break (REQ-TA-008). 409 when no day is open. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "attendance-clock"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "breakMinutes": {
+                                        "type": "integer",
+                                        "description": "The break taken, or null to keep the record's."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
                     }
                 }
             }

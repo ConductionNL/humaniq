@@ -34,6 +34,9 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'document#generate', 'url' => '/api/documents/generate', 'verb' => 'POST'],
         // payroll-annual-statement-action: queue a finished year's annual statements (HR or payroll).
         ['name' => 'annualStatementBatch#queueJaaropgaven', 'url' => '/api/documents/jaaropgaven', 'verb' => 'POST'],
+        // matrix-rows-without-a-requirement REQ-TA-008: the caller clocks in and out from My attendance.
+        ['name' => 'attendanceClock#clockIn', 'url' => '/api/attendance/clock-in', 'verb' => 'POST'],
+        ['name' => 'attendanceClock#clockOut', 'url' => '/api/attendance/clock-out', 'verb' => 'POST'],
         // people-esign-hr-documents: send a generated HR document for signature (HR or admin).
         ['name' => 'documentSigning#requestSignature', 'url' => '/api/documents/{id}/request-signature', 'verb' => 'POST'],
         // reporting-pay-transparency: the gender pay gap report (HR and accountants), and its CSV.

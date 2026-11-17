@@ -27,7 +27,33 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Clock records per employee per working day, with the Working Hours Act compliance checks on rest time, maximum shift length and breaks."
+				"description": "Clock records per employee per working day, with the Working Hours Act compliance checks on rest time, maximum shift length and breaks. Clock in and Clock out record the signed-in employee's own day: the server stamps the employee, the user and the worked hours.",
+				"actions": [
+					{
+						"id": "clock-in",
+						"label": "Clock in",
+						"type": "api-call",
+						"icon": "ClockPlusOutline",
+						"url": "/api/attendance/clock-in",
+						"method": "POST",
+						"params": {},
+						"confirm": false,
+						"successMessage": "You are clocked in. Your day is open until you clock out.",
+						"errorMessage": "Clocking in failed. A day may already be open, or your account is not linked to an employee."
+					},
+					{
+						"id": "clock-out",
+						"label": "Clock out",
+						"type": "api-call",
+						"icon": "ClockCheckOutline",
+						"url": "/api/attendance/clock-out",
+						"method": "POST",
+						"params": {},
+						"confirm": true,
+						"successMessage": "You are clocked out. Your worked hours are recorded.",
+						"errorMessage": "Clocking out failed. You may have no open day."
+					}
+				]
 			}
 		},
 		{

@@ -57,6 +57,7 @@
     "OCA\\Humaniq\\Service\\AgendaReadAccess::$store",
     "OCA\\Humaniq\\Service\\AnnouncementService::$gateway",
     "OCA\\Humaniq\\Service\\ApprovalsInboxService::$gateway",
+    "OCA\\Humaniq\\Service\\AttendanceClockService::$store",
     "OCA\\Humaniq\\Service\\AwfReviewService::$gateway",
     "OCA\\Humaniq\\Service\\CalendarSubscriptionPoller::$gateway",
     "OCA\\Humaniq\\Service\\CarriedCorrections::$gateway",
