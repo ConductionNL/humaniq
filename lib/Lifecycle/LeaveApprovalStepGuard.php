@@ -15,8 +15,9 @@
  *   so a direct `approve` from `submitted` is refused;
  * - a type that needs no HR goes straight to `approved`, so
  *   `approve-manager` is refused;
- * - from `manager-approved`, `approve` and `reject` need HR rights and a
- *   different person than the manager who approved.
+ * - from `manager-approved`, `approve` and `reject` need HR rights (a member
+ *   of `humaniq-hr` or a Nextcloud administrator) and a different person than
+ *   the manager who approved.
  *
  * Fails closed: when the leave types cannot be read, nothing is approved.
  *
@@ -38,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Lifecycle;
 
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\LeaveTypeResolver;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\OpenRegister\Lifecycle\GuardResult;
@@ -63,16 +65,24 @@ final class LeaveApprovalStepGuard implements LifecycleTransitionGuardInterface 
 	private readonly LeaveTypeResolver $resolver;
 
 	/**
+	 * Who holds the HR role.
+	 *
+	 * @var HumaniqRoles
+	 */
+	private readonly HumaniqRoles $roles;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param RecordStoreInterface $gateway      Reads the leave types.
-	 * @param IGroupManager        $groupManager The HR check (admin until distinct HR roles land).
+	 * @param IGroupManager        $groupManager The HR check: the humaniq-hr group or an administrator.
 	 */
 	public function __construct(
 		private readonly RecordStoreInterface $gateway,
-		private readonly IGroupManager $groupManager,
+		IGroupManager $groupManager,
 	) {
 		$this->resolver = new LeaveTypeResolver();
+		$this->roles    = new HumaniqRoles(groupManager: $groupManager);
 	}//end __construct()
 
 	/**
@@ -159,7 +169,8 @@ final class LeaveApprovalStepGuard implements LifecycleTransitionGuardInterface 
 	}//end managerStep()
 
 	/**
-	 * HR's step, from `manager-approved`: HR rights, and not the manager who approved.
+	 * HR's step, from `manager-approved`: HR rights (the humaniq-hr group or an
+	 * administrator), and not the manager who approved.
 	 *
 	 * @param array<string, mixed> $object The leave request, waiting for HR.
 	 * @param string               $userId The acting user.
@@ -167,7 +178,7 @@ final class LeaveApprovalStepGuard implements LifecycleTransitionGuardInterface 
 	 * @return GuardResult
 	 */
 	private function hrStep(array $object, string $userId): GuardResult {
-		if ($this->groupManager->isAdmin($userId) === false) {
+		if ($this->roles->isHr($userId) === false) {
 			return GuardResult::deny('Alleen HR mag deze stap nemen.');
 		}
 
