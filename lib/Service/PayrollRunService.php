@@ -266,6 +266,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		'paidTimesheets' => [],
 		'paidClaimIds' => [],
 		'wkrRows' => [],
+		'paidLeavers' => [],
 		'allocatable' => [],
 		'computed' => [],
 		'skipped' => [],
@@ -296,6 +297,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @param CostAllocationService|null $costAllocation Splits each payslip's wage costs over cost centres and projects (payroll-cost-allocation D3); null runs without it.
 	 * @param AwfReviewService|null $awfReview Reviews the low Awf premium before the run reads its adjustments (filings-premium-differentiation D2/D3); null runs without it.
 	 * @param PayslipLineageService|null $lineage Writes each payslip's source-carrying lines (payroll-mutation-lineage D1); null runs without it.
+	 * @param FinalLeavePayoutService|null $leavePayout Pays a leaver's open leave balance on the final payslip (REQ-OFC-005); null runs without it.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each optional fold (hours, claims and allowances) and the run check is its own collaborator, so a run without one stays byte-identical and a test names which fold ran.
 	 */
@@ -316,6 +318,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		private readonly ?CostAllocationService $costAllocation = null,
 		private readonly ?AwfReviewService $awfReview = null,
 		private readonly ?PayslipLineageService $lineage = null,
+		private readonly ?FinalLeavePayoutService $leavePayout = null,
 	) {
 
 	}//end __construct()
@@ -576,6 +579,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$state['retro'] = $this->appliedRetroAdjustmentsByEmployeeId($period);
 		$state['leaveSources'] = $this->settledLeaveTransactionSourcesByEmployeeId($period);
 		$state['leaveBuySell'] = $this->settledLeaveTransactionsByEmployeeId(sources: $state['leaveSources']);
+		$state['leaveBalances'] = ($this->leavePayout?->balancesByEmployeeKey() ?? []);
 		$state['calculatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
 		$state['loonbeslagen'] = $this->activeLoonbeslagenByEmployeeKey();
 		$state['assetAssignments'] = $this->openAssetAssignmentsByEmployeeKey();
@@ -778,6 +782,11 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$slip['leaveBuySellCents'] = ($state['leaveBuySell'][$slip['employeeId']] ?? 0);
 		$slip['leaveSources'] = ($state['leaveSources'][$slip['employeeId']] ?? []);
 		$slip['grossCents'] += $slip['leaveBuySellCents'];
+
+		// REQ-OFC-005: a leaver's open leave hours are wage of the final
+		// period, paid at the last contract's hourly wage before tax.
+		$slip['leavePayout'] = $this->leavePayout?->payoutFor(employee: $employee, contract: $slip['contract'], period: $state['period'], balances: ($state['leaveBalances'] ?? []));
+		$slip['grossCents'] += (int)($slip['leavePayout']['cents'] ?? 0);
 
 		return $this->foldCaoAndExpenses(state: $state, slip: $slip);
 	}//end foldGross()
@@ -1038,6 +1047,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			$this->thirtyPercentRulingFields($slip['thirtyPercentExemptionCents']),
 			$this->retroAdjustmentFields($slip['retroAdjustment']['net'], $slip['result']->nettoPayCents),
 			$this->leaveBuySellFields($slip['leaveBuySellCents']),
+			($this->leavePayout?->payslipFields(payout: ($slip['leavePayout'] ?? null)) ?? []),
 			$this->loonbeslagFields($slip['loonbeslag'], $slip['loonbeslagDeductionCents'], $slip['nettoPaySoFarCents']),
 			$this->hoursPayFields(hoursPay: $slip['hoursPay'], salaried: $slip['salaried']),
 			$this->awfFields(awf: $slip['awf'], employeeId: $slip['employeeId'], contracts: $slip['employeeContracts'], period: $state['period'], paidHours: $slip['awfPaidHours']),
@@ -1063,6 +1073,10 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	private function collectPaidSources(array &$state, array $slip): void {
 		$state['paidClaimIds'] = array_merge($state['paidClaimIds'], (array)($slip['expenseFold']['claimIds'] ?? []));
 		$state['wkrRows'] = array_merge($state['wkrRows'], (array)($slip['expenseFold']['wkr'] ?? []));
+		if (($slip['leavePayout'] ?? null) !== null) {
+			$state['paidLeavers'][] = $slip['employee'];
+		}
+
 		foreach ((array)($slip['hoursPay']['timesheetIds'] ?? []) as $timesheetId) {
 			$state['paidTimesheets'][$timesheetId] = $this->creditFor(hoursPay: $slip['hoursPay'], timesheetId: $timesheetId);
 		}
@@ -1139,6 +1153,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @return void
 	 */
 	private function stampPaidSources(array $state): void {
+		$this->leavePayout?->markPaid(employees: $state['paidLeavers']);
+
 		if ($this->hoursPay !== null) {
 			$this->hoursPay->stamp(timesheets: $state['hours']['timesheets'], paid: $state['paidTimesheets'], runId: $state['runId'], period: $state['period']);
 		}

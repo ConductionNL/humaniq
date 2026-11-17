@@ -59,6 +59,7 @@ use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
+use OCA\Humaniq\Service\FinalLeavePayoutService;
 use OCA\Humaniq\Service\PayslipLineageService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Services\IAppConfig;
@@ -267,10 +268,11 @@ class PayrollRunServiceTest extends TestCase {
 	 * @param CostAllocationService|null $costAllocation The cost allocation, or null for a run without it.
 	 * @param AwfReviewService|null $awfReview The Awf review, or null for a run without it.
 	 * @param bool $withLineage Whether the run writes payslip lines (payroll-mutation-lineage).
+	 * @param bool $withLeavePayout Whether the run pays a leaver's open leave balance (REQ-OFC-005).
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null, bool $withLineage = false): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null, bool $withLineage = false, bool $withLeavePayout = false): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -310,8 +312,13 @@ class PayrollRunServiceTest extends TestCase {
 			$lineage = new PayslipLineageService($lineageContainer, $settings, $logger);
 		}
 
+		$leavePayout = null;
+		if ($withLeavePayout === true) {
+			$leavePayout = new FinalLeavePayoutService($container, $settings, $logger);
+		}
+
 		return [
-			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, lineage: $lineage),
+			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, lineage: $lineage, leavePayout: $leavePayout),
 			$fake,
 			$retentionGuard,
 		];
@@ -1114,6 +1121,74 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertSame(4000.00, $result['totals']['totalGross'], 'The run total gross carries the sale.');
 
 	}//end testSettledSellLeaveTransactionIsTaxedAsGrossWageBeforeTheCalculator()
+
+	/**
+	 * REQ-OFC-005 "A leaver with 16 open hours": the March run of an employee
+	 * leaving on 31 March pays 16 open hours at 25 euros as one line inside
+	 * the taxable gross, and marks the offboarding case paid.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
+	 */
+	public function testALeaverIsPaidTheOpenLeaveBalanceOnTheFinalPayslip(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['endDate' => '2026-03-31'])],
+				'EmploymentContract' => [$this->contract(['endDate' => '2026-03-31', 'hourlyWage' => 25.00])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+				'LeaveBalance' => [['id' => 'lb-1', 'employeeId' => 'emp-1', 'year' => 2026, 'entitledHours' => 40, 'bovenwettelijkHours' => 0, 'usedHours' => 24]],
+				'Offboarding' => [['id' => 'off-1', 'employeeId' => 'emp-1', 'status' => 'eindafrekening', 'verlofsaldoUitbetaald' => false]],
+			],
+			withLeavePayout: true
+		);
+
+		$result = $service->runFor('2026-03');
+
+		$this->assertSame('calculated', $result['status']);
+		$payslips = $this->savedFor($fake, 'Payslip');
+		$this->assertCount(1, $payslips);
+		$this->assertSame(['hours' => 16.0, 'amount' => 400.0], $payslips[0]['leavePayout']);
+		$this->assertSame(4200.00, $payslips[0]['grossPay'], 'The payout is wage: grossPay includes it.');
+		$this->assertSame(420000, $payslips[0]['engineInputSnapshot']['grossMonthlySalaryCents'], 'The calculator taxes the payout.');
+
+		$cases = $this->savedFor($fake, 'Offboarding');
+		$this->assertCount(1, $cases);
+		$this->assertTrue($cases[0]['verlofsaldoUitbetaald']);
+
+	}//end testALeaverIsPaidTheOpenLeaveBalanceOnTheFinalPayslip()
+
+	/**
+	 * REQ-OFC-005 "A leaver with no open hours": no payout line, gross
+	 * unchanged, and the offboarding case is not touched.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
+	 */
+	public function testALeaverWithNoOpenHoursHasNoPayoutLine(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['endDate' => '2026-03-31'])],
+				'EmploymentContract' => [$this->contract(['endDate' => '2026-03-31', 'hourlyWage' => 25.00])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+				'LeaveBalance' => [['id' => 'lb-1', 'employeeId' => 'emp-1', 'year' => 2026, 'entitledHours' => 40, 'usedHours' => 40]],
+				'Offboarding' => [['id' => 'off-1', 'employeeId' => 'emp-1', 'verlofsaldoUitbetaald' => false]],
+			],
+			withLeavePayout: true
+		);
+
+		$service->runFor('2026-03');
+
+		$payslips = $this->savedFor($fake, 'Payslip');
+		$this->assertCount(1, $payslips);
+		$this->assertArrayNotHasKey('leavePayout', $payslips[0]);
+		$this->assertSame(3800.00, $payslips[0]['grossPay']);
+		$this->assertSame([], $this->savedFor($fake, 'Offboarding'));
+
+	}//end testALeaverWithNoOpenHoursHasNoPayoutLine()
 
 	/**
 	 * leave-buy-sell REQ-BUYSELL-005 (humaniq#513): a settled `buy`

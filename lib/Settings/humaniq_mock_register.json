@@ -16,7 +16,7 @@
       "humaniq": {
         "slug": "humaniq",
         "title": "Humaniq Register (demo)",
-        "version": "0.68.0",
+        "version": "0.69.0",
         "description": "Demo data for Humaniq Register. Generated from the register's own schemas: see hydra-gates/scripts/lib/generate_mock_register.py.",
         "authorization": {
           "read": [
@@ -11441,6 +11441,36 @@
             "nullable": true,
             "description": "Backdated corrections settled in this period: a positive amount is paid out, a negative one is reclaimed. Included in the net pay.",
             "x-notes": "Summed net TWK (terugwerkende kracht) retro-adjustment delta settled into THIS payslip's period -- a nabetaling (positive) or terugvordering (negative) rolled up from every applied PayrollAdjustment whose settlementPeriod equals this payslip's period (retro-adjustments). Included in nettoPay. Null when no adjustment settles this period; the sealed historical payslip this delta was diffed against is never touched.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "leavePayout": {
+            "title": "Leave payout",
+            "type": "object",
+            "nullable": true,
+            "description": "The open leave balance paid on a leaver's final payslip: the hours and the amount, as one line. Counted in the taxable gross pay.",
+            "x-notes": "REQ-OFC-005 (BW 7:641): set only on the payslip of the period the employee's endDate falls in, when entitled plus extra-statutory minus used leave hours of that year is above zero, at the last contract's hourlyWage. Written by FinalLeavePayoutService; absent otherwise.",
+            "properties": {
+              "hours": {
+                "type": "number"
+              },
+              "amount": {
+                "type": "number"
+              }
+            },
             "authorization": {
               "read": [
                 "humaniq-hr",
