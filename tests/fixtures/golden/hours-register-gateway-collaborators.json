@@ -95,6 +95,7 @@
     "OCA\\Humaniq\\Service\\SalaryBureauExchangeService::$gateway",
     "OCA\\Humaniq\\Service\\SideActivityRegister::$gateway",
     "OCA\\Humaniq\\Service\\SurveyAudience::$gateway",
+    "OCA\\Humaniq\\Service\\SurveyResponseRelease::$gateway",
     "OCA\\Humaniq\\Service\\SurveyService::$gateway",
     "OCA\\Humaniq\\Service\\TaxTableSetService::$gateway",
     "OCA\\Humaniq\\Service\\TeamDigestComposer::$gateway",

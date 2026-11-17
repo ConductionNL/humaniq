@@ -381,9 +381,9 @@
                 "configuration": {"exportable": true},
                 "slug": "SurveyResponse",
                 "icon": "CommentTextMultipleOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Survey response",
-                "description": "One set of answers to a survey. It holds the department and contract type of whoever answered and the date, and nothing that names them: no employee, account, invitation or time of day (talent-engagement-surveys D1).",
+                "description": "One set of answers to a survey. It holds the department and contract type of whoever answered, and nothing that names them: no employee, account, invitation or time of day (talent-engagement-surveys D1). Answers are held back and released in shuffled batches owned by the system, so neither the owner nor the creation time links a response to the invitation that was answered; HR reads a response one by one only when it was released in a batch of at least the survey's minimum group size.",
                 "type": "object",
                 "required": [
                     "surveyId",
@@ -392,7 +392,12 @@
                 ],
                 "authorization": {
                     "read": [
-                        "humaniq-hr"
+                        {
+                            "group": "humaniq-hr",
+                            "match": {
+                                "readable": true
+                            }
+                        }
                     ],
                     "create": [
                         "humaniq-hr"
@@ -432,8 +437,74 @@
                     "submittedOn": {
                         "type": "string",
                         "format": "date",
-                        "title": "Answered on",
-                        "description": "The day of the answer, without the time."
+                        "title": "Released on",
+                        "description": "The day the response was released with its batch; not the day it was given, so it cannot be matched to the invitation."
+                    },
+                    "readable": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Readable one by one",
+                        "description": "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration of the survey."
+                    }
+                }
+            },
+            "SurveyResponseHold": {
+                "configuration": {"exportable": true},
+                "slug": "SurveyResponseHold",
+                "icon": "TimerSandEmpty",
+                "x-openregister-demo-data": "Written only while an answer waits for its release batch and removed by the release job; a demo hold would be released as a response nobody gave.",
+                "version": "0.1.0",
+                "title": "Held survey answer",
+                "description": "An answer waiting to be released as a SurveyResponse. Owned by the system and readable by administrators only; the release job moves held answers into SurveyResponse in shuffled batches and removes them here, so the response's creation time is the batch's, not the answer's (talent-engagement-surveys REQ-SRV-002).",
+                "type": "object",
+                "required": [
+                    "surveyId",
+                    "answers"
+                ],
+                "authorization": {
+                    "read": [
+                        "admin"
+                    ],
+                    "create": [
+                        "admin"
+                    ],
+                    "update": [
+                        "admin"
+                    ],
+                    "delete": [
+                        "admin"
+                    ]
+                },
+                "properties": {
+                    "surveyId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Survey",
+                        "title": "Survey",
+                        "description": "The survey answered."
+                    },
+                    "orgUnitId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Department",
+                        "description": "The department of whoever answered, on the day they answered."
+                    },
+                    "contractType": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Contract type",
+                        "description": "The contract type of whoever answered."
+                    },
+                    "answers": {
+                        "type": "object",
+                        "title": "Answers",
+                        "description": "The answers, by question key."
                     },
                     "administrationId": {
                         "type": "string",
@@ -642,6 +713,7 @@
                     "toelichting": "Meer tijd voor overleg met het team."
                 },
                 "submittedOn": "2026-09-03",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -660,6 +732,7 @@
                     "aanbevelen": 9
                 },
                 "submittedOn": "2026-09-04",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -679,6 +752,7 @@
                     "toelichting": "Duidelijker prioriteiten."
                 },
                 "submittedOn": "2026-09-05",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -697,6 +771,7 @@
                     "aanbevelen": 8
                 },
                 "submittedOn": "2026-09-06",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -716,6 +791,7 @@
                     "toelichting": "Betere laptops."
                 },
                 "submittedOn": "2026-09-07",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -734,6 +810,7 @@
                     "aanbevelen": 6
                 },
                 "submittedOn": "2026-09-08",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -753,6 +830,7 @@
                     "toelichting": "Minder vergaderingen."
                 },
                 "submittedOn": "2026-09-09",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -772,6 +850,7 @@
                     "toelichting": "Meer tijd voor overleg met het team."
                 },
                 "submittedOn": "2026-09-10",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -790,6 +869,7 @@
                     "aanbevelen": 10
                 },
                 "submittedOn": "2026-09-11",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -809,6 +889,7 @@
                     "toelichting": "Duidelijker prioriteiten."
                 },
                 "submittedOn": "2026-09-12",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -827,6 +908,7 @@
                     "aanbevelen": 5
                 },
                 "submittedOn": "2026-09-13",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -846,6 +928,7 @@
                     "toelichting": "Betere laptops."
                 },
                 "submittedOn": "2026-09-14",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -865,6 +948,7 @@
                     "toelichting": "Meer tijd voor overleg met het team."
                 },
                 "submittedOn": "2026-09-15",
+                "readable": true,
                 "administrationId": "ADM-001"
             },
             {
@@ -883,6 +967,7 @@
                     "aanbevelen": 10
                 },
                 "submittedOn": "2026-09-16",
+                "readable": true,
                 "administrationId": "ADM-001"
             }
         ]
