@@ -24102,6 +24102,42 @@
       {
         "@self": {
           "register": "humaniq",
+          "schema": "TimeActivity",
+          "slug": "timeactivity-timeactivity-1-1"
+        },
+        "code": "opleiding",
+        "label": "Opleiding",
+        "kind": "non-project",
+        "billableDefault": false,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "TimeActivity",
+          "slug": "timeactivity-timeactivity-2-2"
+        },
+        "code": "intern-overleg",
+        "label": "Intern overleg",
+        "kind": "non-project",
+        "billableDefault": false,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "TimeActivity",
+          "slug": "timeactivity-timeactivity-3-3"
+        },
+        "code": "verlof",
+        "label": "Verlof",
+        "kind": "absence",
+        "billableDefault": false,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "humaniq",
           "schema": "TrainingRecord",
           "slug": "trainingrecord-voorbeeld-title-1-1"
         },
