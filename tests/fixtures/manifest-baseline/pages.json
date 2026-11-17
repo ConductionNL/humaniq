@@ -196,6 +196,26 @@
 		"route": "/review-cycles/:id"
 	},
 	{
+		"id": "WageCostReport",
+		"route": "/reports/wage-costs"
+	},
+	{
+		"id": "PayrollRunsReport",
+		"route": "/reports/payroll-runs"
+	},
+	{
+		"id": "TurnoverReport",
+		"route": "/reports/turnover"
+	},
+	{
+		"id": "LeaveBalanceReport",
+		"route": "/reports/leave-balances"
+	},
+	{
+		"id": "MyReports",
+		"route": "/reports/mine"
+	},
+	{
 		"id": "PayrollAdjustmentDetail",
 		"route": "/payroll-adjustments/:id"
 	},

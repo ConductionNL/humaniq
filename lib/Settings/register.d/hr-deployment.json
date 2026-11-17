@@ -25,7 +25,7 @@
                     ]
                 },
                 "icon": "CalendarClock",
-                "version": "0.1.0",
+                "version": "0.1.1",
                 "title": "Deployment plan",
                 "description": "A teacher's planned hours for one school year, against the norm for their contract.",
                 "x-notes": "education-staff-deployment-and-count D1. One plan per teacher per school year (1 August to 31 July). Line hours and plannedHours are stamped by DeploymentPlanTotalsListener on every save; differenceHours is calculated from them. The norm comes from DeploymentPlanService::normFor (CAO annual norm prorated to the contracts) when the CAO figure is verified, else HR enters it and normSource is handmatig. NoSelfApprovalGuard stops the teacher (employeeUserId) confirming their own plan.",
@@ -86,6 +86,13 @@
                     }
                 },
                 "properties": {
+                    "differenceHours": {
+                        "type": "number",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Difference",
+                        "description": "Planned hours minus the norm. Above zero is an overload."
+                    },
                     "employeeId": {
                         "type": "string",
                         "format": "uuid",

@@ -458,7 +458,7 @@
                 "slug": "LeaveBalance",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr"], "delete": ["humaniq-hr"]},
                 "icon": "ScaleBalance",
-                "version": "0.5.0",
+                "version": "0.5.1",
                 "title": "Leave balance",
                 "description": "Per-employee, per-year, per-leave-type entitlement and usage ledger (verlofsaldo): the statutory plus bovenwettelijk hours granted for a year, the hours used, and a declaratively calculated remaining balance (x-openregister-calculations). Read by the nl-verlof-wettelijk-minimum / nl-verlof-saldo-niet-negatief / nl-verlof-vervaltermijn rule checks (lib/Standards/rules/labour.json, leave-verzuim-mvp). UsedHours is recomputed from the approved LeaveRequests behind it by LeaveApprovalListener, so approving, correcting or reversing a request restates the balance.",
                 "type": "object",
@@ -538,6 +538,27 @@
                     }
                 },
                 "properties": {
+                    "remainingStatutoryHours": {
+                        "type": "number",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Remaining statutory hours",
+                        "description": "Statutory hours of this balance not yet taken and not lapsed."
+                    },
+                    "daysUntilStatutoryLapse": {
+                        "type": "number",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Days until the statutory hours lapse",
+                        "description": "Days from today until the statutory hours left on this balance lapse. Empty when none are left."
+                    },
+                    "statutoryExpiresSoon": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Statutory hours lapse soon",
+                        "description": "True when statutory hours are left and lapse within 90 days."
+                    },
                     "employeeId": {
                         "type": "string",
                         "format": "uuid",
