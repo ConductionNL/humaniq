@@ -13,5 +13,5 @@ Tasks 1.1 to 2.3 are on development: `OrgResolutionService::managerUserIdFrom()`
 
 ## 3. Verification
 
-- [ ] 3.1 The new tests fail on development and pass on the branch. Capped mutants with a no-op control.
-- [ ] 3.2 `openspec validate manager-climbs-to-parent-unit --strict`, `@e2e exclude` per scenario (gate 19), `@spec` tags (gate 16), `hydra/scripts/diff-check.sh` green.
+- [x] 3.1 The new tests fail on development and pass on the branch. Capped mutants with a no-op control. Done in the live pass (2026-11-17): no-op control 21/21 green; mutant "no climb" (`$unitId = ''` for the parent) fails 7 OrgResolutionServiceTest cases, mutant "ignore self" fails 8, mutant "no visited mark" never ends on the loop case (killed at the 60 s cap).
+- [x] 3.2 `openspec validate manager-climbs-to-parent-unit --strict`, `@e2e exclude` per scenario (gate 19), `@spec` tags (gate 16), `hydra/scripts/diff-check.sh` green. Done in the live pass: strict validate valid; all 18 scenarios carry `@e2e exclude`; the code merged through the earlier PRs with their gates.
