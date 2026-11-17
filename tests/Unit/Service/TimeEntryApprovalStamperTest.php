@@ -37,6 +37,7 @@ use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -114,10 +115,7 @@ class TimeEntryApprovalStamperTest extends TestCase {
 			 * Record the marker, then save (or fail).
 			 *
 			 * @param array<string, mixed>|object $object The payload.
-			 * @param array<int, string>|null $extend Extend (ignored).
-			 * @param mixed $register The register.
-			 * @param mixed $schema The schema.
-			 * @param string|null $uuid The uuid.
+			 * @param ObjectSaveOptions $options The target, uuid and extend.
 			 * @param bool $_rbac RBAC flag.
 			 * @param bool $_multitenancy Multitenancy flag.
 			 *
@@ -125,19 +123,16 @@ class TimeEntryApprovalStamperTest extends TestCase {
 			 */
 			public function saveObject(
 				array|object $object,
-				?array $extend = [],
-				mixed $register = null,
-				mixed $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): ObjectEntity {
 				$this->internal[] = $this->marker->isInternal();
-				if (in_array($uuid, $this->failOn->getArrayCopy(), true) === true) {
+				if (in_array($options->uuid, $this->failOn->getArrayCopy(), true) === true) {
 					throw new \RuntimeException('register down');
 				}
 
-				return parent::saveObject($object, $extend, $register, $schema, $uuid, $_rbac, $_multitenancy);
+				return parent::saveObject($object, $options, $_rbac, $_multitenancy);
 			}//end saveObject()
 		};
 
