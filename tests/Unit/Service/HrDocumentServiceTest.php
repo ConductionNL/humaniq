@@ -48,6 +48,9 @@ use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for HrDocumentService.
@@ -139,7 +142,9 @@ class HrDocumentServiceTest extends TestCase {
 			 *
 			 * @return object|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				foreach (($this->rowsBySchema[$schema] ?? []) as $row) {
 					if ((string)($row['id'] ?? '') === $id) {
 						return new class($row) {
@@ -166,12 +171,13 @@ class HrDocumentServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
 				$saved = array_merge($object, ['id' => $id]);
@@ -1184,7 +1190,7 @@ class HrDocumentServiceTest extends TestCase {
 		$this->assertSame('generated', $first['status']);
 
 		// A new 2026 payslip lands after the first jaaropgaaf was generated.
-		$fake->saveObject($this->payslip(['id' => 'ps-2', 'period' => '2026-02', 'grossPay' => 4000.0]), null, 'Payslip', 'ps-2');
+		$fake->saveObject($this->payslip(['id' => 'ps-2', 'period' => '2026-02', 'grossPay' => 4000.0]), new ObjectSaveOptions(target: new ObjectFindTarget(schema: 'Payslip'), uuid: 'ps-2'));
 
 		$second = $service->generateJaaropgaaf('emp-1', 2026);
 		// The document itself no-ops (same jaaropgaafId, already generated,

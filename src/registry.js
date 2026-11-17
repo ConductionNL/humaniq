@@ -108,6 +108,7 @@ import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
 import ApplicationAnswersWidget from './widgets/ApplicationAnswersWidget.vue'
 import ApprovalsInboxWidget from './widgets/ApprovalsInboxWidget.vue'
+import DevicePushWidget from './widgets/DevicePushWidget.vue'
 import EmployeeHistoryWidget from './widgets/EmployeeHistoryWidget.vue'
 import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 import OnCallAverages from './widgets/OnCallAverages.vue'
@@ -120,6 +121,7 @@ import VacancyQuestionsWidget from './widgets/VacancyQuestionsWidget.vue'
 import YearTransitionWidget from './widgets/YearTransitionWidget.vue'
 import { proposeRaiseForSelection } from './dialogs/proposeRaiseForSelection.js'
 import { registerTrainingAttended, registerTrainingNotAttended } from './dialogs/registerTrainingAttendance.js'
+import { openIntegriqConnections } from './services/connectionRegistry.js'
 import EndpointTableWidget from './widgets/EndpointTableWidget.js'
 
 export default {
@@ -161,6 +163,12 @@ export default {
 		kind: 'handler',
 		handler: registerTrainingNotAttended,
 	},
+	// platform-integrations-catalogue: the Integrations page's Add integration
+	// header action leaves for integriq's Connections overview.
+	openIntegriqConnections: {
+		kind: 'handler',
+		handler: openIntegriqConnections,
+	},
 
 	ProformaPayslip: {
 		kind: 'page',
@@ -191,6 +199,17 @@ export default {
 		allowedSlots: ['body', 'sidebar'],
 		propsSchema: null,
 		_note: 'Explicit override for the library\'s CnDeltaWidget, for exactly the reason `stat` needs one — see the module docblock above. CnDeltaWidget self-registers its key through the same bare side-effect import that gets tree-shaken out of Humaniq\'s bundle, so without this entry every `type:"delta"` placement resolves to nothing and renders blank. Manifest widgets already pass the { title, icon, content } shape it expects, so no wrapper is needed.',
+	},
+	// @custom-widget-ratchet exclude no built-in widget asks the browser for a push subscription on a tap and hands it to openregister's web-push endpoint
+	'device-push': {
+		kind: 'widget',
+		component: DevicePushWidget,
+		defaultSize: { w: 12, h: 2 },
+		minSize: { w: 4, h: 2 },
+		maxSize: { w: 12, h: 4 },
+		allowedSlots: ['body', 'sidebar'],
+		propsSchema: null,
+		_note: 'self-service-mobile design.md D5, REQ-MOB-004: the opt-in for notifications on this device. Loading reads the state only; the permission prompt comes from the switch. openregister owns the subscription and the delivery.',
 	},
 	// @custom-widget-ratchet exclude no built-in widget renders endpoint rows on a dashboard with a per-row decision: object-table resolves to CnObjectListWidget, which reads register/schema and ignores endpointSource in nextcloud-vue 2.57.1, rowRoute is one static route while inbox rows open four different detail pages, and api-call row actions carry no row token for the transition
 	'approvals-inbox': {

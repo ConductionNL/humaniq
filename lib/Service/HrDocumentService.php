@@ -77,6 +77,9 @@ namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\FleetAppId;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -866,7 +869,12 @@ class HrDocumentService {
 	 */
 	private function findEntity(string $schema, string $id): mixed {
 		try {
-			return $this->objectService()->find(id: $id, register: $this->register(), schema: $schema, _rbac: false, _multitenancy: false);
+			return $this->objectService()->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $this->register(), schema: $schema),
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (\Throwable $e) {
 			$this->logger->debug('HrDocumentService: kon ' . $schema . ' ' . $id . ' niet opnieuw ophalen als entity: ' . $e->getMessage());
 			return null;
@@ -1153,8 +1161,7 @@ class HrDocumentService {
 	private function createGeneratedDocument(array $fields): array {
 		$created = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->register(),
-			schema: self::GENERATED_DOCUMENT_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::GENERATED_DOCUMENT_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -1178,9 +1185,10 @@ class HrDocumentService {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::GENERATED_DOCUMENT_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::GENERATED_DOCUMENT_SCHEMA),
+				uuid: $id === '' ? null : $id
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -1198,8 +1206,7 @@ class HrDocumentService {
 	private function createJaaropgaaf(array $fields): array {
 		$created = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->register(),
-			schema: self::JAAROPGAAF_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::JAAROPGAAF_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -1224,9 +1231,10 @@ class HrDocumentService {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::JAAROPGAAF_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::JAAROPGAAF_SCHEMA),
+				uuid: $id === '' ? null : $id
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

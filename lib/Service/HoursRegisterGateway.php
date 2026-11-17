@@ -40,6 +40,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -106,8 +110,7 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 		try {
 			$entity = $this->objects()->find(
 				id: $uuid,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: $schema,
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: $schema),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -188,9 +191,10 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 	public function save(array $payload, string $schema, ?string $uuid = null): object {
 		return $this->objects()->saveObject(
 			object: $payload,
-			register: $this->settingsService->getRegisterSlug(),
-			schema: $schema,
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: $schema),
+				uuid: $uuid
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -208,9 +212,10 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 	 */
 	public function delete(string $uuid, string $schema): void {
 		$this->objects()->deleteObject(
-			uuid: $uuid,
-			register: $this->settingsService->getRegisterSlug(),
-			schema: $schema,
+			new ObjectDeletion(
+				uuid: $uuid,
+				target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: $schema)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

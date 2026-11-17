@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -69,8 +70,7 @@ class HostObjectAccess {
 		try {
 			$found = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(
 				id: trim($domainObjectRef),
-				register: trim($parts[0]),
-				schema: trim($parts[1]),
+				options: new ObjectFindOptions(register: trim($parts[0]), schema: trim($parts[1])),
 				_rbac: true,
 				_multitenancy: true
 			);

@@ -65,6 +65,9 @@ use PHPUnit\Framework\TestCase;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for PayrollRunService.
@@ -166,12 +169,13 @@ class PayrollRunServiceTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$targetSchema = ($schema ?? $this->schema);
 
 				$id = ($uuid ?? ('generated-' . $targetSchema . '-' . $this->nextId++));
@@ -215,17 +219,20 @@ class PayrollRunServiceTest extends TestCase {
 			 * @return null
 			 */
 			public function find(mixed ...$args): mixed {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				$this->found[] = $args;
 				return null;
 			}//end find()
 
 			public function deleteObject(
-				string $uuid,
-				?string $register = null,
-				?string $schema = null,
+				ObjectDeletion $deletion,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
+				bool $_retentionSweep = false
 			): bool {
+				$uuid = $deletion->uuid;
+				$register = $deletion->target->register;
+				$schema = $deletion->target->schema;
 				$this->deleted[] = $uuid;
 
 				$targetSchema = ($schema ?? $this->schema);
@@ -2124,6 +2131,40 @@ class PayrollRunServiceTest extends TestCase {
 
 		self::assertSame('calculated', $service->runFor('2026-05', 'ADM-001')['status']);
 	}//end testTheEngineStaysOutOfAnOutsourcedAdministration()
+
+	/**
+	 * payroll-period-edge-cases REQ-PPE-001: a monthly administration
+	 * refuses a four-weekly period and writes nothing; a four-weekly one
+	 * gets past the period check with it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	public function testARunTakesOnlyPeriodsOfTheAdministrationsFrequency(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [],
+				'EmploymentContract' => [],
+				'PayrollRun' => [],
+				'Payslip' => [],
+				'hrAdministration' => [
+					['id' => 'adm-1', 'administrationId' => 'ADM-001', 'name' => 'Monthly'],
+					['id' => 'adm-5', 'administrationId' => 'ADM-005', 'name' => 'Four-weekly', 'payFrequency' => 'four-weekly'],
+				],
+			]
+		);
+
+		$refused = $service->runFor('2026-P05', 'ADM-001');
+		self::assertSame('failed', $refused['status']);
+		self::assertSame('Ongeldige periode "2026-P05": "2026-P05" is not a monthly period: this administration pays monthly.', $refused['message']);
+		self::assertSame([], $fake->saved);
+
+		$accepted = $service->runFor('2026-P05', 'ADM-005');
+		self::assertStringNotContainsString('Ongeldige periode', (string)$accepted['message']);
+
+		self::assertSame('failed', $service->runFor('2026-05', 'ADM-005')['status']);
+	}//end testARunTakesOnlyPeriodsOfTheAdministrationsFrequency()
 
 	/**
 	 * filings-premium-differentiation REQ-AWF-101: a signed BBL

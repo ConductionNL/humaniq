@@ -236,6 +236,18 @@
 		"route": "/mijn"
 	},
 	{
+		"id": "Integrations",
+		"route": "/configuratie/koppelingen"
+	},
+	{
+		"id": "TaakbeleidScholen",
+		"route": "/taakbeleid"
+	},
+	{
+		"id": "Taakbeleid",
+		"route": "/taakbeleid/:id"
+	},
+	{
 		"id": "ManagerDeputies",
 		"route": "/manager-deputies"
 	},
@@ -636,6 +648,14 @@
 		"route": "/pension-filings/:id"
 	},
 	{
+		"id": "PensionSchemes",
+		"route": "/pension-schemes"
+	},
+	{
+		"id": "PensionSchemeDetail",
+		"route": "/pension-schemes/:id"
+	},
+	{
 		"id": "ReviewCycles",
 		"route": "/review-cycles"
 	},
@@ -786,5 +806,21 @@
 	{
 		"id": "NonWorkingTimeDetail",
 		"route": "/niet-werkdagen/:id"
+	},
+	{
+		"id": "BenefitEntitlements",
+		"route": "/benefit-entitlements"
+	},
+	{
+		"id": "BenefitEntitlementDetail",
+		"route": "/benefit-entitlements/:id"
+	},
+	{
+		"id": "DeploymentPlans",
+		"route": "/deployment-plans"
+	},
+	{
+		"id": "DeploymentPlanDetail",
+		"route": "/deployment-plans/:id"
 	}
 ]

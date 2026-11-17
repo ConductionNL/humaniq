@@ -108,6 +108,20 @@ interface IFlowNode {
 }//end interface
 
 /**
+ * A flow node in main's call form: execute() takes one FlowNodeCall.
+ */
+interface ICallFlowNode extends IFlowNode {
+	/**
+	 * Run the node.
+	 *
+	 * @param FlowNodeCall $call The items, the step config and the run context.
+	 *
+	 * @return array<int, array<string, mixed>> The resulting items.
+	 */
+	public function execute(FlowNodeCall $call): array;
+}
+
+/**
  * Test-stub mirror of OpenRegister's FlowNodeCall: what one node is called with.
  */
 final class FlowNodeCall {
