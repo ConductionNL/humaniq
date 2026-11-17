@@ -26,7 +26,7 @@ namespace OCA\Humaniq\Flow;
 
 use OCA\Humaniq\Service\ExitInterviewService;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
-use OCA\OpenRegister\Service\Flow\IFlowNode;
+use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 
@@ -35,7 +35,7 @@ use OCP\IURLGenerator;
  *
  * @spec openspec/specs/offboarding-completion/spec.md#REQ-OFC-002
  */
-class AnonymiseExitInterviewsNode extends AdminSweepNode implements IFlowNode {
+class AnonymiseExitInterviewsNode extends AdminSweepNode implements ICallFlowNode {
 
 	public const OUTCOME_KEY = 'anonymised';
 

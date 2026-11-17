@@ -155,4 +155,87 @@ class ConnectionReporterTest extends TestCase {
 		$this->assertSame('humaniq', $declared['app']);
 		$this->assertSame(ConnectionReporter::KEYS, $reportedOnly);
 	}//end testEveryReportedKeyIsDeclaredAsReportedOnly()
+
+	/**
+	 * A class under integriq's event name that is not an event is not dispatched.
+	 *
+	 * @return void
+	 */
+	public function testAClassThatIsNotAnEventIsNotDispatched(): void {
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->never())->method('warning');
+
+		$notAnEvent = get_class(
+			new class(app: '', key: '', status: '', message: '') {
+				/**
+				 * Takes the report's arguments but is no Event.
+				 *
+				 * @param string $app     The app id.
+				 * @param string $key     The connection key.
+				 * @param string $status  The status.
+				 * @param string $message The message.
+				 */
+				public function __construct(
+					public string $app,
+					public string $key,
+					public string $status,
+					public string $message,
+				) {
+				}//end __construct()
+			}
+		);
+
+		$reporter = new class(eventDispatcher: $this->dispatcher, logger: $this->logger, eventClass: $notAnEvent) extends ConnectionReporter {
+			/**
+			 * Constructor.
+			 *
+			 * @param IEventDispatcher $eventDispatcher The dispatcher.
+			 * @param LoggerInterface  $logger          The logger.
+			 * @param string           $eventClass      The class to hand out.
+			 */
+			public function __construct(
+				IEventDispatcher $eventDispatcher,
+				LoggerInterface $logger,
+				private readonly string $eventClass,
+			) {
+				parent::__construct(eventDispatcher: $eventDispatcher, logger: $logger);
+			}//end __construct()
+
+			/**
+			 * Integriq's name resolves to a class that is not an event.
+			 *
+			 * @param string $eventClass The class name.
+			 *
+			 * @return string|null
+			 */
+			protected function resolveEventClass(string $eventClass): ?string {
+				return $this->eventClass;
+			}//end resolveEventClass()
+		};
+
+		$this->assertFalse($reporter->report(key: 'shillinq-ledger', status: 'configured'));
+	}//end testAClassThatIsNotAnEventIsNotDispatched()
+
+	/**
+	 * The event class resolves with a leading backslash, or to null when it does not exist.
+	 *
+	 * @return void
+	 */
+	public function testTheEventClassResolvesOnlyWhenItExists(): void {
+		$reporter = new class(eventDispatcher: $this->dispatcher, logger: $this->logger) extends ConnectionReporter {
+			/**
+			 * Exposes the resolver.
+			 *
+			 * @param string $eventClass The class name.
+			 *
+			 * @return string|null
+			 */
+			public function resolve(string $eventClass): ?string {
+				return $this->resolveEventClass(eventClass: $eventClass);
+			}//end resolve()
+		};
+
+		$this->assertSame('\\' . ConnectionReporter::STATUS_EVENT, $reporter->resolve(eventClass: ConnectionReporter::STATUS_EVENT));
+		$this->assertNull($reporter->resolve(eventClass: 'OCA\\Integriq\\Event\\NoSuchEvent'));
+	}//end testTheEventClassResolvesOnlyWhenItExists()
 }//end class

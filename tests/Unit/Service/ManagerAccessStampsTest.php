@@ -33,6 +33,7 @@ use OCA\Humaniq\Tests\Unit\Support\ApprovalsFixture;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 class ManagerAccessStampsTest extends TestCase {
 
@@ -85,7 +86,7 @@ class ManagerAccessStampsTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function stored(string $schema, string $uuid): array {
-		return (array)$this->store->find($uuid, schema: $schema)?->getObject();
+		return (array)$this->store->find($uuid, new ObjectFindOptions(schema: $schema))?->getObject();
 	}//end stored()
 
 	/**

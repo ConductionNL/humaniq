@@ -55,6 +55,11 @@ class DeploymentPlanService {
 	public const CATEGORIES = ['lesgevend', 'lesgebonden', 'schooltaak', 'professionalisering', 'duurzame-inzetbaarheid'];
 
 	/**
+	 * The school-view columns of a placed teacher without a plan.
+	 */
+	private const NO_PLAN = ['id' => null, 'hasPlan' => false, 'planId' => null, 'status' => null, 'plannedHours' => null, 'normHours' => null, 'normSource' => null, 'differenceHours' => null, 'overload' => false];
+
+	/**
 	 * Resolves a CAO id to its annual norm, or null.
 	 *
 	 * @var Closure(string): ?float
@@ -87,24 +92,22 @@ class DeploymentPlanService {
 			return null;
 		}
 
-		[$yearStart, $yearEnd] = $year;
-		$yearDays = self::days(from: $yearStart, until: $yearEnd);
+		$yearDays = self::days(from: $year[0], until: $year[1]);
 		$total = 0.0;
 		$counted = 0;
 		foreach ($contracts as $contract) {
-			$covered = self::coveredDays(contract: $contract, yearStart: $yearStart, yearEnd: $yearEnd);
+			$covered = self::coveredDays(contract: $contract, year: $year);
 			if ($covered === 0) {
 				continue;
 			}
 
-			$annual = ($this->annualNorm)((string)($contract['cao'] ?? ''));
-			$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
-			if ($annual === null || is_numeric($hoursPerWeek) === false || (float)$hoursPerWeek <= 0.0) {
+			$norm = $this->contractNorm(contract: $contract, share: ($covered / $yearDays));
+			if ($norm === null) {
 				// One contract the CAO cannot price makes the whole norm a hand-entered one.
 				return null;
 			}
 
-			$total += ($annual * ((float)$hoursPerWeek / self::FULL_TIME_HOURS_PER_WEEK) * ($covered / $yearDays));
+			$total += $norm;
 			$counted++;
 		}
 
@@ -114,6 +117,26 @@ class DeploymentPlanService {
 
 		return ['hours' => round($total, 2), 'source' => 'cao'];
 	}//end normFor()
+
+	/**
+	 * The norm hours one contract adds for the share of the school year it covers.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract row (`hoursPerWeek`, `cao`).
+	 * @param float                $share    The covered days over the days of the school year.
+	 *
+	 * @return float|null The hours, or null when the CAO cannot price the contract.
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#scenario-a-part-time-contract-halfway-through-the-year
+	 */
+	private function contractNorm(array $contract, float $share): ?float {
+		$annual = ($this->annualNorm)((string)($contract['cao'] ?? ''));
+		$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
+		if ($annual === null || is_numeric($hoursPerWeek) === false || (float)$hoursPerWeek <= 0.0) {
+			return null;
+		}
+
+		return ($annual * ((float)$hoursPerWeek / self::FULL_TIME_HOURS_PER_WEEK) * $share);
+	}//end contractNorm()
 
 	/**
 	 * A plan's lines with their hours, its planned total, the difference with its norm and whether it is an overload.
@@ -153,6 +176,182 @@ class DeploymentPlanService {
 			'overload'        => ($difference !== null && $difference > 0.0),
 		];
 	}//end totals()
+
+	/**
+	 * The school view: every teacher placed in a unit during a school year, with their plan's planned, norm and difference.
+	 *
+	 * A teacher with a plan is listed with its totals; a placed teacher without
+	 * one is listed with `hasPlan` false. Rows with a plan come first, the
+	 * largest difference (the worst overload) first; teachers without a plan
+	 * follow by name. Only the teachers in `$readable` are listed, so the
+	 * caller's read access decides who appears. A row's `id` is its plan's id
+	 * (null without a plan), so a table row opens the plan.
+	 *
+	 * @param array<int, array<string, mixed>>    $assignments The unit's OrgAssignment rows (`employeeId`, `startDate`, `endDate`).
+	 * @param array<int, array<string, mixed>>    $plans       The unit's DeploymentPlan rows for the school year.
+	 * @param array<string, array<string, mixed>> $readable    The teachers the caller may read, by employee id.
+	 * @param string                              $schoolYear  The school year, `YYYY-YYYY`.
+	 *
+	 * @return array<int, array<string, mixed>>|null The rows, or null for a malformed school year.
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-a-school-leader-shall-see-every-teacher-s-plan-for-their-school-req-edu-002
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#scenario-room-in-the-team
+	 */
+	public function schoolView(array $assignments, array $plans, array $readable, string $schoolYear): ?array {
+		$year = self::schoolYearBounds(schoolYear: $schoolYear);
+		if ($year === null) {
+			return null;
+		}
+
+		$readableAssignments = array_filter(
+			$assignments,
+			static fn (array $assignment): bool => isset($readable[(string)($assignment['employeeId'] ?? '')]) === true && (string)($assignment['employeeId'] ?? '') !== ''
+		);
+		$placed = self::placedIn(assignments: $readableAssignments, year: $year);
+		$plansOfYear = array_filter($plans, static fn (array $plan): bool => (string)($plan['schoolYear'] ?? '') === $schoolYear);
+		$plansByEmployee = self::plansByEmployee(plans: $plansOfYear, placed: $placed);
+
+		$withPlan = [];
+		$withoutPlan = [];
+		foreach (array_keys($placed) as $employeeId) {
+			$employeeId = (string)$employeeId;
+			$row = ['employeeId' => $employeeId, 'name' => self::employeeName(employee: $readable[$employeeId])];
+			if (isset($plansByEmployee[$employeeId]) === false) {
+				$withoutPlan[] = array_merge($row, self::NO_PLAN);
+				continue;
+			}
+
+			$withPlan[] = array_merge($row, $this->planColumns(plan: $plansByEmployee[$employeeId]));
+		}
+
+		usort($withPlan, [self::class, 'byDifferenceThenName']);
+		usort($withoutPlan, static fn (array $left, array $right): int => strcmp((string)$left['name'], (string)$right['name']));
+
+		return array_merge($withPlan, $withoutPlan);
+	}//end schoolView()
+
+	/**
+	 * The employees with an assignment covering part of the school year.
+	 *
+	 * @param array<int, array<string, mixed>>                  $assignments The OrgAssignment rows.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $year        The first and last day of the school year.
+	 *
+	 * @return array<string, true> The placed employee ids.
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-a-school-leader-shall-see-every-teacher-s-plan-for-their-school-req-edu-002
+	 */
+	private static function placedIn(array $assignments, array $year): array {
+		$placed = [];
+		foreach ($assignments as $assignment) {
+			if (self::coveredDays(contract: $assignment, year: $year) > 0) {
+				$placed[(string)($assignment['employeeId'] ?? '')] = true;
+			}
+		}
+
+		return $placed;
+	}//end placedIn()
+
+	/**
+	 * The plan of each placed employee; a later plan of the same employee wins.
+	 *
+	 * @param array<int, array<string, mixed>> $plans  The DeploymentPlan rows of the school year.
+	 * @param array<string, true>              $placed The placed employee ids.
+	 *
+	 * @return array<string, array<string, mixed>> The plans, by employee id.
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-a-school-leader-shall-see-every-teacher-s-plan-for-their-school-req-edu-002
+	 */
+	private static function plansByEmployee(array $plans, array $placed): array {
+		$plansByEmployee = [];
+		foreach ($plans as $plan) {
+			$employeeId = (string)($plan['employeeId'] ?? '');
+			if (isset($placed[$employeeId]) === true) {
+				$plansByEmployee[$employeeId] = $plan;
+			}
+		}
+
+		return $plansByEmployee;
+	}//end plansByEmployee()
+
+	/**
+	 * The school-view columns of a teacher with a plan.
+	 *
+	 * @param array<string, mixed> $plan The DeploymentPlan row.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#scenario-room-in-the-team
+	 */
+	private function planColumns(array $plan): array {
+		$totals = $this->totals(plan: $plan);
+		$norm = null;
+		if (is_numeric($plan['normHours'] ?? null) === true) {
+			$norm = (float)$plan['normHours'];
+		}
+
+		return [
+			'id'              => ($plan['id'] ?? null),
+			'hasPlan'         => true,
+			'planId'          => ($plan['id'] ?? null),
+			'status'          => ($plan['status'] ?? null),
+			'plannedHours'    => $totals['plannedHours'],
+			'normHours'       => $norm,
+			'normSource'      => ($plan['normSource'] ?? null),
+			'differenceHours' => $totals['differenceHours'],
+			'overload'        => $totals['overload'],
+		];
+	}//end planColumns()
+
+	/**
+	 * Orders rows with a plan: the largest difference first, then by name.
+	 *
+	 * @param array<string, mixed> $left  One row.
+	 * @param array<string, mixed> $right The other row.
+	 *
+	 * @return int
+	 */
+	private static function byDifferenceThenName(array $left, array $right): int {
+		$byDifference = (($right['differenceHours'] ?? -INF) <=> ($left['differenceHours'] ?? -INF));
+		if ($byDifference !== 0) {
+			return $byDifference;
+		}
+
+		return strcmp((string)$left['name'], (string)$right['name']);
+	}//end byDifferenceThenName()
+
+	/**
+	 * The school year a day falls in (`YYYY-YYYY`, 1 August to 31 July).
+	 *
+	 * @param DateTimeImmutable $day The day.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-a-school-leader-shall-see-every-teacher-s-plan-for-their-school-req-edu-002
+	 */
+	public static function schoolYearOf(DateTimeImmutable $day): string {
+		$year = (int)$day->format('Y');
+		if ((int)$day->format('n') < 8) {
+			$year--;
+		}
+
+		return $year.'-'.($year + 1);
+	}//end schoolYearOf()
+
+	/**
+	 * A teacher's display name.
+	 *
+	 * @param array<string, mixed> $employee The Employee row.
+	 *
+	 * @return string
+	 */
+	private static function employeeName(array $employee): string {
+		$name = trim((string)($employee['firstName'] ?? '').' '.(string)($employee['lastName'] ?? ''));
+		if ($name === '') {
+			$name = (string)($employee['name'] ?? ($employee['id'] ?? ''));
+		}
+
+		return $name;
+	}//end employeeName()
 
 	/**
 	 * The hours of one line.
@@ -195,23 +394,22 @@ class DeploymentPlanService {
 	/**
 	 * How many days of the school year a contract covers; 0 when none or its dates do not parse.
 	 *
-	 * @param array<string, mixed> $contract  The contract.
-	 * @param DateTimeImmutable    $yearStart The first day of the school year.
-	 * @param DateTimeImmutable    $yearEnd   The last day of the school year.
+	 * @param array<string, mixed>                              $contract The contract.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $year     The first and last day of the school year.
 	 *
 	 * @return int
 	 */
-	private static function coveredDays(array $contract, DateTimeImmutable $yearStart, DateTimeImmutable $yearEnd): int {
+	private static function coveredDays(array $contract, array $year): int {
 		$start = self::date(value: $contract['startDate'] ?? null);
 		if ($start === null) {
 			return 0;
 		}
 
 		$end = self::date(value: $contract['endDate'] ?? null);
-		$from = max($start, $yearStart);
-		$until = $yearEnd;
+		$from = max($start, $year[0]);
+		$until = $year[1];
 		if ($end !== null) {
-			$until = min($end, $yearEnd);
+			$until = min($end, $year[1]);
 		}
 
 		if ($from > $until) {

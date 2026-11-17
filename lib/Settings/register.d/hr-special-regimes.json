@@ -1,0 +1,293 @@
+{
+    "x-humaniq-fragment": "hr-special-regimes",
+    "components": {
+        "schemas": {
+            "BenefitEntitlement": {
+                "slug": "BenefitEntitlement",
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        "humaniq-payroll",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "userId": "$userId"
+                            }
+                        }
+                    ],
+                    "create": [
+                        "humaniq-hr"
+                    ],
+                    "update": [
+                        "humaniq-hr",
+                        "humaniq-payroll"
+                    ],
+                    "delete": [
+                        "humaniq-hr"
+                    ]
+                },
+                "icon": "CashClock",
+                "version": "0.1.0",
+                "title": "Benefit entitlement",
+                "description": "A benefit the organisation pays a person under a decision, such as an early-retirement benefit or a former office holder's benefit. Paid as its own payslip.",
+                "type": "object",
+                "x-schema-org": "schema:MonetaryGrant",
+                "required": [
+                    "employeeId",
+                    "kind",
+                    "startDate",
+                    "paymentMode",
+                    "status"
+                ],
+                "configuration": {
+                    "exportable": true,
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "draft",
+                        "terminal": [
+                            "ended"
+                        ],
+                        "transitions": {
+                            "activate": {
+                                "from": [
+                                    "draft"
+                                ],
+                                "to": "active",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "An HR adviser activates the entitlement once the decision is recorded. The NoSelfApprovalGuard refuses the person the entitlement is for."
+                            },
+                            "end": {
+                                "from": [
+                                    "active"
+                                ],
+                                "to": "ended",
+                                "description": "The entitlement stops: its end date passed or the decision was withdrawn. Terminal."
+                            }
+                        }
+                    }
+                },
+                "x-notes": "payroll-special-regimes D1. A benefit is not a contract: it carries no work, hours or insurance. The run pays each active entitlement covering the period in a second pass, one payslip each, keyed by (payrollRunId, employeeId, benefitEntitlementId). Its tax treatment comes from the specialRegimes group of the tax tables, keyed by kind; nothing about a regime is coded here.",
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Person",
+                        "description": "The person the benefit is paid to, employed or not."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "title": "Account",
+                        "description": "The person's account, when they have one. Lets them read their own entitlement."
+                    },
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "rvu",
+                            "wachtgeld"
+                        ],
+                        "x-enum-labels": {
+                            "rvu": "Early-retirement benefit",
+                            "wachtgeld": "Former office holder's benefit"
+                        },
+                        "title": "Kind",
+                        "description": "Which benefit this is. It selects the tax treatment."
+                    },
+                    "decisionReference": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "title": "Decision",
+                        "description": "The reference of the decision that grants the benefit."
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Start date",
+                        "description": "The first day the benefit is paid for."
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "End date",
+                        "description": "The last day the benefit is paid for. Empty while it runs on."
+                    },
+                    "paymentMode": {
+                        "type": "string",
+                        "enum": [
+                            "periodic",
+                            "lump-sum"
+                        ],
+                        "x-enum-labels": {
+                            "periodic": "Every month",
+                            "lump-sum": "Once, as a lump sum"
+                        },
+                        "title": "Payment",
+                        "description": "Whether the benefit is paid every month or once."
+                    },
+                    "monthlyAmount": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Monthly amount",
+                        "description": "The gross amount paid each month, when it is a fixed amount."
+                    },
+                    "referenceSalary": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Reference salary",
+                        "description": "The monthly salary the percentages of the schedule apply to."
+                    },
+                    "schedule": {
+                        "type": "array",
+                        "title": "Schedule",
+                        "description": "The share of the reference salary paid in each stretch of months.",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "fromMonth",
+                                "toMonth",
+                                "percentage"
+                            ],
+                            "properties": {
+                                "fromMonth": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "title": "From month",
+                                    "description": "The first month of the stretch, counted from the start date."
+                                },
+                                "toMonth": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "title": "To month",
+                                    "description": "The last month of the stretch."
+                                },
+                                "percentage": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "title": "Percentage",
+                                    "description": "The share of the reference salary paid in these months."
+                                }
+                            }
+                        }
+                    },
+                    "offsetIncomeMonthly": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Income offset",
+                        "description": "Other income per month that is deducted from the benefit."
+                    },
+                    "lumpSumAmount": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Lump sum",
+                        "description": "The gross amount paid once."
+                    },
+                    "lumpSumPeriod": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+                        "title": "Lump sum month",
+                        "description": "The month the lump sum is paid in, as YYYY-MM."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "active",
+                            "ended"
+                        ],
+                        "x-enum-labels": {
+                            "draft": "Draft",
+                            "active": "Active",
+                            "ended": "Ended"
+                        },
+                        "default": "draft",
+                        "title": "Status",
+                        "description": "Where the entitlement stands. Only an active one is paid."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The payroll administration that pays the benefit.",
+                        "x-notes": "Denormalized administratie key, a plain nullable string and NOT a $ref (ADR-062 rule 7, the PayrollRun convention), like Employee.administrationId. The payroll run pays an entitlement only in a run of the same administration when both name one."
+                    }
+                }
+            },
+            "EmploymentContract": {
+                "configuration": {
+                    "exportable": true
+                },
+                "properties": {
+                    "officeRole": {
+                        "type": "string",
+                        "enum": [
+                            "burgemeester",
+                            "wethouder",
+                            "raadslid",
+                            "commissielid",
+                            "statenlid",
+                            "gedeputeerde"
+                        ],
+                        "x-enum-labels": {
+                            "burgemeester": "Mayor",
+                            "wethouder": "Alderman",
+                            "raadslid": "Council member",
+                            "commissielid": "Committee member",
+                            "statenlid": "Provincial council member",
+                            "gedeputeerde": "Provincial executive"
+                        },
+                        "title": "Office",
+                        "description": "The public office held, for a political-office contract."
+                    },
+                    "termStart": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Term start",
+                        "description": "The first day of the term of office."
+                    },
+                    "termEnd": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Term end",
+                        "description": "The last day of the term of office."
+                    }
+                }
+            },
+            "Payslip": {
+                "configuration": {
+                    "exportable": true
+                },
+                "properties": {
+                    "benefitEntitlementId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "BenefitEntitlement",
+                        "title": "Benefit entitlement",
+                        "description": "The benefit this payslip pays. Empty for a salary payslip."
+                    },
+                    "specialRegime": {
+                        "type": "string",
+                        "enum": [
+                            "rvu",
+                            "wachtgeld",
+                            "politiek-ambt"
+                        ],
+                        "x-enum-labels": {
+                            "rvu": "Early-retirement benefit",
+                            "wachtgeld": "Former office holder's benefit",
+                            "politiek-ambt": "Political office"
+                        },
+                        "title": "Special regime",
+                        "description": "The tax treatment applied, when it is not the ordinary one."
+                    },
+                    "rvuEindheffing": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Final levy",
+                        "description": "The employer's final levy on the part of an early-retirement benefit above the threshold."
+                    }
+                }
+            }
+        }
+    }
+}

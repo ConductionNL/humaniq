@@ -79,8 +79,9 @@ class NlPackTest extends TestCase {
 	}//end testTheBundledNlPackPassesEveryUploadGateIncludingItsNineGoldenVectors()
 
 	/**
-	 * REQ-JP-006 / 30-procent-regeling: the NL pack's self-test block is the 10
-	 * existing fixtures (the original 9 plus the 30%-ruling anchor) —
+	 * REQ-JP-006 / 30-procent-regeling / payroll-special-regimes: the NL pack's
+	 * self-test block is the 12 existing fixtures (the original 9, the
+	 * 30%-ruling anchor, the withheld Zvw and the RVU final levy) —
 	 * referenced, never copied. If a fixture is added, it belongs here too.
 	 *
 	 * @return void
@@ -88,9 +89,9 @@ class NlPackTest extends TestCase {
 	public function testTheNlPackDeclaresAllTenGoldenFixturesAsItsOwnVectors(): void {
 		$vectors = $this->pack()->selfTest()['vectors'];
 
-		// The ten fixtures plus three inline special-rate and end-of-year
+		// The twelve fixtures plus three inline special-rate and end-of-year
 		// vectors (payroll-reservation-payouts).
-		$this->assertCount(13, $vectors);
+		$this->assertCount(15, $vectors);
 		$inline = array_values(array_filter($vectors, static fn (array $v): bool => isset($v['$fixture']) === false));
 		$this->assertCount(3, $inline);
 		$this->assertSame(184115, $inline[0]['expected']['@step.loonheffingBijzonder']);
@@ -107,6 +108,8 @@ class NlPackTest extends TestCase {
 				'payroll-2026/bijtelling-anchor.json',
 				'payroll-2026/dga-anchor.json',
 				'payroll-2026/thirty-percent-ruling-anchor.json',
+				'payroll-2026/zvw-inhouding.json',
+				'payroll-2026/rvu-final-levy.json',
 			],
 			array_values(array_filter(array_column($vectors, '$fixture')))
 		);
@@ -130,10 +133,12 @@ class NlPackTest extends TestCase {
 
 	/**
 	 * REQ-JP-003: no pack declares a net step — net is the interpreter's fold.
-	 * NL's `reduces-net` steps are loonheffing and, on a special payment,
-	 * loonheffingBijzonder, which is exactly why the fold reproduces
-	 * `tvl + specialPayment - loonheffing - loonheffingBijzonder` without the
-	 * interpreter knowing anything about the Netherlands.
+	 * NL's `reduces-net` steps are loonheffing, on a special payment
+	 * loonheffingBijzonder, and the withheld Zvw contribution, which runs
+	 * only in `inhouding` mode (payroll-special-regimes D3), which is exactly
+	 * why the fold reproduces `tvl + specialPayment - loonheffing -
+	 * loonheffingBijzonder` without the interpreter knowing anything about
+	 * the Netherlands.
 	 *
 	 * @return void
 	 */
@@ -146,7 +151,7 @@ class NlPackTest extends TestCase {
 			}
 		}
 
-		$this->assertSame(['loonheffing', 'loonheffingBijzonder'], $reducers);
+		$this->assertSame(['loonheffing', 'loonheffingBijzonder', 'zvwInhouding'], $reducers);
 
 	}//end testLoonheffingIsTheOnlyStepThatReducesNet()
 

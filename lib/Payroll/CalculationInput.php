@@ -130,6 +130,27 @@ final class CalculationInput {
 	public readonly float $thirtyPercentRulingRate;
 
 	/**
+	 * `werkgeversheffing` or `inhouding` (payroll-special-regimes D3). Additive and defaults to the employer's levy, so every pre-existing call site and stored snapshot is unaffected.
+	 *
+	 * @var string
+	 */
+	public readonly string $zvwMode;
+
+	/**
+	 * The early-retirement final-levy threshold for the period, in cents (payroll-special-regimes D4). `0` means the wage is not an early-retirement benefit and no final levy applies.
+	 *
+	 * @var integer
+	 */
+	public readonly int $rvuThresholdCents;
+
+	/**
+	 * The early-retirement final-levy rate on the percentage scale (payroll-special-regimes D4); only applied while `rvuThresholdCents` is positive.
+	 *
+	 * @var float
+	 */
+	public readonly float $rvuFinalLevyRate;
+
+	/**
 	 * The special payment and end-of-year rate (payroll-reservation-payouts);
 	 * empty for a period without either.
 	 *
@@ -164,14 +185,19 @@ final class CalculationInput {
 		$this->jurisdiction = $wage->jurisdiction;
 		$this->thirtyPercentRulingRate = $levies->wageTax->thirtyPercentRulingRate;
 		$this->special = ($special ?? new SpecialPayment());
+		$this->zvwMode = ($levies->insurance->zvwMode === 'inhouding' ? 'inhouding' : 'werkgeversheffing');
+		$this->rvuThresholdCents = max(0, $levies->rvuThresholdCents);
+		$this->rvuFinalLevyRate = $levies->rvuFinalLevyRate;
 
 	}//end __construct()
 
 	/**
-	 * All eleven public readonly properties as a plain array, keyed by name.
-	 * The special-payment keys are added only when the input carries one, so
-	 * a period without one stamps exactly the snapshot it stamped before
-	 * (payroll-reservation-payouts REQ-RSP-001).
+	 * All eleven public readonly properties as a plain array, keyed by name,
+	 * plus the special-payment keys only when the input carries one
+	 * (payroll-reservation-payouts REQ-RSP-001) and `zvwMode`,
+	 * `rvuThresholdCents` and `rvuFinalLevyRate` only when the wage carries
+	 * them (payroll-special-regimes D3 and D4), so the snapshot of every
+	 * ordinary payslip stays byte-identical.
 	 *
 	 * @return array<string, mixed>
 	 *
@@ -196,6 +222,15 @@ final class CalculationInput {
 			$data['specialPaymentCents'] = $this->special->specialPaymentCents;
 			$data['annualWageReferenceCents'] = $this->special->annualWageReferenceCents;
 			$data['endOfYearRate'] = $this->special->endOfYearRate;
+		}
+
+		if ($this->zvwMode !== 'werkgeversheffing') {
+			$data['zvwMode'] = $this->zvwMode;
+		}
+
+		if ($this->rvuThresholdCents > 0) {
+			$data['rvuThresholdCents'] = $this->rvuThresholdCents;
+			$data['rvuFinalLevyRate'] = $this->rvuFinalLevyRate;
 		}
 
 		return $data;
@@ -283,8 +318,11 @@ final class CalculationInput {
 					awfTariff: (string)($decoded['awfTariff'] ?? ''),
 					aofTariff: (string)($decoded['aofTariff'] ?? ''),
 					whkPercentage: (float)($decoded['whkPercentage'] ?? 0.0),
-					verzekeringsplichtig: (($decoded['verzekeringsplichtig'] ?? true) === true)
-				)
+					verzekeringsplichtig: (($decoded['verzekeringsplichtig'] ?? true) === true),
+					zvwMode: (string)($decoded['zvwMode'] ?? 'werkgeversheffing')
+				),
+				rvuThresholdCents: (int)($decoded['rvuThresholdCents'] ?? 0),
+				rvuFinalLevyRate: (float)($decoded['rvuFinalLevyRate'] ?? 0.0)
 			),
 			special: new SpecialPayment(
 				specialPaymentCents: max(0, (int)($decoded['specialPaymentCents'] ?? 0)),

@@ -65,6 +65,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Service\Gdpr\ErasureRequest;
+use OCA\OpenRegister\Service\Gdpr\SubjectQuery;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -142,8 +145,7 @@ class AvgDsrService {
 		try {
 			$entity = $this->objectService()->find(
 				id: $employeeId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Employee'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Employee')
 			);
 		} catch (\Throwable $e) {
 			$this->logger->info('AvgDsrService: werknemer ' . $employeeId . ' kon niet worden opgehaald: ' . $e->getMessage());
@@ -174,7 +176,7 @@ class AvgDsrService {
 	 */
 	public function exportForSubject(string $employeeId, string $right, ?string $dsrRequestId = null): array {
 		$subject = $this->resolveSubject($employeeId);
-		$envelopes = $this->guardedService()->findSubjectData($subject);
+		$envelopes = $this->guardedService()->findSubjectData(new SubjectQuery(subjectId: $subject));
 		$result = $this->renderExport($envelopes, $right);
 
 		if ($dsrRequestId !== null && $dsrRequestId !== '') {
@@ -236,7 +238,7 @@ class AvgDsrService {
 	 */
 	public function previewErasure(string $employeeId, ?string $dsrRequestId = null): array {
 		$subject = $this->resolveSubject($employeeId);
-		$summary = $this->guardedService()->erase($subject, null, self::ERASE_MODE_PSEUDONYMISE, true);
+		$summary = $this->guardedService()->erase(new ErasureRequest(subjectId: $subject, eraseMode: self::ERASE_MODE_PSEUDONYMISE, dryRun: true));
 
 		$preview = [
 			'wouldErase' => (array)($summary['erased'] ?? []),
@@ -285,7 +287,7 @@ class AvgDsrService {
 		}
 
 		$subject = $this->resolveSubject($employeeId);
-		$summary = $this->guardedService()->erase($subject, null, self::ERASE_MODE_PSEUDONYMISE, false);
+		$summary = $this->guardedService()->erase(new ErasureRequest(subjectId: $subject, eraseMode: self::ERASE_MODE_PSEUDONYMISE, dryRun: false));
 
 		$erased = (array)($summary['erased'] ?? []);
 		$retained = (array)($summary['held'] ?? []);

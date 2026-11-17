@@ -59,6 +59,7 @@ final class CalculationInputMapper {
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-007
 	 * @spec openspec/specs/30-procent-regeling/spec.md#REQ-30P-003
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 * @spec openspec/changes/payroll-special-regimes
 	 */
 	public function toPackInputs(CalculationInput $input): array {
 		$inputs = [
@@ -71,6 +72,9 @@ final class CalculationInputMapper {
 			'whkPercentage' => $input->whkPercentage,
 			'verzekeringsplichtig' => $input->verzekeringsplichtig,
 			'thirtyPercentRulingRate' => $input->thirtyPercentRulingRate,
+			'zvwMode' => $input->zvwMode,
+			'rvuThreshold' => $input->rvuThresholdCents,
+			'rvuFinalLevyRate' => $input->rvuFinalLevyRate,
 		];
 		// Only when there is something to carry, so a pack without these
 		// inputs (a third-party one) still receives exactly what it declares.
