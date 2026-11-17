@@ -62,6 +62,8 @@ class SignInSettingsController extends Controller {
 	 * `GET /api/settings/sign-in`: the sign-in methods and the password policy.
 	 * Admin-only by Nextcloud's default for an un-attributed method.
 	 *
+	 * @auth admin-only the password policy is instance-wide, so only an instance administrator reads it
+	 *
 	 * @return JSONResponse
 	 *
 	 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-004
@@ -83,6 +85,8 @@ class SignInSettingsController extends Controller {
 	 *
 	 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-005
 	 * @spec openspec/changes/sign-in-and-hosting-are-the-platforms/specs/irma-digid-auth/spec.md#REQ-AUTH-006
+	 *
+	 * @auth admin-only the password policy is instance-wide, so only an instance administrator changes it
 	 */
 	public function update(mixed $passwordPolicy = null): JSONResponse {
 		if (is_array($passwordPolicy) === false || ($passwordPolicy !== [] && array_is_list($passwordPolicy) === true)) {
