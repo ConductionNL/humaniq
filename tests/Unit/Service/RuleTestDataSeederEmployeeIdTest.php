@@ -48,6 +48,7 @@ use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests the Employee-UUID resolution the seeder applies before writing
@@ -140,7 +141,11 @@ class RuleTestDataSeederEmployeeIdTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(mixed $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, mixed $currentUser = null): array {
+			public function saveObject(mixed $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
+				$currentUser = $options->actor->currentUser;
 				$object = (array)$object;
 
 				if ($uuid !== null && $uuid !== '') {

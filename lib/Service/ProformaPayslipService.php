@@ -37,6 +37,7 @@ namespace OCA\Humaniq\Service;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\PayPeriod;
 use OCA\Humaniq\Payroll\CalculationLevies;
 use OCA\Humaniq\Payroll\CalculationResult;
 use OCA\Humaniq\Payroll\CalculationWage;
@@ -67,11 +68,11 @@ class ProformaPayslipService {
 
 	/**
 	 * @param PayrollCalculator $calculator The existing, reused-as-is pure calculator.
-	 * @param SettingsService $settingsService The employer-level Aof/Whk knob source.
+	 * @param EmployerPremiumSettings $premiums The employer-level Aof/Whk knob source.
 	 */
 	public function __construct(
 		private readonly PayrollCalculator $calculator,
-		private readonly SettingsService $settingsService,
+		private readonly EmployerPremiumSettings $premiums,
 	) {
 
 	}//end __construct()
@@ -168,8 +169,8 @@ class ProformaPayslipService {
 		$whkDefault = (float)$tables->werknemersverzekeringen()['whkDefault'];
 
 		return [
-			'aof' => self::requireAofTariff($params['aof'] ?? null, $this->settingsService->getPayrollAofTariff()),
-			'whk' => self::requireNonNegativeFloat($params['whk'] ?? null, $this->settingsService->getPayrollWhkPercentage($whkDefault), 'Whk-percentage'),
+			'aof' => self::requireAofTariff($params['aof'] ?? null, $this->premiums->getPayrollAofTariff()),
+			'whk' => self::requireNonNegativeFloat($params['whk'] ?? null, $this->premiums->getPayrollWhkPercentage($whkDefault), 'Whk-percentage'),
 		];
 
 	}//end levyInput()
@@ -348,7 +349,7 @@ class ProformaPayslipService {
 	 * passed-in employer setting).
 	 *
 	 * @param mixed $value The raw value.
-	 * @param string $default The `SettingsService::getPayrollAofTariff()` default.
+	 * @param string $default The `EmployerPremiumSettings::getPayrollAofTariff()` default.
 	 *
 	 * @return string `laag` or `hoog`.
 	 *
@@ -383,7 +384,7 @@ class ProformaPayslipService {
 		}
 
 		$period = trim((string)$value);
-		if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period) !== 1) {
+		if (self::isMonth(period: $period) === false) {
 			throw new InvalidArgumentException('Periode "' . $value . '" moet het formaat JJJJ-MM hebben.');
 		}
 
@@ -427,5 +428,24 @@ class ProformaPayslipService {
 		$string = trim((string)$value);
 		return $string === '' ? null : $string;
 	}//end nullableString()
+
+	/**
+	 * Whether a period id is a month. Read through PayPeriod; this path
+	 * still converts by month, so four-weekly and weekly ids wait for the
+	 * run's conversions to move to the period's share of the year.
+	 *
+	 * @param string $period The period id.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private static function isMonth(string $period): bool {
+		try {
+			return PayPeriod::parse(id: $period)->tijdvak === PayPeriod::TIJDVAK_MAAND;
+		} catch (\InvalidArgumentException) {
+			return false;
+		}
+	}//end isMonth()
 
 }//end class

@@ -56,6 +56,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCP\Calendar\IManager;
+use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -82,17 +84,43 @@ class InterviewCalendarService {
 	 * @param CalendarSettings $calendars Target-calendar config (design.md D6).
 	 * @param InterviewRepository $repository Reads interviews and their applications and vacancies.
 	 * @param LoggerInterface $logger Logger.
+	 * @param IUserManager|null $users Names the interviewers as attendees (REQ-INTV-010); without it they are text only.
+	 * @param IManager|null $calendarManager Delivers an event to its attendees' own calendars (REQ-INTV-010); without it the event stays in the shared calendar only.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly CalendarSettings $calendars,
 		private readonly InterviewRepository $repository,
 		private readonly LoggerInterface $logger,
+		?IUserManager $users = null,
+		?IManager $calendarManager = null,
 	) {
-		$this->engine = new InterviewSyncEngine($this->repository, new InterviewIcsRenderer());
+		$this->engine = $this->engineFor(users: $users, calendarManager: $calendarManager);
 		$this->orphanReconciler = new InterviewOrphanReconciler($logger);
 
 	}//end __construct()
+
+	/**
+	 * The sync engine, naming attendees and inviting them when the managers are there.
+	 *
+	 * @param IUserManager|null $users           Names the interviewers as attendees.
+	 * @param IManager|null     $calendarManager Delivers an event to its attendees' own calendars.
+	 *
+	 * @return InterviewSyncEngine
+	 */
+	private function engineFor(?IUserManager $users, ?IManager $calendarManager): InterviewSyncEngine {
+		$attendees = null;
+		if ($users !== null) {
+			$attendees = new InterviewAttendees(users: $users);
+		}
+
+		$scheduler = null;
+		if ($calendarManager !== null) {
+			$scheduler = new SchedulingCalendarWriter(calendars: $calendarManager);
+		}
+
+		return new InterviewSyncEngine($this->repository, new InterviewIcsRenderer(), $attendees, $scheduler);
+	}//end engineFor()
 
 	/**
 	 * Run the full sync: upsert one timed VEVENT per `scheduled` Interview,

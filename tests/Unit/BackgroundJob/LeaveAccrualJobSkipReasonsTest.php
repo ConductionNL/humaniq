@@ -35,6 +35,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Tests\Support\LegacyObjectArgs;
 
 /**
  * LeaveAccrualJob skip reasons.
@@ -108,6 +109,7 @@ class LeaveAccrualJobSkipReasonsTest extends TestCase {
 			 * @throws \RuntimeException Always: the register refuses the write.
 			 */
 			public function saveObject(mixed ...$arguments): array {
+				$arguments = LegacyObjectArgs::flatten(args: $arguments);
 				throw new \RuntimeException('opslag geweigerd');
 			}//end saveObject()
 		};

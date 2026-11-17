@@ -25,9 +25,10 @@
     "l10n:build": "node scripts/build-l10n-js.js",
     "check:l10n-js": "node scripts/build-l10n-js.js --check",
     "check:deps-drift": "node scripts/check-node-deps-drift.js",
+    "check:composer-drift": "node scripts/check-composer-deps-drift.js",
     "check:manifest-sentinels": "node scripts/check-manifest-sentinels.mjs",
     "check:bundle-freshness": "node scripts/check-bundle-freshness.js",
-    "check:boot-integrity": "npm run check:deps-drift && npm run check:manifest-sentinels && npm run check:bundle-freshness",
+    "check:boot-integrity": "npm run check:deps-drift && npm run check:composer-drift && npm run check:manifest-sentinels && npm run check:bundle-freshness",
     "test:js": "node --test tests/js/*.test.mjs",
     "test:e2e": "playwright test --project chromium",
     "check:bundle-sidecar": "node scripts/check-bundle-freshness.js --sidecar"
@@ -36,8 +37,8 @@
     "extends @nextcloud/browserslist-config"
   ],
   "dependencies": {
-    "@babel/core": "^7.29.0",
-    "@babel/preset-env": "^7.29.5",
+    "@babel/core": "^8.0.7",
+    "@babel/preset-env": "^8.0.7",
     "@conduction/nextcloud-vue": "^2.89.2",
     "@nextcloud/auth": "^2.5.0",
     "@nextcloud/axios": "~2.6.0",
@@ -46,29 +47,32 @@
     "@nextcloud/initial-state": "^3.0.0",
     "@nextcloud/l10n": "^3.4.1",
     "@nextcloud/router": "^3.2.0",
-    "@nextcloud/vue": "^9.11.0",
+    "@nextcloud/vue": "^9.13.1",
     "@vueuse/core": "^14.3.0",
     "babel-loader": "^10.1.1",
     "dexie": "^4.4.6",
     "dompurify": "^3.4.17",
     "gridstack": "^13.3.0",
-    "marked": "^18.0.11",
+    "marked": "^18.1.1",
     "node-polyfill-webpack-plugin": "4.0.0",
     "pinia": "^3.0.4",
     "terser-webpack-plugin": "^5.6.1",
     "vue": "^3.5.43",
-    "vue-material-design-icons": "^5.3.0",
-    "vue-router": "^5.3.1"
+    "vue-material-design-icons": "^5.4.0",
+    "vue-router": "^5.4.0"
   },
   "overrides": {
     "@noble/hashes": "1.4.0",
-    "dompurify": "$dompurify"
+    "dompurify": "$dompurify",
+    "webdav": {
+      "minimatch": "^11.0.1"
+    }
   },
   "devDependencies": {
     "@nextcloud/browserslist-config": "^3.0.1",
     "@nextcloud/eslint-config": "^9.0.1",
     "@nextcloud/stylelint-config": "^3.2.2",
-    "@nextcloud/webpack-vue-config": "^7.0.4",
+    "@nextcloud/webpack-vue-config": "^7.1.0",
     "@playwright/test": "^1.63.0",
     "@typescript-eslint/parser": "^8.71.0",
     "@vue/compiler-sfc": "^3.5.13",
@@ -76,8 +80,8 @@
     "css-loader": "~7.1.5",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
-    "jsdom": "^30.0.1",
-    "sass": "^1.104.1",
+    "jsdom": "^30.1.3",
+    "sass": "^1.105.2",
     "sass-loader": "^17.0.1",
     "style-loader": "~4.0.0",
     "stylelint": "^17.15.0",

@@ -282,6 +282,51 @@ final class CaoRegistry {
 	}//end overtimeCompensationPreference()
 
 	/**
+	 * The CAO's annual norm of working hours for a full-time contract (the
+	 * normjaartaak in CAO PO), or `null` when the CAO is unknown, its
+	 * `workingTime` leaf is `verified: false` / `placeholder: true`, or the
+	 * leaf names no annual norm (design.md D5: an unverified figure is never
+	 * used as if it were verified).
+	 *
+	 * @param string $caoId The CAO id.
+	 *
+	 * @return float|null Hours per year for a full-time contract.
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-each-teacher-shall-have-a-yearly-deployment-plan-against-the-norm-for-their-contract-req-edu-001
+	 */
+	public static function annualNormHours(string $caoId): ?float {
+		$cao = self::get($caoId);
+		if ($cao === null) {
+			return null;
+		}
+
+		return self::annualNormHoursOf(leaf: ($cao['workingTime'] ?? null));
+	}//end annualNormHours()
+
+	/**
+	 * The annual norm a `workingTime` leaf declares, or `null` when the leaf is
+	 * not usable or holds no positive `normjaartaakUrenPerJaar`.
+	 *
+	 * @param mixed $leaf A `workingTime` leaf.
+	 *
+	 * @return float|null
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/specs/education-staff-deployment/spec.md#requirement-each-teacher-shall-have-a-yearly-deployment-plan-against-the-norm-for-their-contract-req-edu-001
+	 */
+	public static function annualNormHoursOf(mixed $leaf): ?float {
+		if (self::isUsableLeaf($leaf) === false || is_array($leaf['value']) === false) {
+			return null;
+		}
+
+		$norm = ($leaf['value']['normjaartaakUrenPerJaar'] ?? null);
+		if (is_numeric($norm) === false || (float)$norm <= 0.0) {
+			return null;
+		}
+
+		return (float)$norm;
+	}//end annualNormHoursOf()
+
+	/**
 	 * Reset the memoised cache (test hook).
 	 *
 	 * @return void

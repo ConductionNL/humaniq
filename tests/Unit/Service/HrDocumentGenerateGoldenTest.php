@@ -42,6 +42,8 @@ use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Golden cases for HrDocumentService's generate entry points.
@@ -361,7 +363,9 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 			 *
 			 * @return object|null
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->test->calls[] = ['find' => [$id, $register, $schema, $_rbac, $_multitenancy]];
 				foreach (($this->rows[$schema] ?? []) as $row) {
 					if ((string)($row['id'] ?? '') === $id) {
@@ -382,7 +386,10 @@ class HrDocumentGenerateGoldenTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, ?string $register = null, ?string $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->test->calls[] = ['saveObject' => [$object, $register, $schema, $uuid, $_rbac, $_multitenancy]];
 				$id = ($uuid ?? ('new-' . $schema . '-' . $this->nextId++));
 				$saved = array_merge($object, ['id' => $id]);
