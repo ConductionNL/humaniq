@@ -7866,7 +7866,7 @@
 								"field": "component"
 							}
 						},
-						"icon": "FormatListBulleted",
+						"icon": "ReceiptTextOutline",
 						"id": "payslip-lines",
 						"title": "Where each amount comes from",
 						"type": "object-list"

@@ -1394,7 +1394,7 @@
 						"id": "payslip-lines",
 						"type": "object-list",
 						"title": "Where each amount comes from",
-						"icon": "FormatListBulleted",
+						"icon": "ReceiptTextOutline",
 						"content": {
 							"register": "humaniq",
 							"schema": "PayslipLine",
