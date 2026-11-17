@@ -2819,7 +2819,9 @@
 						"icon": "CashPlus",
 						"handler": "proposeRaiseForSelection"
 					}
-				]
+				],
+				"allowSavedViews": true,
+				"allowExport": true
 			}
 		},
 		{
@@ -2848,7 +2850,9 @@
 				],
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
-				}
+				},
+				"allowSavedViews": true,
+				"allowExport": true
 			}
 		},
 		{
@@ -2876,7 +2880,9 @@
 				],
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
-				}
+				},
+				"allowSavedViews": true,
+				"allowExport": true
 			}
 		},
 		{
