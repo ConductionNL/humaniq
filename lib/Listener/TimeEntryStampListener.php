@@ -58,6 +58,7 @@ namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\TimeActivityCatalog;
 use OCA\Humaniq\Service\TimeEntryHoursDeriver;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -108,6 +109,7 @@ class TimeEntryStampListener implements IEventListener {
 	 * @param LoggerInterface $logger The logger.
 	 * @param TimeEntryHoursDeriver $hoursDeriver Decides the booking's day and hours,
 	 *  in either recorded shape.
+	 * @param TimeActivityCatalog $activities The activity kinds (absence is never booked by hand).
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
@@ -115,6 +117,7 @@ class TimeEntryStampListener implements IEventListener {
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,
 		private readonly TimeEntryHoursDeriver $hoursDeriver,
+		private readonly TimeActivityCatalog $activities,
 	) {
 
 	}//end __construct()
@@ -237,6 +240,10 @@ class TimeEntryStampListener implements IEventListener {
 	 * @spec openspec/specs/time-entry-capture/spec.md#Requirement:-humaniq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
 	 */
 	private function stamp(TimeEntryWrite $write): array {
+		// 0. Absence is composed from the leave and sickness records, never
+		// booked by hand (time-non-project-activities D2).
+		$this->activities->assertBookable(incoming: $write->incoming);
+
 		// 1. Employee resolution (Decision 5.1): explicit id (HR entry) or
 		// the acting user's own Employee (self-service).
 		$resolved = $this->resolveEmployee($write->incoming, $write->stored);
