@@ -1,6 +1,6 @@
 ## 1. Backend
 
-- [ ] 1.1 Add `SignInSettingsController` with `GET` and `PUT /api/settings/sign-in` (admin only,
+- [x] 1.1 Add `SignInSettingsController` with `GET` and `PUT /api/settings/sign-in` (admin only,
       no `NoAdminRequired`) and a `SignInSettingsService` that reads and writes the
       `password_policy` keys through `IAppConfig` and lists enabled `user_saml` / `user_oidc`
       providers. Register both routes in `appinfo/routes.php`. Verify: unit tests for a read,
@@ -8,7 +8,7 @@
 
 ## 2. Admin settings
 
-- [ ] 2.1 Add an Inloggen `CnSettingsSection` to `src/views/settings/AdminSettings.vue` as drawn
+- [x] 2.1 Add an Inloggen `CnSettingsSection` to `src/views/settings/AdminSettings.vue` as drawn
       on HuInstellingen: sign-in methods, password rules for accounts outside single sign-on,
       failed sign-in throttle, Opslaan. Verify: `npm run lint` exits 0 and the section shows
       the missing-app message when `password_policy` is disabled.
