@@ -37,6 +37,8 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // matrix-rows-without-a-requirement REQ-TA-008: the caller clocks in and out from My attendance.
         ['name' => 'attendanceClock#clockIn', 'url' => '/api/attendance/clock-in', 'verb' => 'POST'],
         ['name' => 'attendanceClock#clockOut', 'url' => '/api/attendance/clock-out', 'verb' => 'POST'],
+        // matrix-rows-without-a-requirement REQ-RULE-010: the Compliance check page's audit.
+        ['name' => 'complianceCheck#check', 'url' => '/api/compliance/check', 'verb' => 'GET'],
         // people-esign-hr-documents: send a generated HR document for signature (HR or admin).
         ['name' => 'documentSigning#requestSignature', 'url' => '/api/documents/{id}/request-signature', 'verb' => 'POST'],
         // reporting-pay-transparency: the gender pay gap report (HR and accountants), and its CSV.

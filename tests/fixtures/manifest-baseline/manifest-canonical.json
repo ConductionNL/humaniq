@@ -549,6 +549,12 @@
 					"route": "IncompleteDossiers"
 				},
 				{
+					"icon": "ShieldCheckOutline",
+					"id": "ComplianceCheck",
+					"label": "Compliance check",
+					"route": "ComplianceCheck"
+				},
+				{
 					"icon": "FileAccountOutline",
 					"id": "PersonnelDocuments",
 					"label": "Personnel documents",
@@ -4880,6 +4886,189 @@
 			"id": "IncompleteDossiers",
 			"route": "/incomplete-files",
 			"title": "Incomplete personnel files",
+			"type": "dashboard"
+		},
+		{
+			"config": {
+				"_note": "matrix-rows-without-a-requirement REQ-RULE-010: the audit humaniq:rules:audit prints, on a page. Every widget reads GET /api/compliance/check, which runs RuleAuditService::findings (kept for a minute, so the tiles and the table share one run) and keeps only violations about records the caller may read (one caller-scoped read per schema), so a manager sees only their own people. The table is record-route-table: each violation row opens its own record through content.routes.",
+				"description": "The rule audit over every HR and payroll record: each violation with its rule, its severity and the record it is about, and how many catalogued rules are enforced. You see violations only about records you may read.",
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "rules-enforced"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 3,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "rules-catalogued"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 6,
+						"gridY": 0,
+						"id": 3,
+						"widgetId": "rules-not-enforced"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 9,
+						"gridY": 0,
+						"id": 4,
+						"widgetId": "mandatory-violations"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 2,
+						"id": 5,
+						"widgetId": "violations"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"icon": "ShieldCheckOutline",
+							"label": "Rules enforced",
+							"valueField": "coverage.enforced"
+						},
+						"icon": "ShieldCheckOutline",
+						"id": "rules-enforced",
+						"title": "Rules enforced",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"icon": "ClipboardTextOutline",
+							"label": "Rules catalogued",
+							"valueField": "coverage.catalogued"
+						},
+						"icon": "ClipboardTextOutline",
+						"id": "rules-catalogued",
+						"title": "Rules catalogued",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"icon": "CloseCircleOutline",
+							"label": "Rules not enforced",
+							"valueField": "coverage.notEnforced"
+						},
+						"icon": "CloseCircleOutline",
+						"id": "rules-not-enforced",
+						"title": "Rules not enforced",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"icon": "AlertOutline",
+							"label": "Mandatory violations",
+							"valueField": "counts.mandatory"
+						},
+						"icon": "AlertOutline",
+						"id": "mandatory-violations",
+						"title": "Mandatory violations",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "severity",
+									"label": "Severity"
+								},
+								{
+									"key": "ruleId",
+									"label": "Rule"
+								},
+								{
+									"key": "statement",
+									"label": "What the rule says"
+								},
+								{
+									"key": "schema",
+									"label": "Record type"
+								},
+								{
+									"key": "source",
+									"label": "Source"
+								}
+							],
+							"emptyText": "No violations in the records you may read",
+							"endpointSource": {
+								"responsePath": "violations",
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"routeField": "schema",
+							"routes": {
+								"Asset": "AssetDetail",
+								"AssetAssignment": "AssetAssignmentDetail",
+								"AttendanceRecord": "AttendanceRecordDetail",
+								"BhvCertificering": "BhvCertificeringDetail",
+								"CompAdjustment": "CompAdjustmentDetail",
+								"Employee": "EmployeeDetail",
+								"EmployeeRelationsCase": "RelationsCaseDetail",
+								"EmploymentContract": "EmploymentContractDetail",
+								"Expense": "ExpenseDetail",
+								"HrGeneratedDocument": "GeneratedDocumentDetail",
+								"LeaveRequest": "LeaveRequestDetail",
+								"LoonaangifteFiling": "LoonaangifteFilingDetail",
+								"Loonbeslag": "LoonbeslagDetail",
+								"Offboarding": "OffboardingDetail",
+								"Onboarding": "OnboardingDetail",
+								"OrgAssignment": "OrgAssignmentDetail",
+								"OrgUnit": "OrgUnitDetail",
+								"PayrollAdjustment": "PayrollAdjustmentDetail",
+								"PayrollGLPost": "PayrollGLPostDetail",
+								"PayrollMutationReport": "PayrollMutationReportDetail",
+								"PayrollRun": "PayrollRunDetail",
+								"Payslip": "PayslipDetail",
+								"PensionFiling": "PensionFilingDetail",
+								"PerformanceReview": "PerformanceReviewDetail",
+								"RosterAssignment": "RosterAssignmentDetail",
+								"SickLeaveCase": "SickLeaveCaseDetail",
+								"Stagiair": "StagiairDetail",
+								"ThirdPartyPayee": "ThirdPartyPayeeDetail",
+								"ThirdPartyPayment": "ThirdPartyPaymentDetail",
+								"Timesheet": "TimesheetDetail",
+								"WkrAssessment": "WkrAssessmentDetail",
+								"WkrDeclaration": "WkrDeclarationDetail",
+								"WntDisclosure": "WntDisclosureDetail",
+								"job-application": "ApplicationDetail"
+							}
+						},
+						"icon": "AlertOutline",
+						"id": "violations",
+						"title": "Violations",
+						"type": "record-route-table"
+					}
+				]
+			},
+			"id": "ComplianceCheck",
+			"route": "/compliance-check",
+			"title": "Compliance check",
 			"type": "dashboard"
 		},
 		{

@@ -238,6 +238,32 @@ class RuleAuditServiceTest extends TestCase {
 	}//end testDanglingReferenceIsFlaggedByAudit()
 
 	/**
+	 * REQ-RULE-010: findings() names each violation's rule, severity and the
+	 * record it is about, beside the same coverage report audit() gives.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
+	 */
+	public function testFindingsNameTheRecordOfEachViolation(): void {
+		$rows = [
+			'PayrollRun' => [],
+			'PensionFiling' => [['id' => 'pf-1', 'payrollRunId' => 'no-such-run', 'period' => '2026-05', 'fund' => 'abp', 'deadline' => '2026-06-30', 'status' => 'concept']],
+		];
+
+		$findings = $this->serviceWithRows($rows)->findings(['jurisdiction' => 'NL']);
+
+		$matches = array_values(array_filter($findings['violations'], static fn (array $row): bool => $row['ruleId'] === 'nl-upa-payrollrun-approved'));
+		$this->assertCount(1, $matches);
+		$this->assertSame('PensionFiling', $matches[0]['schema']);
+		$this->assertSame('pf-1', $matches[0]['objectId']);
+		$this->assertNotSame('', $matches[0]['severity']);
+		$this->assertSame(count($findings['violations']), array_sum(array_column($findings['report']['types'], 'violations')));
+		$this->assertArrayHasKey('enforceableRules', $findings['report']);
+
+	}//end testFindingsNameTheRecordOfEachViolation()
+
+	/**
 	 * @return void
 	 */
 	public function testApprovedRunWithoutAnyFilingIsFlaggedIncomplete(): void {

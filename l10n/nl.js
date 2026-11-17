@@ -4048,7 +4048,23 @@ OC.L10N.register(
         "The employee's account that signed the review.": "Het account van de medewerker die de beoordeling heeft ondertekend.",
         "When the employee signed the review.": "Wanneer de medewerker de beoordeling heeft ondertekend.",
         "What the employee added when signing the review.": "Wat de medewerker bij het ondertekenen heeft toegevoegd.",
-        "Where this review has got to: draft, submitted, discussed, finalised or signed by the employee.": "Hoe ver deze beoordeling is: concept, ingediend, besproken, vastgesteld of ondertekend door de medewerker."
+        "Where this review has got to: draft, submitted, discussed, finalised or signed by the employee.": "Hoe ver deze beoordeling is: concept, ingediend, besproken, vastgesteld of ondertekend door de medewerker.",
+        "Compliance check": "Nalevingscontrole",
+        "Clock records per employee per working day, with the Working Hours Act compliance checks on rest time, maximum shift length and breaks. Clock in and Clock out record the signed-in employee's own day: the server stamps the employee, the user and the worked hours.": "Klokregistraties per medewerker per werkdag, met de controles op de Arbeidstijdenwet voor rusttijd, maximale dienstduur en pauzes. Inklokken en Uitklokken registreren de eigen dag van de ingelogde medewerker: de server legt de medewerker, de gebruiker en de gewerkte uren vast.",
+        "You are clocked in. Your day is open until you clock out.": "Je bent ingeklokt. Je dag staat open tot je uitklokt.",
+        "Clocking in failed. A day may already be open, or your account is not linked to an employee.": "Inklokken is mislukt. Er staat misschien al een dag open, of je account is niet aan een medewerker gekoppeld.",
+        "You are clocked out. Your worked hours are recorded.": "Je bent uitgeklokt. Je gewerkte uren zijn vastgelegd.",
+        "Clocking out failed. You may have no open day.": "Uitklokken is mislukt. Misschien staat er geen dag open.",
+        "The rule audit over every HR and payroll record: each violation with its rule, its severity and the record it is about, and how many catalogued rules are enforced. You see violations only about records you may read.": "De regelcontrole over alle HR- en salarisrecords: elke overtreding met de regel, de zwaarte en het record waar het om gaat, en hoeveel regels uit de catalogus worden gehandhaafd. Je ziet alleen overtredingen over records die je mag inzien.",
+        "Rules enforced": "Gehandhaafde regels",
+        "Rules catalogued": "Regels in de catalogus",
+        "Rules not enforced": "Niet gehandhaafde regels",
+        "Mandatory violations": "Verplichte overtredingen",
+        "Violations": "Overtredingen",
+        "What the rule says": "Wat de regel zegt",
+        "No violations in the records you may read": "Geen overtredingen in de records die je mag inzien",
+        "Leave payout": "Uitbetaling verlofsaldo",
+        "The open leave balance paid on a leaver's final payslip: the hours and the amount, as one line. Counted in the taxable gross pay.": "Het openstaande verlofsaldo dat op de laatste loonstrook van een vertrekkende medewerker wordt uitbetaald: de uren en het bedrag, als één regel. Telt mee in het belaste brutoloon."
     },
     "nplurals=2; plural=(n != 1);"
 )

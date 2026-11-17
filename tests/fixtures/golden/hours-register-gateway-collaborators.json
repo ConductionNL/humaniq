@@ -67,6 +67,7 @@
     "OCA\\Humaniq\\Service\\CompCollectiveService::$gateway",
     "OCA\\Humaniq\\Service\\CompCycleApprover::$gateway",
     "OCA\\Humaniq\\Service\\CompCycleBudget::$gateway",
+    "OCA\\Humaniq\\Service\\ComplianceCheckService::$store",
     "OCA\\Humaniq\\Service\\CostAllocationService::$gateway",
     "OCA\\Humaniq\\Service\\CostRateAccess::$gateway",
     "OCA\\Humaniq\\Service\\ExitInterviewService::$gateway",

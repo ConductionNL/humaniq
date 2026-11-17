@@ -148,6 +148,46 @@ class RuleAuditService implements RuleAuditServiceInterface {
 	}//end audit()
 
 	/**
+	 * Run the audit and return the report together with every violation, one
+	 * row per violation naming the rule, its severity and the record it is
+	 * about (REQ-RULE-010). The rows are NOT filtered by who may read the
+	 * record: that is the caller's job (ComplianceCheckService), so this
+	 * method must never be served as is.
+	 *
+	 * @param array<string, mixed> $context Evaluation context (e.g. jurisdiction).
+	 *
+	 * @return array{report: array<string, mixed>, violations: list<array{schema: string, objectId: string, ruleId: string, severity: string, source: string, statement: string}>}
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
+	 */
+	public function findings(array $context = []): array {
+		$context = $this->withPayrollIndexes($this->withRecordIndexes($context));
+
+		$tally = new RuleAuditTally(self::auditReportHeader());
+		$rows = [];
+		foreach (RuleEngine::supportedTypes() as $type) {
+			$tally->startType($type);
+			foreach ($this->loadAll($type) as $object) {
+				$violations = RuleEngine::evaluate($type, $object, $context);
+				$tally->record($type, $violations);
+				$objectId = (string)($object['id'] ?? $object['@self']['id'] ?? '');
+				foreach ($violations as $violation) {
+					$rows[] = [
+						'schema' => $type,
+						'objectId' => $objectId,
+						'ruleId' => $violation->ruleId,
+						'severity' => $violation->severity,
+						'source' => $violation->source,
+						'statement' => $violation->statement,
+					];
+				}
+			}
+		}
+
+		return ['report' => $tally->report(), 'violations' => $rows];
+	}//end findings()
+
+	/**
 	 * Add the record-level sibling indexes the predicates read: related
 	 * objects, GL posts, third-party reports, attendance, net pay, generated
 	 * documents and contract signals.

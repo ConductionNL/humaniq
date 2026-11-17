@@ -242,6 +242,10 @@
         {
             "name": "attendance-clock",
             "description": "Clock in and clock out for the signed-in employee."
+        },
+        {
+            "name": "compliance-check",
+            "description": "The Compliance check page: the rule audit for the signed-in caller."
         }
     ],
     "paths": {
@@ -1350,6 +1354,37 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/compliance/check": {
+            "get": {
+                "operationId": "compliance-check-check",
+                "summary": "`GET /api/compliance/check`: coverage and the caller's visible violations.",
+                "description": "`GET /api/compliance/check`: runs the rule audit and answers with the corpus coverage (rules enforced against rules catalogued) and every violation, with its rule, severity and record, about a record the caller may read (REQ-RULE-010). Counts are of the listed violations only. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "compliance-check"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"

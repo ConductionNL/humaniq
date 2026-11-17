@@ -53,6 +53,189 @@
 					}
 				]
 			}
+		},
+		{
+			"id": "ComplianceCheck",
+			"route": "/compliance-check",
+			"type": "dashboard",
+			"title": "Compliance check",
+			"config": {
+				"description": "The rule audit over every HR and payroll record: each violation with its rule, its severity and the record it is about, and how many catalogued rules are enforced. You see violations only about records you may read.",
+				"_note": "matrix-rows-without-a-requirement REQ-RULE-010: the audit humaniq:rules:audit prints, on a page. Every widget reads GET /api/compliance/check, which runs RuleAuditService::findings (kept for a minute, so the tiles and the table share one run) and keeps only violations about records the caller may read (one caller-scoped read per schema), so a manager sees only their own people. The table is record-route-table: each violation row opens its own record through content.routes.",
+				"widgets": [
+					{
+						"id": "rules-enforced",
+						"type": "stat",
+						"title": "Rules enforced",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"label": "Rules enforced",
+							"icon": "ShieldCheckOutline",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"valueField": "coverage.enforced"
+						}
+					},
+					{
+						"id": "rules-catalogued",
+						"type": "stat",
+						"title": "Rules catalogued",
+						"icon": "ClipboardTextOutline",
+						"content": {
+							"label": "Rules catalogued",
+							"icon": "ClipboardTextOutline",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"valueField": "coverage.catalogued"
+						}
+					},
+					{
+						"id": "rules-not-enforced",
+						"type": "stat",
+						"title": "Rules not enforced",
+						"icon": "CloseCircleOutline",
+						"content": {
+							"label": "Rules not enforced",
+							"icon": "CloseCircleOutline",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"valueField": "coverage.notEnforced"
+						}
+					},
+					{
+						"id": "mandatory-violations",
+						"type": "stat",
+						"title": "Mandatory violations",
+						"icon": "AlertOutline",
+						"content": {
+							"label": "Mandatory violations",
+							"icon": "AlertOutline",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"valueField": "counts.mandatory"
+						}
+					},
+					{
+						"id": "violations",
+						"type": "record-route-table",
+						"title": "Violations",
+						"icon": "AlertOutline",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check",
+								"responsePath": "violations"
+							},
+							"columns": [
+								{
+									"key": "severity",
+									"label": "Severity",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "ruleId",
+									"label": "Rule"
+								},
+								{
+									"key": "statement",
+									"label": "What the rule says"
+								},
+								{
+									"key": "schema",
+									"label": "Record type"
+								},
+								{
+									"key": "source",
+									"label": "Source"
+								}
+							],
+							"routeField": "schema",
+							"routes": {
+								"CompAdjustment": "CompAdjustmentDetail",
+								"Payslip": "PayslipDetail",
+								"Employee": "EmployeeDetail",
+								"EmploymentContract": "EmploymentContractDetail",
+								"LoonaangifteFiling": "LoonaangifteFilingDetail",
+								"PayrollRun": "PayrollRunDetail",
+								"SickLeaveCase": "SickLeaveCaseDetail",
+								"Timesheet": "TimesheetDetail",
+								"Expense": "ExpenseDetail",
+								"LeaveRequest": "LeaveRequestDetail",
+								"Onboarding": "OnboardingDetail",
+								"OrgAssignment": "OrgAssignmentDetail",
+								"AttendanceRecord": "AttendanceRecordDetail",
+								"AssetAssignment": "AssetAssignmentDetail",
+								"PerformanceReview": "PerformanceReviewDetail",
+								"job-application": "ApplicationDetail",
+								"PayrollMutationReport": "PayrollMutationReportDetail",
+								"WkrDeclaration": "WkrDeclarationDetail",
+								"WkrAssessment": "WkrAssessmentDetail",
+								"PensionFiling": "PensionFilingDetail",
+								"HrGeneratedDocument": "GeneratedDocumentDetail",
+								"EmployeeRelationsCase": "RelationsCaseDetail",
+								"Asset": "AssetDetail",
+								"PayrollGLPost": "PayrollGLPostDetail",
+								"Offboarding": "OffboardingDetail",
+								"OrgUnit": "OrgUnitDetail",
+								"PayrollAdjustment": "PayrollAdjustmentDetail",
+								"RosterAssignment": "RosterAssignmentDetail",
+								"BhvCertificering": "BhvCertificeringDetail",
+								"Stagiair": "StagiairDetail",
+								"ThirdPartyPayment": "ThirdPartyPaymentDetail",
+								"ThirdPartyPayee": "ThirdPartyPayeeDetail",
+								"Loonbeslag": "LoonbeslagDetail",
+								"WntDisclosure": "WntDisclosureDetail"
+							},
+							"emptyText": "No violations in the records you may read"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "rules-enforced",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 2,
+						"widgetId": "rules-catalogued",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 3,
+						"widgetId": "rules-not-enforced",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 4,
+						"widgetId": "mandatory-violations",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 5,
+						"widgetId": "violations",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 8
+					}
+				]
+			}
 		}
 	],
 	"pageInstances": [

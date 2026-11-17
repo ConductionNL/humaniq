@@ -104,6 +104,10 @@
 		"route": "/incomplete-files"
 	},
 	{
+		"id": "ComplianceCheck",
+		"route": "/compliance-check"
+	},
+	{
 		"id": "ExpenseDetail",
 		"route": "/expenses/:id"
 	},

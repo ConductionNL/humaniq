@@ -4048,7 +4048,23 @@ OC.L10N.register(
         "The employee's account that signed the review.": "The employee's account that signed the review.",
         "When the employee signed the review.": "When the employee signed the review.",
         "What the employee added when signing the review.": "What the employee added when signing the review.",
-        "Where this review has got to: draft, submitted, discussed, finalised or signed by the employee.": "Where this review has got to: draft, submitted, discussed, finalised or signed by the employee."
+        "Where this review has got to: draft, submitted, discussed, finalised or signed by the employee.": "Where this review has got to: draft, submitted, discussed, finalised or signed by the employee.",
+        "Compliance check": "Compliance check",
+        "Clock records per employee per working day, with the Working Hours Act compliance checks on rest time, maximum shift length and breaks. Clock in and Clock out record the signed-in employee's own day: the server stamps the employee, the user and the worked hours.": "Clock records per employee per working day, with the Working Hours Act compliance checks on rest time, maximum shift length and breaks. Clock in and Clock out record the signed-in employee's own day: the server stamps the employee, the user and the worked hours.",
+        "You are clocked in. Your day is open until you clock out.": "You are clocked in. Your day is open until you clock out.",
+        "Clocking in failed. A day may already be open, or your account is not linked to an employee.": "Clocking in failed. A day may already be open, or your account is not linked to an employee.",
+        "You are clocked out. Your worked hours are recorded.": "You are clocked out. Your worked hours are recorded.",
+        "Clocking out failed. You may have no open day.": "Clocking out failed. You may have no open day.",
+        "The rule audit over every HR and payroll record: each violation with its rule, its severity and the record it is about, and how many catalogued rules are enforced. You see violations only about records you may read.": "The rule audit over every HR and payroll record: each violation with its rule, its severity and the record it is about, and how many catalogued rules are enforced. You see violations only about records you may read.",
+        "Rules enforced": "Rules enforced",
+        "Rules catalogued": "Rules catalogued",
+        "Rules not enforced": "Rules not enforced",
+        "Mandatory violations": "Mandatory violations",
+        "Violations": "Violations",
+        "What the rule says": "What the rule says",
+        "No violations in the records you may read": "No violations in the records you may read",
+        "Leave payout": "Leave payout",
+        "The open leave balance paid on a leaver's final payslip: the hours and the amount, as one line. Counted in the taxable gross pay.": "The open leave balance paid on a leaver's final payslip: the hours and the amount, as one line. Counted in the taxable gross pay."
     },
     "nplurals=2; plural=(n != 1);"
 )
