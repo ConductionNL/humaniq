@@ -76,25 +76,39 @@ class AbsenceDays {
 	}//end contracted()
 
 	/**
+	 * The range with the employee's contracted hours of each of its days.
+	 *
+	 * @param EmployeeWorkingTime                               $time  The employee and the working-time records.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $range First and last day, inclusive.
+	 *
+	 * @return AbsenceWindow
+	 *
+	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 */
+	public function window(EmployeeWorkingTime $time, array $range): AbsenceWindow {
+		return new AbsenceWindow(time: $time, range: $range, contract: $this->contracted(time: $time, range: $range));
+	}//end window()
+
+	/**
 	 * The hours of one approved leave request on each day of the range.
 	 *
-	 * @param EmployeeWorkingTime                               $time    The employee and the working-time records.
-	 * @param array<string, mixed>                              $request The LeaveRequest.
-	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $range   First and last day, inclusive.
+	 * @param array<string, mixed> $request The LeaveRequest.
+	 * @param AbsenceWindow        $window  The employee and the range.
 	 *
 	 * @return array<string, float> Hours by ISO date, only working days inside the range.
 	 *
 	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
-	public function leave(EmployeeWorkingTime $time, array $request, array $range): array {
-		$window = $this->leaveWindow(request: $request, range: $range);
-		if ($window === null) {
+	public function leave(array $request, AbsenceWindow $window): array {
+		$range = $window->range;
+		$requestDays = $this->leaveWindow(request: $request, range: $range);
+		if ($requestDays === null) {
 			return [];
 		}
 
 		// The whole request, also outside the range: its hours are spread over
 		// all of its working days, not only the ones this period sees.
-		$contracted = $this->contracted(time: $time, range: $window);
+		$contracted = $this->contracted(time: $window->time, range: $requestDays);
 		$share = $this->leaveShare(request: $request, contracted: $contracted);
 
 		$hours = [];
@@ -110,15 +124,16 @@ class AbsenceDays {
 	/**
 	 * The sick hours of one case on each day of the range.
 	 *
-	 * @param array<string, mixed>                              $sickCase The SickLeaveCase.
-	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $range    First and last day, inclusive.
-	 * @param array<string, float>                              $contract Contracted hours by ISO date over the range.
+	 * @param array<string, mixed> $sickCase The SickLeaveCase.
+	 * @param AbsenceWindow        $window   The range and its contracted hours.
 	 *
 	 * @return array<string, float> Hours by ISO date.
 	 *
 	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
-	public function sickness(array $sickCase, array $range, array $contract): array {
+	public function sickness(array $sickCase, AbsenceWindow $window): array {
+		$range = $window->range;
+		$contract = $window->contract;
 		$first = $this->progression->date(value: ($sickCase['firstSickDay'] ?? null));
 		if ($first === null) {
 			return [];

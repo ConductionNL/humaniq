@@ -97,7 +97,7 @@ class AbsenceDaysTest extends TestCase {
 	public function testLeaveWithoutHoursTakesTheWorkingDaysInTheRange(): void {
 		$request = ['status' => 'approved', 'startDate' => '2026-10-29', 'endDate' => '2026-11-04'];
 
-		self::assertSame(['2026-11-02' => 6.0, '2026-11-03' => 6.0], $this->days->leave($this->time, $request, $this->week));
+		self::assertSame(['2026-11-02' => 6.0, '2026-11-03' => 6.0], $this->days->leave($request, $this->days->window($this->time, $this->week)));
 	}//end testLeaveWithoutHoursTakesTheWorkingDaysInTheRange()
 
 	/**
@@ -110,7 +110,7 @@ class AbsenceDaysTest extends TestCase {
 		// Thursday 29 Oct, Monday and Tuesday: 18 contracted hours for 9 requested.
 		$request = ['status' => 'approved', 'startDate' => '2026-10-29', 'endDate' => '2026-11-03', 'hours' => 9];
 
-		self::assertSame(['2026-11-02' => 3.0, '2026-11-03' => 3.0], $this->days->leave($this->time, $request, $this->week));
+		self::assertSame(['2026-11-02' => 3.0, '2026-11-03' => 3.0], $this->days->leave($request, $this->days->window($this->time, $this->week)));
 	}//end testRequestedHoursSpreadOverTheWholeRequest()
 
 	/**
@@ -119,10 +119,10 @@ class AbsenceDaysTest extends TestCase {
 	 * @return void
 	 */
 	public function testLeaveThatDoesNotCount(): void {
-		self::assertSame([], $this->days->leave($this->time, ['status' => 'submitted', 'startDate' => '2026-11-02'], $this->week));
-		self::assertSame([], $this->days->leave($this->time, ['status' => 'approved'], $this->week));
-		self::assertSame([], $this->days->leave($this->time, ['status' => 'approved', 'startDate' => '2026-11-10', 'endDate' => '2026-11-12'], $this->week));
-		self::assertSame([], $this->days->leave($this->time, ['status' => 'approved', 'startDate' => '2026-11-03', 'endDate' => '2026-11-02'], $this->week));
+		self::assertSame([], $this->days->leave(['status' => 'submitted', 'startDate' => '2026-11-02'], $this->days->window($this->time, $this->week)));
+		self::assertSame([], $this->days->leave(['status' => 'approved'], $this->days->window($this->time, $this->week)));
+		self::assertSame([], $this->days->leave(['status' => 'approved', 'startDate' => '2026-11-10', 'endDate' => '2026-11-12'], $this->days->window($this->time, $this->week)));
+		self::assertSame([], $this->days->leave(['status' => 'approved', 'startDate' => '2026-11-03', 'endDate' => '2026-11-02'], $this->days->window($this->time, $this->week)));
 	}//end testLeaveThatDoesNotCount()
 
 	/**
@@ -131,7 +131,6 @@ class AbsenceDaysTest extends TestCase {
 	 * @return void
 	 */
 	public function testSicknessFollowsTheProgression(): void {
-		$contract = $this->days->contracted($this->time, $this->week);
 		$case = [
 			'status' => 'gemeld',
 			'firstSickDay' => '2026-10-20',
@@ -141,7 +140,7 @@ class AbsenceDaysTest extends TestCase {
 			],
 		];
 
-		$hours = $this->days->sickness($case, $this->week, $contract);
+		$hours = $this->days->sickness($case, $this->days->window($this->time, $this->week));
 
 		self::assertSame(6.0, $hours['2026-11-02']);
 		self::assertSame(1.5, $hours['2026-11-03']);
@@ -157,13 +156,12 @@ class AbsenceDaysTest extends TestCase {
 	 * @return void
 	 */
 	public function testSicknessWindow(): void {
-		$contract = $this->days->contracted($this->time, $this->week);
 
 		self::assertSame(
 			['2026-11-02' => 6.0, '2026-11-03' => 6.0],
-			$this->days->sickness(['status' => 'hersteld', 'firstSickDay' => '2026-11-01', 'recoveredDate' => '2026-11-03'], $this->week, $contract)
+			$this->days->sickness(['status' => 'hersteld', 'firstSickDay' => '2026-11-01', 'recoveredDate' => '2026-11-03'], $this->days->window($this->time, $this->week))
 		);
-		self::assertSame([], $this->days->sickness(['status' => 'gemeld'], $this->week, $contract));
+		self::assertSame([], $this->days->sickness(['status' => 'gemeld'], $this->days->window($this->time, $this->week)));
 	}//end testSicknessWindow()
 
 }//end class

@@ -94,11 +94,10 @@ class TimesheetWeekService {
 			return null;
 		}
 
-		return $this->compose(
-			timesheet: $timesheet,
-			entries: $this->store->findFiltered('TimeEntry', ['timesheetId' => $timesheetId]),
-			absence: $this->absenceRecordsOf(employeeId: trim((string)($timesheet['employeeId'] ?? '')))
-		);
+		$records = $this->absenceRecordsOf(employeeId: trim((string)($timesheet['employeeId'] ?? '')));
+		$records['entries'] = $this->store->findFiltered('TimeEntry', ['timesheetId' => $timesheetId]);
+
+		return $this->compose(timesheet: $timesheet, records: $records);
 	}//end weekFor()
 
 	/**
@@ -112,11 +111,9 @@ class TimesheetWeekService {
 	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function absenceHoursFor(array $timesheet, array $entries): float {
-		$view = $this->compose(
-			timesheet: $timesheet,
-			entries: $entries,
-			absence: $this->absenceRecordsOf(employeeId: trim((string)($timesheet['employeeId'] ?? '')))
-		);
+		$records = $this->absenceRecordsOf(employeeId: trim((string)($timesheet['employeeId'] ?? '')));
+		$records['entries'] = $entries;
+		$view = $this->compose(timesheet: $timesheet, records: $records);
 
 		return (float)$view['totals']['absenceHours'];
 	}//end absenceHoursFor()
@@ -124,21 +121,20 @@ class TimesheetWeekService {
 	/**
 	 * Compose the view from already-read records.
 	 *
-	 * @param array<string, mixed>             $timesheet The Timesheet payload.
-	 * @param array<int, array<string, mixed>> $entries   Its TimeEntry payloads.
-	 * @param array<string, mixed>             $absence   The employee's records: `leave` (LeaveRequest), `sickness` (SickLeaveCase), `sources` (WorkingTimeSources) and `kinds` (kind by activity code).
+	 * @param array<string, mixed> $timesheet The Timesheet payload.
+	 * @param array<string, mixed> $records   The timesheet's `entries` (TimeEntry) and the employee's records: `leave` (LeaveRequest), `sickness` (SickLeaveCase), `sources` (WorkingTimeSources) and `kinds` (kind by activity code).
 	 *
 	 * @return array{period: string, from: string|null, to: string|null, patternOnly: bool, lines: list<array<string, mixed>>, weeks: list<array<string, mixed>>, totals: array<string, float>}
 	 *
 	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
-	public function compose(array $timesheet, array $entries, array $absence): array {
+	public function compose(array $timesheet, array $records): array {
 		$period = trim((string)($timesheet['period'] ?? ''));
 		$range = self::periodRange(period: $period);
-		$entryKind = new EntryKind(kinds: ($absence['kinds'] ?? []));
+		$entryKind = new EntryKind(kinds: ($records['kinds'] ?? []));
 
 		$lines = [];
-		foreach ($entries as $entry) {
+		foreach (($records['entries'] ?? []) as $entry) {
 			$lines[] = $this->entryLine(entry: $entry, entryKind: $entryKind);
 		}
 
@@ -146,10 +142,11 @@ class TimesheetWeekService {
 		if ($range !== null) {
 			$time = new EmployeeWorkingTime(
 				employeeId: trim((string)($timesheet['employeeId'] ?? '')),
-				sources: ($absence['sources'] ?? new WorkingTimeSources())
+				sources: ($records['sources'] ?? new WorkingTimeSources())
 			);
-			$contract = $this->absenceDays->contracted(time: $time, range: $range);
-			$lines = array_merge($lines, $this->absenceLines(time: $time, range: $range, contract: $contract, absence: $absence));
+			$window = $this->absenceDays->window(time: $time, range: $range);
+			$contract = $window->contract;
+			$lines = array_merge($lines, $this->absenceLines(window: $window, absence: $records));
 		}
 
 		usort($lines, static fn (array $a, array $b): int => [$a['date'], $a['source']] <=> [$b['date'], $b['source']]);
@@ -259,65 +256,50 @@ class TimesheetWeekService {
 	/**
 	 * The read-only leave and sickness lines inside the range.
 	 *
-	 * @param EmployeeWorkingTime                               $time     The employee and the working-time records.
-	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $range    First and last day, inclusive.
-	 * @param array<string, float>                              $contract Contracted hours by ISO date over the range.
-	 * @param array<string, mixed>                              $absence  The employee's records.
+	 * Leave is placed before sickness, and no day takes more absence than its
+	 * contracted hours.
+	 *
+	 * @param AbsenceWindow        $window  The employee, the range and its contracted hours.
+	 * @param array<string, mixed> $absence The employee's records: `leave` and `sickness`.
 	 *
 	 * @return list<array<string, mixed>>
 	 */
-	private function absenceLines(EmployeeWorkingTime $time, array $range, array $contract, array $absence): array {
-		$taken = [];
-		$lines = [];
+	private function absenceLines(AbsenceWindow $window, array $absence): array {
+		$byRecord = [];
 		foreach (($absence['leave'] ?? []) as $request) {
-			foreach ($this->absenceDays->leave(time: $time, request: $request, range: $range) as $date => $hours) {
-				$hours = min($hours, (($contract[$date] ?? 0.0) - ($taken[$date] ?? 0.0)));
-				if ($hours <= 0.0) {
-					continue;
-				}
-
-				$taken[$date] = (($taken[$date] ?? 0.0) + $hours);
-				$lines[] = $this->absenceLine(date: $date, hours: $hours, activityCode: self::ACTIVITY_LEAVE, source: 'leave');
-			}
+			$byRecord[] = ['leave', $this->absenceDays->leave(request: $request, window: $window)];
 		}
 
 		foreach (($absence['sickness'] ?? []) as $case) {
-			foreach ($this->absenceDays->sickness(sickCase: $case, range: $range, contract: $contract) as $date => $hours) {
-				$hours = min($hours, (($contract[$date] ?? 0.0) - ($taken[$date] ?? 0.0)));
+			$byRecord[] = ['sickness', $this->absenceDays->sickness(sickCase: $case, window: $window)];
+		}
+
+		$activityOf = ['leave' => self::ACTIVITY_LEAVE, 'sickness' => self::ACTIVITY_SICKNESS];
+		$taken = [];
+		$lines = [];
+		foreach ($byRecord as [$source, $hoursByDate]) {
+			foreach ($hoursByDate as $date => $hours) {
+				$hours = min($hours, (($window->contract[$date] ?? 0.0) - ($taken[$date] ?? 0.0)));
 				if ($hours <= 0.0) {
 					continue;
 				}
 
 				$taken[$date] = (($taken[$date] ?? 0.0) + $hours);
-				$lines[] = $this->absenceLine(date: $date, hours: $hours, activityCode: self::ACTIVITY_SICKNESS, source: 'sickness');
+				$lines[] = [
+					'date' => (string)$date,
+					'kind' => TimeActivityCatalog::KIND_ABSENCE,
+					'activityCode' => $activityOf[$source],
+					'projectId' => '',
+					'description' => '',
+					'hours' => round($hours, 2),
+					'source' => $source,
+					'readOnly' => true,
+				];
 			}
 		}
 
 		return $lines;
 	}//end absenceLines()
-
-	/**
-	 * One read-only absence line.
-	 *
-	 * @param string $date         The ISO date.
-	 * @param float  $hours        The absence hours.
-	 * @param string $activityCode The absence activity.
-	 * @param string $source       `leave` or `sickness`.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function absenceLine(string $date, float $hours, string $activityCode, string $source): array {
-		return [
-			'date' => $date,
-			'kind' => TimeActivityCatalog::KIND_ABSENCE,
-			'activityCode' => $activityCode,
-			'projectId' => '',
-			'description' => '',
-			'hours' => round($hours, 2),
-			'source' => $source,
-			'readOnly' => true,
-		];
-	}//end absenceLine()
 
 	/**
 	 * Hours per kind and contract hours over all lines.
