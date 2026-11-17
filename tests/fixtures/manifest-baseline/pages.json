@@ -92,6 +92,10 @@
 		"route": "/mijn/aanbevelingen"
 	},
 	{
+		"id": "AttendanceToday",
+		"route": "/attendance/today"
+	},
+	{
 		"id": "CaoDetail",
 		"route": "/caos/:id"
 	},

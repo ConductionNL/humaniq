@@ -4076,7 +4076,16 @@
         "VAT to reclaim": "Terug te vorderen btw",
         "The VAT on the claims reimbursed last month, through payroll or directly, so the employer can reclaim it in its VAT return. The payroll journal books this VAT on the VAT account.": "De btw op de declaraties die vorige maand zijn vergoed, via de salarisverwerking of rechtstreeks, zodat de werkgever die kan terugvragen in de btw-aangifte. De loonjournaalpost boekt deze btw op de btw-rekening.",
         "Claims with VAT": "Declaraties met btw",
-        "No reimbursed claims with VAT last month": "Geen vergoede declaraties met btw vorige maand"
+        "No reimbursed claims with VAT last month": "Geen vergoede declaraties met btw vorige maand",
+        "Attendance today": "Aanwezigheid vandaag",
+        "Who of your people is present, late, away or not clocked in today. Late means clocked in after the start of today's roster; away means approved leave or sick.": "Wie van je mensen vandaag aanwezig, te laat, afwezig of niet ingeklokt is. Te laat betekent ingeklokt na de start van het rooster van vandaag; afwezig betekent goedgekeurd verlof of ziek.",
+        "Late": "Te laat",
+        "Away": "Afwezig",
+        "Not clocked in": "Niet ingeklokt",
+        "Today": "Vandaag",
+        "Clocked in": "Ingeklokt",
+        "Rostered start": "Geroosterde start",
+        "No one you may read is placed in a unit today": "Niemand die je mag inzien is vandaag in een eenheid geplaatst"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

@@ -1,4 +1,148 @@
 {
+	"pages": [
+		{
+			"id": "AttendanceToday",
+			"route": "/attendance/today",
+			"type": "dashboard",
+			"title": "Attendance today",
+			"config": {
+				"description": "Who of your people is present, late, away or not clocked in today. Late means clocked in after the start of today's roster; away means approved leave or sick.",
+				"_note": "matrix-rows-without-a-requirement REQ-TA-007: the today view of the attendance pages. GET /api/attendance/today lists the people the caller may read (everyone placed in a unit for HR and accountants, the people of the units a manager leads) from AttendanceRecord, today's RosterAssignment, approved LeaveRequest and open SickLeaveCase. Working patterns hold no start time, so lateness is judged against the roster only.",
+				"widgets": [
+					{
+						"id": "today-present",
+						"type": "stat",
+						"title": "Present",
+						"icon": "CheckCircleOutline",
+						"content": {
+							"label": "Present",
+							"icon": "CheckCircleOutline",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"valueField": "counts.present"
+						}
+					},
+					{
+						"id": "today-late",
+						"type": "stat",
+						"title": "Late",
+						"icon": "AlertCircleOutline",
+						"content": {
+							"label": "Late",
+							"icon": "AlertCircleOutline",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"valueField": "counts.late"
+						}
+					},
+					{
+						"id": "today-away",
+						"type": "stat",
+						"title": "Away",
+						"icon": "AccountClockOutline",
+						"content": {
+							"label": "Away",
+							"icon": "AccountClockOutline",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"valueField": "counts.away"
+						}
+					},
+					{
+						"id": "today-not-clocked-in",
+						"type": "stat",
+						"title": "Not clocked in",
+						"icon": "AccountCancelOutline",
+						"content": {
+							"label": "Not clocked in",
+							"icon": "AccountCancelOutline",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"valueField": "counts.not-clocked-in"
+						}
+					},
+					{
+						"id": "today-people",
+						"type": "object-table",
+						"title": "Today",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today",
+								"responsePath": "people"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Employee",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "clockIn",
+									"label": "Clocked in"
+								},
+								{
+									"key": "plannedStart",
+									"label": "Rostered start"
+								}
+							],
+							"rowRoute": "EmployeeDetail",
+							"emptyText": "No one you may read is placed in a unit today"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "today-present",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 2,
+						"widgetId": "today-late",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 3,
+						"widgetId": "today-away",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 4,
+						"widgetId": "today-not-clocked-in",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 5,
+						"widgetId": "today-people",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 8
+					}
+				]
+			}
+		}
+	],
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",

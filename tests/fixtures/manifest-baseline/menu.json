@@ -532,6 +532,12 @@
 				"route": "AttendanceRecords"
 			},
 			{
+				"id": "AttendanceToday",
+				"label": "Attendance today",
+				"icon": "AccountClockOutline",
+				"route": "AttendanceToday"
+			},
+			{
 				"id": "EmployeeCompetences",
 				"label": "Competences",
 				"icon": "CertificateOutline",

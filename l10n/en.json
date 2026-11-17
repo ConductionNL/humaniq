@@ -4076,7 +4076,16 @@
         "VAT to reclaim": "VAT to reclaim",
         "The VAT on the claims reimbursed last month, through payroll or directly, so the employer can reclaim it in its VAT return. The payroll journal books this VAT on the VAT account.": "The VAT on the claims reimbursed last month, through payroll or directly, so the employer can reclaim it in its VAT return. The payroll journal books this VAT on the VAT account.",
         "Claims with VAT": "Claims with VAT",
-        "No reimbursed claims with VAT last month": "No reimbursed claims with VAT last month"
+        "No reimbursed claims with VAT last month": "No reimbursed claims with VAT last month",
+        "Attendance today": "Attendance today",
+        "Who of your people is present, late, away or not clocked in today. Late means clocked in after the start of today's roster; away means approved leave or sick.": "Who of your people is present, late, away or not clocked in today. Late means clocked in after the start of today's roster; away means approved leave or sick.",
+        "Late": "Late",
+        "Away": "Away",
+        "Not clocked in": "Not clocked in",
+        "Today": "Today",
+        "Clocked in": "Clocked in",
+        "Rostered start": "Rostered start",
+        "No one you may read is placed in a unit today": "No one you may read is placed in a unit today"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

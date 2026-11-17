@@ -6,6 +6,8 @@
  * `POST /api/attendance/clock-in` and `POST /api/attendance/clock-out`: the
  * signed-in employee opens and closes their own clock day from
  * `My attendance` (REQ-TA-008). Who clocks is the caller, never a parameter.
+ * `GET /api/attendance/today`: who of the caller's people is present, late,
+ * away or not clocked in today (REQ-TA-007).
  *
  * @category Controller
  * @package  OCA\Humaniq\Controller
@@ -28,6 +30,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\AttendanceClockService;
+use OCA\Humaniq\Service\AttendanceTodayService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,11 +51,13 @@ class AttendanceClockController extends Controller {
 	 * @param IRequest               $request     The request.
 	 * @param AttendanceClockService $clock       Opens and closes the clock day.
 	 * @param IUserSession           $userSession The caller.
+	 * @param AttendanceTodayService|null $today Today's presence of the caller's people; null answers 403.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly AttendanceClockService $clock,
 		private readonly IUserSession $userSession,
+		private readonly ?AttendanceTodayService $today = null,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -96,4 +101,27 @@ class AttendanceClockController extends Controller {
 
 		return new JSONResponse($answer['body'], $answer['status']);
 	}//end clockOut()
+
+	/**
+	 * `GET /api/attendance/today`: today's presence of the people the caller
+	 * may read: everyone for HR and accountants, a manager's own people.
+	 *
+	 * @return JSONResponse 200 {date, counts, people}, 401 when signed out, 403 without an administration.
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-a-manager-shall-see-who-is-present-absent-or-late-today-req-ta-007
+	 */
+	#[NoAdminRequired]
+	public function today(): JSONResponse {
+		$uid = $this->userSession->getUser()?->getUID();
+		if ($uid === null || $uid === '') {
+			return new JSONResponse(['error' => 'Sign in to see today\'s attendance.'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$view = $this->today?->today(userId: $uid);
+		if ($view === null) {
+			return new JSONResponse(['error' => 'You have no administration to read attendance in.'], Http::STATUS_FORBIDDEN);
+		}
+
+		return new JSONResponse($view);
+	}//end today()
 }//end class

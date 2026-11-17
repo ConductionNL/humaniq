@@ -1097,6 +1097,37 @@
                 }
             }
         },
+        "/attendance/today": {
+            "get": {
+                "operationId": "attendance-clock-today",
+                "summary": "`GET /api/attendance/today`: today's presence of the people the caller may read.",
+                "description": "`GET /api/attendance/today`: each person the caller may read (everyone placed in a unit for HR and accountants, a manager's own people) as present, late (clocked in after today's roster start), away (approved leave or sick) or not clocked in (REQ-TA-007). Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "attendance-clock"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
         "/availability": {
             "get": {
                 "operationId": "agenda-availability",

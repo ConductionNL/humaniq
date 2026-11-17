@@ -757,6 +757,12 @@
 					"route": "AttendanceRecords"
 				},
 				{
+					"icon": "AccountClockOutline",
+					"id": "AttendanceToday",
+					"label": "Attendance today",
+					"route": "AttendanceToday"
+				},
+				{
 					"icon": "CertificateOutline",
 					"id": "EmployeeCompetences",
 					"label": "Competences",
@@ -4520,6 +4526,148 @@
 			"route": "/mijn/aanbevelingen",
 			"title": "My referrals",
 			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "matrix-rows-without-a-requirement REQ-TA-007: the today view of the attendance pages. GET /api/attendance/today lists the people the caller may read (everyone placed in a unit for HR and accountants, the people of the units a manager leads) from AttendanceRecord, today's RosterAssignment, approved LeaveRequest and open SickLeaveCase. Working patterns hold no start time, so lateness is judged against the roster only.",
+				"description": "Who of your people is present, late, away or not clocked in today. Late means clocked in after the start of today's roster; away means approved leave or sick.",
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "today-present"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 3,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "today-late"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 6,
+						"gridY": 0,
+						"id": 3,
+						"widgetId": "today-away"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 9,
+						"gridY": 0,
+						"id": 4,
+						"widgetId": "today-not-clocked-in"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 2,
+						"id": 5,
+						"widgetId": "today-people"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"icon": "CheckCircleOutline",
+							"label": "Present",
+							"valueField": "counts.present"
+						},
+						"icon": "CheckCircleOutline",
+						"id": "today-present",
+						"title": "Present",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"icon": "AlertCircleOutline",
+							"label": "Late",
+							"valueField": "counts.late"
+						},
+						"icon": "AlertCircleOutline",
+						"id": "today-late",
+						"title": "Late",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"icon": "AccountClockOutline",
+							"label": "Away",
+							"valueField": "counts.away"
+						},
+						"icon": "AccountClockOutline",
+						"id": "today-away",
+						"title": "Away",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"icon": "AccountCancelOutline",
+							"label": "Not clocked in",
+							"valueField": "counts.not-clocked-in"
+						},
+						"icon": "AccountCancelOutline",
+						"id": "today-not-clocked-in",
+						"title": "Not clocked in",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Employee"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "clockIn",
+									"label": "Clocked in"
+								},
+								{
+									"key": "plannedStart",
+									"label": "Rostered start"
+								}
+							],
+							"emptyText": "No one you may read is placed in a unit today",
+							"endpointSource": {
+								"responsePath": "people",
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"rowRoute": "EmployeeDetail"
+						},
+						"id": "today-people",
+						"title": "Today",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "AttendanceToday",
+			"route": "/attendance/today",
+			"title": "Attendance today",
+			"type": "dashboard"
 		},
 		{
 			"config": {
