@@ -23,8 +23,11 @@
 
 - [x] 3.1 An e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19).
       > Each scenario names the unit test that covers it; the manage link's adminOnly flag is now asserted too.
-- [ ] 3.2 One live check: add a "Rijbewijs" property to Employee in OpenRegister, fill it on an
+- [x] 3.2 One live check: add a "Rijbewijs" property to Employee in OpenRegister, fill it on an
       employee page and reload.
+      Done in the live pass (2026-11-17, clean install): `rijbewijs` added to Employee through
+      OpenRegister's schema API (0.15.0 -> 0.16.0); EmployeeDetail's Own fields card showed it
+      empty, Edit on that card saved "B, BE" (PUT 200) and the value was there after a reload.
 
 Build notes (2.1/2.2): the shipped Employee properties come from two fragments, `hr-objects.json` and
 `hr-cost-rate.json`, so the exclude list and its test cover both. "Employment & compliance" excluded only the

@@ -47,5 +47,14 @@
       tags on the new classes (gate 16).
       Done: a reason-bearing `@e2e exclude` on each of the six scenarios, naming the unit
       tests that cover it; `@spec` on every new class, `StampsProcessFields` included.
-- [ ] 3.2 One live check: approve the seeded unpaid request as HR and read both decisions on
+- [x] 3.2 One live check: approve the seeded unpaid request as HR and read both decisions on
       `LeaveRequestDetail`; record the screenshot in the PR.
+      Done in the live pass (2026-11-17, clean install): the seeded unpaid request lands in
+      `draft` without decisions (a seed cannot carry process state), so it was submitted as
+      admin and approved as manager by manager-pietersen; an administrator then approved it
+      from the page's Actions menu. `LeaveRequestDetail` shows both decisions (manager approved,
+      hr approved, each dated); the timeline shows no name, since a list entry takes one detail
+      field.
+- [ ] 3.3 Decide who takes the HR step. `LeaveApprovalStepGuard::hrStep()` admits only
+      Nextcloud administrators; a member of `humaniq-hr` is refused ("Alleen HR mag deze stap
+      nemen."), while REQ-LAS-002 says "the HR role" and `HumaniqRoles::isHr()` exists.

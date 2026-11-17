@@ -41,6 +41,7 @@
 					"projectId",
 					"billable"
 				],
+				"allowSavedViews": true,
 				"allowExport": true
 			}
 		},

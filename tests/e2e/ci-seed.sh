@@ -633,7 +633,7 @@ ADM_ID="E2E-ADM-001"
 # analytics guard independent of that seed's shape).
 ACTIVE_ADM_ID="ADM-001"
 for payload in \
-	"{\"administrationId\":\"${ADM_ID}\",\"name\":\"E2E Administration\",\"active\":true,\"mode\":\"standard\"}|Administration" \
+	"{\"administrationId\":\"${ADM_ID}\",\"name\":\"E2E Administration\",\"active\":true,\"mode\":\"standard\"}|hrAdministration" \
 	"{\"userId\":\"${USER_NAME}\",\"administrationId\":\"${ADM_ID}\",\"role\":\"hr\"}|AdministrationAccess" \
 	"{\"userId\":\"${USER_NAME}\",\"administrationId\":\"${ACTIVE_ADM_ID}\",\"role\":\"hr\"}|AdministrationAccess"
 do

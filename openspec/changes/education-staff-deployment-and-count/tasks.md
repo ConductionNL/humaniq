@@ -70,5 +70,10 @@
       tags on the new methods (gate 16).
       Done: a reason-bearing `@e2e exclude` on each of the six scenarios, naming the unit
       tests that verify it; gate 19 and gate 16 (with base `origin/development`) pass.
-- [ ] 4.2 One live check: open `Taakbeleid` for the seeded school and read the overload;
+- [x] 4.2 One live check: open `Taakbeleid` for the seeded school and read the overload;
       record the screenshot in the PR.
+      Done in the live pass (2026-11-17, clean install): `Taakbeleid` for Basisschool De Klimop
+      lists Lotte Vermeulen (vastgesteld, 1700 planned against 1659, difference 41, overload
+      ticked) and Daan Claes (concept, -120, no overload). The school picker on
+      `TaakbeleidScholen` said "No organisational units yet": OpenRegister answered 500 to its
+      `_order[name]` on PostgreSQL (fixed in OpenRegister, see the live-pass PR).

@@ -318,9 +318,13 @@ function checkObjects(objects, schemas, sourceBySlug) {
 	for (const object of objects) {
 		const self = object["@self"] || {};
 		const schema = schemas[self.schema];
-		if (isPlainObject(schema) === false) continue;
-		const properties = schema.properties || {};
 		const where = `${sourceBySlug.get(self.slug) || "?"}  ${self.schema}/${self.slug}`;
+		if (isPlainObject(schema) === false) {
+			// OpenRegister skips an object whose schema it cannot find, with only a log line.
+			tally.failures.push(`${where}\n      @self.schema: "${self.schema}" names no schema in the register`);
+			continue;
+		}
+		const properties = schema.properties || {};
 		for (const [name, raw] of Object.entries(object)) {
 			if (name.startsWith("@")) continue;
 			if (relationTarget(properties[name]) === null) continue;

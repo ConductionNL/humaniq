@@ -15,7 +15,13 @@
 
 ## 3. Verification
 
-- [ ] 3.1 `@spec` tags on every new method (gate 16) and an e2e test or a reason-bearing
+- [x] 3.1 `@spec` tags on every new method (gate 16) and an e2e test or a reason-bearing
       `@e2e exclude` per scenario (gate 19).
-- [ ] 3.2 One live check on a dev instance: change the minimum password length on the Inloggen
+      Done in the live pass: the controller and service carry `@spec`; each of the seven
+      scenarios carries a reason-bearing `@e2e exclude`.
+- [x] 3.2 One live check on a dev instance: change the minimum password length on the Inloggen
       section and see the same value on Nextcloud's Security admin page.
+      Done in the live pass (2026-11-17, clean install, password_policy enabled): the
+      Inloggen section read 10, was set to 13 and saved (PUT 200); Nextcloud's Security page
+      showed 13 and `occ config:app:get password_policy minLength` read 13; a new account with
+      a 12-character password was refused.
