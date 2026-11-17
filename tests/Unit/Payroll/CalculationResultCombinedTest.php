@@ -50,7 +50,7 @@ class CalculationResultCombinedTest extends TestCase {
 
 		$sum = CalculationResult::combined(fourWeeks: $fourWeeks, week53: $week);
 
-		foreach (['grossPayCents', 'loonheffingCents', 'arbeidskortingCents', 'volksverzekeringenCents', 'zvwCents', 'nettoPayCents', 'vakantiegeldReservedCents', 'awfCents', 'aofCents', 'wkoCents', 'whkCents', 'werknemersverzekeringenCents', 'employerChargesCents', 'taxableWageCents', 'premiumWageCents'] as $field) {
+		foreach (['grossPayCents', 'loonheffingCents', 'arbeidskortingCents', 'volksverzekeringenCents', 'zvwCents', 'nettoPayCents', 'vakantiegeldReservedCents', 'awfCents', 'aofCents', 'wkoCents', 'whkCents', 'werknemersverzekeringenCents', 'employerChargesCents', 'taxableWageCents', 'premiumWageCents', 'rvuFinalLevyCents'] as $field) {
 			self::assertSame($fourWeeks->$field + $week->$field, $sum->$field, $field);
 		}
 
@@ -59,6 +59,9 @@ class CalculationResultCombinedTest extends TestCase {
 		self::assertSame(350769 + 87692, $sum->grossPayCents);
 		self::assertSame([$fourWeeks->zvwMode, $fourWeeks->zvwRate, $fourWeeks->appliedTaxRate, $fourWeeks->vakantiegeldRate], [$sum->zvwMode, $sum->zvwRate, $sum->appliedTaxRate, $sum->vakantiegeldRate]);
 		self::assertFalse($sum->aboveLmax);
+		// No RVU benefit on either part, so no final levy on the sum; reading it
+		// must not fail on an uninitialised readonly property.
+		self::assertSame(0, $sum->rvuFinalLevyCents);
 	}//end testAmountsAddUpAndTheFourWeeksKeepTheirRates()
 
 	/**

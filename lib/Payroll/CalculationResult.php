@@ -221,6 +221,7 @@ final class CalculationResult {
 			$this->aboveLmax = (bool)$out['aboveLmax'];
 			$this->taxableWageCents = (int)$out['taxableWageCents'];
 			$this->premiumWageCents = (int)$out['premiumWageCents'];
+			$this->rvuFinalLevyCents = (int)($out['rvuFinalLevyCents'] ?? 0);
 
 			return;
 		}
@@ -265,7 +266,7 @@ final class CalculationResult {
 	 */
 	public static function combined(self $fourWeeks, self $week53): self {
 		$sum = [];
-		foreach (['grossPayCents', 'loonheffingCents', 'arbeidskortingCents', 'volksverzekeringenCents', 'zvwCents', 'nettoPayCents', 'vakantiegeldReservedCents', 'awfCents', 'aofCents', 'wkoCents', 'whkCents', 'werknemersverzekeringenCents', 'employerChargesCents', 'taxableWageCents', 'premiumWageCents'] as $field) {
+		foreach (['grossPayCents', 'loonheffingCents', 'arbeidskortingCents', 'volksverzekeringenCents', 'zvwCents', 'nettoPayCents', 'vakantiegeldReservedCents', 'awfCents', 'aofCents', 'wkoCents', 'whkCents', 'werknemersverzekeringenCents', 'employerChargesCents', 'taxableWageCents', 'premiumWageCents', 'rvuFinalLevyCents'] as $field) {
 			$sum[$field] = ($fourWeeks->$field + $week53->$field);
 		}
 
