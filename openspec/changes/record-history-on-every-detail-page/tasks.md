@@ -30,6 +30,9 @@
 - [ ] 4.1 An e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), `@spec` tags
       on new methods (gate 16).
   - Done: `@spec` tags on the new methods; reason-bearing excludes on the two backend and
-    build-time scenarios. Open: e2e tests for the four browser scenarios need a live instance.
+    build-time scenarios; the four browser scenarios in
+    `tests/e2e/spec-coverage/record-audit-history.spec.ts` (an HR adviser from an empty storage
+    state, the IBAN change in the history tab, the section's sentences and its filtered links).
+    Open: the spec has not run against an instance yet.
 - [ ] 4.2 One live check: open an employee as one user, then see the read entry on the
       Audittrail section as an administrator.
