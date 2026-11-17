@@ -458,6 +458,7 @@
                 "configuration": {"exportable": true},
                 "slug": "SurveyResponseHold",
                 "icon": "TimerSandEmpty",
+                "x-openregister-demo-data": "Written only while an answer waits for its release batch and removed by the release job; a demo hold would be released as a response nobody gave.",
                 "version": "0.1.0",
                 "title": "Held survey answer",
                 "description": "An answer waiting to be released as a SurveyResponse. Owned by the system and readable by administrators only; the release job moves held answers into SurveyResponse in shuffled batches and removes them here, so the response's creation time is the batch's, not the answer's (talent-engagement-surveys REQ-SRV-002).",
