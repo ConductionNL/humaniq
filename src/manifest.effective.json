@@ -18846,7 +18846,7 @@
 		},
 		{
 			"config": {
-				"_note": "performance-reviews-mvp (2026-07-13): the dossier half of the performance-review MVP (ADR-001 Rule 6 — the primary surface is actually the EmployeeDetail emp-reviews row; this page is a routed detail, reached from that row, the cycle's review list, or the deepLink, and is deliberately NOT a menu child, the TimesheetDetail convention). The 'Beoordeling' data widget carries rating/sterktes/ontwikkelpunten/afspraken/goals/besprokenOp/vastgesteldDoor, excluding employeeId/cycleId/reviewerId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). Goals are recorded INSIDE this review (design D2 — no separate Goal entity anywhere in the register); besprokenOp/vastgesteldDoor are stamped on the carrying writes of bespreken/vaststellen. lifecycleActions expose exactly indienen/bespreken/vaststellen/heropenen (hr-performance.json) -- vaststellen is guarded server-side by the existing NoSelfApprovalGuard (the employee under review may not vaststellen their own beoordeling); heropenen is the correction edge back to besproken. Audit history is a sidebar tab.",
+				"_note": "performance-reviews-mvp (2026-07-13): the dossier half of the performance-review MVP (ADR-001 Rule 6 — the primary surface is actually the EmployeeDetail emp-reviews row; this page is a routed detail, reached from that row, the cycle's review list, or the deepLink, and is deliberately NOT a menu child, the TimesheetDetail convention). The 'Beoordeling' data widget carries rating/sterktes/ontwikkelpunten/afspraken/goals/besprokenOp/vastgesteldDoor, excluding employeeId/cycleId/reviewerId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). Goals are recorded INSIDE this review (design D2 — no separate Goal entity anywhere in the register); besprokenOp/vastgesteldDoor are stamped on the carrying writes of bespreken/vaststellen. lifecycleActions expose exactly indienen/bespreken/vaststellen/heropenen (hr-performance.json) -- vaststellen is guarded server-side by the existing NoSelfApprovalGuard (the employee under review may not vaststellen their own beoordeling); heropenen is the correction edge back to besproken. Audit history is a sidebar tab. matrix-rows-without-a-requirement REQ-PRV-007: 'Sign as employee' (ondertekenen, vastgesteld->ondertekend) lets the reviewed employee confirm a set review with an optional comment; ReviewSignOffGuard refuses anyone else server-side and ReviewSignOffStampListener stamps vastgesteldOp, medewerkerOndertekendDoor and medewerkerOndertekendOp and keeps the review's content. Heropenen also leaves ondertekend and clears the sign-off.",
 				"layout": [
 					{
 						"gridHeight": 9,
@@ -18895,10 +18895,25 @@
 						{
 							"action": "heropenen",
 							"from": [
-								"vastgesteld"
+								"vastgesteld",
+								"ondertekend"
 							],
 							"label": "Reopen",
 							"to": "besproken"
+						},
+						{
+							"action": "ondertekenen",
+							"from": [
+								"vastgesteld"
+							],
+							"inputs": [
+								{
+									"field": "medewerkerOpmerking",
+									"required": false
+								}
+							],
+							"label": "Sign as employee",
+							"to": "ondertekend"
 						}
 					]
 				},
@@ -18948,7 +18963,8 @@
 					"cycleId",
 					"status",
 					"rating",
-					"besprokenOp"
+					"besprokenOp",
+					"medewerkerOndertekendOp"
 				],
 				"description": "Your own reviews.",
 				"filter": {

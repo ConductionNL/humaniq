@@ -238,7 +238,8 @@ class EmployeeHistoryService implements EmployeeHistoryServiceInterface {
 	}//end period()
 
 	/**
-	 * Whether a period row counts: approved leave, a settled review, any sickness.
+	 * Whether a period row counts: approved leave, a settled review (set, or
+	 * set and signed by the employee), any sickness.
 	 *
 	 * @param string               $schema The source schema.
 	 * @param array<string, mixed> $row    The row.
@@ -248,7 +249,7 @@ class EmployeeHistoryService implements EmployeeHistoryServiceInterface {
 	private static function counts(string $schema, array $row): bool {
 		return match ($schema) {
 			'LeaveRequest' => ($row['status'] ?? '') === 'approved',
-			'PerformanceReview' => ($row['status'] ?? '') === 'vastgesteld',
+			'PerformanceReview' => in_array(($row['status'] ?? ''), ['vastgesteld', 'ondertekend'], true),
 			default => true,
 		};
 	}//end counts()

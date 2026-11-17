@@ -4038,7 +4038,17 @@ OC.L10N.register(
         "Budget used": "Budget used",
         "Budget left": "Budget left",
         "Over budget": "Over budget",
-        "The raise budget of this cycle in cents: what the monthly raises of its proposed, approved and effective adjustments may add up to. Going over it is flagged on the cycle page, never refused (REQ-COMP-009).": "The raise budget of this cycle in cents: what the monthly raises of its proposed, approved and effective adjustments may add up to. Going over it is flagged on the cycle page, never refused (REQ-COMP-009)."
+        "The raise budget of this cycle in cents: what the monthly raises of its proposed, approved and effective adjustments may add up to. Going over it is flagged on the cycle page, never refused (REQ-COMP-009).": "The raise budget of this cycle in cents: what the monthly raises of its proposed, approved and effective adjustments may add up to. Going over it is flagged on the cycle page, never refused (REQ-COMP-009).",
+        "Sign as employee": "Sign as employee",
+        "Finalised on": "Finalised on",
+        "Signed by employee": "Signed by employee",
+        "Signed by employee on": "Signed by employee on",
+        "Employee's comment": "Employee's comment",
+        "When the reviewer finalised the review.": "When the reviewer finalised the review.",
+        "The employee's account that signed the review.": "The employee's account that signed the review.",
+        "When the employee signed the review.": "When the employee signed the review.",
+        "What the employee added when signing the review.": "What the employee added when signing the review.",
+        "Where this review has got to: draft, submitted, discussed, finalised or signed by the employee.": "Where this review has got to: draft, submitted, discussed, finalised or signed by the employee."
     },
     "nplurals=2; plural=(n != 1);"
 )

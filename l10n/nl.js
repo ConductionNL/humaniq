@@ -4038,7 +4038,17 @@ OC.L10N.register(
         "Budget used": "Budget gebruikt",
         "Budget left": "Budget over",
         "Over budget": "Boven budget",
-        "The raise budget of this cycle in cents: what the monthly raises of its proposed, approved and effective adjustments may add up to. Going over it is flagged on the cycle page, never refused (REQ-COMP-009).": "Het verhogingsbudget van deze cyclus in centen: wat de maandelijkse verhogingen van de voorgestelde, goedgekeurde en ingegane aanpassingen samen mogen kosten. Een overschrijding wordt op de cycluspagina gemeld, nooit geweigerd (REQ-COMP-009)."
+        "The raise budget of this cycle in cents: what the monthly raises of its proposed, approved and effective adjustments may add up to. Going over it is flagged on the cycle page, never refused (REQ-COMP-009).": "Het verhogingsbudget van deze cyclus in centen: wat de maandelijkse verhogingen van de voorgestelde, goedgekeurde en ingegane aanpassingen samen mogen kosten. Een overschrijding wordt op de cycluspagina gemeld, nooit geweigerd (REQ-COMP-009).",
+        "Sign as employee": "Ondertekenen als medewerker",
+        "Finalised on": "Vastgesteld op",
+        "Signed by employee": "Ondertekend door medewerker",
+        "Signed by employee on": "Ondertekend door medewerker op",
+        "Employee's comment": "Opmerking van de medewerker",
+        "When the reviewer finalised the review.": "Wanneer de beoordelaar de beoordeling heeft vastgesteld.",
+        "The employee's account that signed the review.": "Het account van de medewerker die de beoordeling heeft ondertekend.",
+        "When the employee signed the review.": "Wanneer de medewerker de beoordeling heeft ondertekend.",
+        "What the employee added when signing the review.": "Wat de medewerker bij het ondertekenen heeft toegevoegd.",
+        "Where this review has got to: draft, submitted, discussed, finalised or signed by the employee.": "Hoe ver deze beoordeling is: concept, ingediend, besproken, vastgesteld of ondertekend door de medewerker."
     },
     "nplurals=2; plural=(n != 1);"
 )
