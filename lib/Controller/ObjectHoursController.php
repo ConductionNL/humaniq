@@ -26,8 +26,8 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\ObjectWeekHoursInterface;
 use OCA\Humaniq\Service\HostObjectAccess;
-use OCA\Humaniq\Service\ObjectWeekHours;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,14 +48,14 @@ class ObjectHoursController extends Controller {
 	 *
 	 * @param IRequest        $request     The request object.
 	 * @param IUserSession    $userSession The calling user.
-	 * @param ObjectWeekHours  $weekHours   The week's hours per person.
+	 * @param ObjectWeekHoursInterface  $weekHours   The week's hours per person.
 	 * @param HostObjectAccess $hosts       Whether the caller may read the object.
 	 * @param LoggerInterface  $logger      Logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly IUserSession $userSession,
-		private readonly ObjectWeekHours $weekHours,
+		private readonly ObjectWeekHoursInterface $weekHours,
 		private readonly HostObjectAccess $hosts,
 		private readonly LoggerInterface $logger,
 	) {

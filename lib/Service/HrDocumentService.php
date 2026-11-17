@@ -75,6 +75,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\HrDocumentServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\FleetAppId;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
@@ -92,7 +93,7 @@ use OCA\Humaniq\Support\NormalisesRows;
  * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
  * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-002
  */
-class HrDocumentService {
+class HrDocumentService implements HrDocumentServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;

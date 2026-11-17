@@ -81,6 +81,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\AssetDialectMigrationServiceInterface;
 use OCA\Humaniq\Support\RegisterSlugLookup;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -97,7 +98,7 @@ use OCA\Humaniq\Support\KeepsReadableRows;
  *
  * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
  */
-class AssetDialectMigrationService {
+class AssetDialectMigrationService implements AssetDialectMigrationServiceInterface {
 
 	use ResolvesObjectServiceByClass;
 	use KeepsReadableRows;

@@ -40,6 +40,7 @@ use OCA\Humaniq\Event\EmployeeJoinedEvent;
 use OCA\Humaniq\Event\EmployeeLeftEvent;
 use OCA\Humaniq\Event\LeaveApprovedEvent;
 use OCA\Humaniq\Event\SicknessReportedEvent;
+use OCA\Humaniq\Kernel\Contracts\HrLifecycleEventServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
@@ -50,16 +51,11 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/hr-lifecycle-events/spec.md#REQ-HLE-001
  */
-class HrLifecycleEventService {
+class HrLifecycleEventService implements HrLifecycleEventServiceInterface {
 
 	public const TYPE_PREFIX = 'nl.conduction.hrmq.';
 
 	public const SOURCE = '/apps/humaniq/employees';
-
-	/**
-	 * The schemas whose writes can mark a moment, by slug.
-	 */
-	public const SLUGS = ['employmentcontract', 'onboarding', 'offboarding', 'orgassignment', 'leaverequest', 'sickleavecase'];
 
 	/**
 	 * The typed event class per moment.

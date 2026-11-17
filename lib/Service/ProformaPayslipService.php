@@ -36,6 +36,7 @@ namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
+use OCA\Humaniq\Kernel\Contracts\ProformaPayslipServiceInterface;
 use OCA\Humaniq\Payroll\CalculationInput;
 use OCA\Humaniq\Payroll\PayPeriod;
 use OCA\Humaniq\Payroll\CalculationLevies;
@@ -50,7 +51,7 @@ use OCA\Humaniq\Payroll\TaxTables;
  * Stateless builder: hypothetical params in, full gross-to-net breakdown out,
  * nothing persisted.
  */
-class ProformaPayslipService {
+class ProformaPayslipService implements ProformaPayslipServiceInterface {
 
 	/**
 	 * Why the simulation always assumes the low Awf premium.

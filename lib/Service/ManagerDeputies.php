@@ -29,16 +29,16 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\ManagerDeputiesInterface;
+
 /**
  * Resolves active deputies and judges a deputy record before it is saved.
  *
  * @spec openspec/specs/approvals-inbox/spec.md#REQ-API-002
  */
-class ManagerDeputies {
+class ManagerDeputies implements ManagerDeputiesInterface {
 
 	public const SCHEMA = 'ManagerDeputy';
-
-	public const SLUG = 'managerdeputy';
 
 	/**
 	 * Rows read once per request, since a notification or an inbox read asks

@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\AgendaReadAccessInterface;
 use OCP\IUserSession;
 
 /**
@@ -44,7 +45,7 @@ use OCP\IUserSession;
  *
  * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-007
  */
-class AgendaReadAccess {
+class AgendaReadAccess implements AgendaReadAccessInterface {
 
 	/**
 	 * The kinds a colleague sees. An interview is not one of them, and a kind

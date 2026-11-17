@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\ManagerDeputies;
+use OCA\Humaniq\Kernel\Contracts\ManagerDeputiesInterface;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
@@ -46,11 +46,11 @@ class ManagerDeputyListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ManagerDeputies $deputies The rules.
+	 * @param ManagerDeputiesInterface $deputies The rules.
 	 * @param IUserSession $userSession The writer.
 	 */
 	public function __construct(
-		private readonly ManagerDeputies $deputies,
+		private readonly ManagerDeputiesInterface $deputies,
 		private readonly IUserSession $userSession,
 	) {
 

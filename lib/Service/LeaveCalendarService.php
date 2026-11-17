@@ -48,6 +48,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\LeaveCalendarServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -59,7 +60,7 @@ use OCA\Humaniq\Support\ReadsIcsValues;
 /**
  * Upserts/removes approved-absence VEVENTs on the configured shared calendar.
  */
-class LeaveCalendarService {
+class LeaveCalendarService implements LeaveCalendarServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;

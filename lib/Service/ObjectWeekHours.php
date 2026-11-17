@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\ObjectWeekHoursInterface;
 use OCP\IUserManager;
 
 /**
@@ -37,7 +38,7 @@ use OCP\IUserManager;
  *
  * @spec openspec/specs/hours-leaf/spec.md#requirement-the-hours-surface-shows-the-week-per-person
  */
-class ObjectWeekHours {
+class ObjectWeekHours implements ObjectWeekHoursInterface {
 
 	/**
 	 * Unit names by id, read once per request.

@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\CompAdjustmentService;
+use OCA\Humaniq\Kernel\Contracts\CompAdjustmentServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -42,10 +42,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class CompEffectuateCommand extends Command {
 
 	/**
-	 * @param CompAdjustmentService $service The effectuation service.
+	 * @param CompAdjustmentServiceInterface $service The effectuation service.
 	 */
 	public function __construct(
-		private readonly CompAdjustmentService $service,
+		private readonly CompAdjustmentServiceInterface $service,
 	) {
 		parent::__construct();
 

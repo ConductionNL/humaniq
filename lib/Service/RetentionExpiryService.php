@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\RetentionExpiryServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -39,7 +40,7 @@ use OCA\Humaniq\Support\ResolvesObjectService;
 /**
  * Walks the retained schemas and releases and marks what has expired.
  */
-class RetentionExpiryService {
+class RetentionExpiryService implements RetentionExpiryServiceInterface {
 
 	use ResolvesObjectService;
 

@@ -32,12 +32,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\WpmReportServiceInterface;
+
 /**
  * The yearly mobility figures of one administration.
  *
  * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-004
  */
-class WpmReportService {
+class WpmReportService implements WpmReportServiceInterface {
 
 	/**
 	 * The headcount from which the reporting duty applies.

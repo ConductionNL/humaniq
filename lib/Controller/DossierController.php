@@ -32,7 +32,7 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\DossierCompletenessService;
+use OCA\Humaniq\Kernel\Contracts\DossierCompletenessServiceInterface;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
@@ -59,14 +59,14 @@ class DossierController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param RecordStoreInterface $gateway Register reads.
-	 * @param DossierCompletenessService $completeness The completeness rule.
+	 * @param DossierCompletenessServiceInterface $completeness The completeness rule.
 	 * @param RbacObjectReader $rbac What the caller may read.
 	 * @param IL10N $l10n Translations for the status labels.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly RecordStoreInterface $gateway,
-		private readonly DossierCompletenessService $completeness,
+		private readonly DossierCompletenessServiceInterface $completeness,
 		private readonly RbacObjectReader $rbac,
 		private readonly IL10N $l10n,
 	) {
@@ -99,7 +99,7 @@ class DossierController extends Controller {
 			'employee' => ($this->gateway->findObjectData($id, 'Employee') ?? $employee),
 			'DossierRequirement' => $this->gateway->loadAll('DossierRequirement'),
 		];
-		foreach (DossierCompletenessService::SOURCES as $schema) {
+		foreach (DossierCompletenessServiceInterface::SOURCES as $schema) {
 			if ($schema === 'DossierRequirement') {
 				continue;
 			}
@@ -130,7 +130,7 @@ class DossierController extends Controller {
 		}
 
 		$rows = [];
-		foreach (DossierCompletenessService::SOURCES as $schema) {
+		foreach (DossierCompletenessServiceInterface::SOURCES as $schema) {
 			$rows[$schema] = $this->gateway->loadAll($schema);
 		}
 
@@ -166,7 +166,7 @@ class DossierController extends Controller {
 		$gaps = array_values(
 			array_filter(
 				$this->labelled(rows: $this->completeness->statusFor(employeeId: $employeeId, date: $day, rows: $sources)),
-				static fn (array $row): bool => $row['status'] !== DossierCompletenessService::PRESENT
+				static fn (array $row): bool => $row['status'] !== DossierCompletenessServiceInterface::PRESENT
 			)
 		);
 		if ($gaps === []) {

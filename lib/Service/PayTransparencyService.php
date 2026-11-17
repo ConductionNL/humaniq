@@ -34,12 +34,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\PayTransparencyServiceInterface;
+
 /**
  * Computes the gender pay gap indicators for one administration and year.
  *
  * @spec openspec/specs/pay-transparency/spec.md#REQ-PTR-001
  */
-class PayTransparencyService {
+class PayTransparencyService implements PayTransparencyServiceInterface {
 
 	/**
 	 * The category of an employee whose function carries no pay category.

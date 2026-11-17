@@ -32,7 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Notification;
 
-use OCA\Humaniq\Service\ManagerDeputies;
+use OCA\Humaniq\Kernel\Contracts\ManagerDeputiesInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Notifications\Service\Notification\RecipientResolverInterface;
 
@@ -44,10 +44,10 @@ use OCA\OpenRegister\Notifications\Service\Notification\RecipientResolverInterfa
 class ManagerOrDeputyRecipientResolver implements RecipientResolverInterface {
 
 	/**
-	 * @param ManagerDeputies $deputies Managers and their deputies.
+	 * @param ManagerDeputiesInterface $deputies Managers and their deputies.
 	 */
 	public function __construct(
-		private readonly ManagerDeputies $deputies,
+		private readonly ManagerDeputiesInterface $deputies,
 	) {
 
 	}//end __construct()

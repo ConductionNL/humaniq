@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\WageTaxRemittanceServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
@@ -40,7 +41,7 @@ use OCA\Humaniq\Support\ResolvesObjectService;
  *
  * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
-class WageTaxRemittanceService {
+class WageTaxRemittanceService implements WageTaxRemittanceServiceInterface {
 
 	use ResolvesObjectService;
 

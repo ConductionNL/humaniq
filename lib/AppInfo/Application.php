@@ -30,6 +30,10 @@ namespace OCA\Humaniq\AppInfo;
 
 use OCA\Humaniq\Command\RulesAuditCommand;
 use OCA\Humaniq\Command\RulesSeedTestDataCommand;
+use OCA\Humaniq\Kernel\Contracts\AnnouncementServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\HrLifecycleEventServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\ManagerDeputiesInterface;
+use OCA\Humaniq\Kernel\Contracts\TimeEntryEventServiceInterface;
 use OCA\Humaniq\Lifecycle\ChangeApproverRoleGuard;
 use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
@@ -83,7 +87,6 @@ use OCA\Humaniq\Listener\RecurringAllowanceStampListener;
 use OCA\Humaniq\Listener\RelationsCaseListener;
 use OCA\Humaniq\Listener\AnnouncementConfirmationListener;
 use OCA\Humaniq\Middleware\ApiContractMiddleware;
-use OCA\Humaniq\Service\AnnouncementService;
 use OCA\Humaniq\Listener\SideActivityListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimeEstimateListener;
@@ -98,14 +101,12 @@ use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Service\ContractBindings;
+use OCA\Humaniq\Service\SideActivityRegister;
 use OCA\Humaniq\Service\TaxTableSetService;
-use OCA\Humaniq\Service\HrLifecycleEventService;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\JurisdictionPackService;
-use OCA\Humaniq\Service\ManagerDeputies;
 use OCA\Humaniq\Service\RosterCheckService;
-use OCA\Humaniq\Service\SideActivityRegister;
-use OCA\Humaniq\Service\TimeEntryEventService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -172,8 +173,9 @@ class Application extends App implements IBootstrap {
 		// self-service-policy-assistant D2: offer Hermiq the HR-vraagbaak template.
 		// The event is named by string, so humaniq installs without Hermiq.
 		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);
-		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class)));
+		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Kernel\Contracts\RuleAuditServiceInterface::class)));
 		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
+		(new ContractBindings())->register(context: $context);
 		$context->registerServiceAlias(\OCA\Humaniq\Service\RecordStoreInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 		$context->registerServiceAlias(\OCA\Humaniq\Service\OrgLookupInterface::class, \OCA\Humaniq\Service\HoursRegisterGateway::class);
 
@@ -310,7 +312,7 @@ class Application extends App implements IBootstrap {
 			static function ($c): RightToWorkGuard {
 				return new RightToWorkGuard(
 					gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class),
-					rule: $c->get(\OCA\Humaniq\Service\RightToWorkService::class)
+					rule: $c->get(\OCA\Humaniq\Kernel\Contracts\RightToWorkServiceInterface::class)
 				);
 			}
 		);
@@ -508,7 +510,7 @@ class Application extends App implements IBootstrap {
 			event: ObjectUpdatedEvent::class,
 			listener: TimesheetApprovalListener::class,
 			registers: null,
-			schemas: [TimeEntryEventService::TIMESHEET_SLUG]
+			schemas: [TimeEntryEventServiceInterface::TIMESHEET_SLUG]
 		);
 
 		$this->registerHoursListeners($dispatcher);
@@ -952,7 +954,7 @@ class Application extends App implements IBootstrap {
 			event: ObjectCreatingEvent::class,
 			listener: AnnouncementConfirmationListener::class,
 			registers: null,
-			schemas: [AnnouncementService::CONFIRMATION_SLUG]
+			schemas: [AnnouncementServiceInterface::CONFIRMATION_SLUG]
 		);
 
 	}//end registerAnnouncementListener()
@@ -1041,7 +1043,7 @@ class Application extends App implements IBootstrap {
 				event: $event,
 				listener: ManagerDeputyListener::class,
 				registers: null,
-				schemas: [ManagerDeputies::SLUG]
+				schemas: [ManagerDeputiesInterface::SLUG]
 			);
 		}
 
@@ -1096,7 +1098,7 @@ class Application extends App implements IBootstrap {
 				event: $event,
 				listener: HrLifecycleEventListener::class,
 				registers: null,
-				schemas: HrLifecycleEventService::SLUGS
+				schemas: HrLifecycleEventServiceInterface::SLUGS
 			);
 		}
 

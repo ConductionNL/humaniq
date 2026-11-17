@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use InvalidArgumentException;
-use OCA\Humaniq\Service\EmploymentTermsResolver;
+use OCA\Humaniq\Kernel\Contracts\EmploymentTermsResolverInterface;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
@@ -51,12 +51,12 @@ class CaoComponentOverrideListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param EmploymentTermsResolver $terms The override rules.
+	 * @param EmploymentTermsResolverInterface $terms The override rules.
 	 *
 	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-002
 	 */
 	public function __construct(
-		private readonly EmploymentTermsResolver $terms,
+		private readonly EmploymentTermsResolverInterface $terms,
 	) {
 	}//end __construct()
 

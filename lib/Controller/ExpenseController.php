@@ -35,9 +35,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\ReceiptExtractionServiceInterface;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\HumaniqRoles;
-use OCA\Humaniq\Service\ReceiptExtractionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
@@ -56,13 +56,13 @@ class ExpenseController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param ReceiptExtractionService $receiptExtractionService The receipt-extraction service.
+	 * @param ReceiptExtractionServiceInterface $receiptExtractionService The receipt-extraction service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ReceiptExtractionService $receiptExtractionService,
+		private readonly ReceiptExtractionServiceInterface $receiptExtractionService,
 		private readonly SettingsService $settingsService,
 		private readonly CallerContext $caller,
 	) {

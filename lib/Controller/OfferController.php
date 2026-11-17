@@ -33,8 +33,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\OfferEsignServiceInterface;
 use OCA\Humaniq\Service\CallerContext;
-use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
@@ -53,13 +53,13 @@ class OfferController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param OfferEsignService $offerEsignService The offer-letter + e-signature service.
+	 * @param OfferEsignServiceInterface $offerEsignService The offer-letter + e-signature service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly OfferEsignService $offerEsignService,
+		private readonly OfferEsignServiceInterface $offerEsignService,
 		private readonly SettingsService $settingsService,
 		private readonly CallerContext $caller,
 	) {

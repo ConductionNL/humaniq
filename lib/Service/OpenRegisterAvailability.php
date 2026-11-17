@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\OpenRegisterAvailabilityInterface;
 use OCP\App\IAppManager;
 
 /**
@@ -32,7 +33,7 @@ use OCP\App\IAppManager;
  *
  * @spec openspec/specs/hrm-rule-engine/spec.md
  */
-final class OpenRegisterAvailability {
+final class OpenRegisterAvailability implements OpenRegisterAvailabilityInterface {
 
 	/**
 	 * @param IAppManager $appManager The app manager.

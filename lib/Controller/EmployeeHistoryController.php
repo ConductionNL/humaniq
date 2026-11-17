@@ -31,8 +31,8 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\EmployeeHistoryServiceInterface;
 use OCA\Humaniq\Service\AbsenceRateService;
-use OCA\Humaniq\Service\EmployeeHistoryService;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
@@ -47,15 +47,15 @@ use OCP\IRequest;
 class EmployeeHistoryController extends Controller {
 
 	/**
-	 * @param IRequest               $request The request.
-	 * @param RecordStoreInterface   $gateway Loads the employee's rows per schema.
-	 * @param EmployeeHistoryService $history Maps and orders the rows.
-	 * @param RbacObjectReader       $rbac    Reads under the caller's own RBAC.
+	 * @param IRequest                        $request The request.
+	 * @param RecordStoreInterface            $gateway Loads the employee's rows per schema.
+	 * @param EmployeeHistoryServiceInterface $history Maps and orders the rows.
+	 * @param RbacObjectReader                $rbac    Reads under the caller's own RBAC.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly RecordStoreInterface $gateway,
-		private readonly EmployeeHistoryService $history,
+		private readonly EmployeeHistoryServiceInterface $history,
 		private readonly RbacObjectReader $rbac,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -77,7 +77,7 @@ class EmployeeHistoryController extends Controller {
 		}
 
 		$rows = [];
-		foreach (array_keys(EmployeeHistoryService::SOURCES) as $schema) {
+		foreach (array_keys(EmployeeHistoryServiceInterface::SOURCES) as $schema) {
 			$rows[$schema] = $this->readable(schema: $schema, employeeId: $id);
 		}
 

@@ -41,13 +41,14 @@ namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
+use OCA\Humaniq\Kernel\Contracts\DepartmentFiguresServiceInterface;
 
 /**
  * Unit figures for the comparison, the manager's units and one unit.
  *
  * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
  */
-class DepartmentFiguresService {
+class DepartmentFiguresService implements DepartmentFiguresServiceInterface {
 
 	/**
 	 * The schemas a unit row reads.

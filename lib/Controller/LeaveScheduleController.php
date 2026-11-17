@@ -43,10 +43,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\AgendaReadAccess;
-use OCA\Humaniq\Service\DepartmentLeaveScheduleService;
+use OCA\Humaniq\Kernel\Contracts\AgendaReadAccessInterface;
+use OCA\Humaniq\Kernel\Contracts\DepartmentLeaveScheduleServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\LeaveCoverageWarningInterface;
 use OCA\Humaniq\Service\RecordStoreInterface;
-use OCA\Humaniq\Service\LeaveCoverageWarning;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -68,18 +68,18 @@ class LeaveScheduleController extends Controller {
 	/**
 	 * @param IRequest $request The request object.
 	 * @param RecordStoreInterface $gateway The shared register plumbing.
-	 * @param DepartmentLeaveScheduleService $schedule Composes the schedule on read.
-	 * @param LeaveCoverageWarning $warnings The coverage warning of one request.
+	 * @param DepartmentLeaveScheduleServiceInterface $schedule Composes the schedule on read.
+	 * @param LeaveCoverageWarningInterface $warnings The coverage warning of one request.
 	 * @param RbacObjectReader $rbac Reads one object under the caller's own ambient RBAC.
-	 * @param AgendaReadAccess $access Who may read an org unit's agenda.
+	 * @param AgendaReadAccessInterface $access Who may read an org unit's agenda.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly RecordStoreInterface $gateway,
-		private readonly DepartmentLeaveScheduleService $schedule,
-		private readonly LeaveCoverageWarning $warnings,
+		private readonly DepartmentLeaveScheduleServiceInterface $schedule,
+		private readonly LeaveCoverageWarningInterface $warnings,
 		private readonly RbacObjectReader $rbac,
-		private readonly AgendaReadAccess $access,
+		private readonly AgendaReadAccessInterface $access,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()

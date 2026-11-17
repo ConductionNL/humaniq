@@ -37,6 +37,7 @@ namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Humaniq\Kernel\Contracts\HrDocumentSigningServiceInterface;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 
@@ -45,7 +46,7 @@ use Psr\Container\ContainerInterface;
  *
  * @spec openspec/specs/hr-document-signing/spec.md#REQ-HDS-001
  */
-class HrDocumentSigningService {
+class HrDocumentSigningService implements HrDocumentSigningServiceInterface {
 
 	/**
 	 * The document types that can be signed, and whether the employee signs too.

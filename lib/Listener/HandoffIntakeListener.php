@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\SalaryBureauExchangeService;
+use OCA\Humaniq\Kernel\Contracts\SalaryBureauExchangeServiceInterface;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -51,13 +51,13 @@ class HandoffIntakeListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param SalaryBureauExchangeService $handoffs The intake check.
+	 * @param SalaryBureauExchangeServiceInterface $handoffs The intake check.
 	 * @param LoggerInterface       $logger   The logger.
 	 *
 	 * @spec openspec/specs/payroll-external-bureau-handoff/spec.md#REQ-PXB-004
 	 */
 	public function __construct(
-		private readonly SalaryBureauExchangeService $handoffs,
+		private readonly SalaryBureauExchangeServiceInterface $handoffs,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

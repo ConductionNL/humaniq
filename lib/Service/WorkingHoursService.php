@@ -66,6 +66,7 @@ namespace OCA\Humaniq\Service;
 
 use DateInterval;
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\WorkingHoursServiceInterface;
 
 /**
  * Pure calculator answering the contracted hours of one employee on one date,
@@ -73,7 +74,7 @@ use DateTimeImmutable;
  *
  * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-003
  */
-class WorkingHoursService {
+class WorkingHoursService implements WorkingHoursServiceInterface {
 
 	/**
 	 * The `WorkingPattern` property holding each weekday's contracted hours.

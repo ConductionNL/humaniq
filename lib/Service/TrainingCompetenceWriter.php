@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\TrainingCompetenceWriterInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -37,7 +38,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *
  * @spec openspec/specs/training-and-lms-sync/spec.md#REQ-TRN-001
  */
-class TrainingCompetenceWriter {
+class TrainingCompetenceWriter implements TrainingCompetenceWriterInterface {
 
 	/**
 	 * The competence schema.

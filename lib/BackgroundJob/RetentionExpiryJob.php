@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\BackgroundJob;
 
 use DateTimeImmutable;
-use OCA\Humaniq\Service\RetentionExpiryService;
+use OCA\Humaniq\Kernel\Contracts\RetentionExpiryServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
@@ -47,13 +47,13 @@ class RetentionExpiryJob extends TimedJob {
 	private const INTERVAL_SECONDS = 86400;
 
 	/**
-	 * @param ITimeFactory           $time    Time factory.
-	 * @param RetentionExpiryService $service The walk.
-	 * @param LoggerInterface        $logger  Logger.
+	 * @param ITimeFactory                    $time    Time factory.
+	 * @param RetentionExpiryServiceInterface $service The walk.
+	 * @param LoggerInterface                 $logger  Logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly RetentionExpiryService $service,
+		private readonly RetentionExpiryServiceInterface $service,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

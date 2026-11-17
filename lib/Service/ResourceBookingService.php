@@ -43,12 +43,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\ResourceBookingServiceInterface;
+
 /**
  * Decides whether a resource booking may be written.
  *
  * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-004
  */
-class ResourceBookingService {
+class ResourceBookingService implements ResourceBookingServiceInterface {
 
 	/**
 	 * The refusal for one booking, or null when it may be written.

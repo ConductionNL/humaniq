@@ -36,13 +36,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\LeaveCoverageWarningInterface;
 
 /**
  * Composes the coverage warning of one leave request.
  *
  * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
  */
-class LeaveCoverageWarning {
+class LeaveCoverageWarning implements LeaveCoverageWarningInterface {
 
 	/**
 	 * Constructor.
