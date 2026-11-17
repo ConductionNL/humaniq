@@ -58,7 +58,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\CompAdjustmentServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -71,7 +75,7 @@ use OCA\Humaniq\Support\LoadsAllRows;
  *
  * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-006
  */
-class CompAdjustmentService {
+class CompAdjustmentService implements CompAdjustmentServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;
@@ -253,9 +257,10 @@ class CompAdjustmentService {
 
 			$this->objectService()->saveObject(
 				object: $employeeUpdate,
-				register: $this->register(),
-				schema: 'Employee',
-				uuid: $employeeId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'Employee'),
+					uuid: $employeeId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -268,9 +273,10 @@ class CompAdjustmentService {
 			try {
 				$this->objectService()->saveObject(
 					object: $contractChange['contract'],
-					register: $this->register(),
-					schema: 'EmploymentContract',
-					uuid: (string)$contractChange['contractId'],
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $this->register(), schema: 'EmploymentContract'),
+						uuid: (string)$contractChange['contractId']
+					),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -288,9 +294,10 @@ class CompAdjustmentService {
 
 			$this->objectService()->saveObject(
 				object: $adjustmentUpdate,
-				register: $this->register(),
-				schema: 'CompAdjustment',
-				uuid: $adjustmentId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'CompAdjustment'),
+					uuid: $adjustmentId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -375,7 +382,7 @@ class CompAdjustmentService {
 	 */
 	private function findById(string $schema, string $id): ?array {
 		try {
-			$row = $this->objectService()->find(id: $id, register: $this->register(), schema: $schema);
+			$row = $this->objectService()->find(id: $id, options: new ObjectFindOptions(register: $this->register(), schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->info('CompAdjustmentService: kon ' . $schema . ' ' . $id . ' niet laden: ' . $e->getMessage());
 			return null;

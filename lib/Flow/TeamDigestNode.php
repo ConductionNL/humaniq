@@ -29,9 +29,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Flow;
 
 use InvalidArgumentException;
-use OCA\Humaniq\Service\TeamDigestComposer;
+use OCA\Humaniq\Kernel\Contracts\TeamDigestComposerInterface;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
-use OCA\OpenRegister\Service\Flow\IFlowNode;
+use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\WorkflowEngine\IManager;
@@ -41,24 +41,24 @@ use OCP\WorkflowEngine\IManager;
  *
  * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
  */
-class TeamDigestNode implements IFlowNode {
+class TeamDigestNode implements ICallFlowNode {
 
 	public const OUTCOME_KEY = 'digest';
 
 	/**
 	 * Constructor.
 	 *
-	 * @param IL10N              $l10n     Translations.
-	 * @param IURLGenerator      $urls     For the step icon.
-	 * @param TeamDigestComposer $composer Builds the message.
-	 * @param string|null        $today    The day to compose for; today when null (tests pin it).
+	 * @param IL10N                       $l10n     Translations.
+	 * @param IURLGenerator               $urls     For the step icon.
+	 * @param TeamDigestComposerInterface $composer Builds the message.
+	 * @param string|null                 $today    The day to compose for; today when null (tests pin it).
 	 *
 	 * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-003
 	 */
 	public function __construct(
 		private readonly IL10N $l10n,
 		private readonly IURLGenerator $urls,
-		private readonly TeamDigestComposer $composer,
+		private readonly TeamDigestComposerInterface $composer,
 		private readonly ?string $today=null,
 	) {
 

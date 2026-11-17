@@ -223,7 +223,7 @@
             {
                 "@self": {
                     "register": "humaniq",
-                    "schema": "GeneratedDocument",
+                    "schema": "HrGeneratedDocument",
                     "slug": "gendoc-arbeidsovereenkomst-jansen"
                 },
                 "documentType": "arbeidsovereenkomst",
@@ -238,7 +238,7 @@
             {
                 "@self": {
                     "register": "humaniq",
-                    "schema": "GeneratedDocument",
+                    "schema": "HrGeneratedDocument",
                     "slug": "gendoc-werkgeversverklaring-jansen-skipped"
                 },
                 "documentType": "werkgeversverklaring",
@@ -272,7 +272,7 @@
             {
                 "@self": {
                     "register": "humaniq",
-                    "schema": "GeneratedDocument",
+                    "schema": "HrGeneratedDocument",
                     "slug": "gendoc-loonstrook-jansen-2026-05"
                 },
                 "documentType": "loonstrook",

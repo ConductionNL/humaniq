@@ -53,10 +53,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\AvgDsrService;
+use OCA\Humaniq\Kernel\Contracts\AvgDsrServiceInterface;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -83,13 +84,13 @@ class AvgDsrController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param AvgDsrService $avgDsrService The DSR orchestration service.
+	 * @param AvgDsrServiceInterface $avgDsrService The DSR orchestration service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param CallerContext $caller The signed-in caller (admin gate; ambient session for the guarded OpenRegister service), their roles and the container.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly AvgDsrService $avgDsrService,
+		private readonly AvgDsrServiceInterface $avgDsrService,
 		private readonly SettingsService $settingsService,
 		private readonly CallerContext $caller,
 	) {
@@ -382,8 +383,7 @@ class AvgDsrController extends Controller {
 		try {
 			$employee = $this->objectService()->find(
 				id: $employeeId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Employee'
+				options: new ObjectFindOptions(register: $this->settingsService->getRegisterSlug(), schema: 'Employee')
 			);
 		} catch (\Throwable $e) {
 			return null;

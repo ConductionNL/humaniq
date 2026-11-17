@@ -28,18 +28,18 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\AnnouncementServiceInterface;
+
 /**
  * Audience matching and read confirmations for announcements.
  *
  * @spec openspec/specs/announcements-and-digest/spec.md#REQ-AND-001
  */
-class AnnouncementService {
+class AnnouncementService implements AnnouncementServiceInterface {
 
 	public const ANNOUNCEMENT = 'Announcement';
 
 	public const CONFIRMATION = 'AnnouncementConfirmation';
-
-	public const CONFIRMATION_SLUG = 'announcementconfirmation';
 
 	private const PUBLISHED = 'gepubliceerd';
 

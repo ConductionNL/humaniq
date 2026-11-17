@@ -41,13 +41,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\ForwardCapacityServiceInterface;
 
 /**
  * Reads planned hours against contracted hours, forward from a date.
  *
  * @spec openspec/specs/rostering/spec.md#REQ-ROST-C03
  */
-class ForwardCapacityService {
+class ForwardCapacityService implements ForwardCapacityServiceInterface {
 
 	/**
 	 * Constructor.

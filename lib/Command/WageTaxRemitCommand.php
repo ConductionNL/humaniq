@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\WageTaxRemittanceService;
+use OCA\Humaniq\Kernel\Contracts\WageTaxRemittanceServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -40,10 +40,10 @@ class WageTaxRemitCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param WageTaxRemittanceService $service The hand-off.
+	 * @param WageTaxRemittanceServiceInterface $service The hand-off.
 	 */
 	public function __construct(
-		private readonly WageTaxRemittanceService $service,
+		private readonly WageTaxRemittanceServiceInterface $service,
 	) {
 		parent::__construct();
 	}//end __construct()

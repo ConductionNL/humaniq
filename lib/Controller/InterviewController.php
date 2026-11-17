@@ -34,10 +34,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\InterviewCalendarServiceInterface;
 use OCA\Humaniq\Service\CallerContext;
-use OCA\Humaniq\Service\InterviewCalendarService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -53,13 +54,13 @@ class InterviewController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param InterviewCalendarService $interviewCalendarService The interview-calendar-sync service.
+	 * @param InterviewCalendarServiceInterface $interviewCalendarService The interview-calendar-sync service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly InterviewCalendarService $interviewCalendarService,
+		private readonly InterviewCalendarServiceInterface $interviewCalendarService,
 		private readonly SettingsService $settingsService,
 		private readonly CallerContext $caller,
 	) {
@@ -150,8 +151,10 @@ class InterviewController extends Controller {
 		try {
 			$interview = $this->objectService()->find(
 				id: $interviewId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Interview'
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: 'Interview'
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('InterviewController: an interview lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);

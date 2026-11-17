@@ -35,13 +35,13 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\AgendaComposer;
+use OCA\Humaniq\Kernel\Contracts\AgendaComposerInterface;
+use OCA\Humaniq\Kernel\Contracts\AgendaReadAccessInterface;
+use OCA\Humaniq\Kernel\Contracts\AvailabilityServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\ForwardCapacityServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\WorkingCalendarReaderInterface;
 use OCA\Humaniq\Service\AgendaSubject;
-use OCA\Humaniq\Service\AgendaReadAccess;
-use OCA\Humaniq\Service\AvailabilityService;
-use OCA\Humaniq\Service\ForwardCapacityService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
-use OCA\Humaniq\Service\WorkingCalendarReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -81,20 +81,20 @@ class AgendaController extends Controller {
 	/**
 	 * @param IRequest $request The request object.
 	 * @param HoursRegisterGateway $gateway The shared register plumbing.
-	 * @param AgendaComposer $agenda Composes the agenda on read.
-	 * @param AvailabilityService $availability Answers free hours per employee.
-	 * @param ForwardCapacityService $capacity Reads planned against contracted.
-	 * @param AgendaReadAccess $access Who may read which agenda, and the members of a unit.
-	 * @param WorkingCalendarReader $workingCalendar openregister's working calendar, read and never owned.
+	 * @param AgendaComposerInterface $agenda Composes the agenda on read.
+	 * @param AvailabilityServiceInterface $availability Answers free hours per employee.
+	 * @param ForwardCapacityServiceInterface $capacity Reads planned against contracted.
+	 * @param AgendaReadAccessInterface $access Who may read which agenda, and the members of a unit.
+	 * @param WorkingCalendarReaderInterface $workingCalendar openregister's working calendar, read and never owned.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly HoursRegisterGateway $gateway,
-		private readonly AgendaComposer $agenda,
-		private readonly AvailabilityService $availability,
-		private readonly ForwardCapacityService $capacity,
-		private readonly AgendaReadAccess $access,
-		private readonly WorkingCalendarReader $workingCalendar,
+		private readonly AgendaComposerInterface $agenda,
+		private readonly AvailabilityServiceInterface $availability,
+		private readonly ForwardCapacityServiceInterface $capacity,
+		private readonly AgendaReadAccessInterface $access,
+		private readonly WorkingCalendarReaderInterface $workingCalendar,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 

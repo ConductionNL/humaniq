@@ -32,7 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\AssetDialectMigrationService;
+use OCA\Humaniq\Kernel\Contracts\AssetDialectMigrationServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -43,12 +43,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 class AssetsMigrateDialectCommand extends Command {
 
 	/**
-	 * @param AssetDialectMigrationService $migrationService The migration.
+	 * @param AssetDialectMigrationServiceInterface $migrationService The migration.
 	 *
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function __construct(
-		private readonly AssetDialectMigrationService $migrationService,
+		private readonly AssetDialectMigrationServiceInterface $migrationService,
 	) {
 		parent::__construct();
 

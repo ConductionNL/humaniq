@@ -41,7 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\ReceiptExtractionService;
+use OCA\Humaniq\Kernel\Contracts\ReceiptExtractionServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -61,11 +61,11 @@ class ExpenseExtractReceiptCommand extends Command {
 	private const FAILURE_STATUSES = ['failed'];
 
 	/**
-	 * @param ReceiptExtractionService $service The receipt-extraction service.
+	 * @param ReceiptExtractionServiceInterface $service The receipt-extraction service.
 	 * @param PrivilegedSessionResolver $sessionResolver The shared --as-user session establishment mechanism (the humaniq:avg:* precedent).
 	 */
 	public function __construct(
-		private readonly ReceiptExtractionService $service,
+		private readonly ReceiptExtractionServiceInterface $service,
 		private readonly PrivilegedSessionResolver $sessionResolver,
 	) {
 		parent::__construct();

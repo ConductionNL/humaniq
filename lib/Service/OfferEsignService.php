@@ -97,6 +97,7 @@ namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Humaniq\Kernel\Contracts\OfferEsignServiceInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -105,7 +106,7 @@ use Psr\Log\LoggerInterface;
  * Generates an offer letter and raises a docudesk e-signature request for a
  * recruiting Application at the `aanbod` stage.
  */
-class OfferEsignService {
+class OfferEsignService implements OfferEsignServiceInterface {
 
 	/**
 	 * @var string

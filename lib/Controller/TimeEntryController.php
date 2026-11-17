@@ -40,10 +40,10 @@ namespace OCA\Humaniq\Controller;
 
 use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\RunningTimerServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\TimeEstimateServiceInterface;
 use OCA\Humaniq\Listener\HoursWriteRefusedException;
 use OCA\Humaniq\Service\HoursRegisterGateway;
-use OCA\Humaniq\Service\RunningTimerService;
-use OCA\Humaniq\Service\TimeEstimateService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -64,18 +64,18 @@ class TimeEntryController extends Controller {
 	 *
 	 * @param IRequest            $request      The request object.
 	 * @param IUserSession        $userSession  The calling user, the only identity any of these methods trusts.
-	 * @param RunningTimerService $timers       Start, stop and resolve the running timer.
+	 * @param RunningTimerServiceInterface $timers       Start, stop and resolve the running timer.
 	 * @param LoggerInterface     $logger       Logger.
 	 * @param HoursRegisterGateway $gateway     The shared register plumbing (the estimate read).
-	 * @param TimeEstimateService $estimates    Derives estimated, spent and remaining.
+	 * @param TimeEstimateServiceInterface $estimates    Derives estimated, spent and remaining.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly IUserSession $userSession,
-		private readonly RunningTimerService $timers,
+		private readonly RunningTimerServiceInterface $timers,
 		private readonly LoggerInterface $logger,
 		private readonly HoursRegisterGateway $gateway,
-		private readonly TimeEstimateService $estimates,
+		private readonly TimeEstimateServiceInterface $estimates,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -155,10 +155,10 @@ class TimeEntryController extends Controller {
 		}
 
 		if ($running === null) {
-			return new JSONResponse(['status' => RunningTimerService::STATUS_NONE]);
+			return new JSONResponse(['status' => RunningTimerServiceInterface::STATUS_NONE]);
 		}
 
-		return new JSONResponse(['status' => RunningTimerService::STATUS_RUNNING, 'entry' => $running]);
+		return new JSONResponse(['status' => RunningTimerServiceInterface::STATUS_RUNNING, 'entry' => $running]);
 	}//end timer()
 
 	/**
@@ -189,8 +189,8 @@ class TimeEntryController extends Controller {
 		}
 
 		return match ((string)$result['status']) {
-			RunningTimerService::STATUS_INVALID => new JSONResponse($result, Http::STATUS_BAD_REQUEST),
-			RunningTimerService::STATUS_ALREADY_RUNNING => new JSONResponse($result, Http::STATUS_CONFLICT),
+			RunningTimerServiceInterface::STATUS_INVALID => new JSONResponse($result, Http::STATUS_BAD_REQUEST),
+			RunningTimerServiceInterface::STATUS_ALREADY_RUNNING => new JSONResponse($result, Http::STATUS_CONFLICT),
 			default => new JSONResponse($result),
 		};
 	}//end startTimer()
@@ -218,9 +218,9 @@ class TimeEntryController extends Controller {
 			return $this->refused($e);
 		}
 
-		if ((string)$result['status'] === RunningTimerService::STATUS_NONE) {
+		if ((string)$result['status'] === RunningTimerServiceInterface::STATUS_NONE) {
 			return new JSONResponse(
-				['status' => RunningTimerService::STATUS_NONE, 'error' => 'Er loopt geen timer om te stoppen.'],
+				['status' => RunningTimerServiceInterface::STATUS_NONE, 'error' => 'Er loopt geen timer om te stoppen.'],
 				Http::STATUS_NOT_FOUND
 			);
 		}
@@ -344,7 +344,7 @@ class TimeEntryController extends Controller {
 		$this->logger->info('TimeEntryController: a timer request was refused.', ['exceptionClass' => $e::class]);
 
 		return new JSONResponse(
-			['status' => RunningTimerService::STATUS_INVALID, 'error' => $e->getMessage()],
+			['status' => RunningTimerServiceInterface::STATUS_INVALID, 'error' => $e->getMessage()],
 			Http::STATUS_BAD_REQUEST
 		);
 	}//end refused()

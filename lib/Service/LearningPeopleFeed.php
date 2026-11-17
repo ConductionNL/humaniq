@@ -29,12 +29,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\LearningPeopleFeedInterface;
+
 /**
  * Composes the people feed for learning platforms.
  *
  * @spec openspec/specs/training-and-lms-sync/spec.md#REQ-TRN-002
  */
-class LearningPeopleFeed {
+class LearningPeopleFeed implements LearningPeopleFeedInterface {
 
 	/**
 	 * Constructor.

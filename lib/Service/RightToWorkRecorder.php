@@ -31,22 +31,19 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\RightToWorkRecorderInterface;
+
 /**
  * Stamps and follows up a right-to-work check.
  *
  * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
-class RightToWorkRecorder {
+class RightToWorkRecorder implements RightToWorkRecorderInterface {
 
 	/**
 	 * The requirement code a residence document is filed under.
 	 */
 	public const RESIDENCE_REQUIREMENT = 'verblijfsdocument';
-
-	/**
-	 * The RightToWorkCheck schema slug, lower case.
-	 */
-	public const CHECK_SLUG = 'righttoworkcheck';
 
 	/**
 	 * Constructor.

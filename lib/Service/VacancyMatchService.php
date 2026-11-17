@@ -31,10 +31,12 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\VacancyMatchServiceInterface;
+
 /**
  * The match score and the ranked list for one vacancy.
  */
-class VacancyMatchService {
+class VacancyMatchService implements VacancyMatchServiceInterface {
 
 	private const EDUCATION_POINTS = 25.0;
 	private const EXPERIENCE_POINTS = 25.0;

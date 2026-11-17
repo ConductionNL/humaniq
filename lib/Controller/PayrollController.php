@@ -84,14 +84,15 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\WkrServiceInterface;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\PayrollRunServices;
 use OCA\Humaniq\Service\SettingsService;
-use OCA\Humaniq\Service\WkrService;
 use OCA\Humaniq\Standards\Checks\NlDgaChecks;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\ReadsTypedRequestParameters;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -142,7 +143,7 @@ class PayrollController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param WkrService $wkrService The WKR vrije-ruimte assessment roll-up service.
+	 * @param WkrServiceInterface $wkrService The WKR vrije-ruimte assessment roll-up service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param PayrollRunServices $runs Recalculates runs, diffs and persists mutations, simulates pro-forma payslips and settles retro adjustments.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
@@ -150,7 +151,7 @@ class PayrollController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private readonly PayrollRunServices $runs,
-		private readonly WkrService $wkrService,
+		private readonly WkrServiceInterface $wkrService,
 		private readonly SettingsService $settingsService,
 		private readonly CallerContext $caller,
 	) {
@@ -565,8 +566,10 @@ class PayrollController extends Controller {
 		try {
 			$adjustment = $this->objectService()->find(
 				id: $adjustmentId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'PayrollAdjustment'
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: 'PayrollAdjustment'
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('PayrollController: a payroll adjustment lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
@@ -646,8 +649,10 @@ class PayrollController extends Controller {
 		try {
 			$assessment = $this->objectService()->find(
 				id: $assessmentId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'WkrAssessment'
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: 'WkrAssessment'
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('PayrollController: a WKR assessment lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
@@ -678,8 +683,10 @@ class PayrollController extends Controller {
 		try {
 			$run = $this->objectService()->find(
 				id: $runId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'PayrollRun'
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: 'PayrollRun'
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('PayrollController: a payroll run lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);

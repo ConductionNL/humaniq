@@ -37,6 +37,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\AgendaController;
+use OCA\Humaniq\Kernel\Contracts\AgendaComposerInterface;
+use OCA\Humaniq\Kernel\Contracts\AgendaReadAccessInterface;
+use OCA\Humaniq\Kernel\Contracts\AvailabilityServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\ForwardCapacityServiceInterface;
+use OCA\Humaniq\Kernel\Contracts\WorkingCalendarReaderInterface;
 use OCA\Humaniq\Service\AgendaComposer;
 use OCA\Humaniq\Service\AgendaReadAccess;
 use OCA\Humaniq\Service\AvailabilityService;
@@ -234,7 +239,12 @@ class AgendaReadAccessTest extends TestCase {
 			HumaniqRoles::class => static fn (): HumaniqRoles => $roles,
 			ManagerDeputies::class => static fn (): ManagerDeputies => new ManagerDeputies($gateway, $roles),
 		];
+		$factories[AgendaComposerInterface::class] = $factories[AgendaComposer::class];
+		$factories[AvailabilityServiceInterface::class] = $factories[AvailabilityService::class];
+		$factories[WorkingCalendarReaderInterface::class] = $factories[WorkingCalendarReader::class];
+		$factories[ForwardCapacityServiceInterface::class] = $factories[ForwardCapacityService::class];
 		$factories[AgendaReadAccess::class] = fn (): object => $this->build(AgendaReadAccess::class, $factories);
+		$factories[AgendaReadAccessInterface::class] = $factories[AgendaReadAccess::class];
 
 		return $this->build(AgendaController::class, $factories);
 	}//end controller()

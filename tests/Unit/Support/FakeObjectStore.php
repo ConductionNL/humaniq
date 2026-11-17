@@ -34,6 +34,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Support;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * In-memory ObjectService double with clone-surviving shared state.
@@ -170,13 +173,14 @@ class FakeObjectStore {
 	 */
 	public function find(
 		int|string $id,
-		?array $_extend = [],
-		bool $files = false,
-		mixed $register = null,
-		mixed $schema = null,
+		?ObjectFindOptions $options = null,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
+		bool $_multitenancy = true
 	): ?ObjectEntity {
+		$_extend = $options?->extend ?? [];
+		$files = $options?->files ?? false;
+		$register = $options?->register;
+		$schema = $options?->schema;
 		$schemaKey = (string)($schema ?? $this->contextSchema);
 		$payload = ($this->state->objects[$schemaKey][(string)$id] ?? null);
 		if ($payload === null) {
@@ -203,15 +207,16 @@ class FakeObjectStore {
 	 * @return bool
 	 */
 	public function deleteObject(
-		string $uuid,
-		mixed $register = null,
-		mixed $schema = null,
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_retentionSweep = false,
-		mixed $currentUser = null,
-		bool $permanent = false,
+		bool $_retentionSweep = false
 	): bool {
+		$uuid = $deletion->uuid;
+		$register = $deletion->target->register;
+		$schema = $deletion->target->schema;
+		$currentUser = $deletion->currentUser;
+		$permanent = $deletion->permanent ?? false;
 		$schemaKey = (string)($schema ?? $this->contextSchema);
 		$found = isset($this->state->objects[$schemaKey][$uuid]);
 		unset($this->state->objects[$schemaKey][$uuid]);
@@ -234,13 +239,14 @@ class FakeObjectStore {
 	 */
 	public function saveObject(
 		array|object $object,
-		?array $extend = [],
-		mixed $register = null,
-		mixed $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
+		bool $_multitenancy = true
 	): ObjectEntity {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$payload = (is_array($object) === true ? $object : (array)$object);
 		$schemaKey = (string)($schema ?? $this->contextSchema);
 		if ($uuid === null || $uuid === '') {
@@ -255,6 +261,7 @@ class FakeObjectStore {
 			'schema' => $schemaKey,
 			'uuid' => $uuid,
 			'payload' => $payload,
+			'unowned' => $options->actor->unowned,
 		];
 
 		return $this->entityFor($uuid, $schemaKey, $this->state->objects[$schemaKey][$uuid]);

@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\RuleAuditServiceInterface;
 use OCA\Humaniq\Payroll\PayPeriod;
 use OCA\Humaniq\Standards\CaoRegistry;
 use OCA\Humaniq\Standards\RuleCatalogue;
@@ -48,7 +49,7 @@ use OCA\Humaniq\Support\ResolvesObjectServiceByClass;
 /**
  * Read-only compliance auditor over the register's HR/labour objects.
  */
-class RuleAuditService {
+class RuleAuditService implements RuleAuditServiceInterface {
 
 	use KeepsReadableRows;
 	use ResolvesObjectServiceByClass;

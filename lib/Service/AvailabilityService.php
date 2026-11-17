@@ -47,13 +47,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\AvailabilityServiceInterface;
 
 /**
  * Answers free hours per employee over a window.
  *
  * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
  */
-class AvailabilityService {
+class AvailabilityService implements AvailabilityServiceInterface {
 
 	/**
 	 * Constructor.

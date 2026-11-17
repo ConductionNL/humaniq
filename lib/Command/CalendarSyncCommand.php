@@ -34,7 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\LeaveCalendarService;
+use OCA\Humaniq\Kernel\Contracts\LeaveCalendarServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -47,10 +47,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class CalendarSyncCommand extends Command {
 
 	/**
-	 * @param LeaveCalendarService $service The calendar-sync service.
+	 * @param LeaveCalendarServiceInterface $service The calendar-sync service.
 	 */
 	public function __construct(
-		private readonly LeaveCalendarService $service,
+		private readonly LeaveCalendarServiceInterface $service,
 	) {
 		parent::__construct();
 

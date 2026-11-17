@@ -33,10 +33,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\OfferEsignServiceInterface;
 use OCA\Humaniq\Service\CallerContext;
-use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -52,13 +53,13 @@ class OfferController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param OfferEsignService $offerEsignService The offer-letter + e-signature service.
+	 * @param OfferEsignServiceInterface $offerEsignService The offer-letter + e-signature service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly OfferEsignService $offerEsignService,
+		private readonly OfferEsignServiceInterface $offerEsignService,
 		private readonly SettingsService $settingsService,
 		private readonly CallerContext $caller,
 	) {
@@ -158,8 +159,10 @@ class OfferController extends Controller {
 		try {
 			$application = $this->objectService()->find(
 				id: $applicationId,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'job-application'
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterSlug(),
+					schema: 'job-application'
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('OfferController: an application lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);

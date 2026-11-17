@@ -34,6 +34,9 @@ namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\NormalisesRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -82,7 +85,10 @@ class OfferApplicationRepository {
 	 */
 	public function find(string $applicationId): ?array {
 		try {
-			$row = $this->objectService()->find(id: $applicationId, register: $this->register(), schema: self::APPLICATION_SCHEMA);
+			$row = $this->objectService()->find(
+				id: $applicationId,
+				options: new ObjectFindOptions(register: $this->register(), schema: self::APPLICATION_SCHEMA)
+			);
 		} catch (\Throwable $e) {
 			$this->logger->info('OfferApplicationRepository: kon Application ' . $applicationId . ' niet laden: ' . $e->getMessage());
 			return null;
@@ -110,9 +116,10 @@ class OfferApplicationRepository {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::APPLICATION_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::APPLICATION_SCHEMA),
+				uuid: $id === '' ? null : $id
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

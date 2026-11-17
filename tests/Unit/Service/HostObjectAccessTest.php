@@ -29,6 +29,7 @@ use OCA\Humaniq\Service\HostObjectAccess;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * @covers \OCA\Humaniq\Service\HostObjectAccess
@@ -68,7 +69,11 @@ class HostObjectAccessTest extends TestCase {
 			 *
 			 * @return object|null A found object, or null.
 			 */
-			public function find(int|string $id, ?array $_extend = [], bool $files = false, mixed $register = null, mixed $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+			public function find(int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->calls[] = ['id' => $id, 'register' => $register, 'schema' => $schema, 'rbac' => $_rbac, 'multitenancy' => $_multitenancy];
 				if ($this->throws === true) {
 					throw new RuntimeException('no access');

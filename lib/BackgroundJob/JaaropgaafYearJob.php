@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\BackgroundJob;
 
-use OCA\Humaniq\Service\HrDocumentService;
+use OCA\Humaniq\Kernel\Contracts\HrDocumentServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
@@ -42,13 +42,13 @@ class JaaropgaafYearJob extends QueuedJob {
 	/**
 	 * Constructor.
 	 *
-	 * @param ITimeFactory      $time              Job time factory.
-	 * @param HrDocumentService $hrDocumentService Aggregates and renders the statements.
-	 * @param LoggerInterface   $logger            PSR-3 logger.
+	 * @param ITimeFactory               $time              Job time factory.
+	 * @param HrDocumentServiceInterface $hrDocumentService Aggregates and renders the statements.
+	 * @param LoggerInterface            $logger            PSR-3 logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly HrDocumentService $hrDocumentService,
+		private readonly HrDocumentServiceInterface $hrDocumentService,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct($time);

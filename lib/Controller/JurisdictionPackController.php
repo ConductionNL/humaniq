@@ -40,9 +40,9 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\YearTransitionServiceInterface;
 use OCA\Humaniq\Payroll\Dsl\DslException;
 use OCA\Humaniq\Service\JurisdictionPackService;
-use OCA\Humaniq\Service\YearTransitionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -64,7 +64,7 @@ class JurisdictionPackController extends Controller {
 	/**
 	 * @param IRequest $request The request.
 	 * @param JurisdictionPackService $packService The pack upload/validation service.
-	 * @param YearTransitionService $yearTransition The year resolution the page and occ share.
+	 * @param YearTransitionServiceInterface $yearTransition The year resolution the page and occ share.
 	 * @param IUserSession $userSession The user session.
 	 * @param IGroupManager $groupManager The group manager (admin check).
 	 * @param LoggerInterface $logger Logger.
@@ -72,7 +72,7 @@ class JurisdictionPackController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private readonly JurisdictionPackService $packService,
-		private readonly YearTransitionService $yearTransition,
+		private readonly YearTransitionServiceInterface $yearTransition,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,

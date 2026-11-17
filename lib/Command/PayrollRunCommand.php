@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\PayrollRunService;
+use OCA\Humaniq\Kernel\Contracts\PayrollRunServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -43,10 +43,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class PayrollRunCommand extends Command {
 
 	/**
-	 * @param PayrollRunService $service The draft-run generation service.
+	 * @param PayrollRunServiceInterface $service The draft-run generation service.
 	 */
 	public function __construct(
-		private readonly PayrollRunService $service,
+		private readonly PayrollRunServiceInterface $service,
 	) {
 		parent::__construct();
 

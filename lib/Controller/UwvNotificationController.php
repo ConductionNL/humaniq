@@ -31,8 +31,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\HrDocumentServiceInterface;
 use OCA\Humaniq\Service\AdministrationService;
-use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -51,7 +51,7 @@ class UwvNotificationController extends Controller {
 
 	/**
 	 * @param IRequest $request The request.
-	 * @param HrDocumentService $documents Renders and files the notification.
+	 * @param HrDocumentServiceInterface $documents Renders and files the notification.
 	 * @param RbacObjectReader $rbac Reads the case under the caller's own RBAC.
 	 * @param AdministrationService $administrationService The caller's role in the active administration.
 	 * @param IGroupManager $groupManager The admin check.
@@ -59,7 +59,7 @@ class UwvNotificationController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly HrDocumentService $documents,
+		private readonly HrDocumentServiceInterface $documents,
 		private readonly RbacObjectReader $rbac,
 		private readonly AdministrationService $administrationService,
 		private readonly IGroupManager $groupManager,

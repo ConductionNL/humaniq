@@ -33,8 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Kernel\Contracts\TrainingCompetenceWriterInterface;
 use OCA\Humaniq\Service\OrgLookupInterface;
-use OCA\Humaniq\Service\TrainingCompetenceWriter;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
@@ -60,13 +60,13 @@ class TrainingRecordListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param OrgLookupInterface       $gateway Resolves slugs.
-	 * @param TrainingCompetenceWriter $writer  Stamps the record and grants the competence.
-	 * @param LoggerInterface          $logger  Logger.
+	 * @param OrgLookupInterface                $gateway Resolves slugs.
+	 * @param TrainingCompetenceWriterInterface $writer  Stamps the record and grants the competence.
+	 * @param LoggerInterface                   $logger  Logger.
 	 */
 	public function __construct(
 		private readonly OrgLookupInterface $gateway,
-		private readonly TrainingCompetenceWriter $writer,
+		private readonly TrainingCompetenceWriterInterface $writer,
 		private readonly LoggerInterface $logger,
 	) {
 

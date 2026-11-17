@@ -60,10 +60,12 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Repair;
 
+use OCA\Humaniq\Kernel\Contracts\TimesheetAggregationServiceInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
-use OCA\Humaniq\Service\TimesheetAggregationService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
@@ -93,7 +95,7 @@ class MigrateHoursProcess implements IRepairStep {
 	 * @param ContainerInterface $container The DI container (lazy OpenRegister lookup).
 	 * @param InternalWriteMarker $marker The request-scoped internal-writer marker.
 	 * @param OrgResolutionService $orgResolution The shared org-chain resolver.
-	 * @param TimesheetAggregationService $aggregationService The shared aggregate recompute.
+	 * @param TimesheetAggregationServiceInterface $aggregationService The shared aggregate recompute.
 	 * @param SettingsService $settingsService The humaniq settings (register slug).
 	 * @param LoggerInterface $logger The logger.
 	 */
@@ -101,7 +103,7 @@ class MigrateHoursProcess implements IRepairStep {
 		private readonly ContainerInterface $container,
 		private readonly InternalWriteMarker $marker,
 		private readonly OrgResolutionService $orgResolution,
-		private readonly TimesheetAggregationService $aggregationService,
+		private readonly TimesheetAggregationServiceInterface $aggregationService,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
@@ -268,9 +270,13 @@ class MigrateHoursProcess implements IRepairStep {
 			$this->marker->runInternal(function () use ($payload, $timesheetId): void {
 				$this->objects()->saveObject(
 					object: $payload,
-					register: $this->settingsService->getRegisterSlug(),
-					schema: 'Timesheet',
-					uuid: $timesheetId,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+								register: $this->settingsService->getRegisterSlug(),
+								schema: 'Timesheet'
+							),
+						uuid: $timesheetId
+					),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -332,8 +338,10 @@ class MigrateHoursProcess implements IRepairStep {
 		$this->marker->runInternal(function () use ($entry): void {
 			$this->objects()->saveObject(
 				object: $entry,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: 'TimeEntry',
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(
+						register: $this->settingsService->getRegisterSlug(),
+						schema: 'TimeEntry'
+					)),
 				_rbac: false,
 				_multitenancy: false
 			);

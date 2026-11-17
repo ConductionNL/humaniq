@@ -36,6 +36,7 @@ use OCA\Humaniq\Service\TimeEntryHoursDeriver;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\TimeActivityCatalog;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
@@ -113,16 +114,21 @@ class TimeEntryStampListenerTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('humaniq');
 
+		$this->store->seed('TimeActivity', 'timeactivity-verlof', ['code' => 'verlof', 'label' => 'Leave', 'kind' => 'absence']);
+		$this->store->seed('TimeActivity', 'timeactivity-opleiding', ['code' => 'opleiding', 'label' => 'Training', 'kind' => 'non-project']);
+
+		$gateway = new HoursRegisterGateway(
+			container: $container,
+			settingsService: $settings,
+			orgResolution: new OrgResolutionService()
+		);
 		$this->listener = new TimeEntryStampListener(
-			gateway: new HoursRegisterGateway(
-				container: $container,
-				settingsService: $settings,
-				orgResolution: new OrgResolutionService()
-			),
+			gateway: $gateway,
 			userSession: $session,
 			marker: $this->marker,
 			logger: new NullLogger(),
-			hoursDeriver: new TimeEntryHoursDeriver()
+			hoursDeriver: new TimeEntryHoursDeriver(),
+			activities: new TimeActivityCatalog(store: $gateway)
 		);
 	}//end setUp()
 
@@ -260,6 +266,52 @@ class TimeEntryStampListenerTest extends TestCase {
 		$this->assertSame('2026-05', $timesheet['period'], 'a day booking files on the same month grain');
 
 	}//end testADayBookingIsAcceptedWithoutClockTimes()
+
+	/**
+	 * Leave cannot be booked as hours: it comes from the leave request.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+	 */
+	public function testABookingOnAnAbsenceActivityIsRefused(): void {
+		$event = new ObjectCreatingEvent($this->entryEntity([
+			'date' => '2026-05-06',
+			'hours' => 8,
+			'activityCode' => 'verlof',
+		]));
+
+		$this->listener->handle($event);
+
+		$this->assertTrue($event->isPropagationStopped());
+		$this->assertStringContainsString('verlofaanvraag', (string)$event->getErrors()['message']);
+		$this->assertSame([], ($this->store->state->objects['Timesheet'] ?? []), 'a refused booking opens no timesheet');
+
+	}//end testABookingOnAnAbsenceActivityIsRefused()
+
+	/**
+	 * A training afternoon is booked without a project.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+	 */
+	public function testABookingOnANonProjectActivityIsAccepted(): void {
+		$event = new ObjectCreatingEvent($this->entryEntity([
+			'date' => '2026-05-06',
+			'hours' => 4,
+			'activityCode' => 'opleiding',
+		]));
+
+		$this->listener->handle($event);
+
+		$this->assertFalse($event->isPropagationStopped());
+		$modified = $event->getModifiedData();
+		$this->assertSame(4.0, (float)$modified['hours']);
+		$this->assertSame('employee-jansen', $modified['employeeId']);
+		$this->assertArrayNotHasKey('projectId', $modified, 'the listener adds no project to a non-project booking');
+
+	}//end testABookingOnANonProjectActivityIsAccepted()
 
 	/**
 	 * A clocked booking still gets a `date`, stamped from its start.
@@ -655,7 +707,8 @@ class TimeEntryStampListenerTest extends TestCase {
 			userSession: $session,
 			marker: new InternalWriteMarker(),
 			logger: new NullLogger(),
-			hoursDeriver: new TimeEntryHoursDeriver()
+			hoursDeriver: new TimeEntryHoursDeriver(),
+			activities: new TimeActivityCatalog(store: $gateway)
 		);
 
 		$event = new ObjectCreatingEvent($this->entryEntity([
@@ -766,4 +819,74 @@ class TimeEntryStampListenerTest extends TestCase {
 			]
 		);
 	}//end testTheParentLockMatrix()
+	/**
+	 * A new entry on a draft timesheet carries approvalState draft, and a
+	 * client-sent approved state and approval time are overwritten
+	 * (time-entry-approval-state D2).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+	 */
+	public function testAClientCannotApproveItsOwnEntry(): void {
+		$event = new ObjectCreatingEvent($this->entryEntity([
+			'startedAt' => '2026-09-07T09:00:00Z',
+			'endedAt' => '2026-09-07T13:00:00Z',
+			'approvalState' => 'approved',
+			'approvedAt' => '2026-09-07T13:00:00Z',
+		]));
+
+		$this->listener->handle($event);
+
+		$this->assertFalse($event->isPropagationStopped());
+		$modified = $event->getModifiedData();
+		$this->assertSame('draft', $modified['approvalState']);
+		$this->assertArrayHasKey('approvedAt', $modified);
+		$this->assertNull($modified['approvedAt']);
+	}//end testAClientCannotApproveItsOwnEntry()
+
+	/**
+	 * An entry written under a rejected timesheet carries approvalState
+	 * rejected, on create and on update.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+	 */
+	public function testAnEntryOnARejectedTimesheetCarriesRejected(): void {
+		$this->store->seed('Timesheet', 'ts-rejected', [
+			'employeeId' => 'employee-jansen',
+			'period' => '2026-09',
+			'status' => 'rejected',
+		]);
+
+		$create = new ObjectCreatingEvent($this->entryEntity([
+			'startedAt' => '2026-09-08T09:00:00Z',
+			'endedAt' => '2026-09-08T12:00:00Z',
+			'approvalState' => 'draft',
+		]));
+		$this->listener->handle($create);
+
+		$this->assertFalse($create->isPropagationStopped());
+		$this->assertSame('ts-rejected', $create->getModifiedData()['timesheetId']);
+		$this->assertSame('rejected', $create->getModifiedData()['approvalState']);
+
+		$stored = [
+			'employeeId' => 'employee-jansen',
+			'timesheetId' => 'ts-rejected',
+			'startedAt' => '2026-09-08T09:00:00Z',
+			'endedAt' => '2026-09-08T12:00:00Z',
+			'approvalState' => 'draft',
+		];
+		$update = new ObjectUpdatingEvent(
+			$this->entryEntity(array_merge($stored, ['endedAt' => '2026-09-08T13:00:00Z', 'approvalState' => 'approved']), 'entry-1'),
+			$this->entryEntity($stored, 'entry-1')
+		);
+		$this->listener->handle($update);
+
+		$this->assertFalse($update->isPropagationStopped());
+		$this->assertSame('rejected', $update->getModifiedData()['approvalState']);
+		$this->assertNull($update->getModifiedData()['approvedAt']);
+	}//end testAnEntryOnARejectedTimesheetCarriesRejected()
+
 }//end class

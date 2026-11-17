@@ -75,8 +75,12 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\HrDocumentServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\FleetAppId;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -89,7 +93,7 @@ use OCA\Humaniq\Support\NormalisesRows;
  * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
  * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-002
  */
-class HrDocumentService {
+class HrDocumentService implements HrDocumentServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;
@@ -174,6 +178,18 @@ class HrDocumentService {
 	 * @var string[]
 	 */
 	private const ACTIVE_STATUSES = ['pending', 'generated'];
+
+	/**
+	 * Document types that are never deduplicated: each confirmed request makes
+	 * a new GeneratedDocument and earlier ones stay. An employer statement is
+	 * dated and each application needs a fresh one
+	 * (documents-employer-statement-from-the-contract D2).
+	 *
+	 * @var string[]
+	 *
+	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
+	 */
+	private const NEVER_DEDUPLICATED = ['werkgeversverklaring'];
 
 	/**
 	 * Max rows loaded per register scan.
@@ -543,13 +559,19 @@ class HrDocumentService {
 	 * @param HrDocumentRequest $request The normalised request.
 	 *
 	 * @return array{status: string, message: string, document: array<string, mixed>|null}
+	 *
+	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
 	 */
 	private function runGeneration(HrDocumentRequest $request): array {
 		if ($request->subject->employeeId === '') {
 			return ['status' => 'failed', 'message' => 'Geen employeeId opgegeven; genereren is geweigerd.', 'document' => null];
 		}
 
-		$active = $this->activeDocumentFor($request);
+		$active = null;
+		if (in_array($request->documentType, self::NEVER_DEDUPLICATED, true) === false) {
+			$active = $this->activeDocumentFor($request);
+		}
+
 		if ($active !== null) {
 			if ((string)($active['status'] ?? '') === 'generated') {
 				return ['status' => 'already-generated', 'message' => 'Er bestaat al een gegenereerd document; geen nieuwe poging nodig.', 'document' => $active];
@@ -848,7 +870,12 @@ class HrDocumentService {
 	 */
 	private function findEntity(string $schema, string $id): mixed {
 		try {
-			return $this->objectService()->find(id: $id, register: $this->register(), schema: $schema, _rbac: false, _multitenancy: false);
+			return $this->objectService()->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $this->register(), schema: $schema),
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (\Throwable $e) {
 			$this->logger->debug('HrDocumentService: kon ' . $schema . ' ' . $id . ' niet opnieuw ophalen als entity: ' . $e->getMessage());
 			return null;
@@ -1172,8 +1199,7 @@ class HrDocumentService {
 	private function createGeneratedDocument(array $fields): array {
 		$created = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->register(),
-			schema: self::GENERATED_DOCUMENT_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::GENERATED_DOCUMENT_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -1197,9 +1223,10 @@ class HrDocumentService {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::GENERATED_DOCUMENT_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::GENERATED_DOCUMENT_SCHEMA),
+				uuid: $id === '' ? null : $id
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -1217,8 +1244,7 @@ class HrDocumentService {
 	private function createJaaropgaaf(array $fields): array {
 		$created = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->register(),
-			schema: self::JAAROPGAAF_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::JAAROPGAAF_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -1243,9 +1269,10 @@ class HrDocumentService {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::JAAROPGAAF_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::JAAROPGAAF_SCHEMA),
+				uuid: $id === '' ? null : $id
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

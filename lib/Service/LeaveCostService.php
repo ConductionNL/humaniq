@@ -29,13 +29,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\LeaveCostServiceInterface;
 use OCP\IL10N;
 
 /**
  * The cost of one request. *
  * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-003
  */
-class LeaveCostService {
+class LeaveCostService implements LeaveCostServiceInterface {
 
 	/**
 	 * Constructor.

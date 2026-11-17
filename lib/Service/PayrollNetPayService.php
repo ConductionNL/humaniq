@@ -50,7 +50,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
+use OCA\Humaniq\Kernel\Contracts\PayrollNetPayServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -65,7 +68,7 @@ use OCA\Humaniq\Support\ChecksShillinqAvailability;
  *
  * @spec openspec/specs/payroll-sepa-netpay-shillinq/spec.md
  */
-class PayrollNetPayService {
+class PayrollNetPayService implements PayrollNetPayServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;
@@ -512,8 +515,7 @@ class PayrollNetPayService {
 
 		$created = $this->objectService()->saveObject(
 			object: $payload,
-			register: self::SHILLINQ_REGISTER,
-			schema: self::SHILLINQ_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::SHILLINQ_REGISTER, schema: self::SHILLINQ_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -699,8 +701,7 @@ class PayrollNetPayService {
 	private function createBatch(array $fields): array {
 		$created = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->register(),
-			schema: self::BATCH_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::BATCH_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -724,9 +725,10 @@ class PayrollNetPayService {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::BATCH_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::BATCH_SCHEMA),
+				uuid: $id === '' ? null : $id
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

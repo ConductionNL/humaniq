@@ -64,6 +64,19 @@
     "thirtyPercentRulingRate": {
       "type": "percent",
       "default": 0
+    },
+    "zvwMode": {
+      "type": "enum",
+      "values": ["werkgeversheffing", "inhouding"],
+      "default": "werkgeversheffing"
+    },
+    "rvuThreshold": {
+      "type": "cents",
+      "default": 0
+    },
+    "rvuFinalLevyRate": {
+      "type": "percent",
+      "default": 0
     }
   },
   "bindings": [
@@ -273,11 +286,28 @@
       }
     },
     {
+      "id": "zvwMode",
+      "_note": "Which Zvw the wage carries: the employer's levy (default, every ordinary wage) or the contribution withheld from net pay, which a benefit regime names (payroll-special-regimes D3).",
+      "op": "derive",
+      "using": {
+        "op": "match",
+        "on": "@input.zvwMode",
+        "cases": {
+          "werkgeversheffing": "werkgeversheffing",
+          "inhouding": "inhouding"
+        }
+      }
+    },
+    {
       "id": "zvwRate",
       "op": "derive",
       "using": {
-        "op": "expr",
-        "expression": "@table.zvw.werkgeversheffing"
+        "op": "match",
+        "on": "@input.zvwMode",
+        "cases": {
+          "werkgeversheffing": "@table.zvw.werkgeversheffing",
+          "inhouding": "@table.zvw.inhouding"
+        }
       }
     },
     {
@@ -461,9 +491,32 @@
     },
     {
       "id": "zvw",
-      "_note": "Zvw werkgeversheffing over the capped bijdrageloon. EMPLOYER-COST.",
+      "_note": "Zvw werkgeversheffing over the capped bijdrageloon. EMPLOYER-COST. Off when the wage carries the withheld contribution instead.",
       "op": "cappedRate",
       "incidence": "employer-cost",
+      "when": {
+        "op": "eq",
+        "left": "@input.zvwMode",
+        "right": "werkgeversheffing"
+      },
+      "base": "@binding.belastbaarLoon",
+      "rate": "@binding.zvwRate",
+      "cap": "@binding.premieloonCap",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "zvwInhouding",
+      "_note": "The withheld Zvw contribution (ingehouden bijdrage Zvw) at the tables' inhouding rate over the same capped base. REDUCES-NET: the employee pays it, the employer owes no levy (payroll-special-regimes D3).",
+      "op": "cappedRate",
+      "incidence": "reduces-net",
+      "when": {
+        "op": "eq",
+        "left": "@input.zvwMode",
+        "right": "inhouding"
+      },
       "base": "@binding.belastbaarLoon",
       "rate": "@binding.zvwRate",
       "cap": "@binding.premieloonCap",
@@ -527,6 +580,22 @@
       }
     },
     {
+      "id": "rvuEindheffing",
+      "_note": "The employer's final levy on an early-retirement benefit (RVU): the rate times the part of the period's benefit above the threshold. EMPLOYER-COST, so net is unchanged. Gated on a positive threshold, which only an RVU payslip carries. Threshold and rate are inputs: the run reads them from the tables' specialRegimes.rvu leaves and refuses the payslip while either is unverified (D2); for a lump sum the run passes the threshold times the months it covers (payroll-special-regimes D4).",
+      "op": "expr",
+      "incidence": "employer-cost",
+      "when": {
+        "op": "gt",
+        "left": "@input.rvuThreshold",
+        "right": 0
+      },
+      "expression": "max(0, @binding.tvl - @input.rvuThreshold) * @input.rvuFinalLevyRate / 100",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
       "id": "werknemersverzekeringen",
       "_note": "An informative roll-up of the four employer premium lines. It must NOT declare employer-cost: its components already did, and the interpreter's fold would double-count it.",
       "op": "expr",
@@ -558,6 +627,8 @@
       "arbeidskorting": "@step.arbeidskorting",
       "volksverzekeringen": "@step.volksverzekeringen",
       "zvw": "@step.zvw",
+      "zvwInhouding": "@step.zvwInhouding",
+      "rvuEindheffing": "@step.rvuEindheffing",
       "awf": "@step.awf",
       "aof": "@step.aof",
       "wko": "@step.wko",
@@ -578,6 +649,8 @@
       { "$fixture": "payroll-2026/bijtelling-anchor.json" },
       { "$fixture": "payroll-2026/dga-anchor.json" },
       { "$fixture": "payroll-2026/thirty-percent-ruling-anchor.json" },
+      { "$fixture": "payroll-2026/zvw-inhouding.json" },
+      { "$fixture": "payroll-2026/rvu-final-levy.json" },
       {"_note": "Four-weekly (payroll-period-edge-cases D2): the anchor's annual wage (3800 x 12 / 13 per period) gives the anchor's loonheffing x 12 / 13, through tijdvakFactor 13.", "period": "2026-P05", "input": {"gross": 350769, "taxTableColor": "wit", "dateOfBirth": "1990-04-12", "loonheffingskortingToegepast": true, "awfTariff": "laag", "aofTariff": "laag", "whkPercentage": 1.52}, "expected": {"@step.loonheffing": 66354, "@step.arbeidskorting": 43731, "@step.volksverzekeringen": 43464, "@step.zvw": 21397, "@step.awf": 9611, "@step.aof": 21993, "@step.werknemersverzekeringen": 38690, "@step.vakantiegeld": 28062, "@net": 284415, "@employerCharges": 60087}},
       {"_note": "Weekly: the anchor's annual wage (3800 x 12 / 52 per week) gives the anchor's loonheffing x 12 / 52, through tijdvakFactor 52.", "period": "2026-W20", "input": {"gross": 87692, "taxTableColor": "wit", "dateOfBirth": "1990-04-12", "loonheffingskortingToegepast": true, "awfTariff": "laag", "aofTariff": "laag", "whkPercentage": 1.52}, "expected": {"@step.loonheffing": 16588, "@step.arbeidskorting": 10933, "@step.volksverzekeringen": 10866, "@step.zvw": 5349, "@step.awf": 2403, "@step.aof": 5498, "@step.werknemersverzekeringen": 9672, "@step.vakantiegeld": 7015, "@net": 71104, "@employerCharges": 15021}},
       {"_note": "Four-weekly above the cap: Zvw and the werknemersverzekeringen stop at maximumpremieloon.vierweken (6108.38; Zvw 6.10% = 372.61).", "period": "2026-P05", "input": {"gross": 700000, "taxTableColor": "wit", "dateOfBirth": "1990-04-12", "loonheffingskortingToegepast": true, "awfTariff": "laag", "aofTariff": "laag", "whkPercentage": 1.52}, "expected": {"@step.loonheffing": 248008, "@step.arbeidskorting": 21000, "@step.volksverzekeringen": 76245, "@step.zvw": 37261, "@step.awf": 16737, "@step.aof": 38300, "@step.werknemersverzekeringen": 67376, "@step.vakantiegeld": 56000, "@net": 451992, "@employerCharges": 104637}},

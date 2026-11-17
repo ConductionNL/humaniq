@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\CompCycleApproverInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -38,7 +39,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-002
  */
-class CompCycleApprover {
+class CompCycleApprover implements CompCycleApproverInterface {
 
 	/**
 	 * OpenRegister's transition engine, resolved lazily.

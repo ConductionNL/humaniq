@@ -40,6 +40,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Humaniq\Tests\Support\LegacyObjectArgs;
 
 /**
  * DocumentController::generate() loonstrook and letter paths.
@@ -86,6 +87,7 @@ class DocumentControllerGenerateGoldenTest extends TestCase {
 			 * @return array<string, mixed>|null
 			 */
 			public function find(string $id, mixed ...$rest): ?array {
+				$rest = LegacyObjectArgs::flatten(args: $rest);
 				$this->finds[] = $id;
 				return $this->row;
 			}//end find()

@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\AdministrationAccessTrust;
+use OCA\Humaniq\Kernel\Contracts\AdministrationAccessTrustInterface;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
@@ -62,15 +62,15 @@ class AdministrationAccessWriteGuard implements IEventListener {
 	private const REFUSAL = 'Alleen een beheerder of HR van deze administratie mag toegang tot de administratie toekennen of intrekken.';
 
 	/**
-	 * @param HoursRegisterGateway      $gateway Reads every access row and resolves the schema slug.
-	 * @param AdministrationAccessTrust $trust   Decides who may grant.
-	 * @param InternalWriteMarker       $marker  Marks humaniq's own writes and shipped imports.
-	 * @param IUserSession              $session The acting user.
-	 * @param LoggerInterface           $logger  The logger.
+	 * @param HoursRegisterGateway               $gateway Reads every access row and resolves the schema slug.
+	 * @param AdministrationAccessTrustInterface $trust   Decides who may grant.
+	 * @param InternalWriteMarker                $marker  Marks humaniq's own writes and shipped imports.
+	 * @param IUserSession                       $session The acting user.
+	 * @param LoggerInterface                    $logger  The logger.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
-		private readonly AdministrationAccessTrust $trust,
+		private readonly AdministrationAccessTrustInterface $trust,
 		private readonly InternalWriteMarker $marker,
 		private readonly IUserSession $session,
 		private readonly LoggerInterface $logger,

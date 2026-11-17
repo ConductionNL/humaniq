@@ -48,13 +48,15 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\TimeEstimateServiceInterface;
+
 /**
  * Derives estimated, spent and remaining for one host object, and decides
  * whether one more booking may be written.
  *
  * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-002
  */
-class TimeEstimateService {
+class TimeEstimateService implements TimeEstimateServiceInterface {
 
 	/**
 	 * The key a figure with no role is filed under.

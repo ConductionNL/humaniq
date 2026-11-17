@@ -163,6 +163,23 @@ if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') ==
 	require __DIR__ . '/stubs/OpenRegisterLifecycleStub.php';
 }
 
+// AvgDsrService builds openregister's SubjectQuery and ErasureRequest for the
+// guarded DataSubjectRequestService (avg-dsr, REQ-DSR-003/005). The stub
+// declares those value objects so the calls load in the standalone suite.
+if (class_exists('OCA\\OpenRegister\\Service\\Gdpr\\SubjectQuery') === false) {
+	require __DIR__ . '/stubs/OpenRegisterGdprRequestStub.php';
+}
+
+// The transition guard and its context (lifecycle-guards-see-the-stored-object):
+// a guard that judges the stored object. The context carries an ObjectEntity.
+if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleTransitionGuardInterface') === false) {
+	if (class_exists('OCA\\OpenRegister\\Db\\ObjectEntity') === false) {
+		require_once __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
+	}
+
+	require __DIR__ . '/stubs/OpenRegisterLifecycleTransitionStub.php';
+}
+
 // The notification recipient seam (absence-deadlines-and-signals D2): the
 // CaseManagerResolver implements it. It takes an ObjectEntity, so the object
 // events stub (which carries ObjectEntity) is loaded first.
@@ -279,3 +296,16 @@ if (class_exists('OCA\\OpenRegister\\Service\\Dmn\\DecisionTableEvaluator') === 
 	require __DIR__ . '/stubs/OpenRegisterDmn/UnaryTestEvaluator.php';
 	require __DIR__ . '/stubs/OpenRegisterDmn/DecisionTableEvaluator.php';
 }
+
+// OpenRegister's object-service option objects, from main, when OpenRegister itself is absent.
+spl_autoload_register(
+	static function (string $class): void {
+		$prefix = 'OCA\\OpenRegister\\Kernel\\Contracts\\Value\\';
+		if (str_starts_with($class, $prefix) === true) {
+			$file = __DIR__ . '/stubs/OpenRegister/Kernel/Contracts/Value/' . substr($class, strlen($prefix)) . '.php';
+			if (is_file($file) === true) {
+				require_once $file;
+			}
+		}
+	}
+);

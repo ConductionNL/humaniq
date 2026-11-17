@@ -43,8 +43,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\LeaveBalanceProjectionServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\NormalisesRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -54,7 +57,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-001
  */
-class LeaveBalanceProjectionService {
+class LeaveBalanceProjectionService implements LeaveBalanceProjectionServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use NormalisesRows;
@@ -398,9 +401,10 @@ class LeaveBalanceProjectionService {
 		try {
 			$this->objectService()->saveObject(
 				object: $payload,
-				register: $this->register(),
-				schema: 'LeaveBalance',
-				uuid: ($uuid === '' ? null : $uuid),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'LeaveBalance'),
+					uuid: $uuid === '' ? null : $uuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

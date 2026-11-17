@@ -46,8 +46,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\WkrServiceInterface;
 use OCA\Humaniq\Standards\Checks\NlWkrChecks;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
@@ -58,7 +61,7 @@ use OCA\Humaniq\Support\RoundsToCents;
  * Cross-object loonsom -> vrije-ruimte roll-up, upserted as an idempotent
  * WkrAssessment per (administrationId, year).
  */
-class WkrService {
+class WkrService implements WkrServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;
@@ -156,9 +159,10 @@ class WkrService {
 			$saved = $this->toArray(
 				$this->objectService()->saveObject(
 					object: $payload,
-					register: $this->register(),
-					schema: 'WkrAssessment',
-					uuid: ($existing === null ? null : $this->idOf($existing)),
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $this->register(), schema: 'WkrAssessment'),
+						uuid: $existing === null ? null : $this->idOf($existing)
+					),
 					_rbac: false,
 					_multitenancy: false
 				)

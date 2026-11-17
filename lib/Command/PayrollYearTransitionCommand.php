@@ -34,7 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\YearTransitionService;
+use OCA\Humaniq\Kernel\Contracts\YearTransitionServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -46,10 +46,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class PayrollYearTransitionCommand extends Command {
 
 	/**
-	 * @param YearTransitionService $yearTransition The year resolution the Payroll packs page shows too.
+	 * @param YearTransitionServiceInterface $yearTransition The year resolution the Payroll packs page shows too.
 	 */
 	public function __construct(
-		private readonly YearTransitionService $yearTransition,
+		private readonly YearTransitionServiceInterface $yearTransition,
 	) {
 		parent::__construct();
 

@@ -37,7 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\HrDocumentService;
+use OCA\Humaniq\Kernel\Contracts\HrDocumentServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -70,10 +70,10 @@ class DocumentsGenerateCommand extends Command {
 	private const FAILURE_STATUSES = ['failed', 'usage-error'];
 
 	/**
-	 * @param HrDocumentService $service The document-generation service.
+	 * @param HrDocumentServiceInterface $service The document-generation service.
 	 */
 	public function __construct(
-		private readonly HrDocumentService $service,
+		private readonly HrDocumentServiceInterface $service,
 	) {
 		parent::__construct();
 

@@ -29,10 +29,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\SalaryBureauExchangeServiceInterface;
 use OCA\Humaniq\Service\CallerContext;
 use OCA\Humaniq\Service\PayrollDeskAccess;
-use OCA\Humaniq\Service\SalaryBureauExchangeService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -58,7 +59,7 @@ class PayrollHandoffController extends Controller {
 	 *
 	 * @param IRequest              $request     The request.
 	 * @param SettingsService       $settings    The register slug.
-	 * @param SalaryBureauExchangeService $handoffs    Compile and intake.
+	 * @param SalaryBureauExchangeServiceInterface $handoffs    Compile and intake.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 * @param PayrollDeskAccess $access Who may use this endpoint and which administrations they can read.
 	 *
@@ -67,7 +68,7 @@ class PayrollHandoffController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private readonly SettingsService $settings,
-		private readonly SalaryBureauExchangeService $handoffs,
+		private readonly SalaryBureauExchangeServiceInterface $handoffs,
 		CallerContext $caller,
 		private readonly PayrollDeskAccess $access,
 	) {
@@ -137,7 +138,10 @@ class PayrollHandoffController extends Controller {
 		}
 
 		try {
-			$handoff = $this->objects()->find(id: $handoffId, register: $this->settings->getRegisterSlug(), schema: 'PayrollHandoff');
+			$handoff = $this->objects()->find(
+				id: $handoffId,
+				options: new ObjectFindOptions(register: $this->settings->getRegisterSlug(), schema: 'PayrollHandoff')
+			);
 		} catch (\Throwable $e) {
 			$this->caller->logger->warning('PayrollHandoffController: a handoff lookup failed and is answered as not found.', ['exceptionClass' => $e::class]);
 			$handoff = null;

@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\PayTransparencySettingsInterface;
 use OCP\AppFramework\Services\IAppConfig;
 
 /**
@@ -30,7 +31,7 @@ use OCP\AppFramework\Services\IAppConfig;
  *
  * @spec openspec/specs/pay-transparency/spec.md#REQ-PTR-002
  */
-final class PayTransparencySettings {
+final class PayTransparencySettings implements PayTransparencySettingsInterface {
 
 	/**
 	 * @param IAppConfig $appConfig humaniq's app config.
