@@ -67,4 +67,11 @@ final class InterviewEventSync {
 	 * @var PreparedInterviewEvent|null
 	 */
 	public ?PreparedInterviewEvent $prepared = null;
+
+	/**
+	 * The stored event's text, read before an update; null when there is none or it could not be read.
+	 *
+	 * @var string|null
+	 */
+	public ?string $storedIcs = null;
 }//end class

@@ -37,6 +37,9 @@ use DateTimeInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\LoadsAllRows;
 use OCA\Humaniq\Support\ResolvesObjectService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -174,8 +177,7 @@ final class PayslipLineageService {
 			try {
 				$this->objectService()->saveObject(
 					object: $line,
-					register: $this->register(),
-					schema: self::SCHEMA,
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::SCHEMA)),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -274,9 +276,10 @@ final class PayslipLineageService {
 
 			try {
 				$this->objectService()->deleteObject(
-					uuid: $lineId,
-					register: $this->register(),
-					schema: self::SCHEMA,
+					deletion: new ObjectDeletion(
+						uuid: $lineId,
+						target: new ObjectFindTarget(register: $this->register(), schema: self::SCHEMA)
+					),
 					_rbac: false,
 					_multitenancy: false
 				);

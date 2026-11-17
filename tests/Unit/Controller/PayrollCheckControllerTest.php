@@ -35,6 +35,7 @@ use Psr\Container\ContainerInterface;
 use OCA\Humaniq\Tests\Unit\Support\RecordingLogger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Who may check a run, and what an unreadable run answers.
@@ -67,7 +68,9 @@ class PayrollCheckControllerTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
 				if ($id === 'forbidden') {
 					throw new \RuntimeException('Forbidden');
 				}

@@ -44,11 +44,14 @@ namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Humaniq\Support\ResolvesObjectService;
 use OCA\Humaniq\Support\NormalisesRows;
+use OCA\Humaniq\Service\Connection\ConnectionReporter;
 use OCA\Humaniq\Support\ChecksShillinqAvailability;
 
 /**
@@ -100,14 +103,18 @@ class PayrollGLPostService {
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppManager $appManager To duck-type-probe shillinq's presence.
-	 * @param SettingsService $settingsService Register slug + configurable RGS account numbers.
+	 * @param SettingsService $settingsService Register slug.
+	 * @param PayrollBookkeepingSettings $bookkeeping The configurable RGS account numbers.
 	 * @param LoggerInterface $logger Logger.
+	 * @param ConnectionReporter|null $connections Reports whether shillinq answered to integriq; null reports nothing.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly SettingsService $settingsService,
+		private readonly PayrollBookkeepingSettings $bookkeeping,
 		private readonly LoggerInterface $logger,
+		private readonly ?ConnectionReporter $connections = null,
 	) {
 
 	}//end __construct()
@@ -176,6 +183,7 @@ class PayrollGLPostService {
 				]
 			);
 
+			$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'unavailable', message: 'Shillinq is not installed, or its journal entries cannot be reached.');
 			return $this->outcome($runId, 'skipped-no-shillinq', (string)($glPost['errorMessage'] ?? ''), $glPost);
 		}
 
@@ -260,6 +268,7 @@ class PayrollGLPostService {
 		$glPost = $this->saveGlPost($active, ['status' => 'posted', 'journalEntryId' => $journalEntryId, 'journalNumber' => $journalNumber, 'postedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'errorMessage' => null]);
 		$this->applySuccessToRun($run, (float)$built['glExpensePosted'], (float)$built['glLiabilityPosted']);
 
+		$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'configured', message: 'Shillinq holds journal entry ' . $journalNumber . '.');
 		return $this->outcome($runId, 'posted', 'Bestaande shillinq-journaalpost overgenomen (crash-recovery).', $glPost, $journalEntryId);
 	}//end settledByActiveGlPost()
 
@@ -303,12 +312,14 @@ class PayrollGLPostService {
 			$journalEntryId = $this->createOrAdoptJournalEntry($run, $built['lines']);
 		} catch (\Throwable $e) {
 			$glPost = $this->saveGlPost($claim, ['status' => 'failed', 'errorMessage' => 'Aanmaken van de shillinq JournalEntry is mislukt: ' . $e->getMessage()]);
+			$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'error', message: 'Shillinq refused the journal entry: ' . $e->getMessage());
 			return $this->outcome($runId, 'failed', (string)$glPost['errorMessage'], $glPost);
 		}
 
 		$glPost = $this->saveGlPost($claim, ['status' => 'posted', 'journalEntryId' => $journalEntryId, 'postedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'lines' => $built['lines']]);
 		$this->applySuccessToRun($run, (float)$built['glExpensePosted'], (float)$built['glLiabilityPosted']);
 
+		$this->connections?->report(key: ConnectionReporter::LEDGER, status: 'configured', message: 'Shillinq took journal entry ' . $journalNumber . '.');
 		return $this->outcome($runId, 'posted', 'Geboekt als shillinq journaalpost ' . $journalNumber . '.', $glPost, $journalEntryId);
 	}//end postUnderClaim()
 
@@ -364,15 +375,15 @@ class PayrollGLPostService {
 
 		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
 		$candidates = array_merge(
-			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'gross', 'totalCents' => $grossCents, 'account' => $this->settingsService->getGlPostAccountGross(), 'description' => 'Loonkosten bruto']),
-			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'employerCharges', 'totalCents' => $chargesCents, 'account' => $this->settingsService->getGlPostAccountEmployerCharges(), 'description' => 'Werkgeverslasten sociale premies'])
+			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'gross', 'totalCents' => $grossCents, 'account' => $this->bookkeeping->getGlPostAccountGross(), 'description' => 'Loonkosten bruto']),
+			$this->costLines(allocations: $allocations, cost: ['runId' => $runId, 'field' => 'employerCharges', 'totalCents' => $chargesCents, 'account' => $this->bookkeeping->getGlPostAccountEmployerCharges(), 'description' => 'Werkgeverslasten sociale premies'])
 		);
 		$liabilities = [
-			['side' => 'credit', 'accountNumber' => $this->settingsService->getGlPostAccountWageTaxLiability(), 'amount' => $loonheffingCents, 'description' => 'Loonheffing-schuld'],
-			['side' => 'credit', 'accountNumber' => $this->settingsService->getGlPostAccountNetWagesLiability(), 'amount' => $netLiabilityCents, 'description' => 'Netto-loonschuld'],
+			['side' => 'credit', 'accountNumber' => $this->bookkeeping->getGlPostAccountWageTaxLiability(), 'amount' => $loonheffingCents, 'description' => 'Loonheffing-schuld'],
+			['side' => 'credit', 'accountNumber' => $this->bookkeeping->getGlPostAccountNetWagesLiability(), 'amount' => $netLiabilityCents, 'description' => 'Netto-loonschuld'],
 		];
 		if ($reimbursementCents > 0) {
-			$candidates[] = ['side' => 'debit', 'accountNumber' => $this->settingsService->getGlPostAccountReimbursements(), 'amount' => $reimbursementCents, 'description' => 'Declaraties en onbelaste vergoedingen'];
+			$candidates[] = ['side' => 'debit', 'accountNumber' => $this->bookkeeping->getGlPostAccountReimbursements(), 'amount' => $reimbursementCents, 'description' => 'Declaraties en onbelaste vergoedingen'];
 		}
 
 		$candidates = array_merge($candidates, $liabilities);
@@ -541,8 +552,7 @@ class PayrollGLPostService {
 
 		$created = $this->objectService()->saveObject(
 			object: $payload,
-			register: self::SHILLINQ_REGISTER,
-			schema: self::SHILLINQ_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::SHILLINQ_REGISTER, schema: self::SHILLINQ_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -660,9 +670,10 @@ class PayrollGLPostService {
 		try {
 			$this->objectService()->saveObject(
 				object: $payload,
-				register: $this->register(),
-				schema: 'PayrollRun',
-				uuid: $runId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->register(), schema: 'PayrollRun'),
+					uuid: $runId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -758,8 +769,7 @@ class PayrollGLPostService {
 	private function createGlPost(array $fields): array {
 		$created = $this->objectService()->saveObject(
 			object: $fields,
-			register: $this->register(),
-			schema: self::GLPOST_SCHEMA,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: self::GLPOST_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -783,9 +793,10 @@ class PayrollGLPostService {
 
 		$saved = $this->objectService()->saveObject(
 			object: $payload,
-			register: $this->register(),
-			schema: self::GLPOST_SCHEMA,
-			uuid: ($id === '' ? null : $id),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: self::GLPOST_SCHEMA),
+				uuid: $id === '' ? null : $id
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

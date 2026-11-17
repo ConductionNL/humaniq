@@ -51,6 +51,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\Humaniq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The acting user is the session user, never a request value.
@@ -215,6 +216,7 @@ class ForgedCallerIdentityTest extends TestCase {
 			public function __construct(private string $owner) {
 			}
 			public function find(...$a): array {
+				$a = LegacyObjectArgs::flatten(args: $a);
 				return ['id' => 'exp-1', 'userId' => $this->owner];
 			}
 		};
@@ -259,6 +261,7 @@ class ForgedCallerIdentityTest extends TestCase {
 		$esign->expects($this->once())->method('requestSignature')->with('app-1', 'boss')->willReturn(['status' => 'ok']);
 		$os = new class {
 			public function find(...$a): array {
+				$a = LegacyObjectArgs::flatten(args: $a);
 				return ['id' => 'app-1', 'status' => 'aanbod'];
 			}
 		};

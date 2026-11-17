@@ -49,6 +49,9 @@ use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 
 class LoonaangifteCorrectionServiceTest extends TestCase {
 
@@ -192,7 +195,7 @@ class LoonaangifteCorrectionServiceTest extends TestCase {
 	 */
 	public function testAnEmployeeNoLongerPaidIsWithdrawn(): void {
 		$correctionId = $this->service('2026-05-15')->open($this->row('filing-03'), 'payroll-1')['filingId'];
-		$this->store->deleteObject('slip-bakker-03', 'humaniq', 'Payslip');
+		$this->store->deleteObject(new ObjectDeletion(uuid: 'slip-bakker-03', target: new ObjectFindTarget(register: 'humaniq', schema: 'Payslip')));
 
 		$this->service('2026-05-15')->render($this->row($correctionId), 'payroll-1');
 
@@ -373,7 +376,7 @@ class LoonaangifteCorrectionServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function row(string $uuid): array {
-		return array_merge($this->store->find($uuid, schema: 'LoonaangifteFiling')->getObject(), ['id' => $uuid]);
+		return array_merge($this->store->find($uuid, new ObjectFindOptions(schema: 'LoonaangifteFiling'))->getObject(), ['id' => $uuid]);
 	}//end row()
 
 }//end class

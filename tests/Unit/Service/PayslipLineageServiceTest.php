@@ -28,6 +28,8 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 use DateTime;
 use OCA\Humaniq\Service\PayslipLineageService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -120,31 +122,30 @@ final class PayslipLineageServiceTest extends TestCase {
 			}//end findAll()
 
 			/**
-			 * @param array<string, mixed> $object        The object.
-			 * @param string|null          $register      Unused.
-			 * @param string|null          $schema        The schema.
-			 * @param string|null          $uuid          Unused.
+			 * @param array<string, mixed> $object        The row.
+			 * @param ObjectSaveOptions    $options       Where it goes; its schema files the row.
 			 * @param bool                 $_rbac         Unused.
 			 * @param bool                 $_multitenancy Unused.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, ?string $register = null, ?string $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$schema = (string)$options->target->schema;
 				$saved = array_merge($object, ['id' => 'line-new-' . $this->nextId++]);
 				$this->rowsBySchema[$schema][] = $saved;
 				return $saved;
 			}//end saveObject()
 
 			/**
-			 * @param string      $uuid          The id.
-			 * @param string|null $register      Unused.
-			 * @param string|null $schema        The schema.
-			 * @param bool        $_rbac         Unused.
-			 * @param bool        $_multitenancy Unused.
+			 * @param ObjectDeletion $deletion      The id and schema of the row.
+			 * @param bool           $_rbac         Unused.
+			 * @param bool           $_multitenancy Unused.
 			 *
 			 * @return bool
 			 */
-			public function deleteObject(string $uuid, ?string $register = null, ?string $schema = null, bool $_rbac = true, bool $_multitenancy = true): bool {
+			public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true): bool {
+				$uuid = $deletion->uuid;
+				$schema = (string)$deletion->target->schema;
 				$this->deleted[] = $uuid;
 				$this->rowsBySchema[$schema] = array_values(array_filter(($this->rowsBySchema[$schema] ?? []), static fn (array $row): bool => $row['id'] !== $uuid));
 				return true;

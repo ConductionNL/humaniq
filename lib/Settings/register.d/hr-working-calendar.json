@@ -3,6 +3,7 @@
     "components": {
         "schemas": {
             "WorkingPattern": {
+                "configuration": {"exportable": true},
                 "slug": "WorkingPattern",
                 "icon": "CalendarAccountOutline",
                 "version": "0.1.0",
@@ -28,6 +29,7 @@
                 }
             },
             "NonWorkingTime": {
+                "configuration": {"exportable": true},
                 "slug": "NonWorkingTime",
                 "icon": "CalendarRemoveOutline",
                 "version": "0.1.0",

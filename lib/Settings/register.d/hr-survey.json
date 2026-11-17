@@ -37,6 +37,7 @@
                     ]
                 },
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "concept",
@@ -263,6 +264,7 @@
                     ]
                 },
                 "configuration": {
+                    "exportable": true,
                     "x-openregister-notifications": {
                         "survey-invited": {
                             "trigger": {
@@ -376,6 +378,7 @@
                 }
             },
             "SurveyResponse": {
+                "configuration": {"exportable": true},
                 "slug": "SurveyResponse",
                 "icon": "CommentTextMultipleOutline",
                 "version": "0.1.0",
