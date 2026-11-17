@@ -4,6 +4,7 @@ OC.L10N.register(
         "2024": "2024",
         "2025": "2025",
         "2026": "2026",
+        "Planned hours minus the norm. Above zero is an overload.": "Planned hours minus the norm. Above zero is an overload.",
         "Make employer statement": "Make employer statement",
         "Making the employer statement failed.": "Making the employer statement failed.",
         "The employer statement is being made.": "The employer statement is being made.",

@@ -120,7 +120,7 @@
             "PersonnelDocument": {
                 "slug": "PersonnelDocument",
                 "icon": "FileAccountOutline",
-                "version": "0.1.0",
+                "version": "0.1.1",
                 "title": "Personnel document",
                 "description": "One document an employee supplied for their personnel file, with its issue and expiry date and who checked it. The file itself is attached to this record (people-dossier-completeness D2).",
                 "type": "object",
@@ -292,6 +292,20 @@
                     }
                 },
                 "properties": {
+                    "daysUntilExpiry": {
+                        "type": "number",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Days until expiry",
+                        "description": "Days from today until the document expires. Empty when it does not expire."
+                    },
+                    "daysUntilWarning": {
+                        "type": "number",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Days until the expiry warning",
+                        "description": "Days from today until HR is warned that the document expires. Empty when it does not expire."
+                    },
                     "employeeId": {
                         "type": "string",
                         "format": "uuid",
