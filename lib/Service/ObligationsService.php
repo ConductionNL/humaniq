@@ -94,6 +94,11 @@ class ObligationsService implements ObligationsServiceInterface {
 	private const BHV_EXPIRY_WINDOW_DAYS = 90;
 
 	/**
+	 * `nl-signaal-proeftijd-eindigt` `parameters.windowDays`.
+	 */
+	private const PROBATION_END_WINDOW_DAYS = 14;
+
+	/**
 	 * Max Obligations rows returned (REQ-DSI-008).
 	 *
 	 * @var int
@@ -141,9 +146,12 @@ class ObligationsService implements ObligationsServiceInterface {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
 	 */
 	public function getObligations(string $administrationId): array {
+		$sickLeaveRows = $this->sickLeaveMilestoneRows($administrationId);
+		$contracts = $this->loadFiltered('EmploymentContract', $administrationId);
 		$rows = array_merge(
-			$this->sickLeaveMilestoneRows($administrationId),
-			$this->expiringContractRows($administrationId),
+			$sickLeaveRows,
+			$this->expiringContractRows($contracts),
+			$this->probationEndingRows($contracts),
 			$this->expiringBhvRows($administrationId)
 		);
 
@@ -196,16 +204,16 @@ class ObligationsService implements ObligationsServiceInterface {
 	 * `EmploymentContract` rows expiring within the unchanged hr-signals
 	 * 60-day window (REQ-DSI-008).
 	 *
-	 * @param string $administrationId The caller's active administration.
+	 * @param array<int, array<string, mixed>> $contracts The administration's contracts.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
-	private function expiringContractRows(string $administrationId): array {
+	private function expiringContractRows(array $contracts): array {
 		$rows = [];
 		[$today, $windowEnd] = $this->expiryWindow(self::CONTRACT_EXPIRY_WINDOW_DAYS);
-		foreach ($this->loadFiltered('EmploymentContract', $administrationId) as $contract) {
+		foreach ($contracts as $contract) {
 			if ((string)($contract['type'] ?? '') !== 'temporary') {
 				continue;
 			}
@@ -227,6 +235,38 @@ class ObligationsService implements ObligationsServiceInterface {
 
 		return $rows;
 	}//end expiringContractRows()
+
+	/**
+	 * `EmploymentContract` rows whose probation period ends within the
+	 * hr-signals 14-day window, beside the expiring contracts (REQ-SIG-007).
+	 *
+	 * @param array<int, array<string, mixed>> $contracts The administration's contracts.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals/spec.md#REQ-SIG-007
+	 */
+	private function probationEndingRows(array $contracts): array {
+		$rows = [];
+		[$today, $windowEnd] = $this->expiryWindow(self::PROBATION_END_WINDOW_DAYS);
+		foreach ($contracts as $contract) {
+			$endDate = DateValues::parse($contract['proeftijdEndDate'] ?? null);
+			if ($endDate === null || $endDate < $today || $endDate > $windowEnd) {
+				continue;
+			}
+
+			$rows[] = [
+				'type' => 'EmploymentContract',
+				'employeeId' => (string)($contract['employeeId'] ?? ''),
+				'subject' => 'proeftijdEndDate',
+				'dueDate' => $endDate->format('Y-m-d'),
+				'route' => 'EmploymentContractDetail',
+				'object' => $contract,
+			];
+		}
+
+		return $rows;
+	}//end probationEndingRows()
 
 	/**
 	 * `BhvCertificering` rows expiring within the unchanged bhv-organisatie

@@ -123,6 +123,7 @@ import { proposeRaiseForSelection } from './dialogs/proposeRaiseForSelection.js'
 import { registerTrainingAttended, registerTrainingNotAttended } from './dialogs/registerTrainingAttendance.js'
 import { openIntegriqConnections } from './services/connectionRegistry.js'
 import EndpointTableWidget from './widgets/EndpointTableWidget.js'
+import RecordRouteTableWidget from './widgets/RecordRouteTableWidget.js'
 
 export default {
 	// --- Flows (ADR-110 Decision 4). Only the SIDEBAR is an app component;
@@ -320,6 +321,17 @@ export default {
 		allowedSlots: ['body'],
 		propsSchema: null,
 		_note: 'A table whose rows come from a humaniq endpoint (content.endpointSource), on detail pages: formation places on a unit, personnel-file status on an employee, the budget and comparison of a formation scenario. Dashboards keep type object-table, which CnDashboardPage resolves as written.',
+	},
+	// @custom-widget-ratchet exclude no built-in widget opens a different detail page per row of one endpoint table; object-table's rowRoute is one static route for every row
+	'record-route-table': {
+		kind: 'widget',
+		component: RecordRouteTableWidget,
+		defaultSize: { w: 12, h: 6 },
+		minSize: { w: 4, h: 3 },
+		maxSize: { w: 12, h: 12 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'matrix-rows-without-a-requirement REQ-RULE-010: a table of endpoint rows that are records of different schemas (the Compliance check violations), each row opening its own record through content.routes (detail page per schema) and content.routeField.',
 	},
 	// @custom-widget-ratchet exclude no built-in widget key renders a dated timeline whose rows each link to a different detail page; object-table's rowRoute is one static route for every row, and CnTimelineView has no widget key of its own
 	'employee-history': {

@@ -357,6 +357,21 @@
       }
     },
     {
+      "id": "nl-signaal-proeftijd-eindigt",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-signals",
+      "source": "HR contract-lifecycle control (einde proeftijd, BW 7:652)",
+      "statement": "A contract whose probation period ends within the next 14 days shall be signalled for HR follow-up: the end-of-probation conversation, and a decision before the period passes.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290",
+      "parameters": {
+        "windowDays": 14
+      }
+    },
+    {
       "id": "nl-signaal-ketenregeling",
       "domain": "labour",
       "jurisdiction": "NL",

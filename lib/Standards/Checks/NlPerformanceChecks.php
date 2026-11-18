@@ -67,7 +67,8 @@ final class NlPerformanceChecks implements CheckProvider {
 	}//end seedSpec()
 
 	/**
-	 * True unless `status` is `vastgesteld` and either `rating` is null/empty
+	 * True unless `status` is `vastgesteld` (or `ondertekend`, set and signed
+	 * by the employee, REQ-PRV-007) and either `rating` is null/empty
 	 * or `afspraken` is null/empty. All other statuses pass vacuously -- an
 	 * unfinished review legitimately has no rating or afspraken yet.
 	 *
@@ -76,7 +77,7 @@ final class NlPerformanceChecks implements CheckProvider {
 	 * @return bool
 	 */
 	private static function dossiervormingSatisfied(array $o): bool {
-		if ((string)($o['status'] ?? '') !== 'vastgesteld') {
+		if (in_array((string)($o['status'] ?? ''), ['vastgesteld', 'ondertekend'], true) === false) {
 			return true;
 		}
 

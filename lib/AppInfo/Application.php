@@ -47,10 +47,12 @@ use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
+use OCA\Humaniq\Lifecycle\ReviewSignOffGuard;
 use OCA\Humaniq\Lifecycle\RightToWorkGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\SurveyOpenGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Humaniq\Lifecycle\TimesheetReopenGuard;
 use OCA\Humaniq\Lifecycle\UbdReportReadyGuard;
 use OCA\Humaniq\Listener\AdministrationAccessWriteGuard;
 use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
@@ -69,6 +71,7 @@ use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
 use OCA\Humaniq\Listener\PayrollAdjustmentLineGuard;
 use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
+use OCA\Humaniq\Listener\ReviewSignOffStampListener;
 use OCA\Humaniq\Listener\RightToWorkCheckListener;
 use OCA\Humaniq\Listener\ScenarioMutationListener;
 use OCA\Humaniq\Listener\ExitInterviewListener;
@@ -225,6 +228,10 @@ class Application extends App implements IBootstrap {
 		// its FQCN so OpenRegister's LifecycleGuardRegistry resolves the
 		// `requires` tag declared on the `submit` transition.
 		$context->registerService(TimesheetNotEmptyGuard::class, static fn ($c): TimesheetNotEmptyGuard => new TimesheetNotEmptyGuard());
+		$context->registerService(TimesheetReopenGuard::class, static fn ($c): TimesheetReopenGuard => new TimesheetReopenGuard($c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
+		// matrix-rows-without-a-requirement REQ-PRV-007: only the reviewed employee
+		// signs their review (`ondertekenen` on PerformanceReview), keyed by its FQCN.
+		$context->registerService(ReviewSignOffGuard::class, static fn ($c): ReviewSignOffGuard => new ReviewSignOffGuard());
 
 		// OpenRegister lifecycle guard for the LeaveRequest `submit` transition
 		// (leave-against-a-department-schedule REQ-LVM-T02): a type that needs a
@@ -525,6 +532,7 @@ class Application extends App implements IBootstrap {
 		$this->registerRelationsCaseListeners($dispatcher);
 		$this->registerExitInterviewListeners($dispatcher);
 		$this->registerCandidateAssessmentListeners($dispatcher);
+		$this->registerReviewSignOffListeners($dispatcher);
 		$this->registerAnnouncementListener($dispatcher);
 		$this->registerScenarioMutationListener($dispatcher);
 		$this->registerChangeRequestListeners($dispatcher);
@@ -568,6 +576,13 @@ class Application extends App implements IBootstrap {
 				registers: null,
 				schemas: [TimeEntryStampListener::TIMEENTRY_SLUG]
 			);
+		}
+
+		// matrix-rows-without-a-requirement REQ-TEC-009: a billable booking takes
+		// its project's rate. Registered after the stamp listener above, whose
+		// modified data it merges into rather than replaces.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: \OCA\Humaniq\Listener\TimeEntryRateListener::class, registers: null, schemas: [TimeEntryStampListener::TIMEENTRY_SLUG]);
 		}
 
 		// hours-process-redesign Decision 4: pre-save process-field inertness +
@@ -951,6 +966,28 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerCandidateAssessmentListeners()
+
+	/**
+	 * matrix-rows-without-a-requirement REQ-PRV-007: the reviewer's and the
+	 * employee's sign-off on a performance review, stamped by the server.
+	 *
+	 * @param IEventDispatcher $dispatcher The dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+	 */
+	private function registerReviewSignOffListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: ReviewSignOffStampListener::class,
+				registers: null,
+				schemas: [ReviewSignOffStampListener::SLUG]
+			);
+		}
+	}//end registerReviewSignOffListeners()
 
 	/**
 	 * self-service-announcements-and-digest D1: one confirmation per employee

@@ -238,6 +238,18 @@
         {
             "name": "uwv-notification",
             "description": "Generates the 42-week notification for a sickness case."
+        },
+        {
+            "name": "attendance-clock",
+            "description": "Clock in and clock out for the signed-in employee."
+        },
+        {
+            "name": "compliance-check",
+            "description": "The Compliance check page: the rule audit for the signed-in caller."
+        },
+        {
+            "name": "expense-vat",
+            "description": "The VAT to reclaim on reimbursed claims."
         }
     ],
     "paths": {
@@ -385,6 +397,111 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/analytics/billable-share": {
+            "get": {
+                "operationId": "analytics-billable-share",
+                "summary": "`GET /api/analytics/billable-share?period=YYYY-MM`: the billable share of approved hours per unit the caller may read.",
+                "description": "`GET /api/analytics/billable-share?period=YYYY-MM`: the billable share of approved hours per unit the caller may read (REQ-DSI-010). HR and accountants read every unit of the administration; anyone else the units they lead. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "analytics"
+                ],
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "required": false,
+                        "description": "The month, YYYY-MM; the previous month when left out.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/analytics/billable-share/people": {
+            "get": {
+                "operationId": "analytics-billable-share-people",
+                "summary": "`GET /api/analytics/billable-share/people?orgUnitId=&period=YYYY-MM`: the billable share per person placed in one unit.",
+                "description": "`GET /api/analytics/billable-share/people?orgUnitId=&period=YYYY-MM`: the billable share per person placed in one unit (REQ-DSI-010). Refused for a unit the caller does not lead, unless they are HR or an accountant. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "analytics"
+                ],
+                "parameters": [
+                    {
+                        "name": "orgUnitId",
+                        "in": "query",
+                        "required": true,
+                        "description": "The OrgUnit id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "required": false,
+                        "description": "The month, YYYY-MM; the previous month when left out.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
                     }
                 }
             }
@@ -895,6 +1012,122 @@
                 }
             }
         },
+        "/attendance/clock-in": {
+            "post": {
+                "operationId": "attendance-clock-clock-in",
+                "summary": "`POST /api/attendance/clock-in`: open a clock day for the caller now.",
+                "description": "`POST /api/attendance/clock-in`: open an AttendanceRecord for the caller now, stamped on the server with the caller's own employee and user id (REQ-TA-008). 409 when a day is already open, 404 when the account is not linked to an employee. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "attendance-clock"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    }
+                }
+            }
+        },
+        "/attendance/clock-out": {
+            "post": {
+                "operationId": "attendance-clock-clock-out",
+                "summary": "`POST /api/attendance/clock-out`: close the caller's open clock day now.",
+                "description": "`POST /api/attendance/clock-out`: close the caller's open AttendanceRecord through its `sluiten` transition with the current time as clockOut and workedHours computed on the server from the clock times and the break (REQ-TA-008). 409 when no day is open. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "attendance-clock"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "breakMinutes": {
+                                        "type": "integer",
+                                        "description": "The break taken, or null to keep the record's."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    }
+                }
+            }
+        },
+        "/attendance/today": {
+            "get": {
+                "operationId": "attendance-clock-today",
+                "summary": "`GET /api/attendance/today`: today's presence of the people the caller may read.",
+                "description": "`GET /api/attendance/today`: each person the caller may read (everyone placed in a unit for HR and accountants, a manager's own people) as present, late (clocked in after today's roster start), away (approved leave or sick) or not clocked in (REQ-TA-007). Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "attendance-clock"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
         "/availability": {
             "get": {
                 "operationId": "agenda-availability",
@@ -1115,6 +1348,54 @@
                 }
             }
         },
+        "/comp/cycles/budget": {
+            "get": {
+                "operationId": "comp-cycle-budget",
+                "summary": "`GET /api/comp/cycles/budget?cycleId=`: the cycle's budget, what its proposed, approved and effective raises use, what is left and how far over budget it is, in cents.",
+                "description": "`GET /api/comp/cycles/budget?cycleId=`: the cycle's budget, what its proposed, approved and effective raises use, what is left and how far over budget it is, in cents, with the same figures in euros under `euro`. Going over budget is reported, never refused. Needs a signed-in Nextcloud user with the `hr` role or an administrator.",
+                "tags": [
+                    "comp-cycle"
+                ],
+                "parameters": [
+                    {
+                        "name": "cycleId",
+                        "in": "query",
+                        "required": true,
+                        "description": "The CompReviewCycle id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
         "/comp/cycles/propose": {
             "post": {
                 "operationId": "comp-cycle-propose-collective",
@@ -1213,6 +1494,37 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/compliance/check": {
+            "get": {
+                "operationId": "compliance-check-check",
+                "summary": "`GET /api/compliance/check`: coverage and the caller's visible violations.",
+                "description": "`GET /api/compliance/check`: runs the rule audit and answers with the corpus coverage (rules enforced against rules catalogued) and every violation, with its rule, severity and record, about a record the caller may read (REQ-RULE-010). Counts are of the listed violations only. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "compliance-check"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
@@ -2186,6 +2498,54 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/expenses/vat": {
+            "get": {
+                "operationId": "expense-vat-overview",
+                "summary": "`GET /api/expenses/vat?period=YYYY-MM`: the VAT to reclaim on the claims reimbursed in a month.",
+                "description": "`GET /api/expenses/vat?period=YYYY-MM`: every claim of the caller's active administration reimbursed in the month (on that month's payslip or directly) that records a VAT amount, and their total, so the employer can reclaim it (REQ-RCPT-008). The previous month by default. HR and the accountant role only. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "expense-vat"
+                ],
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "required": false,
+                        "description": "The month, YYYY-MM; the previous month when left out.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
                     }
                 }
             }

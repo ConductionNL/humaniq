@@ -92,6 +92,10 @@
 		"route": "/mijn/aanbevelingen"
 	},
 	{
+		"id": "AttendanceToday",
+		"route": "/attendance/today"
+	},
+	{
 		"id": "CaoDetail",
 		"route": "/caos/:id"
 	},
@@ -104,8 +108,16 @@
 		"route": "/incomplete-files"
 	},
 	{
+		"id": "ComplianceCheck",
+		"route": "/compliance-check"
+	},
+	{
 		"id": "ExpenseDetail",
 		"route": "/expenses/:id"
+	},
+	{
+		"id": "VatToReclaim",
+		"route": "/expenses/vat"
 	},
 	{
 		"id": "OnCallAverages",
@@ -242,6 +254,10 @@
 	{
 		"id": "MijnUren",
 		"route": "/mijn/uren"
+	},
+	{
+		"id": "BillableHours",
+		"route": "/billable-hours"
 	},
 	{
 		"id": "SickLeaveCaseDetail",

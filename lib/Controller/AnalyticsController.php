@@ -46,6 +46,7 @@ use OCA\Humaniq\Kernel\Contracts\AnalyticsServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\ObligationsServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\SeriesLatestInterface;
 use OCA\Humaniq\Service\AnalyticsAccess;
+use OCA\Humaniq\Service\BillableShareService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -69,6 +70,7 @@ class AnalyticsController extends Controller {
 	 * @param AnalyticsAccess $access Resolves the caller's active administration, role and managed units.
 	 * @param IUserSession $userSession The current user session (acting userId).
 	 * @param LoggerInterface $logger Logger.
+	 * @param BillableShareService|null $billableShare The billable share per team and per person (REQ-DSI-010); null answers 403.
 	 *
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
@@ -80,6 +82,7 @@ class AnalyticsController extends Controller {
 		private readonly SeriesLatestInterface $seriesLatest,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly ?BillableShareService $billableShare = null,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -113,6 +116,72 @@ class AnalyticsController extends Controller {
 
 		return $this->trendsWithin(access: $access, orgUnitId: $orgUnitId);
 	}//end trends()
+
+	/**
+	 * `GET /api/analytics/billable-share?period=YYYY-MM`: the billable share
+	 * of approved hours per unit the caller may read. HR and accountants read
+	 * every unit of the administration; anyone else the units they lead.
+	 *
+	 * @return JSONResponse 200 {period, units}, 400 for a bad period, 401 signed out, 403 without an administration.
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
+	 */
+	#[NoAdminRequired]
+	public function billableShare(): JSONResponse {
+		return $this->billableShareRead(read: fn (string $userId, string $period): ?array => $this->billableShare?->perUnit(userId: $userId, period: $period));
+	}//end billableShare()
+
+	/**
+	 * `GET /api/analytics/billable-share/people?orgUnitId=&period=YYYY-MM`:
+	 * the billable share per person placed in one unit. Refused (403) for a
+	 * unit the caller does not lead, unless they are HR or an accountant.
+	 *
+	 * @return JSONResponse 200 {period, orgUnitId, name, people}, 400 for a bad period, 401 signed out, 403 for a unit the caller may not read.
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
+	 */
+	#[NoAdminRequired]
+	public function billableSharePeople(): JSONResponse {
+		$orgUnitId = trim((string)$this->request->getParam('orgUnitId', ''));
+
+		return $this->billableShareRead(read: fn (string $userId, string $period): ?array => $this->billableShare?->perEmployee(userId: $userId, orgUnitId: $orgUnitId, period: $period));
+	}//end billableSharePeople()
+
+	/**
+	 * Run a billable-share read for the caller and the requested month (the
+	 * previous month by default) and map refusals and failures onto static
+	 * messages.
+	 *
+	 * @param callable(string, string): (array<string, mixed>|null) $read The read; null means refused.
+	 *
+	 * @return JSONResponse
+	 */
+	private function billableShareRead(callable $read): JSONResponse {
+		$userId = $this->userSession->getUser()?->getUID();
+		if ($userId === null || $userId === '') {
+			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$period = trim((string)$this->request->getParam('period', ''));
+		if ($period === '') {
+			$period = (new \DateTimeImmutable('first day of last month'))->format('Y-m');
+		}
+
+		try {
+			$figures = $read($userId, $period);
+		} catch (InvalidArgumentException $e) {
+			return new JSONResponse(['message' => 'Invalid period'], Http::STATUS_BAD_REQUEST);
+		} catch (\Throwable $e) {
+			$this->logger->error('AnalyticsController: the billable share could not be computed.', ['exceptionClass' => $e::class]);
+			return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		if ($figures === null) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
+		return new JSONResponse($figures);
+	}//end billableShareRead()
 
 	/**
 	 * The trend the caller asked for, inside the administration and unit
