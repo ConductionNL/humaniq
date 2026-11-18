@@ -251,6 +251,30 @@
       "sourceUrl": "https://wetten.overheid.nl/BWBR0002471"
     },
     {
+      "id": "nl-openingsbalans-overlap",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Wet LB 1964 art. 28 lid 1 aanhef en onderdeel d jo. Uitvoeringsregeling LB 2011 (jaaropgaaf); payroll-period-edge-cases D6",
+      "statement": "When an employee's year-to-date figures were carried over from a previous payroll package, humaniq shall not also pay a period on or before the last period that package paid: the annual statement would count that period twice.",
+      "severity": "conditional",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0002471"
+    },
+    {
+      "id": "nl-openingsbalans-ontbreekt",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Wet LB 1964 art. 28 lid 1 aanhef en onderdeel d (jaaropgaaf over het hele kalenderjaar); payroll-period-edge-cases D6",
+      "statement": "When an employee's first humaniq payslip of a year is not the year's first period, the year-to-date figures of the previous payroll package shall be imported as an opening balance, or the annual statement misses the months before. An employee who started that year is a finding to confirm, not an error.",
+      "severity": "conditional",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0002471"
+    },
+    {
       "id": "nl-wkr-eindheffing-80",
       "domain": "tax",
       "jurisdiction": "NL",

@@ -97,6 +97,7 @@ use OCA\Humaniq\Listener\TimesheetProcessStampListener;
 use OCA\Humaniq\Listener\LeaveRequestProcessStampListener;
 use OCA\Humaniq\Listener\TrainingRecordListener;
 use OCA\Humaniq\Listener\TravelAmountListener;
+use OCA\Humaniq\Listener\PayrollOpeningBalanceUniqueGuard;
 use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
@@ -622,6 +623,19 @@ class Application extends App implements IBootstrap {
 				listener: WorkingPatternOverlapListener::class,
 				registers: null,
 				schemas: [WorkingPatternOverlapListener::WORKINGPATTERN_SLUG]
+			);
+		}
+
+		// payroll-period-edge-cases D5: one opening balance per employee,
+		// administration and year -- a second would count the previous
+		// package's months twice in the annual statement.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: PayrollOpeningBalanceUniqueGuard::class,
+				registers: null,
+				schemas: [PayrollOpeningBalanceUniqueGuard::SCHEMA_SLUG]
 			);
 		}
 

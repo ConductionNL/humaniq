@@ -1,0 +1,56 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "PayrollOpeningBalance",
+			"params": {
+				"id": "OpeningBalances",
+				"route": "/opening-balances",
+				"title": "Opening balances",
+				"columns": [
+					"employeeId",
+					"year",
+					"lastPeriodInPrevious",
+					"grossWage",
+					"loonheffing",
+					"source"
+				],
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				},
+				"filters": [
+					"year",
+					"source"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "The year-to-date figures employees bring from the previous payroll package. Import them with mass import; the annual statement adds them to humaniq's own payslips.",
+				"note": "payroll-period-edge-cases D5: plain objects created with the library's mass import (showMassImport stays on), no endpoint (ADR-022). PayrollOpeningBalanceUniqueGuard refuses a second balance per employee, administration and year."
+			}
+		},
+		{
+			"templateRef": "dualDataScaffold",
+			"register": "humaniq",
+			"schema": "PayrollOpeningBalance",
+			"params": {
+				"id": "OpeningBalanceDetail",
+				"route": "/opening-balances/:id",
+				"title": "Opening balance",
+				"statusTitle": "Source",
+				"statusIcon": "ScaleBalance",
+				"statusInclude": [
+					"source",
+					"lastPeriodInPrevious",
+					"importedAt"
+				],
+				"dataTitle": "Year-to-date figures",
+				"dataIcon": "ScaleBalance",
+				"dataHeight": 8,
+				"relatedHeight": 11
+			}
+		}
+	]
+}

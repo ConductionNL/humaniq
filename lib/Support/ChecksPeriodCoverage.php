@@ -3,7 +3,7 @@
 /**
  * ChecksPeriodCoverage.
  *
- * Whether a date range covers a wage period month.
+ * Whether a date range covers a wage period: a month, four weeks or a week.
  *
  * @category Support
  * @package  OCA\Humaniq\Support
@@ -25,9 +25,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Support;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Payroll\PayPeriod;
 
 /**
- * Whether a date range covers a wage period month.
+ * Whether a date range covers a wage period: a month, four weeks or a week.
  */
 trait ChecksPeriodCoverage {
 	/**
@@ -37,18 +38,28 @@ trait ChecksPeriodCoverage {
 	 *
 	 * @param string $startDate ISO start date.
 	 * @param string $endDate ISO end date, or ''/null-ish while open.
-	 * @param string $period Wage period (YYYY-MM).
+	 * @param string $period Wage period (YYYY-MM, YYYY-Pnn or YYYY-Wnn).
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	private function coversPeriod(string $startDate, string $endDate, string $period): bool {
 		try {
-			$periodStart = new DateTimeImmutable($period . '-01');
-		} catch (\Throwable $e) {
-			return false;
-		}
+			// A month, a four-week period or a week (payroll-period-edge-cases D4).
+			$pay = PayPeriod::parse($period);
+			$periodStart = $pay->firstDay;
+			$periodEnd = $pay->lastDay;
+		} catch (\InvalidArgumentException $notAPayPeriod) {
+			// Anything else reads as before: the given date to its month's end.
+			try {
+				$periodStart = new DateTimeImmutable($period . '-01');
+			} catch (\Throwable $e) {
+				return false;
+			}
 
-		$periodEnd = $periodStart->modify('last day of this month');
+			$periodEnd = $periodStart->modify('last day of this month');
+		}
 
 		$start = strtotime(trim($startDate));
 		if ($start === false || $start > $periodEnd->getTimestamp()) {

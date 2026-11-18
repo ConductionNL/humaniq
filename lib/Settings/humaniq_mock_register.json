@@ -5436,6 +5436,18 @@
             "description": "The employer's payroll tax number, taken from the settings when this statement was produced.",
             "x-notes": "Employer loonheffingennummer, snapshotted from configuration at aggregation time."
           },
+          "includesOpeningBalance": {
+            "title": "Includes opening balance",
+            "type": "boolean",
+            "nullable": true,
+            "description": "The totals include the year-to-date figures of the previous payroll package."
+          },
+          "openingBalanceSource": {
+            "title": "Opening balance source",
+            "type": "string",
+            "nullable": true,
+            "description": "The previous payroll package those figures came from."
+          },
           "aggregatedAt": {
             "type": "string",
             "format": "date-time",
@@ -10397,6 +10409,50 @@
             "type": "number",
             "description": "Hours worked in the period. Together with the gross pay this gives the effective hourly rate the minimum-wage check uses.",
             "x-notes": "Hours worked in the period; with grossPay yields the effective hourly rate for minimum-wage checks.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "tijdvakFactor": {
+            "title": "Periods per year",
+            "type": "integer",
+            "nullable": true,
+            "description": "How many periods of this payslip's kind make a year: 13 for four weeks, 52 for a week. Monthly figures (salary, car benefit, protected amount of a wage garnishment) were scaled by 12 divided by it. Empty on a monthly payslip.",
+            "x-notes": "payroll-period-edge-cases D4: PayPeriod::periodsPerYear() of the period; absent for YYYY-MM so a monthly payslip is unchanged.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "week53": {
+            "title": "Week 53",
+            "type": "object",
+            "nullable": true,
+            "description": "On a period 13 that also pays ISO week 53: the calculation for weeks 49 to 52 (four-weekly tijdvak) and the one for week 53 (weekly tijdvak). The payslip's amounts are their sum. Empty otherwise.",
+            "x-notes": "payroll-period-edge-cases D3 (extend-period-13): each part carries weeks, tijdvak, grossPay, loonheffing, volksverzekeringen, zvw, werknemersverzekeringen and nettoPay.",
             "authorization": {
               "read": [
                 "humaniq-hr",
@@ -24823,6 +24879,72 @@
         "offerLetterFileId": 3,
         "offerSigningRequestId": "Voorbeeld Offersigningrequestid 3",
         "offerSigningStatus": "COMPLETED"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollOpeningBalance",
+          "slug": "payrollopeningbalance-payrollopeningbalance-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "administrationId": "Voorbeeld Administrationid 1",
+        "year": 2000,
+        "lastPeriodInPrevious": "0123-01",
+        "grossWage": 1.0,
+        "loonheffing": 1.0,
+        "payPeriodCount": 0,
+        "source": "Voorbeeld Source 1",
+        "zvwWithheld": 1.0,
+        "zvwBijdrageloon": 1.0,
+        "premieloon": 1.0,
+        "vakantiegeldReserved": 1.0,
+        "vakantiegeldPaid": 1.0,
+        "pensionContribution": 1.0,
+        "importedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollOpeningBalance",
+          "slug": "payrollopeningbalance-payrollopeningbalance-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "administrationId": "Voorbeeld Administrationid 2",
+        "year": 2001,
+        "lastPeriodInPrevious": "1234-02",
+        "grossWage": 2.0,
+        "loonheffing": 2.0,
+        "payPeriodCount": 1,
+        "source": "Voorbeeld Source 2",
+        "zvwWithheld": 2.0,
+        "zvwBijdrageloon": 2.0,
+        "premieloon": 2.0,
+        "vakantiegeldReserved": 2.0,
+        "vakantiegeldPaid": 2.0,
+        "pensionContribution": 2.0,
+        "importedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PayrollOpeningBalance",
+          "slug": "payrollopeningbalance-payrollopeningbalance-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "administrationId": "Voorbeeld Administrationid 3",
+        "year": 2002,
+        "lastPeriodInPrevious": "2345-03",
+        "grossWage": 3.0,
+        "loonheffing": 3.0,
+        "payPeriodCount": 2,
+        "source": "Voorbeeld Source 3",
+        "zvwWithheld": 3.0,
+        "zvwBijdrageloon": 3.0,
+        "premieloon": 3.0,
+        "vakantiegeldReserved": 3.0,
+        "vakantiegeldPaid": 3.0,
+        "pensionContribution": 3.0,
+        "importedAt": "2026-03-03T09:00:00+00:00"
       }
     ]
   }

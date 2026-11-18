@@ -2271,6 +2271,136 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testARunTakesOnlyPeriodsOfTheAdministrationsFrequency()
 
 	/**
+	 * payroll-period-edge-cases 2.3: a monthly payslip with a company car,
+	 * a wage garnishment and contracted hours is byte-identical to the one
+	 * the run wrote before the conversions moved to the period's share of
+	 * the year (the golden was written by the code before the change).
+	 *
+	 * @return void
+	 */
+	public function testAMonthlyPayslipIsUnchangedByThePeriodShare(): void {
+		$payslip = $this->periodPayslip(period: '2026-02', administrations: []);
+
+		self::assertArrayNotHasKey('tijdvakFactor', $payslip);
+		self::assertSame(
+			(string)file_get_contents(__DIR__ . '/../../fixtures/golden/payroll-period-monthly-payslip.json'),
+			json_encode($payslip, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n"
+		);
+	}//end testAMonthlyPayslipIsUnchangedByThePeriodShare()
+
+	/**
+	 * payroll-period-edge-cases D4: on a four-weekly payslip the monthly
+	 * salary, the car's bijtelling, the garnishment's protected amount and
+	 * the contracted hours are scaled by 12 / 13, and the payslip says 13.
+	 *
+	 * @return void
+	 */
+	public function testAFourWeeklyPayslipScalesTheMonthlyFigures(): void {
+		$payslip = $this->periodPayslip(
+			period: '2026-P05',
+			administrations: [['id' => 'adm-1', 'administrationId' => 'ADM-001', 'name' => 'Four-weekly', 'payFrequency' => 'four-weekly']]
+		);
+
+		self::assertSame(13, $payslip['tijdvakFactor']);
+		// 36 hours a week x 4 weeks.
+		self::assertSame(144.0, $payslip['hoursWorked']);
+		// The bijtelling: 45000 x 22% / 13 = 761.54, less the 325.00 contribution.
+		self::assertSame(436.54, $payslip['bijtelling']);
+		// The salary 3800 x 12 / 13 = 3507.69 plus that bijtelling.
+		self::assertSame(3944.23, $payslip['grossPay']);
+		// The garnishment takes all above the protected 2950 x 12 / 13 = 2723.08.
+		self::assertSame(2723.08, $payslip['nettoPay']);
+		self::assertSame(337.53, $payslip['loonbeslag']);
+	}//end testAFourWeeklyPayslipScalesTheMonthlyFigures()
+
+	/**
+	 * payroll-period-edge-cases D3, separate-period-14: the run for
+	 * `2026-P14` covers week 53 alone and taxes it with the weekly tijdvak:
+	 * a week's salary (3800 x 12 / 52) and the weekly loonheffing of the
+	 * pack's W20 vector for that same wage.
+	 *
+	 * @return void
+	 */
+	public function testASeparatePeriod14IsWeek53TaxedAsOneWeek(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+				'hrAdministration' => [['id' => 'adm-1', 'administrationId' => 'ADM-001', 'name' => 'Four-weekly', 'payFrequency' => 'four-weekly', 'week53Handling' => 'separate-period-14']],
+			]
+		);
+
+		self::assertSame('calculated', $service->runFor('2026-P14')['status']);
+		$payslip = $this->savedFor($fake, 'Payslip')[0];
+
+		self::assertSame(52, $payslip['tijdvakFactor']);
+		self::assertSame(876.92, $payslip['grossPay']);
+		self::assertSame(165.88, $payslip['loonheffing']);
+		self::assertArrayNotHasKey('week53', $payslip);
+		self::assertSame('failed', $service->runFor('2025-P14')['status'], '2025 has no week 53');
+	}//end testASeparatePeriod14IsWeek53TaxedAsOneWeek()
+
+	/**
+	 * payroll-period-edge-cases D3, extend-period-13 (the default): the
+	 * payslip of `2026-P13` carries one calculation for weeks 49 to 52 with
+	 * the four-weekly tijdvak and one for week 53 with the weekly tijdvak, on
+	 * a quarter of the four weeks' salary and car benefit, and its amounts
+	 * are their sum. Paying week 53 as period 14 leaves period 13 four weeks.
+	 *
+	 * @return void
+	 */
+	public function testAnExtendedPeriod13AddsWeek53AsAOneWeekCalculation(): void {
+		$four = [['id' => 'adm-1', 'administrationId' => 'ADM-001', 'name' => 'Four-weekly', 'payFrequency' => 'four-weekly']];
+		$payslip = $this->periodPayslip(period: '2026-P13', administrations: $four);
+
+		self::assertSame(['weeks' => '49-52', 'tijdvak' => 'vierweken', 'grossPay' => 3944.23], array_slice($payslip['week53']['fourWeeks'], 0, 3));
+		// (3507.69 + 436.54) / 4.
+		self::assertSame(['weeks' => '53', 'tijdvak' => 'week', 'grossPay' => 986.06], array_slice($payslip['week53']['week'], 0, 3));
+		foreach (['grossPay', 'loonheffing', 'volksverzekeringen', 'zvw', 'werknemersverzekeringen'] as $field) {
+			self::assertEqualsWithDelta($payslip['week53']['fourWeeks'][$field] + $payslip['week53']['week'][$field], $payslip[$field], 0.001, $field);
+		}
+
+		// The week is taxed as a week: the four weeks' loonheffing over 13 periods would differ.
+		self::assertGreaterThan(0.0, $payslip['week53']['week']['loonheffing']);
+		self::assertNotEqualsWithDelta(round($payslip['week53']['fourWeeks']['loonheffing'] / 4, 2), $payslip['week53']['week']['loonheffing'], 0.001);
+
+		$separate = [array_merge($four[0], ['week53Handling' => 'separate-period-14'])];
+		self::assertArrayNotHasKey('week53', $this->periodPayslip(period: '2026-P13', administrations: $separate), 'with a separate period 14, period 13 is four weeks');
+	}//end testAnExtendedPeriod13AddsWeek53AsAOneWeekCalculation()
+
+	/**
+	 * The payslip of a run for the period, for the anchor employee with a
+	 * company car and a wage garnishment.
+	 *
+	 * @param string                           $period          The period id.
+	 * @param list<array<string, mixed>>       $administrations The hrAdministration rows.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function periodPayslip(string $period, array $administrations): array {
+		$rows = [
+			'Employee' => [$this->employee(['startDate' => '2022-01-01'])],
+			'EmploymentContract' => [$this->contract()],
+			'PayrollRun' => [],
+			'Payslip' => [],
+			'Asset' => [$this->vehicleAsset()],
+			'AssetAssignment' => [$this->vehicleAssignment()],
+			'Loonbeslag' => [$this->loonbeslag()],
+		];
+		if ($administrations !== []) {
+			$rows['hrAdministration'] = $administrations;
+		}
+
+		[$service, $fake] = $this->service($rows);
+
+		self::assertSame('calculated', $service->runFor($period)['status']);
+
+		return $this->savedFor($fake, 'Payslip')[0];
+	}//end periodPayslip()
+
+	/**
 	 * filings-premium-differentiation REQ-AWF-101: a signed BBL
 	 * praktijkovereenkomst is charged the low Awf rate, and the payslip says
 	 * so and why.

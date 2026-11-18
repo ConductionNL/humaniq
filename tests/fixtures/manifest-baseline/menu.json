@@ -732,6 +732,12 @@
 				"route": "PayrollAdjustments"
 			},
 			{
+				"id": "OpeningBalances",
+				"label": "Opening balances",
+				"icon": "ScaleBalance",
+				"route": "OpeningBalances"
+			},
+			{
 				"id": "PayrollGLPosts",
 				"label": "Payroll GL posts",
 				"icon": "BookEditOutline",

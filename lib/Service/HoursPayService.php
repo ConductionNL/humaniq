@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
+use OCA\Humaniq\Payroll\PayPeriod;
 
 /**
  * Selection, arithmetic and stamping of paid hours.
@@ -60,25 +61,33 @@ class HoursPayService {
 	}//end __construct()
 
 	/**
-	 * The employee's approved timesheets this run pays: period on or before
-	 * the run's, and not stamped by another run that still exists.
+	 * The employee's approved timesheets this run pays: a month that has
+	 * ended by the run's last day, and not stamped by another run that still
+	 * exists.
+	 *
+	 * For a monthly run that is every month on or before the run's own. A
+	 * four-weekly or weekly run pays a month once its last day falls in or
+	 * before the period (payroll-period-edge-cases D4): comparing the month
+	 * id with `2026-P05` as text would rank every month of 2026 before it.
 	 *
 	 * @param list<array<string, mixed>>          $timesheets Every Timesheet.
 	 * @param string                              $employeeId The employee.
-	 * @param string                              $period     The run's period, YYYY-MM.
+	 * @param string                              $period     The run's period: YYYY-MM, YYYY-Pnn or YYYY-Wnn.
 	 * @param string                              $runId      The run.
 	 * @param array<string, array<string, mixed>> $runsById   Every PayrollRun by id.
 	 *
 	 * @return list<array<string, mixed>>
 	 *
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public function timesheetsToPay(array $timesheets, string $employeeId, string $period, string $runId, array $runsById): array {
-		$out = [];
+		$periodEnd = self::lastDayOfPeriod($period);
+		$out       = [];
 		foreach ($timesheets as $timesheet) {
 			if (($timesheet['status'] ?? null) !== 'approved'
 				|| (string)($timesheet['employeeId'] ?? '') !== $employeeId
-				|| substr((string)($timesheet['period'] ?? ''), 0, 7) > $period
+				|| self::monthHasEnded(month: substr((string)($timesheet['period'] ?? ''), 0, 7), periodEnd: $periodEnd, period: $period) === false
 			) {
 				continue;
 			}
@@ -91,6 +100,44 @@ class HoursPayService {
 
 		return $out;
 	}//end timesheetsToPay()
+
+	/**
+	 * A run period's last day as `Y-m-d`, null when the id is no period.
+	 *
+	 * @param string $period The run's period.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private static function lastDayOfPeriod(string $period): ?string {
+		try {
+			return PayPeriod::parse($period)->lastDay->format('Y-m-d');
+		} catch (InvalidArgumentException $e) {
+			return null;
+		}
+	}//end lastDayOfPeriod()
+
+	/**
+	 * Whether a timesheet month has ended by the period's last day. A month
+	 * or period that does not parse falls back to comparing the ids, as the
+	 * monthly run always did.
+	 *
+	 * @param string      $month     The timesheet's month, YYYY-MM.
+	 * @param string|null $periodEnd The run period's last day, null when it does not parse.
+	 * @param string      $period    The run's period id.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private static function monthHasEnded(string $month, ?string $periodEnd, string $period): bool {
+		if ($periodEnd === null || preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month) !== 1) {
+			return $month <= $period;
+		}
+
+		return PayPeriod::parse($month)->lastDay->format('Y-m-d') <= $periodEnd;
+	}//end monthHasEnded()
 
 	/**
 	 * What the timesheets come to for this employee.

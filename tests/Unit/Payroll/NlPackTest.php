@@ -75,13 +75,17 @@ class NlPackTest extends TestCase {
 	 * self-test block is the 12 existing fixtures (the original 9, the
 	 * 30%-ruling anchor, the withheld Zvw and the RVU final levy) —
 	 * referenced, never copied. If a fixture is added, it belongs here too.
+	 * Every fixture is monthly; the four-weekly and weekly periods are the
+	 * inline vectors after them (payroll-period-edge-cases 2.2).
 	 *
 	 * @return void
 	 */
 	public function testTheNlPackDeclaresAllTenGoldenFixturesAsItsOwnVectors(): void {
 		$vectors = $this->pack()->selfTest()['vectors'];
+		$fixtures = array_values(array_filter($vectors, static fn (array $vector): bool => array_key_exists('$fixture', $vector)));
 
-		$this->assertCount(12, $vectors);
+		$this->assertCount(12, $fixtures);
+		$this->assertSame(['2026-P05', '2026-W20', '2026-P05', '2026-W20'], array_column(array_slice($vectors, 12), 'period'));
 		$this->assertSame(
 			[
 				'payroll-2026/anchor.json',
@@ -97,7 +101,7 @@ class NlPackTest extends TestCase {
 				'payroll-2026/zvw-inhouding.json',
 				'payroll-2026/rvu-final-levy.json',
 			],
-			array_column($vectors, '$fixture')
+			array_column($fixtures, '$fixture')
 		);
 
 	}//end testTheNlPackDeclaresAllTenGoldenFixturesAsItsOwnVectors()

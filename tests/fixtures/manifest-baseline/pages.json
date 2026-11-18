@@ -640,6 +640,10 @@
 		"route": "/exit-interviews/:id"
 	},
 	{
+		"id": "OpeningBalances",
+		"route": "/opening-balances"
+	},
+	{
 		"id": "OrgUnits",
 		"route": "/org-units"
 	},
