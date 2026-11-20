@@ -52,5 +52,7 @@
 - [ ] 5.1 `tests/e2e/spec-coverage/setup-wizard-six-steps.spec.ts` for the Wijzigen scenario;
       every other scenario keeps its reason-bearing `@e2e exclude` (gate 19); `@spec` tags on
       changed methods (gate 16).
+      Written, not run: `tests/e2e/spec-coverage/setup-wizard-six-steps.spec.ts`, ahead of the
+      recap (1.1) and the six-step setup block (2.1 to 2.5) it walks; it fails until those land.
 - [ ] 5.2 One live pass of the wizard against board `humaniq/HuInrichten`, step by step, with a
       screenshot of the Klaar step next to the board.
