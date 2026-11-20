@@ -75,11 +75,23 @@ class ReservationPayoutRunService {
 	];
 
 	/**
-	 * @param RecordStoreInterface    $records The register rows.
-	 * @param InternalWriteMarker     $marker  Marks the run's writes as humaniq's own.
-	 * @param ReservationPayoutService $math   The annual wage and open-balance arithmetic.
-	 * @param AllowanceRateResolver   $rates   The contract-first, confirmed-CAO-second rates.
-	 * @param IkbSpendFold            $ikb     The individual choice budget's payout lines.
+	 * The contract-first, confirmed-CAO-second rates.
+	 *
+	 * @var AllowanceRateResolver
+	 */
+	private readonly AllowanceRateResolver $rates;
+
+	/**
+	 * The individual choice budget's payout lines.
+	 *
+	 * @var IkbSpendFold
+	 */
+	private readonly IkbSpendFold $ikb;
+
+	/**
+	 * @param RecordStoreInterface     $records The register rows.
+	 * @param InternalWriteMarker      $marker  Marks the run's writes as humaniq's own.
+	 * @param ReservationPayoutService $math    The annual wage and open-balance arithmetic.
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-holiday-allowance-shall-be-paid-out-on-the-administrations-schedule-and-on-leaving-req-rsp-002
 	 */
@@ -87,9 +99,9 @@ class ReservationPayoutRunService {
 		private readonly RecordStoreInterface $records,
 		private readonly InternalWriteMarker $marker,
 		private readonly ReservationPayoutService $math = new ReservationPayoutService(),
-		private readonly AllowanceRateResolver $rates = new AllowanceRateResolver(),
-		private readonly IkbSpendFold $ikb = new IkbSpendFold(),
 	) {
+		$this->rates = new AllowanceRateResolver();
+		$this->ikb = new IkbSpendFold();
 	}//end __construct()
 
 	/**

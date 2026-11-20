@@ -153,7 +153,7 @@ class ReservationPayoutApprovalService {
 			}
 
 			$year = (int)substr((string)($payslip['period'] ?? ''), 0, 4);
-			if ($budgets->accrue(employeeId: (string)($payslip['employeeId'] ?? ''), year: $year, amount: $amount, runId: $runId, userId: ($payslip['userId'] ?? null)) === true) {
+			if ($budgets->accrue(owner: ['employeeId' => (string)($payslip['employeeId'] ?? ''), 'userId' => ($payslip['userId'] ?? null)], year: $year, amount: $amount, runId: $runId) === true) {
 				++$accrued;
 			}
 		}

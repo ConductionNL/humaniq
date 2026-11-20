@@ -78,6 +78,8 @@ class PackValidatorTest extends TestCase {
 	 * Gate 2 knows `band` (payroll-reservation-payouts D2): a pack using it validates.
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 *
+	 * @return void
 	 */
 	public function testABandStepValidates(): void {
 		$this->assertSame([], $this->validate($this->bandPack(band: [])));
@@ -87,6 +89,8 @@ class PackValidatorTest extends TestCase {
 	 * A `band` step carrying a key outside its allow-list is refused.
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 *
+	 * @return void
 	 */
 	public function testABandStepWithAForeignKeyIsRefused(): void {
 		$this->expectException(DslException::class);

@@ -64,17 +64,18 @@ final class IkbBudgets {
 	/**
 	 * Add a run's accrual, once per run. A missing budget is created.
 	 *
-	 * @param string      $employeeId The employee.
-	 * @param int         $year       The year.
-	 * @param float       $amount     The accrual, in euros.
-	 * @param string      $runId      The run.
-	 * @param string|null $userId     The employee's account, for a new budget.
+	 * @param array{employeeId: string, userId?: string|null} $owner  The employee, and their account for a new budget.
+	 * @param int                                             $year   The year.
+	 * @param float                                           $amount The accrual, in euros.
+	 * @param string                                          $runId  The run.
 	 *
 	 * @return bool Whether it was added; false when the run was already added.
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-individual-choice-budget-shall-accrue-and-be-spent-by-approved-request-req-rsp-004
 	 */
-	public function accrue(string $employeeId, int $year, float $amount, string $runId, ?string $userId = null): bool {
+	public function accrue(array $owner, int $year, float $amount, string $runId): bool {
+		$employeeId = (string)$owner['employeeId'];
+		$userId = $owner['userId'] ?? null;
 		if ($employeeId === '' || $year <= 0 || $amount <= 0) {
 			return false;
 		}

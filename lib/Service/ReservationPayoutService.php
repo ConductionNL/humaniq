@@ -30,6 +30,7 @@ namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
+use OCA\Humaniq\Support\RoundsToCents;
 
 /**
  * Annual wage, basis periods and open balances of the holiday allowance and end-of-year reserves.
@@ -40,6 +41,8 @@ use InvalidArgumentException;
  * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-holiday-allowance-shall-be-paid-out-on-the-administrations-schedule-and-on-leaving-req-rsp-002
  */
 class ReservationPayoutService {
+
+	use RoundsToCents;
 
 	/**
 	 * The holiday allowance reserve.
@@ -221,19 +224,4 @@ class ReservationPayoutService {
 
 		return (int)substr($period, 0, 4);
 	}//end year()
-
-	/**
-	 * A stored euro amount in cents.
-	 *
-	 * @param mixed $euros The amount.
-	 *
-	 * @return int The cents.
-	 */
-	private static function cents(mixed $euros): int {
-		if (is_numeric($euros) === false) {
-			return 0;
-		}
-
-		return (int)round(((float)$euros) * 100);
-	}//end cents()
 }//end class
