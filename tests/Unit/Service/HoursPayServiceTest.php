@@ -100,6 +100,31 @@ class HoursPayServiceTest extends TestCase {
 	}//end testWhichTimesheetsARunPays()
 
 	/**
+	 * A four-weekly or weekly run pays a month once it has ended by the
+	 * period's last day. 2026-P05 is ISO weeks 17 to 20 (20 April to 17 May)
+	 * and 2026-W22 ends on 31 May: April is paid in P05 and May is not, and
+	 * the week holding 31 May pays May. Comparing `2026-06` with `2026-P05`
+	 * as text would have paid June too.
+	 *
+	 * @return void
+	 */
+	public function testANonMonthlyRunPaysTheMonthsEndedByItsLastDay(): void {
+		$timesheets = [
+			self::timesheet('ts-april', '2026-04', 120),
+			self::timesheet('ts-may', '2026-05', 128),
+			self::timesheet('ts-june', '2026-06', 100),
+		];
+
+		$fourWeekly = $this->service()->timesheetsToPay(timesheets: $timesheets, employeeId: 'emp-1', period: '2026-P05', runId: 'run-p05', runsById: []);
+		$week21 = $this->service()->timesheetsToPay(timesheets: $timesheets, employeeId: 'emp-1', period: '2026-W21', runId: 'run-w21', runsById: []);
+		$week22 = $this->service()->timesheetsToPay(timesheets: $timesheets, employeeId: 'emp-1', period: '2026-W22', runId: 'run-w22', runsById: []);
+
+		self::assertSame(['ts-april'], array_column($fourWeekly, 'id'));
+		self::assertSame(['ts-april'], array_column($week21, 'id'));
+		self::assertSame(['ts-april', 'ts-may'], array_column($week22, 'id'));
+	}//end testANonMonthlyRunPaysTheMonthsEndedByItsLastDay()
+
+	/**
 	 * An hourly employee is paid the approved hours times the hourly wage:
 	 * 128 hours at 16.00 is 2048.00.
 	 *

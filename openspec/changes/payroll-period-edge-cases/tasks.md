@@ -10,35 +10,47 @@
 
 ## 2. Engine
 
-- [ ] 2.1 Teach `RefResolver` `@period.tijdvak` and `@period.lastDay` for every id. Verify:
+- [x] 2.1 Teach `RefResolver` `@period.tijdvak` and `@period.lastDay` for every id. Verify:
       unit tests for each grain.
-- [ ] 2.2 Replace the monthly factor and caps in the pack with tijdvak bindings, add
+  - Done: `RefResolver::period()` parses the id through `PayPeriod`: `@period.year` is the id's (ISO) year, `@period.lastDay` the period's last day, `@period.tijdvak` `maand`, `vierweken` or `week`; an unknown id or a week 53 the year lacks is refused as before. Tests: `RefResolverTest::testEachGrainResolvesItsPeriodFields` (6 grains), `testAWeek53TheYearLacksIsRejected`.
+- [x] 2.2 Replace the monthly factor and caps in the pack with tijdvak bindings, add
       `maximumpremieloon.week` and new golden vectors. Verify: the nine fixtures pass unchanged
       and the four-weekly and weekly vectors pass through `PackValidator` gate 5.
-- [ ] 2.3 Switch the run's monthly conversions to `shareOfYear` (D4). Verify: unit test that a
+  - Done: binding `tijdvakFactor` = `@table.loonheffing.tijdvakFactoren[@period.tijdvak]` feeds `annualised`, `loonheffing` and `arbeidskorting`; `premieloonCap` and the 30%-ruling cap index `maximumpremieloon` and `aftoppingsgrens` by `@period.tijdvak`. The tables gain `maximumpremieloon.week` (1527.10 = jaar / 52) and `aftoppingsgrens.vierweken`/`.week` (jaar x 4 / 52, jaar / 52). The ten monthly fixtures pass unchanged; four inline vectors (`2026-P05` and `2026-W20`, below and above the cap) pass gate 5, and the uncapped ones reproduce the anchor's loonheffing x 12 / 13 and x 12 / 52. Tests: `NlPackTest`.
+- [x] 2.3 Switch the run's monthly conversions to `shareOfYear` (D4). Verify: unit test that a
       monthly payslip is byte-identical to before.
-- [ ] 2.4 Add week-53 handling for both settings (D3). Verify: unit tests that an extended
+  - Done: `PayrollRunService` scales by `PayPeriod::periodsPerYear()` (12/13/52, the same as `shareOfYear`): `hoursWorked` = hours a week x 52 / periods, the bijtelling = yearly / periods, the salaried gross and the garnishment's `beslagvrijeVoet` = monthly x 12 / periods (unchanged for a month); the holiday calendar range and the sick-pay year-one test use the period's first and last day; `ChecksPeriodCoverage` covers a four-week period or a week by its days (other inputs read as before). A non-monthly payslip records `tijdvakFactor` (new `Payslip` property, schema 0.19.0; absent on a monthly one). Tests: `PayrollRunServiceTest::testAMonthlyPayslipIsUnchangedByThePeriodShare` (golden written by the code before the change: car, garnishment, hours), `testAFourWeeklyPayslipScalesTheMonthlyFigures`. Timesheets stay month-keyed: `HoursPayService::timesheetsToPay()` pays a month once its last day falls on or before the period's last day (unchanged for a month; it compared the month id with `2026-P05` as text, which paid every month of the year). Test: `HoursPayServiceTest::testANonMonthlyRunPaysTheMonthsEndedByItsLastDay`.
+- [x] 2.4 Add week-53 handling for both settings (D3). Verify: unit tests that an extended
       `2026-P13` payslip carries a four-week and a one-week calculation, and a `2026-P14` run
       covers week 53 only.
 
+  - Done: `separate-period-14`: `2026-P14` parses as week 53 alone with tijdvak `week`, so the run pays a week's salary and the weekly loonheffing (2.2/2.3). `extend-period-13`: `PayrollRunService::withWeek53()` calculates week 53 as `YYYY-W53` on a quarter of the four weeks' salary and car benefit, `CalculationResult::combined()` sums both calculations into the payslip's amounts, and the payslip's new `week53` block (schema 0.19.0) shows each part with its weeks and tijdvak. Left: an hourly employee's week 53 is not calculated (approved hours are selected per month). Tests: `PayrollRunServiceTest::testASeparatePeriod14IsWeek53TaxedAsOneWeek`, `testAnExtendedPeriod13AddsWeek53AsAOneWeekCalculation`, `CalculationResultCombinedTest` (2).
+
 ## 3. Opening balances
 
-- [ ] 3.1 Add `PayrollOpeningBalance` with its uniqueness rule and the `OpeningBalances` page
+- [x] 3.1 Add `PayrollOpeningBalance` with its uniqueness rule and the `OpeningBalances` page
       with mass import. Verify: `occ app:update` imports it and `npm run check:manifest` exits
       0.
-- [ ] 3.2 Add opening balances to `upsertJaaropgaaf()` and `WkrService`. Verify: unit tests
+  - Done: schema `PayrollOpeningBalance` (D5 fields) in `register.d/hr-opening-balance.json`, register 0.64.0. `PayrollOpeningBalanceUniqueGuard` refuses a second balance per employee, administration and year on create and update, and fails closed. Pages `OpeningBalances` (index, mass import on) and `OpeningBalanceDetail` in `manifest.d/hr-opening-balance.json`, menu entry under Payroll; en/nl strings. `npm run check:manifest` passes. Tests: `PayrollOpeningBalanceUniqueGuardTest` (5). Not run here: `occ app:update` (needs a live instance).
+- [x] 3.2 Add opening balances to `upsertJaaropgaaf()` and `WkrService`. Verify: unit tests
       that six months of opening balance plus six humaniq payslips give a twelve-period
       statement.
-- [ ] 3.3 Add `nl-openingsbalans-overlap` and `nl-openingsbalans-ontbreekt`. Verify:
+  - Done: `HrDocumentService::upsertJaaropgaaf()` adds the employee's balance for the year (gross, loonheffing, Zvw withheld, holiday allowance reserved, pension, periods) and stamps `includesOpeningBalance` and `openingBalanceSource` (Jaaropgaaf schema 0.2.0); without a balance the statement is unchanged. `WkrService` adds each balance's `grossWage` to the loonsom of its administration and year. Tests: `HrDocumentServiceTest::testGenerateJaaropgaafAddsTheOpeningBalanceOfTheYear` (6 + 6 = 12 periods), `WkrServiceTest::testAnOpeningBalanceCountsTowardsTheFiscalWageBill`; the document golden re-recorded for the one added read.
+- [x] 3.3 Add `nl-openingsbalans-overlap` and `nl-openingsbalans-ontbreekt`. Verify:
       `occ humaniq:rules:audit` reports a seeded overlap.
+
+  - Done: both rules in `lib/Standards/rules/payroll.json`, checked on Payslip by `NlOpeningBalanceChecks` over `context['openingBalances']` (balances by employee and year, each employee's first humaniq period of a year), built by `RuleAuditService` for the full and the run-scoped audit; the WKR audit context adds the balances' gross wage as `WkrService` does. Tests: `NlOpeningBalanceChecksTest` (3), `RuleAuditServiceTest::testTheAuditReportsAnOpeningBalanceOverlapAndAMissingBalance` (the seeded overlap and a missing balance, each reported once). Not run here: `occ humaniq:rules:audit` on a live instance.
 
 ## 4. Seed
 
-- [ ] 4.1 Seed `ADM-005` and the opening balance. Verify: `npm run check:seed-refs` exits 0.
+- [x] 4.1 Seed `ADM-005` and the opening balance. Verify: `npm run check:seed-refs` exits 0.
+
+  - Done: `hr-seed.json` seeds the four-weekly administration as `ADM-007` (ADM-005 and ADM-006 were already taken), with `week53Handling: extend-period-13`, one employee (`employee-vierweken`) and her contract, and `opening-balance-degroot-2026` (ADM-001, last period 2026-06, six periods). `npm run check:seed-refs` passes.
 
 ## 5. Verification
 
-- [ ] 5.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec` tags
+- [x] 5.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec` tags
       on every new method (gate 16).
+  - Done: each of the eight scenarios carries an `@e2e exclude` naming the unit test that asserts it (every outcome is server-side: a run, a statement, an audit finding); every new class and method carries `@spec`.
 - [ ] 5.2 One live check on a dev instance: calculate `2026-P13` for `ADM-005` and generate the
       2026 statement for the employee with an opening balance; record screenshots in the PR.

@@ -132,6 +132,20 @@ class HrDocumentService implements HrDocumentServiceInterface {
 	private const EMPLOYEE_SCHEMA = 'Employee';
 
 	/**
+	 * The statement totals an opening balance adds to, by the balance field
+	 * that carries each (payroll-period-edge-cases D6).
+	 *
+	 * @var array<string, string>
+	 */
+	private const OPENING_BALANCE_TOTALS = [
+		'totalGrossPay' => 'grossWage',
+		'totalLoonheffing' => 'loonheffing',
+		'totalZvwWithheld' => 'zvwWithheld',
+		'totalPensionContribution' => 'pensionContribution',
+		'totalVakantiegeldReserved' => 'vakantiegeldReserved',
+	];
+
+	/**
 	 * @var string
 	 */
 	private const CONTRACT_SCHEMA = 'EmploymentContract';
@@ -951,10 +965,6 @@ class HrDocumentService implements HrDocumentServiceInterface {
 			$payPeriodCount++;
 		}//end foreach
 
-		if ($payPeriodCount === 0) {
-			return null;
-		}
-
 		$fields = [
 			'employeeId' => $employeeId,
 			'year' => $year,
@@ -972,6 +982,13 @@ class HrDocumentService implements HrDocumentServiceInterface {
 			'aggregatedAt' => gmdate('Y-m-d\TH:i:s\Z'),
 		];
 
+		// payroll-period-edge-cases D6: the year-to-date figures a previous
+		// package paid before humaniq took over count towards the statement.
+		$fields = $this->withOpeningBalance(fields: $fields, opening: $this->openingBalanceOf(employeeId: $employeeId, year: $year));
+		if ($fields['payPeriodCount'] === 0) {
+			return null;
+		}
+
 		$existing = $this->findJaaropgaaf($employeeId, $year);
 		if ($existing !== null) {
 			return $this->saveJaaropgaaf($existing, $fields);
@@ -979,6 +996,53 @@ class HrDocumentService implements HrDocumentServiceInterface {
 
 		return $this->createJaaropgaaf($fields);
 	}//end upsertJaaropgaaf()
+
+	/**
+	 * Add an imported opening balance to the statement's totals, and mark the
+	 * statement as including it.
+	 *
+	 * @param array<string, mixed>      $fields  The statement fields from humaniq's own payslips.
+	 * @param array<string, mixed>|null $opening The opening balance, null when none was imported.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 */
+	private function withOpeningBalance(array $fields, ?array $opening): array {
+		if ($opening === null) {
+			return $fields;
+		}
+
+		foreach (self::OPENING_BALANCE_TOTALS as $field => $source) {
+			$fields[$field] += (float)($opening[$source] ?? 0);
+		}
+
+		$fields['payPeriodCount'] += (int)($opening['payPeriodCount'] ?? 0);
+		$fields['includesOpeningBalance'] = true;
+		$fields['openingBalanceSource'] = (string)($opening['source'] ?? '');
+
+		return $fields;
+	}//end withOpeningBalance()
+
+	/**
+	 * The employee's opening balance for the year, if one was imported.
+	 *
+	 * @param string $employeeId The Employee id.
+	 * @param int    $year       The kalenderjaar.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 */
+	private function openingBalanceOf(string $employeeId, int $year): ?array {
+		foreach ($this->loadAll('PayrollOpeningBalance') as $balance) {
+			if (trim((string)($balance['employeeId'] ?? '')) === $employeeId && (int)($balance['year'] ?? 0) === $year) {
+				return $balance;
+			}
+		}
+
+		return null;
+	}//end openingBalanceOf()
 
 	/**
 	 * The active (pending/generated) GeneratedDocument for one idempotency

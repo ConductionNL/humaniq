@@ -18,10 +18,13 @@ Rows: `dm-week-53` (humaniq matrix), changelog https://loket.nl/roadmap/.
 - **THEN** the payslips are computed with the four-weekly tijdvak factor 13 and the
   four-weekly maximum premium wage
 
+@e2e exclude A run is calculated server-side and its payslip is read back through the API; there is no page step a browser test adds. `PayrollRunServiceTest::testAFourWeeklyPayslipScalesTheMonthlyFigures` and the pack's inline `2026-P05` vectors (gate 5) assert the four-weekly factor and cap.
 #### Scenario: The wrong grain is refused
 - **GIVEN** an administration with pay frequency month
 - **WHEN** a payroll officer asks for a run for `2026-P05`
 - **THEN** the run is refused because the administration pays monthly
+
+@e2e exclude The refusal is the run's answer to a period id, not something a page renders differently. `PayrollRunServiceTest::testARunTakesOnlyPeriodsOfTheAdministrationsFrequency` asserts it.
 
 ### Requirement: The 53rd week SHALL be paid and taxed as a one-week tijdvak (REQ-PPE-002)
 
@@ -39,15 +42,19 @@ Rows: `dm-week-53` (humaniq matrix), changelog https://loket.nl/roadmap/.
 - **THEN** each payslip shows one calculation for weeks 49 to 52 with the four-weekly tijdvak
   and one for week 53 with the weekly tijdvak, and their sum
 
+@e2e exclude The two calculations are written by the run and land as the payslip's `week53` block; the payslip page renders stored fields only. `PayrollRunServiceTest::testAnExtendedPeriod13AddsWeek53AsAOneWeekCalculation` asserts both parts and their sum.
 #### Scenario: Week 53 as its own period
 - **GIVEN** the same administration set to a separate period 14
 - **WHEN** the payroll officer calculates `2026-P14`
 - **THEN** the run covers week 53 only, with the weekly tijdvak
 
+@e2e exclude Server-side calculation only. `PayrollRunServiceTest::testASeparatePeriod14IsWeek53TaxedAsOneWeek` asserts the weekly tijdvak for `2026-P14`.
 #### Scenario: A year without week 53 has no period 14
 - **GIVEN** 2025, which has 52 ISO weeks
 - **WHEN** the payroll officer asks for `2025-P14`
 - **THEN** the run is refused
+
+@e2e exclude A refused period id, asserted by `PayPeriodTest` and `PayrollRunServiceTest::testASeparatePeriod14IsWeek53TaxedAsOneWeek` (`2025-P14`).
 
 ### Requirement: Opening balances SHALL carry a previous package's year-to-date figures into annual totals (REQ-PPE-003)
 
@@ -68,14 +75,18 @@ https://klant.afas.nl/update/profit-7/hrm.
 - **THEN** it shows a total wage of 45600.00 over twelve periods and says it includes the
   opening balance from the previous package
 
+@e2e exclude The statement is aggregated server-side before the PDF is rendered by docudesk. `HrDocumentServiceTest::testGenerateJaaropgaafAddsTheOpeningBalanceOfTheYear` asserts the twelve periods; the import itself is the library's mass import on the OpeningBalances page, covered by the library's own tests.
 #### Scenario: A double-counted month is flagged
 - **GIVEN** an opening balance up to 2026-06 and a humaniq payslip for 2026-06 for the same
   employee
 - **WHEN** an HR adviser runs the rule audit
 - **THEN** the audit flags the overlap for that employee and period
 
+@e2e exclude A rule audit finding, produced by `occ humaniq:rules:audit` and the audit service. `RuleAuditServiceTest::testTheAuditReportsAnOpeningBalanceOverlapAndAMissingBalance` asserts it.
 #### Scenario: A forgotten balance is flagged
 - **GIVEN** an employee whose first humaniq payslip of 2026 is for 2026-07 and who has no 2026
   opening balance
 - **WHEN** the rule audit runs
 - **THEN** the audit flags the missing opening balance
+
+@e2e exclude A rule audit finding, as above. `RuleAuditServiceTest::testTheAuditReportsAnOpeningBalanceOverlapAndAMissingBalance` and `NlOpeningBalanceChecksTest` assert it.

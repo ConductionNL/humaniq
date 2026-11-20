@@ -210,6 +210,7 @@ class WkrService implements WkrServiceInterface {
 	private function buildAggregate(): array {
 		$aggregate = new WkrAggregate();
 		$this->addPayslips($aggregate, $this->administrationIdsByRun());
+		$this->addOpeningBalances($aggregate);
 		$this->addDeclarations($aggregate);
 
 		return $aggregate->toArray();
@@ -242,6 +243,29 @@ class WkrService implements WkrServiceInterface {
 				->add('payslipWkrUsed', (float)($payslip['wkrUsed'] ?? 0));
 		}
 	}//end addPayslips()
+
+	/**
+	 * Add every opening balance's gross wage to the loonsom of its
+	 * administration and year: the months a previous package paid count
+	 * towards the year's fiscal wage bill (payroll-period-edge-cases D6).
+	 *
+	 * @param WkrAggregate $aggregate The aggregate being built.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 */
+	private function addOpeningBalances(WkrAggregate $aggregate): void {
+		foreach ($this->loadAll('PayrollOpeningBalance') as $balance) {
+			$administrationId = trim((string)($balance['administrationId'] ?? ''));
+			$year = (int)($balance['year'] ?? 0);
+			if ($administrationId === '' || $year === 0) {
+				continue;
+			}
+
+			$aggregate->at($administrationId, $year)->add('loonsom', (float)($balance['grossWage'] ?? 0));
+		}
+	}//end addOpeningBalances()
 
 	/**
 	 * Add every counted WkrDeclaration's amount to its (administrationId,

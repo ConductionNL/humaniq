@@ -26,6 +26,7 @@ use OCA\Humaniq\Listener\FilteredObjectSubscriptions;
 use OCA\Humaniq\Listener\InterviewInterviewersListener;
 use OCA\Humaniq\Listener\ManagerAccessOrgChangeListener;
 use OCA\Humaniq\Listener\ManagerAccessStampListener;
+use OCA\Humaniq\Listener\PayrollOpeningBalanceUniqueGuard;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -79,7 +80,7 @@ class FilteredObjectSubscriptionsTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheManagerAccessSubscriptionsFollowUnchanged(): void {
-		$rest = array_slice($this->subscriptions(), 2);
+		$rest = array_slice($this->subscriptions(), 2, 5);
 
 		self::assertSame(
 			[
@@ -94,4 +95,21 @@ class FilteredObjectSubscriptionsTest extends TestCase {
 		self::assertSame(array_keys(ManagerAccessStampListener::SLUGS), $rest[0]['schemas']);
 		self::assertSame(ManagerAccessOrgChangeListener::SLUGS, $rest[2]['schemas']);
 	}//end testTheManagerAccessSubscriptionsFollowUnchanged()
+
+	/**
+	 * The opening balance guard comes last, on create and update of a balance only.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 */
+	public function testTheOpeningBalanceGuardIsSubscribedBeforeEverySave(): void {
+		self::assertSame(
+			[
+				['event' => ObjectCreatingEvent::class, 'listener' => PayrollOpeningBalanceUniqueGuard::class, 'schemas' => ['payrollopeningbalance']],
+				['event' => ObjectUpdatingEvent::class, 'listener' => PayrollOpeningBalanceUniqueGuard::class, 'schemas' => ['payrollopeningbalance']],
+			],
+			array_slice($this->subscriptions(), 7)
+		);
+	}//end testTheOpeningBalanceGuardIsSubscribedBeforeEverySave()
 }//end class
