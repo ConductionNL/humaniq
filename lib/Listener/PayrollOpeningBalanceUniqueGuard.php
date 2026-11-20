@@ -32,7 +32,6 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\HoursRegisterGateway;
-use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -71,17 +70,19 @@ class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 	 * @return void
 	 *
 	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) PreSaveEvents::entityOf and ::refuse are the shared reader and refusal every pre-save guard uses.
 	 */
 	public function handle(Event $event): void {
-		$incoming = $this->incoming(event: $event);
-		if ($incoming === null) {
+		$entity = PreSaveEvents::entityOf($event);
+		if ($entity === null || $this->isBalance(entity: $entity) === false) {
 			return;
 		}
 
-		[$payload, $uuid] = $incoming;
+		$payload = ($entity->getObject() ?? []);
 
 		try {
-			$duplicate = $this->duplicateOf(payload: $payload, uuid: $uuid);
+			$duplicate = $this->duplicateOf(payload: $payload, uuid: $this->ownId(event: $event, entity: $entity));
 		} catch (\Throwable $e) {
 			$this->logger->warning('humaniq: PayrollOpeningBalanceUniqueGuard could not check an opening balance', ['exception' => $e->getMessage()]);
 			PreSaveEvents::refuse($event, 'Het beginsaldo kon niet worden gecontroleerd; probeer het later opnieuw.');
@@ -94,27 +95,22 @@ class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 	}//end handle()
 
 	/**
-	 * The written balance and, on an update, its own id.
+	 * The written balance's own id on an update, null on a create.
 	 *
-	 * @param Event $event The pre-save event.
+	 * @param Event  $event  The pre-save event.
+	 * @param object $entity The written balance.
 	 *
-	 * @return array{0: array<string, mixed>, 1: string|null}|null Null when the write is not a balance.
+	 * @return string|null
 	 *
 	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
-	private function incoming(Event $event): ?array {
-		if ($event instanceof ObjectCreatingEvent) {
-			$entity = $event->getObject();
-			return ($this->isBalance(entity: $entity) === true) ? [($entity->getObject() ?? []), null] : null;
-		}
-
+	private function ownId(Event $event, object $entity): ?string {
 		if ($event instanceof ObjectUpdatingEvent) {
-			$entity = $event->getNewObject();
-			return ($this->isBalance(entity: $entity) === true) ? [($entity->getObject() ?? []), (string)$entity->getUuid()] : null;
+			return (string)$entity->getUuid();
 		}
 
 		return null;
-	}//end incoming()
+	}//end ownId()
 
 	/**
 	 * Whether a stored balance other than this one has the same employee,

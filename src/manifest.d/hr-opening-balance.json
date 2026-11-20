@@ -46,8 +46,17 @@
 					"lastPeriodInPrevious",
 					"importedAt"
 				],
+				"statusOverrides": {
+					"importedAt": {
+						"editable": false
+					}
+				},
 				"dataTitle": "Year-to-date figures",
 				"dataIcon": "ScaleBalance",
+				"dataExclude": [
+					"employeeId",
+					"administrationId"
+				],
 				"dataHeight": 8,
 				"relatedHeight": 11
 			}

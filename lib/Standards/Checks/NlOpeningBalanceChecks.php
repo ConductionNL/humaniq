@@ -54,8 +54,8 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	public static function checks(): array {
 		return [
 			'Payslip' => [
-				'nl-openingsbalans-overlap' => static fn (array $o, array $context): bool => self::doesNotOverlap(payslip: $o, context: $context),
-				'nl-openingsbalans-ontbreekt' => static fn (array $o, array $context): bool => self::hasBalanceWhenNeeded(payslip: $o, context: $context),
+				'nl-openingsbalans-overlap' => static fn (array $payslip, array $context): bool => self::doesNotOverlap(payslip: $payslip, context: $context),
+				'nl-openingsbalans-ontbreekt' => static fn (array $payslip, array $context): bool => self::hasBalanceWhenNeeded(payslip: $payslip, context: $context),
 			],
 		];
 	}//end checks()
@@ -157,6 +157,8 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 * @return PayPeriod|null
 	 *
 	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) PayPeriod::parse is the pure value-object factory every period reader uses.
 	 */
 	private static function period(string $id): ?PayPeriod {
 		try {

@@ -644,6 +644,10 @@
 		"route": "/opening-balances"
 	},
 	{
+		"id": "OpeningBalanceDetail",
+		"route": "/opening-balances/:id"
+	},
+	{
 		"id": "OrgUnits",
 		"route": "/org-units"
 	},

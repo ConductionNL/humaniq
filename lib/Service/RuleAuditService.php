@@ -34,7 +34,7 @@ namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Kernel\Contracts\RuleAuditServiceInterface;
-use OCA\Humaniq\Payroll\PayPeriod;
+use OCA\Humaniq\Payroll\OpeningBalanceIndex;
 use OCA\Humaniq\Standards\CaoRegistry;
 use OCA\Humaniq\Standards\RuleCatalogue;
 use OCA\Humaniq\Standards\RuleEngine;
@@ -765,35 +765,7 @@ class RuleAuditService implements RuleAuditServiceInterface {
 	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function buildOpeningBalanceContext(): array {
-		$byEmployeeYear = [];
-		foreach ($this->loadAll('PayrollOpeningBalance') as $balance) {
-			$employeeId = trim((string)($balance['employeeId'] ?? ''));
-			$year = (int)($balance['year'] ?? 0);
-			if ($employeeId !== '' && $year !== 0) {
-				$byEmployeeYear[$employeeId][$year] = $balance;
-			}
-		}
-
-		$firstPeriod = [];
-		$firstDay = [];
-		foreach ($this->loadAll('Payslip') as $payslip) {
-			$employeeId = trim((string)($payslip['employeeId'] ?? ''));
-			try {
-				$period = PayPeriod::parse((string)($payslip['period'] ?? ''));
-			} catch (\InvalidArgumentException $e) {
-				continue;
-			}
-
-			$year = (int)substr($period->id, 0, 4);
-			if ($employeeId === '' || (isset($firstDay[$employeeId][$year]) === true && $firstDay[$employeeId][$year] <= $period->firstDay)) {
-				continue;
-			}
-
-			$firstDay[$employeeId][$year] = $period->firstDay;
-			$firstPeriod[$employeeId][$year] = $period->id;
-		}
-
-		return ['byEmployeeYear' => $byEmployeeYear, 'firstPeriod' => $firstPeriod];
+		return (new OpeningBalanceIndex())->build(balances: $this->loadAll('PayrollOpeningBalance'), payslips: $this->loadAll('Payslip'));
 	}//end buildOpeningBalanceContext()
 
 	/**

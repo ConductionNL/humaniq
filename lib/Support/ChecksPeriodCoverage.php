@@ -43,6 +43,8 @@ trait ChecksPeriodCoverage {
 	 * @return bool
 	 *
 	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) PayPeriod::parse is the pure value-object factory every period reader uses.
 	 */
 	private function coversPeriod(string $startDate, string $endDate, string $period): bool {
 		try {

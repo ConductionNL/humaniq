@@ -208,6 +208,8 @@ final class RefResolver {
 	 * @throws DslException When the field is unknown or the period is unparseable.
 	 *
 	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) PayPeriod::parse is the pure value-object factory every period reader uses.
 	 */
 	private function period(string $field, StepContext $ctx, string $ref): mixed {
 		$id = $ctx->period();
