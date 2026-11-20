@@ -351,6 +351,42 @@ class RuleAuditServiceTest extends TestCase {
 	}//end testSeededOnboardingDataFlagsExactlyOneWidCheckViolation()
 
 	/**
+	 * payroll-period-edge-cases D6: the audit reports a seeded overlap -- a
+	 * humaniq payslip for 2026-06 while the opening balance says the previous
+	 * package paid up to 2026-06 -- once, and an employee whose first payslip
+	 * of the year is July without any balance once. The employee with a
+	 * balance and payslips from July on is clean.
+	 *
+	 * @return void
+	 */
+	public function testTheAuditReportsAnOpeningBalanceOverlapAndAMissingBalance(): void {
+		$payslip = static fn (string $id, string $employeeId, string $period): array => ['id' => $id, 'employeeId' => $employeeId, 'period' => $period, 'grossPay' => 3800.0];
+		$service = $this->serviceWithRows(
+			[
+				'Payslip' => [
+					$payslip('ps-dg-06', 'employee-degroot', '2026-06'),
+					$payslip('ps-dg-07', 'employee-degroot', '2026-07'),
+					$payslip('ps-vs-07', 'employee-visser', '2026-07'),
+					$payslip('ps-vs-08', 'employee-visser', '2026-08'),
+					$payslip('ps-ok-07', 'employee-bakker', '2026-07'),
+				],
+				'PayrollOpeningBalance' => [
+					['id' => 'ob-dg', 'employeeId' => 'employee-degroot', 'administrationId' => 'ADM-001', 'year' => 2026, 'lastPeriodInPrevious' => '2026-06', 'grossWage' => 22800.0, 'payPeriodCount' => 6],
+					['id' => 'ob-ok', 'employeeId' => 'employee-bakker', 'administrationId' => 'ADM-001', 'year' => 2026, 'lastPeriodInPrevious' => '2026-06', 'grossWage' => 22800.0, 'payPeriodCount' => 6],
+				],
+			]
+		);
+
+		$byRule = [];
+		foreach ($service->audit(['jurisdiction' => 'NL'])['topViolatedRules'] as $entry) {
+			$byRule[$entry['ruleId']] = $entry['count'];
+		}
+
+		$this->assertSame(1, ($byRule['nl-openingsbalans-overlap'] ?? 0));
+		$this->assertSame(1, ($byRule['nl-openingsbalans-ontbreekt'] ?? 0));
+	}//end testTheAuditReportsAnOpeningBalanceOverlapAndAMissingBalance()
+
+	/**
 	 * @return void
 	 */
 	public function testOnboardingLoonheffingenverklaringViolatedWhenEmployeeMissingVerklaringAtReadyStatus(): void {

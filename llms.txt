@@ -1,0 +1,36 @@
+# Humaniq
+
+> Open-source HR and payroll administration for Dutch and EU employers, built as a Nextcloud app on the OpenRegister data layer, with a versioned HR, labour law and wage-tax compliance rule corpus.
+
+## Start here
+
+- [AGENTS.md](AGENTS.md): setup, build, test, lint and repo conventions for coding agents
+- [README.md](README.md): overview, payroll engine status and limitations
+- [CONTRIBUTING.md](CONTRIBUTING.md): contribution workflow and commit format
+
+## Docs
+
+- [docs/intro.md](docs/intro.md): introduction to the user documentation
+- [docs/getting-started/installation.md](docs/getting-started/installation.md): installation
+- [docs/Installation/demo-environment.md](docs/Installation/demo-environment.md): local demo environment
+- [docs/hr/](docs/hr/): leave, absence, timesheets, rostering, expenses, self-service
+- [docs/payroll/](docs/payroll/): payroll engine, payslips, wage-tax filing, pension and related topics
+- [docs/people/](docs/people/): recruiting, onboarding, performance, org chart and related topics
+- [docs/compliance/rule-engine.md](docs/compliance/rule-engine.md): the compliance rule engine
+
+## API
+
+- [openapi.json](openapi.json): OpenAPI document for the app's HTTP API
+
+## Specs and decisions
+
+- [openspec/specs/](openspec/specs/): current capability specs
+- [openspec/changes/](openspec/changes/): open changes; finished ones in `openspec/changes/archive/`
+- [openspec/architecture/](openspec/architecture/): architecture decision records
+- [openspec/config.yaml](openspec/config.yaml): project context and spec rules
+
+## Configuration
+
+- [lib/Settings/humaniq_register.json](lib/Settings/humaniq_register.json): OpenRegister register and schemas, with fragments in `lib/Settings/register.d/`
+- [lib/Standards/packs/nl-2026.pack.json](lib/Standards/packs/nl-2026.pack.json): Dutch 2026 payroll jurisdiction pack
+- [src/manifest.json](src/manifest.json): frontend page manifest, with fragments in `src/manifest.d/`

@@ -55,9 +55,9 @@
 
 ## 5. The journey (REQ-HLD-005)
 
-- [ ] 5.1 Add `tests/e2e/hours-leaf-on-a-host-page.spec.ts`: mount the leaf on
+- [x] 5.1 Add `tests/e2e/hours-leaf-on-a-host-page.spec.ts`: mount the leaf on
       a seeded host, read the total, book an hour, read the total again.
-- [ ] 5.2 Assert the new entry carries the host's `domainObjectType` and
+- [x] 5.2 Assert the new entry carries the host's `domainObjectType` and
       `domainObjectRef`.
 - [ ] 5.3 Mutation-check: disable the booking call and confirm the spec fails
       rather than passing on the seeded total.

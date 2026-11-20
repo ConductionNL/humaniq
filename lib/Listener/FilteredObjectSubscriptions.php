@@ -54,6 +54,12 @@ final class FilteredObjectSubscriptions {
 		}
 
 		(new ManagerAccessListeners())->register(subscribe: $subscribe);
+
+		// payroll-period-edge-cases D5: one opening balance per employee, administration and
+		// year -- a second would count the previous package's months twice in the annual statement.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$subscribe(['event' => $event, 'listener' => PayrollOpeningBalanceUniqueGuard::class, 'schemas' => [PayrollOpeningBalanceUniqueGuard::SCHEMA_SLUG]]);
+		}
 	}//end register()
 
 }//end class

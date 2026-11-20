@@ -523,6 +523,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			'administrationId' => (string)($run['administrationId'] ?? ''),
 			'jurisdiction' => $this->runJurisdiction($run),
 		];
+		$state['week53Extended'] = $this->extendsWithWeek53(period: $state['period'], administrationId: $state['administrationId']);
 
 		try {
 			$state['pack'] = $this->packs->resolve($state['jurisdiction'], $state['period']);
@@ -754,7 +755,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 */
 	private function foldGross(array $state, array $slip): array {
 		$employee = $slip['employee'];
-		$slip['grossCents'] = ($slip['salaried'] === true ? (int)round(((float)$slip['grossMonthly']) * 100) : (int)($slip['hoursPay']['hourlyCents'] ?? 0));
+		$slip['grossCents'] = ($slip['salaried'] === true ? $this->periodCents(monthlyAmount: (float)$slip['grossMonthly'], period: $state['period']) : (int)($slip['hoursPay']['hourlyCents'] ?? 0));
 		$slip['regularWageCents'] = $slip['grossCents'];
 
 		// filings-premium-differentiation D1: the Awf tariff follows the
@@ -840,7 +841,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$slip['bijtellingCents'] = 0;
 		if ($slip['assetAssignment'] !== null) {
 			$vehicleAsset = ($state['vehicleAssets'][(string)($slip['assetAssignment']['assetId'] ?? '')] ?? null);
-			$slip['bijtellingCents'] = $this->bijtellingCentsFor($vehicleAsset, $slip['assetAssignment'], $state['tables']);
+			$slip['bijtellingCents'] = $this->bijtellingCentsFor($vehicleAsset, $slip['assetAssignment'], $state['tables'], $state['period']);
 
 			$slip['grossCents'] += $slip['bijtellingCents'];
 		}
@@ -887,6 +888,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	private function calculateSlip(array $state, array $slip): array {
 		$slip['input'] = $this->calculationInput(state: $state, slip: $slip);
 		$slip['result'] = $this->calculator->calculate($slip['input'], $state['tables']);
+		$slip = $this->withWeek53(state: $state, slip: $slip);
 
 		// 30-procent-regeling (design.md D5): independently re-derive the
 		// exemption amount (the same cappedRate formula, in PHP -- the
@@ -910,7 +912,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		// nabetaling/leave-payout would still inflate past.
 		$slip['nettoPaySoFarCents'] = ($slip['result']->nettoPayCents + $slip['retroAdjustment']['net'] + $slip['expenseNetCents']);
 		$slip['loonbeslag'] = $this->activeLoonbeslagFor($slip['employee'], $state['loonbeslagen'], $state['period']);
-		$slip['loonbeslagDeductionCents'] = ($slip['loonbeslag'] !== null) ? $this->loonbeslagDeductionCents($slip['loonbeslag'], $slip['nettoPaySoFarCents']) : 0;
+		$slip['loonbeslagDeductionCents'] = ($slip['loonbeslag'] !== null) ? $this->loonbeslagDeductionCents($slip['loonbeslag'], $slip['nettoPaySoFarCents'], $state['period']) : 0;
 
 		return $slip;
 	}//end calculateSlip()
@@ -1267,7 +1269,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$dates = null;
 		if ($this->calendar !== null) {
 			$from = new \DateTimeImmutable(((int)substr($period, 0, 4) - 1) . '-01-01');
-			$dates = $this->calendar->nonWorkingDates($from, (new \DateTimeImmutable($period . '-01'))->modify('last day of this month'))['dates'];
+			$dates = $this->calendar->nonWorkingDates($from, $this->lastDayOf(period: $period))['dates'];
 		}
 
 		return [
@@ -1395,6 +1397,166 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	}//end bureauRefusal()
 
 	/**
+	 * The administration's hrAdministration row, or an empty one.
+	 *
+	 * @param string $administrationId The administration.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private function administrationRow(string $administrationId): array {
+		foreach ($this->loadAll('hrAdministration') as $administration) {
+			if ((string)($administration['administrationId'] ?? '') === $administrationId) {
+				return $administration;
+			}
+		}
+
+		return [];
+	}//end administrationRow()
+
+	/**
+	 * Whether the run is a period 13 that also pays ISO week 53: a four-week
+	 * period 13 of a year with week 53, at an administration that extends
+	 * period 13 (the default) rather than paying a separate period 14
+	 * (payroll-period-edge-cases D3).
+	 *
+	 * @param string $period           The period id.
+	 * @param string $administrationId The administration.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 */
+	private function extendsWithWeek53(string $period, string $administrationId): bool {
+		try {
+			$pay = PayPeriod::parse($period);
+		} catch (\InvalidArgumentException $e) {
+			return false;
+		}
+
+		if ($pay->tijdvak !== PayPeriod::TIJDVAK_VIERWEKEN || $pay->week53 === false) {
+			return false;
+		}
+
+		return (string)($this->administrationRow(administrationId: $administrationId)['week53Handling'] ?? '') !== PayPeriod::WEEK53_SEPARATE;
+	}//end extendsWithWeek53()
+
+	/**
+	 * On an extended period 13, calculate week 53 as its own one-week
+	 * tijdvak and make the slip's result the sum of both calculations; the
+	 * payslip shows each part (D3). The week's wage is a quarter of the four
+	 * weeks' salary and car benefit. An hourly employee's week 53 is not
+	 * calculated: approved hours are selected per month.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The calculated slip.
+	 *
+	 * @return array<string, mixed> The slip, with `week53` when week 53 was calculated.
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 */
+	private function withWeek53(array $state, array $slip): array {
+		if (($state['week53Extended'] ?? false) !== true || ($slip['salaried'] ?? false) !== true) {
+			return $slip;
+		}
+
+		$fourWeeks = $slip['result'];
+		$weekCents = (int)round(($this->periodCents(monthlyAmount: (float)$slip['grossMonthly'], period: $state['period']) + (int)($slip['bijtellingCents'] ?? 0)) / 4);
+		$weekInput = $this->calculationInput(
+			state: array_merge($state, ['period' => substr($state['period'], 0, 4) . '-W53']),
+			slip: array_merge($slip, ['grossCents' => $weekCents])
+		);
+		$week = $this->calculator->calculate($weekInput, $state['tables']);
+
+		$slip['week53'] = ['fourWeeks' => $fourWeeks, 'week' => $week];
+		$slip['result'] = CalculationResult::combined(fourWeeks: $fourWeeks, week53: $week);
+
+		return $slip;
+	}//end withWeek53()
+
+	/**
+	 * One calculation of an extended period 13, as the payslip shows it.
+	 *
+	 * @param CalculationResult $result  The calculation.
+	 * @param string            $tijdvak The tijdvak it was taxed with.
+	 * @param string            $weeks   The ISO weeks it covers.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 */
+	private function week53Part(CalculationResult $result, string $tijdvak, string $weeks): array {
+		return [
+			'weeks' => $weeks,
+			'tijdvak' => $tijdvak,
+			'grossPay' => $this->euros($result->grossPayCents),
+			'loonheffing' => $this->euros($result->loonheffingCents),
+			'volksverzekeringen' => $this->euros($result->volksverzekeringenCents),
+			'zvw' => $this->euros($result->zvwCents),
+			'werknemersverzekeringen' => $this->euros($result->werknemersverzekeringenCents),
+			'nettoPay' => $this->euros($result->nettoPayCents),
+		];
+	}//end week53Part()
+
+	/**
+	 * How many periods of the period's tijdvak make a year: 12, 13 or 52. An
+	 * id PayPeriod cannot read counts as a month, as it did before
+	 * (payroll-period-edge-cases D4).
+	 *
+	 * @param string $period The period id.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private function periodsPerYearOf(string $period): int {
+		try {
+			return PayPeriod::parse($period)->periodsPerYear();
+		} catch (\InvalidArgumentException $e) {
+			return 12;
+		}
+	}//end periodsPerYearOf()
+
+	/**
+	 * A monthly amount in cents for the period: unchanged for a month, times
+	 * 12 over the periods per year otherwise (D4).
+	 *
+	 * @param float  $monthlyAmount The monthly amount in euros.
+	 * @param string $period        The period id.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private function periodCents(float $monthlyAmount, string $period): int {
+		$periodsPerYear = $this->periodsPerYearOf(period: $period);
+		if ($periodsPerYear === 12) {
+			return (int)round($monthlyAmount * 100);
+		}
+
+		return (int)round($monthlyAmount * 100 * 12 / $periodsPerYear);
+	}//end periodCents()
+
+	/**
+	 * The period's last day: the month's, the fourth week's or the week's
+	 * Sunday (D4).
+	 *
+	 * @param string $period The period id.
+	 *
+	 * @return DateTimeImmutable
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private function lastDayOf(string $period): DateTimeImmutable {
+		try {
+			return PayPeriod::parse($period)->lastDay;
+		} catch (\InvalidArgumentException $e) {
+			return (new DateTimeImmutable($period . '-01'))->modify('last day of this month');
+		}
+	}//end lastDayOf()
+
+	/**
 	 * Why a period cannot be run for an administration, or null: the id must
 	 * be a period of the administration's pay frequency (monthly when it
 	 * names none).
@@ -1407,15 +1569,9 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	private function periodRefusal(string $period, string $administrationId): ?string {
-		$frequency = '';
-		$week53    = '';
-		foreach ($this->loadAll('hrAdministration') as $administration) {
-			if ((string)($administration['administrationId'] ?? '') === $administrationId) {
-				$frequency = (string)($administration['payFrequency'] ?? '');
-				$week53    = (string)($administration['week53Handling'] ?? '');
-				break;
-			}
-		}
+		$administration = $this->administrationRow(administrationId: $administrationId);
+		$frequency      = (string)($administration['payFrequency'] ?? '');
+		$week53         = (string)($administration['week53Handling'] ?? '');
 
 		try {
 			PayPeriod::forFrequency(id: $period, frequency: $frequency, week53Handling: $week53);
@@ -1583,9 +1739,24 @@ class PayrollRunService implements PayrollRunServiceInterface {
 
 		$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
 		if (is_numeric($hoursPerWeek) === true && ((float)$hoursPerWeek) > 0.0) {
-			// Contracted monthly hours (52 weeks / 12 months) — feeds the
-			// effective-hourly-rate minimum-wage checks.
-			$payload['hoursWorked'] = round((((float)$hoursPerWeek) * 52 / 12), 2);
+			// Contracted hours of the period (52 weeks / 12 months, 13 four-week
+			// periods or 52 weeks) — feeds the effective-hourly-rate
+			// minimum-wage checks (payroll-period-edge-cases D4).
+			$payload['hoursWorked'] = round((((float)$hoursPerWeek) * 52 / $this->periodsPerYearOf(period: $state['period'])), 2);
+		}
+
+		$periodsPerYear = $this->periodsPerYearOf(period: $state['period']);
+		if ($periodsPerYear !== 12) {
+			// The factor monthly figures were scaled by; absent on a monthly payslip.
+			$payload['tijdvakFactor'] = $periodsPerYear;
+		}
+
+		if (isset($slip['week53']) === true) {
+			// Extended period 13 (D3): the amounts above are the sum of these two.
+			$payload['week53'] = [
+				'fourWeeks' => $this->week53Part(result: $slip['week53']['fourWeeks'], tijdvak: PayPeriod::TIJDVAK_VIERWEKEN, weeks: '49-52'),
+				'week' => $this->week53Part(result: $slip['week53']['week'], tijdvak: PayPeriod::TIJDVAK_WEEK, weeks: '53'),
+			];
 		}
 
 		return $payload;
@@ -2092,7 +2263,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 */
 	private function isYearOne(string $firstSickDay, string $period): bool {
 		try {
-			$periodStart = new DateTimeImmutable($period . '-01');
+			$periodStart = PayPeriod::parse($period)->firstDay;
 			$day = new DateTimeImmutable($firstSickDay);
 		} catch (\Throwable $e) {
 			return false;
@@ -2268,7 +2439,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @spec openspec/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
-	private function bijtellingCentsFor(?array $asset, array $assignment, TaxTables $tables): int {
+	private function bijtellingCentsFor(?array $asset, array $assignment, TaxTables $tables, string $period): int {
 		if ($asset === null) {
 			return 0;
 		}
@@ -2295,7 +2466,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$employeeContribution = ($assignment['employeeContribution'] ?? 0);
 		$employeeContributionCents = is_numeric($employeeContribution) === true ? (int)round(((float)$employeeContribution) * 100) : 0;
 
-		return max(0, ((int)round($baseCents / 12)) - $employeeContributionCents);
+		// The yearly bijtelling over the period's share of the year (D4).
+		return max(0, ((int)round($baseCents / $this->periodsPerYearOf(period: $period))) - $employeeContributionCents);
 	}//end bijtellingCentsFor()
 
 	/**
@@ -2684,12 +2856,13 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-002
 	 */
-	private function loonbeslagDeductionCents(array $loonbeslag, int $nettoPaySoFarCents): int {
+	private function loonbeslagDeductionCents(array $loonbeslag, int $nettoPaySoFarCents, string $period): int {
 		$orderedAmount = ($loonbeslag['orderedAmount'] ?? 0);
 		$orderedCents = is_numeric($orderedAmount) === true ? (int)round(((float)$orderedAmount) * 100) : 0;
 
 		$beslagvrijeVoet = ($loonbeslag['beslagvrijeVoet'] ?? 0);
-		$voetCents = is_numeric($beslagvrijeVoet) === true ? (int)round(((float)$beslagvrijeVoet) * 100) : 0;
+		// The protected amount is a monthly figure by law, scaled to the period (D4).
+		$voetCents = is_numeric($beslagvrijeVoet) === true ? $this->periodCents(monthlyAmount: (float)$beslagvrijeVoet, period: $period) : 0;
 
 		return min($orderedCents, max(0, ($nettoPaySoFarCents - $voetCents)));
 	}//end loonbeslagDeductionCents()

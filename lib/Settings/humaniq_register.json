@@ -128,7 +128,8 @@
                     "SurveyResponse",
                     "SurveyResponseHold",
                     "WageTaxRemittance",
-                    "BenefitEntitlement"
+                    "BenefitEntitlement",
+                    "PayrollOpeningBalance"
                 ]
             }
         },
