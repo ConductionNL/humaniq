@@ -31,4 +31,7 @@
 
 - [ ] 3.1 e2e: export the Employees list filtered to active, and a `Mijn*` list, and count the
       rows in each file (REQ-HLE-001); assert no Export menu on the sick leave list.
+      Written, not run: `tests/e2e/spec-coverage/hr-list-export.spec.ts`. The Employees list has
+      no "active" filter, so the spec filters on its one facet, `taxTableColor`, over more rows than
+      one page. Stays open until it has run against an instance.
 - [ ] 3.2 `@spec` tags and an e2e test or a reason-bearing `@e2e exclude` per scenario.
