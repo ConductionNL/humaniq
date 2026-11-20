@@ -124,10 +124,10 @@ webpackConfig.resolve = {
 		// previous directory alias produced 232 `Can't resolve '@nextcloud/vue'`
 		// errors, one per importing module, including from inside
 		// @conduction/nextcloud-vue's own dist. Point singleton aliases at a
-		// concrete entry FILE. (`vue` and `pinia` still declare `main`, so a
-		// directory alias resolves for them.)
+		// concrete entry FILE. (`vue` still declares `main`, so a
+		// directory alias resolves for it; `pinia@4` has no `main` either.)
 		vue$: path.resolve(__dirname, 'node_modules/vue'),
-		pinia$: path.resolve(__dirname, 'node_modules/pinia'),
+		pinia$: path.resolve(__dirname, 'node_modules/pinia/dist/pinia.js'),
 		// vue-demi resolves to a DIFFERENT FILE depending on which Vue was
 		// installed alongside it — its postinstall rewrites lib/index.mjs in
 		// place. A nested copy inside a sibling checkout can therefore be the
