@@ -16,11 +16,13 @@ https://www.tenderned.nl/aankondigingen/overzicht/365739.
 - **WHEN** they book four hours on Wednesday with activity "Opleiding"
 - **THEN** the entry is saved without a project, and the week's timesheet counts four
   non-project hours
+- @e2e tests/e2e/spec-coverage/time-non-project-activities.spec.ts
 
 #### Scenario: Leave cannot be booked twice
 - **GIVEN** the same employee
 - **WHEN** they try to book eight hours with activity "Verlof"
 - **THEN** the booking is refused with a message that leave comes from the leave request
+- @e2e tests/e2e/spec-coverage/time-non-project-activities.spec.ts
 
 ### Requirement: Leave and sickness SHALL show on the weekly timesheet from their own records (REQ-TAC-002)
 
@@ -35,3 +37,5 @@ Rows: `tim-non-project` (planninq matrix, owned by humaniq).
   of 8 hours in a week
 - **WHEN** they open the week's `TimesheetDetail`
 - **THEN** it shows 26 project, 2 non-project and 8 absence hours against 36 contract hours
+
+@e2e exclude Needs a working pattern, an approved leave day and a full week of bookings on one employee; the arithmetic is TimesheetWeekServiceTest's and the timesheet aggregate test's, and the week view is read in the live week of task 3.1
