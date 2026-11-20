@@ -21,6 +21,11 @@
 
 ## 3. Hand-over
 
-- [ ] 3.1 `@spec` tags and an e2e test or a reason-bearing `@e2e exclude` per scenario.
+- [x] 3.1 `@spec` tags and an e2e test or a reason-bearing `@e2e exclude` per scenario.
+      `@spec` REQ-HDD-011 on `DocumentController::generate()` and `letterEmployeeId()` (REQ-HDD-012
+      was already on `HrDocumentService`); all four scenarios in
+      `tests/e2e/spec-coverage/employer-statement-from-the-contract.spec.ts`, the two that need
+      filinq with or without its template skip naming what is missing. Lints and lists; not run
+      against an instance yet.
 - [ ] 3.2 Live check: make a statement from the contract page on the dev instance with filinq;
       note the outcome in the PR body.
