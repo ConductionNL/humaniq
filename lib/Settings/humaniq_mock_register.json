@@ -11521,10 +11521,14 @@
             "x-notes": "REQ-OFC-005 (BW 7:641): set only on the payslip of the period the employee's endDate falls in, when entitled plus extra-statutory minus used leave hours of that year is above zero, at the last contract's hourlyWage. Written by FinalLeavePayoutService; absent otherwise.",
             "properties": {
               "hours": {
-                "type": "number"
+                "title": "Leave hours paid",
+                "type": "number",
+                "description": "The open leave hours paid out on this final payslip."
               },
               "amount": {
-                "type": "number"
+                "title": "Leave payout amount",
+                "type": "number",
+                "description": "The gross amount paid for those leave hours, at the last hourly wage."
               }
             },
             "authorization": {
