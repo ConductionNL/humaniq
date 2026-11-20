@@ -99,7 +99,7 @@ export default {
 		 * The survey's questions that have a key.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+		 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 		 */
 		questions() {
 			const questions = Array.isArray(this.survey?.questions) ? this.survey.questions : []
@@ -110,7 +110,7 @@ export default {
 		 * Whether the invitation is answered, now or before.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+		 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 		 */
 		answered() {
 			return this.sent || this.objectData?.status === 'beantwoord'
@@ -126,7 +126,7 @@ export default {
 		 * Read the survey the invitation names.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+		 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 		 */
 		async load() {
 			this.loading = true
@@ -147,7 +147,7 @@ export default {
 		 *
 		 * @param {object} question The question.
 		 * @return {Array<string|number>}
-		 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+		 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 		 */
 		choicesOf(question) {
 			if (question.type === 'enum') {
@@ -166,7 +166,7 @@ export default {
 		 * Send the answers.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+		 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 		 */
 		async submit() {
 			this.sending = true

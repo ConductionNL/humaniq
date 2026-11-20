@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-approval-steps/spec.md#requirement-every-leave-decision-shall-be-stamped-on-the-request-by-the-server-req-las-001
+ * @spec openspec/specs/leave-approval-steps/spec.md#requirement-every-leave-decision-shall-be-stamped-on-the-request-by-the-server-req-las-001
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use OCP\EventDispatcher\Event;
  * warning logged when stamping throws) and STAMP_REFUSAL (the user-facing
  * message the write is refused with).
  *
- * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-approval-steps/spec.md#requirement-every-leave-decision-shall-be-stamped-on-the-request-by-the-server-req-las-001
+ * @spec openspec/specs/leave-approval-steps/spec.md#requirement-every-leave-decision-shall-be-stamped-on-the-request-by-the-server-req-las-001
  */
 trait StampsProcessFields {
 

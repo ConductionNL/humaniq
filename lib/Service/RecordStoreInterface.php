@@ -91,7 +91,7 @@ interface RecordStoreInterface {
 	 *
 	 * @return object The saved ObjectEntity.
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function createUnowned(array $payload, string $schema): object;
 

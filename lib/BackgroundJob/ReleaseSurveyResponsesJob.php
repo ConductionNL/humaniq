@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\BackgroundJob\TimedJob;
 /**
  * Scheduled release of held survey answers.
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
  */
 class ReleaseSurveyResponsesJob extends TimedJob {
 
@@ -44,7 +44,7 @@ class ReleaseSurveyResponsesJob extends TimedJob {
 	 * @param ITimeFactory          $time    The clock.
 	 * @param SurveyResponseRelease $release The release.
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function __construct(ITimeFactory $time, private readonly SurveyResponseRelease $release) {
 		parent::__construct(time: $time);
@@ -59,7 +59,7 @@ class ReleaseSurveyResponsesJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) -- $argument is mandated by the TimedJob::run() signature.
 	 */

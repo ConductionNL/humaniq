@@ -40,7 +40,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
+ * @spec openspec/specs/leave-management/spec.md
  */
 
 declare(strict_types=1);
@@ -60,7 +60,7 @@ use Throwable;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
+ * @spec openspec/specs/leave-management/spec.md
  */
 class LeaveRequestProcessStampListener implements IEventListener {
 
@@ -106,7 +106,7 @@ class LeaveRequestProcessStampListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
+	 * @spec openspec/specs/leave-management/spec.md
 	 */
 	public function handle(Event $event): void {
 		$this->stampOrRefuse(event: $event);
@@ -169,7 +169,7 @@ class LeaveRequestProcessStampListener implements IEventListener {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
+	 * @spec openspec/specs/leave-management/spec.md
 	 */
 	public function stampUpdate(array $incoming, array $stored): array {
 		$modified = [];

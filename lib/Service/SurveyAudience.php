@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ namespace OCA\Humaniq\Service;
 /**
  * The audience of a survey.
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
  */
 class SurveyAudience {
 
@@ -57,7 +57,7 @@ class SurveyAudience {
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
 	 */
 	public function employeesFor(array $survey, string $today): array {
 		$administration = trim((string)($survey['administrationId'] ?? ''));
@@ -145,7 +145,7 @@ class SurveyAudience {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
 	 */
 	public function unitOf(string $employeeId, string $today): ?string {
 		foreach ($this->gateway->findFiltered('OrgAssignment', ['employeeId' => $employeeId]) as $assignment) {
@@ -165,7 +165,7 @@ class SurveyAudience {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
 	 */
 	public function contractTypeOf(string $employeeId, string $today): ?string {
 		foreach ($this->gateway->findFiltered('EmploymentContract', ['employeeId' => $employeeId]) as $contract) {

@@ -27,7 +27,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ namespace OCA\Humaniq\Service;
 /**
  * Move held survey answers into responses, in batches.
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
  */
 class SurveyResponseRelease {
 
@@ -68,7 +68,7 @@ class SurveyResponseRelease {
 	 *
 	 * @return int The number of responses released.
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function release(string $today): int {
 		$bySurvey = [];

@@ -16,7 +16,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCP\IUserSession;
  * administrator; answering is for the invited employee only, which the
  * service checks against the caller's own invitation.
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
  */
 class SurveyController extends Controller {
 
@@ -66,7 +66,7 @@ class SurveyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
 	 */
 	#[NoAdminRequired]
 	public function open(string $id): JSONResponse {
@@ -87,7 +87,7 @@ class SurveyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	#[NoAdminRequired]
 	public function respond(string $id, array $answers=[]): JSONResponse {
@@ -108,7 +108,7 @@ class SurveyController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-003
 	 */
 	#[NoAdminRequired]
 	public function results(string $id): JSONResponse {
