@@ -99,7 +99,7 @@ export default {
 		 *
 		 * @return {string}
 		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-002
-		 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+		 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
 		 */
 		url() {
 			return generateUrl('/apps/openregister/api/objects/{register}/{schema}/{id}', { register: 'humaniq', schema: this.objectSchema, id: this.objectId })
@@ -116,7 +116,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-002
-		 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+		 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
 		 */
 		async load() {
 			this.loading = true
@@ -137,7 +137,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/portal-audiences/spec.md#REQ-PAU-002
-		 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+		 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
 		 */
 		async save() {
 			this.saving = true

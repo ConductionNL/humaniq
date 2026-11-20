@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use OCA\Humaniq\Kernel\Contracts\SurveyServiceInterface;
 /**
  * Open, answer and read the results of a survey.
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
  */
 class SurveyService implements SurveyServiceInterface {
 
@@ -101,7 +101,7 @@ class SurveyService implements SurveyServiceInterface {
 	 *
 	 * @return array{status: int, message: string|null, invited: int, withoutAccount: int}
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
 	 */
 	public function open(string $surveyId, string $today): array {
 		$survey = $this->gateway->findObjectData($surveyId, self::SURVEY);
@@ -201,7 +201,7 @@ class SurveyService implements SurveyServiceInterface {
 	 *
 	 * @return array{status: int, message: string|null}
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function respond(string $surveyId, string $uid, array $answers, string $today): array {
 		$reply = new SurveyReply();
@@ -301,7 +301,7 @@ class SurveyService implements SurveyServiceInterface {
 	 *
 	 * @return array<string, mixed>|null Null when the survey does not exist.
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-003
 	 */
 	public function results(string $surveyId): ?array {
 		$survey = $this->gateway->findObjectData($surveyId, self::SURVEY);

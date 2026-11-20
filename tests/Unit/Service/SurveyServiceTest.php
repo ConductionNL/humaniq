@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use PHPUnit\Framework\TestCase;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
  */
 class SurveyServiceTest extends TestCase {
 
@@ -153,7 +153,7 @@ class SurveyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function testAnAnswerNamesNobody(): void {
 		$this->service()->open(self::SURVEY_ID, self::TODAY);
@@ -190,7 +190,7 @@ class SurveyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function testOneAnswerPerPerson(): void {
 		$this->service()->open(self::SURVEY_ID, self::TODAY);
@@ -243,7 +243,7 @@ class SurveyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-003
 	 */
 	public function testASmallTeamStaysAnonymous(): void {
 		$this->store->seed('Survey', 'srv-closed', $this->survey(['status' => 'gesloten']));
@@ -277,7 +277,7 @@ class SurveyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-003
 	 */
 	public function testSmallDepartmentsFoldIntoOther(): void {
 		$this->store->seed('Survey', 'srv-fold', $this->survey(['status' => 'gesloten', 'minGroupSize' => 3]));
@@ -306,7 +306,7 @@ class SurveyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function testAnswersAreCheckedAgainstTheQuestions(): void {
 		$questions = $this->survey([])['questions'];

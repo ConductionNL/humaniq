@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 /**
  * Only humaniq's own Open survey step may open a survey.
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
  */
 class SurveyOpenGuard implements LifecycleGuardInterface {
 
@@ -60,7 +60,7 @@ class SurveyOpenGuard implements LifecycleGuardInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the static allow()/deny() factories.
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The signature is LifecycleGuardInterface's.
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		if ($this->marker->isInternal() === true) {
