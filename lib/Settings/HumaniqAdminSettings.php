@@ -26,6 +26,7 @@ namespace OCA\Humaniq\Settings;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\HumaniqRoles;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
@@ -43,14 +44,16 @@ class HumaniqAdminSettings implements ISettings {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppManager   $appManager   Reads the running app version.
-	 * @param IInitialState $initialState Hands the page its initial state.
-	 * @param IGroupManager $groupManager Counts the members of the role groups.
+	 * @param IAppManager     $appManager   Reads the running app version.
+	 * @param IInitialState   $initialState Hands the page its initial state.
+	 * @param IGroupManager   $groupManager Counts the members of the role groups.
+	 * @param SettingsService $settings     Names humaniq's register for the Audittrail section.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly IInitialState $initialState,
 		private readonly IGroupManager $groupManager,
+		private readonly SettingsService $settings,
 	) {
 	}//end __construct()
 
@@ -70,6 +73,9 @@ class HumaniqAdminSettings implements ISettings {
 				'payroll' => $this->describeGroup(gid: HumaniqRoles::PAYROLL_GROUP),
 			]
 		);
+
+		// The Audittrail section reads OpenRegister's audit list narrowed to this register (REQ-RAH-003).
+		$this->initialState->provideInitialState('registerSlug', $this->settings->getRegisterSlug());
 
 		return new TemplateResponse(Application::APP_ID, 'settings/admin', []);
 	}//end getForm()
