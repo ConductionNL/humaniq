@@ -180,8 +180,8 @@
       "type": "library",
       "name": "core",
       "group": "@babel",
-      "version": "8.0.7",
-      "bom-ref": "humaniq@0.1.0|@babel/core@8.0.7",
+      "version": "8.1.2",
+      "bom-ref": "humaniq@0.1.0|@babel/core@8.1.2",
       "licenses": [
         {
           "license": {
@@ -189,15 +189,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40babel/core@8.0.7",
+      "purl": "pkg:npm/%40babel/core@8.1.2",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@babel/core/-/core-8.0.7.tgz",
+          "url": "https://registry.npmjs.org/@babel/core/-/core-8.1.2.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "648b195811ba635a1afbc7e4415a74c5e09d8c21c19171420885ab9a0f52bde8d5bdf71542028a4661ab04359f33bae2961be746812e6aa6b97642bb281de91c"
+              "content": "c6a0da8c70003a39255b952d5b315df6f4a6950d7af9e9a01a2d07b320d0146450599fc68eec02a18182dcf9c7c6ca66391f87241cc320e90cc4dabf56f0bdf3"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -215,7 +215,7 @@
           "name": "code-frame",
           "group": "@babel",
           "version": "8.0.6",
-          "bom-ref": "humaniq@0.1.0|@babel/core@8.0.7|@babel/code-frame@8.0.6",
+          "bom-ref": "humaniq@0.1.0|@babel/core@8.1.2|@babel/code-frame@8.0.6",
           "licenses": [
             {
               "license": {
@@ -248,8 +248,8 @@
           "type": "library",
           "name": "parser",
           "group": "@babel",
-          "version": "8.0.7",
-          "bom-ref": "humaniq@0.1.0|@babel/core@8.0.7|@babel/parser@8.0.7",
+          "version": "8.1.2",
+          "bom-ref": "humaniq@0.1.0|@babel/core@8.1.2|@babel/parser@8.1.2",
           "licenses": [
             {
               "license": {
@@ -257,15 +257,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/%40babel/parser@8.0.7",
+          "purl": "pkg:npm/%40babel/parser@8.1.2",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/@babel/parser/-/parser-8.0.7.tgz",
+              "url": "https://registry.npmjs.org/@babel/parser/-/parser-8.1.2.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "5240f011b3ced69c762504ab761e2a220687d49806ec63bfa45789929c610f12044e44ff42f1a99e2817230ef95621d83ed2202884e655426a2e388ef89b968c"
+                  "content": "643294eef697d1539177606168efb714aaffdf44ca8db532dd23197327623e782701bf8c7ac814a21e5225c139130132063d7833927a7cae7a1ae06abd898ea7"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -282,8 +282,8 @@
           "type": "library",
           "name": "types",
           "group": "@babel",
-          "version": "8.0.6",
-          "bom-ref": "humaniq@0.1.0|@babel/core@8.0.7|@babel/types@8.0.6",
+          "version": "8.1.2",
+          "bom-ref": "humaniq@0.1.0|@babel/core@8.1.2|@babel/types@8.1.2",
           "licenses": [
             {
               "license": {
@@ -291,15 +291,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/%40babel/types@8.0.6",
+          "purl": "pkg:npm/%40babel/types@8.1.2",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/@babel/types/-/types-8.0.6.tgz",
+              "url": "https://registry.npmjs.org/@babel/types/-/types-8.1.2.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "73ec604966e8576a5dc173faec15160d54478b604ee50dcac31c8556ceed6954d8f9fb0ae3bfcbe7565742857dae8cc7243347bc9e2fe1612c23f225c55da5d8"
+                  "content": "b97b7aaadd9fe46eb58d9c0d2332b544abbb9795e3b75557b4f3ce1ae56f7a16bd7f16f1d1033de14d64338a4564a4d12e358af97f2f9b08f06c87a62638904c"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -317,7 +317,7 @@
           "name": "helper-validator-identifier",
           "group": "@babel",
           "version": "8.0.6",
-          "bom-ref": "humaniq@0.1.0|@babel/core@8.0.7|@babel/helper-validator-identifier@8.0.6",
+          "bom-ref": "humaniq@0.1.0|@babel/core@8.1.2|@babel/helper-validator-identifier@8.0.6",
           "licenses": [
             {
               "license": {
@@ -350,7 +350,7 @@
           "type": "library",
           "name": "js-tokens",
           "version": "10.0.0",
-          "bom-ref": "humaniq@0.1.0|@babel/core@8.0.7|js-tokens@10.0.0",
+          "bom-ref": "humaniq@0.1.0|@babel/core@8.1.2|js-tokens@10.0.0",
           "licenses": [
             {
               "license": {
@@ -383,8 +383,8 @@
           "type": "library",
           "name": "helper-string-parser",
           "group": "@babel",
-          "version": "8.0.6",
-          "bom-ref": "humaniq@0.1.0|@babel/core@8.0.7|@babel/helper-string-parser@8.0.6",
+          "version": "8.1.2",
+          "bom-ref": "humaniq@0.1.0|@babel/core@8.1.2|@babel/helper-string-parser@8.1.2",
           "licenses": [
             {
               "license": {
@@ -392,15 +392,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/%40babel/helper-string-parser@8.0.6",
+          "purl": "pkg:npm/%40babel/helper-string-parser@8.1.2",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-8.0.6.tgz",
+              "url": "https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-8.1.2.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "fba1d81019ec0d164726d5130047cc41dd33303a9d1474bb0bee6f02c119a8152bdef10c58e5a51c9d09cf5812f23248942bcbb2e03a8af99ea2acc7f77e9870"
+                  "content": "4d1cf96743207c87d6ab0108abfa42a54a445d0c54b76220d996f11b749d9a149b1cc00515818e8b1d2423824b577ef5fd303ea969d0e315873d68e88e4c9114"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -1897,8 +1897,8 @@
       "type": "library",
       "name": "helpers",
       "group": "@babel",
-      "version": "8.0.7",
-      "bom-ref": "humaniq@0.1.0|@babel/helpers@8.0.7",
+      "version": "8.1.2",
+      "bom-ref": "humaniq@0.1.0|@babel/helpers@8.1.2",
       "licenses": [
         {
           "license": {
@@ -1906,15 +1906,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40babel/helpers@8.0.7",
+      "purl": "pkg:npm/%40babel/helpers@8.1.2",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@babel/helpers/-/helpers-8.0.7.tgz",
+          "url": "https://registry.npmjs.org/@babel/helpers/-/helpers-8.1.2.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "e5d323e641704b6018ec3b783d9a78a71ddce5384c6db11aeed65fb874e7702192158abcba8035b9f0c4d484bf958a5079d13edfe190ddc3d9522a6522ed7de7"
+              "content": "066b621bc1fd3945924c53a097d8ed3d899f0e2eae736d4f7f8194c64806a199f3308ce90e786497982c1895bac1bd6398a0b2539eb917c2187b99b039372d7f"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -1931,8 +1931,8 @@
           "type": "library",
           "name": "types",
           "group": "@babel",
-          "version": "8.0.6",
-          "bom-ref": "humaniq@0.1.0|@babel/helpers@8.0.7|@babel/types@8.0.6",
+          "version": "8.1.2",
+          "bom-ref": "humaniq@0.1.0|@babel/helpers@8.1.2|@babel/types@8.1.2",
           "licenses": [
             {
               "license": {
@@ -1940,15 +1940,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/%40babel/types@8.0.6",
+          "purl": "pkg:npm/%40babel/types@8.1.2",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/@babel/types/-/types-8.0.6.tgz",
+              "url": "https://registry.npmjs.org/@babel/types/-/types-8.1.2.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "73ec604966e8576a5dc173faec15160d54478b604ee50dcac31c8556ceed6954d8f9fb0ae3bfcbe7565742857dae8cc7243347bc9e2fe1612c23f225c55da5d8"
+                  "content": "b97b7aaadd9fe46eb58d9c0d2332b544abbb9795e3b75557b4f3ce1ae56f7a16bd7f16f1d1033de14d64338a4564a4d12e358af97f2f9b08f06c87a62638904c"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -1965,8 +1965,8 @@
           "type": "library",
           "name": "helper-string-parser",
           "group": "@babel",
-          "version": "8.0.6",
-          "bom-ref": "humaniq@0.1.0|@babel/helpers@8.0.7|@babel/helper-string-parser@8.0.6",
+          "version": "8.1.2",
+          "bom-ref": "humaniq@0.1.0|@babel/helpers@8.1.2|@babel/helper-string-parser@8.1.2",
           "licenses": [
             {
               "license": {
@@ -1974,15 +1974,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/%40babel/helper-string-parser@8.0.6",
+          "purl": "pkg:npm/%40babel/helper-string-parser@8.1.2",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-8.0.6.tgz",
+              "url": "https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-8.1.2.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "fba1d81019ec0d164726d5130047cc41dd33303a9d1474bb0bee6f02c119a8152bdef10c58e5a51c9d09cf5812f23248942bcbb2e03a8af99ea2acc7f77e9870"
+                  "content": "4d1cf96743207c87d6ab0108abfa42a54a445d0c54b76220d996f11b749d9a149b1cc00515818e8b1d2423824b577ef5fd303ea969d0e315873d68e88e4c9114"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2000,7 +2000,7 @@
           "name": "helper-validator-identifier",
           "group": "@babel",
           "version": "8.0.6",
-          "bom-ref": "humaniq@0.1.0|@babel/helpers@8.0.7|@babel/helper-validator-identifier@8.0.6",
+          "bom-ref": "humaniq@0.1.0|@babel/helpers@8.1.2|@babel/helper-validator-identifier@8.0.6",
           "licenses": [
             {
               "license": {
