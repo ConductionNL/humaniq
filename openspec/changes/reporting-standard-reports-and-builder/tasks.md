@@ -11,7 +11,14 @@
       imports.
 - [x] 2.2 Add the "My reports" category on `Reports`. Verify: the seeded public view shows as a
       card and opens its page with the view applied.
-- [ ] 2.3 Seed the public view. Verify: `npm run check:seed-refs` exits 0.
+- [x] 2.3 Seed the public view. Verify: `npm run check:seed-refs` exits 0.
+      Done in the Zuiddrecht example-set fragment (`lib/Settings/example-sets/zuiddrecht.json`,
+      `views`): a register seed cannot carry a saved view, OpenRegister's example set can. The view
+      "Contracts ending within three months" is public, owned by `{{cast:anouk.uid}}`, over
+      `humaniq`/`EmploymentContract` with `endDate[gte]` today and `endDate[lte]` today + 91 days,
+      soonest first. A calendar quarter cannot be written relative to the install day, hence
+      the name. `endDate` joins the `EmploymentContracts` filters so the list offers the range the
+      view applies. `ZuiddrechtSharedReportTest`; `check:seed-refs` exits 0.
 
 ## 3. Verification
 

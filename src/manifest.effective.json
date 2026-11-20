@@ -17625,7 +17625,8 @@
 				},
 				"filters": [
 					"type",
-					"awfTariff"
+					"awfTariff",
+					"endDate"
 				],
 				"register": "humaniq",
 				"schema": "EmploymentContract",
