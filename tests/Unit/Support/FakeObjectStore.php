@@ -261,6 +261,7 @@ class FakeObjectStore {
 			'schema' => $schemaKey,
 			'uuid' => $uuid,
 			'payload' => $payload,
+			'unowned' => $options->actor->unowned,
 		];
 
 		return $this->entityFor($uuid, $schemaKey, $this->state->objects[$schemaKey][$uuid]);

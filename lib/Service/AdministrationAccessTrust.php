@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\AdministrationAccessTrustInterface;
 use OCP\IAppConfig;
 
 /**
@@ -35,7 +36,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-003
  */
-class AdministrationAccessTrust {
+class AdministrationAccessTrust implements AdministrationAccessTrustInterface {
 
 	/**
 	 * The role that may grant access to its administration.

@@ -32,13 +32,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\ApprovalsInboxServiceInterface;
 
 /**
  * Composes the open and decided views of the approvals inbox.
  *
  * @spec openspec/specs/approvals-inbox/spec.md#REQ-API-001
  */
-class ApprovalsInboxService {
+class ApprovalsInboxService implements ApprovalsInboxServiceInterface {
 
 	/**
 	 * How far back the decided view looks, in days.

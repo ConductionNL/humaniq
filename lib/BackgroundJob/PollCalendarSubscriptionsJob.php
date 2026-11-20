@@ -36,7 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\BackgroundJob;
 
-use OCA\Humaniq\Service\CalendarSubscriptionPoller;
+use OCA\Humaniq\Kernel\Contracts\CalendarSubscriptionPollerInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
@@ -59,12 +59,12 @@ class PollCalendarSubscriptionsJob extends TimedJob {
 
 	/**
 	 * @param ITimeFactory $time Time factory.
-	 * @param CalendarSubscriptionPoller $poller The poller itself.
+	 * @param CalendarSubscriptionPollerInterface $poller The poller itself.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly CalendarSubscriptionPoller $poller,
+		private readonly CalendarSubscriptionPollerInterface $poller,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

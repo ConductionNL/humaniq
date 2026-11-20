@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\ManagerAccessStampsInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -40,7 +41,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
  */
-class ManagerAccessStamps {
+class ManagerAccessStamps implements ManagerAccessStampsInterface {
 
 	/**
 	 * The schemas that carry the stamps.

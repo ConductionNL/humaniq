@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\WkrService;
+use OCA\Humaniq\Kernel\Contracts\WkrServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -41,10 +41,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class WkrAssessCommand extends Command {
 
 	/**
-	 * @param WkrService $service The idempotent cross-object roll-up service.
+	 * @param WkrServiceInterface $service The idempotent cross-object roll-up service.
 	 */
 	public function __construct(
-		private readonly WkrService $service,
+		private readonly WkrServiceInterface $service,
 	) {
 		parent::__construct();
 

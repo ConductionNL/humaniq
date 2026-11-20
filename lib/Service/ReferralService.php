@@ -29,10 +29,12 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\ReferralServiceInterface;
+
 /**
  * Referral checks, stamps, the application and the status mirror.
  */
-class ReferralService {
+class ReferralService implements ReferralServiceInterface {
 
 	/**
 	 * Constructor.

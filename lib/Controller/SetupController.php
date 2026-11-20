@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\DemoDataServiceInterface;
 use OCA\Humaniq\Settings\HumaniqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -42,7 +43,6 @@ use OCP\IUserSession;
 use OCA\Humaniq\Service\Setup\SetupAdministrations;
 use OCA\Humaniq\Service\Setup\SetupHealthCheck;
 use Psr\Log\LoggerInterface;
-use OCA\Humaniq\Service\DemoDataService;
 
 /**
  * First-time setup wizard endpoints.
@@ -91,7 +91,7 @@ class SetupController extends Controller {
 	 * @param IRequest        $request         The request.
 	 * @param IAppConfig      $appConfig       Records the demo-data decision.
 	 * @param LoggerInterface $logger          Records a failed import.
-	 * @param DemoDataService $demoDataService Imports the shipped demo dataset.
+	 * @param DemoDataServiceInterface $demoDataService Imports the shipped demo dataset.
 	 * @param SetupAdministrations $setupAdministrations Creates the Administraties step's administrations and writes the working mode.
 	 * @param IUserSession    $userSession     The administrator running the wizard.
 	 * @param SetupHealthCheck $healthCheck    The Klaar step's health check.
@@ -102,7 +102,7 @@ class SetupController extends Controller {
 		IRequest $request,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
-		private readonly DemoDataService $demoDataService,
+		private readonly DemoDataServiceInterface $demoDataService,
 		private readonly SetupAdministrations $setupAdministrations,
 		private readonly IUserSession $userSession,
 		private readonly SetupHealthCheck $healthCheck,
@@ -425,8 +425,8 @@ class SetupController extends Controller {
 
 		// Declining is an answer, and the work is already done: record that the
 		// step is finished and import nothing.
-		if ($picked === DemoDataService::NONE_DATASET) {
-			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoDataService::NONE_DATASET);
+		if ($picked === DemoDataServiceInterface::NONE_DATASET) {
+			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoDataServiceInterface::NONE_DATASET);
 			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
 
 			return new JSONResponse(data: ['success' => true, 'message' => 'No example data imported, as chosen.']);
@@ -444,7 +444,7 @@ class SetupController extends Controller {
 		}
 
 		if ($picked === '') {
-			$picked = DemoDataService::DEMO_DATASET;
+			$picked = DemoDataServiceInterface::DEMO_DATASET;
 		}
 
 		return $this->installDemoData(dataset: $picked);

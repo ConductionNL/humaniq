@@ -43,6 +43,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\LeaveBalanceProjectionServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\Humaniq\Support\NormalisesRows;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
@@ -56,7 +57,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-001
  */
-class LeaveBalanceProjectionService {
+class LeaveBalanceProjectionService implements LeaveBalanceProjectionServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use NormalisesRows;

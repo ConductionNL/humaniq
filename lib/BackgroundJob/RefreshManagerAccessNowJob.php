@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\BackgroundJob;
 
-use OCA\Humaniq\Service\ManagerAccessStamps;
+use OCA\Humaniq\Kernel\Contracts\ManagerAccessStampsInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 
@@ -42,12 +42,12 @@ class RefreshManagerAccessNowJob extends QueuedJob {
 	/**
 	 * Constructor.
 	 *
-	 * @param ManagerAccessStamps $stamps The restamp pass.
+	 * @param ManagerAccessStampsInterface $stamps The restamp pass.
 	 * @param ITimeFactory $time The clock.
 	 *
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
-	public function __construct(private readonly ManagerAccessStamps $stamps, ITimeFactory $time) {
+	public function __construct(private readonly ManagerAccessStampsInterface $stamps, ITimeFactory $time) {
 		parent::__construct(time: $time);
 	}//end __construct()
 

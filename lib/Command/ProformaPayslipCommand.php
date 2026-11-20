@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\ProformaPayslipService;
+use OCA\Humaniq\Kernel\Contracts\ProformaPayslipServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -60,10 +60,10 @@ class ProformaPayslipCommand extends Command {
 	];
 
 	/**
-	 * @param ProformaPayslipService $service The stateless pro-forma simulation service.
+	 * @param ProformaPayslipServiceInterface $service The stateless pro-forma simulation service.
 	 */
 	public function __construct(
-		private readonly ProformaPayslipService $service,
+		private readonly ProformaPayslipServiceInterface $service,
 	) {
 		parent::__construct();
 

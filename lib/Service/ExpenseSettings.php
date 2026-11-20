@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\ExpenseSettingsInterface;
 use OCP\AppFramework\Services\IAppConfig;
 
 /**
@@ -31,7 +32,7 @@ use OCP\AppFramework\Services\IAppConfig;
  * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-001
  * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
  */
-final class ExpenseSettings {
+final class ExpenseSettings implements ExpenseSettingsInterface {
 
 	/**
 	 * @param IAppConfig $appConfig humaniq's app config.

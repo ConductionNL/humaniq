@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\FrequentAbsenceService;
+use OCA\Humaniq\Kernel\Contracts\FrequentAbsenceServiceInterface;
 use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
@@ -57,13 +57,13 @@ class FrequentAbsenceListener implements IEventListener {
 	public const SICKLEAVECASE_SLUG = 'sickleavecase';
 
 	/**
-	 * @param FrequentAbsenceService $service Counts and stamps.
+	 * @param FrequentAbsenceServiceInterface $service Counts and stamps.
 	 * @param InternalWriteMarker $marker Tells humaniq's own writes apart.
 	 * @param OrgLookupInterface   $gateway Resolves the event's schema slug.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly FrequentAbsenceService $service,
+		private readonly FrequentAbsenceServiceInterface $service,
 		private readonly InternalWriteMarker $marker,
 		private readonly OrgLookupInterface $gateway,
 		private readonly LoggerInterface $logger,

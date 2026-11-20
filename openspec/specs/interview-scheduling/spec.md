@@ -13,7 +13,7 @@ built_by: openspec/changes/archive/2026-07-15-interview-scheduling
 
 ## Purpose
 
-Close the gap `recruiting-ats-basic`'s `uitnodigen` transition docblock states plainly ("No calendar/scheduling integration in the MVP"): today an interview invitation is a bare status flip with no artifact, so nobody on the recruiting team can see from a calendar when and with whom a `gesprek` is actually happening. `leave-calendar-nc` already proved the mechanism humaniq needs — an on-demand service that projects register objects onto one configured shared Nextcloud calendar through a duck-typed `CalDavBackend`, degrading cleanly when unconfigured. Interview scheduling forks that pattern for a second object type, with one deliberate divergence: because interviews are scheduled/rescheduled/cancelled as individual, direct actions (not swept as one whole set every run), `InterviewCalendarService` PERSISTS the derived `calendarEventUid` back onto the Interview after first sync — an inspectable "has this ever reached the calendar" marker — rather than only deriving it at render time. AVG boundary: unlike absence (where even the kind of leave is excluded), an interview event's whole purpose is telling the panel who and what role, so SUMMARY carries the candidate name and vacancy title; everything else Application-sensitive (email, phone, cvFile, motivation, talentPoolOptIn, rejectedDate, retentionExpiryDate) never reaches the render path, and interviewers appear as plain DESCRIPTION text, never as an ATTENDEE/ORGANIZER (so no iMIP scheduling mail ever fires).
+Close the gap `recruiting-ats-basic`'s `uitnodigen` transition docblock states plainly ("No calendar/scheduling integration in the MVP"): today an interview invitation is a bare status flip with no artifact, so nobody on the recruiting team can see from a calendar when and with whom a `gesprek` is actually happening. `leave-calendar-nc` already proved the mechanism humaniq needs — an on-demand service that projects register objects onto one configured shared Nextcloud calendar through a duck-typed `CalDavBackend`, degrading cleanly when unconfigured. Interview scheduling forks that pattern for a second object type, with one deliberate divergence: because interviews are scheduled/rescheduled/cancelled as individual, direct actions (not swept as one whole set every run), `InterviewCalendarService` PERSISTS the derived `calendarEventUid` back onto the Interview after first sync — an inspectable "has this ever reached the calendar" marker — rather than only deriving it at render time. AVG boundary: unlike absence (where even the kind of leave is excluded), an interview event's whole purpose is telling the panel who and what role, so SUMMARY carries the candidate name and vacancy title; everything else Application-sensitive (email, phone, cvFile, motivation, talentPoolOptIn, rejectedDate, retentionExpiryDate) never reaches the render path. The interviewers are the event's attendees (REQ-INTV-010); the candidate never is.
 
 ## Requirements
 
@@ -93,17 +93,12 @@ The sync deletes the calendar object of any Interview whose `status` is `cancell
 
 The interview SHALL show the candidate's name and the role, and SHALL NOT show the Application's personal data.
 
-Events render SUMMARY exactly `Sollicitatiegesprek — {candidateName} ({vacancyTitle})`, resolved from the referenced Application and its Vacancy, falling back to `Sollicitatiegesprek — kandidaat` when the Application cannot be resolved. `interviewers` renders as plain text inside the DESCRIPTION property, and no event carries an ATTENDEE or ORGANIZER property (so no iMIP scheduling mail is ever triggered). No event of any Interview carries the referenced Application's `email`, `phone`, `cvFile`, `motivation`, `talentPoolOptIn`, `rejectedDate`, or `retentionExpiryDate` in any ICS property — the loading path (`InterviewRepository::loadApplicationIndex()`) never reads those fields into memory at all.
+Events render SUMMARY exactly `Sollicitatiegesprek — {candidateName} ({vacancyTitle})`, resolved from the referenced Application and its Vacancy, falling back to `Sollicitatiegesprek — kandidaat` when the Application cannot be resolved. The interviewers are the event's attendees and the candidate never is (REQ-INTV-010). No event of any Interview carries the referenced Application's `email`, `phone`, `cvFile`, `motivation`, `talentPoolOptIn`, `rejectedDate`, or `retentionExpiryDate` in any ICS property — the loading path (`InterviewRepository::loadApplicationIndex()`) never reads those fields into memory at all.
 
 #### Scenario: Summary carries name and role, nothing else from the Application
 - **GIVEN** a scheduled Interview for an Application with `candidateName: "Sam de Vries"`, `email`, `phone`, and `motivation` all populated, for a Vacancy titled "Backend Developer"
 - **WHEN** its event is rendered
 - **THEN** the ICS SUMMARY is `Sollicitatiegesprek — Sam de Vries (Backend Developer)` and no property anywhere in the ICS contains the email, phone, or motivation text
-
-#### Scenario: Interviewers never become scheduling attendees
-- **GIVEN** a scheduled Interview with `interviewers: "Els Bakker, Jan Smit"`
-- **WHEN** its event is rendered
-- **THEN** the DESCRIPTION contains the interviewer names as plain text and the ICS contains no ATTENDEE or ORGANIZER property
 
 #### Scenario: Unresolvable Application falls back safely
 - **GIVEN** a scheduled Interview whose `applicationId` no longer resolves to an Application
@@ -173,3 +168,49 @@ Interview pages SHALL nest under the existing recruiting menu group.
 - **GIVEN** an Application with two Interview objects referencing it
 - **WHEN** its detail page is opened
 - **THEN** both Interviews appear in the "Gesprekken" list widget, each linking to its own InterviewDetail page
+
+### Requirement: An interview SHALL be a calendar event with the interviewers as attendees (REQ-INTV-010)
+
+`interviewers` on an `Interview` SHALL hold Nextcloud user ids. The synced event SHALL name the
+configured interview calendar's principal as ORGANIZER and every interviewer as an ATTENDEE, so
+Nextcloud's calendar scheduling delivers the interview to each interviewer's own calendar.
+Moving the interview SHALL update their copies, and cancelling it SHALL cancel them. The
+candidate SHALL never be an attendee, and the personal data boundary of REQ-INTV-005 stays.
+This replaces the REQ-INTV-005 rule that no event carries an ATTENDEE or ORGANIZER.
+
+Rows: `hir-interview-scheduling` (humaniq matrix).
+
+#### Scenario: Each interviewer gets the interview in their own calendar
+- **GIVEN** a scheduled Interview with interviewers `els` and `jan`
+- **WHEN** the sync runs
+- **THEN** the event carries an ATTENDEE for `els` and one for `jan`
+- **AND** the interview shows in the personal calendar of both users
+
+@e2e exclude Delivery into another user's calendar runs in the dav app's scheduling plugin on a live instance, which the e2e instance does not set up with mail addresses for its users. The ATTENDEE lines and the scheduling-aware create are asserted in tests/Unit/Service/InterviewAttendeesTest.php and tests/Unit/Service/InterviewSchedulingSyncTest.php.
+
+#### Scenario: Moving the interview moves it for every interviewer
+- **GIVEN** the Interview above has reached both calendars
+- **WHEN** HR changes `scheduledStart` and the sync runs again
+- **THEN** both interviewers' calendars show the new time and neither shows the old one
+
+@e2e exclude Same live-scheduling dependency as above. tests/Unit/Service/InterviewSchedulingSyncTest.php asserts the stored copy is replaced through the scheduling-aware calendar with the new time and a higher SEQUENCE, and that a removed interviewer gets a cancellation.
+
+#### Scenario: Cancelling the interview cancels it for every interviewer
+- **GIVEN** the Interview above has reached both calendars
+- **WHEN** it is cancelled and the sync runs
+- **THEN** the interview is cancelled in both interviewers' calendars
+
+@e2e exclude Same live-scheduling dependency as above. tests/Unit/Service/InterviewSchedulingSyncTest.php asserts a STATUS:CANCELLED copy is sent to every attendee and the event is then removed.
+
+#### Scenario: An interviewer who is not a Nextcloud user is refused
+- **WHEN** HR saves an Interview whose interviewers name a user id that does not exist
+- **THEN** the save is refused with a message naming that interviewer
+
+@e2e exclude The refusal is a server-side save listener with no page of its own; tests/Unit/Listener/InterviewInterviewersListenerTest.php asserts the refusal and the message naming the interviewer.
+
+#### Scenario: The candidate is never an attendee
+- **GIVEN** a scheduled Interview with interviewers `els` and `jan` for a candidate with an email address
+- **WHEN** its event is rendered
+- **THEN** the ICS has no ATTENDEE for the candidate's email address and still carries none of the Application's personal fields
+
+@e2e exclude A property of the rendered ICS text, not of a page; tests/Unit/Service/InterviewAttendeesTest.php asserts no candidate address and none of the Application's fields reach the event.

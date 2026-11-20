@@ -16,7 +16,7 @@
       "humaniq": {
         "slug": "humaniq",
         "title": "Humaniq Register (demo)",
-        "version": "0.63.0",
+        "version": "0.64.0",
         "description": "Demo data for Humaniq Register. Generated from the register's own schemas: see hydra-gates/scripts/lib/generate_mock_register.py.",
         "authorization": {
           "read": [
@@ -15745,7 +15745,12 @@
         ],
         "authorization": {
           "read": [
-            "humaniq-hr"
+            {
+              "group": "humaniq-hr",
+              "match": {
+                "readable": true
+              }
+            }
           ],
           "create": [
             "humaniq-hr"
@@ -15793,6 +15798,12 @@
             "nullable": true,
             "title": "Administration",
             "description": "The administration of the survey."
+          },
+          "readable": {
+            "type": "boolean",
+            "default": false,
+            "title": "Readable one by one",
+            "description": "Whether HR may read this response on its own: true only when it was released in a batch of at least the survey's minimum group size. The results count every response either way."
           }
         }
       },
@@ -24499,7 +24510,8 @@
           "aanbevelen": 7
         },
         "submittedOn": "2026-03-01",
-        "administrationId": "Voorbeeld Administrationid 1"
+        "administrationId": "Voorbeeld Administrationid 1",
+        "readable": true
       },
       {
         "@self": {
@@ -24515,7 +24527,8 @@
           "aanbevelen": 8
         },
         "submittedOn": "2026-04-01",
-        "administrationId": "Voorbeeld Administrationid 2"
+        "administrationId": "Voorbeeld Administrationid 2",
+        "readable": true
       },
       {
         "@self": {
@@ -24531,7 +24544,8 @@
           "aanbevelen": 9
         },
         "submittedOn": "2026-05-01",
-        "administrationId": "Voorbeeld Administrationid 3"
+        "administrationId": "Voorbeeld Administrationid 3",
+        "readable": true
       },
       {
         "@self": {

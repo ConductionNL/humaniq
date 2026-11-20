@@ -44,6 +44,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -199,6 +200,30 @@ class HoursRegisterGateway implements RecordStoreInterface, OrgLookupInterface {
 			_multitenancy: false
 		);
 	}//end save()
+
+	/**
+	 * Create one object owned by the system rather than by the signed-in
+	 * caller, for a write that must not name who caused it (an anonymous
+	 * survey answer).
+	 *
+	 * @param array<string, mixed> $payload The object payload.
+	 * @param string $schema The schema slug.
+	 *
+	 * @return object The saved ObjectEntity.
+	 *
+	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 */
+	public function createUnowned(array $payload, string $schema): object {
+		return $this->objects()->saveObject(
+			object: $payload,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->settingsService->getRegisterSlug(), schema: $schema),
+				actor: new SaveActor(unowned: true)
+			),
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end createUnowned()
 
 	/**
 	 * Delete one object.

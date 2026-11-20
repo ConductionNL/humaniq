@@ -28,7 +28,7 @@ namespace OCA\Humaniq\Controller;
 
 use InvalidArgumentException;
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\ExpenseCategoryPolicy;
+use OCA\Humaniq\Kernel\Contracts\ExpenseCategoryPolicyInterface;
 use OCA\Humaniq\Settings\HumaniqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -48,11 +48,11 @@ class ExpenseCategoryController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ExpenseCategoryPolicy $policy The category switches.
+	 * @param ExpenseCategoryPolicyInterface $policy The category switches.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ExpenseCategoryPolicy $policy,
+		private readonly ExpenseCategoryPolicyInterface $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 

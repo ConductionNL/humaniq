@@ -33,11 +33,11 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\RegisterPrefillServiceInterface;
 use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RbacObjectReader;
-use OCA\Humaniq\Service\RegisterPrefillService;
 use OCA\Humaniq\Service\RegisterPrefillUnavailableException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -57,7 +57,7 @@ class RegisterPrefillController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest               $request     The request.
-	 * @param RegisterPrefillService $prefill     Looks the record up.
+	 * @param RegisterPrefillServiceInterface $prefill     Looks the record up.
 	 * @param RecordStoreInterface   $gateway     Saves the filled fields, reads the administration.
 	 * @param RbacObjectReader       $rbac        Reads under the caller's own rights.
 	 * @param HumaniqRoles           $roles       The HR check.
@@ -66,7 +66,7 @@ class RegisterPrefillController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly RegisterPrefillService $prefill,
+		private readonly RegisterPrefillServiceInterface $prefill,
 		private readonly RecordStoreInterface $gateway,
 		private readonly RbacObjectReader $rbac,
 		private readonly HumaniqRoles $roles,

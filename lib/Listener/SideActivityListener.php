@@ -27,8 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Kernel\Contracts\SideActivityRegisterInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
-use OCA\Humaniq\Service\SideActivityRegister;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IUserSession;
@@ -46,13 +46,13 @@ class SideActivityListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param SideActivityRegister $register The register rules.
+	 * @param SideActivityRegisterInterface $register The register rules.
 	 * @param IUserSession $userSession The caller.
 	 * @param InternalWriteMarker $marker humaniq's own writes are not re-checked.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly SideActivityRegister $register,
+		private readonly SideActivityRegisterInterface $register,
 		private readonly IUserSession $userSession,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,
@@ -91,12 +91,12 @@ class SideActivityListener implements IEventListener {
 	private function route(Event $event, object $entity): void {
 		$slug = $this->register->slugOf((string)$entity->getSchema());
 		$data = ($entity->getObject() ?? []);
-		if ($slug === SideActivityRegister::EMPLOYEE_SLUG && $event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) {
+		if ($slug === SideActivityRegisterInterface::EMPLOYEE_SLUG && $event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) {
 			$this->guardAttestation(event: $event, employee: $entity);
 			return;
 		}
 
-		if ($slug === SideActivityRegister::ACTIVITY_SLUG) {
+		if ($slug === SideActivityRegisterInterface::ACTIVITY_SLUG) {
 			$this->onActivity(event: $event, data: $data);
 		}
 	}//end route()
@@ -158,7 +158,7 @@ class SideActivityListener implements IEventListener {
 		$old = ($event->getOldObject()?->getObject() ?? []);
 		$value = $this->register->correction(new: ($employee->getObject() ?? []), old: $old, employeeId: (string)$employee->getUuid());
 		if ($value !== null) {
-			$event->setModifiedData([SideActivityRegister::FLAG => $value]);
+			$event->setModifiedData([SideActivityRegisterInterface::FLAG => $value]);
 		}
 	}//end guardAttestation()
 

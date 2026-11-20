@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\PayrollMutationService;
+use OCA\Humaniq\Kernel\Contracts\PayrollMutationServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -41,10 +41,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class PayrollMutationsCommand extends Command {
 
 	/**
-	 * @param PayrollMutationService $service The pure diff service.
+	 * @param PayrollMutationServiceInterface $service The pure diff service.
 	 */
 	public function __construct(
-		private readonly PayrollMutationService $service,
+		private readonly PayrollMutationServiceInterface $service,
 	) {
 		parent::__construct();
 

@@ -31,12 +31,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\RegisterPrefillServiceInterface;
+
 /**
  * Fill empty fields from a base register, report the differences.
  *
  * @spec openspec/specs/register-prefill/spec.md#REQ-RPF-001
  */
-class RegisterPrefillService {
+class RegisterPrefillService implements RegisterPrefillServiceInterface {
 
 	/**
 	 * The RDW registered vehicles dataset.

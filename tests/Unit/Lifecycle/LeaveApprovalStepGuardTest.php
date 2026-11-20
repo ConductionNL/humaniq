@@ -51,6 +51,7 @@ class LeaveApprovalStepGuardTest extends TestCase {
 
 		$groups = $this->createMock(IGroupManager::class);
 		$groups->method('isAdmin')->willReturnCallback(static fn (string $uid): bool => in_array($uid, ['hr-ellen', 'manager-hr'], true));
+		$groups->method('isInGroup')->willReturnCallback(static fn (string $uid, string $group): bool => $group === 'humaniq-hr' && $uid === 'hr-group-member');
 
 		return new LeaveApprovalStepGuard(gateway: $gateway, groupManager: $groups);
 	}
@@ -86,6 +87,18 @@ class LeaveApprovalStepGuardTest extends TestCase {
 		$this->assertTrue($guard->check($waiting, 'reject', 'hr-ellen')->isAllowed());
 		$this->assertFalse($guard->check($waiting, 'reject', 'manager1')->isAllowed());
 		$this->assertFalse($guard->check($waiting, 'approve-manager', 'hr-ellen')->isAllowed());
+	}
+
+	public function testAMemberOfTheHrGroupTakesTheHrStepAndAPlainEmployeeDoesNot(): void {
+		$guard   = $this->guard();
+		$waiting = self::request('unpaid', 'manager-approved', decisions: [['step' => 'manager', 'decision' => 'approved', 'by' => 'manager1']]);
+
+		$this->assertTrue($guard->check($waiting, 'approve', 'hr-group-member')->isAllowed(), 'humaniq-hr member, not an administrator');
+		$this->assertTrue($guard->check($waiting, 'reject', 'hr-group-member')->isAllowed());
+		$refused = $guard->check($waiting, 'approve', 'employee1');
+		$this->assertFalse($refused->isAllowed(), 'neither HR nor an administrator');
+		$this->assertSame('Alleen HR mag deze stap nemen.', $refused->getMessage());
+		$this->assertFalse($guard->check($waiting, 'reject', 'employee1')->isAllowed());
 	}
 
 	public function testNobodyDecidesOnTheirOwnRequest(): void {

@@ -28,7 +28,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\BackgroundJob\JaaropgaafYearJob;
-use OCA\Humaniq\Service\HrDocumentService;
+use OCA\Humaniq\Kernel\Contracts\HrDocumentServiceInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -49,16 +49,16 @@ class AnnualStatementBatchController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest          $request           The request.
-	 * @param HrDocumentService $hrDocumentService Lists the year's employees.
-	 * @param IUserSession      $userSession       The caller.
-	 * @param HumaniqRoles      $roles             Who may queue a year.
-	 * @param IJobList          $jobList           Queues the batch.
-	 * @param ITimeFactory      $timeFactory       The clock that decides whether a year is over.
+	 * @param IRequest                   $request           The request.
+	 * @param HrDocumentServiceInterface $hrDocumentService Lists the year's employees.
+	 * @param IUserSession               $userSession       The caller.
+	 * @param HumaniqRoles               $roles             Who may queue a year.
+	 * @param IJobList                   $jobList           Queues the batch.
+	 * @param ITimeFactory               $timeFactory       The clock that decides whether a year is over.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly HrDocumentService $hrDocumentService,
+		private readonly HrDocumentServiceInterface $hrDocumentService,
 		private readonly IUserSession $userSession,
 		private readonly HumaniqRoles $roles,
 		private readonly IJobList $jobList,

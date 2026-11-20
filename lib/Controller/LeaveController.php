@@ -39,7 +39,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\LeaveBuySellSettlementService;
+use OCA\Humaniq\Kernel\Contracts\LeaveBuySellSettlementServiceInterface;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
@@ -63,14 +63,14 @@ class LeaveController extends Controller {
 	/**
 	 * @param IRequest $request The request object.
 	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
-	 * @param LeaveBuySellSettlementService $leaveBuySellSettlementService The balance-mutating settlement service.
+	 * @param LeaveBuySellSettlementServiceInterface $leaveBuySellSettlementService The balance-mutating settlement service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly ContainerInterface $container,
-		private readonly LeaveBuySellSettlementService $leaveBuySellSettlementService,
+		private readonly LeaveBuySellSettlementServiceInterface $leaveBuySellSettlementService,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
 	) {

@@ -39,8 +39,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Kernel\Contracts\HrDocumentServiceInterface;
 use OCA\Humaniq\Service\CallerContext;
-use OCA\Humaniq\Service\HrDocumentService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
@@ -61,13 +61,13 @@ class DocumentController extends Controller {
 
 	/**
 	 * @param IRequest $request The request object.
-	 * @param HrDocumentService $hrDocumentService The document-generation service.
+	 * @param HrDocumentServiceInterface $hrDocumentService The document-generation service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param CallerContext $caller The signed-in caller, their roles, the container and the logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly HrDocumentService $hrDocumentService,
+		private readonly HrDocumentServiceInterface $hrDocumentService,
 		private readonly SettingsService $settingsService,
 		private readonly CallerContext $caller,
 	) {

@@ -29,12 +29,14 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\OvertimeCreditServiceInterface;
+
 /**
  * The time-off credit of an approved run.
  *
  * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-003
  */
-class OvertimeCreditService {
+class OvertimeCreditService implements OvertimeCreditServiceInterface {
 
 	public const LEAVE_TYPE = 'compensation';
 

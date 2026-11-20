@@ -58,6 +58,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\CompAdjustmentServiceInterface;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
@@ -74,7 +75,7 @@ use OCA\Humaniq\Support\LoadsAllRows;
  *
  * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-006
  */
-class CompAdjustmentService {
+class CompAdjustmentService implements CompAdjustmentServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;

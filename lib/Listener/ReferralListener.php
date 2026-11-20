@@ -28,9 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Kernel\Contracts\ReferralServiceInterface;
 use OCA\Humaniq\Service\OrgLookupInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
-use OCA\Humaniq\Service\ReferralService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -61,7 +61,7 @@ class ReferralListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ReferralService      $referrals   The referral rules.
+	 * @param ReferralServiceInterface      $referrals   The referral rules.
 	 * @param OrgLookupInterface   $gateway     Resolves the schema slug.
 	 * @param IUserSession         $userSession The signed-in user.
 	 * @param InternalWriteMarker  $marker      Marks humaniq's own writes.
@@ -70,7 +70,7 @@ class ReferralListener implements IEventListener {
 	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-003
 	 */
 	public function __construct(
-		private readonly ReferralService $referrals,
+		private readonly ReferralServiceInterface $referrals,
 		private readonly OrgLookupInterface $gateway,
 		private readonly IUserSession $userSession,
 		private readonly InternalWriteMarker $marker,

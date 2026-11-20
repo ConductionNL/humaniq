@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\LeaveCostService;
+use OCA\Humaniq\Kernel\Contracts\LeaveCostServiceInterface;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -45,16 +45,16 @@ class LeaveCostController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest         $request The request.
-	 * @param RbacObjectReader $rbac    Reads as the caller.
-	 * @param LeaveCostService $costs   The cost.
+	 * @param IRequest                  $request The request.
+	 * @param RbacObjectReader          $rbac    Reads as the caller.
+	 * @param LeaveCostServiceInterface $costs   The cost.
 	 *
 	 * @spec openspec/specs/leave-hours-from-pattern/spec.md#REQ-LHP-003
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly RbacObjectReader $rbac,
-		private readonly LeaveCostService $costs,
+		private readonly LeaveCostServiceInterface $costs,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()

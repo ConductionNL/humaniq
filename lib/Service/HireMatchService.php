@@ -28,11 +28,13 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\HireMatchServiceInterface;
+
 /**
  * The ordered duplicate check. *
  * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-002
  */
-class HireMatchService {
+class HireMatchService implements HireMatchServiceInterface {
 
 	/**
 	 * Constructor.

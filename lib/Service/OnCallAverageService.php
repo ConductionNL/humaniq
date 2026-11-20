@@ -29,13 +29,14 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\OnCallAverageServiceInterface;
 
 /**
  * Averages approved hours per on-call contract.
  *
  * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-002
  */
-final class OnCallAverageService {
+final class OnCallAverageService implements OnCallAverageServiceInterface {
 
 	/**
 	 * Months after its start that an on-call contract is owed an offer.

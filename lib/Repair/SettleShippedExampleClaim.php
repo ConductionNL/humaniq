@@ -30,8 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Repair;
 
+use OCA\Humaniq\Kernel\Contracts\OpenRegisterAvailabilityInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
-use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -95,13 +95,13 @@ class SettleShippedExampleClaim implements IRepairStep {
 	 *
 	 * @param RecordStoreInterface $gateway The register.
 	 * @param InternalWriteMarker $marker Marks the write as humaniq's own.
-	 * @param OpenRegisterAvailability $openRegister Availability check.
+	 * @param OpenRegisterAvailabilityInterface $openRegister Availability check.
 	 * @param LoggerInterface $logger Records the settled claim.
 	 */
 	public function __construct(
 		private readonly RecordStoreInterface $gateway,
 		private readonly InternalWriteMarker $marker,
-		private readonly OpenRegisterAvailability $openRegister,
+		private readonly OpenRegisterAvailabilityInterface $openRegister,
 		private readonly LoggerInterface $logger,
 	) {
 

@@ -29,8 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use OCA\Humaniq\Kernel\Contracts\ManagerAccessStampsInterface;
 use OCA\Humaniq\Service\InternalWriteMarker;
-use OCA\Humaniq\Service\ManagerAccessStamps;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
@@ -62,14 +62,14 @@ class ManagerAccessStampListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ManagerAccessStamps $stamps Resolves the schema and the stamps.
+	 * @param ManagerAccessStampsInterface $stamps Resolves the schema and the stamps.
 	 * @param LoggerInterface $logger Records a failed resolution.
 	 * @param InternalWriteMarker $marker Lets humaniq's own writes pass.
 	 *
 	 * @spec openspec/changes/manager-record-access/specs/mss-team-scope/spec.md#Requirement:-A-manager-and-their-deputies-SHALL-read-their-team's-records-through-stamped-access-fields-(REQ-MSS-009)
 	 */
 	public function __construct(
-		private readonly ManagerAccessStamps $stamps,
+		private readonly ManagerAccessStampsInterface $stamps,
 		private readonly LoggerInterface $logger,
 		private readonly InternalWriteMarker $marker,
 	) {

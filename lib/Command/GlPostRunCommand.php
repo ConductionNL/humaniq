@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Command;
 
-use OCA\Humaniq\Service\PayrollGLPostService;
+use OCA\Humaniq\Kernel\Contracts\PayrollGLPostServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -43,10 +43,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class GlPostRunCommand extends Command {
 
 	/**
-	 * @param PayrollGLPostService $service The GL-posting service.
+	 * @param PayrollGLPostServiceInterface $service The GL-posting service.
 	 */
 	public function __construct(
-		private readonly PayrollGLPostService $service,
+		private readonly PayrollGLPostServiceInterface $service,
 	) {
 		parent::__construct();
 

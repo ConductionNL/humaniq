@@ -41,7 +41,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl.
     ]]></description>
-    <version>0.2.13-unstable.20261114150000</version>
+    <version>0.2.13-unstable.20261117100000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Humaniq</namespace>
@@ -121,6 +121,10 @@ Vrij en open source onder de EUPL-1.2-licentie.
              deputy access fields, so a deputy period that starts or ends reaches
              the read rules without a save of the record. -->
         <job>OCA\Humaniq\BackgroundJob\RefreshManagerAccessJob</job>
+        <!-- talent-engagement-surveys REQ-SRV-002: releases held survey answers
+             as responses in shuffled batches, so a response does not carry the
+             moment its invitation was answered. -->
+        <job>OCA\Humaniq\BackgroundJob\ReleaseSurveyResponsesJob</job>
     </background-jobs>
 
     <repair-steps>
@@ -256,6 +260,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  records stored before the fields existed. Runs AFTER
                  InitializeRegister, which imports the fields. -->
             <step>OCA\Humaniq\Repair\StampManagerAccess</step>
+            <!-- time-entry-approval-state D3: stamp each timesheet's status on its
+                 time entries (approvalState, approvedAt). Runs AFTER
+                 InitializeRegister, which imports the fields. Idempotent: only a
+                 drifted entry is written, so a missed edge heals on every repair. -->
+            <step>OCA\Humaniq\Repair\RestampTimeEntryApprovalState</step>
             <!-- settle-the-shipped-example-claim: the old seed shipped the example
                  travel claim approved on the payroll route without a run. Marks it
                  reimbursed on the direct route, once, only while it still holds the
@@ -369,6 +378,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  records stored before the fields existed. Runs AFTER
                  InitializeRegister, which imports the fields. -->
             <step>OCA\Humaniq\Repair\StampManagerAccess</step>
+            <!-- time-entry-approval-state D3: stamp each timesheet's status on its
+                 time entries (approvalState, approvedAt). Runs AFTER
+                 InitializeRegister, which imports the fields. Idempotent: only a
+                 drifted entry is written, so a missed edge heals on every repair. -->
+            <step>OCA\Humaniq\Repair\RestampTimeEntryApprovalState</step>
             <!-- settle-the-shipped-example-claim: the old seed shipped the example
                  travel claim approved on the payroll route without a run. Marks it
                  reimbursed on the direct route, once, only while it still holds the

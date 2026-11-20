@@ -163,6 +163,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Kernel\Contracts\PayrollRunServiceInterface;
 use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\PayPeriod;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
@@ -199,7 +200,7 @@ use OCA\Humaniq\Support\FindsCoveringContract;
 /**
  * Generates draft payroll runs + engine payslips from the pure calculator.
  */
-class PayrollRunService {
+class PayrollRunService implements PayrollRunServiceInterface {
 
 	use ConvertsRowsToArrays;
 	use ResolvesObjectService;
@@ -246,13 +247,14 @@ class PayrollRunService {
 	 * The retro fold of an employee with no applied adjustment this period:
 	 * nothing paid, nothing booked (humaniq#514).
 	 *
-	 * @var array{net: int, gross: int, loonheffing: int, employerCharges: int}
+	 * @var array{net: int, gross: int, loonheffing: int, employerCharges: int, sources: list<array{sourceId: string, cents: int}>}
 	 */
 	private const NO_RETRO_ADJUSTMENT = [
 		'net' => 0,
 		'gross' => 0,
 		'loonheffing' => 0,
 		'employerCharges' => 0,
+		'sources' => [],
 	];
 
 	/**
@@ -297,6 +299,7 @@ class PayrollRunService {
 	 * @param CostAllocationService|null $costAllocation Splits each payslip's wage costs over cost centres and projects (payroll-cost-allocation D3); null runs without it.
 	 * @param AwfReviewService|null $awfReview Reviews the low Awf premium before the run reads its adjustments (filings-premium-differentiation D2/D3); null runs without it.
 	 * @param ReservationPayoutRunService|null $reservations Pays out the holiday allowance, end-of-year and IKB reserves (payroll-reservation-payouts); null runs without it.
+	 * @param PayslipLineageService|null $lineage Writes each payslip's source-carrying lines (payroll-mutation-lineage D1); null runs without it.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each optional fold (hours, claims and allowances) and the run check is its own collaborator, so a run without one stays byte-identical and a test names which fold ran.
 	 */
@@ -317,6 +320,7 @@ class PayrollRunService {
 		private readonly ?CostAllocationService $costAllocation = null,
 		private readonly ?AwfReviewService $awfReview = null,
 		private readonly ?ReservationPayoutRunService $reservations = null,
+		private readonly ?PayslipLineageService $lineage = null,
 	) {
 
 	}//end __construct()
@@ -475,6 +479,9 @@ class PayrollRunService {
 			return $state['failed'];
 		}
 
+		// payroll-mutation-lineage: lineage reads raises and audit rows once per run.
+		$this->lineage?->beginRun();
+
 		$employees = $this->loadAll('Employee');
 		foreach ($employees as $employee) {
 			$failed = $this->payEmployee(state: $state, employee: $employee);
@@ -572,7 +579,9 @@ class PayrollRunService {
 		// awf-herziening adjustments first, so this run settles them.
 		$this->awfReview?->review(period: $period, runId: $state['runId']);
 		$state['retro'] = $this->appliedRetroAdjustmentsByEmployeeId($period);
-		$state['leaveBuySell'] = $this->settledLeaveTransactionsByEmployeeId($period);
+		$state['leaveSources'] = $this->settledLeaveTransactionSourcesByEmployeeId($period);
+		$state['leaveBuySell'] = $this->settledLeaveTransactionsByEmployeeId(sources: $state['leaveSources']);
+		$state['calculatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
 		$state['loonbeslagen'] = $this->activeLoonbeslagenByEmployeeKey();
 		$state['assetAssignments'] = $this->openAssetAssignmentsByEmployeeKey();
 		$state['vehicleAssets'] = $this->vehicleAssetsById();
@@ -773,6 +782,7 @@ class PayrollRunService {
 		// No settled transaction -> leaveBuySellCents is 0 and the gross is
 		// unchanged.
 		$slip['leaveBuySellCents'] = ($state['leaveBuySell'][$slip['employeeId']] ?? 0);
+		$slip['leaveSources'] = ($state['leaveSources'][$slip['employeeId']] ?? []);
 		$slip['grossCents'] += $slip['leaveBuySellCents'];
 
 		return $this->foldCaoAndExpenses(state: $state, slip: $slip);
@@ -1015,9 +1025,40 @@ class PayrollRunService {
 				$state['heldPayouts'][] = array_merge($held, ['employee' => $slip['label']]);
 			}
 		}
+		$this->recordLineage(state: $state, slip: $slip, saved: $saved);
 
 		return null;
 	}//end recordSlip()
+
+	/**
+	 * Replace the saved payslip's lines with one line per source it folded
+	 * (payroll-mutation-lineage D1/D2). A run without the lineage service
+	 * writes no lines.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The calculated slip.
+	 * @param array<string, mixed> $saved The saved payslip.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.3
+	 */
+	private function recordLineage(array $state, array $slip, array $saved): void {
+		if ($this->lineage === null) {
+			return;
+		}
+
+		$salarySource = null;
+		if ($slip['salaried'] === true) {
+			$salarySource = $this->lineage->salarySource(employee: $slip['employee'], salaryCents: $slip['regularWageCents'], calculatedAt: $state['calculatedAt']);
+		}
+
+		$this->lineage->replaceLines(
+			payslip: $saved,
+			sources: PayslipLineSources::fromSlip(slip: $slip, salarySource: $salarySource),
+			calculatedAt: $state['calculatedAt']
+		);
+	}//end recordLineage()
 
 	/**
 	 * The payslip payload: the engine output, then each fold's fields.
@@ -2454,9 +2495,14 @@ class PayrollRunService {
 	 *
 	 * @param string $period Wage period (YYYY-MM).
 	 *
-	 * @return array<string, array{net: int, gross: int, loonheffing: int, employerCharges: int}>
+	 * Each employee's entry also lists the adjustments it summed, as
+	 * `sources` of `{sourceId, cents}` (net), without changing the totals
+	 * (payroll-mutation-lineage D2).
+	 *
+	 * @return array<string, array{net: int, gross: int, loonheffing: int, employerCharges: int, sources: list<array{sourceId: string, cents: int}>}>
 	 *
 	 * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-004
+	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.1
 	 */
 	private function appliedRetroAdjustmentsByEmployeeId(string $period): array {
 		$out = [];
@@ -2489,6 +2535,7 @@ class PayrollRunService {
 				'gross' => ($current['gross'] + $grossCents),
 				'loonheffing' => ($current['loonheffing'] + $loonheffingCents),
 				'employerCharges' => ($current['employerCharges'] + $chargesCents),
+				'sources' => array_merge($current['sources'], [['sourceId' => $this->idOf($adjustment), 'cents' => $netCents]]),
 			];
 		}//end foreach
 
@@ -2536,23 +2583,25 @@ class PayrollRunService {
 	}//end retroAdjustmentFields()
 
 	/**
-	 * Every employee's summed signed settled LeaveTransaction amount (cents)
-	 * whose settlementPeriod equals this run's period (leave-buy-sell
-	 * design.md D6) -- the current-run-only folding index. A `sell`
-	 * contributes a POSITIVE amount (taxable wage added to the gross); a
-	 * `buy` contributes a NEGATIVE amount (taken off the gross). Draft/
-	 * submitted/approved/rejected transactions and transactions settling a
-	 * different period are excluded. Degrades gracefully to an empty map
-	 * when the LeaveTransaction schema does not exist yet in the register
-	 * (the retro-adjustments cross-change-ordering precedent).
+	 * Every employee's settled LeaveTransactions whose settlementPeriod equals
+	 * this run's period, each as `{sourceId, cents}` signed (leave-buy-sell
+	 * design.md D6; payroll-mutation-lineage D2) -- the current-run-only
+	 * folding index. A `sell` contributes a POSITIVE amount (taxable wage
+	 * added to the gross); a `buy` contributes a NEGATIVE amount (taken off
+	 * the gross). Draft/submitted/approved/rejected transactions and
+	 * transactions settling a different period are excluded. Degrades
+	 * gracefully to an empty map when the LeaveTransaction schema does not
+	 * exist yet in the register (the retro-adjustments cross-change-ordering
+	 * precedent).
 	 *
 	 * @param string $period Wage period (YYYY-MM).
 	 *
-	 * @return array<string, int>
+	 * @return array<string, list<array{sourceId: string, cents: int}>>
 	 *
 	 * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
+	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.1
 	 */
-	private function settledLeaveTransactionsByEmployeeId(string $period): array {
+	private function settledLeaveTransactionSourcesByEmployeeId(string $period): array {
 		$out = [];
 		foreach ($this->loadAll('LeaveTransaction') as $transaction) {
 			if ((string)($transaction['status'] ?? '') !== 'settled') {
@@ -2572,10 +2621,24 @@ class PayrollRunService {
 			$cents = is_numeric($settledAmount) === true ? (int)round(((float)$settledAmount) * 100) : 0;
 			$sign = ((string)($transaction['transactionType'] ?? '')) === 'sell' ? 1 : -1;
 
-			$out[$employeeId] = (($out[$employeeId] ?? 0) + ($sign * $cents));
+			$out[$employeeId][] = ['sourceId' => $this->idOf($transaction), 'cents' => ($sign * $cents)];
 		}
 
 		return $out;
+	}//end settledLeaveTransactionSourcesByEmployeeId()
+
+	/**
+	 * Every employee's summed signed settled LeaveTransaction amount (cents)
+	 * this run folds into the gross: the sum of its sources.
+	 *
+	 * @param array<string, list<array{sourceId: string, cents: int}>> $sources The settled transactions per employee.
+	 *
+	 * @return array<string, int>
+	 *
+	 * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
+	 */
+	private function settledLeaveTransactionsByEmployeeId(array $sources): array {
+		return array_map(static fn (array $entries): int => array_sum(array_column($entries, 'cents')), $sources);
 	}//end settledLeaveTransactionsByEmployeeId()
 
 	/**

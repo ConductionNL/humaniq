@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use OCA\Humaniq\Kernel\Contracts\ChangeRequestApplierInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -34,7 +35,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *
  * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-001
  */
-class ChangeRequestApplier {
+class ChangeRequestApplier implements ChangeRequestApplierInterface {
 
 	/**
 	 * The request schema.
