@@ -132,7 +132,8 @@
                     "IkbBudget",
                     "IkbGoal",
                     "IkbSpendRequest",
-                    "BenefitEntitlement"
+                    "BenefitEntitlement",
+                    "PayrollOpeningBalance"
                 ]
             }
         },

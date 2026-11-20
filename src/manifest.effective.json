@@ -983,6 +983,12 @@
 					"route": "PayrollAdjustments"
 				},
 				{
+					"icon": "ScaleBalance",
+					"id": "OpeningBalances",
+					"label": "Opening balances",
+					"route": "OpeningBalances"
+				},
+				{
 					"icon": "BookEditOutline",
 					"id": "PayrollGLPosts",
 					"label": "Payroll GL posts",
@@ -18513,6 +18519,123 @@
 			"id": "ExitInterviewDetail",
 			"route": "/exit-interviews/:id",
 			"title": "Exit interview",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "payroll-period-edge-cases D5: plain objects created with the library's mass import (showMassImport stays on), no endpoint (ADR-022). PayrollOpeningBalanceUniqueGuard refuses a second balance per employee, administration and year.",
+				"allowExport": true,
+				"columns": [
+					"employeeId",
+					"year",
+					"lastPeriodInPrevious",
+					"grossWage",
+					"loonheffing",
+					"source"
+				],
+				"description": "The year-to-date figures employees bring from the previous payroll package. Import them with mass import; the annual statement adds them to humaniq's own payslips.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"year",
+					"source"
+				],
+				"register": "humaniq",
+				"schema": "PayrollOpeningBalance",
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				}
+			},
+			"id": "OpeningBalances",
+			"route": "/opening-balances",
+			"title": "Opening balances",
+			"type": "index"
+		},
+		{
+			"config": {
+				"layout": [
+					{
+						"gridHeight": 3,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 3,
+						"id": 2,
+						"widgetId": "data-2"
+					},
+					{
+						"gridHeight": 11,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 3,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "PayrollOpeningBalance",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 4,
+							"include": [
+								"source",
+								"lastPeriodInPrevious",
+								"importedAt"
+							],
+							"overrides": {
+								"importedAt": {
+									"editable": false
+								}
+							},
+							"title": "Source"
+						},
+						"icon": "ScaleBalance",
+						"id": "data",
+						"title": "Source",
+						"type": "data"
+					},
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"administrationId"
+							],
+							"title": "Year-to-date figures"
+						},
+						"icon": "ScaleBalance",
+						"id": "data-2",
+						"title": "Year-to-date figures",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "OpeningBalanceDetail",
+			"route": "/opening-balances/:id",
+			"title": "Opening balance",
 			"type": "detail"
 		},
 		{

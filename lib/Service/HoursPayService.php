@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
+use OCA\Humaniq\Payroll\MonthEndWindow;
 
 /**
  * Selection, arithmetic and stamping of paid hours.
@@ -60,25 +61,30 @@ class HoursPayService {
 	}//end __construct()
 
 	/**
-	 * The employee's approved timesheets this run pays: period on or before
-	 * the run's, and not stamped by another run that still exists.
+	 * The employee's approved timesheets this run pays: a month that has
+	 * ended by the run's last day, and not stamped by another run that still
+	 * exists.
+	 *
+	 * Which months have ended is MonthEndWindow's (payroll-period-edge-cases D4).
 	 *
 	 * @param list<array<string, mixed>>          $timesheets Every Timesheet.
 	 * @param string                              $employeeId The employee.
-	 * @param string                              $period     The run's period, YYYY-MM.
+	 * @param string                              $period     The run's period: YYYY-MM, YYYY-Pnn or YYYY-Wnn.
 	 * @param string                              $runId      The run.
 	 * @param array<string, array<string, mixed>> $runsById   Every PayrollRun by id.
 	 *
 	 * @return list<array<string, mixed>>
 	 *
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public function timesheetsToPay(array $timesheets, string $employeeId, string $period, string $runId, array $runsById): array {
-		$out = [];
+		$window = new MonthEndWindow(period: $period);
+		$out    = [];
 		foreach ($timesheets as $timesheet) {
 			if (($timesheet['status'] ?? null) !== 'approved'
 				|| (string)($timesheet['employeeId'] ?? '') !== $employeeId
-				|| substr((string)($timesheet['period'] ?? ''), 0, 7) > $period
+				|| $window->admits(month: substr((string)($timesheet['period'] ?? ''), 0, 7)) === false
 			) {
 				continue;
 			}

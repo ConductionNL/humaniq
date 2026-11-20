@@ -221,13 +221,39 @@ final class CalculationResult {
 	 * `employerChargesCents` are the interpreter's incidence folds: read, not
 	 * computed here (REQ-JP-003). The fields stay flat and in this order.
 	 *
-	 * @param PackRunResult $out The pack run's output.
+	 * @param PackRunResult|array<string, mixed> $out The pack run's output, or the fields of two results summed by combined().
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
 	 */
-	public function __construct(PackRunResult $out) {
+	public function __construct(PackRunResult|array $out) {
+		if (is_array($out) === true) {
+			$this->grossPayCents = (int)$out['grossPayCents'];
+			$this->loonheffingCents = (int)$out['loonheffingCents'];
+			$this->arbeidskortingCents = (int)$out['arbeidskortingCents'];
+			$this->volksverzekeringenCents = (int)$out['volksverzekeringenCents'];
+			$this->zvwCents = (int)$out['zvwCents'];
+			$this->zvwMode = (string)$out['zvwMode'];
+			$this->zvwRate = (float)$out['zvwRate'];
+			$this->appliedTaxRate = (float)$out['appliedTaxRate'];
+			$this->nettoPayCents = (int)$out['nettoPayCents'];
+			$this->vakantiegeldReservedCents = (int)$out['vakantiegeldReservedCents'];
+			$this->vakantiegeldRate = (float)$out['vakantiegeldRate'];
+			$this->awfCents = (int)$out['awfCents'];
+			$this->aofCents = (int)$out['aofCents'];
+			$this->wkoCents = (int)$out['wkoCents'];
+			$this->whkCents = (int)$out['whkCents'];
+			$this->werknemersverzekeringenCents = (int)$out['werknemersverzekeringenCents'];
+			$this->employerChargesCents = (int)$out['employerChargesCents'];
+			$this->aboveLmax = (bool)$out['aboveLmax'];
+			$this->taxableWageCents = (int)$out['taxableWageCents'];
+			$this->premiumWageCents = (int)$out['premiumWageCents'];
+			$this->rvuFinalLevyCents = (int)($out['rvuFinalLevyCents'] ?? 0);
+
+			return;
+		}
+
 		$this->grossPayCents = $out->gross();
 		$this->loonheffingCents = $out->cents('loonheffing');
 		$this->arbeidskortingCents = $out->cents('arbeidskorting');
@@ -257,6 +283,40 @@ final class CalculationResult {
 		$this->rvuFinalLevyCents = self::optionalStepCents(out: $out, id: 'rvuEindheffing');
 
 	}//end __construct()
+
+	/**
+	 * Two calculations of one payslip as one: the four weeks of an extended
+	 * period 13 and its week 53, each taxed with its own tijdvak
+	 * (payroll-period-edge-cases D3). Amounts and wages add up; the mode and
+	 * rates are the four weeks', and the payslip is above the Lmax when
+	 * either part is.
+	 *
+	 * @param self $fourWeeks The weeks 49 to 52, tijdvak vierweken.
+	 * @param self $week53    Week 53, tijdvak week.
+	 *
+	 * @return self
+	 *
+	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 */
+	public static function combined(self $fourWeeks, self $week53): self {
+		$sum = [];
+		foreach (['grossPayCents', 'loonheffingCents', 'arbeidskortingCents', 'volksverzekeringenCents', 'zvwCents', 'nettoPayCents', 'vakantiegeldReservedCents', 'awfCents', 'aofCents', 'wkoCents', 'whkCents', 'werknemersverzekeringenCents', 'employerChargesCents', 'taxableWageCents', 'premiumWageCents', 'rvuFinalLevyCents'] as $field) {
+			$sum[$field] = ($fourWeeks->$field + $week53->$field);
+		}
+
+		return new self(
+			array_merge(
+				$sum,
+				[
+					'zvwMode' => $fourWeeks->zvwMode,
+					'zvwRate' => $fourWeeks->zvwRate,
+					'appliedTaxRate' => $fourWeeks->appliedTaxRate,
+					'vakantiegeldRate' => $fourWeeks->vakantiegeldRate,
+					'aboveLmax' => ($fourWeeks->aboveLmax === true || $week53->aboveLmax === true),
+				]
+			)
+		);
+	}//end combined()
 
 	/**
 	 * A binding in cents, or 0 when the pack does not declare it (a third-party

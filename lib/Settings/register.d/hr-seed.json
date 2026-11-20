@@ -3642,6 +3642,21 @@
             {
                 "@self": {
                     "register": "humaniq",
+                    "schema": "hrAdministration",
+                    "slug": "example-adm-007"
+                },
+                "administrationId": "ADM-007",
+                "name": "Example: Vierweken B.V.",
+                "kvkNumber": "66778899",
+                "loonheffingennummer": "000000000L07",
+                "active": true,
+                "payFrequency": "four-weekly",
+                "week53Handling": "extend-period-13",
+                "_note": "payroll-period-edge-cases (design.md Seed data, reconciled to HEAD -- ADM-005 and ADM-006 were already taken): a four-weekly administration that pays ISO week 53 on period 13, so a 2026-P13 run (2026 has week 53) shows both calculations on one payslip."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
                     "schema": "IkbBudget",
                     "slug": "ikbbudget-jansen-2026"
                 },
@@ -3654,6 +3669,25 @@
                 "balance": 1900.0,
                 "accruedRunIds": [],
                 "_note": "payroll-reservation-payouts (design.md Seed data): five months of 10% of 3800.00, so the approved 800.00 payout below fits the balance."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-vierweken"
+                },
+                "gender": "woman",
+                "employeeNumber": "EMP-0701",
+                "firstName": "Fenna",
+                "lastName": "Vierweken",
+                "dateOfBirth": "1992-05-04",
+                "startDate": "2025-01-06",
+                "grossMonthlySalary": 3250.0,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-007",
+                "_note": "payroll-period-edge-cases: the one employee of the four-weekly ADM-007; her monthly salary is paid as 3250 x 12 / 13 per four weeks."
             },
             {
                 "@self": {
@@ -3694,6 +3728,20 @@
                 "@self": {
                     "register": "humaniq",
                     "schema": "EmploymentContract",
+                    "slug": "contract-vierweken-1"
+                },
+                "employeeId": "@ref:employee-vierweken",
+                "type": "permanent",
+                "startDate": "2025-01-06",
+                "writtenContract": true,
+                "hoursPerWeek": 36,
+                "awfTariff": "low",
+                "administrationId": "ADM-007"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
                     "slug": "contract-wethouder-ambt"
                 },
                 "employeeId": "@ref:employee-wethouder",
@@ -3707,6 +3755,29 @@
                 "hoursPerWeek": 36,
                 "awfTariff": "low",
                 "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "PayrollOpeningBalance",
+                    "slug": "opening-balance-degroot-2026"
+                },
+                "employeeId": "@ref:employee-degroot",
+                "administrationId": "ADM-001",
+                "year": 2026,
+                "lastPeriodInPrevious": "2026-06",
+                "grossWage": 18600.0,
+                "loonheffing": 3540.0,
+                "zvwWithheld": 0.0,
+                "zvwBijdrageloon": 18600.0,
+                "premieloon": 18600.0,
+                "vakantiegeldReserved": 1488.0,
+                "vakantiegeldPaid": 1488.0,
+                "pensionContribution": 0.0,
+                "payPeriodCount": 6,
+                "source": "Example: previous payroll package",
+                "importedAt": "2026-07-01T09:00:00Z",
+                "_note": "payroll-period-edge-cases (design.md Seed data): six months (3100 x 6) the previous package paid before ADM-001 moved to humaniq in July 2026; the 2026 annual statement adds them to humaniq's payslips."
             },
             {
                 "@self": {

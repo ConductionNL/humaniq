@@ -96,9 +96,10 @@
     },
     "werknemersverzekeringen": {
       "maximumpremieloon": {
-        "value": {"jaar": 79409, "maand": 6617.41, "vierweken": 6108.38},
+        "value": {"jaar": 79409, "maand": 6617.41, "vierweken": 6108.38, "week": 1527.10},
         "source": "RPP2026",
-        "verified": true
+        "verified": true,
+        "note": "week = jaar / 52, rounded to the cent, as vierweken = jaar x 4 / 52 (payroll-period-edge-cases D2)."
       },
       "awf": {"value": {"laag": 2.74, "hoog": 7.74}, "source": "RPP2026", "verified": true},
       "aof": {"value": {"laag": 6.27, "hoog": 7.63}, "source": "RPP2026", "verified": true, "note": "Aof small/other-employer classification is per-employer; both rates are verified, selection is engine input in payroll-core-engine."},
@@ -208,7 +209,7 @@
         "note": "Maximum 5 years (60 months) from the first working day in NL; prior NL employment/stay is deducted from the 5 years (not modelled -- MVP non-goal, 30-procent-regeling)."
       },
       "aftoppingsgrens": {
-        "value": {"jaar": 262000, "maand": 21833.33},
+        "value": {"jaar": 262000, "maand": 21833.33, "vierweken": 20153.85, "week": 5038.46},
         "source": "WNT-norm (Balkenende-norm) 2026 -- unconditional for every 30%-ruling from 1 Jan 2026 (transitional carve-out expired 31 Dec 2025)",
         "verified": true,
         "note": "Fixes the pre-existing nl-30-regeling-aftoppingsgrens rule's placeholder cap amount. maand = jaar / 12, rounded to the cent, the maximumpremieloon.maand precedent (30-procent-regeling)."

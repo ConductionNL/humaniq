@@ -83,19 +83,25 @@ class NlPackTest extends TestCase {
 	 * self-test block is the 12 existing fixtures (the original 9, the
 	 * 30%-ruling anchor, the withheld Zvw and the RVU final levy) —
 	 * referenced, never copied. If a fixture is added, it belongs here too.
+	 * Every fixture is monthly; the four-weekly and weekly periods are the
+	 * inline vectors after them (payroll-period-edge-cases 2.2).
 	 *
 	 * @return void
 	 */
 	public function testTheNlPackDeclaresAllTenGoldenFixturesAsItsOwnVectors(): void {
 		$vectors = $this->pack()->selfTest()['vectors'];
+		$fixtures = array_values(array_filter($vectors, static fn (array $vector): bool => array_key_exists('$fixture', $vector)));
 
-		// The twelve fixtures plus three inline special-rate and end-of-year
-		// vectors (payroll-reservation-payouts).
-		$this->assertCount(15, $vectors);
-		$inline = array_values(array_filter($vectors, static fn (array $v): bool => isset($v['$fixture']) === false));
-		$this->assertCount(3, $inline);
-		$this->assertSame(184115, $inline[0]['expected']['@step.loonheffingBijzonder']);
-		$this->assertSame(24990, $inline[2]['expected']['@step.eindejaarsuitkering']);
+		// The twelve fixtures, the four four-weekly and weekly inline vectors
+		// (payroll-period-edge-cases 2.2), then the three inline special-rate
+		// and end-of-year vectors (payroll-reservation-payouts).
+		$this->assertCount(19, $vectors);
+		$this->assertCount(12, $fixtures);
+		$this->assertSame(['2026-P05', '2026-W20', '2026-P05', '2026-W20'], array_column(array_slice($vectors, 12, 4), 'period'));
+		$special = array_slice($vectors, 16);
+		$this->assertCount(3, $special);
+		$this->assertSame(184115, $special[0]['expected']['@step.loonheffingBijzonder']);
+		$this->assertSame(24990, $special[2]['expected']['@step.eindejaarsuitkering']);
 		$this->assertSame(
 			[
 				'payroll-2026/anchor.json',
@@ -111,7 +117,7 @@ class NlPackTest extends TestCase {
 				'payroll-2026/zvw-inhouding.json',
 				'payroll-2026/rvu-final-levy.json',
 			],
-			array_values(array_filter(array_column($vectors, '$fixture')))
+			array_column($fixtures, '$fixture')
 		);
 
 	}//end testTheNlPackDeclaresAllTenGoldenFixturesAsItsOwnVectors()
