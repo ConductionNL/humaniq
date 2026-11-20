@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-003
  */
 
 declare(strict_types=1);
