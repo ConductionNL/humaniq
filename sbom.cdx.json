@@ -15687,8 +15687,8 @@
     {
       "type": "library",
       "name": "enhanced-resolve",
-      "version": "5.25.1",
-      "bom-ref": "humaniq@0.1.0|enhanced-resolve@5.25.1",
+      "version": "5.27.0",
+      "bom-ref": "humaniq@0.1.0|enhanced-resolve@5.27.0",
       "licenses": [
         {
           "license": {
@@ -15696,15 +15696,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/enhanced-resolve@5.25.1",
+      "purl": "pkg:npm/enhanced-resolve@5.27.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/enhanced-resolve/-/enhanced-resolve-5.25.1.tgz",
+          "url": "https://registry.npmjs.org/enhanced-resolve/-/enhanced-resolve-5.27.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "9c65edb39ce72739963eefa6204f62cc23b3760eb7a0971ada60f3196593b61eecaf86824e829ca32155050c0def9223e4f7faa79d74130913a958934730d5fb"
+              "content": "0e8e81076c7395c73fa1d160f97118ca7780c784ff59fcb03bbd72c3d78f4b6b557d1b1fec9551e2651e10b69d21e1f38b19336c6e43a65ba21053e2d9619f61"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -22881,8 +22881,8 @@
     {
       "type": "library",
       "name": "minimizer-webpack-plugin",
-      "version": "5.8.0",
-      "bom-ref": "humaniq@0.1.0|minimizer-webpack-plugin@5.8.0",
+      "version": "5.14.0",
+      "bom-ref": "humaniq@0.1.0|minimizer-webpack-plugin@5.14.0",
       "licenses": [
         {
           "license": {
@@ -22890,15 +22890,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/minimizer-webpack-plugin@5.8.0",
+      "purl": "pkg:npm/minimizer-webpack-plugin@5.14.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/minimizer-webpack-plugin/-/minimizer-webpack-plugin-5.8.0.tgz",
+          "url": "https://registry.npmjs.org/minimizer-webpack-plugin/-/minimizer-webpack-plugin-5.14.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "d9c4fdfa0a097c186d333fa026a7a349fd3d0a58266213e171c45bfdf6f4ced55b8b1b740643bc991b88dba1683cfb94364464ea2103af2580228b9ce56f1e24"
+              "content": "3e7bd05c22718601f665554eecb8f4b0ceaaf0bd571b19d4bddf30550211c22f2484c08bab9c20d0d8317b8e1b72e64bd8548df3545d544ed81c45734cab100d"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -26640,8 +26640,8 @@
     {
       "type": "library",
       "name": "schema-utils",
-      "version": "4.5.0",
-      "bom-ref": "humaniq@0.1.0|schema-utils@4.5.0",
+      "version": "4.8.3",
+      "bom-ref": "humaniq@0.1.0|schema-utils@4.8.3",
       "licenses": [
         {
           "license": {
@@ -26649,15 +26649,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/schema-utils@4.5.0",
+      "purl": "pkg:npm/schema-utils@4.8.3",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/schema-utils/-/schema-utils-4.5.0.tgz",
+          "url": "https://registry.npmjs.org/schema-utils/-/schema-utils-4.8.3.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "cc994c099d1c011e69fd8e28569468aa2a03309706c5a5d1ad0ff8acfe16c91f38bdce73fc3a255dd6ef5de0e94f06eda1c0c5af6ae13ea1cf12b0c252dcf690"
+              "content": "a887e8ddffa544daa730f8295d22af521b13de963953ea699a01abe23f0b6a714fdd6fd97bec63f0363f74f6f9a95bb79baa8520cc8c58a5512cd2b1acd8715a"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -28525,8 +28525,8 @@
     {
       "type": "library",
       "name": "tapable",
-      "version": "2.3.3",
-      "bom-ref": "humaniq@0.1.0|tapable@2.3.3",
+      "version": "2.3.4",
+      "bom-ref": "humaniq@0.1.0|tapable@2.3.4",
       "licenses": [
         {
           "license": {
@@ -28534,15 +28534,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/tapable@2.3.3",
+      "purl": "pkg:npm/tapable@2.3.4",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/tapable/-/tapable-2.3.3.tgz",
+          "url": "https://registry.npmjs.org/tapable/-/tapable-2.3.4.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "bb173fce9a8583ac7b0bcbce13b961e8b6dd6bc7842fdce6566fcf2de4cf051861d710a0756690f89d42522786a487e6d8776db14a51bfe1ec8626ac04c71ce8"
+              "content": "3471625a701b309c4d36907088eee3255183baa3314fdfe857cbf9ed147e7e00504a19098a5e629c60fcff15b2d218cbc874325f5b6edbb400361973dca06a0a"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -30577,8 +30577,8 @@
     {
       "type": "library",
       "name": "watchpack",
-      "version": "2.5.2",
-      "bom-ref": "humaniq@0.1.0|watchpack@2.5.2",
+      "version": "2.6.4",
+      "bom-ref": "humaniq@0.1.0|watchpack@2.6.4",
       "licenses": [
         {
           "license": {
@@ -30586,15 +30586,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/watchpack@2.5.2",
+      "purl": "pkg:npm/watchpack@2.6.4",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/watchpack/-/watchpack-2.5.2.tgz",
+          "url": "https://registry.npmjs.org/watchpack/-/watchpack-2.6.4.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "ea2ff4d0d0633f8c863ecf9c68a4b245fa5317ff13a2bb2ed0c396de633321b86021215d7abf22ef16ea80794b33026b76237c9dd055dd4035fc07f33d2afe8e"
+              "content": "e47dd371ed867f359b72bf559d2ab26a4db084568e370e017662390439cc5e895de2a4a508577ae1768c404491876be40ca99d524bfaad4a35ed4bd9f5ff675f"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -30744,8 +30744,8 @@
     {
       "type": "library",
       "name": "webpack-sources",
-      "version": "3.5.1",
-      "bom-ref": "humaniq@0.1.0|webpack-sources@3.5.1",
+      "version": "3.7.0",
+      "bom-ref": "humaniq@0.1.0|webpack-sources@3.7.0",
       "licenses": [
         {
           "license": {
@@ -30753,15 +30753,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/webpack-sources@3.5.1",
+      "purl": "pkg:npm/webpack-sources@3.7.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/webpack-sources/-/webpack-sources-3.5.1.tgz",
+          "url": "https://registry.npmjs.org/webpack-sources/-/webpack-sources-3.7.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "8f2ba218976dbd8e37e33e5b519ae3cfaeefefafde3cdbc5653a7d31dcf6f48947e3e18fb20c868e2bf47ca23e33b05d914e800e3ba551c280777b542b75a513"
+              "content": "3dd5216c2c9cc048224b5841fc504392c58a83f6ac84022e24aab075b3e7f3f7455605392f142206f1b48ece954512333ee8ccad2b5809ccf2c29f363f42969e"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -30810,8 +30810,8 @@
     {
       "type": "library",
       "name": "webpack",
-      "version": "5.111.1",
-      "bom-ref": "humaniq@0.1.0|webpack@5.111.1",
+      "version": "5.112.2",
+      "bom-ref": "humaniq@0.1.0|webpack@5.112.2",
       "licenses": [
         {
           "license": {
@@ -30819,15 +30819,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/webpack@5.111.1",
+      "purl": "pkg:npm/webpack@5.112.2",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/webpack/-/webpack-5.111.1.tgz",
+          "url": "https://registry.npmjs.org/webpack/-/webpack-5.112.2.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "70dca96b3d113fe4b872f4158b533fddb45492f34fd316692f44e3171f9cea383ae156f10fedb07960e063d5278d123a761660b5a8fc0d4efa18615c27bf713d"
+              "content": "076b69d4b23d0fc195a4f0eaa6b76dd76ba44e45d76a18fd333a92589ab87da48f80e50cec2759686001e87acbffc13a5306c1a5d8f8bf35836caa059d5a14ea"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -30844,7 +30844,7 @@
           "type": "library",
           "name": "mime-db",
           "version": "1.54.0",
-          "bom-ref": "humaniq@0.1.0|webpack@5.111.1|mime-db@1.54.0",
+          "bom-ref": "humaniq@0.1.0|webpack@5.112.2|mime-db@1.54.0",
           "licenses": [
             {
               "license": {
