@@ -196,5 +196,28 @@
 				"billable": false
 			}
 		}
+	],
+	"views": [
+		{
+			"key": "contracten-einde-kwartaal",
+			"data": {
+				"name": "Contracts ending within three months",
+				"description": "Employment contracts whose end date falls in the coming three months, soonest first. Shared, so every colleague finds it under My reports.",
+				"owner": "{{cast:anouk.uid}}",
+				"isPublic": true,
+				"query": {
+					"registers": ["humaniq"],
+					"schemas": ["EmploymentContract"],
+					"filters": {
+						"endDate[gte]": "{{date:0}}",
+						"endDate[lte]": "{{date:91}}"
+					},
+					"search": "",
+					"sort": [
+						{"key": "endDate", "order": "asc"}
+					]
+				}
+			}
+		}
 	]
 }

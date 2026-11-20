@@ -2904,7 +2904,8 @@
 				},
 				"filters": [
 					"type",
-					"awfTariff"
+					"awfTariff",
+					"endDate"
 				],
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
