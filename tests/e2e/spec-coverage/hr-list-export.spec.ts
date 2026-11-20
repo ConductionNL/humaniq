@@ -215,6 +215,7 @@ test.describe('exporting a humaniq list', () => {
 		await admin.dispose()
 	})
 
+	// @e2e hr-list-export::hr-exports-all-active-employees
 	test('the export holds every row the Employees list is filtered to, not only the fetched page @spec REQ-HLE-001', async ({ page }) => {
 		await page.goto('/index.php/apps/humaniq/employees?taxTableColor=white', { waitUntil: 'domcontentloaded' })
 		const search = page.getByRole('searchbox').or(page.getByPlaceholder(/search|zoek/i)).first()
@@ -226,6 +227,7 @@ test.describe('exporting a humaniq list', () => {
 		expect(lines.filter((line) => line.includes(`Groen-${RUN_ID}`)), 'the filter leaves the green-table employees out').toHaveLength(0)
 	})
 
+	// @e2e hr-list-export::a-self-service-list-exports-only-the-users-own-rows
 	test('an employee exporting their own expenses gets only their own claims @spec REQ-HLE-001', async ({ browser }) => {
 		const page = await loginAs(browser, { username: EMPLOYEE_USER, password: EMPLOYEE_PASS })
 		await page.goto('/index.php/apps/humaniq/expenses?userId=@me', { waitUntil: 'domcontentloaded' })
@@ -237,6 +239,7 @@ test.describe('exporting a humaniq list', () => {
 		await page.context().close()
 	})
 
+	// @e2e hr-list-export::the-sick-leave-list-has-no-export
 	test('the sick leave list shows no Export menu, while the Employees list does @spec REQ-HLE-002', async ({ page }) => {
 		// The positive control first, so an absent menu below cannot pass because
 		// the page never rendered its action bar.
