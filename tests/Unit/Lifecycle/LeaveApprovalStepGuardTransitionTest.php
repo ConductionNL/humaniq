@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
+ * @spec openspec/specs/leave-management/spec.md
  */
 
 declare(strict_types=1);

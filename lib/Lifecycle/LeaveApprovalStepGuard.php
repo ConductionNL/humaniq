@@ -32,7 +32,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
+ * @spec openspec/specs/leave-management/spec.md
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use OCP\IGroupManager;
 /**
  * Which approval step a leave request is at, and who may take it.
  *
- * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
+ * @spec openspec/specs/leave-management/spec.md
  */
 final class LeaveApprovalStepGuard implements LifecycleTransitionGuardInterface {
 
@@ -97,7 +97,7 @@ final class LeaveApprovalStepGuard implements LifecycleTransitionGuardInterface 
 	 *
 	 * @return GuardResult
 	 *
-	 * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
+	 * @spec openspec/specs/leave-management/spec.md
 	 */
 	public function checkTransition(LifecycleGuardContext $context): GuardResult {
 		$stored  = $context->storedData();
@@ -120,7 +120,7 @@ final class LeaveApprovalStepGuard implements LifecycleTransitionGuardInterface 
 	 *
 	 * @return GuardResult
 	 *
-	 * @spec openspec/changes/leave-approval-steps-and-history/specs/leave-management/spec.md
+	 * @spec openspec/specs/leave-management/spec.md
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		$selfApproval = (new NoSelfApprovalGuard())->check($object, $action, $userId);

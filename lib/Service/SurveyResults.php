@@ -23,7 +23,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-003
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ namespace OCA\Humaniq\Service;
 /**
  * Fold and summarise survey responses.
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-003
  */
 class SurveyResults {
 
@@ -62,7 +62,7 @@ class SurveyResults {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-003
 	 */
 	public static function minimumOf(array $survey): int {
 		return max(3, (int)($survey['minGroupSize'] ?? self::DEFAULT_MIN));
@@ -77,7 +77,7 @@ class SurveyResults {
 	 *
 	 * @return array{responses: int, minGroupSize: int, overall: list<array<string, mixed>>, units: list<array<string, mixed>>, notes: list<string>, rows: list<array<string, mixed>>}
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-003
 	 */
 	public function compute(array $survey, array $responses, array $unitNames): array {
 		$run = new SurveyResultsRun();

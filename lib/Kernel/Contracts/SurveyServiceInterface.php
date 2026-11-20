@@ -46,7 +46,7 @@ interface SurveyServiceInterface {
 	 *
 	 * @return array{status: int, message: string|null, invited: int, withoutAccount: int}
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
 	 */
 	public function open(string $surveyId, string $today): array;
 
@@ -61,7 +61,7 @@ interface SurveyServiceInterface {
 	 *
 	 * @return array{status: int, message: string|null}
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function respond(string $surveyId, string $uid, array $answers, string $today): array;
 
@@ -72,7 +72,7 @@ interface SurveyServiceInterface {
 	 *
 	 * @return array<string, mixed>|null Null when the survey does not exist.
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-003
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-003
 	 */
 	public function results(string $surveyId): ?array;
 }//end interface

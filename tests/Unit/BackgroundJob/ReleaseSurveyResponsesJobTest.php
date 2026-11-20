@@ -17,7 +17,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * @covers \OCA\Humaniq\BackgroundJob\ReleaseSurveyResponsesJob
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
  */
 class ReleaseSurveyResponsesJobTest extends TestCase {
 

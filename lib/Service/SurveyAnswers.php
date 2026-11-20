@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ namespace OCA\Humaniq\Service;
 /**
  * Clean the answers to a survey.
  *
- * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+ * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
  */
 class SurveyAnswers {
 
@@ -50,7 +50,7 @@ class SurveyAnswers {
 	 *
 	 * @return array{answers: array<string, int|string>, missing: list<string>}
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function clean(array $questions, array $answers): array {
 		$out = ['answers' => [], 'missing' => []];
@@ -123,7 +123,7 @@ class SurveyAnswers {
 	 *
 	 * @return array{0: int, 1: int}
 	 *
-	 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-002
+	 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-002
 	 */
 	public function range(array $question): array {
 		if (($question['type'] ?? '') === 'recommend') {

@@ -37,7 +37,7 @@ export default {
 		 * The kinds of question a survey can ask.
 		 *
 		 * @return {Array<{type: string, label: string}>}
-		 * @spec openspec/changes/talent-engagement-surveys/specs/engagement-surveys/spec.md#REQ-SRV-001
+		 * @spec openspec/specs/engagement-surveys/spec.md#REQ-SRV-001
 		 */
 		types() {
 			return [
