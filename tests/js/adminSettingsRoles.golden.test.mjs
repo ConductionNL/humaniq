@@ -30,6 +30,10 @@ export const CnSettingsSection = {}
 export const NcButton = {}
 export const NcCheckboxRadioSwitch = {}
 export const NcTextField = {}
+export const auditLinks = () => null
+export const auditSentence = () => ''
+export const auditUrls = () => ({})
+export const loadAuditEntries = async () => ({ registerId: 0, entries: [] })
 export const allowedAfterToggle = () => []
 export const loadCategories = async () => []
 export const saveCategories = async () => []
