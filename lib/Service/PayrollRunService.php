@@ -182,6 +182,7 @@ use OCA\Humaniq\Payroll\SickPayInput;
 use OCA\Humaniq\Payroll\SickPayResult;
 use OCA\Humaniq\Payroll\SickPayTiming;
 use OCA\Humaniq\Payroll\SickPayWage;
+use OCA\Humaniq\Payroll\SpecialPayment;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
@@ -266,6 +267,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		'paidTimesheets' => [],
 		'paidClaimIds' => [],
 		'wkrRows' => [],
+		'reservationPaid' => [],
+		'heldPayouts' => [],
 		'paidLeavers' => [],
 		'allocatable' => [],
 		'computed' => [],
@@ -296,6 +299,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @param CaoComponentPayService|null $caoComponents The CAO components a contract names (payroll-cao-components D3); null runs without them.
 	 * @param CostAllocationService|null $costAllocation Splits each payslip's wage costs over cost centres and projects (payroll-cost-allocation D3); null runs without it.
 	 * @param AwfReviewService|null $awfReview Reviews the low Awf premium before the run reads its adjustments (filings-premium-differentiation D2/D3); null runs without it.
+	 * @param ReservationPayoutRunService|null $reservations Pays out the holiday allowance, end-of-year and IKB reserves (payroll-reservation-payouts); null runs without it.
 	 * @param PayslipLineageService|null $lineage Writes each payslip's source-carrying lines (payroll-mutation-lineage D1); null runs without it.
 	 * @param FinalLeavePayoutService|null $leavePayout Pays a leaver's open leave balance on the final payslip (REQ-OFC-005); null runs without it.
 	 *
@@ -317,6 +321,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		private readonly ?CaoComponentPayService $caoComponents = null,
 		private readonly ?CostAllocationService $costAllocation = null,
 		private readonly ?AwfReviewService $awfReview = null,
+		private readonly ?ReservationPayoutRunService $reservations = null,
 		private readonly ?PayslipLineageService $lineage = null,
 		private readonly ?FinalLeavePayoutService $leavePayout = null,
 	) {
@@ -587,6 +592,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$state['vehicleAssets'] = $this->vehicleAssetsById();
 		$state['hours'] = $this->hoursInputs(period: $period);
 		$state['expenseInputs'] = $this->expenses?->inputs(norm: $this->expenses->normFrom($state['tables']));
+		$state['reservationInputs'] = $this->reservations?->inputs(run: ['period' => $period, 'administrationId' => $state['administrationId'], 'runId' => $state['runId'], 'tables' => $state['tables']]);
 
 		return array_merge($state, self::EMPTY_TALLY);
 	}//end withRunInputs()
@@ -886,6 +892,10 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @return array<string, mixed> The slip with its input, result and net.
 	 */
 	private function calculateSlip(array $state, array $slip): array {
+		// payroll-reservation-payouts: the reserves due this period, paid as
+		// a special payment beside the regular wage. Not wired -> null and
+		// the input carries no special part.
+		$slip['reservations'] = ($state['reservationInputs'] === null ? null : $this->reservations?->foldFor(inputs: $state['reservationInputs'], slip: $slip));
 		$slip['input'] = $this->calculationInput(state: $state, slip: $slip);
 		$slip['result'] = $this->calculator->calculate($slip['input'], $state['tables']);
 		$slip = $this->withWeek53(state: $state, slip: $slip);
@@ -910,7 +920,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		// beslagvrije voet protects the employee's actual take-home this
 		// period, never an intermediate figure a same-period
 		// nabetaling/leave-payout would still inflate past.
-		$slip['nettoPaySoFarCents'] = ($slip['result']->nettoPayCents + $slip['retroAdjustment']['net'] + $slip['expenseNetCents']);
+		$slip['nettoPaySoFarCents'] = ($slip['result']->nettoPayCents + $slip['retroAdjustment']['net'] + $slip['expenseNetCents'] + (int)($slip['reservations']['untaxedCents'] ?? 0));
 		$slip['loonbeslag'] = $this->activeLoonbeslagFor($slip['employee'], $state['loonbeslagen'], $state['period']);
 		$slip['loonbeslagDeductionCents'] = ($slip['loonbeslag'] !== null) ? $this->loonbeslagDeductionCents($slip['loonbeslag'], $slip['nettoPaySoFarCents'], $state['period']) : 0;
 
@@ -940,9 +950,31 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			levies: new CalculationLevies(
 				wageTax: new WageTaxElection(taxTableColor: $taxTableColor, loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true), thirtyPercentRulingRate: ((($employee['thirtyPercentRulingGranted'] ?? false) === true) ? (float)($employee['thirtyPercentRulingRate'] ?? 0.0) : 0.0)),
 				insurance: new InsuranceTariffs(awfTariff: $slip['awf']['tariff'], aofTariff: $state['aofTariff'], whkPercentage: $state['whkPercentage'], verzekeringsplichtig: $insured, zvwMode: $zvwMode)
-			)
+			),
+			special: self::specialPaymentOf(fold: $slip['reservations'])
 		);
 	}//end calculationInput()
+
+	/**
+	 * The special part of the input from the reservation fold, or none.
+	 *
+	 * @param array<string, mixed>|null $fold The reservation fold.
+	 *
+	 * @return SpecialPayment|null
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 */
+	private static function specialPaymentOf(?array $fold): ?SpecialPayment {
+		if ($fold === null) {
+			return null;
+		}
+
+		return new SpecialPayment(
+			specialPaymentCents: (int)$fold['specialCents'],
+			annualWageReferenceCents: (int)$fold['annualWageReferenceCents'],
+			endOfYearRate: (float)$fold['endOfYearRate']
+		);
+	}//end specialPaymentOf()
 
 	/**
 	 * The table colour, whether the employee is insured and the Zvw mode: the
@@ -998,6 +1030,12 @@ class PayrollRunService implements PayrollRunServiceInterface {
 
 		$slip['payslipId'] = $this->idOf($saved);
 		$this->tallySlip(state: $state, slip: $slip);
+		if ($slip['reservations'] !== null) {
+			$state['reservationPaid'][] = ['employeeId' => $slip['employeeId'], 'userId' => ($payload['userId'] ?? null), 'payslipId' => $slip['payslipId'], 'fold' => $slip['reservations']];
+			foreach ($slip['reservations']['held'] as $held) {
+				$state['heldPayouts'][] = array_merge($held, ['employee' => $slip['label']]);
+			}
+		}
 		$this->recordLineage(state: $state, slip: $slip, saved: $saved);
 
 		return null;
@@ -1055,6 +1093,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			$this->awfFields(awf: $slip['awf'], employeeId: $slip['employeeId'], contracts: $slip['employeeContracts'], period: $state['period'], paidHours: $slip['awfPaidHours']),
 			($this->caoComponents?->payslipFields(fold: $slip['caoFold']) ?? []),
 			$this->expenseFields(fold: $slip['expenseFold'], netCents: ($slip['nettoPaySoFarCents'] - $slip['loonbeslagDeductionCents'])),
+			$this->reserveNetFields(slip: $slip),
 			$this->regimeFields(regimeKey: ($slip['regimeKey'] ?? null), result: $slip['result']),
 		];
 		foreach ($fieldSets as $fields) {
@@ -1107,9 +1146,9 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$state['allocatable'][] = ['payslipId' => $slip['payslipId'], 'employeeId' => $slip['employeeId'], 'grossCents' => ($result->grossPayCents + $retro['gross']), 'chargesCents' => ($result->employerChargesCents + $retro['employerCharges'])];
 
 		$state['totals']['gross'] += ($result->grossPayCents + $retro['gross']);
-		$state['totals']['loonheffing'] += ($result->loonheffingCents + $retro['loonheffing']);
+		$state['totals']['loonheffing'] += ($result->loonheffingCents + $result->specialLoonheffingCents + $retro['loonheffing']);
 		$state['totals']['employerCharges'] += ($result->employerChargesCents + $retro['employerCharges']);
-		$state['totals']['withholdings'] += ($result->loonheffingCents + $retro['loonheffing']);
+		$state['totals']['withholdings'] += ($result->loonheffingCents + $result->specialLoonheffingCents + $retro['loonheffing']);
 		$state['totals']['net'] += ($slip['nettoPaySoFarCents'] - $slip['loonbeslagDeductionCents']);
 		$state['totals']['reimbursements'] += $slip['expenseNetCents'];
 	}//end tallySlip()
@@ -1164,6 +1203,10 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		if ($this->expenses !== null && $state['expenseInputs'] !== null) {
 			$this->expenses->stampClaims(expenses: $state['expenseInputs']['expenses'], paidIds: $state['paidClaimIds'], runId: $state['runId'], period: $state['period']);
 			$this->expenses->writeWkr(inputs: $state['expenseInputs'], rows: $state['wkrRows'], administrationId: $state['administrationId']);
+		}
+
+		if ($this->reservations !== null && $state['reservationInputs'] !== null) {
+			$this->reservations->write(inputs: $state['reservationInputs'], paid: $state['reservationPaid']);
 		}
 	}//end stampPaidSources()
 
@@ -1222,6 +1265,9 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$outcome = $this->outcome($runId, $state['period'], $state['administrationId'], 'calculated', sprintf('%d loonstro(o)k(en) berekend, %d overgeslagen.', count($state['computed']), count($state['skipped'])));
 		$outcome['computed'] = $state['computed'];
 		$outcome['skipped'] = $state['skipped'];
+		if ($state['heldPayouts'] !== []) {
+			$outcome['heldPayouts'] = $state['heldPayouts'];
+		}
 		$outcome['check'] = $this->runTheCheck(runId: $runId, skipped: $state['skipped']);
 		$outcome['allocationLines'] = $this->allocateCosts(runId: $runId, period: $state['period'], administrationId: $state['administrationId'], payslips: $state['allocatable']);
 		$outcome['totals'] = $this->euroTotals($state['totals']);
@@ -1759,8 +1805,74 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			];
 		}
 
-		return $payload;
+		return array_merge($payload, self::reservationFields(result: $result), self::reserveFoldFields(fold: ($slip['reservations'] ?? null)));
 	}//end payslipPayload()
+
+	/**
+	 * The net pay when an untaxed IKB goal is paid with it
+	 * (payroll-reservation-payouts D8): after the calculation, like an
+	 * untaxed allowance, and before the garnishment.
+	 *
+	 * @param array<string, mixed> $slip The calculated slip.
+	 *
+	 * @return array<string, float>
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-individual-choice-budget-shall-accrue-and-be-spent-by-approved-request-req-rsp-004
+	 */
+	private function reserveNetFields(array $slip): array {
+		if ((int)($slip['reservations']['untaxedCents'] ?? 0) <= 0) {
+			return [];
+		}
+
+		return ['nettoPay' => $this->euros(($slip['nettoPaySoFarCents'] - $slip['loonbeslagDeductionCents']))];
+	}//end reserveNetFields()
+
+	/**
+	 * The annual wage, IKB accrual and untaxed IKB payment of a payslip, only
+	 * when they carry an amount (payroll-reservation-payouts D3, D8).
+	 *
+	 * @param array<string, mixed>|null $fold The reservation fold.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-individual-choice-budget-shall-accrue-and-be-spent-by-approved-request-req-rsp-004
+	 */
+	private static function reserveFoldFields(?array $fold): array {
+		$fields = [];
+		foreach (['annualWageReferenceCents' => 'annualWageReference', 'ikbAccruedCents' => 'ikbAccrued', 'untaxedCents' => 'ikbUntaxedPayment'] as $key => $field) {
+			if ((int)($fold[$key] ?? 0) > 0) {
+				$fields[$field] = round(((int)$fold[$key] / 100), 2);
+			}
+		}
+
+		return $fields;
+	}//end reserveFoldFields()
+
+	/**
+	 * The special-payment and end-of-year fields of a payslip, present only
+	 * when they carry an amount, so a payslip without them is stored exactly
+	 * as before (payroll-reservation-payouts REQ-RSP-001).
+	 *
+	 * @param CalculationResult $result The calculation.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 */
+	private static function reservationFields(CalculationResult $result): array {
+		$fields = [];
+		if ($result->specialPaymentCents > 0) {
+			$fields['specialPayment'] = round(($result->specialPaymentCents / 100), 2);
+			$fields['specialTaxRate'] = $result->specialTaxRate;
+			$fields['specialLoonheffing'] = round(($result->specialLoonheffingCents / 100), 2);
+		}
+
+		if ($result->eindejaarsuitkeringReservedCents > 0) {
+			$fields['eindejaarsuitkeringReserved'] = round(($result->eindejaarsuitkeringReservedCents / 100), 2);
+		}
+
+		return $fields;
+	}//end reservationFields()
 
 	/**
 	 * Upsert one engine Payslip: update the existing (payrollRunId,

@@ -84,7 +84,7 @@
         "required": ["id", "op", "incidence"],
         "properties": {
           "id": { "$ref": "#/$defs/identifier" },
-          "op": { "enum": ["rate", "cappedRate", "bracket", "taper", "piecewiseAccrue", "quantize", "clamp", "match", "expr", "phpStep"] },
+          "op": { "enum": ["rate", "cappedRate", "bracket", "band", "taper", "piecewiseAccrue", "quantize", "clamp", "match", "expr", "phpStep"] },
           "incidence": {
             "enum": ["reduces-net", "employer-cost", "informative", "reserve"],
             "description": "What this amount DOES to the payslip. net = gross - sum(reduces-net) is derived by the interpreter; a pack must NOT declare a net step."
@@ -98,7 +98,7 @@
           },
           "params": { "type": "object", "description": "phpStep ONLY: data-only params." },
           "expression": { "type": "string", "maxLength": 2000, "description": "expr ONLY: the closed, total arithmetic grammar. No loops, recursion, IO or clock." },
-          "unit": { "enum": ["euro", "cent"], "description": "bracket ONLY: the unit of the rows' tot/a/c. Required, because the corpus carries no unit marker." },
+          "unit": { "enum": ["euro", "cent"], "description": "bracket and band ONLY: the unit of the rows' tot (and bracket's a/c). Required, because the corpus carries no unit marker." },
           "mode": { "type": "string" },
           "base": {},
           "rate": {},

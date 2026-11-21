@@ -112,6 +112,7 @@ final class PackValidator {
 		'rate' => ['base', 'rate'],
 		'cappedRate' => ['base', 'rate', 'cap'],
 		'bracket' => ['value', 'table', 'unit', 'mode'],
+		'band' => ['value', 'table', 'unit'],
 		'taper' => ['base', 'value', 'threshold', 'rate', 'floor'],
 		'piecewiseAccrue' => ['value', 'segments', 'tail', 'zeroAbove', 'roundTerm'],
 		'quantize' => ['value', 'step', 'mode'],

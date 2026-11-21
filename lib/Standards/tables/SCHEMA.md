@@ -57,6 +57,32 @@ Optional keys on a leaf:
 unconfirmed value must never be silent. Anything the implementer cannot confirm
 against a named primary source keeps `verified: false`.
 
+## Special payments: `bijzondereBeloningen`
+
+The tabel voor bijzondere beloningen (payroll-reservation-payouts D1). A one-off
+payment (a holiday allowance or end-of-year payout, an IKB payout) is taxed at a
+percentage chosen by the employee's annual wage, not as the period's wage. The
+group holds one leaf per table colour, `wit` and `groen`; each leaf's `value` is
+
+```jsonc
+{
+  "belowAow": {"metKorting": [<band>], "zonderKorting": [<band>]},
+  "aowAge":   {"metKorting": [<band>], "zonderKorting": [<band>]}
+}
+```
+
+where a band is `{"tot": <annual wage in euro | null>, "percentage": <0-100>}`,
+ordered by `tot`, the last band with `tot: null` (the open top band). The pack's
+`band` op returns the percentage of the first band whose `tot` reaches the
+annual wage. The columns follow the AOW status and whether the
+loonheffingskorting is applied, as the regular chain does.
+
+While a leaf is `verified: false` (the 2026 bands are derived from the
+regular brackets and credits, not yet transcribed from the published table) or
+`placeholder: true`, the run does not pay a
+special payment from it: the employee is listed with `special-rate-unverified`
+and nothing is taxed with a guessed percentage.
+
 ## Units
 
 Amounts in the data file are **euros with 2 decimals** (human-auditable against

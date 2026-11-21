@@ -182,6 +182,34 @@ final class CalculationResult {
 	public readonly int $premiumWageCents;
 
 	/**
+	 * The one-off payment taxed at the special rate, included in `grossPayCents` (payroll-reservation-payouts D1).
+	 *
+	 * @var integer
+	 */
+	public readonly int $specialPaymentCents;
+
+	/**
+	 * The special-rate percentage applied to it; 0 without a special payment.
+	 *
+	 * @var float
+	 */
+	public readonly float $specialTaxRate;
+
+	/**
+	 * The wage tax withheld on the special payment, apart from `loonheffingCents`.
+	 *
+	 * @var integer
+	 */
+	public readonly int $specialLoonheffingCents;
+
+	/**
+	 * The end-of-year (thirteenth month) reserve this period (D7).
+	 *
+	 * @var integer
+	 */
+	public readonly int $eindejaarsuitkeringReservedCents;
+
+	/**
 	 * The employer's final levy on an early-retirement benefit above the threshold (payroll-special-regimes D4); 0 for any other wage.
 	 *
 	 * @var integer
@@ -221,6 +249,10 @@ final class CalculationResult {
 			$this->aboveLmax = (bool)$out['aboveLmax'];
 			$this->taxableWageCents = (int)$out['taxableWageCents'];
 			$this->premiumWageCents = (int)$out['premiumWageCents'];
+			$this->specialPaymentCents = (int)($out['specialPaymentCents'] ?? 0);
+			$this->specialTaxRate = (float)($out['specialTaxRate'] ?? 0.0);
+			$this->specialLoonheffingCents = (int)($out['specialLoonheffingCents'] ?? 0);
+			$this->eindejaarsuitkeringReservedCents = (int)($out['eindejaarsuitkeringReservedCents'] ?? 0);
 			$this->rvuFinalLevyCents = (int)($out['rvuFinalLevyCents'] ?? 0);
 
 			return;
@@ -244,8 +276,14 @@ final class CalculationResult {
 		$this->werknemersverzekeringenCents = $out->cents('werknemersverzekeringen');
 		$this->employerChargesCents = $out->employerCharges();
 		$this->aboveLmax = (bool)$out->binding('aboveLmax');
-		$this->taxableWageCents = self::optionalCents(out: $out, id: 'belastbaarLoon');
-		$this->premiumWageCents = min(self::optionalCents(out: $out, id: 'belastbaarLoon'), self::optionalCents(out: $out, id: 'premieloonCap'));
+		$this->specialPaymentCents = self::specialPayment(out: $out);
+		$this->specialTaxRate = (float)self::optionalStep(out: $out, id: 'bijzonderPercentage');
+		$this->specialLoonheffingCents = (int)self::optionalStep(out: $out, id: 'loonheffingBijzonder');
+		$this->eindejaarsuitkeringReservedCents = (int)self::optionalStep(out: $out, id: 'eindejaarsuitkering');
+		// A special payment is wage too: it counts in the taxable and the
+		// premium wage the filings report (zero without one, as before).
+		$this->taxableWageCents = (self::optionalCents(out: $out, id: 'belastbaarLoon') + $this->specialPaymentCents);
+		$this->premiumWageCents = min((self::optionalCents(out: $out, id: 'belastbaarLoon') + $this->specialPaymentCents), self::optionalCents(out: $out, id: 'premieloonCap'));
 		$this->rvuFinalLevyCents = self::optionalStepCents(out: $out, id: 'rvuEindheffing');
 
 	}//end __construct()
@@ -266,7 +304,7 @@ final class CalculationResult {
 	 */
 	public static function combined(self $fourWeeks, self $week53): self {
 		$sum = [];
-		foreach (['grossPayCents', 'loonheffingCents', 'arbeidskortingCents', 'volksverzekeringenCents', 'zvwCents', 'nettoPayCents', 'vakantiegeldReservedCents', 'awfCents', 'aofCents', 'wkoCents', 'whkCents', 'werknemersverzekeringenCents', 'employerChargesCents', 'taxableWageCents', 'premiumWageCents', 'rvuFinalLevyCents'] as $field) {
+		foreach (['grossPayCents', 'loonheffingCents', 'arbeidskortingCents', 'volksverzekeringenCents', 'zvwCents', 'nettoPayCents', 'vakantiegeldReservedCents', 'awfCents', 'aofCents', 'wkoCents', 'whkCents', 'werknemersverzekeringenCents', 'employerChargesCents', 'taxableWageCents', 'premiumWageCents', 'specialPaymentCents', 'specialLoonheffingCents', 'eindejaarsuitkeringReservedCents', 'rvuFinalLevyCents'] as $field) {
 			$sum[$field] = ($fourWeeks->$field + $week53->$field);
 		}
 
@@ -277,6 +315,7 @@ final class CalculationResult {
 					'zvwMode' => $fourWeeks->zvwMode,
 					'zvwRate' => $fourWeeks->zvwRate,
 					'appliedTaxRate' => $fourWeeks->appliedTaxRate,
+					'specialTaxRate' => $fourWeeks->specialTaxRate,
 					'vakantiegeldRate' => $fourWeeks->vakantiegeldRate,
 					'aboveLmax' => ($fourWeeks->aboveLmax === true || $week53->aboveLmax === true),
 				]
@@ -296,12 +335,50 @@ final class CalculationResult {
 	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 */
 	private static function optionalCents(PackRunResult $out, string $id): int {
+
 		try {
 			return (int)$out->binding($id);
 		} catch (DslException $e) {
 			return 0;
 		}
 	}//end optionalCents()
+
+	/**
+	 * The part of the gross that is not the regular wage `tvl`: the special
+	 * payment. 0 for a pack without a `tvl` binding, whose gross is all regular.
+	 *
+	 * @param PackRunResult $out The interpreter output.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 */
+	private static function specialPayment(PackRunResult $out): int {
+		try {
+			return max(0, ($out->gross() - (int)$out->binding('tvl')));
+		} catch (DslException $e) {
+			return 0;
+		}
+	}//end specialPayment()
+
+	/**
+	 * A step's value, or 0 when the pack does not declare it (a third-party
+	 * pack need not carry the special-rate steps).
+	 *
+	 * @param PackRunResult $out The interpreter output.
+	 * @param string        $id  The step id.
+	 *
+	 * @return int|float
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 */
+	private static function optionalStep(PackRunResult $out, string $id): int|float {
+		try {
+			return $out->step($id);
+		} catch (DslException $e) {
+			return 0;
+		}
+	}//end optionalStep()
 
 	/**
 	 * A step in cents, or 0 when the pack does not declare it (a third-party

@@ -68,7 +68,7 @@ final class AmountsPart {
 			'OpgRchtVakBsl' => $facts->money('vakantiegeldReserved'),
 			'LnInGld' => $facts->money('grossPay'),
 			'LnOwrk' => $facts->money('overtimePay'),
-			'IngLbPh' => $facts->money('loonheffing'),
+			'IngLbPh' => ($facts->money('loonheffing') + $facts->money('specialLoonheffing')),
 			'BijdrZvw' => ($facts->withheldZvw() === true ? $zvw : 0),
 			'WghZvw' => ($facts->withheldZvw() === true ? 0 : $zvw),
 			'VerrArbKrt' => $facts->money('arbeidskorting'),
@@ -186,7 +186,7 @@ final class AmountsPart {
 			return;
 		}
 
-		if ($facts->result->loonheffingCents !== $facts->money('loonheffing')) {
+		if ($facts->result->loonheffingCents !== $facts->money('loonheffing') || $facts->result->specialLoonheffingCents !== $facts->money('specialLoonheffing')) {
 			$facts->find('payslip-not-reproducible', 'IngLbPh', 'De ingehouden loonheffing op de loonstrook van ' . $facts->name() . ' wijkt af van de herberekening; bereken de loonrun opnieuw.');
 		}
 	}//end checkReproduced()

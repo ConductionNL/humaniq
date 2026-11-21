@@ -80,6 +80,7 @@ Every step is `{id, op, incidence, when?, round?, ...params}`.
 | `rate` | `base, rate` | `base * rate / 100` |
 | `cappedRate` | `base, rate, cap` | `min(base, cap) * rate / 100` |
 | `bracket` | `value, table, unit, mode: affine` | first row where `value <= tot` (`null` = unbounded), then `(value - a) * percentage / 100 + c` |
+| `band` | `value, table, unit` | the `percentage` of the first row where `value <= tot` (`null` = unbounded); applies nothing to the value (the special rate, payroll-reservation-payouts) |
 | `taper` | `base, value, threshold, rate, floor?` | `max(floor, base - max(0, value - threshold) * rate)` |
 | `piecewiseAccrue` | `value, segments[{upTo, rate, cap}], tail{from, rate}?, zeroAbove?, roundTerm` | capped piecewise build-up; each term rounded to `roundTerm` decimals **then** capped at that segment's ceiling; then the tail; then hard zero |
 | `quantize` | `value, step, mode` | round `value` to a multiple of `step` |
@@ -131,7 +132,7 @@ So the **pack declares the unit**:
 "@table.zvw.werkgeversheffing"       // percentage -> passed through
 ```
 
-`bracket` does the same via its required `unit` field, for its rows' `tot`/`a`/`c`.
+`bracket` does the same via its required `unit` field, for its rows' `tot`/`a`/`c`; `band` likewise for its rows' `tot`.
 
 ## `expr` is a calculator, not a language
 

@@ -151,18 +151,28 @@ final class CalculationInput {
 	public readonly float $rvuFinalLevyRate;
 
 	/**
+	 * The special payment and end-of-year rate (payroll-reservation-payouts);
+	 * empty for a period without either.
+	 *
+	 * @var SpecialPayment
+	 */
+	public readonly SpecialPayment $special;
+
+	/**
 	 * The fields stay flat and in this order: the pack mapper, toArray() and
 	 * the stamped engineInputSnapshot read them by name.
 	 *
 	 * @param CalculationWage $wage The gross salary, date of birth, period and jurisdiction.
 	 * @param CalculationLevies $levies The wage tax election and the insurance tariffs.
+	 * @param SpecialPayment|null $special The special payment and end-of-year rate, none by default.
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-001
 	 * @spec openspec/specs/30-procent-regeling/spec.md#REQ-30P-003
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
 	 */
-	public function __construct(CalculationWage $wage, CalculationLevies $levies) {
+	public function __construct(CalculationWage $wage, CalculationLevies $levies, ?SpecialPayment $special = null) {
 		$this->grossMonthlySalaryCents = $wage->grossMonthlySalaryCents;
 		$this->taxTableColor = $levies->wageTax->taxTableColor;
 		$this->loonheffingskortingToegepast = $levies->wageTax->loonheffingskortingToegepast;
@@ -174,6 +184,7 @@ final class CalculationInput {
 		$this->verzekeringsplichtig = $levies->insurance->verzekeringsplichtig;
 		$this->jurisdiction = $wage->jurisdiction;
 		$this->thirtyPercentRulingRate = $levies->wageTax->thirtyPercentRulingRate;
+		$this->special = ($special ?? new SpecialPayment());
 		$this->zvwMode = ($levies->insurance->zvwMode === 'inhouding' ? 'inhouding' : 'werkgeversheffing');
 		$this->rvuThresholdCents = max(0, $levies->rvuThresholdCents);
 		$this->rvuFinalLevyRate = $levies->rvuFinalLevyRate;
@@ -182,14 +193,16 @@ final class CalculationInput {
 
 	/**
 	 * All eleven public readonly properties as a plain array, keyed by name,
-	 * plus `zvwMode`, `rvuThresholdCents` and `rvuFinalLevyRate` only when the
-	 * wage carries them (they differ from their
-	 * defaults, so the snapshot of every ordinary payslip stays byte-identical
-	 * (payroll-special-regimes D3 and D4).
+	 * plus the special-payment keys only when the input carries one
+	 * (payroll-reservation-payouts REQ-RSP-001) and `zvwMode`,
+	 * `rvuThresholdCents` and `rvuFinalLevyRate` only when the wage carries
+	 * them (payroll-special-regimes D3 and D4), so the snapshot of every
+	 * ordinary payslip stays byte-identical.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
 	 */
 	public function toArray(): array {
 		$data = [
@@ -205,6 +218,12 @@ final class CalculationInput {
 			'jurisdiction' => $this->jurisdiction,
 			'thirtyPercentRulingRate' => $this->thirtyPercentRulingRate,
 		];
+		if ($this->special->isEmpty() === false) {
+			$data['specialPaymentCents'] = $this->special->specialPaymentCents;
+			$data['annualWageReferenceCents'] = $this->special->annualWageReferenceCents;
+			$data['endOfYearRate'] = $this->special->endOfYearRate;
+		}
+
 		if ($this->zvwMode !== 'werkgeversheffing') {
 			$data['zvwMode'] = $this->zvwMode;
 		}
@@ -304,6 +323,11 @@ final class CalculationInput {
 				),
 				rvuThresholdCents: (int)($decoded['rvuThresholdCents'] ?? 0),
 				rvuFinalLevyRate: (float)($decoded['rvuFinalLevyRate'] ?? 0.0)
+			),
+			special: new SpecialPayment(
+				specialPaymentCents: max(0, (int)($decoded['specialPaymentCents'] ?? 0)),
+				annualWageReferenceCents: max(0, (int)($decoded['annualWageReferenceCents'] ?? 0)),
+				endOfYearRate: max(0.0, (float)($decoded['endOfYearRate'] ?? 0.0))
 			)
 		);
 

@@ -66,7 +66,15 @@ class NlPackTest extends TestCase {
 
 		$provenance = (new PackValidator())->validate($pack, TaxTables::load($pack->tablesId()), $repository);
 
-		$this->assertSame([], $provenance, 'the NL pack resolves no unverified or placeholder leaf');
+		// Only the special-rate vectors reach an unverified leaf: the 2026
+		// bijzondereBeloningen bands, until they are transcribed from the
+		// published table (payroll-reservation-payouts D3). The regular chain
+		// stays fully verified.
+		$this->assertSame(
+			['bijzondereBeloningen.wit'],
+			array_values(array_unique(array_column($provenance, 'path'))),
+			'the NL pack resolves no unverified or placeholder leaf outside the special rate'
+		);
 
 	}//end testTheBundledNlPackPassesEveryUploadGateIncludingItsNineGoldenVectors()
 
@@ -84,8 +92,16 @@ class NlPackTest extends TestCase {
 		$vectors = $this->pack()->selfTest()['vectors'];
 		$fixtures = array_values(array_filter($vectors, static fn (array $vector): bool => array_key_exists('$fixture', $vector)));
 
+		// The twelve fixtures, the four four-weekly and weekly inline vectors
+		// (payroll-period-edge-cases 2.2), then the three inline special-rate
+		// and end-of-year vectors (payroll-reservation-payouts).
+		$this->assertCount(19, $vectors);
 		$this->assertCount(12, $fixtures);
-		$this->assertSame(['2026-P05', '2026-W20', '2026-P05', '2026-W20'], array_column(array_slice($vectors, 12), 'period'));
+		$this->assertSame(['2026-P05', '2026-W20', '2026-P05', '2026-W20'], array_column(array_slice($vectors, 12, 4), 'period'));
+		$special = array_slice($vectors, 16);
+		$this->assertCount(3, $special);
+		$this->assertSame(184115, $special[0]['expected']['@step.loonheffingBijzonder']);
+		$this->assertSame(24990, $special[2]['expected']['@step.eindejaarsuitkering']);
 		$this->assertSame(
 			[
 				'payroll-2026/anchor.json',
@@ -123,11 +139,12 @@ class NlPackTest extends TestCase {
 
 	/**
 	 * REQ-JP-003: no pack declares a net step — net is the interpreter's fold.
-	 * NL's `reduces-net` steps are loonheffing and the withheld Zvw
-	 * contribution, which runs only in `inhouding` mode
-	 * (payroll-special-regimes D3), which is exactly why the fold reproduces
-	 * `tvl - loonheffing` for an ordinary wage without the interpreter knowing
-	 * anything about the Netherlands.
+	 * NL's `reduces-net` steps are loonheffing, on a special payment
+	 * loonheffingBijzonder, and the withheld Zvw contribution, which runs
+	 * only in `inhouding` mode (payroll-special-regimes D3), which is exactly
+	 * why the fold reproduces `tvl + specialPayment - loonheffing -
+	 * loonheffingBijzonder` without the interpreter knowing anything about
+	 * the Netherlands.
 	 *
 	 * @return void
 	 */
@@ -140,7 +157,7 @@ class NlPackTest extends TestCase {
 			}
 		}
 
-		$this->assertSame(['loonheffing', 'zvwInhouding'], $reducers);
+		$this->assertSame(['loonheffing', 'loonheffingBijzonder', 'zvwInhouding'], $reducers);
 
 	}//end testLoonheffingIsTheOnlyStepThatReducesNet()
 
@@ -191,7 +208,7 @@ class NlPackTest extends TestCase {
 
 		$this->assertSame('NL', $pack->jurisdiction());
 		$this->assertSame(2026, $pack->taxYear());
-		$this->assertSame('nl-2026@1.1.0', $pack->engineVersion());
+		$this->assertSame('nl-2026@1.2.0', $pack->engineVersion());
 		$this->assertTrue($pack->isBundled());
 
 	}//end testThePackIsResolvedByItsDeclaredJurisdictionAndTaxYear()

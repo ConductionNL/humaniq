@@ -56,6 +56,7 @@ class ManagerAccessStampListener implements IEventListener {
 		'sickleavecase' => 'SickLeaveCase',
 		'leavetransaction' => 'LeaveTransaction',
 		'compadjustment' => 'CompAdjustment',
+		'ikbspendrequest' => 'IkbSpendRequest',
 	];
 
 	/**

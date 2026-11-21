@@ -40,6 +40,7 @@ use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
 use OCA\Humaniq\Lifecycle\HandoffCloseGuard;
 use OCA\Humaniq\Lifecycle\HandoffReleaseGuard;
 use OCA\Humaniq\Lifecycle\HrReopenGuard;
+use OCA\Humaniq\Lifecycle\IkbSpendApprovalGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Humaniq\Lifecycle\LoonaangifteMessageGuard;
 use OCA\Humaniq\Lifecycle\LeaveApprovalStepGuard;
@@ -189,8 +190,7 @@ class Application extends App implements IBootstrap {
 		// dependencies, so a plain construction closure suffices.
 		$context->registerService(NoSelfApprovalGuard::class, static fn ($c): NoSelfApprovalGuard => new NoSelfApprovalGuard());
 
-		// hr-reopens-an-approved-claim: only HR outside the claim reopens an approved Expense.
-		$context->registerService(HrReopenGuard::class, static fn ($c): HrReopenGuard => new HrReopenGuard($c->get(\OCA\Humaniq\Service\HumaniqRoles::class), $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
+		$this->registerRecordStoreGuards(context: $context);
 
 		// OpenRegister lifecycle guard for the PensionFiling `controleren` transition
 		// (pension-filing-upa-mvp) — denies review unless the referenced PayrollRun is
@@ -375,6 +375,22 @@ class Application extends App implements IBootstrap {
 		// recurse). When OpenRegister is absent the lazy get() throws and fails soft.
 
 	}//end register()
+
+	/**
+	 * Register the lifecycle guards that read the register through the record store.
+	 *
+	 * hr-reopens-an-approved-claim: only HR outside the claim reopens an approved Expense.
+	 * payroll-reservation-payouts D8: an individual choice budget spend is approved by
+	 * someone other than the requester and never above the balance.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerRecordStoreGuards(IRegistrationContext $context): void {
+		$context->registerService(HrReopenGuard::class, static fn ($c): HrReopenGuard => new HrReopenGuard($c->get(\OCA\Humaniq\Service\HumaniqRoles::class), $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
+		$context->registerService(IkbSpendApprovalGuard::class, static fn ($c): IkbSpendApprovalGuard => new IkbSpendApprovalGuard(records: $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
+	}//end registerRecordStoreGuards()
 
 	/**
 	 * Register an object-lifecycle listener that declares its interest up front.

@@ -15,6 +15,7 @@ reason.
 Rows: `pay-holiday-allowance` (humaniq matrix).
 
 #### Scenario: The May holiday allowance is taxed at the special rate
+@e2e exclude engine arithmetic, covered by SpecialPaymentCalculationTest and the pack's inline golden vectors; a live run holds the payout while the 2026 special-rate table is unverified, so no browser page can show it yet
 - **GIVEN** an employee paid 3800.00 a month for all of 2025 and a holiday allowance of
   3648.00 to pay in May 2026
 - **WHEN** a payroll officer calculates the 2026-05 run
@@ -23,6 +24,7 @@ Rows: `pay-holiday-allowance` (humaniq matrix).
   special payment at that percentage
 
 #### Scenario: No special payment, no difference
+@e2e exclude byte identity of the calculation, covered by the CalculationInputGoldenTest and PayrollRunGenerateGoldenTest recordings
 - **GIVEN** a month without payouts
 - **WHEN** the run is calculated
 - **THEN** every payslip equals the one the previous pack version computes for the same input
@@ -38,6 +40,7 @@ period minus the recorded payouts for it.
 Rows: `pay-holiday-allowance` (humaniq matrix).
 
 #### Scenario: The yearly payout in May
+@e2e exclude run arithmetic over twelve months of payslips, covered by ReservationPayoutRunServiceTest; a live run holds it while the special-rate table is unverified
 - **GIVEN** an administration paying holiday allowance yearly in May and an employee with
   twelve payslips from June 2025 to May 2026 reserving 304.00 each
 - **WHEN** the 2026-05 run is calculated
@@ -45,6 +48,7 @@ Rows: `pay-holiday-allowance` (humaniq matrix).
   to May 2026
 
 #### Scenario: A leaver takes the reserve with them
+@e2e exclude run and approval arithmetic, covered by ReservationPayoutRunServiceTest (the leaver's basis) and ReservationPayoutApprovalServiceTest (the offboarding tick)
 - **GIVEN** an employee whose employment ends on 30 September 2026 with four months of reserve
   since the May payout
 - **WHEN** the 2026-09 run is calculated and approved
@@ -61,6 +65,7 @@ an agreement whose figure is a placeholder, without its own rate, SHALL reserve 
 Rows: `pay-holiday-allowance` (humaniq matrix).
 
 #### Scenario: A thirteenth month in December
+@e2e exclude run arithmetic over a calendar year, covered by ReservationPayoutRunServiceTest and the pack's end-of-year vector
 - **GIVEN** a contract with an end-of-year rate of 8.33% and a regular wage of 3000.00 all year
 - **WHEN** the 2026-12 run is calculated
 - **THEN** the payslip pays the year's reserve of 2998.80 as a special payment
@@ -79,17 +84,20 @@ Rows: `td-ikb` (humaniq matrix), tender
 https://www.tenderned.nl/aankondigingen/overzicht/415227.
 
 #### Scenario: An employee buys extra leave with the budget
+@e2e exclude settlement on run approval, covered by ReservationPayoutApprovalServiceTest (hours credited, budget reduced, no payslip amount)
 - **GIVEN** an IKB balance of 1500.00 and a request for 16 hours of leave valued at 480.00
 - **WHEN** the manager approves the request and it is settled
 - **THEN** the employee's holiday balance gains 16 hours, the budget shows 1020.00 left, and
   no amount appears on the payslip
 
 #### Scenario: A request above the balance is refused
+@e2e exclude server-side lifecycle guard, covered by IkbSpendApprovalGuardTest
 - **GIVEN** an IKB balance of 300.00
 - **WHEN** the employee submits a payout request of 500.00 and the manager tries to approve it
 - **THEN** the approval is refused because it exceeds the balance
 
 #### Scenario: A payout is taxed at the special rate
+@e2e exclude run arithmetic, covered by ReservationPayoutRunServiceTest; a live run holds it while the special-rate table is unverified
 - **GIVEN** an approved payout request of 800.00 settling in 2026-06
 - **WHEN** the 2026-06 run is calculated
 - **THEN** the payslip shows a special payment of 800.00 taxed at the employee's special rate

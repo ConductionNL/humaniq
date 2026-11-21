@@ -48,7 +48,7 @@ class ManagerAccessStamps implements ManagerAccessStampsInterface {
 	 *
 	 * @var list<string>
 	 */
-	public const SCHEMAS = ['Employee', 'SickLeaveCase', 'LeaveTransaction', 'CompAdjustment'];
+	public const SCHEMAS = ['Employee', 'SickLeaveCase', 'LeaveTransaction', 'CompAdjustment', 'IkbSpendRequest'];
 
 	/**
 	 * The day the current resolution is for, YYYY-MM-DD.

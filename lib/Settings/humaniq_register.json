@@ -128,6 +128,10 @@
                     "SurveyResponse",
                     "SurveyResponseHold",
                     "WageTaxRemittance",
+                    "ReservationPayout",
+                    "IkbBudget",
+                    "IkbGoal",
+                    "IkbSpendRequest",
                     "BenefitEntitlement",
                     "PayrollOpeningBalance"
                 ]

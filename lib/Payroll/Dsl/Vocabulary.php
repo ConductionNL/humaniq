@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Payroll\Dsl;
 
+use OCA\Humaniq\Payroll\Dsl\Ops\BandOp;
 use OCA\Humaniq\Payroll\Dsl\Ops\BracketOp;
 use OCA\Humaniq\Payroll\Dsl\Ops\CappedRateOp;
 use OCA\Humaniq\Payroll\Dsl\Ops\ClampOp;
@@ -99,6 +100,7 @@ final class Vocabulary {
 				new RateOp($this->refs),
 				new CappedRateOp($this->refs),
 				new BracketOp($this->refs),
+				new BandOp($this->refs),
 				new TaperOp($this->refs),
 				new PiecewiseAccrueOp($this->refs, $this->rounder),
 				new QuantizeOp($this->refs),
