@@ -320,7 +320,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, lineage: $lineage, leavePayout: $leavePayout),
+			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, reservations: $reservations, lineage: $lineage, leavePayout: $leavePayout),
 			$fake,
 			$retentionGuard,
 		];
