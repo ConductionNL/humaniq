@@ -74,7 +74,7 @@ https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_relea
 
 #### Scenario: A lump sum at the special rate
 
-@e2e exclude Not built: the special-rate path comes from payroll-reservation-payouts, which is not on development; until then the run lists a lump sum as lump-sum-pending (PayrollRunServiceSpecialRegimesTest::testTheFinalLevyAndWhatIsNotPaid)
+@e2e exclude A lump sum needs an engine-calculated run on a live instance to reach a payslip; the run is covered by PayrollRunServiceSpecialRegimesTest::testALumpSumAtTheSpecialRate and ::testALumpSumWithoutAnAnnualWageIsNotPaid, the term by BenefitEntitlementPayTest::testTheMonthsALumpSumCovers
 - **GIVEN** an RVU entitlement paid as one sum covering 24 months, settling in 2026-09
 - **WHEN** the 2026-09 run is calculated
 - **THEN** the sum is taxed at the special rate and the final levy uses 24 times the monthly

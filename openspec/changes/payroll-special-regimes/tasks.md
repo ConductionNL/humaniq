@@ -42,11 +42,17 @@
       (Entitlement kind and `political-office` contracts read `TaxTables::specialRegime()`;
       table colour, insurances, Zvw mode and the RVU threshold and rate become inputs; the
       payslip carries `specialRegime` and `rvuEindheffing`.)
-- [ ] 3.3 Pay a lump-sum RVU through the special-rate path.
-      Not built: the special-rate path comes from `payroll-reservation-payouts`, which is not
-      on development yet. Until it lands a lump-sum entitlement is listed `lump-sum-pending`
-      and never paid as a monthly wage. Verify: unit test that the levy
+- [x] 3.3 Pay a lump-sum RVU through the special-rate path. Verify: unit test that the levy
       threshold is multiplied by the months covered.
+      (A lump sum is the run's special payment, never a monthly wage: `benefitSlip()` passes it
+      as `SpecialPayment` with the annual wage the reservation payouts' rule gives (last year's
+      twelve payslips, else the person's monthly wage times twelve plus holiday allowance), and
+      `benefitInput()` multiplies the RVU threshold by `BenefitEntitlementPay::monthsCovered()`.
+      The pack's `rvuEindheffing` reads `grossWithSpecial`, which is `tvl` without a special
+      payment, so a periodic RVU is unchanged. A lump sum without an end date is listed
+      `lump-sum-no-term`, one without an annual wage `lump-sum-no-annual-wage`.
+      `PayrollRunServiceSpecialRegimesTest::testALumpSumAtTheSpecialRate`,
+      `::testALumpSumWithoutAnAnnualWageIsNotPaid`, `BenefitEntitlementPayTest::testTheMonthsALumpSumCovers`.)
 
 ## 4. Pages and seed
 

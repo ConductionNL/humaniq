@@ -676,7 +676,7 @@
     },
     {
       "id": "rvuEindheffing",
-      "_note": "The employer's final levy on an early-retirement benefit (RVU): the rate times the part of the period's benefit above the threshold. EMPLOYER-COST, so net is unchanged. Gated on a positive threshold, which only an RVU payslip carries. Threshold and rate are inputs: the run reads them from the tables' specialRegimes.rvu leaves and refuses the payslip while either is unverified (D2); for a lump sum the run passes the threshold times the months it covers (payroll-special-regimes D4).",
+      "_note": "The employer's final levy on an early-retirement benefit (RVU): the rate times the part of the period's benefit above the threshold. EMPLOYER-COST, so net is unchanged. Gated on a positive threshold, which only an RVU payslip carries. Threshold and rate are inputs: the run reads them from the tables' specialRegimes.rvu leaves and refuses the payslip while either is unverified (D2); a lump sum arrives as the special payment, so the levy reads the benefit plus the special payment (grossWithSpecial, which is tvl when there is none), and the run passes the threshold times the months the lump sum covers (payroll-special-regimes D4).",
       "op": "expr",
       "incidence": "employer-cost",
       "when": {
@@ -684,7 +684,7 @@
         "left": "@input.rvuThreshold",
         "right": 0
       },
-      "expression": "max(0, @binding.tvl - @input.rvuThreshold) * @input.rvuFinalLevyRate / 100",
+      "expression": "max(0, @binding.grossWithSpecial - @input.rvuThreshold) * @input.rvuFinalLevyRate / 100",
       "round": {
         "mode": "nearest",
         "unit": "cent"
