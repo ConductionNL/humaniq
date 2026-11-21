@@ -1,9 +1,5 @@
 # hours-leaf-delivery Specification (delta)
 
----
-status: proposed
----
-
 ## Purpose
 
 The client half of humaniq's hours leaf reaches the page of an app that
