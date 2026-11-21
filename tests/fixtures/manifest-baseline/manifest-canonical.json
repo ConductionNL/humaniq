@@ -21958,10 +21958,21 @@
 		"enabled": true,
 		"steps": [
 			{
-				"body": "Manage your people, contracts, leave and payroll in one place. This takes a minute: say how you work, pick a language and whether to load example data, and you're ready.",
+				"body": "Manage your people, contracts, leave and payroll in one place. This takes a minute: pick whether to load example data, say how you work and pick a language, and you're ready.",
 				"id": "welcome",
 				"title": "Welcome to Humaniq",
 				"type": "info"
+			},
+			{
+				"body": "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Each card has its own Load button. Pick \"None\" on a production install.",
+				"configKey": "demo_dataset",
+				"display": "cards",
+				"id": "demo-data",
+				"loadAction": "load-demo-data",
+				"optionsSource": "datasets",
+				"required": false,
+				"title": "Load example data?",
+				"type": "choice"
 			},
 			{
 				"body": "This decides which parts of Humaniq you see: a sole proprietorship runs no payroll, and a director-major shareholder on their own sees no team screens. You can change it later per administration under Configuration, Administrations.",
@@ -22002,17 +22013,6 @@
 				],
 				"required": false,
 				"title": "Language",
-				"type": "choice"
-			},
-			{
-				"body": "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Each card has its own Load button. Pick \"None\" on a production install.",
-				"configKey": "demo_dataset",
-				"display": "cards",
-				"id": "demo-data",
-				"loadAction": "load-demo-data",
-				"optionsSource": "datasets",
-				"required": false,
-				"title": "Load example data?",
 				"type": "choice"
 			},
 			{

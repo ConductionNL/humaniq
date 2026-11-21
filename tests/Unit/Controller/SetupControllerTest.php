@@ -572,10 +572,13 @@ class SetupControllerTest extends TestCase {
 			$this->assertFalse($language['required'], $file);
 			$this->assertSame(['nl', 'en'], array_column($language['options'], 'value'), $file);
 
-			// Both are asked before the example data, as the board orders them.
+			// The example data stays the step right after welcome (ADR-111
+			// rule 4); both are asked after it and before the summary.
 			$ids = array_keys($steps);
-			$this->assertLessThan(array_search('demo-data', $ids, true), array_search('working-mode', $ids, true), $file);
-			$this->assertLessThan(array_search('demo-data', $ids, true), array_search('language', $ids, true), $file);
+			$this->assertSame(1, array_search('demo-data', $ids, true), $file);
+			$this->assertGreaterThan(array_search('demo-data', $ids, true), array_search('working-mode', $ids, true), $file);
+			$this->assertGreaterThan(array_search('working-mode', $ids, true), array_search('language', $ids, true), $file);
+			$this->assertLessThan(array_search('done', $ids, true), array_search('language', $ids, true), $file);
 		}
 	}
 }

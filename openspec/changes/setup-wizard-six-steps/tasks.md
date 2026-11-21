@@ -19,7 +19,8 @@
       KvK number), `runAction: create-administrations`.
 - [x] 2.3 `working-mode`: cards choice, `configKey: working_mode`, values `standard`,
       `eenmanszaak_no_payroll`, `dga_single_person` with the board's labels and hints.
-      Done: declared after `welcome` and before `demo-data`. The setup options schema allows
+      Done: declared after `demo-data` (ADR-111 rule 4 keeps the example data directly after
+      `welcome`; gate-100 refuses anything between them). The setup options schema allows
       only `value` and `label`, so the hints are one sentence in the step body; the per-step
       recap hint is 2.5's `summaryHint`. Verified by
       `SetupControllerTest::testTheManifestDeclaresTheWorkingModeAndLanguageChoices`, which
