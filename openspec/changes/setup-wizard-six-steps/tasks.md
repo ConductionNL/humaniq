@@ -17,18 +17,31 @@
       Verify: `npm run check:manifest` exits 0.
 - [ ] 2.2 `administrations`: config-fields with a repeatable group (name, loonheffingennummer,
       KvK number), `runAction: create-administrations`.
-- [ ] 2.3 `working-mode`: cards choice, `configKey: working_mode`, values `standard`,
+- [x] 2.3 `working-mode`: cards choice, `configKey: working_mode`, values `standard`,
       `eenmanszaak_no_payroll`, `dga_single_person` with the board's labels and hints.
-- [ ] 2.4 `language`: choice, `configKey: default_language`, values `nl` and `en`.
+      Done: declared after `welcome` and before `demo-data`. The setup options schema allows
+      only `value` and `label`, so the hints are one sentence in the step body; the per-step
+      recap hint is 2.5's `summaryHint`. Verified by
+      `SetupControllerTest::testTheManifestDeclaresTheWorkingModeAndLanguageChoices`, which
+      compares the option values with `SetupAdministrations::MODES`.
+- [x] 2.4 `language`: choice, `configKey: default_language`, values `nl` and `en`.
+      Done: a dropdown choice after `working-mode`, same test.
 - [ ] 2.5 `done`: `summaryEditable: true`, a `summaryHint` per step from the board, health check
       on. Keep `templates` exactly as `configuration-store` declares it.
 - [ ] 2.6 Add `nl` and `en` catalogue entries for every new string.
+      Progress: the `working-mode` and `language` strings and the updated `welcome` body are in
+      `l10n/` (`npm run check:l10n` passes); the `administrations`, `templates` and `done`
+      strings follow with 2.1, 2.2 and 2.5.
 
 ## 3. Server (lib/Controller/SetupController.php)
 
 - [ ] 3.1 `status()`: report the six step ids, each done once answered or skipped (app-config
       keys `administrations_decided`, `working_mode`, `default_language`, existing demo and
       templates keys). Verify: unit tests for fresh, skipped and answered per step.
+      Progress: `working-mode` and `language` are reported, done once `working_mode` or
+      `default_language` holds an answer (`SetupControllerTest`). `administrations` and
+      `templates` join when 2.1 declares them, because the status must report exactly the
+      manifest's step ids (`testStatusReportsEveryStepTheManifestDeclares`).
 - [x] 3.2 `runAction('create-administrations')`: validate every entry first (400 on a missing
       name or loonheffingennummer, nothing created), then create or reuse `hrAdministration` by
       loonheffingennummer through ObjectService, add an `AdministrationAccess` row of role `hr`

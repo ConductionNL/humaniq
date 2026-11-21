@@ -21958,10 +21958,51 @@
 		"enabled": true,
 		"steps": [
 			{
-				"body": "Manage your people, contracts, leave and payroll in one place. This takes a minute: pick whether to load example data, and you're ready.",
+				"body": "Manage your people, contracts, leave and payroll in one place. This takes a minute: say how you work, pick a language and whether to load example data, and you're ready.",
 				"id": "welcome",
 				"title": "Welcome to Humaniq",
 				"type": "info"
+			},
+			{
+				"body": "This decides which parts of Humaniq you see: a sole proprietorship runs no payroll, and a director-major shareholder on their own sees no team screens. You can change it later per administration under Configuration, Administrations.",
+				"configKey": "working_mode",
+				"display": "cards",
+				"id": "working-mode",
+				"options": [
+					{
+						"label": "Organisation with staff",
+						"value": "standard"
+					},
+					{
+						"label": "Sole proprietorship",
+						"value": "eenmanszaak_no_payroll"
+					},
+					{
+						"label": "Director-major shareholder without an HR structure",
+						"value": "dga_single_person"
+					}
+				],
+				"required": false,
+				"title": "Way of working",
+				"type": "choice"
+			},
+			{
+				"body": "The language of the documents and notifications Humaniq makes for employees who did not pick one. Employees choose their own language in their personal settings.",
+				"configKey": "default_language",
+				"id": "language",
+				"options": [
+					{
+						"label": "Nederlands",
+						"value": "nl"
+					},
+					{
+						"label": "English",
+						"value": "en"
+					}
+				],
+				"required": false,
+				"title": "Language",
+				"type": "choice"
 			},
 			{
 				"body": "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Each card has its own Load button. Pick \"None\" on a production install.",

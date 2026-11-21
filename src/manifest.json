@@ -13,7 +13,48 @@
 				"id": "welcome",
 				"type": "info",
 				"title": "Welcome to Humaniq",
-				"body": "Manage your people, contracts, leave and payroll in one place. This takes a minute: pick whether to load example data, and you're ready."
+				"body": "Manage your people, contracts, leave and payroll in one place. This takes a minute: say how you work, pick a language and whether to load example data, and you're ready."
+			},
+			{
+				"id": "working-mode",
+				"type": "choice",
+				"display": "cards",
+				"configKey": "working_mode",
+				"required": false,
+				"title": "Way of working",
+				"body": "This decides which parts of Humaniq you see: a sole proprietorship runs no payroll, and a director-major shareholder on their own sees no team screens. You can change it later per administration under Configuration, Administrations.",
+				"options": [
+					{
+						"value": "standard",
+						"label": "Organisation with staff"
+					},
+					{
+						"value": "eenmanszaak_no_payroll",
+						"label": "Sole proprietorship"
+					},
+					{
+						"value": "dga_single_person",
+						"label": "Director-major shareholder without an HR structure"
+					}
+				]
+			},
+			{
+				"id": "language",
+				"type": "choice",
+				"configKey": "default_language",
+				"required": false,
+				"title": "Language",
+				"body": "The language of the documents and notifications Humaniq makes for employees who did not pick one. Employees choose their own language in their personal settings.",
+				"options": [
+					{
+						"value": "nl",
+						"label": "Nederlands"
+					},
+					{
+						"value": "en",
+						"label": "English"
+					}
+				]
 			},
 			{
 				"id": "demo-data",
