@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Controller;
 
+use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\ExpenseVatService;
@@ -76,7 +77,7 @@ class ExpenseVatController extends Controller {
 
 		$period = trim((string)$this->request->getParam('period', ''));
 		if ($period === '') {
-			$period = (new \DateTimeImmutable('first day of last month'))->format('Y-m');
+			$period = (new DateTimeImmutable('first day of last month'))->format('Y-m');
 		}
 
 		try {

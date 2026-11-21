@@ -47,6 +47,9 @@ use OCP\IUserSession;
 /**
  * Propose, approve and effectuate a whole compensation cycle.
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) the cycle endpoints share one RBAC and
+ * role guard; the budget reader joins the propose, approve and effectuate services.
+ *
  * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
  */
 class CompCycleController extends Controller {

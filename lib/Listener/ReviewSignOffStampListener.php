@@ -143,6 +143,10 @@ class ReviewSignOffStampListener implements IEventListener {
 	 * @param \OCA\OpenRegister\Event\ObjectCreatingEvent $event The pre-save event.
 	 *
 	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Called from StampsProcessFields::stampOrRefuse().
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
 	 */
 	private function stampCreating(\OCA\OpenRegister\Event\ObjectCreatingEvent $event): void {
 		if ($this->isReview(entity: $event->getObject()) === true) {
@@ -156,6 +160,10 @@ class ReviewSignOffStampListener implements IEventListener {
 	 * @param \OCA\OpenRegister\Event\ObjectUpdatingEvent $event The pre-save event.
 	 *
 	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Called from StampsProcessFields::stampOrRefuse().
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
 	 */
 	private function stampUpdating(\OCA\OpenRegister\Event\ObjectUpdatingEvent $event): void {
 		$entity = $event->getNewObject();

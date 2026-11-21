@@ -72,6 +72,9 @@ class TimesheetReopenGuard implements LifecycleGuardInterface {
 	 *
 	 * @return GuardResult
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the static allow()/deny() factories.
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The signature is LifecycleGuardInterface's.
+	 *
 	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-timesheet-approval/spec.md
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {

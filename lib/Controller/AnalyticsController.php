@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Controller;
 
+use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Kernel\Contracts\AnalyticsServiceInterface;
@@ -58,6 +59,9 @@ use Psr\Log\LoggerInterface;
 /**
  * Guarded read-only analytics endpoints for the Dashboard's steering
  * indicators.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) one controller serves every steering
+ * indicator endpoint; its collaborators are the readers behind those figures.
  *
  * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
  */
@@ -164,7 +168,7 @@ class AnalyticsController extends Controller {
 
 		$period = trim((string)$this->request->getParam('period', ''));
 		if ($period === '') {
-			$period = (new \DateTimeImmutable('first day of last month'))->format('Y-m');
+			$period = (new DateTimeImmutable('first day of last month'))->format('Y-m');
 		}
 
 		try {

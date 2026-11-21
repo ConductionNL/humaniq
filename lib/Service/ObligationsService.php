@@ -211,29 +211,12 @@ class ObligationsService implements ObligationsServiceInterface {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function expiringContractRows(array $contracts): array {
-		$rows = [];
-		[$today, $windowEnd] = $this->expiryWindow(self::CONTRACT_EXPIRY_WINDOW_DAYS);
-		foreach ($contracts as $contract) {
-			if ((string)($contract['type'] ?? '') !== 'temporary') {
-				continue;
-			}
+		$temporary = array_filter(
+			$contracts,
+			static fn (array $contract): bool => (string)($contract['type'] ?? '') === 'temporary'
+		);
 
-			$endDate = DateValues::parse($contract['endDate'] ?? null);
-			if ($endDate === null || $endDate < $today || $endDate > $windowEnd) {
-				continue;
-			}
-
-			$rows[] = [
-				'type' => 'EmploymentContract',
-				'employeeId' => (string)($contract['employeeId'] ?? ''),
-				'subject' => (string)($contract['employeeId'] ?? ''),
-				'dueDate' => $endDate->format('Y-m-d'),
-				'route' => 'EmploymentContractDetail',
-				'object' => $contract,
-			];
-		}
-
-		return $rows;
+		return $this->contractDueRows(contracts: $temporary, dateField: 'endDate', windowDays: self::CONTRACT_EXPIRY_WINDOW_DAYS, subject: null);
 	}//end expiringContractRows()
 
 	/**
@@ -247,26 +230,45 @@ class ObligationsService implements ObligationsServiceInterface {
 	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals/spec.md#REQ-SIG-007
 	 */
 	private function probationEndingRows(array $contracts): array {
+		return $this->contractDueRows(contracts: $contracts, dateField: 'proeftijdEndDate', windowDays: self::PROBATION_END_WINDOW_DAYS, subject: 'proeftijdEndDate');
+	}//end probationEndingRows()
+
+	/**
+	 * `EmploymentContract` rows whose date field falls between today and the
+	 * end of the window.
+	 *
+	 * @param array<int, array<string, mixed>> $contracts  The contracts to check.
+	 * @param string                           $dateField  The contract date that falls due.
+	 * @param int                              $windowDays The window in days.
+	 * @param string|null                      $subject    The row subject; null names the employee.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DateValues is a static date-parsing helper.
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals/spec.md#REQ-SIG-007
+	 */
+	private function contractDueRows(array $contracts, string $dateField, int $windowDays, ?string $subject): array {
 		$rows = [];
-		[$today, $windowEnd] = $this->expiryWindow(self::PROBATION_END_WINDOW_DAYS);
+		[$today, $windowEnd] = $this->expiryWindow($windowDays);
 		foreach ($contracts as $contract) {
-			$endDate = DateValues::parse($contract['proeftijdEndDate'] ?? null);
-			if ($endDate === null || $endDate < $today || $endDate > $windowEnd) {
+			$dueDate = DateValues::parse($contract[$dateField] ?? null);
+			if ($dueDate === null || $dueDate < $today || $dueDate > $windowEnd) {
 				continue;
 			}
 
 			$rows[] = [
 				'type' => 'EmploymentContract',
 				'employeeId' => (string)($contract['employeeId'] ?? ''),
-				'subject' => 'proeftijdEndDate',
-				'dueDate' => $endDate->format('Y-m-d'),
+				'subject' => ($subject ?? (string)($contract['employeeId'] ?? '')),
+				'dueDate' => $dueDate->format('Y-m-d'),
 				'route' => 'EmploymentContractDetail',
 				'object' => $contract,
 			];
 		}
 
 		return $rows;
-	}//end probationEndingRows()
+	}//end contractDueRows()
 
 	/**
 	 * `BhvCertificering` rows expiring within the unchanged bhv-organisatie
