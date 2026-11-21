@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md
+ * @spec openspec/specs/time-entry-capture/spec.md
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use RuntimeException;
 /**
  * A billable booking takes the project's rate; the approved event carries hours times rate.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
+ * @spec openspec/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
  */
 #[CoversClass(ProjectRateReader::class)]
 #[CoversClass(TimeEntryRateListener::class)]

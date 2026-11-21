@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md
+ * @spec openspec/specs/hrm-rule-engine/spec.md
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use RuntimeException;
 /**
  * Coverage beside the findings, and only the caller's readable records (REQ-RULE-010).
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
+ * @spec openspec/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
  */
 #[CoversClass(ComplianceCheckService::class)]
 final class ComplianceCheckServiceTest extends TestCase {

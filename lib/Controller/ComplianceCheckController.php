@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md
+ * @spec openspec/specs/hrm-rule-engine/spec.md
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use Psr\Log\LoggerInterface;
 /**
  * The compliance check for the signed-in caller.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
+ * @spec openspec/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
  */
 class ComplianceCheckController extends Controller {
 
@@ -65,7 +65,7 @@ class ComplianceCheckController extends Controller {
 	 *
 	 * @return JSONResponse 200 {coverage, counts, violations}, 401 when signed out, 500 when the audit cannot read the register.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
 	 */
 	#[NoAdminRequired]
 	public function check(): JSONResponse {

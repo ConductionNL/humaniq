@@ -112,7 +112,7 @@ class NlSignalChecksTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals/spec.md#REQ-SIG-007
+	 * @spec openspec/specs/hr-signals/spec.md#REQ-SIG-007
 	 */
 	public function testProeftijdEindigtIsRaisedOnlyWithinFourteenDays(): void {
 		$check = $this->checks['nl-signaal-proeftijd-eindigt'];

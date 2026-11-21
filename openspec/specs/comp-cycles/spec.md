@@ -12,6 +12,7 @@ built_by: openspec/changes/archive/2026-07-15-comp-cycles
 logic and zero external market-data integration)
 **OpenSpec changes**:
 - [comp-cycles](../../changes/archive/2026-07-15-comp-cycles/) _(archived 2026-07-15)_ —
+- [matrix-rows-without-a-requirement](../../changes/archive/2026-11-21-matrix-rows-without-a-requirement/) _(archived 2026-11-21)_ — adds the requirements above that the HR matrix rows named without one
   compensation review cycles: a `SalaryBand` reference schema (integer-cents internal min/reference/max
   bands, `schema:MonetaryAmountDistribution`, `allowCreate:false`), a `CompReviewCycle` round container
   (`schema:Action`, plain `open → closed`), a per-employee `CompAdjustment` proposal
@@ -213,3 +214,26 @@ kept `allowCreate: false`. `npm run check:manifest` MUST pass.
 - **GIVEN** an EmployeeDetail page for an employee with an approved, due CompAdjustment
 - **WHEN** the user opens the comp-adjustments surface and executes "Effectueren" with confirm
 - **THEN** the endpoint effectuates the adjustment and the refreshed page shows it as `effective` with the new salary
+
+### Requirement: A review cycle SHALL carry a raise budget and show what is left of it (REQ-COMP-009)
+
+`CompReviewCycle` SHALL carry an optional `budgetAmount` in integer cents. The cycle page SHALL
+show the sum of the proposed and approved raises in the cycle against that budget, and what is
+left. A proposal that takes the cycle over budget SHALL be flagged on the cycle page, not
+refused.
+
+Rows: `tal-comp-cycle` (humaniq matrix).
+
+#### Scenario: The budget is partly used
+
+@e2e exclude Budget arithmetic read by four stat tiles on CompReviewCycleDetail; verified by CompCycleBudgetTest and CompCycleControllerTest.
+- **GIVEN** a cycle with a budget of 10,000 euros and two proposals adding 2,500 and 3,000 euros
+- **WHEN** HR opens the cycle page
+- **THEN** it shows 5,500 euros used and 4,500 euros left
+
+#### Scenario: A proposal goes over budget
+
+@e2e exclude Over-budget arithmetic, flagged and never refused; verified by CompCycleBudgetTest.
+- **GIVEN** a cycle with 1,000 euros left
+- **WHEN** a manager proposes a raise costing 1,500 euros
+- **THEN** the proposal is saved and the cycle page flags the cycle as 500 euros over budget

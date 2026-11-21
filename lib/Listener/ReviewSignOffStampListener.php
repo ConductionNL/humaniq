@@ -32,7 +32,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+ * @spec openspec/specs/performance-reviews/spec.md
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use Psr\Log\LoggerInterface;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+ * @spec openspec/specs/performance-reviews/spec.md
  */
 class ReviewSignOffStampListener implements IEventListener {
 
@@ -114,7 +114,7 @@ class ReviewSignOffStampListener implements IEventListener {
 	 * @param IUserSession         $userSession The signing user.
 	 * @param LoggerInterface      $logger      The logger.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+	 * @spec openspec/specs/performance-reviews/spec.md
 	 */
 	public function __construct(
 		private readonly OrgLookupInterface $gateway,
@@ -131,7 +131,7 @@ class ReviewSignOffStampListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+	 * @spec openspec/specs/performance-reviews/spec.md
 	 */
 	public function handle(Event $event): void {
 		$this->stampOrRefuse(event: $event);
@@ -146,7 +146,7 @@ class ReviewSignOffStampListener implements IEventListener {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Called from StampsProcessFields::stampOrRefuse().
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+	 * @spec openspec/specs/performance-reviews/spec.md
 	 */
 	private function stampCreating(\OCA\OpenRegister\Event\ObjectCreatingEvent $event): void {
 		if ($this->isReview(entity: $event->getObject()) === true) {
@@ -163,7 +163,7 @@ class ReviewSignOffStampListener implements IEventListener {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Called from StampsProcessFields::stampOrRefuse().
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+	 * @spec openspec/specs/performance-reviews/spec.md
 	 */
 	private function stampUpdating(\OCA\OpenRegister\Event\ObjectUpdatingEvent $event): void {
 		$entity = $event->getNewObject();
@@ -192,7 +192,7 @@ class ReviewSignOffStampListener implements IEventListener {
 	 *
 	 * @return array<string, mixed> The fields to set.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+	 * @spec openspec/specs/performance-reviews/spec.md
 	 */
 	public function stamps(array $incoming, array $stored): array {
 		$from = (string)($stored['status'] ?? '');

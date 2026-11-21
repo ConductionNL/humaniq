@@ -128,7 +128,7 @@ class ObligationsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals/spec.md#REQ-SIG-007
+	 * @spec openspec/specs/hr-signals/spec.md#REQ-SIG-007
 	 */
 	public function testAProbationPeriodEndingWithinFourteenDaysIsAnObligation(): void {
 		$today = new DateTimeImmutable('today');

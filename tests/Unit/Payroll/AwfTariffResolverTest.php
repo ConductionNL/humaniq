@@ -230,7 +230,7 @@ class AwfTariffResolverTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/awf-premium-review/spec.md#REQ-AWF-103
+	 * @spec openspec/specs/awf-premium-review/spec.md#REQ-AWF-103
 	 */
 	public function testThePremiumFollowsAPermanentWrittenOrAFlexContract(): void {
 		$permanentWritten = $this->contract(['type' => 'permanent', 'writtenContract' => true, 'hoursPerWeek' => 32.0]);

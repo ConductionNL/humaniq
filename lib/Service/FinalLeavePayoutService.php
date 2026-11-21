@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion/spec.md
+ * @spec openspec/specs/offboarding-completion/spec.md
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Psr\Log\LoggerInterface;
 /**
  * The open leave balance of a leaver as pay, and the offboarding stamp.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion/spec.md
+ * @spec openspec/specs/offboarding-completion/spec.md
  */
 final class FinalLeavePayoutService {
 
@@ -66,7 +66,7 @@ final class FinalLeavePayoutService {
 	 * @param SettingsService    $settingsService The register slug and OpenRegister availability.
 	 * @param LoggerInterface    $logger          Logger.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion/spec.md
+	 * @spec openspec/specs/offboarding-completion/spec.md
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -82,7 +82,7 @@ final class FinalLeavePayoutService {
 	 *
 	 * @return array<string, list<array<string, mixed>>>
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
+	 * @spec openspec/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
 	 */
 	public function balancesByEmployeeKey(): array {
 		$out = [];
@@ -107,7 +107,7 @@ final class FinalLeavePayoutService {
 	 *
 	 * @return array{hours: float, cents: int}|null
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
+	 * @spec openspec/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
 	 */
 	public function payoutFor(array $employee, ?array $contract, string $period, array $balances): ?array {
 		$endDate = trim((string)($employee['endDate'] ?? ''));
@@ -136,7 +136,7 @@ final class FinalLeavePayoutService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
+	 * @spec openspec/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
 	 */
 	public function payslipFields(?array $payout): array {
 		if ($payout === null) {
@@ -155,7 +155,7 @@ final class FinalLeavePayoutService {
 	 *
 	 * @return int The number of cases marked.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
+	 * @spec openspec/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
 	 */
 	public function markPaid(array $employees): int {
 		if ($employees === []) {

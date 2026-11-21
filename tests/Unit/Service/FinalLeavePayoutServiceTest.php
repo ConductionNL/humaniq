@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion/spec.md
+ * @spec openspec/specs/offboarding-completion/spec.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use RuntimeException;
 /**
  * The leaver's open hours as pay and the offboarding stamp (REQ-OFC-005).
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
+ * @spec openspec/specs/offboarding-completion/spec.md#requirement-the-open-leave-balance-shall-be-paid-on-the-leavers-final-payslip-req-ofc-005
  */
 #[CoversClass(FinalLeavePayoutService::class)]
 final class FinalLeavePayoutServiceTest extends TestCase {

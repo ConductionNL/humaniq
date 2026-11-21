@@ -28,7 +28,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-timesheet-approval/spec.md
+ * @spec openspec/specs/humaniq-timesheet-approval/spec.md
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 /**
  * Refuses reopening a timesheet whose hours an approved or later payroll run paid.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-timesheet-approval/spec.md
+ * @spec openspec/specs/humaniq-timesheet-approval/spec.md
  */
 class TimesheetReopenGuard implements LifecycleGuardInterface {
 
@@ -56,7 +56,7 @@ class TimesheetReopenGuard implements LifecycleGuardInterface {
 	 *
 	 * @param RecordStoreInterface $store Reads the stored timesheet and its run.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-timesheet-approval/spec.md
+	 * @spec openspec/specs/humaniq-timesheet-approval/spec.md
 	 */
 	public function __construct(
 		private readonly RecordStoreInterface $store,
@@ -75,7 +75,7 @@ class TimesheetReopenGuard implements LifecycleGuardInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the static allow()/deny() factories.
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The signature is LifecycleGuardInterface's.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-timesheet-approval/spec.md
+	 * @spec openspec/specs/humaniq-timesheet-approval/spec.md
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		$id = trim((string)($object['id'] ?? ($object['@self']['id'] ?? ($object['uuid'] ?? ''))));

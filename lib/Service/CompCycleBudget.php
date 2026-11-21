@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/comp-cycles/spec.md
+ * @spec openspec/specs/comp-cycles/spec.md
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ namespace OCA\Humaniq\Service;
 /**
  * Sums a cycle's raises against its budget.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/comp-cycles/spec.md
+ * @spec openspec/specs/comp-cycles/spec.md
  */
 class CompCycleBudget {
 
@@ -61,7 +61,7 @@ class CompCycleBudget {
 	 * @return array<string, mixed> `{cycleId, budgetAmount, used, left, overBudget, isOverBudget, adjustments}`
 	 *     in cents, and `euro` holding budget, used, left and overBudget in euros for display.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/comp-cycles/spec.md
+	 * @spec openspec/specs/comp-cycles/spec.md
 	 */
 	public function forCycle(array $cycle): array {
 		$cycleId = (string)($cycle['id'] ?? ($cycle['@self']['id'] ?? ''));

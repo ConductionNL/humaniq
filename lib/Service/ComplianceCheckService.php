@@ -25,7 +25,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md
+ * @spec openspec/specs/hrm-rule-engine/spec.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use OCP\ICacheFactory;
 /**
  * Coverage and the violations the caller may see.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
+ * @spec openspec/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
  */
 final class ComplianceCheckService {
 
@@ -58,7 +58,7 @@ final class ComplianceCheckService {
 	 * @param RecordStoreInterface $store        The caller-scoped reads.
 	 * @param ICacheFactory|null   $cacheFactory Keeps the unfiltered audit for a minute; null runs it every time.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
 	 */
 	public function __construct(
 		private readonly RuleAuditService $audit,
@@ -75,7 +75,7 @@ final class ComplianceCheckService {
 	 *
 	 * @return array{coverage: array<string, mixed>, counts: array<string, int>, violations: list<array<string, string>>}
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
 	 */
 	public function run(string $jurisdiction = 'NL'): array {
 		$findings = $this->findings(jurisdiction: $jurisdiction);

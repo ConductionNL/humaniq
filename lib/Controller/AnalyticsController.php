@@ -128,7 +128,7 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse 200 {period, units}, 400 for a bad period, 401 signed out, 403 without an administration.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
+	 * @spec openspec/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
 	 */
 	#[NoAdminRequired]
 	public function billableShare(): JSONResponse {
@@ -142,7 +142,7 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse 200 {period, orgUnitId, name, people}, 400 for a bad period, 401 signed out, 403 for a unit the caller may not read.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
+	 * @spec openspec/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
 	 */
 	#[NoAdminRequired]
 	public function billableSharePeople(): JSONResponse {

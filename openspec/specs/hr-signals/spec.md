@@ -11,6 +11,7 @@ built_by: openspec/changes/archive/2026-07-13-hr-signals
 **OpenSpec changes**:
 - [hr-signals](../../changes/archive/2026-07-13-hr-signals/) _(archived 2026-07-13)_ — corpus-first HR-moment signalling: `nl-signaal-contract-verloopt` (temporary contract ending ≤60 days, no successor — advisory) + `nl-aanzegtermijn-bewaking` (BW 7:668 lid 1, mandatory) with the new `aanzegdOn` field, `NlSignalChecks` + the `signals` audit context, the 'Aflopende contracten' dashboard widget, and one intended-violation seed (kind: config)
 - [hrmq-dashboard-steering-indicators](../../changes/hrmq-dashboard-steering-indicators/) — **Status**: in-progress — modifies REQ-SIG-005: the 'Aflopende contracten' signal folds into the Dashboard's merged Obligations list instead of a dedicated widget; the rule, the 60-day window, and REQ-SIG-001–004/006 are unchanged
+- [matrix-rows-without-a-requirement](../../changes/archive/2026-11-21-matrix-rows-without-a-requirement/) _(archived 2026-11-21)_ — adds the requirements above that the HR matrix rows named without one
 
 ## Purpose
 
@@ -128,3 +129,26 @@ still touches both. `npm run check:manifest` SHALL stay green.
 - GIVEN a fresh register import on 2026-07-13
 - WHEN `occ humaniq:rules:audit` runs
 - THEN `contract-devries-tijdelijk` carries exactly the two new violations and every other seeded object reports the same results as before this change
+
+### Requirement: HR SHALL be signalled before a probation period ends (REQ-SIG-007)
+
+A contract with a `proeftijdEndDate` SHALL raise an advisory signal from 14 days before that
+date until it passes. The signal SHALL name the employee, the contract and the end date. It
+SHALL show on the Dashboard obligations list beside expiring contracts.
+
+Rows: `ppl-contract-expiry-signal` (humaniq matrix).
+
+#### Scenario: A probation period ends next week
+
+@e2e exclude Audit rule with no journey of its own; verified by NlSignalChecksTest (probation end within the window).
+- **GIVEN** a contract whose `proeftijdEndDate` is 10 days from today
+- **WHEN** `occ humaniq:rules:audit` runs
+- **THEN** the contract carries an advisory probation-end signal with that date
+- **AND** the Dashboard obligations list shows it
+
+#### Scenario: A probation period that ended raises nothing
+
+@e2e exclude Audit rule with no journey of its own; verified by NlSignalChecksTest (ended probation raises nothing).
+- **GIVEN** a contract whose `proeftijdEndDate` was yesterday
+- **WHEN** the audit runs
+- **THEN** no probation-end signal is reported for that contract

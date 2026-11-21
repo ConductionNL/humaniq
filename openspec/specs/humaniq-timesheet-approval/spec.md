@@ -171,3 +171,39 @@ this requirement is satisfied only when the dependency items land.
 @e2e exclude API-tamper path has no UI surface; verified by the stamping listener unit tests
 - **WHEN** a client supplies `rejectionReason` on a write that is not a submitted→rejected edge
 - **THEN** the supplied value is discarded and the stored value persists
+
+### Requirement: An empty timesheet SHALL NOT be submitted
+
+The `submit` transition SHALL be refused for a timesheet with no bookings (`entryCount` 0). The
+refusal SHALL say that the timesheet has no hours.
+
+Rows: `tim-timesheet-not-empty` (humaniq matrix).
+
+#### Scenario: An employee submits a timesheet with no bookings
+
+@e2e exclude Guard with no journey of its own beyond the hours-process suite; verified by TimesheetNotEmptyGuardTest.
+- **GIVEN** a `Timesheet` in state `draft` with `entryCount` 0
+- **WHEN** the employee applies the `submit` transition
+- **THEN** the transition is refused, the state stays `draft` and the refusal names the missing hours
+
+### Requirement: An approved timesheet SHALL be reopenable until payroll has used it
+
+The `reopen` transition SHALL move an approved timesheet back to `draft` and clear its approval
+fields. It SHALL be refused once a payroll run that is approved or later has paid hours from the
+timesheet.
+
+Rows: `tim-reopen` (humaniq matrix).
+
+#### Scenario: HR reopens an approved timesheet for a correction
+
+@e2e exclude Lifecycle guard; verified by TimesheetReopenGuardTest (reopen allowed before payroll used the hours).
+- **GIVEN** an approved timesheet that no payroll run has used
+- **WHEN** HR applies `reopen`
+- **THEN** the timesheet is `draft`, its entries are editable and `approvedBy` and `approvedAt` are empty
+
+#### Scenario: Payroll already paid the hours
+
+@e2e exclude Needs a payroll run that paid the timesheet; verified by TimesheetReopenGuardTest (reopen refused once paid).
+- **GIVEN** an approved timesheet whose hours an approved payroll run has paid
+- **WHEN** HR applies `reopen`
+- **THEN** the transition is refused and the refusal names the payroll run

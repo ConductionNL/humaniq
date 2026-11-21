@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md
+ * @spec openspec/specs/receipt-ocr/spec.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Finance reads the VAT to reclaim per month (REQ-RCPT-008).
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
+ * @spec openspec/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
  */
 #[CoversClass(ExpenseVatService::class)]
 #[CoversClass(ExpenseVatController::class)]

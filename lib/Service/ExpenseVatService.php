@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md
+ * @spec openspec/specs/receipt-ocr/spec.md
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use InvalidArgumentException;
 /**
  * The reimbursed claims with VAT of one month, and their total.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
+ * @spec openspec/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
  */
 final class ExpenseVatService {
 
@@ -43,7 +43,7 @@ final class ExpenseVatService {
 	 * @param AnalyticsService $analytics Reads the administration's claims.
 	 * @param AnalyticsAccess  $access    Who may read the administration's figures.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
+	 * @spec openspec/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
 	 */
 	public function __construct(
 		private readonly AnalyticsService $analytics,
@@ -62,7 +62,7 @@ final class ExpenseVatService {
 	 *
 	 * @throws InvalidArgumentException For a period that is not `YYYY-MM`.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
+	 * @spec openspec/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
 	 */
 	public function overview(string $userId, string $period): ?array {
 		if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period) !== 1) {

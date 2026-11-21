@@ -23,7 +23,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md
+ * @spec openspec/specs/time-entry-capture/spec.md
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCP\EventDispatcher\IEventListener;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
+ * @spec openspec/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
  */
 class TimeEntryRateListener implements IEventListener {
 
@@ -67,7 +67,7 @@ class TimeEntryRateListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
+	 * @spec openspec/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
 	 */
 	public function handle(Event $event): void {
 		if ($this->marker->isInternal() === true) {
@@ -98,7 +98,7 @@ class TimeEntryRateListener implements IEventListener {
 	 *
 	 * @return array{hourlyRate: int|null}|null
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
+	 * @spec openspec/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
 	 */
 	public function rateStamp(array $entry): ?array {
 		$rate = ($entry['hourlyRate'] ?? null);

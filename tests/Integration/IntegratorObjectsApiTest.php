@@ -26,7 +26,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hris-api-public/spec.md
+ * @spec openspec/specs/hris-api-public/spec.md
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The three REQ-HRIS-006 scenarios over HTTP.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hris-api-public/spec.md#requirement-an-integrator-shall-read-and-write-hr-records-through-the-objects-api-with-an-app-password-req-hris-006
+ * @spec openspec/specs/hris-api-public/spec.md#requirement-an-integrator-shall-read-and-write-hr-records-through-the-objects-api-with-an-app-password-req-hris-006
  */
 final class IntegratorObjectsApiTest extends TestCase {
 

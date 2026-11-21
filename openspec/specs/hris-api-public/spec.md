@@ -10,6 +10,7 @@ built_by: openspec/changes/archive/2026-09-07-hris-api-public
 **Scope**: humaniq
 **OpenSpec changes**:
 - [hris-api-public](../../changes/archive/2026-09-07-hris-api-public/) _(archived 2026-09-07)_ — humaniq builds no parallel REST/GraphQL/webhook/SCIM stack; external access is Nextcloud app passwords over OpenRegister's own API, catalogued by a new IntegrationAccount schema under Configuratie (kind: config)
+- [matrix-rows-without-a-requirement](../../changes/archive/2026-11-21-matrix-rows-without-a-requirement/) _(archived 2026-11-21)_ — adds the requirements above that the HR matrix rows named without one
 
 ## Purpose
 
@@ -99,3 +100,32 @@ humaniq's documentation SHALL recommend, as the default starting grant for a new
 - **GIVEN** the manifest after this change
 - **WHEN** an admin navigates to `Configuratie › Integraties`
 - **THEN** an `IntegrationAccounts` entry is present, and the top-level menu count is unchanged from ADR-001's frozen 9 (8 menus + Configuratie)
+
+### Requirement: An integrator SHALL read and write HR records through the objects API with an app password (REQ-HRIS-006)
+
+An external system SHALL read and write humaniq records through OpenRegister's objects API at
+`/api/objects/humaniq/{schema}`, signed in with a Nextcloud app password of a service account.
+Every call SHALL get exactly the access that account has in the app: the same role checks, the
+same field access and the same administration scope as a person signed in with that account.
+humaniq SHALL document the calls an integrator needs for the employee and the contract.
+
+Rows: `plt-public-api` (humaniq matrix).
+
+#### Scenario: A payroll bureau reads an employee
+
+@e2e exclude Needs a service account in humaniq-payroll with an app password; covered by tests/Integration/IntegratorObjectsApiTest, run with phpunit-integration.xml against a live instance.
+- **GIVEN** a service account in the payroll group with an app password
+- **WHEN** the bureau calls `GET /api/objects/humaniq/Employee/{id}` with that app password
+- **THEN** the response holds the employee with the fields the payroll role may read
+
+#### Scenario: An identity manager updates a work e-mail address
+
+@e2e exclude Needs a service account in humaniq-hr with an app password; covered by tests/Integration/IntegratorObjectsApiTest (PATCH and the audit trail naming the account).
+- **GIVEN** a service account in the HR group with an app password
+- **WHEN** it calls `PATCH /api/objects/humaniq/Employee/{id}` with a new work e-mail address
+- **THEN** the employee carries the new address and the audit trail names the service account
+
+#### Scenario: An account without the role gets nothing
+- **GIVEN** a service account in no humaniq group
+- **WHEN** it calls `GET /api/objects/humaniq/Employee`
+- **THEN** no employee is returned

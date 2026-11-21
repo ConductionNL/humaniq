@@ -23,7 +23,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md
+ * @spec openspec/specs/time-attendance/spec.md
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use RuntimeException;
 /**
  * The caller's own clock day: open it, close it.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
+ * @spec openspec/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
  */
 final class AttendanceClockService {
 
@@ -64,7 +64,7 @@ final class AttendanceClockService {
 	 * @param ITimeFactory                      $timeFactory  The clock.
 	 * @param LoggerInterface                   $logger       Logger.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
+	 * @spec openspec/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
 	 */
 	public function __construct(
 		private readonly RecordStoreInterface $store,
@@ -83,7 +83,7 @@ final class AttendanceClockService {
 	 *
 	 * @return array{status: int, body: array<string, mixed>} 201 with the record; 404 without a linked employee; 409 when a day is already open.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
+	 * @spec openspec/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
 	 */
 	public function clockIn(string $uid): array {
 		$employee = $this->employeeOf(uid: $uid);
@@ -122,7 +122,7 @@ final class AttendanceClockService {
 	 *
 	 * @return array{status: int, body: array<string, mixed>} 200 with the closed record; 409 when no day is open; 400 for a negative break; 502 when the transition fails.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
+	 * @spec openspec/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
 	 */
 	public function clockOut(string $uid, ?int $breakMinutes = null): array {
 		if ($breakMinutes !== null && $breakMinutes < 0) {
@@ -163,7 +163,7 @@ final class AttendanceClockService {
 	 *
 	 * @return float
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
+	 * @spec openspec/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
 	 */
 	public static function workedHours(string $clockIn, DateTimeInterface $clockOut, int $breakMinutes): float {
 		try {
