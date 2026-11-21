@@ -49,6 +49,8 @@ class AllowanceRateResolver {
 	 *
 	 * @return float|null The percentage (0-100), or null when neither applies.
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) CaoRegistry is the static corpus reader the terms resolver uses too.
+	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-an-end-of-year-payment-shall-be-reserved-and-paid-when-a-rate-applies-req-rsp-003
 	 */
 	public function rate(array $contract, string $contractField, string $caoKey): ?float {
