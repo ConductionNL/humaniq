@@ -260,6 +260,113 @@
 					}
 				]
 			}
+		},
+		{
+			"id": "VatToReclaim",
+			"route": "/expenses/vat",
+			"type": "dashboard",
+			"title": "VAT to reclaim",
+			"config": {
+				"description": "The VAT on the claims reimbursed last month, through payroll or directly, so the employer can reclaim it in its VAT return. The payroll journal books this VAT on the VAT account.",
+				"_note": "matrix-rows-without-a-requirement REQ-RCPT-008: GET /api/expenses/vat (HR and the accountant role of the active administration; the previous month by default, period=YYYY-MM on the endpoint) lists every reimbursed claim with a VAT amount and the total. PayrollGLPostService books the same VAT on glpost_account_vat instead of the reimbursements account.",
+				"widgets": [
+					{
+						"id": "vat-total",
+						"type": "stat",
+						"title": "VAT to reclaim",
+						"icon": "CurrencyEur",
+						"content": {
+							"label": "VAT to reclaim",
+							"icon": "CurrencyEur",
+							"format": {
+								"style": "currency",
+								"currency": "EUR",
+								"decimals": 2
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/expenses/vat"
+							},
+							"valueField": "totalVat"
+						}
+					},
+					{
+						"id": "vat-count",
+						"type": "stat",
+						"title": "Claims with VAT",
+						"icon": "ReceiptTextOutline",
+						"content": {
+							"label": "Claims with VAT",
+							"icon": "ReceiptTextOutline",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/expenses/vat"
+							},
+							"valueField": "count"
+						}
+					},
+					{
+						"id": "vat-claims",
+						"type": "object-table",
+						"title": "Claims with VAT",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/expenses/vat",
+								"responsePath": "claims"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Claim",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "vendor",
+									"label": "Vendor"
+								},
+								{
+									"key": "expenseDate",
+									"label": "Date"
+								},
+								{
+									"key": "amount",
+									"label": "Amount"
+								},
+								{
+									"key": "vatAmount",
+									"label": "VAT amount"
+								}
+							],
+							"rowRoute": "ExpenseDetail",
+							"emptyText": "No reimbursed claims with VAT last month"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "vat-total",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2
+					},
+					{
+						"id": 2,
+						"widgetId": "vat-count",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 2
+					},
+					{
+						"id": 3,
+						"widgetId": "vat-claims",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 8
+					}
+				]
+			}
 		}
 	],
 	"pageInstances": [

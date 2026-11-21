@@ -12,11 +12,15 @@ refused.
 Rows: `tal-comp-cycle` (humaniq matrix).
 
 #### Scenario: The budget is partly used
+
+@e2e exclude Budget arithmetic read by four stat tiles on CompReviewCycleDetail; verified by CompCycleBudgetTest and CompCycleControllerTest.
 - **GIVEN** a cycle with a budget of 10,000 euros and two proposals adding 2,500 and 3,000 euros
 - **WHEN** HR opens the cycle page
 - **THEN** it shows 5,500 euros used and 4,500 euros left
 
 #### Scenario: A proposal goes over budget
+
+@e2e exclude Over-budget arithmetic, flagged and never refused; verified by CompCycleBudgetTest.
 - **GIVEN** a cycle with 1,000 euros left
 - **WHEN** a manager proposes a raise costing 1,500 euros
 - **THEN** the proposal is saved and the cycle page flags the cycle as 500 euros over budget

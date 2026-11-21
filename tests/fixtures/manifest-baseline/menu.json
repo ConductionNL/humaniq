@@ -324,6 +324,12 @@
 				"route": "IncompleteDossiers"
 			},
 			{
+				"id": "ComplianceCheck",
+				"label": "Compliance check",
+				"icon": "ShieldCheckOutline",
+				"route": "ComplianceCheck"
+			},
+			{
 				"id": "PersonnelDocuments",
 				"label": "Personnel documents",
 				"icon": "FileAccountOutline",
@@ -415,6 +421,13 @@
 				"icon": "ClockPlusOutline",
 				"route": "TimeEstimates",
 				"order": 15
+			},
+			{
+				"id": "BillableHours",
+				"label": "Billable hours per team",
+				"icon": "ClockCheckOutline",
+				"route": "BillableHours",
+				"order": 21
 			},
 			{
 				"id": "LeaveRequests",
@@ -519,6 +532,12 @@
 				"route": "AttendanceRecords"
 			},
 			{
+				"id": "AttendanceToday",
+				"label": "Attendance today",
+				"icon": "AccountClockOutline",
+				"route": "AttendanceToday"
+			},
+			{
 				"id": "EmployeeCompetences",
 				"label": "Competences",
 				"icon": "CertificateOutline",
@@ -582,6 +601,12 @@
 						"eq": "standard"
 					}
 				}
+			},
+			{
+				"id": "VatToReclaim",
+				"label": "VAT to reclaim",
+				"icon": "CurrencyEur",
+				"route": "VatToReclaim"
 			},
 			{
 				"id": "ExpenseApproval",

@@ -221,4 +221,32 @@ class AwfTariffResolverTest extends TestCase {
 		$this->assertSame(0.0, AwfHoursReview::contractHoursIn($this->contract(['startDate' => '2026-07-01']), '2026-05'));
 
 	}//end testContractHoursPerPeriod()
+
+	/**
+	 * REQ-AWF-103: the three contracts of the requirement's scenarios, each
+	 * resolved for the June run and checked against the tariff the rules
+	 * audit expects on the contract, so the run and the audit cannot
+	 * disagree. The basis `contract` is the permanent-written basis.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/awf-premium-review/spec.md#REQ-AWF-103
+	 */
+	public function testThePremiumFollowsAPermanentWrittenOrAFlexContract(): void {
+		$permanentWritten = $this->contract(['type' => 'permanent', 'writtenContract' => true, 'hoursPerWeek' => 32.0]);
+		$fixedTerm        = $this->contract(['type' => 'temporary', 'writtenContract' => true, 'hoursPerWeek' => 32.0]);
+		$permanentUnwritten = $this->contract(['type' => 'permanent', 'writtenContract' => false, 'hoursPerWeek' => 32.0]);
+
+		// Aged 30 in June 2026 and paid a full month, so no youth exception applies.
+		$this->assertSame(['tariff' => 'low', 'basis' => 'contract'], AwfTariffResolver::resolve($permanentWritten, '1996-03-01', '2026-06', 138.67));
+		$this->assertSame(['tariff' => 'high', 'basis' => 'flex'], AwfTariffResolver::resolve($fixedTerm, '1996-03-01', '2026-06', 138.67));
+		$this->assertSame(['tariff' => 'high', 'basis' => 'flex'], AwfTariffResolver::resolve($permanentUnwritten, '1996-03-01', '2026-06', 138.67));
+
+		// The audit's expectation is the same resolver's: a high premium on an
+		// unwritten permanent contract is what it expects, so no violation.
+		$this->assertSame('low', AwfTariffResolver::contractTariff($permanentWritten));
+		$this->assertSame('high', AwfTariffResolver::contractTariff($fixedTerm));
+		$this->assertSame('high', AwfTariffResolver::contractTariff($permanentUnwritten));
+
+	}//end testThePremiumFollowsAPermanentWrittenOrAFlexContract()
 }//end class

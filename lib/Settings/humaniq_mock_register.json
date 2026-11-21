@@ -16,7 +16,7 @@
       "humaniq": {
         "slug": "humaniq",
         "title": "Humaniq Register (demo)",
-        "version": "0.64.0",
+        "version": "0.70.0",
         "description": "Demo data for Humaniq Register. Generated from the register's own schemas: see hydra-gates/scripts/lib/generate_mock_register.py.",
         "authorization": {
           "read": [
@@ -11513,6 +11513,40 @@
               ]
             }
           },
+          "leavePayout": {
+            "title": "Leave payout",
+            "type": "object",
+            "nullable": true,
+            "description": "The open leave balance paid on a leaver's final payslip: the hours and the amount, as one line. Counted in the taxable gross pay.",
+            "x-notes": "REQ-OFC-005 (BW 7:641): set only on the payslip of the period the employee's endDate falls in, when entitled plus extra-statutory minus used leave hours of that year is above zero, at the last contract's hourlyWage. Written by FinalLeavePayoutService; absent otherwise.",
+            "properties": {
+              "hours": {
+                "title": "Leave hours paid",
+                "type": "number",
+                "description": "The open leave hours paid out on this final payslip."
+              },
+              "amount": {
+                "title": "Leave payout amount",
+                "type": "number",
+                "description": "The gross amount paid for those leave hours, at the last hourly wage."
+              }
+            },
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
           "leaveBuySell": {
             "title": "Leave buy sell",
             "type": "number",
@@ -16345,6 +16379,15 @@
             "default": false,
             "title": "Billable",
             "description": "Whether these hours are billable to a client or project."
+          },
+          "hourlyRate": {
+            "type": "integer",
+            "order": 61,
+            "nullable": true,
+            "minimum": 0,
+            "title": "Hourly rate",
+            "description": "The rate these billable hours are billed at, in cents an hour. Taken from the project's rate when the booking is written; empty for hours that are not billable.",
+            "x-notes": "REQ-TEC-009. Stamped by TimeEntryRateListener from the planninq project's hourlyRate (euros) when billable is true and no rate is given; a rate already on the entry is kept, so a correction stands; cleared when billable is false. The approved-time event carries hours times rate per project."
           },
           "costCenter": {
             "type": "string",

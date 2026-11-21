@@ -34,6 +34,13 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'document#generate', 'url' => '/api/documents/generate', 'verb' => 'POST'],
         // payroll-annual-statement-action: queue a finished year's annual statements (HR or payroll).
         ['name' => 'annualStatementBatch#queueJaaropgaven', 'url' => '/api/documents/jaaropgaven', 'verb' => 'POST'],
+        // matrix-rows-without-a-requirement REQ-TA-008: the caller clocks in and out from My attendance.
+        ['name' => 'attendanceClock#clockIn', 'url' => '/api/attendance/clock-in', 'verb' => 'POST'],
+        ['name' => 'attendanceClock#clockOut', 'url' => '/api/attendance/clock-out', 'verb' => 'POST'],
+        // matrix-rows-without-a-requirement REQ-TA-007: who is present, late or away today.
+        ['name' => 'attendanceClock#today', 'url' => '/api/attendance/today', 'verb' => 'GET'],
+        // matrix-rows-without-a-requirement REQ-RULE-010: the Compliance check page's audit.
+        ['name' => 'complianceCheck#check', 'url' => '/api/compliance/check', 'verb' => 'GET'],
         // people-esign-hr-documents: send a generated HR document for signature (HR or admin).
         ['name' => 'documentSigning#requestSignature', 'url' => '/api/documents/{id}/request-signature', 'verb' => 'POST'],
         // reporting-pay-transparency: the gender pay gap report (HR and accountants), and its CSV.
@@ -139,6 +146,8 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'compCycle#proposeCollective', 'url' => '/api/comp/cycles/propose', 'verb' => 'POST'],
         ['name' => 'compCycle#approveCycle', 'url' => '/api/comp/cycles/approve', 'verb' => 'POST'],
         ['name' => 'compCycle#effectuateCycle', 'url' => '/api/comp/cycles/effectuate', 'verb' => 'POST'],
+        // matrix-rows-without-a-requirement REQ-COMP-009: the cycle's raises against its budget.
+        ['name' => 'compCycle#budget', 'url' => '/api/comp/cycles/budget', 'verb' => 'GET'],
         // absence-deadlines-and-signals D3: the 42-week notification to UWV, generated from the case.
         ['name' => 'uwvNotification#generate', 'url' => '/api/sick-leave/{id}/uwv-notification', 'verb' => 'POST'],
         // multi-administratie — guarded per-user active-administration
@@ -172,6 +181,8 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // RBAC (ObjectService::find under ambient RBAC) then an explicit
         // admin-or-owner ownership check.
         ['name' => 'expense#extractReceipt', 'url' => '/api/expenses/extract-receipt', 'verb' => 'POST'],
+        // matrix-rows-without-a-requirement REQ-RCPT-008: the VAT to reclaim per month.
+        ['name' => 'expenseVat#overview', 'url' => '/api/expenses/vat', 'verb' => 'GET'],
         // offer-esign — guarded, admin/HR-only trigger for the
         // ApplicationDetail "request-offer-signature" manifest api-call
         // action (design.md D8): resolve-first RBAC (ObjectService::find
@@ -199,6 +210,9 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // parameter is ever read. BEFORE the SPA catch-all.
         ['name' => 'analytics#trends', 'url' => '/api/analytics/trends', 'verb' => 'GET'],
         ['name' => 'analytics#obligations', 'url' => '/api/analytics/obligations', 'verb' => 'GET'],
+        // matrix-rows-without-a-requirement REQ-DSI-010: the billable share per team and per person.
+        ['name' => 'analytics#billableShare', 'url' => '/api/analytics/billable-share', 'verb' => 'GET'],
+        ['name' => 'analytics#billableSharePeople', 'url' => '/api/analytics/billable-share/people', 'verb' => 'GET'],
         // department-figures: units side by side (HR/accountant), the caller's own units, and one unit.
         ['name' => 'departmentFigures#units', 'url' => '/api/analytics/units', 'verb' => 'GET'],
         ['name' => 'departmentFigures#myUnits', 'url' => '/api/analytics/my-units', 'verb' => 'GET'],

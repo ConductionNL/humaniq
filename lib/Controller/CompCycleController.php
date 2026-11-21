@@ -34,6 +34,7 @@ use OCA\Humaniq\Kernel\Contracts\CompAdjustmentServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\CompCollectiveServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\CompCycleApproverInterface;
 use OCA\Humaniq\Service\AdministrationService;
+use OCA\Humaniq\Service\CompCycleBudget;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -45,6 +46,9 @@ use OCP\IUserSession;
 
 /**
  * Propose, approve and effectuate a whole compensation cycle.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) the cycle endpoints share one RBAC and
+ * role guard; the budget reader joins the propose, approve and effectuate services.
  *
  * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
  */
@@ -59,6 +63,7 @@ class CompCycleController extends Controller {
 	 * @param AdministrationService $administrationService The caller's role in the active administration.
 	 * @param IGroupManager $groupManager The admin check.
 	 * @param IUserSession $userSession The caller.
+	 * @param CompCycleBudget $budget The cycle's raises against its budget.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -69,6 +74,7 @@ class CompCycleController extends Controller {
 		private readonly AdministrationService $administrationService,
 		private readonly IGroupManager $groupManager,
 		private readonly IUserSession $userSession,
+		private readonly CompCycleBudget $budget,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -151,6 +157,31 @@ class CompCycleController extends Controller {
 
 		return new JSONResponse(['cycleId' => $cycleId, 'dryRun' => $preview, 'counts' => $counts, 'outcomes' => $outcomes]);
 	}//end effectuateCycle()
+
+	/**
+	 * `GET /api/comp/cycles/budget?cycleId=`: the cycle's budget, what its
+	 * proposed, approved and effective raises use, what is left and how far
+	 * over budget it is, in cents. Reading it is guarded like the other cycle
+	 * endpoints.
+	 *
+	 * @param string|null $cycleId The CompReviewCycle id.
+	 *
+	 * @return JSONResponse The budget figures.
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/comp-cycles/spec.md
+	 */
+	#[NoAdminRequired]
+	public function budget(?string $cycleId = null): JSONResponse {
+		$caller = $this->authorizeCycle($cycleId);
+		if ($caller instanceof JSONResponse) {
+			return $caller;
+		}
+
+		$cycle = ($this->rbac->findOrNull(id: trim((string)$cycleId), schema: 'CompReviewCycle') ?? []);
+		$cycle['id'] = trim((string)$cycleId);
+
+		return new JSONResponse($this->budget->forCycle(cycle: $cycle));
+	}//end budget()
 
 	/**
 	 * The cycle endpoints' guard: a signed-in caller, a cycle their RBAC can

@@ -98,11 +98,13 @@ class TimeEntryEventService implements TimeEntryEventServiceInterface {
 	 * @param ContainerInterface $container The DI container (lazy OpenRegister WebhookService lookup).
 	 * @param IEventDispatcher $eventDispatcher Nextcloud's typed event dispatcher (ADR-041 cross-app event).
 	 * @param LoggerInterface $logger The logger.
+	 * @param RecordStoreInterface|null $store Reads the timesheet's bookings for the amount per project (REQ-TEC-009); null leaves `projects` out.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IEventDispatcher $eventDispatcher,
 		private readonly LoggerInterface $logger,
+		private readonly ?RecordStoreInterface $store = null,
 	) {
 
 	}//end __construct()
@@ -195,9 +197,54 @@ class TimeEntryEventService implements TimeEntryEventServiceInterface {
 		$header->eventId = $uuid;
 		$header->time = $time;
 
-		return (new CloudEventEnvelope())->build(header: $header, data: self::approvedData(timeEntry: $timeEntry, approvedAt: $approvedAt));
+		$data = self::approvedData(timeEntry: $timeEntry, approvedAt: $approvedAt);
+		if ($this->store !== null) {
+			$data['projects'] = $this->projectAmounts(timesheetId: (string)$data['timesheetId']);
+		}
+
+		return (new CloudEventEnvelope())->build(header: $header, data: $data);
 
 	}//end buildApprovedEvent()
+
+	/**
+	 * The billable hours and their amount (hours times each booking's
+	 * `hourlyRate`) per project of the timesheet's bookings (REQ-TEC-009).
+	 * A booking without a rate counts its hours and adds no amount. A failed
+	 * read gives an empty list: the event is never held back for it.
+	 *
+	 * @param string $timesheetId The approved timesheet.
+	 *
+	 * @return list<array{projectId: string, hours: float, amount: float}>
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
+	 */
+	public function projectAmounts(string $timesheetId): array {
+		if ($this->store === null || $timesheetId === '') {
+			return [];
+		}
+
+		try {
+			$entries = $this->store->findFiltered(schema: 'TimeEntry', filters: ['timesheetId' => $timesheetId]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('humaniq: the bookings of an approved timesheet could not be read for its project amounts (' . $e::class . ')');
+			return [];
+		}
+
+		$projects = [];
+		foreach ($entries as $entry) {
+			$projectId = trim((string)($entry['projectId'] ?? ''));
+			if ($projectId === '' || ($entry['billable'] ?? false) !== true) {
+				continue;
+			}
+
+			$hours = (float)($entry['hours'] ?? 0);
+			$projects[$projectId] ??= ['projectId' => $projectId, 'hours' => 0.0, 'cents' => 0];
+			$projects[$projectId]['hours'] += $hours;
+			$projects[$projectId]['cents'] += (int)round($hours * (int)($entry['hourlyRate'] ?? 0));
+		}
+
+		return array_values(array_map(static fn (array $row): array => ['projectId' => $row['projectId'], 'hours' => round($row['hours'], 2), 'amount' => round(($row['cents'] / 100), 2)], $projects));
+	}//end projectAmounts()
 
 	/**
 	 * The approved event's data: the timesheet's figures and references.

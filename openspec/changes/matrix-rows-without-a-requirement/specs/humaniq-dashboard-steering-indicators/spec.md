@@ -18,11 +18,15 @@ Rows: `rep-billable-ratio` (humaniq matrix).
 - **THEN** Vergunningen shows 70 percent and Burgerzaken 60 percent, each with its hours
 
 #### Scenario: The share per person in one team
+
+@e2e exclude Needs approved October hours seeded per team member; verified by BillableShareServiceTest::testTheSharePerPersonInOneTeam.
 - **GIVEN** the same October in Team Vergunningen
 - **WHEN** the manager opens the team's row
 - **THEN** each employee of the team is listed with their approved hours and billable share
 
 #### Scenario: Another team stays closed
+
+@e2e exclude Needs a manager-only account; the 403 is verified by AnalyticsBillableShareControllerTest and BillableShareServiceTest.
 - **GIVEN** a manager who does not lead Team Belastingen
 - **WHEN** they request the billable share for Team Belastingen
 - **THEN** the request is refused and no figure is returned

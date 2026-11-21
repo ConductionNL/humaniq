@@ -12,12 +12,16 @@ case SHALL then read `verlofsaldoUitbetaald: true`.
 Rows: `lve-leave-in-pay` (humaniq matrix).
 
 #### Scenario: A leaver with 16 open hours
+
+@e2e exclude Payroll run arithmetic with no screen of its own; verified by FinalLeavePayoutServiceTest and PayrollRunServiceTest::testALeaverIsPaidTheOpenLeaveBalanceOnTheFinalPayslip.
 - **GIVEN** an employee leaving on 31 March with 16 open leave hours and an hourly wage of 25 euros
 - **WHEN** the March payroll run is calculated
 - **THEN** their payslip carries a leave payout line of 16 hours and 400 euros
 - **AND** their offboarding case reads `verlofsaldoUitbetaald: true`
 
 #### Scenario: A leaver with no open hours
+
+@e2e exclude Payroll run arithmetic; verified by PayrollRunServiceTest::testALeaverWithNoOpenHoursHasNoPayoutLine.
 - **GIVEN** an employee leaving with every leave hour used
 - **WHEN** the run is calculated
 - **THEN** the payslip has no leave payout line

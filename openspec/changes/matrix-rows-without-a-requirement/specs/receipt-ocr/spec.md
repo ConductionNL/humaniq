@@ -12,6 +12,8 @@ book that VAT on the VAT account instead of on the cost account.
 Rows: `dm-expense-vat` (humaniq matrix).
 
 #### Scenario: An employee records the VAT on a receipt
+
+@e2e exclude The VAT amount field already exists on the claim and in the ExpenseDetail data widget; this change adds no screen for it.
 - **GIVEN** a hotel receipt of 121.00 euros with 21.00 euros VAT
 - **WHEN** the employee submits the claim with the VAT amount filled in
 - **THEN** `ExpenseDetail` shows a VAT amount of 21.00 on the claim
@@ -22,6 +24,8 @@ Rows: `dm-expense-vat` (humaniq matrix).
 - **THEN** it lists the two claims with VAT and a total of 30.00 to reclaim
 
 #### Scenario: The journal books the VAT apart
+
+@e2e exclude Needs shillinq to receive the journal; verified by PayrollGLPostServiceTest::testTheJournalBooksTheVatApart and testPostRunBooksTheVatOfTheRunsClaims.
 - **GIVEN** the May payroll run that reimburses the hotel claim
 - **WHEN** the journal is posted to shillinq
 - **THEN** it carries 100.00 on the cost account and 21.00 on the VAT account

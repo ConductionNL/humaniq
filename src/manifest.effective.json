@@ -549,6 +549,12 @@
 					"route": "IncompleteDossiers"
 				},
 				{
+					"icon": "ShieldCheckOutline",
+					"id": "ComplianceCheck",
+					"label": "Compliance check",
+					"route": "ComplianceCheck"
+				},
+				{
 					"icon": "FileAccountOutline",
 					"id": "PersonnelDocuments",
 					"label": "Personnel documents",
@@ -640,6 +646,13 @@
 					"label": "Time estimates",
 					"order": 15,
 					"route": "TimeEstimates"
+				},
+				{
+					"icon": "ClockCheckOutline",
+					"id": "BillableHours",
+					"label": "Billable hours per team",
+					"order": 21,
+					"route": "BillableHours"
 				},
 				{
 					"icon": "CalendarWeekendOutline",
@@ -744,6 +757,12 @@
 					"route": "AttendanceRecords"
 				},
 				{
+					"icon": "AccountClockOutline",
+					"id": "AttendanceToday",
+					"label": "Attendance today",
+					"route": "AttendanceToday"
+				},
+				{
 					"icon": "CertificateOutline",
 					"id": "EmployeeCompetences",
 					"label": "Competences",
@@ -807,6 +826,12 @@
 							"eq": "standard"
 						}
 					}
+				},
+				{
+					"icon": "CurrencyEur",
+					"id": "VatToReclaim",
+					"label": "VAT to reclaim",
+					"route": "VatToReclaim"
 				},
 				{
 					"icon": "CheckDecagramOutline",
@@ -4510,6 +4535,148 @@
 		},
 		{
 			"config": {
+				"_note": "matrix-rows-without-a-requirement REQ-TA-007: the today view of the attendance pages. GET /api/attendance/today lists the people the caller may read (everyone placed in a unit for HR and accountants, the people of the units a manager leads) from AttendanceRecord, today's RosterAssignment, approved LeaveRequest and open SickLeaveCase. Working patterns hold no start time, so lateness is judged against the roster only.",
+				"description": "Who of your people is present, late, away or not clocked in today. Late means clocked in after the start of today's roster; away means approved leave or sick.",
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "today-present"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 3,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "today-late"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 6,
+						"gridY": 0,
+						"id": 3,
+						"widgetId": "today-away"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 9,
+						"gridY": 0,
+						"id": 4,
+						"widgetId": "today-not-clocked-in"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 2,
+						"id": 5,
+						"widgetId": "today-people"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"icon": "CheckCircleOutline",
+							"label": "Present",
+							"valueField": "counts.present"
+						},
+						"icon": "CheckCircleOutline",
+						"id": "today-present",
+						"title": "Present",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"icon": "AlertCircleOutline",
+							"label": "Late",
+							"valueField": "counts.late"
+						},
+						"icon": "AlertCircleOutline",
+						"id": "today-late",
+						"title": "Late",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"icon": "AccountClockOutline",
+							"label": "Away",
+							"valueField": "counts.away"
+						},
+						"icon": "AccountClockOutline",
+						"id": "today-away",
+						"title": "Away",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"icon": "AccountCancelOutline",
+							"label": "Not clocked in",
+							"valueField": "counts.not-clocked-in"
+						},
+						"icon": "AccountCancelOutline",
+						"id": "today-not-clocked-in",
+						"title": "Not clocked in",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Employee"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "clockIn",
+									"label": "Clocked in"
+								},
+								{
+									"key": "plannedStart",
+									"label": "Rostered start"
+								}
+							],
+							"emptyText": "No one you may read is placed in a unit today",
+							"endpointSource": {
+								"responsePath": "people",
+								"url": "/apps/humaniq/api/attendance/today"
+							},
+							"rowRoute": "EmployeeDetail"
+						},
+						"id": "today-people",
+						"title": "Today",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "AttendanceToday",
+			"route": "/attendance/today",
+			"title": "Attendance today",
+			"type": "dashboard"
+		},
+		{
+			"config": {
 				"_note": "cao-library (2026-07-14): read-only reference detail for one CAO (derived projection of lib/Standards/cao/{caoId}.json). The 'CAO' data widget surfaces the identity + verification flags (caoId/name/sector/version/effectiveDate/payScalesVerified/leaveEntitlementVerified/source); the 'Loonschalen & verlof' widget surfaces the actual scales/allowances/leave/working-time maps -- the reference facts a maintainer checks a contract against. No lifecycleActions (Cao has no x-openregister-lifecycle), no create/edit affordances (corpus-authored). Audit history is a sidebar tab.",
 				"allowCreate": false,
 				"layout": [
@@ -4582,7 +4749,7 @@
 		},
 		{
 			"config": {
-				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab. comp-collective-raise-and-step-increase (2026-09-28): a collective or step-increase cycle is run from here in three steps, each an open-modal header action on the CompCycleRunDialog host modal (src/dialogs), which shows a dry run first (propose, effectuate) and then posts to POST /api/comp/cycles/{propose,approve,effectuate}. A host modal and not api-call actions because api-call cannot show a preview of what it will write.",
+				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab. comp-collective-raise-and-step-increase (2026-09-28): a collective or step-increase cycle is run from here in three steps, each an open-modal header action on the CompCycleRunDialog host modal (src/dialogs), which shows a dry run first (propose, effectuate) and then posts to POST /api/comp/cycles/{propose,approve,effectuate}. A host modal and not api-call actions because api-call cannot show a preview of what it will write. matrix-rows-without-a-requirement REQ-COMP-009: four stat tiles read GET /api/comp/cycles/budget for the cycle's budget, the monthly raises of its proposed, approved and effective adjustments, what is left and how far over budget it is; over budget is shown, never refused.",
 				"headerActions": [
 					{
 						"icon": "PlusCircleOutline",
@@ -4635,10 +4802,42 @@
 						"widgetId": "data"
 					},
 					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 0,
+						"gridY": 6,
+						"id": 3,
+						"widgetId": "budget-total"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 3,
+						"gridY": 6,
+						"id": 4,
+						"widgetId": "budget-used"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 6,
+						"gridY": 6,
+						"id": 5,
+						"widgetId": "budget-left"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 9,
+						"gridY": 6,
+						"id": 6,
+						"widgetId": "budget-over"
+					},
+					{
 						"gridHeight": 5,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 6,
+						"gridY": 8,
 						"id": 2,
 						"widgetId": "object-list"
 					}
@@ -4672,6 +4871,94 @@
 						"id": "data",
 						"title": "Cycle",
 						"type": "data"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"cycleId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/comp/cycles/budget"
+							},
+							"format": {
+								"currency": "EUR",
+								"decimals": 2,
+								"style": "currency"
+							},
+							"icon": "CashMultiple",
+							"label": "Budget",
+							"valueField": "euro.budget"
+						},
+						"icon": "CashMultiple",
+						"id": "budget-total",
+						"title": "Budget",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"cycleId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/comp/cycles/budget"
+							},
+							"format": {
+								"currency": "EUR",
+								"decimals": 2,
+								"style": "currency"
+							},
+							"icon": "CashPlus",
+							"label": "Budget used",
+							"valueField": "euro.used"
+						},
+						"icon": "CashPlus",
+						"id": "budget-used",
+						"title": "Budget used",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"cycleId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/comp/cycles/budget"
+							},
+							"format": {
+								"currency": "EUR",
+								"decimals": 2,
+								"style": "currency"
+							},
+							"icon": "CashCheck",
+							"label": "Budget left",
+							"valueField": "euro.left"
+						},
+						"icon": "CashCheck",
+						"id": "budget-left",
+						"title": "Budget left",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"cycleId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/comp/cycles/budget"
+							},
+							"format": {
+								"currency": "EUR",
+								"decimals": 2,
+								"style": "currency"
+							},
+							"icon": "CashRemove",
+							"label": "Over budget",
+							"valueField": "euro.overBudget"
+						},
+						"icon": "CashRemove",
+						"id": "budget-over",
+						"title": "Over budget",
+						"type": "stat"
 					},
 					{
 						"content": {
@@ -4766,6 +5053,189 @@
 			"id": "IncompleteDossiers",
 			"route": "/incomplete-files",
 			"title": "Incomplete personnel files",
+			"type": "dashboard"
+		},
+		{
+			"config": {
+				"_note": "matrix-rows-without-a-requirement REQ-RULE-010: the audit humaniq:rules:audit prints, on a page. Every widget reads GET /api/compliance/check, which runs RuleAuditService::findings (kept for a minute, so the tiles and the table share one run) and keeps only violations about records the caller may read (one caller-scoped read per schema), so a manager sees only their own people. The table is record-route-table: each violation row opens its own record through content.routes.",
+				"description": "The rule audit over every HR and payroll record: each violation with its rule, its severity and the record it is about, and how many catalogued rules are enforced. You see violations only about records you may read.",
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "rules-enforced"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 3,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "rules-catalogued"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 6,
+						"gridY": 0,
+						"id": 3,
+						"widgetId": "rules-not-enforced"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 9,
+						"gridY": 0,
+						"id": 4,
+						"widgetId": "mandatory-violations"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 2,
+						"id": 5,
+						"widgetId": "violations"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"icon": "ShieldCheckOutline",
+							"label": "Rules enforced",
+							"valueField": "coverage.enforced"
+						},
+						"icon": "ShieldCheckOutline",
+						"id": "rules-enforced",
+						"title": "Rules enforced",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"icon": "ClipboardTextOutline",
+							"label": "Rules catalogued",
+							"valueField": "coverage.catalogued"
+						},
+						"icon": "ClipboardTextOutline",
+						"id": "rules-catalogued",
+						"title": "Rules catalogued",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"icon": "CloseCircleOutline",
+							"label": "Rules not enforced",
+							"valueField": "coverage.notEnforced"
+						},
+						"icon": "CloseCircleOutline",
+						"id": "rules-not-enforced",
+						"title": "Rules not enforced",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"icon": "AlertOutline",
+							"label": "Mandatory violations",
+							"valueField": "counts.mandatory"
+						},
+						"icon": "AlertOutline",
+						"id": "mandatory-violations",
+						"title": "Mandatory violations",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "severity",
+									"label": "Severity"
+								},
+								{
+									"key": "ruleId",
+									"label": "Rule"
+								},
+								{
+									"key": "statement",
+									"label": "What the rule says"
+								},
+								{
+									"key": "schema",
+									"label": "Record type"
+								},
+								{
+									"key": "source",
+									"label": "Source"
+								}
+							],
+							"emptyText": "No violations in the records you may read",
+							"endpointSource": {
+								"responsePath": "violations",
+								"url": "/apps/humaniq/api/compliance/check"
+							},
+							"routeField": "schema",
+							"routes": {
+								"Asset": "AssetDetail",
+								"AssetAssignment": "AssetAssignmentDetail",
+								"AttendanceRecord": "AttendanceRecordDetail",
+								"BhvCertificering": "BhvCertificeringDetail",
+								"CompAdjustment": "CompAdjustmentDetail",
+								"Employee": "EmployeeDetail",
+								"EmployeeRelationsCase": "RelationsCaseDetail",
+								"EmploymentContract": "EmploymentContractDetail",
+								"Expense": "ExpenseDetail",
+								"HrGeneratedDocument": "GeneratedDocumentDetail",
+								"LeaveRequest": "LeaveRequestDetail",
+								"LoonaangifteFiling": "LoonaangifteFilingDetail",
+								"Loonbeslag": "LoonbeslagDetail",
+								"Offboarding": "OffboardingDetail",
+								"Onboarding": "OnboardingDetail",
+								"OrgAssignment": "OrgAssignmentDetail",
+								"OrgUnit": "OrgUnitDetail",
+								"PayrollAdjustment": "PayrollAdjustmentDetail",
+								"PayrollGLPost": "PayrollGLPostDetail",
+								"PayrollMutationReport": "PayrollMutationReportDetail",
+								"PayrollRun": "PayrollRunDetail",
+								"Payslip": "PayslipDetail",
+								"PensionFiling": "PensionFilingDetail",
+								"PerformanceReview": "PerformanceReviewDetail",
+								"RosterAssignment": "RosterAssignmentDetail",
+								"SickLeaveCase": "SickLeaveCaseDetail",
+								"Stagiair": "StagiairDetail",
+								"ThirdPartyPayee": "ThirdPartyPayeeDetail",
+								"ThirdPartyPayment": "ThirdPartyPaymentDetail",
+								"Timesheet": "TimesheetDetail",
+								"WkrAssessment": "WkrAssessmentDetail",
+								"WkrDeclaration": "WkrDeclarationDetail",
+								"WntDisclosure": "WntDisclosureDetail",
+								"job-application": "ApplicationDetail"
+							}
+						},
+						"icon": "AlertOutline",
+						"id": "violations",
+						"title": "Violations",
+						"type": "record-route-table"
+					}
+				]
+			},
+			"id": "ComplianceCheck",
+			"route": "/compliance-check",
+			"title": "Compliance check",
 			"type": "dashboard"
 		},
 		{
@@ -5028,6 +5498,113 @@
 			"route": "/expenses/:id",
 			"title": "Expense",
 			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "matrix-rows-without-a-requirement REQ-RCPT-008: GET /api/expenses/vat (HR and the accountant role of the active administration; the previous month by default, period=YYYY-MM on the endpoint) lists every reimbursed claim with a VAT amount and the total. PayrollGLPostService books the same VAT on glpost_account_vat instead of the reimbursements account.",
+				"description": "The VAT on the claims reimbursed last month, through payroll or directly, so the employer can reclaim it in its VAT return. The payroll journal books this VAT on the VAT account.",
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "vat-total"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "vat-count"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 2,
+						"id": 3,
+						"widgetId": "vat-claims"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/expenses/vat"
+							},
+							"format": {
+								"currency": "EUR",
+								"decimals": 2,
+								"style": "currency"
+							},
+							"icon": "CurrencyEur",
+							"label": "VAT to reclaim",
+							"valueField": "totalVat"
+						},
+						"icon": "CurrencyEur",
+						"id": "vat-total",
+						"title": "VAT to reclaim",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/expenses/vat"
+							},
+							"icon": "ReceiptTextOutline",
+							"label": "Claims with VAT",
+							"valueField": "count"
+						},
+						"icon": "ReceiptTextOutline",
+						"id": "vat-count",
+						"title": "Claims with VAT",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "title",
+									"label": "Claim"
+								},
+								{
+									"key": "vendor",
+									"label": "Vendor"
+								},
+								{
+									"key": "expenseDate",
+									"label": "Date"
+								},
+								{
+									"key": "amount",
+									"label": "Amount"
+								},
+								{
+									"key": "vatAmount",
+									"label": "VAT amount"
+								}
+							],
+							"emptyText": "No reimbursed claims with VAT last month",
+							"endpointSource": {
+								"responsePath": "claims",
+								"url": "/apps/humaniq/api/expenses/vat"
+							},
+							"rowRoute": "ExpenseDetail"
+						},
+						"id": "vat-claims",
+						"title": "Claims with VAT",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "VatToReclaim",
+			"route": "/expenses/vat",
+			"title": "VAT to reclaim",
+			"type": "dashboard"
 		},
 		{
 			"config": {
@@ -9904,7 +10481,7 @@
 		},
 		{
 			"config": {
-				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab. people-formation-positions (2026-09-28): four stat tiles (budgeted, filled, vacant, net FTE for the unit) and an object-table of the unit's places, all bound through endpointSource to GET /api/formation/occupancy, which computes them on read; built-in widgets only (ADR-049), the endpoint does the cross-schema, absence-weighted count.",
+				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab. people-formation-positions (2026-09-28): four stat tiles (budgeted, filled, vacant, net FTE for the unit) and an object-table of the unit's places, all bound through endpointSource to GET /api/formation/occupancy, which computes them on read; built-in widgets only (ADR-049), the endpoint does the cross-schema, absence-weighted count. matrix-rows-without-a-requirement REQ-DSI-010: 'Billable share per person' lists last month's approved and billable hours per person placed in the unit, from GET /api/analytics/billable-share/people (403 for a unit the caller does not lead, so the table stays empty).",
 				"layout": [
 					{
 						"gridHeight": 6,
@@ -9977,6 +10554,14 @@
 						"gridY": 12,
 						"id": 9,
 						"widgetId": "formation-places"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 17,
+						"id": 10,
+						"widgetId": "billable-per-person"
 					}
 				],
 				"register": "humaniq",
@@ -10218,6 +10803,46 @@
 						},
 						"id": "formation-places",
 						"title": "Formation",
+						"type": "endpoint-table"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Employee"
+								},
+								{
+									"key": "employeeNumber",
+									"label": "Employee number"
+								},
+								{
+									"key": "approvedHours",
+									"label": "Approved hours"
+								},
+								{
+									"key": "billableHours",
+									"label": "Billable hours"
+								},
+								{
+									"key": "billableShare",
+									"label": "Billable share (%)"
+								}
+							],
+							"emptyText": "No approved hours last month, or this is not a team you lead",
+							"endpointSource": {
+								"params": {
+									"orgUnitId": "@objectId"
+								},
+								"responsePath": "people",
+								"url": "/apps/humaniq/api/analytics/billable-share/people"
+							},
+							"rowRoute": "EmployeeDetail"
+						},
+						"icon": "ClockCheckOutline",
+						"id": "billable-per-person",
+						"title": "Billable share per person",
 						"type": "endpoint-table"
 					}
 				]
@@ -12784,6 +13409,64 @@
 		},
 		{
 			"config": {
+				"_note": "matrix-rows-without-a-requirement REQ-DSI-010: next to the administration-wide billable ratio of the Dashboard (REQ-DSI-002), the share per org unit from GET /api/analytics/billable-share (AnalyticsController over BillableShareService, which reads through AnalyticsService::rowsFor and guards like the unit figures). A row opens the unit, whose 'Billable share per person' table reads GET /api/analytics/billable-share/people for that unit; a unit the caller does not lead answers 403. The default month is the previous one; the endpoints take period=YYYY-MM.",
+				"description": "The billable share of last month's approved hours per team you may read: HR and accountants see every team, a manager the teams they lead. Open a team to see the share per person.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "billable-per-team"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Team"
+								},
+								{
+									"key": "people",
+									"label": "People"
+								},
+								{
+									"key": "approvedHours",
+									"label": "Approved hours"
+								},
+								{
+									"key": "billableHours",
+									"label": "Billable hours"
+								},
+								{
+									"key": "billableShare",
+									"label": "Billable share (%)"
+								}
+							],
+							"emptyText": "No teams you may read",
+							"endpointSource": {
+								"responsePath": "units",
+								"url": "/apps/humaniq/api/analytics/billable-share"
+							},
+							"rowRoute": "OrgUnitDetail"
+						},
+						"id": "billable-per-team",
+						"title": "Billable share per team",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "BillableHours",
+			"route": "/billable-hours",
+			"title": "Billable hours per team",
+			"type": "dashboard"
+		},
+		{
+			"config": {
 				"_note": "leave-verzuim-mvp (2026-07-12): administrative-only sickness case -- NO medical/diagnosis data exists on this schema or its widgets (REQ-VWP-002). The 'Case' data widget (firstSickDay/recoveredDate/status/wachtdag/loondoorbetalingPercentage) excludes employeeId since Related already resolves and links the sick Employee by name; the 'Poortwachter milestones' widget surfaces all eight Due/Done WVP dates (probleemanalyse/plan van aanpak/UWV 42-wekenmelding/eerstejaarsevaluatie) so the re-integration clock is the page's second headline fact. Files is labeled and described for gespreksverslagen & plan-van-aanpak process documents ONLY -- repeating the no-medical-data warning, matching the schema's own privacy stance. lifecycleActions expose exactly herstellen/heropenen (gemeld<->hersteld) -- no invented edges. Audit history is a sidebar tab. absence-deadlines-and-signals (2026-09-28): each milestone shows its days left (a materialised calculation the reminder rules watch); the 'Generate 42-week notification' api-call posts to POST /api/sick-leave/{id}/uwv-notification (UwvNotificationController, HR or admin only), which files the rendered document as an HrGeneratedDocument on the case. Nothing is sent to UWV.",
 				"headerActions": [
 					{
@@ -14498,6 +15181,32 @@
 			"type": "detail"
 		},
 		{
+			"actions": [
+				{
+					"confirm": false,
+					"errorMessage": "Clocking in failed. A day may already be open, or your account is not linked to an employee.",
+					"icon": "ClockPlusOutline",
+					"id": "clock-in",
+					"label": "Clock in",
+					"method": "POST",
+					"params": {},
+					"successMessage": "You are clocked in. Your day is open until you clock out.",
+					"type": "api-call",
+					"url": "/api/attendance/clock-in"
+				},
+				{
+					"confirm": true,
+					"errorMessage": "Clocking out failed. You may have no open day.",
+					"icon": "ClockCheckOutline",
+					"id": "clock-out",
+					"label": "Clock out",
+					"method": "POST",
+					"params": {},
+					"successMessage": "You are clocked out. Your worked hours are recorded.",
+					"type": "api-call",
+					"url": "/api/attendance/clock-out"
+				}
+			],
 			"config": {
 				"allowExport": true,
 				"columns": [
@@ -14508,7 +15217,7 @@
 					"workedHours",
 					"status"
 				],
-				"description": "Clock records per employee per working day, with the Working Hours Act compliance checks on rest time, maximum shift length and breaks.",
+				"description": "Clock records per employee per working day, with the Working Hours Act compliance checks on rest time, maximum shift length and breaks. Clock in and Clock out record the signed-in employee's own day: the server stamps the employee, the user and the worked hours.",
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
@@ -18850,7 +19559,7 @@
 		},
 		{
 			"config": {
-				"_note": "performance-reviews-mvp (2026-07-13): the dossier half of the performance-review MVP (ADR-001 Rule 6 — the primary surface is actually the EmployeeDetail emp-reviews row; this page is a routed detail, reached from that row, the cycle's review list, or the deepLink, and is deliberately NOT a menu child, the TimesheetDetail convention). The 'Beoordeling' data widget carries rating/sterktes/ontwikkelpunten/afspraken/goals/besprokenOp/vastgesteldDoor, excluding employeeId/cycleId/reviewerId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). Goals are recorded INSIDE this review (design D2 — no separate Goal entity anywhere in the register); besprokenOp/vastgesteldDoor are stamped on the carrying writes of bespreken/vaststellen. lifecycleActions expose exactly indienen/bespreken/vaststellen/heropenen (hr-performance.json) -- vaststellen is guarded server-side by the existing NoSelfApprovalGuard (the employee under review may not vaststellen their own beoordeling); heropenen is the correction edge back to besproken. Audit history is a sidebar tab.",
+				"_note": "performance-reviews-mvp (2026-07-13): the dossier half of the performance-review MVP (ADR-001 Rule 6 — the primary surface is actually the EmployeeDetail emp-reviews row; this page is a routed detail, reached from that row, the cycle's review list, or the deepLink, and is deliberately NOT a menu child, the TimesheetDetail convention). The 'Beoordeling' data widget carries rating/sterktes/ontwikkelpunten/afspraken/goals/besprokenOp/vastgesteldDoor, excluding employeeId/cycleId/reviewerId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). Goals are recorded INSIDE this review (design D2 — no separate Goal entity anywhere in the register); besprokenOp/vastgesteldDoor are stamped on the carrying writes of bespreken/vaststellen. lifecycleActions expose exactly indienen/bespreken/vaststellen/heropenen (hr-performance.json) -- vaststellen is guarded server-side by the existing NoSelfApprovalGuard (the employee under review may not vaststellen their own beoordeling); heropenen is the correction edge back to besproken. Audit history is a sidebar tab. matrix-rows-without-a-requirement REQ-PRV-007: 'Sign as employee' (ondertekenen, vastgesteld->ondertekend) lets the reviewed employee confirm a set review with an optional comment; ReviewSignOffGuard refuses anyone else server-side and ReviewSignOffStampListener stamps vastgesteldOp, medewerkerOndertekendDoor and medewerkerOndertekendOp and keeps the review's content. Heropenen also leaves ondertekend and clears the sign-off.",
 				"layout": [
 					{
 						"gridHeight": 9,
@@ -18899,10 +19608,25 @@
 						{
 							"action": "heropenen",
 							"from": [
-								"vastgesteld"
+								"vastgesteld",
+								"ondertekend"
 							],
 							"label": "Reopen",
 							"to": "besproken"
+						},
+						{
+							"action": "ondertekenen",
+							"from": [
+								"vastgesteld"
+							],
+							"inputs": [
+								{
+									"field": "medewerkerOpmerking",
+									"required": false
+								}
+							],
+							"label": "Sign as employee",
+							"to": "ondertekend"
 						}
 					]
 				},
@@ -18952,7 +19676,8 @@
 					"cycleId",
 					"status",
 					"rating",
-					"besprokenOp"
+					"besprokenOp",
+					"medewerkerOndertekendOp"
 				],
 				"description": "Your own reviews.",
 				"filter": {

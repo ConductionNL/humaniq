@@ -16,6 +16,8 @@ Rows: `tim-attendance-overview` (humaniq matrix).
 - **THEN** they read as present, late, away and not clocked in
 
 #### Scenario: Another team stays hidden
+
+@e2e exclude Needs a manager-only account; verified by AttendanceTodayServiceTest::testAnotherTeamStaysHidden.
 - **WHEN** a manager opens the today view
 - **THEN** people outside the units they may read are not listed
 

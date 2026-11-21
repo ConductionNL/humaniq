@@ -102,7 +102,7 @@
                 "slug": "PerformanceReview",
                 "authorization": {"read": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}], "create": ["humaniq-hr"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}], "delete": ["humaniq-hr"]},
                 "icon": "ClipboardAccountOutline",
-                "version": "0.4.0",
+                "version": "0.5.0",
                 "title": "Performance Review",
                 "description": "A single employee's beoordelingsdossier for one review cycle: rating, sterktes/ontwikkelpunten/afspraken and goals, on a concept -> ingediend -> besproken -> vastgesteld lifecycle with a heropenen correction edge. Under BW 7:669 lid 3 sub d a documented, vastgestelde beoordeling with a rating and concrete afspraken is the precondition for any underperformance dismissal. This object is that dossier. Goals are recorded INSIDE the review (no separate Goal entity, design D2): they freeze with the dossier under one lifecycle, one audit trail and one retention context.",
                 "type": "object",
@@ -171,10 +171,19 @@
                             },
                             "heropenen": {
                                 "from": [
-                                    "vastgesteld"
+                                    "vastgesteld",
+                                    "ondertekend"
                                 ],
                                 "to": "besproken",
-                                "description": "Correction edge: a vastgesteld verslag that turns out wrong is reopened to besproken for correction. Every path back to vastgesteld passes the NoSelfApprovalGuard again."
+                                "description": "Correction edge: a vastgesteld verslag that turns out wrong is reopened to besproken for correction. Every path back to vastgesteld passes the NoSelfApprovalGuard again. Reopening a signed review clears the employee's sign-off, so the corrected review is signed again."
+                            },
+                            "ondertekenen": {
+                                "from": [
+                                    "vastgesteld"
+                                ],
+                                "to": "ondertekend",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\ReviewSignOffGuard",
+                                "description": "The employee confirms they have read the set review, with an optional comment (REQ-PRV-007). ReviewSignOffGuard allows only the review's own employee (userId). ReviewSignOffStampListener stamps who signed and when, and keeps the rating, strengths, development points, agreements and goals as they were."
                             }
                         }
                     }
@@ -211,13 +220,14 @@
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Where this review has got to: draft, submitted, discussed or finalised.", "x-notes": "Review workflow status. Governed by the x-openregister-lifecycle state machine.",
-                        "x-enum-labels": {"concept": "Draft", "ingediend": "Submitted", "besproken": "Discussed", "vastgesteld": "Finalised"},
+                        "description": "Where this review has got to: draft, submitted, discussed, finalised or signed by the employee.", "x-notes": "Review workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "x-enum-labels": {"concept": "Draft", "ingediend": "Submitted", "besproken": "Discussed", "vastgesteld": "Finalised", "ondertekend": "Signed"},
                         "enum": [
                             "concept",
                             "ingediend",
                             "besproken",
-                            "vastgesteld"
+                            "vastgesteld",
+                            "ondertekend"
                         ],
                         "default": "concept"
                     },
@@ -310,6 +320,32 @@
                         "nullable": true,
                         "title": "Finalised by",
                         "description": "The manager who finalised the review. It cannot be the employee being reviewed.", "x-notes": "Nextcloud user id of the manager who vaststelde the beoordeling -- an NC user id, not an object FK (the approvedBy convention), never a $ref. Stamped on the carrying write of the vaststellen transition. Must differ from the reviewed employee (no self-approval)."
+                    },
+                    "vastgesteldOp": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Finalised on",
+                        "description": "When the reviewer finalised the review.", "x-notes": "Stamped by ReviewSignOffStampListener on the vaststellen edge; client input is ignored (REQ-PRV-007)."
+                    },
+                    "medewerkerOndertekendDoor": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Signed by employee",
+                        "description": "The employee's account that signed the review.", "x-notes": "Nextcloud user id stamped by ReviewSignOffStampListener on the ondertekenen edge; client input is ignored and a reopen clears it (REQ-PRV-007)."
+                    },
+                    "medewerkerOndertekendOp": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Signed by employee on",
+                        "description": "When the employee signed the review.", "x-notes": "Stamped by ReviewSignOffStampListener on the ondertekenen edge (REQ-PRV-007)."
+                    },
+                    "medewerkerOpmerking": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Employee's comment",
+                        "description": "What the employee added when signing the review.", "x-notes": "Carried on the ondertekenen write and kept by ReviewSignOffStampListener; any other write leaves it as it was (REQ-PRV-007)."
                     },
                     "userId": {
                         "type": "string",

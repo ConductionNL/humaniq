@@ -33,6 +33,7 @@ use OCA\Humaniq\Controller\CompCycleController;
 use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\CompAdjustmentService;
 use OCA\Humaniq\Service\CompCollectiveService;
+use OCA\Humaniq\Service\CompCycleBudget;
 use OCA\Humaniq\Service\CompCycleApprover;
 use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Http;
@@ -70,6 +71,13 @@ class CompCycleControllerTest extends TestCase {
 	private CompAdjustmentService&MockObject $adjustments;
 
 	/**
+	 * The budget service double.
+	 *
+	 * @var CompCycleBudget&MockObject
+	 */
+	private CompCycleBudget&MockObject $budget;
+
+	/**
 	 * Build the controller for a caller.
 	 *
 	 * @param bool $cycleReadable Whether the caller's RBAC reads the cycle.
@@ -80,7 +88,7 @@ class CompCycleControllerTest extends TestCase {
 	 */
 	private function controller(bool $cycleReadable, bool $admin, ?string $role): CompCycleController {
 		$rbac = $this->createMock(RbacObjectReader::class);
-		$rbac->method('findOrNull')->willReturn($cycleReadable === true ? ['id' => 'cycle-1', 'status' => 'open', 'kind' => 'collective'] : null);
+		$rbac->method('findOrNull')->willReturn($cycleReadable === true ? ['id' => 'cycle-1', 'status' => 'open', 'kind' => 'collective', 'budgetAmount' => 1000000] : null);
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('salarisadmin');
@@ -96,6 +104,7 @@ class CompCycleControllerTest extends TestCase {
 		$this->collective = $this->createMock(CompCollectiveService::class);
 		$this->approver = $this->createMock(CompCycleApprover::class);
 		$this->adjustments = $this->createMock(CompAdjustmentService::class);
+		$this->budget = $this->createMock(CompCycleBudget::class);
 
 		return new CompCycleController(
 			$this->createMock(IRequest::class),
@@ -106,6 +115,7 @@ class CompCycleControllerTest extends TestCase {
 			$administrations,
 			$groups,
 			$session,
+			$this->budget,
 		);
 	}//end controller()
 
@@ -123,6 +133,8 @@ class CompCycleControllerTest extends TestCase {
 		self::assertSame(Http::STATUS_NOT_FOUND, $controller->proposeCollective('cycle-1')->getStatus());
 		self::assertSame(Http::STATUS_NOT_FOUND, $controller->approveCycle('cycle-1')->getStatus());
 		self::assertSame(Http::STATUS_NOT_FOUND, $controller->effectuateCycle('cycle-1')->getStatus());
+		$this->budget->expects($this->never())->method('forCycle');
+		self::assertSame(Http::STATUS_NOT_FOUND, $controller->budget('cycle-1')->getStatus());
 	}//end testAnUnreadableCycleIs404()
 
 	/**
@@ -139,6 +151,8 @@ class CompCycleControllerTest extends TestCase {
 		self::assertSame(Http::STATUS_FORBIDDEN, $controller->proposeCollective('cycle-1')->getStatus());
 		self::assertSame(Http::STATUS_FORBIDDEN, $controller->approveCycle('cycle-1')->getStatus());
 		self::assertSame(Http::STATUS_FORBIDDEN, $controller->effectuateCycle('cycle-1')->getStatus());
+		$this->budget->expects($this->never())->method('forCycle');
+		self::assertSame(Http::STATUS_FORBIDDEN, $controller->budget('cycle-1')->getStatus());
 	}//end testAnEmployeeRoleIs403()
 
 	/**
@@ -192,5 +206,37 @@ class CompCycleControllerTest extends TestCase {
 		self::assertSame(['would-apply' => 1, 'refused-not-due' => 1], $preview['counts']);
 		self::assertCount(2, $preview['outcomes']);
 	}//end testAnAdminApprovesAndPreviewsTheEffectuation()
+
+	/**
+	 * HR reads the cycle's budget: the cycle as RBAC read it goes to the
+	 * budget service, and its figures are the response.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/comp-cycles/spec.md
+	 */
+	public function testHrReadsTheCycleBudget(): void {
+		$controller = $this->controller(true, false, 'hr');
+		$this->budget->expects($this->once())->method('forCycle')
+			->with(['id' => 'cycle-1', 'status' => 'open', 'kind' => 'collective', 'budgetAmount' => 1000000])
+			->willReturn(['cycleId' => 'cycle-1', 'used' => 550000, 'left' => 450000]);
+
+		$response = $controller->budget(' cycle-1 ');
+
+		self::assertSame(Http::STATUS_OK, $response->getStatus());
+		self::assertSame(450000, $response->getData()['left']);
+	}//end testHrReadsTheCycleBudget()
+
+	/**
+	 * A budget read without a cycle id is a 400.
+	 *
+	 * @return void
+	 */
+	public function testABudgetReadWithoutACycleIs400(): void {
+		$controller = $this->controller(true, true, null);
+		$this->budget->expects($this->never())->method('forCycle');
+
+		self::assertSame(Http::STATUS_BAD_REQUEST, $controller->budget(null)->getStatus());
+	}//end testABudgetReadWithoutACycleIs400()
 
 }//end class

@@ -96,6 +96,12 @@ final class NlSignalChecks implements CheckProvider {
 	private const BHV_WINDOW_DAYS = 90;
 
 	/**
+	 * Days before a probation period ends that the probation-end signal
+	 * starts; mirrors `nl-signaal-proeftijd-eindigt` `parameters.windowDays`.
+	 */
+	private const PROBATION_WINDOW_DAYS = 14;
+
+	/**
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, callable>>
@@ -109,6 +115,9 @@ final class NlSignalChecks implements CheckProvider {
 				// BW art. 7:668 lid 1 -- written aanzegging at least one month
 				// before the end date of a fixed-term contract of >= 6 months.
 				'nl-aanzegtermijn-bewaking' => static fn (array $o): bool => self::aanzegtermijnSatisfied($o),
+				// BW art. 7:652 -- a probation period ending within 14 days is
+				// signalled so HR holds the end-of-probation conversation in time.
+				'nl-signaal-proeftijd-eindigt' => static fn (array $o): bool => self::proeftijdEindigtSatisfied($o),
 			],
 			'BhvCertificering' => [
 				// bhv-organisatie -- expiring BHV-related certification is
@@ -131,6 +140,31 @@ final class NlSignalChecks implements CheckProvider {
 	public static function seedSpec(): array {
 		return [];
 	}//end seedSpec()
+
+	/**
+	 * `nl-signaal-proeftijd-eindigt`: true unless the contract's
+	 * `proeftijdEndDate` is a parseable date within `[today, today +
+	 * PROBATION_WINDOW_DAYS]`. A contract without a probation period, one
+	 * further out than the window, and one whose probation already ended all
+	 * pass.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals/spec.md#REQ-SIG-007
+	 */
+	private static function proeftijdEindigtSatisfied(array $o): bool {
+		$endDate = strtotime((string)($o['proeftijdEndDate'] ?? ''));
+		if ($endDate === false) {
+			return true;
+		}
+
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+		$windowEnd = strtotime('+' . self::PROBATION_WINDOW_DAYS . ' days', $today);
+
+		return ($endDate >= $today && $endDate <= $windowEnd) === false;
+	}//end proeftijdEindigtSatisfied()
 
 	/**
 	 * `nl-signaal-contract-verloopt`: true unless the contract is temporary,
