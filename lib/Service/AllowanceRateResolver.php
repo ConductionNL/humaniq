@@ -60,7 +60,12 @@ class AllowanceRateResolver {
 		}
 
 		$caoId = trim((string)($contract['cao'] ?? ''));
-		$leaf = ($caoId === '' ? null : (CaoRegistry::get($caoId)['allowances'] ?? null));
+		$leaf = null;
+		if ($caoId !== '') {
+			$cao = CaoRegistry::get($caoId);
+			$leaf = ($cao['allowances'] ?? null);
+		}
+
 		if (self::usable(leaf: $leaf) === false) {
 			return null;
 		}
