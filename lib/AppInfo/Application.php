@@ -531,7 +531,12 @@ class Application extends App implements IBootstrap {
 		$this->registerRelationsCaseListeners($dispatcher);
 		$this->registerExitInterviewListeners($dispatcher);
 		$this->registerCandidateAssessmentListeners($dispatcher);
-		$this->registerReviewSignOffListeners($dispatcher);
+		// matrix-rows-without-a-requirement REQ-PRV-007: the reviewer's and the
+		// employee's sign-off on a performance review, stamped by the server.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: ReviewSignOffStampListener::class, registers: null, schemas: [ReviewSignOffStampListener::SLUG]);
+		}
+
 		$this->registerAnnouncementListener($dispatcher);
 		$this->registerScenarioMutationListener($dispatcher);
 		$this->registerChangeRequestListeners($dispatcher);
@@ -952,28 +957,6 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerCandidateAssessmentListeners()
-
-	/**
-	 * matrix-rows-without-a-requirement REQ-PRV-007: the reviewer's and the
-	 * employee's sign-off on a performance review, stamped by the server.
-	 *
-	 * @param IEventDispatcher $dispatcher The dispatcher.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
-	 */
-	private function registerReviewSignOffListeners(IEventDispatcher $dispatcher): void {
-		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
-			$this->registerFilteredObjectListener(
-				dispatcher: $dispatcher,
-				event: $event,
-				listener: ReviewSignOffStampListener::class,
-				registers: null,
-				schemas: [ReviewSignOffStampListener::SLUG]
-			);
-		}
-	}//end registerReviewSignOffListeners()
 
 	/**
 	 * self-service-announcements-and-digest D1: one confirmation per employee
